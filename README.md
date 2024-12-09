@@ -13,3 +13,7 @@ Here's an explanation of what's on the repo as it pertains to the final project:
 - `data`: This directory contains the data used for the research project in general.
 - `Python3.9.0-libraries-versions`: This file contains all the libraries + versions needed to run in Python 3.9.0.
 - `A3`: Is just my A3 submission!
+
+VIDEO SUBMISSION FOUND HERE: https://youtu.be/s-UoMgOU9E0
+
+Vryan Feliciano -- vgfelica@stanford.edu -- 006371790
