@@ -12,9 +12,9 @@ Here's an explanation of what's on the repo as it pertains to the final project:
   - You will still need to run `01-nlp-dataloading-merging` and `02-nlp-preprocessing` to produce `clean_metadata_transcript.csv` and `clean_metadata_transcript.pkl`, which are needed for the visualizatiob code.
   -  The Notebooks that use Python 3.9.0 are `07-nlp-topicmodeling.ipynb` and `08-nlp-interactive-visualization.ipynb`. Everything else runs in Python 3.13.0.
 -  `08-nlp-interactive-visualization.ipynb` depends on the following:
-  - `clean_metadata_transcript.csv` and `clean_metadata_transcript.pkl`, which are produced in `02-nlp-preprocessing` but needs `01-nlp-dataloading-merging` to run `metadata_transcript.csv` to be proprocessed and cleaned
-  - `04-nlp-advanced-analysis` to produce Channel Log-Odds TFD CSV files stored in `Log_Odds_Analysis`
-  - `07-nlp-topicmodeling.ipynb` to produce channel topic modeling data produced in the folder `channel_topic_analysis`
+    - `clean_metadata_transcript.csv` and `clean_metadata_transcript.pkl`, which are produced in `02-nlp-preprocessing` but needs `01-nlp-dataloading-merging` to run `metadata_transcript.csv` to be proprocessed and cleaned
+    - `04-nlp-advanced-analysis` to produce Channel Log-Odds TFD CSV files stored in `Log_Odds_Analysis`
+    - `07-nlp-topicmodeling.ipynb` to produce channel topic modeling data produced in the folder `channel_topic_analysis`
 - `data`: This directory contains the data used for the research project in general.
 - `Python3.9.0-libraries-versions`: This file contains all the libraries + versions needed to run in Python 3.9.0.
 - `A3`: Is just my A3 submission!
