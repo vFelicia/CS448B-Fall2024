@@ -1,0 +1,515 @@
+With timestamps:
+
+00:00 - in this video we're going to handle
+00:01 - simple spreadsheet animation in a pure
+00:03 - unity ECS game this is one of the
+00:06 - simplest forms of animation and it can
+00:07 - be done extremely fast so you can easily
+00:09 - render thousands of units let's begin
+00:14 - [Music]
+00:18 - hello and welcome I'm your code monkey
+00:21 - and this channel is all about helping
+00:22 - you learn how to make your own games
+00:24 - with NF tutorials made by a professional
+00:26 - indie game developer so if you find the
+00:28 - video helpful consider subscribing so
+00:30 - the new dot stack is wonderful and works
+00:32 - insanely fast but one of the biggest
+00:34 - challenges is animation as of right now
+00:36 - there is no implementation for the
+00:38 - default Unity animations so you have to
+00:40 - build your own system however you need
+00:42 - to be careful to make sure your
+00:44 - animation system doesn't become a
+00:45 - performance bottleneck
+00:46 - now when approached you can do is a mesh
+00:48 - based system that is what I normally use
+00:50 - in my videos where each unit has a mesh
+00:52 - and just modifies that mesh per
+00:54 - animation frame that's the approach I
+00:56 - took in the Marines vs Zombies video in
+00:59 - that scene each animation frame is a
+01:01 - different mesh and the system just grabs
+01:02 - the mesh that matches the current
+01:04 - animation frame that is a great approach
+01:06 - but also has some limitations and it's
+01:08 - quite complex to handle lots of
+01:09 - different meshes so here we're going to
+01:12 - create the simplest form of animation
+01:13 - just some basic spreadsheet animation so
+01:16 - let's begin by writing some code let's
+01:18 - start off by making a script to run our
+01:20 - code so a new C sharp script let's call
+01:22 - it the game hammer make a game object
+01:25 - and just write a script okay okay so
+01:28 - let's start off by just spawning a
+01:30 - simple entity and drawing it now first
+01:32 - of all if you have absolutely no idea
+01:34 - how ECS works then check out the getting
+01:36 - started video that videos should teach
+01:38 - you the core of how ECS works and how to
+01:41 - make an entity and add components in
+01:42 - here I'm just going to quickly write the
+01:44 - code to spawn our entity so here first
+01:51 - we create a entity archetype
+01:58 - so here we just create it very simple
+02:01 - with the translation component right so
+02:04 - that's our basic archetype now let's
+02:06 - create it alright that's it very simple
+02:14 - let's see for entities and they've been
+02:16 - created so here we are and here the
+02:18 - entity buzzer and indeed we have an
+02:20 - entity with translation okay good now
+02:22 - let's see how we can draw a sprite so
+02:25 - let's make a system that won't be
+02:26 - responsible for drawing it so let's put
+02:29 - it in a different script and let's call
+02:30 - this the sprite sheet renderer in here
+02:38 - this will be a component system and now
+02:45 - in here let's just cycle through all the
+02:47 - entities with the translation component
+02:49 - so we do entities for each we grab a
+02:54 - reference to the translation component
+02:59 - and here we're going to use graphics
+03:03 - draw a mesh in order to draw them onto
+03:05 - the screen now here you can see the
+03:07 - parameters that will require so
+03:09 - essentially we need a mesh and a
+03:11 - material so let's have those as fields
+03:14 - on the game and one now I'm only adding
+03:20 - them in here just for testing if you
+03:22 - were to use this in a complete game you
+03:23 - would obviously place all of these
+03:25 - assets in a more appropriate place but
+03:26 - for now this is great for testing let's
+03:28 - go into the editor and here on the game
+03:30 - handler we can use for the quad mesh we
+03:32 - can use the default quad and for the
+03:35 - walking sprite sheet material let's
+03:37 - create a new material in here okay so we
+03:41 - have our material let's drag our
+03:43 - reference okay
+03:44 - and now here back in our code we need to
+03:46 - access these fields from our spreadsheet
+03:49 - renderer so again this case and let's
+03:51 - make a static instance that we can
+03:52 - access
+03:58 - so we have a static instance that we set
+04:01 - on awake and then a function to get the
+04:02 - instance and through this instance we
+04:04 - won't be able to access these fields
+04:05 - again if you are using this code in a
+04:08 - proper game you would manage your
+04:09 - references in a better way we're just
+04:11 - doing it this way just for testing so we
+04:13 - can now go into the spreadsheet brendor
+04:15 - we draw the mesh then we use the quad
+04:19 - mesh for the position we use the
+04:21 - translation that value for the
+04:23 - quaternion we don't any rotation so
+04:25 - quaternion
+04:26 - identity and for the material we use
+04:28 - that material all right so here is our
+04:34 - nice function call we're using the
+04:36 - graphics API in order to draw mesh so
+04:38 - we're going to draw a simple quad using
+04:40 - our material so let's see if it works
+04:42 - any of here we are and there's our
+04:44 - spreadsheet being correctly displayed
+04:46 - all right so we have the basics for
+04:48 - drawing a sprite with a custom system
+04:50 - now obviously the sprite is meant to
+04:52 - only display one frame of the sprite
+04:54 - sheet and not the whole thing so let's
+04:55 - see how we can do that now the way we're
+04:58 - going to do is by using a custom shader
+05:00 - and passing a specific parameter to that
+05:02 - shader the shader won't then use that
+05:04 - parameter in order to display only a
+05:06 - single animation frame that way every
+05:09 - single unit will have the same mesh the
+05:11 - same material but different parameters
+05:13 - so let's see the shader code here is the
+05:15 - shader code it is slightly modified in
+05:18 - order to support GPU instancing
+05:20 - essentially so we can pass in different
+05:22 - values once having the same mesh in the
+05:23 - material now I must say I am NOT an
+05:26 - expert in shaders this change code here
+05:28 - is put together from several examples
+05:30 - that I found online so if you see
+05:32 - something in this shader that could be
+05:33 - done better please let me know in the
+05:35 - comments but the shader does work for
+05:37 - what we're trying to do now the key
+05:39 - elements are down here this is what
+05:41 - defines what properties we can modify so
+05:43 - you can see that we are receiving an
+05:45 - instance color and an instance UV and
+05:47 - down here we can access the instance
+05:49 - properties so we're going to pass in the
+05:51 - main text UV as an array of UV
+05:53 - coordinates each unit will calculate its
+05:56 - own coordinates and then the whole thing
+05:57 - is run in a single drop ok
+06:00 - so this is a shader now let's see how we
+06:01 - can pass in these values to this shader
+06:06 - so here we have our draw mesh code now
+06:09 - in here we're going to swap two things
+06:11 - first we're going to pass values to the
+06:13 - shader using a material property block
+06:17 - this is what actually contains the data
+06:20 - that we wish to send to the shader so in
+06:22 - here we can do set the vector Arang the
+06:27 - name ID is the name that we gave in the
+06:29 - shader so here we are it's the main text
+06:31 - UV then we pass in an array of valence
+06:38 - now in here this vector 4 is going to be
+06:40 - the UV coordinates so let's define up
+06:43 - here to see how it's set up
+06:46 - essentially we have a width a height a X
+06:49 - offset and a Y offset now these are all
+06:57 - normalized values so regardless of
+06:59 - texture size the value from 0 to 1 and
+07:01 - with these values we're essentially
+07:03 - going to display the entire texture so
+07:05 - we have the offsets both at 0 so we're
+07:07 - going to start drawing on the lower left
+07:08 - corner and the width and height is 1 so
+07:11 - the entire texture so we're going to
+07:12 - draw the whole thing so we create a new
+07:14 - vector 4 and we pass in first the width
+07:17 - and the height and so on then in here we
+07:21 - pass in this UV into our material
+07:24 - properly what all right so that's our
+07:26 - material setup now let's pass it into
+07:28 - our drama cone so here is the version of
+07:31 - the function that we want so first our
+07:33 - mesh ok then the position then the
+07:35 - rotation then the material then layer
+07:37 - then we need a camera submission parties
+07:39 - so for the camera let's pass in camera
+07:42 - domain for the sub mesh we don't have a
+07:44 - sub mesh so passing 0 and then finally
+07:47 - our material property block
+07:54 - all right so just like that we have our
+07:57 - code to pass in custom values into our
+07:59 - shader so let's see now before we test
+08:01 - we need to assign our correct shader so
+08:03 - here in the material let's go down into
+08:05 - our custom and use the instance shader
+08:08 - all right now let's test any of here we
+08:10 - are indeed we can still see our nice
+08:12 - spreadsheet and we can see the entire
+08:14 - spreadsheet now let's make sure it's
+08:16 - working by saying DV for a single frame
+08:18 - so let's go back now here in order to
+08:21 - display just a single frame essentially
+08:23 - we need to mess around with the width
+08:24 - and the offset so in this case we have
+08:27 - four frames of animation so what we do
+08:28 - is 1/4 that way we have the width of a
+08:31 - single frame of animation so this is
+08:34 - only takes now let's test any of there's
+08:36 - our first frame of animation now let's
+08:38 - test the second frame so in order to
+08:40 - have the second frame we have the same
+08:41 - width but we modify the UV offset
+08:43 - essentially you modify by the UV width x
+08:46 - in this case by 1 and yep there is our
+08:49 - entity displaying the second frame of
+08:51 - animation alright awesome so we can now
+08:53 - play around with the values we put in
+08:55 - the material property block in order to
+08:57 - display different frames in order to
+08:58 - have spreadsheet animation all we really
+09:00 - need is to change those UV values over
+09:02 - time so let's handle that now we're
+09:05 - going to do our animation timing in ecs
+09:07 - let's make a new script and call this
+09:10 - the sprite sheet animation and now in
+09:15 - here we're going to have two things
+09:16 - we're going to have a component to hold
+09:17 - all of the animation data and a system
+09:20 - to animate that data so first start off
+09:22 - with this simple component so component
+09:25 - won't be a public struct let's call this
+09:28 - the sprite sheet animation data and we
+09:33 - obviously implement I component that
+09:38 - so this component won't handle all the
+09:40 - data that the animation system will
+09:42 - require so in this case the first thing
+09:44 - we need is the current frame so we store
+09:46 - a public int for the current frame then
+09:49 - we need to know the total frame count
+09:51 - so if publican for the frame count this
+09:54 - will be how many frames total the
+09:55 - animation has then we also need to know
+09:57 - the time spent in this current frame so
+09:59 - it probably float for the frame timer
+10:01 - and finally a timer max to know when to
+10:04 - go to the next frame so again a public
+10:06 - float for the frame time max so as the
+10:10 - frame timer increases when it goes past
+10:12 - the timer max we increase the current
+10:14 - frame and as the current frame goes past
+10:16 - the frame count it resets back to zero
+10:18 - all right so this is all that we need
+10:20 - for a very simple animation now let's
+10:23 - have this component into our animation
+10:25 - archetype so here we are so we add with
+10:27 - translation and a type of animation that
+10:30 - now let's also set up our starting
+10:33 - values
+10:53 - so here we are setting our component
+10:55 - data for the translation let's arm off
+10:57 - at 0 0 and for the data we start off at
+11:00 - the current frame 0 we have a total of 4
+11:02 - frames of animation the frame timer
+11:04 - starts at 0 and for internal max of 0.1
+11:07 - so essentially we're going to play this
+11:08 - animation 10 frames per second right so
+11:11 - we have our component data all set up
+11:13 - now we need to make a system to actually
+11:15 - animate so let's go back into our script
+11:17 - and down here make a public class this
+11:20 - will be the sprite sheet animation
+11:23 - animate and will be a job component
+11:26 - system now in here we're going to create
+11:31 - a very simple job we want a job looping
+11:33 - through all the entities with our
+11:35 - animation data component so first it's
+11:38 - only struct for our job and will be an
+11:40 - eye job for each with the sprite sheet
+11:44 - animation tab okay so here we are
+11:53 - cycling through all of our entities with
+11:55 - animation data now in here we go into
+11:57 - the data in order to access the frame
+12:01 - timer and increase it by del time now
+12:04 - again in a job we cannot use time table
+12:06 - time directly so we need to store it out
+12:08 - here ok so we increase the frame timer
+12:11 - by the Delta time then we need to test
+12:13 - if the frame timer is past the frame
+12:15 - time or max
+12:23 - so when we are above the frame tunnel
+12:26 - max we reduce the frame timer by the
+12:28 - frame timer max and we increase the
+12:31 - current frame so we increase the current
+12:47 - frame and we get the remainder of the
+12:49 - frame count so as you go past the frame
+12:51 - count we look back into zero alright so
+12:53 - that's it right here we have a very
+12:55 - simple animation system that just deals
+12:57 - with this simple data so now let's
+12:59 - schedule our jump and only really need
+13:06 - this to pass in the Delta all right so
+13:15 - that's it and now in here we can also
+13:17 - add a very simple verse compound in
+13:20 - order to make it quite a bit faster okay
+13:22 - so let's see this job in action ok here
+13:25 - we are and nothing moves since we aren't
+13:26 - updating it yet but if we go and inspect
+13:29 - our entity there it is
+13:31 - you can see the frame timer increasing
+13:33 - with the Delta time and as it goes past
+13:35 - the frame tarmacs which is point 1 you
+13:37 - can see the current frame constantly
+13:38 - increasing all right so we have our
+13:40 - admission that are correctly working now
+13:42 - let's calculate the UV frame based on
+13:44 - that data so let's go into the regular
+13:46 - system and in here the first thing we
+13:48 - need to do is to make sure that our
+13:49 - renderer only runs after the animation
+13:52 - system so for that we can use the update
+13:54 - after test in the type of spreadsheet
+13:58 - animation system that way this system
+14:00 - only runs after the animate has done its
+14:03 - thing and now here on the at least for
+14:05 - each we grab translation then also grab
+14:07 - the animation data and then in here
+14:14 - let's calculate the UV based on the
+14:16 - animation done so for the width we have
+14:18 - 1 divided by the total number of frames
+14:21 - so we can do that frame count the height
+14:24 - our sprite sheet is setup only
+14:26 - horizontally so we only add one and for
+14:28 - the X offset it will essentially be the
+14:30 - width multiplied by the spreadsheet
+14:32 - animation data dot current rent
+14:34 - so as the current frame increases we
+14:36 - shift what we show to the right all
+14:38 - right so that's it let's test any of
+14:41 - their it is we have our nice entity with
+14:44 - a very nice simple spreadsheet animation
+14:46 - awesome you can check the stats to see
+14:48 - that we only have one quad so two
+14:49 - triangles four vertices and here's our
+14:51 - nice unit alright so now that we have
+14:54 - the core working let's see how we can
+14:56 - improve upon it now one of the things we
+14:58 - can improve quite easily is regarding
+15:00 - this UV calculation so right now we're
+15:03 - doing it here inside a for each meaning
+15:05 - we're doing it on the main thread
+15:06 - sequentially for each unit so a much
+15:09 - better approach is to simply calculate
+15:10 - this once we are accounting the
+15:12 - animation so right here this way we're
+15:15 - going to benefit from multi-threading as
+15:16 - we calculate our UV so let's simply add
+15:19 - another field to our animation data so
+15:21 - in here a public vector for for our UV
+15:25 - and here in our job code after we modify
+15:28 - the current frame let's also calculate
+15:30 - the UV so let's copy this code from here
+15:33 - into here and we simply set the
+15:38 - spreadsheet animation down UV and here
+15:42 - this could be further improved by
+15:43 - caching the width and height and
+15:45 - everything that doesn't change but for
+15:47 - now this will work in too long where you
+15:49 - be insanely fast so now we are
+15:52 - calculating the UV inside our job so we
+15:54 - can go back into our River system and in
+15:57 - here we grab the UV directly from the
+15:59 - spreadsheet data also another piece of
+16:02 - data that we can't complete inside our
+16:04 - job in here if we check out the draw
+16:06 - mesh you can see that there are several
+16:08 - versions that work with a matrix we're
+16:10 - going to need matrices later on when we
+16:12 - use the instance method so let's see on
+16:14 - weight calculating that right now let's
+16:16 - go into our animation data and up here
+16:18 - we also store a public matrix for our
+16:21 - matrix so here on let's calculate the
+16:25 - matrix so for that we go into the
+16:27 - spreadsheet animation data dot matrix
+16:29 - and we calculated using this static
+16:32 - function to get the translation rotation
+16:34 - and scale so we need a position so that
+16:38 - means we need to go up here in order to
+16:39 - add the translation component to this
+16:41 - job
+16:43 - now in here we just need to pass in
+16:45 - translation doubt value what turned our
+16:47 - identity since we don't have rotation
+16:49 - and vector 3.14 our scape alright so
+16:52 - this we have our matrix being calculated
+16:54 - inside of this job which is running nice
+16:56 - multi-threaded code now just one last
+16:58 - thing we need to do in order to handle
+17:00 - sprite sorting order it's in here and
+17:03 - let's simply come late a43 for our
+17:06 - position so first we grab the normal
+17:18 - position then we offset the position
+17:20 - that Xen by the position that Y
+17:23 - multiplied by a small value and then
+17:26 - this position is what we use in there so
+17:29 - essentially we're offsetting it on the
+17:31 - set based on the Y this way we get
+17:33 - automatic sprite sorting Gordon so
+17:35 - sprites with a load Y won't be in front
+17:37 - of sprites with a higher Y so that's it
+17:39 - for calculating in here now we can go
+17:42 - back into our render system and here we
+17:44 - can now use the draw mesh function that
+17:46 - contains both UV and the matrix all
+17:53 - right that should do it
+17:54 - so essentially here on our render system
+17:57 - all we're doing is rendering our mesh so
+17:59 - all the work in terms of calculating the
+18:01 - UV the doing the animation or completing
+18:04 - the matrix all that is done in a nice
+18:06 - multi-threaded code in here before that
+18:08 - happens okay so let's run the code and
+18:11 - see and yep awesome here we have our
+18:13 - entity very nicely animated now let's
+18:16 - change our code to spawn thousands of
+18:18 - entities so here let's create that
+18:34 - so here we have the code spawning a
+18:36 - thousand entities
+18:37 - let's randomize their position and their
+18:39 - starting animation so we can see the
+18:41 - difference all right so here we have a
+18:57 - bunch of randomness so we can easily see
+18:59 - everything and let's test any of here we
+19:02 - have a thousand entities only using some
+19:04 - very nice spreadsheet animation let's
+19:06 - look at the stats and here we are a
+19:08 - thousand entities running in the CPU in
+19:11 - six milliseconds with 150 180 fps now
+19:15 - let's increase it up to 10,000 and right
+19:17 - here at 10,000 we can already see some
+19:19 - performance issues so let's see how we
+19:21 - can improve them here in a renderer we
+19:24 - can easily improve a bunch of things
+19:26 - first of all let's create the material
+19:28 - property block outside and then simply
+19:30 - reuse it that won't save a lot of
+19:32 - garbage calls and the same thing for our
+19:35 - unit vector
+19:45 - so here we are reusing our UV array ion
+19:49 - let's see how much we've improved so
+19:51 - here we are and we had quite a nice
+19:53 - improvement we went down from 50
+19:55 - milliseconds per frame down to 30
+19:56 - milliseconds per frame so right now we
+19:58 - have 10,000 units of them being
+20:00 - independently animated and everything is
+20:02 - running at 30 frames per second so this
+20:05 - right here is the simple way to do
+20:07 - spreadsheet animation and render it
+20:08 - there is a way that we can further
+20:10 - improve upon this and get even better
+20:12 - performance here in the code the main
+20:15 - bottleneck is right here on the drum
+20:17 - ashcombe essentially we're running
+20:20 - through this function for each entity so
+20:22 - we're doing this column as many entities
+20:24 - as we have so if we have 10,000 we have
+20:26 - 10,000 counts however on the graphics
+20:29 - API we have another function and that is
+20:32 - the draw mesh instance this one allows
+20:34 - us to render multiple meshes in a single
+20:36 - function call so we can greatly improve
+20:38 - performance however that also contains a
+20:40 - lot of tricky and limitations and weird
+20:42 - things we must do it so we're going to
+20:44 - cover that in the next video so right
+20:47 - here we have built a nice simple
+20:48 - spreadsheet animation system we have in
+20:51 - here a component that handles all the
+20:53 - data that the spreadsheet requires then
+20:55 - we have a system which works on that
+20:57 - data in order to update the current
+20:58 - frame and also calculate the matrix and
+21:01 - the UV required to render it
+21:02 - this job is fully multi-threaded and
+21:04 - using burst so it's insanely fast and
+21:07 - then we have our renderer which takes on
+21:09 - that data and does a simple draw mesh
+21:10 - comp and here on the archetype you can
+21:13 - see that the only thing we need for this
+21:14 - whole system to work is just the
+21:16 - translation and the data component so
+21:18 - again this is a very simple way of doing
+21:20 - a simple spreadsheet animation whilst
+21:22 - using pure unity ECS stay tuned for the
+21:25 - next video where we're going to explore
+21:26 - the drama SH instance and see how much
+21:29 - better we can push this performance as
+21:31 - always you can download the project
+21:32 - files in utilities from in tcode
+21:34 - Montcalm if you liked the video
+21:35 - subscribe the channel for more unity
+21:37 - tutorials post any questions you have in
+21:39 - the comments and I'll do my best answer
+21:40 - alright see you next time
+21:43 - [Music]
+
+Cleaned transcript:
+
+in this video we're going to handle simple spreadsheet animation in a pure unity ECS game this is one of the simplest forms of animation and it can be done extremely fast so you can easily render thousands of units let's begin hello and welcome I'm your code monkey and this channel is all about helping you learn how to make your own games with NF tutorials made by a professional indie game developer so if you find the video helpful consider subscribing so the new dot stack is wonderful and works insanely fast but one of the biggest challenges is animation as of right now there is no implementation for the default Unity animations so you have to build your own system however you need to be careful to make sure your animation system doesn't become a performance bottleneck now when approached you can do is a mesh based system that is what I normally use in my videos where each unit has a mesh and just modifies that mesh per animation frame that's the approach I took in the Marines vs Zombies video in that scene each animation frame is a different mesh and the system just grabs the mesh that matches the current animation frame that is a great approach but also has some limitations and it's quite complex to handle lots of different meshes so here we're going to create the simplest form of animation just some basic spreadsheet animation so let's begin by writing some code let's start off by making a script to run our code so a new C sharp script let's call it the game hammer make a game object and just write a script okay okay so let's start off by just spawning a simple entity and drawing it now first of all if you have absolutely no idea how ECS works then check out the getting started video that videos should teach you the core of how ECS works and how to make an entity and add components in here I'm just going to quickly write the code to spawn our entity so here first we create a entity archetype so here we just create it very simple with the translation component right so that's our basic archetype now let's create it alright that's it very simple let's see for entities and they've been created so here we are and here the entity buzzer and indeed we have an entity with translation okay good now let's see how we can draw a sprite so let's make a system that won't be responsible for drawing it so let's put it in a different script and let's call this the sprite sheet renderer in here this will be a component system and now in here let's just cycle through all the entities with the translation component so we do entities for each we grab a reference to the translation component and here we're going to use graphics draw a mesh in order to draw them onto the screen now here you can see the parameters that will require so essentially we need a mesh and a material so let's have those as fields on the game and one now I'm only adding them in here just for testing if you were to use this in a complete game you would obviously place all of these assets in a more appropriate place but for now this is great for testing let's go into the editor and here on the game handler we can use for the quad mesh we can use the default quad and for the walking sprite sheet material let's create a new material in here okay so we have our material let's drag our reference okay and now here back in our code we need to access these fields from our spreadsheet renderer so again this case and let's make a static instance that we can access so we have a static instance that we set on awake and then a function to get the instance and through this instance we won't be able to access these fields again if you are using this code in a proper game you would manage your references in a better way we're just doing it this way just for testing so we can now go into the spreadsheet brendor we draw the mesh then we use the quad mesh for the position we use the translation that value for the quaternion we don't any rotation so quaternion identity and for the material we use that material all right so here is our nice function call we're using the graphics API in order to draw mesh so we're going to draw a simple quad using our material so let's see if it works any of here we are and there's our spreadsheet being correctly displayed all right so we have the basics for drawing a sprite with a custom system now obviously the sprite is meant to only display one frame of the sprite sheet and not the whole thing so let's see how we can do that now the way we're going to do is by using a custom shader and passing a specific parameter to that shader the shader won't then use that parameter in order to display only a single animation frame that way every single unit will have the same mesh the same material but different parameters so let's see the shader code here is the shader code it is slightly modified in order to support GPU instancing essentially so we can pass in different values once having the same mesh in the material now I must say I am NOT an expert in shaders this change code here is put together from several examples that I found online so if you see something in this shader that could be done better please let me know in the comments but the shader does work for what we're trying to do now the key elements are down here this is what defines what properties we can modify so you can see that we are receiving an instance color and an instance UV and down here we can access the instance properties so we're going to pass in the main text UV as an array of UV coordinates each unit will calculate its own coordinates and then the whole thing is run in a single drop ok so this is a shader now let's see how we can pass in these values to this shader so here we have our draw mesh code now in here we're going to swap two things first we're going to pass values to the shader using a material property block this is what actually contains the data that we wish to send to the shader so in here we can do set the vector Arang the name ID is the name that we gave in the shader so here we are it's the main text UV then we pass in an array of valence now in here this vector 4 is going to be the UV coordinates so let's define up here to see how it's set up essentially we have a width a height a X offset and a Y offset now these are all normalized values so regardless of texture size the value from 0 to 1 and with these values we're essentially going to display the entire texture so we have the offsets both at 0 so we're going to start drawing on the lower left corner and the width and height is 1 so the entire texture so we're going to draw the whole thing so we create a new vector 4 and we pass in first the width and the height and so on then in here we pass in this UV into our material properly what all right so that's our material setup now let's pass it into our drama cone so here is the version of the function that we want so first our mesh ok then the position then the rotation then the material then layer then we need a camera submission parties so for the camera let's pass in camera domain for the sub mesh we don't have a sub mesh so passing 0 and then finally our material property block all right so just like that we have our code to pass in custom values into our shader so let's see now before we test we need to assign our correct shader so here in the material let's go down into our custom and use the instance shader all right now let's test any of here we are indeed we can still see our nice spreadsheet and we can see the entire spreadsheet now let's make sure it's working by saying DV for a single frame so let's go back now here in order to display just a single frame essentially we need to mess around with the width and the offset so in this case we have four frames of animation so what we do is 1/4 that way we have the width of a single frame of animation so this is only takes now let's test any of there's our first frame of animation now let's test the second frame so in order to have the second frame we have the same width but we modify the UV offset essentially you modify by the UV width x in this case by 1 and yep there is our entity displaying the second frame of animation alright awesome so we can now play around with the values we put in the material property block in order to display different frames in order to have spreadsheet animation all we really need is to change those UV values over time so let's handle that now we're going to do our animation timing in ecs let's make a new script and call this the sprite sheet animation and now in here we're going to have two things we're going to have a component to hold all of the animation data and a system to animate that data so first start off with this simple component so component won't be a public struct let's call this the sprite sheet animation data and we obviously implement I component that so this component won't handle all the data that the animation system will require so in this case the first thing we need is the current frame so we store a public int for the current frame then we need to know the total frame count so if publican for the frame count this will be how many frames total the animation has then we also need to know the time spent in this current frame so it probably float for the frame timer and finally a timer max to know when to go to the next frame so again a public float for the frame time max so as the frame timer increases when it goes past the timer max we increase the current frame and as the current frame goes past the frame count it resets back to zero all right so this is all that we need for a very simple animation now let's have this component into our animation archetype so here we are so we add with translation and a type of animation that now let's also set up our starting values so here we are setting our component data for the translation let's arm off at 0 0 and for the data we start off at the current frame 0 we have a total of 4 frames of animation the frame timer starts at 0 and for internal max of 0.1 so essentially we're going to play this animation 10 frames per second right so we have our component data all set up now we need to make a system to actually animate so let's go back into our script and down here make a public class this will be the sprite sheet animation animate and will be a job component system now in here we're going to create a very simple job we want a job looping through all the entities with our animation data component so first it's only struct for our job and will be an eye job for each with the sprite sheet animation tab okay so here we are cycling through all of our entities with animation data now in here we go into the data in order to access the frame timer and increase it by del time now again in a job we cannot use time table time directly so we need to store it out here ok so we increase the frame timer by the Delta time then we need to test if the frame timer is past the frame time or max so when we are above the frame tunnel max we reduce the frame timer by the frame timer max and we increase the current frame so we increase the current frame and we get the remainder of the frame count so as you go past the frame count we look back into zero alright so that's it right here we have a very simple animation system that just deals with this simple data so now let's schedule our jump and only really need this to pass in the Delta all right so that's it and now in here we can also add a very simple verse compound in order to make it quite a bit faster okay so let's see this job in action ok here we are and nothing moves since we aren't updating it yet but if we go and inspect our entity there it is you can see the frame timer increasing with the Delta time and as it goes past the frame tarmacs which is point 1 you can see the current frame constantly increasing all right so we have our admission that are correctly working now let's calculate the UV frame based on that data so let's go into the regular system and in here the first thing we need to do is to make sure that our renderer only runs after the animation system so for that we can use the update after test in the type of spreadsheet animation system that way this system only runs after the animate has done its thing and now here on the at least for each we grab translation then also grab the animation data and then in here let's calculate the UV based on the animation done so for the width we have 1 divided by the total number of frames so we can do that frame count the height our sprite sheet is setup only horizontally so we only add one and for the X offset it will essentially be the width multiplied by the spreadsheet animation data dot current rent so as the current frame increases we shift what we show to the right all right so that's it let's test any of their it is we have our nice entity with a very nice simple spreadsheet animation awesome you can check the stats to see that we only have one quad so two triangles four vertices and here's our nice unit alright so now that we have the core working let's see how we can improve upon it now one of the things we can improve quite easily is regarding this UV calculation so right now we're doing it here inside a for each meaning we're doing it on the main thread sequentially for each unit so a much better approach is to simply calculate this once we are accounting the animation so right here this way we're going to benefit from multithreading as we calculate our UV so let's simply add another field to our animation data so in here a public vector for for our UV and here in our job code after we modify the current frame let's also calculate the UV so let's copy this code from here into here and we simply set the spreadsheet animation down UV and here this could be further improved by caching the width and height and everything that doesn't change but for now this will work in too long where you be insanely fast so now we are calculating the UV inside our job so we can go back into our River system and in here we grab the UV directly from the spreadsheet data also another piece of data that we can't complete inside our job in here if we check out the draw mesh you can see that there are several versions that work with a matrix we're going to need matrices later on when we use the instance method so let's see on weight calculating that right now let's go into our animation data and up here we also store a public matrix for our matrix so here on let's calculate the matrix so for that we go into the spreadsheet animation data dot matrix and we calculated using this static function to get the translation rotation and scale so we need a position so that means we need to go up here in order to add the translation component to this job now in here we just need to pass in translation doubt value what turned our identity since we don't have rotation and vector 3.14 our scape alright so this we have our matrix being calculated inside of this job which is running nice multithreaded code now just one last thing we need to do in order to handle sprite sorting order it's in here and let's simply come late a43 for our position so first we grab the normal position then we offset the position that Xen by the position that Y multiplied by a small value and then this position is what we use in there so essentially we're offsetting it on the set based on the Y this way we get automatic sprite sorting Gordon so sprites with a load Y won't be in front of sprites with a higher Y so that's it for calculating in here now we can go back into our render system and here we can now use the draw mesh function that contains both UV and the matrix all right that should do it so essentially here on our render system all we're doing is rendering our mesh so all the work in terms of calculating the UV the doing the animation or completing the matrix all that is done in a nice multithreaded code in here before that happens okay so let's run the code and see and yep awesome here we have our entity very nicely animated now let's change our code to spawn thousands of entities so here let's create that so here we have the code spawning a thousand entities let's randomize their position and their starting animation so we can see the difference all right so here we have a bunch of randomness so we can easily see everything and let's test any of here we have a thousand entities only using some very nice spreadsheet animation let's look at the stats and here we are a thousand entities running in the CPU in six milliseconds with 150 180 fps now let's increase it up to 10,000 and right here at 10,000 we can already see some performance issues so let's see how we can improve them here in a renderer we can easily improve a bunch of things first of all let's create the material property block outside and then simply reuse it that won't save a lot of garbage calls and the same thing for our unit vector so here we are reusing our UV array ion let's see how much we've improved so here we are and we had quite a nice improvement we went down from 50 milliseconds per frame down to 30 milliseconds per frame so right now we have 10,000 units of them being independently animated and everything is running at 30 frames per second so this right here is the simple way to do spreadsheet animation and render it there is a way that we can further improve upon this and get even better performance here in the code the main bottleneck is right here on the drum ashcombe essentially we're running through this function for each entity so we're doing this column as many entities as we have so if we have 10,000 we have 10,000 counts however on the graphics API we have another function and that is the draw mesh instance this one allows us to render multiple meshes in a single function call so we can greatly improve performance however that also contains a lot of tricky and limitations and weird things we must do it so we're going to cover that in the next video so right here we have built a nice simple spreadsheet animation system we have in here a component that handles all the data that the spreadsheet requires then we have a system which works on that data in order to update the current frame and also calculate the matrix and the UV required to render it this job is fully multithreaded and using burst so it's insanely fast and then we have our renderer which takes on that data and does a simple draw mesh comp and here on the archetype you can see that the only thing we need for this whole system to work is just the translation and the data component so again this is a very simple way of doing a simple spreadsheet animation whilst using pure unity ECS stay tuned for the next video where we're going to explore the drama SH instance and see how much better we can push this performance as always you can download the project files in utilities from in tcode Montcalm if you liked the video subscribe the channel for more unity tutorials post any questions you have in the comments and I'll do my best answer alright see you next time

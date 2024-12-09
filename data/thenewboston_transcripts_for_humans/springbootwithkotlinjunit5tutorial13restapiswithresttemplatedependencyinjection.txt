@@ -1,0 +1,496 @@
+With timestamps:
+
+00:00 - all right hi everyone and welcome back
+00:02 - to this tutorial
+00:03 - in this video i want to talk a bit more
+00:05 - about dependency injection in spring
+00:08 - boot
+00:08 - and how you can control which kind of
+00:10 - beam you want to inject into one of your
+00:12 - components
+00:13 - if there are multiple that might work
+00:17 - so one thing you might be wondering so
+00:19 - far is
+00:20 - what the heck do we even have this data
+00:22 - source for
+00:23 - it really just delegates every call that
+00:26 - you make
+00:26 - or currently the service delegates every
+00:29 - call that you make
+00:30 - to this data source so why this
+00:32 - additional layer
+00:34 - well as always when you have an
+00:35 - interface like this bank data source
+00:37 - here
+00:38 - it's because you want to have
+00:39 - potentially different implementations
+00:41 - for this
+00:42 - so here for instance you might have a
+00:44 - bank data source that
+00:45 - fetches your banks from a database you
+00:48 - might have a mock data source like the
+00:50 - one we currently have
+00:51 - or you might retrieve banks from the
+00:53 - network so there are different ways that
+00:55 - this data source
+00:56 - might do its job and really you don't
+00:59 - want to
+01:00 - couple yourself to a specific
+01:01 - implementation and also i just want to
+01:03 - show you how you can
+01:05 - inject one specific implementation of a
+01:08 - bean
+01:08 - if there are multiple of the same type
+01:11 - so here let's say we have another data
+01:13 - source
+01:14 - and we're actually going to do something
+01:15 - fun and get them from the network
+01:18 - so in this case from the new boston
+01:20 - chain
+01:21 - so we're going to look at one of the
+01:22 - banks and get the actual list
+01:24 - from one of this service but for now
+01:26 - let's just create the class here
+01:28 - and let's just call it network data
+01:30 - source
+01:32 - and of course this one should implement
+01:33 - our bank data source interface
+01:36 - so again in kotlin we just use a colon
+01:39 - and this means both implement for an
+01:42 - interface as well as
+01:43 - extends for an abstract class or another
+01:46 - class
+01:47 - then we have to implement all its
+01:48 - methods so for now
+01:50 - i'm not going to go through all of them
+01:52 - so we're going to use only
+01:54 - the retrieve banks method but we're
+01:56 - going to do this later
+01:57 - so for now i'm just going to annotate
+01:59 - this class just like the mock data
+02:02 - source
+02:02 - with the add repository annotation so
+02:05 - now something interesting happens
+02:07 - because we have
+02:08 - two different implementations of this
+02:10 - bank data source interface
+02:12 - and if you think back in our bank
+02:14 - service we're just telling spring boot
+02:16 - to give us an implementation
+02:18 - of this bank data source interface so
+02:20 - let's try to run our application
+02:23 - and see what happens all right so as you
+02:26 - can see the application is no longer
+02:28 - able to start successfully
+02:30 - and that's not a surprise because
+02:32 - springboot doesn't know which of those
+02:33 - two implementations you actually want to
+02:35 - have here
+02:36 - so it's going to tell you there are two
+02:39 - different
+02:40 - implementations found the mock bank data
+02:42 - source and the network data source
+02:45 - and it also tells you that the bank
+02:47 - service required a single bean
+02:50 - but two were found and it even tells you
+02:53 - what you might do to
+02:54 - prevent this situation so we can mark
+02:57 - one of them as primary so that would
+02:59 - just then be the default one
+03:01 - so if you say nothing more and just say
+03:03 - give me an object of type bank data
+03:05 - source
+03:06 - it would choose the one with the primary
+03:08 - annotation
+03:09 - you can also allow the consumer so in
+03:11 - this case the bank service
+03:12 - to accept multiple beans but we don't
+03:15 - want this here
+03:16 - or you can use the add qualifier
+03:19 - annotation
+03:20 - and this is what we're going to do in
+03:21 - this video so i'm going to close this up
+03:24 - for now
+03:25 - and now one way to solve this is we can
+03:28 - go into our network data source
+03:30 - and on the repository annotation we can
+03:32 - actually provide an
+03:33 - argument here which then acts as the
+03:36 - qualifier for this bean
+03:38 - so i'm going to say this is our network
+03:40 - repository or
+03:41 - network data source and then in the bank
+03:45 - service
+03:46 - i can now use the qualifier annotation
+03:49 - just like spring would suggested and
+03:51 - then in here i'm going to again use this
+03:53 - qualifier string to tell spring boot
+03:57 - which kind of bank data source being i'm
+04:00 - interested in here
+04:01 - and for this one i'm also going to
+04:03 - disable
+04:04 - the hints because the value is just not
+04:07 - really
+04:08 - a very useful hint and then let's try to
+04:11 - run our application again
+04:12 - and now it should fetch the network data
+04:15 - source
+04:16 - based on this qualifier here so now
+04:19 - if we check the startup it now says
+04:22 - again tomcat started on port 9000
+04:25 - and the application started successfully
+04:27 - all right and we can also verify that
+04:29 - it's actually using this data source now
+04:32 - if you want
+04:32 - so by going to our application on port
+04:35 - 9000
+04:36 - to api banks and then of course it will
+04:38 - give us an internal server error
+04:40 - just because the network data source
+04:43 - doesn't actually implement any of its
+04:45 - methods
+04:46 - so it's going to run into this to do
+04:48 - method and this will just throw an
+04:50 - exception and in fact you can also see
+04:52 - it down here
+04:53 - for now i'm just going to stop this and
+04:56 - close it down here so now let's actually
+04:58 - make this work by connecting to one of
+05:01 - the banks in the new boston
+05:02 - chain and just retrieving the list of
+05:05 - banks from there
+05:06 - so we're going to make a request to the
+05:08 - network
+05:09 - and in fact we're going to call the end
+05:11 - point that you saw
+05:13 - in one of the first videos if you recall
+05:15 - just very briefly
+05:17 - we looked at the new boston.com
+05:20 - and in this documentation here you can
+05:23 - see
+05:24 - there's the documentation for the bank's
+05:26 - endpoint
+05:28 - of one of the banks and so there you can
+05:30 - retrieve the list of the actual banks in
+05:33 - the network
+05:34 - so what we can do is we can take one of
+05:36 - those banks and in fact i'm going to
+05:38 - use the one that's also currently
+05:41 - recommended let's say for the network
+05:43 - and that's the one running on this ip
+05:45 - address
+05:46 - so if i enter this into the browser and
+05:50 - call the bank's endpoint you can see i
+05:53 - get a list here of
+05:54 - all the banks that it knows of which are
+05:56 - currently seven different banks
+05:58 - and these are the actual banks in the
+06:00 - new bus network
+06:01 - so let's go ahead and make this exact
+06:03 - request in our application and then
+06:06 - retrieve those banks from here and
+06:08 - springboot actually
+06:09 - provides a very good capability for this
+06:11 - kind of
+06:13 - functionality because it's really common
+06:16 - so without any new dependencies
+06:18 - for our project we can auto wire a bean
+06:22 - called a rest template so i'm going to
+06:24 - also call the variable here rest
+06:26 - template
+06:27 - and it's going to be of type rest
+06:29 - template which is really spring boots
+06:31 - way of making rest requests
+06:34 - and that's really all we're doing here
+06:36 - so this
+06:37 - end point here is really just another
+06:39 - rest end point just like the one that
+06:41 - we're building with our app
+06:43 - and now we're calling this one and this
+06:46 - is quite easy thanks to this rest
+06:47 - template
+06:49 - so in here we now have a bean of this
+06:51 - type and now in retrieve banks we can
+06:53 - make a request
+06:54 - by saying rest template dot get for
+06:57 - entity
+06:59 - so here i'm going to pass in the url for
+07:02 - this endpoint that we want to call
+07:04 - and get for entity the get really stands
+07:07 - for making a get request
+07:09 - and for entity means you want to parse
+07:11 - the response that you get
+07:13 - into an object of some kind so currently
+07:16 - we don't really have a representation
+07:18 - for the response that we get because it
+07:21 - actually has
+07:22 - this structure over here so it's going
+07:24 - to return
+07:25 - an object which has account next
+07:28 - previous
+07:29 - and then it has a collection of results
+07:32 - or an array of results in json
+07:34 - and each of those has the data for each
+07:37 - of the banks
+07:38 - so starting from here we actually can
+07:40 - use our bank entity
+07:42 - which will only take the fields that it
+07:44 - knows of so it's only going to take the
+07:46 - account number from here
+07:48 - it's going to take the transaction fee
+07:50 - and the trust
+07:52 - however we still need to represent the
+07:54 - entire structure and so we're missing
+07:56 - the results part
+07:58 - here and now to map this i'm going to
+08:00 - say this is called a bank list
+08:02 - and this will be a new dto so new data
+08:05 - transfer object that we're going to use
+08:07 - here
+08:07 - so for this i'm going to go into our
+08:09 - network package
+08:10 - and create a new one called dto because
+08:13 - we only need this one
+08:14 - inside our or for our network data
+08:17 - source so it makes sense to put this
+08:19 - into the scope
+08:20 - and so in here i'm just going to create
+08:21 - a new bank list
+08:23 - and so similar to our bank entity this
+08:25 - will be a simple data class
+08:28 - and it actually only has one field for
+08:30 - us because we're only interested
+08:32 - in the results and we can parse this
+08:35 - into a collection of our bank entities
+08:38 - and this way spring boot or rather
+08:40 - jackson our serializer
+08:42 - will only take a look at the fields that
+08:44 - we're looking for
+08:46 - so here we're going to take the results
+08:48 - but
+08:49 - it's basically just going to ignore the
+08:50 - count next and previous
+08:52 - because we're not interested in them and
+08:54 - it's only going to parse those
+08:56 - and of course we have to use a
+08:57 - collection of bank because this is in
+08:59 - fact an array in json
+09:01 - and then it's going to automatically
+09:03 - parse each of these objects
+09:05 - into one of our bank entities now we
+09:08 - will have to adjust something in our
+09:10 - bank entity later on
+09:12 - but let's first take a look what happens
+09:14 - if we do it just like this
+09:16 - all right so let's first store this into
+09:18 - a variable and i'm going to call this
+09:20 - one response
+09:21 - and now this call to get for entity will
+09:24 - actually give us a
+09:25 - response entity of bank list
+09:28 - and so with this one we can say we want
+09:31 - the
+09:32 - response dot body if there is one
+09:35 - and if there is one we want to take a
+09:37 - look at the results so this is kotlin's
+09:39 - way of handling nullable fields
+09:41 - this body object might be null and if it
+09:44 - is this entire expression will also be
+09:46 - null
+09:47 - but if it's not null we have a safe
+09:49 - access to its results field
+09:51 - and we can also again say if this entire
+09:54 - thing is null
+09:56 - then we want to throw a new io exception
+09:59 - and just say could not fetch banks from
+10:02 - the network so something must have gone
+10:05 - wrong
+10:06 - and otherwise we just want to return
+10:08 - these results
+10:09 - so results now if you take a look here
+10:12 - is actually of
+10:13 - type if it wants to show it is of type
+10:16 - collection of bank
+10:18 - and this is because we said we want to
+10:20 - fetch a bank list
+10:21 - so our body here is of type bank list
+10:24 - question mark this means it's nullable
+10:27 - it might be null
+10:28 - and so this is how we get our list of
+10:30 - banks and that's also what we want to
+10:32 - return
+10:33 - we can get rid of this one now because
+10:35 - it's already defined here
+10:37 - and then with this let's go ahead start
+10:39 - up the application and just see what
+10:40 - happens
+10:42 - all right so down here it says we
+10:44 - require a parameter
+10:46 - in our network data source of type rest
+10:49 - template
+10:51 - and this one could not be found so
+10:53 - actually we have something that we have
+10:55 - to do for this
+10:56 - and we can go into our application our
+10:59 - springboot application for this
+11:01 - and just provide a bean of this type so
+11:04 - this is quite easy to do
+11:05 - in springboot we can just call this
+11:08 - function whatever we want
+11:10 - and there is a so-called rest template
+11:12 - builder
+11:14 - so builder and this method is supposed
+11:17 - to provide a rest template
+11:19 - and quite simply if we just want to take
+11:21 - the default configuration
+11:23 - we can just say builder.build and that's
+11:25 - going to give us a rest template
+11:28 - so this bean annotation really just
+11:30 - means that spring boot is going to look
+11:31 - at this method
+11:32 - and it's going to use that to provide
+11:36 - beans of this type to any
+11:40 - components that request it so here again
+11:42 - it makes sense to say that you're not
+11:44 - really calling this specifically
+11:46 - so you can remove the unused warning
+11:49 - and now if spring boot encounters the
+11:52 - rest template that you want to auto wire
+11:54 - in your network data source
+11:56 - it's gonna see that there is a method
+11:59 - that's annotated with adbean
+12:01 - and that provides a rest template so
+12:04 - it's gonna take it from there
+12:05 - and so with this we should be fine so
+12:07 - let's run our
+12:09 - application again and this time it
+12:12 - should be aware of our bin here
+12:14 - and then inject the rest template all
+12:16 - right it's starting up successfully
+12:18 - so now let's see what happens when we
+12:20 - call our endpoint again
+12:22 - so on our port 9000 slash api slash
+12:26 - banks
+12:26 - well we actually get an error that the
+12:29 - uri is not absolute
+12:31 - so what we'll have to do in our network
+12:32 - data source
+12:34 - is this is not a proper url or it's not
+12:37 - enough
+12:38 - so we also need to include the protocol
+12:40 - for this
+12:41 - it's just http and so let's restart our
+12:44 - application here
+12:46 - and then let's go back
+12:49 - into the browser refresh
+12:52 - and we're actually getting an error here
+12:54 - so internal server error
+12:56 - when this occurs there will be some
+12:58 - stack trace usually in your spring boot
+13:00 - logs
+13:01 - so here you can take a look and try to
+13:04 - figure out what the problem is
+13:06 - i mentioned already we'll have to make a
+13:08 - change to our bank entity here
+13:11 - and this is because spring boot or
+13:14 - rather jackson will look for json
+13:18 - properties
+13:19 - json fields that have the same name as
+13:22 - your class fields so if we look into our
+13:26 - bank
+13:26 - entity here we see that we have account
+13:29 - number
+13:30 - in camel case trust and transaction fee
+13:33 - in camel case
+13:34 - however if we look at the
+13:36 - [Music]
+13:38 - at the actual endpoint here and what it
+13:39 - gives us it's an account number with
+13:42 - underscore
+13:43 - we have default transaction fee also in
+13:46 - snake case with the underscores
+13:48 - and trust so what we should do here
+13:52 - is we can use the json property
+13:55 - annotation
+13:56 - and this is very common on dtos
+14:00 - so data transfer objects to specify the
+14:03 - name
+14:04 - of the json property that you want to
+14:07 - parse here so it's the account number
+14:10 - then of course for
+14:11 - trust we don't necessarily need it
+14:15 - but just to be consistent with the other
+14:17 - fields
+14:18 - and also to make sure that it really
+14:20 - stays this way
+14:21 - even if we want to rename this
+14:23 - internally in our class
+14:25 - we just add the annotation let me also
+14:28 - get rid of the hints
+14:30 - and then this one is actually default
+14:33 - transaction
+14:34 - fee in the api and so this way now
+14:37 - our serializer knows how to handle these
+14:40 - so let's restart our application
+14:43 - and now the entire structure should
+14:45 - match the json response
+14:47 - so it's going to try to parse everything
+14:49 - into a bank list
+14:51 - so it's going to look for a field called
+14:53 - results
+14:54 - and it's going to try to parse the
+14:56 - results array from json
+14:58 - into a collection of bank and then
+15:01 - inside the bank it's now going to look
+15:03 - at the json properties
+15:04 - and it's going to parse the fields with
+15:06 - the same names
+15:08 - so let's go back to the browser and try
+15:10 - this again
+15:11 - and this time we can see we get the
+15:13 - actual data from the network
+15:16 - from the actual new boston chain
+15:20 - so from this specific bank in fact and
+15:22 - we get the exact same data that we have
+15:24 - here of course just a subset of it
+15:27 - because we just took those three fields
+15:29 - from it
+15:30 - but this is how you can make requests
+15:33 - using the spring root rest template
+15:36 - all right perfect so this way now you've
+15:38 - learned how to make network requests
+15:41 - from spring boot using the rest template
+15:43 - how to also customize the serialization
+15:47 - into an object or rather the
+15:50 - deserialization of json into an object
+15:53 - using json property and also how to
+15:56 - control dependency injection a bit more
+15:59 - using qualifiers and then
+16:02 - passing that qualifier also as a name
+16:06 - into your annotations such as repository
+16:09 - you can do the same for services other
+16:12 - components
+16:13 - so if you have here the service
+16:15 - annotation
+16:16 - component or whatever you can always
+16:19 - pass this kind of qualifier to them
+16:22 - all right so i hope that this was
+16:23 - interesting to you of course it's just
+16:26 - scratching the surface of
+16:28 - spring boot of jackson serialization and
+16:31 - also deserialization
+16:33 - how to handle network requests and some
+16:35 - best practices for it
+16:37 - but i still hope you learned something
+16:38 - from it and
+16:40 - if you did please leave a like below
+16:42 - again take a look at the links in the
+16:44 - description if you want to learn more
+16:46 - from from me or from my other resources
+16:50 - and then i will see you again in the
+16:52 - next video for a little recap and
+16:54 - conclusion
+
+Cleaned transcript:
+
+all right hi everyone and welcome back to this tutorial in this video i want to talk a bit more about dependency injection in spring boot and how you can control which kind of beam you want to inject into one of your components if there are multiple that might work so one thing you might be wondering so far is what the heck do we even have this data source for it really just delegates every call that you make or currently the service delegates every call that you make to this data source so why this additional layer well as always when you have an interface like this bank data source here it's because you want to have potentially different implementations for this so here for instance you might have a bank data source that fetches your banks from a database you might have a mock data source like the one we currently have or you might retrieve banks from the network so there are different ways that this data source might do its job and really you don't want to couple yourself to a specific implementation and also i just want to show you how you can inject one specific implementation of a bean if there are multiple of the same type so here let's say we have another data source and we're actually going to do something fun and get them from the network so in this case from the new boston chain so we're going to look at one of the banks and get the actual list from one of this service but for now let's just create the class here and let's just call it network data source and of course this one should implement our bank data source interface so again in kotlin we just use a colon and this means both implement for an interface as well as extends for an abstract class or another class then we have to implement all its methods so for now i'm not going to go through all of them so we're going to use only the retrieve banks method but we're going to do this later so for now i'm just going to annotate this class just like the mock data source with the add repository annotation so now something interesting happens because we have two different implementations of this bank data source interface and if you think back in our bank service we're just telling spring boot to give us an implementation of this bank data source interface so let's try to run our application and see what happens all right so as you can see the application is no longer able to start successfully and that's not a surprise because springboot doesn't know which of those two implementations you actually want to have here so it's going to tell you there are two different implementations found the mock bank data source and the network data source and it also tells you that the bank service required a single bean but two were found and it even tells you what you might do to prevent this situation so we can mark one of them as primary so that would just then be the default one so if you say nothing more and just say give me an object of type bank data source it would choose the one with the primary annotation you can also allow the consumer so in this case the bank service to accept multiple beans but we don't want this here or you can use the add qualifier annotation and this is what we're going to do in this video so i'm going to close this up for now and now one way to solve this is we can go into our network data source and on the repository annotation we can actually provide an argument here which then acts as the qualifier for this bean so i'm going to say this is our network repository or network data source and then in the bank service i can now use the qualifier annotation just like spring would suggested and then in here i'm going to again use this qualifier string to tell spring boot which kind of bank data source being i'm interested in here and for this one i'm also going to disable the hints because the value is just not really a very useful hint and then let's try to run our application again and now it should fetch the network data source based on this qualifier here so now if we check the startup it now says again tomcat started on port 9000 and the application started successfully all right and we can also verify that it's actually using this data source now if you want so by going to our application on port 9000 to api banks and then of course it will give us an internal server error just because the network data source doesn't actually implement any of its methods so it's going to run into this to do method and this will just throw an exception and in fact you can also see it down here for now i'm just going to stop this and close it down here so now let's actually make this work by connecting to one of the banks in the new boston chain and just retrieving the list of banks from there so we're going to make a request to the network and in fact we're going to call the end point that you saw in one of the first videos if you recall just very briefly we looked at the new boston.com and in this documentation here you can see there's the documentation for the bank's endpoint of one of the banks and so there you can retrieve the list of the actual banks in the network so what we can do is we can take one of those banks and in fact i'm going to use the one that's also currently recommended let's say for the network and that's the one running on this ip address so if i enter this into the browser and call the bank's endpoint you can see i get a list here of all the banks that it knows of which are currently seven different banks and these are the actual banks in the new bus network so let's go ahead and make this exact request in our application and then retrieve those banks from here and springboot actually provides a very good capability for this kind of functionality because it's really common so without any new dependencies for our project we can auto wire a bean called a rest template so i'm going to also call the variable here rest template and it's going to be of type rest template which is really spring boots way of making rest requests and that's really all we're doing here so this end point here is really just another rest end point just like the one that we're building with our app and now we're calling this one and this is quite easy thanks to this rest template so in here we now have a bean of this type and now in retrieve banks we can make a request by saying rest template dot get for entity so here i'm going to pass in the url for this endpoint that we want to call and get for entity the get really stands for making a get request and for entity means you want to parse the response that you get into an object of some kind so currently we don't really have a representation for the response that we get because it actually has this structure over here so it's going to return an object which has account next previous and then it has a collection of results or an array of results in json and each of those has the data for each of the banks so starting from here we actually can use our bank entity which will only take the fields that it knows of so it's only going to take the account number from here it's going to take the transaction fee and the trust however we still need to represent the entire structure and so we're missing the results part here and now to map this i'm going to say this is called a bank list and this will be a new dto so new data transfer object that we're going to use here so for this i'm going to go into our network package and create a new one called dto because we only need this one inside our or for our network data source so it makes sense to put this into the scope and so in here i'm just going to create a new bank list and so similar to our bank entity this will be a simple data class and it actually only has one field for us because we're only interested in the results and we can parse this into a collection of our bank entities and this way spring boot or rather jackson our serializer will only take a look at the fields that we're looking for so here we're going to take the results but it's basically just going to ignore the count next and previous because we're not interested in them and it's only going to parse those and of course we have to use a collection of bank because this is in fact an array in json and then it's going to automatically parse each of these objects into one of our bank entities now we will have to adjust something in our bank entity later on but let's first take a look what happens if we do it just like this all right so let's first store this into a variable and i'm going to call this one response and now this call to get for entity will actually give us a response entity of bank list and so with this one we can say we want the response dot body if there is one and if there is one we want to take a look at the results so this is kotlin's way of handling nullable fields this body object might be null and if it is this entire expression will also be null but if it's not null we have a safe access to its results field and we can also again say if this entire thing is null then we want to throw a new io exception and just say could not fetch banks from the network so something must have gone wrong and otherwise we just want to return these results so results now if you take a look here is actually of type if it wants to show it is of type collection of bank and this is because we said we want to fetch a bank list so our body here is of type bank list question mark this means it's nullable it might be null and so this is how we get our list of banks and that's also what we want to return we can get rid of this one now because it's already defined here and then with this let's go ahead start up the application and just see what happens all right so down here it says we require a parameter in our network data source of type rest template and this one could not be found so actually we have something that we have to do for this and we can go into our application our springboot application for this and just provide a bean of this type so this is quite easy to do in springboot we can just call this function whatever we want and there is a socalled rest template builder so builder and this method is supposed to provide a rest template and quite simply if we just want to take the default configuration we can just say builder.build and that's going to give us a rest template so this bean annotation really just means that spring boot is going to look at this method and it's going to use that to provide beans of this type to any components that request it so here again it makes sense to say that you're not really calling this specifically so you can remove the unused warning and now if spring boot encounters the rest template that you want to auto wire in your network data source it's gonna see that there is a method that's annotated with adbean and that provides a rest template so it's gonna take it from there and so with this we should be fine so let's run our application again and this time it should be aware of our bin here and then inject the rest template all right it's starting up successfully so now let's see what happens when we call our endpoint again so on our port 9000 slash api slash banks well we actually get an error that the uri is not absolute so what we'll have to do in our network data source is this is not a proper url or it's not enough so we also need to include the protocol for this it's just http and so let's restart our application here and then let's go back into the browser refresh and we're actually getting an error here so internal server error when this occurs there will be some stack trace usually in your spring boot logs so here you can take a look and try to figure out what the problem is i mentioned already we'll have to make a change to our bank entity here and this is because spring boot or rather jackson will look for json properties json fields that have the same name as your class fields so if we look into our bank entity here we see that we have account number in camel case trust and transaction fee in camel case however if we look at the at the actual endpoint here and what it gives us it's an account number with underscore we have default transaction fee also in snake case with the underscores and trust so what we should do here is we can use the json property annotation and this is very common on dtos so data transfer objects to specify the name of the json property that you want to parse here so it's the account number then of course for trust we don't necessarily need it but just to be consistent with the other fields and also to make sure that it really stays this way even if we want to rename this internally in our class we just add the annotation let me also get rid of the hints and then this one is actually default transaction fee in the api and so this way now our serializer knows how to handle these so let's restart our application and now the entire structure should match the json response so it's going to try to parse everything into a bank list so it's going to look for a field called results and it's going to try to parse the results array from json into a collection of bank and then inside the bank it's now going to look at the json properties and it's going to parse the fields with the same names so let's go back to the browser and try this again and this time we can see we get the actual data from the network from the actual new boston chain so from this specific bank in fact and we get the exact same data that we have here of course just a subset of it because we just took those three fields from it but this is how you can make requests using the spring root rest template all right perfect so this way now you've learned how to make network requests from spring boot using the rest template how to also customize the serialization into an object or rather the deserialization of json into an object using json property and also how to control dependency injection a bit more using qualifiers and then passing that qualifier also as a name into your annotations such as repository you can do the same for services other components so if you have here the service annotation component or whatever you can always pass this kind of qualifier to them all right so i hope that this was interesting to you of course it's just scratching the surface of spring boot of jackson serialization and also deserialization how to handle network requests and some best practices for it but i still hope you learned something from it and if you did please leave a like below again take a look at the links in the description if you want to learn more from from me or from my other resources and then i will see you again in the next video for a little recap and conclusion

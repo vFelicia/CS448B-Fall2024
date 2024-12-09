@@ -1,0 +1,276 @@
+With timestamps:
+
+00:00 - welcome back to another procedural
+00:02 - content generation tutorial for Godot
+00:05 - 3.0 in this installment we're going to
+00:08 - be looking at making random dungeons for
+00:13 - this demo our goal is to generate a
+00:14 - random dungeon like the one picture here
+00:17 - and for our purposes a a dungeon is a
+00:22 - series of rooms connected by corridors
+00:26 - that the player can wander around and
+00:28 - explore and maybe there's things in the
+00:30 - room maybe there's not we're not gonna
+00:31 - worry about that at the moment we want
+00:32 - to generate this layout it's randomly
+00:34 - out of rooms and corridors now there's a
+00:37 - lot of different ways to go about this
+00:39 - there's a lot of different popular
+00:41 - algorithms for generating dungeons this
+00:44 - is something people have been doing for
+00:45 - a long time some popular ones are to
+00:48 - generate the rooms in different
+00:50 - locations and then use maze generation
+00:52 - like we've done before to generate the
+00:54 - corridors between them but for this demo
+00:58 - I wanted to try something a little
+00:59 - different for this algorithm we're gonna
+01:02 - take advantage of godot's built-in
+01:03 - physics engine to create the map broadly
+01:07 - speaking we're gonna split it up into
+01:08 - three steps first we generate the rooms
+01:12 - then we find a path that connects the
+01:15 - rooms together generate the corridors
+01:17 - along that path and then we turn it into
+01:20 - a tile map that will be walls and open
+01:25 - spaces that a player can actually walk
+01:28 - around on and explore so we're going to
+01:32 - start with the room a room in this
+01:34 - context is a rectangular space large
+01:38 - enough for the player to walk around in
+01:39 - and that can contain objects of interest
+01:43 - like treasures or mobs or whatever else
+01:45 - you might be populating your dungeon
+01:47 - with we're going to use a rigidbody 2d
+01:49 - to represent the room this is where the
+01:52 - physics comes in so we're going to start
+01:55 - by making a an individual room object
+01:58 - that we can instance a bunch of to
+02:01 - create our dungeon so here's the node
+02:03 - layout we have a rigidbody 2d for the
+02:07 - room and a collision shaped 2d which I
+02:09 - have not added a shape to yet we're
+02:12 - going to do that in the scripts that we
+02:13 - randomize it so let's attach a script to
+02:16 - the room okay so this script is going to
+02:24 - have a size variable to keep track of
+02:26 - the size of our room and then we're
+02:29 - going to make a function called make
+02:32 - room where we give it a position and a
+02:35 - desired size and that's going to create
+02:38 - the collision shape basically so we set
+02:41 - our position equal to the given position
+02:45 - size is equal to the given size and we
+02:47 - create a rectangle shaped 2d that's
+02:51 - going to have its extents set to the
+02:56 - size and we attach that to the collision
+02:59 - shape 2d and that's our script to
+03:03 - generate a room the other things we need
+03:07 - to do are in the project settings we
+03:10 - need to make sure we set in the physics
+03:12 - 2d section the default gravity to zero I
+03:15 - don't want the room's falling off the
+03:18 - screen and for the room itself we're
+03:21 - gonna set the mode to character and a
+03:25 - rigidbody 2d in character mode can't
+03:28 - rotate so for this dungeon we want to
+03:32 - keep our rooms orthogonal so this will
+03:35 - keep them from rotating if they as they
+03:37 - collide with each other so now let's add
+03:40 - a main scene that's going to generate
+03:43 - our actual dungeon we're going to start
+03:47 - with a node 2d this is gonna be my main
+03:52 - scene and I'm gonna put a plane node in
+03:59 - there called rooms that's gonna act as a
+04:03 - container to hold all the rooms that we
+04:04 - generate in the main scene script we're
+04:07 - going to load the room scene so that we
+04:15 - can instance them and then we going to
+04:17 - set up some config variables that we're
+04:19 - gonna use
+04:20 - we're gonna have a tile size this is
+04:22 - gonna be how big the tiles of our tile
+04:24 - map that we generate will be
+04:27 - the number of rooms that we want to
+04:30 - generate we're going to have the minimum
+04:34 - minimum size is the minimum number of
+04:37 - tiles that a rooms width or height can
+04:41 - be and max size will be the Mexico in
+04:47 - are ready we want to call randomized to
+04:51 - initialize the random number generator
+04:53 - and then we're going to call our make
+04:55 - rooms function and this is going to be
+04:58 - the function that generates all of our
+05:04 - rooms so we have a loop we're going to
+05:07 - account to num rooms that's how many
+05:12 - rooms we want to generate we are going
+05:16 - to start out by setting them all to we
+05:20 - just put them all at the center or at 0
+05:22 - 0 we're going to set all the rooms to 0
+05:24 - 0 to begin with we're gonna make an
+05:27 - instance of the room and we're going to
+05:32 - randomize the width and height so for
+05:36 - width we want a random number between
+05:38 - min size and max size so we get that by
+05:41 - saying picking a random number exercise
+05:49 - - min silence so we pick a random number
+05:53 - between 0 and 6 for example and then add
+05:58 - 4 to it and then you have between 4 and
+06:00 - 10 we're going to do that for both the
+06:02 - width and the height so now we have two
+06:06 - random numbers so we can now call make
+06:09 - make room on the new room we made pass
+06:13 - it to position and pass it our size and
+06:18 - our size is going to be that width and
+06:22 - height times the tile size and then
+06:27 - we're going to add that room to the
+06:31 - rooms container all right so now we've
+06:35 - generated 50 random rooms but if you
+06:39 - were to run this you
+06:40 - see nothing because these collision
+06:42 - shapes don't have any visibility now we
+06:45 - can test to see what's going on by
+06:47 - turning on visible collision shapes and
+06:49 - if we run that we'll see a bunch of
+06:52 - squares are popping up and getting
+06:54 - pushed apart but we need to zoom out to
+06:58 - be able to see the actual rooms and the
+07:01 - whole layout and we probably want to do
+07:03 - some better visualization than the
+07:06 - collision than just the collision shape
+07:08 - debug because we don't want to leave
+07:09 - this on during actual gameplay so we can
+07:13 - add a camera 2d to this scene set the
+07:17 - current on and we're going to set the
+07:19 - zoom to 10 by 10 and that's gonna zoom
+07:22 - us out a bit so that will help us see
+07:25 - what's happening so you can see when we
+07:27 - run the rooms are all pushing each other
+07:30 - apart so that there are no overlaps
+07:32 - because that's what the physics engine
+07:34 - does for us so let's turn that debug
+07:36 - back off and instead we're going to draw
+07:39 - some outlines for the rooms so we'll be
+07:42 - able to see them and we're going to do
+07:44 - that using the draw function for a room
+07:52 - in so for each room we want to draw a
+08:00 - rectangle of its size so we'll use draw
+08:03 - a rect and the rectangle that we're
+08:07 - going to use is room room position -
+08:16 - room size room size times - that's the
+08:21 - size of the rectangle and we'll zoom in
+08:25 - here so you guys can see and we also
+08:29 - want to use a color I'm gonna pick a
+08:33 - greenish color here and false we don't
+08:37 - want the rectangles filled in and so
+08:40 - that means that we just need to call
+08:42 - this in our process function so that it
+08:46 - will update the drawing now when we run
+08:52 - the scene we just see the outlines of
+08:55 - the of the rooms as they're generated
+08:58 - let's also add an input function here so
+09:04 - that oops let's get up here and give
+09:08 - some space so that if we press the space
+09:10 - bar
+09:11 - so is action press that's UI select to
+09:17 - be to start with so if we press the
+09:20 - space bar I want to delete all the rooms
+09:22 - and respawn them so just to give us a
+09:25 - quick way to restart so we want to
+09:27 - delete everything in the rooms container
+09:34 - and then call make rooms again all right
+09:41 - there we go so now we can respawn our
+09:44 - rooms whenever we want by hitting the
+09:45 - space bar and get a different collection
+09:50 - of rooms ok so this is looking good but
+09:53 - let's add a couple other things we're
+09:55 - gonna add another variable here called
+09:57 - ha H spread horizontal spread and what
+10:01 - this means is how much we want the room
+10:06 - layout to be biased to be horizontal so
+10:10 - like a lot of games for example if we
+10:11 - were doing if you're doing this to
+10:13 - generate an isometric map you might want
+10:16 - the player to spend more time walking
+10:17 - right and left than they do up and down
+10:21 - so you want the dungeon to be laid out
+10:23 - more horizontally so this horizontal
+10:26 - spread is going to add some pixels to
+10:29 - the position when the room is spawned
+10:32 - and so the bigger we make this number
+10:34 - the more spread out they'll be
+10:35 - horizontally so that just means that
+10:37 - here what we want to do is change the
+10:39 - starting position so that the X has this
+10:43 - value in it between H spread and H
+10:49 - spread
+10:51 - and and so that means that when we run
+11:00 - it now we'll have a more horizontally
+11:03 - laid out dungeon okay the other thing
+11:11 - you might notice is that it takes a
+11:12 - little time for those rooms to stop
+11:15 - moving as they're overlapping so we can
+11:18 - influence that over here in our room
+11:22 - script when we spawn the shape we're
+11:28 - gonna set custom solver bias to about
+11:33 - 0.75 and you'll see if I run it what
+11:37 - that does is they're gonna stop moving a
+11:41 - little bit faster when they they're
+11:43 - gonna reach their finish point a little
+11:47 - more quickly so next what we want to do
+11:52 - is now that we've generated all these
+11:53 - rooms we want to delete or cull some of
+11:56 - them so I'm gonna make a variable called
+11:58 - cull here and this is a percentage so if
+12:01 - I set it to 0.5 that means when you go
+12:04 - through and cull we're gonna call about
+12:05 - half of the rooms so in make rooms what
+12:09 - we want to do is after we've added all
+12:12 - of them we're going to need to wait for
+12:16 - the movement to stop right we need to
+12:20 - give the physics engine a few seconds or
+12:23 - a little bit of time to spread the rooms
+12:26 - out and get them to stop moving so we
+12:28 - can use yield and just make a quick
+12:32 - timer I'm gonna do it for 1.1 seconds
+12:37 - and you can adjust this based on you
+12:42 - know how you want it to work we're
+12:44 - mainly doing this because we want to be
+12:45 - able to watch the room spread out and
+12:49 - then we're gonna we're gonna call the
+12:51 - rooms after this and calling the rooms
+12:54 - mean as we go through each room and
+12:56 - possibly delete it so for each room in
+13:01 - the rooms container
+13:08 - we're going to pick a random number and
+13:11 - if that random number is less than the
+13:14 - cull number we're going to delete the
+13:16 - room we can also if we didn't then we're
+13:24 - gonna set the room's mode to rigidbody2d
+13:29 - up modes static mode static will turn
+13:33 - this and turn that rigidbody2d into a
+13:35 - static body so it means it's not going
+13:37 - to move anymore or have any collision
+13:39 - physics happening because we're done
+13:40 - with that so now when we run it what
+13:43 - we're gonna see is that our rooms are
+13:45 - going to spread out and then some of
+13:47 - them are going to disappear to give us a
+13:51 - little more sparsely populated dungeon
+13:53 - and again you can adjust now these
+13:57 - numbers to give you all sorts of
+14:00 - different layouts depending on what kind
+14:02 - of dungeon you're going for all right so
+14:06 - that's a good start to our dungeon
+14:07 - generator we've got our rooms being
+14:09 - generated we're going to stop here and
+14:12 - in the next installment we're gonna look
+14:14 - at how we connect these rooms together
+14:17 - generating a path between them thanks
+14:20 - for watching I'll see you in the next
+14:22 - video
+14:31 - you
+
+Cleaned transcript:
+
+welcome back to another procedural content generation tutorial for Godot 3.0 in this installment we're going to be looking at making random dungeons for this demo our goal is to generate a random dungeon like the one picture here and for our purposes a a dungeon is a series of rooms connected by corridors that the player can wander around and explore and maybe there's things in the room maybe there's not we're not gonna worry about that at the moment we want to generate this layout it's randomly out of rooms and corridors now there's a lot of different ways to go about this there's a lot of different popular algorithms for generating dungeons this is something people have been doing for a long time some popular ones are to generate the rooms in different locations and then use maze generation like we've done before to generate the corridors between them but for this demo I wanted to try something a little different for this algorithm we're gonna take advantage of godot's builtin physics engine to create the map broadly speaking we're gonna split it up into three steps first we generate the rooms then we find a path that connects the rooms together generate the corridors along that path and then we turn it into a tile map that will be walls and open spaces that a player can actually walk around on and explore so we're going to start with the room a room in this context is a rectangular space large enough for the player to walk around in and that can contain objects of interest like treasures or mobs or whatever else you might be populating your dungeon with we're going to use a rigidbody 2d to represent the room this is where the physics comes in so we're going to start by making a an individual room object that we can instance a bunch of to create our dungeon so here's the node layout we have a rigidbody 2d for the room and a collision shaped 2d which I have not added a shape to yet we're going to do that in the scripts that we randomize it so let's attach a script to the room okay so this script is going to have a size variable to keep track of the size of our room and then we're going to make a function called make room where we give it a position and a desired size and that's going to create the collision shape basically so we set our position equal to the given position size is equal to the given size and we create a rectangle shaped 2d that's going to have its extents set to the size and we attach that to the collision shape 2d and that's our script to generate a room the other things we need to do are in the project settings we need to make sure we set in the physics 2d section the default gravity to zero I don't want the room's falling off the screen and for the room itself we're gonna set the mode to character and a rigidbody 2d in character mode can't rotate so for this dungeon we want to keep our rooms orthogonal so this will keep them from rotating if they as they collide with each other so now let's add a main scene that's going to generate our actual dungeon we're going to start with a node 2d this is gonna be my main scene and I'm gonna put a plane node in there called rooms that's gonna act as a container to hold all the rooms that we generate in the main scene script we're going to load the room scene so that we can instance them and then we going to set up some config variables that we're gonna use we're gonna have a tile size this is gonna be how big the tiles of our tile map that we generate will be the number of rooms that we want to generate we're going to have the minimum minimum size is the minimum number of tiles that a rooms width or height can be and max size will be the Mexico in are ready we want to call randomized to initialize the random number generator and then we're going to call our make rooms function and this is going to be the function that generates all of our rooms so we have a loop we're going to account to num rooms that's how many rooms we want to generate we are going to start out by setting them all to we just put them all at the center or at 0 0 we're going to set all the rooms to 0 0 to begin with we're gonna make an instance of the room and we're going to randomize the width and height so for width we want a random number between min size and max size so we get that by saying picking a random number exercise min silence so we pick a random number between 0 and 6 for example and then add 4 to it and then you have between 4 and 10 we're going to do that for both the width and the height so now we have two random numbers so we can now call make make room on the new room we made pass it to position and pass it our size and our size is going to be that width and height times the tile size and then we're going to add that room to the rooms container all right so now we've generated 50 random rooms but if you were to run this you see nothing because these collision shapes don't have any visibility now we can test to see what's going on by turning on visible collision shapes and if we run that we'll see a bunch of squares are popping up and getting pushed apart but we need to zoom out to be able to see the actual rooms and the whole layout and we probably want to do some better visualization than the collision than just the collision shape debug because we don't want to leave this on during actual gameplay so we can add a camera 2d to this scene set the current on and we're going to set the zoom to 10 by 10 and that's gonna zoom us out a bit so that will help us see what's happening so you can see when we run the rooms are all pushing each other apart so that there are no overlaps because that's what the physics engine does for us so let's turn that debug back off and instead we're going to draw some outlines for the rooms so we'll be able to see them and we're going to do that using the draw function for a room in so for each room we want to draw a rectangle of its size so we'll use draw a rect and the rectangle that we're going to use is room room position room size room size times that's the size of the rectangle and we'll zoom in here so you guys can see and we also want to use a color I'm gonna pick a greenish color here and false we don't want the rectangles filled in and so that means that we just need to call this in our process function so that it will update the drawing now when we run the scene we just see the outlines of the of the rooms as they're generated let's also add an input function here so that oops let's get up here and give some space so that if we press the space bar so is action press that's UI select to be to start with so if we press the space bar I want to delete all the rooms and respawn them so just to give us a quick way to restart so we want to delete everything in the rooms container and then call make rooms again all right there we go so now we can respawn our rooms whenever we want by hitting the space bar and get a different collection of rooms ok so this is looking good but let's add a couple other things we're gonna add another variable here called ha H spread horizontal spread and what this means is how much we want the room layout to be biased to be horizontal so like a lot of games for example if we were doing if you're doing this to generate an isometric map you might want the player to spend more time walking right and left than they do up and down so you want the dungeon to be laid out more horizontally so this horizontal spread is going to add some pixels to the position when the room is spawned and so the bigger we make this number the more spread out they'll be horizontally so that just means that here what we want to do is change the starting position so that the X has this value in it between H spread and H spread and and so that means that when we run it now we'll have a more horizontally laid out dungeon okay the other thing you might notice is that it takes a little time for those rooms to stop moving as they're overlapping so we can influence that over here in our room script when we spawn the shape we're gonna set custom solver bias to about 0.75 and you'll see if I run it what that does is they're gonna stop moving a little bit faster when they they're gonna reach their finish point a little more quickly so next what we want to do is now that we've generated all these rooms we want to delete or cull some of them so I'm gonna make a variable called cull here and this is a percentage so if I set it to 0.5 that means when you go through and cull we're gonna call about half of the rooms so in make rooms what we want to do is after we've added all of them we're going to need to wait for the movement to stop right we need to give the physics engine a few seconds or a little bit of time to spread the rooms out and get them to stop moving so we can use yield and just make a quick timer I'm gonna do it for 1.1 seconds and you can adjust this based on you know how you want it to work we're mainly doing this because we want to be able to watch the room spread out and then we're gonna we're gonna call the rooms after this and calling the rooms mean as we go through each room and possibly delete it so for each room in the rooms container we're going to pick a random number and if that random number is less than the cull number we're going to delete the room we can also if we didn't then we're gonna set the room's mode to rigidbody2d up modes static mode static will turn this and turn that rigidbody2d into a static body so it means it's not going to move anymore or have any collision physics happening because we're done with that so now when we run it what we're gonna see is that our rooms are going to spread out and then some of them are going to disappear to give us a little more sparsely populated dungeon and again you can adjust now these numbers to give you all sorts of different layouts depending on what kind of dungeon you're going for all right so that's a good start to our dungeon generator we've got our rooms being generated we're going to stop here and in the next installment we're gonna look at how we connect these rooms together generating a path between them thanks for watching I'll see you in the next video you

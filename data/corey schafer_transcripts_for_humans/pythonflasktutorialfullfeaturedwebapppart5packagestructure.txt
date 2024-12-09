@@ -1,0 +1,514 @@
+With timestamps:
+
+00:00 - hey there how's it going everybody in
+00:01 - this video we'll be restructuring our
+00:02 - application to be a package rather than
+00:05 - running it as a module now I usually
+00:07 - start off all my flask applications as
+00:08 - packages because you dodged a lot of
+00:10 - headaches by creating it as a package
+00:12 - from the beginning but I see a lot of
+00:14 - people using modules like we've done so
+00:15 - far so I wanted to show you the process
+00:18 - of converting these into using a package
+00:20 - and also the reasons why you'd want to
+00:22 - do that now if you remember in the last
+00:24 - video I said that I would be putting our
+00:26 - database models into our main
+00:28 - application rather than splitting them
+00:30 - into a different file like we did with
+00:32 - our forms and that's because the imports
+00:35 - can get a little weird so let me
+00:37 - actually split these models into a
+00:39 - different file so that we can see what
+00:40 - happens and what the problem is so I'll
+00:43 - create a file here within my main
+00:45 - project and I'm going to call this
+00:47 - models dot py to hold our database
+00:50 - models and now let's move those models
+00:53 - over to that models dot py file so I'm
+00:55 - going to grab the user and the post
+00:58 - models there and I'm going to cut those
+01:00 - out of our application and paste those
+01:03 - in to our models dot py file and we can
+01:06 - see that our classes use the model class
+01:08 - from our DB instance so we need to
+01:10 - import DB as well so let's grab that by
+01:14 - saying from flask blog which is our
+01:18 - application file import DB and our
+01:21 - models also use the date/time library
+01:23 - here so let's move that import from
+01:26 - flask blog as well so I'm going to go to
+01:28 - flask blog here and grab the date/time
+01:32 - module so I will cut that out and I will
+01:34 - paste that into the top of our models
+01:37 - here so I will save that and save our
+01:39 - flask blog as well and now within our
+01:42 - flask blog module we're going to be
+01:44 - using those models within our views so
+01:47 - we need to import those here as well
+01:49 - so we can import those just like we did
+01:53 - with our forms by saying from models
+01:55 - import and we want to import user and
+01:58 - post ok so now let's run our application
+02:01 - and see if everything worked now since I
+02:03 - mentioned that there was problems with
+02:05 - this we can probably take an educated
+02:06 - guess that this isn't going to work but
+02:08 - let's go ahead and try it anyway so if I
+02:10 - pull up my terminal here and try to run
+02:12 - this app
+02:13 - location just like we have been doing
+02:14 - I'll say Python flax blog PI and run
+02:17 - that and we can see we got an error we
+02:19 - got an import error cannot import name
+02:22 - user and actually what's going on here
+02:24 - is kind of a big mess now I'm going to
+02:27 - walk through this but if you don't quite
+02:29 - understand it then don't worry about it
+02:30 - right now the solution that we're gonna
+02:32 - put in place is going to be a lot more
+02:34 - simple than what this walkthrough of
+02:37 - this error is going to be okay so this
+02:39 - is called a circular import but even
+02:42 - this circular import is extra confusing
+02:44 - now I knew that this would fail but at
+02:46 - first this was really confusing to me as
+02:49 - to why this was failing on the user
+02:51 - import and not somewhere else so let's
+02:53 - walk through this step by step and
+02:55 - explain why it failed on the user import
+02:57 - so we're actually running our flask blog
+03:00 - script from the command line and when we
+03:02 - run that script it I'll pull this up it
+03:06 - imports the user and post from our
+03:08 - models module and any time Python
+03:11 - imports something from a module it still
+03:14 - runs that entire module now some people
+03:16 - aren't aware of that they think that it
+03:17 - only runs the section that is being
+03:19 - imported so when it runs the entire
+03:21 - models module then it comes into our
+03:24 - models script here and then it tries to
+03:26 - perform its imports so then it gets here
+03:29 - to this line and says from flask blog
+03:31 - import dB
+03:33 - so at this point this is where I would
+03:35 - expect that this would fail because
+03:37 - we've already seen the flask bog module
+03:39 - that's where we just came from and I
+03:41 - figured it would just say hey I've
+03:43 - already seen this flask blog module and
+03:45 - I haven't seen this DB variable that
+03:47 - you're asking for so if I switch over
+03:49 - here to flask blog the reason that
+03:51 - hasn't seen this DB variable yet is
+03:52 - because it's created after our import
+03:55 - statement so it's down here so then it
+03:57 - would throw an error saying that it
+03:59 - doesn't that it can't import this DB
+04:01 - variable but it doesn't do that it fails
+04:04 - on the user import so why does it do
+04:06 - that
+04:07 - so what's actually going on here is that
+04:09 - when we ran flask blog from the command
+04:11 - line we're running it directly with
+04:13 - Python and when we run a script directly
+04:15 - Python calls the name of that script
+04:18 - double underscore main and we've seen
+04:20 - that before with our conditional down
+04:22 - here at the bottom that's why we hit
+04:24 - this conditional to run our application
+04:26 - so we're running this
+04:27 - last blog script which Python calls
+04:29 - double underscore main and then we say
+04:32 - from models import user and post and
+04:35 - then it comes in and runs our models
+04:37 - script and when it gets to this line
+04:39 - here from flask blog import DB Python
+04:42 - actually hasn't seen flask blog yet
+04:45 - because Python named flash blog double
+04:47 - underscore main so it will actually run
+04:50 - our flask blog module for a second time
+04:52 - from the beginning so it comes in here
+04:55 - and then it Bri does all of these same
+04:58 - imports reruns this models import again
+05:00 - and when it gets to that models import
+05:02 - it says okay I've already seen this
+05:04 - models module but I don't know what this
+05:07 - user class is and the reason it doesn't
+05:09 - know what this user class is is because
+05:11 - it is below our imports in the models
+05:14 - module so that is why it fails on the
+05:16 - user import and not on the DB import now
+05:19 - I know that this is confusing but just
+05:21 - keep bearing with me so if I were to
+05:24 - come into my models module here and I
+05:28 - was to change this flask blog import
+05:30 - instead to double underscore main and
+05:33 - save that then this should still give us
+05:35 - an error but it should give us the error
+05:37 - that I initially expected saying that it
+05:39 - can't find the DB variable instead of
+05:41 - failing on the user so if I go back to
+05:44 - the command line and clear out that
+05:47 - output and then try to rerun this
+05:50 - application again then we can see that
+05:52 - we still do get an import error but it's
+05:54 - saying that it cannot import named dB
+05:56 - and just to walk through this one more
+05:58 - time the reason that it fails on this
+06:00 - import now is because when we come in
+06:02 - here to our Flash blog module it runs
+06:05 - this and it gets down and runs our
+06:08 - models import and when we come into our
+06:11 - models now we're running this import
+06:14 - here from main import DB and it's
+06:16 - already seen this main module but it
+06:19 - hasn't created this DB variable yet so
+06:22 - that's why it fails on that import now
+06:24 - we could fix this by moving our models
+06:27 - import here down below the creation of
+06:30 - our DB variable so if I move that below
+06:34 - there and save this and then rerun our
+06:37 - application from the command line so
+06:39 - I'll clear out that
+06:40 - and run that then we can see that this
+06:42 - seems to be running and if I pull up the
+06:46 - website here and rerun this or reload it
+06:48 - then we can see that it is running now
+06:50 - so even though our application is
+06:52 - running now the way that we actually
+06:53 - solved this problem is still really ugly
+06:55 - and if we were to run our application
+06:57 - where flash blog wasn't set the double
+06:59 - underscore main then all of this would
+07:01 - fail so for example when we created our
+07:04 - database and the last video by doing DB
+07:06 - create all in the command line that will
+07:09 - no longer work so let me show you this
+07:11 - by actually deleting our current site DB
+07:15 - file and I'm just going to delete it
+07:16 - here from my sidebar and now we'll try
+07:20 - to recreate this from the command line
+07:23 - so to try to recreate this I will stop
+07:26 - the running server with control C and
+07:28 - clear that out and I'll start up Python
+07:31 - just like we did in the last video we
+07:33 - can say from flask blog import DB then
+07:39 - we can see that at this point that this
+07:40 - fails and that's because it's looking
+07:43 - for DB in one of our imports and double
+07:46 - underscore main and at that point double
+07:48 - underscore main is no longer our flask
+07:50 - blog module so I know that all of that
+07:53 - was confusing but if you don't
+07:55 - understand it then it's no big deal the
+07:57 - solution that we're going to go over is
+07:58 - a lot easier than going through the
+08:00 - problem itself
+08:01 - I just wanted to justify why we were
+08:03 - restructuring this project and the
+08:05 - packages which is going to fix this now
+08:08 - just to give credit where credit is due
+08:09 - I first saw a good explanation of this
+08:12 - and a talk that miguel greenberg gave in
+08:15 - a 2016 PyCon talk called flask at scale
+08:19 - and that is where i first saw a good
+08:21 - explanation of these import issues okay
+08:24 - so the solution here is to set up our
+08:26 - code in a way to where we're not running
+08:28 - flask blog directly that way it won't
+08:31 - get that name of double underscore main
+08:34 - so the way we're going to do this is to
+08:36 - turn our application into a package and
+08:39 - using a package will make all of these
+08:41 - imports more simple and allow us to
+08:43 - separate things out better than we've
+08:45 - done now so in order to tell Python that
+08:48 - your directory is a package you just
+08:50 - need to create a double underscore and
+08:52 - knit file so
+08:53 - let's create a package with the name of
+08:56 - our application so I'm going to exit out
+08:59 - of Python here and now I'm going to pull
+09:01 - back up our project and our editor and
+09:04 - within our project I'm going to create a
+09:08 - new folder with the same name as our
+09:11 - application so I'm going to create a new
+09:13 - folder here and I'm going to call this
+09:15 - flask blog all lowercase and within this
+09:18 - folder we'll create a double underscore
+09:20 - and knit dot PI file so I will right
+09:24 - click on here and say new file and this
+09:26 - is double underscore a knit double
+09:28 - underscore dot PI and again I know that
+09:31 - the text is a little small to see over
+09:32 - here in the side bar but I'll show a
+09:34 - larger version of this structure here in
+09:36 - a second ok so now we have a new package
+09:40 - with the name of our application so now
+09:43 - let's move some of our current project
+09:45 - into this new package so I'm going to
+09:47 - open this in finder and if you're
+09:50 - working on Windows then you can do this
+09:52 - and Explorer so now let's move
+09:53 - everything from our applications so far
+09:55 - into this package except for the module
+09:58 - named flash blog let's leave that where
+10:00 - it is so the forms and models and static
+10:03 - folder and template folder we're going
+10:05 - to move all of these into the flash blog
+10:07 - package so I will grab all of those and
+10:10 - move those in to our flash blog package
+10:14 - now this pie cache don't worry about
+10:16 - that it's just something that gets
+10:18 - created we can actually just delete that
+10:19 - for now ok so now in our project
+10:21 - directory we can see that we have this
+10:23 - flask blog package and this flask blog
+10:25 - module so now I'm going to go back to
+10:28 - sublime text and I'm going to close
+10:31 - everything down here for now ok now we
+10:34 - want to open up that double underscore
+10:36 - and knit dot pie file
+10:38 - so our init file in our package will be
+10:40 - where we initialize our application and
+10:42 - bring together different components so
+10:45 - I'm going to have our previous flask
+10:47 - blog module open here and we can
+10:50 - separate out certain parts so I'm going
+10:52 - to open up our previous application
+10:54 - module and now I'm going to grab all of
+10:56 - the imports and the parts where we are
+10:58 - creating our application so I'm going to
+11:01 - copy from our imports all the way down
+11:03 - to the creating the instance of our
+11:06 - database so
+11:07 - we'll cut those out and paste those in
+11:10 - to the Annette PI file and now in our
+11:12 - old application module now we're left
+11:15 - with a lot of route information so let's
+11:18 - actually separate out our routes into
+11:20 - their own module so that everything has
+11:23 - its own place so I'll create a new file
+11:25 - within our package called Ralph's py so
+11:29 - create a new file call this routes dot
+11:32 - py and now let's grab all of that route
+11:34 - information and paste it into routes and
+11:37 - I'm gonna grab the dummy data and the
+11:39 - models import as well so I will copy all
+11:42 - of this route information I'm basically
+11:44 - going to copy everything except where
+11:46 - we're running our application so we
+11:47 - don't want the if name is equal to main
+11:50 - conditional so I will cut out all of
+11:53 - that clean this up a bit and paste that
+11:56 - in two routes okay so now all we're left
+12:00 - with in our original application file is
+12:02 - what we were using to run the
+12:04 - application so let's leave this here and
+12:07 - when we want to test what we've got
+12:08 - we'll still be running this file that's
+12:11 - only job is to grab the app and run it
+12:14 - so first of all since running the
+12:17 - application is the only purpose of this
+12:19 - file now let's rename this to run dot pi
+12:22 - so that that's clear so I'm going to
+12:25 - come over here and right click on this
+12:27 - file and rename this and I'm going to
+12:29 - rename this to run dot PI that way we
+12:32 - don't confuse the name of that module
+12:34 - with our new package that is now named
+12:37 - flask blog okay so we're still running
+12:39 - app dot run within this file so we need
+12:42 - to import the app to run from our
+12:46 - package and to do that we can simply say
+12:48 - from flask blog import app and when
+12:53 - you're working with packages that is
+12:55 - going to import from the Annette PI file
+12:58 - within that package so that app variable
+13:02 - has to exist within Annette PI and it
+13:05 - does you can see that we're creating it
+13:06 - here so it will have that okay and
+13:08 - lastly we need to go through our other
+13:10 - files and clean up our imports so some
+13:13 - of the imports within this PI file were
+13:17 - only used in our routes so we still need
+13:19 - to import
+13:20 - flasks here but render template and URL
+13:24 - for and all of those were only used in
+13:27 - our routes so let's move those there so
+13:29 - I'm going to copy this entire line and
+13:32 - paste those in to the routes and we
+13:36 - don't need this flask object here we
+13:38 - only need render template URL for flash
+13:41 - and redirect so now if we go back to the
+13:43 - knit dot pi file then we can remove all
+13:46 - of those imports except for flask so
+13:49 - we'll keep that okay so we still need
+13:51 - this SQL alchemy here since we use it
+13:54 - for our app initialization down here on
+13:57 - line 8 now the forms we were also only
+14:00 - using within our routes so let's grab
+14:03 - those and move those there so I'm just
+14:04 - going to cut those out and now paste
+14:07 - these into our routes and also now when
+14:11 - we do these imports instead of importing
+14:13 - from models and forms like we did before
+14:16 - now that we're in a package we are going
+14:19 - to use the package name and then the
+14:22 - module name so it's going to be flask
+14:23 - blog dot forms and flask blog dot
+14:27 - modules so let's save that and also if
+14:30 - we scroll down here a bit in our routes
+14:31 - then we can see that our decorators are
+14:35 - using this app that so it uses the app
+14:38 - to create these decorators so we need to
+14:41 - import that app variable into our routes
+14:44 - also so we can import that from our
+14:47 - package so just like we saw before we
+14:50 - can say from flask blog import app now
+14:54 - if we go back to our app initialization
+14:57 - then we need to import our routes here
+15:00 - also so that when we run our application
+15:02 - it can find those now even though we
+15:04 - fixed the problems with the messy
+15:06 - imports we still have to watch for
+15:08 - circular imports so remember that our
+15:11 - routes are importing this app variable
+15:14 - here so we can't import the routes at
+15:16 - the top of the file or else we'll get
+15:19 - into one of those circular imports again
+15:21 - so instead let's do the import of the
+15:23 - routes after we've made the application
+15:26 - and installation and put it down here at
+15:29 - the bottom so I'll say from flask blog
+15:32 - import
+15:34 - routes and save that okay so we're
+15:37 - almost done here so let's also check our
+15:39 - forms and models modules as well so
+15:41 - let's open both of those up so first
+15:43 - let's check our forms so in forms we're
+15:46 - not using any other modules from our
+15:48 - package we're just using packages that
+15:51 - we pip installed so nothing needs to be
+15:53 - changed there so lastly we'll check our
+15:55 - modules or models okay and here's where
+15:58 - we had our messy workaround from before
+16:00 - now instead of importing from main we
+16:03 - can simply import from flask blog
+16:05 - because now we know that's not going to
+16:08 - be called double underscore main anymore
+16:10 - so we can just say from flask vlog
+16:14 - import DB and that's going to come into
+16:17 - the Annette PI file and import this DB
+16:20 - variable here okay so that should do it
+16:23 - but before I run this let me show you
+16:25 - the tree structure of what we've done in
+16:27 - this video so you can get a better idea
+16:29 - of what this looks like
+16:31 - so I've installed a nice command-line
+16:33 - tool here called tree that allows me to
+16:37 - print out this structure okay so we can
+16:39 - see that in our project directory we now
+16:41 - have this flask blog package and a
+16:44 - module called run dot PI that will run
+16:48 - our application now within the flask
+16:50 - blog package we have this double
+16:53 - underscore Annette dot PI file that
+16:56 - tells python that this is a package and
+16:58 - it also initializes and ties together
+17:01 - everything that we need for our app and
+17:03 - we now have a routes file that contains
+17:06 - all of the logic for those and
+17:08 - everything else should be familiar from
+17:10 - our other videos but we've just cleaned
+17:12 - up the imports so we have the forms and
+17:15 - the models modules and also we still
+17:18 - have the static and the templates
+17:20 - folders and we didn't change anything
+17:22 - within those two directories okay so now
+17:25 - let's run our application and make sure
+17:27 - that this all works properly so I'm
+17:29 - going to clear this out and run our
+17:33 - application now remember instead of
+17:35 - running flask blog PI we're now going to
+17:38 - do Python run PI okay so we can see that
+17:41 - we didn't get any errors and it says
+17:43 - that it's running in debug mode so let
+17:45 - me open this up and reload
+17:48 - this page and see if all of this works
+17:50 - so I'll just click on a few links here
+17:53 - it looks like all this is still working
+17:55 - and let's see if our fake email login
+18:00 - still works here and everything okay so
+18:03 - it looks like all of that still works
+18:05 - well so that's good now not only does
+18:07 - our application network in our browser
+18:09 - but we can also create our database
+18:11 - again which failed when we tried this
+18:12 - before so if I pull up my command line
+18:15 - and stop our server and clear this out
+18:18 - and now try to create this database
+18:20 - again I can say Python to start up our
+18:22 - Python interpreter and from our package
+18:25 - so I'll do from flask blog import dB and
+18:29 - that worked fine this is just that SQL
+18:31 - alchemy message it's not a failure so
+18:35 - now we can also import our models so we
+18:39 - can say from flask blog dot models
+18:43 - import user and post and now remember
+18:47 - that we deleted our site DB file so
+18:50 - let's create that again so we can do DB
+18:52 - create all and run that and now if we do
+18:57 - a user dot query dot all then we should
+19:00 - get an empty list and that's what we get
+19:02 - okay so now I'm going to exit out of our
+19:04 - Python interpreter and now I'm going to
+19:06 - rerun that tree command again to see
+19:09 - this structure and again it creates
+19:11 - these podcast directories don't worry
+19:13 - about those but the important thing is
+19:15 - that we can see that the site dot DB
+19:18 - file is now inside the package and
+19:21 - that's because we set it to a relative
+19:23 - location of being in the same directory
+19:25 - as that database so that's fine for now
+19:28 - okay so I think that is going to do it
+19:30 - for this video now I know that in this
+19:32 - restructuring video we didn't get much
+19:34 - further in our actual application in
+19:37 - terms of adding new features but
+19:38 - hopefully you have a better idea for why
+19:40 - it's a good idea to structure these
+19:42 - applications in this way and how it can
+19:44 - save you a lot of headaches down the
+19:45 - road so in the next video we will be
+19:48 - getting back to adding features and
+19:49 - we'll modify our register and login
+19:51 - routes so that we can actually create
+19:53 - real users and our database and be able
+19:56 - to authenticate them and also you know
+19:59 - login and logout and things like that so
+20:01 - if anyone has any questions about what
+20:02 - we covered in this video then feel free
+20:04 - to ask in the comment section below and
+20:06 - I'll do my best to answer those and if
+20:08 - you enjoy these tutorials and would like
+20:09 - to support them then there are several
+20:10 - ways you can do that the easiest way is
+20:12 - to simply like the video and give it a
+20:13 - thumbs up and also it's a huge help to
+20:15 - share these videos with anyone who you
+20:17 - think would find them useful and if you
+20:18 - have to mean so you can contribute
+20:19 - through patreon and there's a link to
+20:21 - that page in the description section
+20:22 - below be sure to subscribe for future
+20:23 - videos and thank you all for watching
+20:36 - you
+
+Cleaned transcript:
+
+hey there how's it going everybody in this video we'll be restructuring our application to be a package rather than running it as a module now I usually start off all my flask applications as packages because you dodged a lot of headaches by creating it as a package from the beginning but I see a lot of people using modules like we've done so far so I wanted to show you the process of converting these into using a package and also the reasons why you'd want to do that now if you remember in the last video I said that I would be putting our database models into our main application rather than splitting them into a different file like we did with our forms and that's because the imports can get a little weird so let me actually split these models into a different file so that we can see what happens and what the problem is so I'll create a file here within my main project and I'm going to call this models dot py to hold our database models and now let's move those models over to that models dot py file so I'm going to grab the user and the post models there and I'm going to cut those out of our application and paste those in to our models dot py file and we can see that our classes use the model class from our DB instance so we need to import DB as well so let's grab that by saying from flask blog which is our application file import DB and our models also use the date/time library here so let's move that import from flask blog as well so I'm going to go to flask blog here and grab the date/time module so I will cut that out and I will paste that into the top of our models here so I will save that and save our flask blog as well and now within our flask blog module we're going to be using those models within our views so we need to import those here as well so we can import those just like we did with our forms by saying from models import and we want to import user and post ok so now let's run our application and see if everything worked now since I mentioned that there was problems with this we can probably take an educated guess that this isn't going to work but let's go ahead and try it anyway so if I pull up my terminal here and try to run this app location just like we have been doing I'll say Python flax blog PI and run that and we can see we got an error we got an import error cannot import name user and actually what's going on here is kind of a big mess now I'm going to walk through this but if you don't quite understand it then don't worry about it right now the solution that we're gonna put in place is going to be a lot more simple than what this walkthrough of this error is going to be okay so this is called a circular import but even this circular import is extra confusing now I knew that this would fail but at first this was really confusing to me as to why this was failing on the user import and not somewhere else so let's walk through this step by step and explain why it failed on the user import so we're actually running our flask blog script from the command line and when we run that script it I'll pull this up it imports the user and post from our models module and any time Python imports something from a module it still runs that entire module now some people aren't aware of that they think that it only runs the section that is being imported so when it runs the entire models module then it comes into our models script here and then it tries to perform its imports so then it gets here to this line and says from flask blog import dB so at this point this is where I would expect that this would fail because we've already seen the flask bog module that's where we just came from and I figured it would just say hey I've already seen this flask blog module and I haven't seen this DB variable that you're asking for so if I switch over here to flask blog the reason that hasn't seen this DB variable yet is because it's created after our import statement so it's down here so then it would throw an error saying that it doesn't that it can't import this DB variable but it doesn't do that it fails on the user import so why does it do that so what's actually going on here is that when we ran flask blog from the command line we're running it directly with Python and when we run a script directly Python calls the name of that script double underscore main and we've seen that before with our conditional down here at the bottom that's why we hit this conditional to run our application so we're running this last blog script which Python calls double underscore main and then we say from models import user and post and then it comes in and runs our models script and when it gets to this line here from flask blog import DB Python actually hasn't seen flask blog yet because Python named flash blog double underscore main so it will actually run our flask blog module for a second time from the beginning so it comes in here and then it Bri does all of these same imports reruns this models import again and when it gets to that models import it says okay I've already seen this models module but I don't know what this user class is and the reason it doesn't know what this user class is is because it is below our imports in the models module so that is why it fails on the user import and not on the DB import now I know that this is confusing but just keep bearing with me so if I were to come into my models module here and I was to change this flask blog import instead to double underscore main and save that then this should still give us an error but it should give us the error that I initially expected saying that it can't find the DB variable instead of failing on the user so if I go back to the command line and clear out that output and then try to rerun this application again then we can see that we still do get an import error but it's saying that it cannot import named dB and just to walk through this one more time the reason that it fails on this import now is because when we come in here to our Flash blog module it runs this and it gets down and runs our models import and when we come into our models now we're running this import here from main import DB and it's already seen this main module but it hasn't created this DB variable yet so that's why it fails on that import now we could fix this by moving our models import here down below the creation of our DB variable so if I move that below there and save this and then rerun our application from the command line so I'll clear out that and run that then we can see that this seems to be running and if I pull up the website here and rerun this or reload it then we can see that it is running now so even though our application is running now the way that we actually solved this problem is still really ugly and if we were to run our application where flash blog wasn't set the double underscore main then all of this would fail so for example when we created our database and the last video by doing DB create all in the command line that will no longer work so let me show you this by actually deleting our current site DB file and I'm just going to delete it here from my sidebar and now we'll try to recreate this from the command line so to try to recreate this I will stop the running server with control C and clear that out and I'll start up Python just like we did in the last video we can say from flask blog import DB then we can see that at this point that this fails and that's because it's looking for DB in one of our imports and double underscore main and at that point double underscore main is no longer our flask blog module so I know that all of that was confusing but if you don't understand it then it's no big deal the solution that we're going to go over is a lot easier than going through the problem itself I just wanted to justify why we were restructuring this project and the packages which is going to fix this now just to give credit where credit is due I first saw a good explanation of this and a talk that miguel greenberg gave in a 2016 PyCon talk called flask at scale and that is where i first saw a good explanation of these import issues okay so the solution here is to set up our code in a way to where we're not running flask blog directly that way it won't get that name of double underscore main so the way we're going to do this is to turn our application into a package and using a package will make all of these imports more simple and allow us to separate things out better than we've done now so in order to tell Python that your directory is a package you just need to create a double underscore and knit file so let's create a package with the name of our application so I'm going to exit out of Python here and now I'm going to pull back up our project and our editor and within our project I'm going to create a new folder with the same name as our application so I'm going to create a new folder here and I'm going to call this flask blog all lowercase and within this folder we'll create a double underscore and knit dot PI file so I will right click on here and say new file and this is double underscore a knit double underscore dot PI and again I know that the text is a little small to see over here in the side bar but I'll show a larger version of this structure here in a second ok so now we have a new package with the name of our application so now let's move some of our current project into this new package so I'm going to open this in finder and if you're working on Windows then you can do this and Explorer so now let's move everything from our applications so far into this package except for the module named flash blog let's leave that where it is so the forms and models and static folder and template folder we're going to move all of these into the flash blog package so I will grab all of those and move those in to our flash blog package now this pie cache don't worry about that it's just something that gets created we can actually just delete that for now ok so now in our project directory we can see that we have this flask blog package and this flask blog module so now I'm going to go back to sublime text and I'm going to close everything down here for now ok now we want to open up that double underscore and knit dot pie file so our init file in our package will be where we initialize our application and bring together different components so I'm going to have our previous flask blog module open here and we can separate out certain parts so I'm going to open up our previous application module and now I'm going to grab all of the imports and the parts where we are creating our application so I'm going to copy from our imports all the way down to the creating the instance of our database so we'll cut those out and paste those in to the Annette PI file and now in our old application module now we're left with a lot of route information so let's actually separate out our routes into their own module so that everything has its own place so I'll create a new file within our package called Ralph's py so create a new file call this routes dot py and now let's grab all of that route information and paste it into routes and I'm gonna grab the dummy data and the models import as well so I will copy all of this route information I'm basically going to copy everything except where we're running our application so we don't want the if name is equal to main conditional so I will cut out all of that clean this up a bit and paste that in two routes okay so now all we're left with in our original application file is what we were using to run the application so let's leave this here and when we want to test what we've got we'll still be running this file that's only job is to grab the app and run it so first of all since running the application is the only purpose of this file now let's rename this to run dot pi so that that's clear so I'm going to come over here and right click on this file and rename this and I'm going to rename this to run dot PI that way we don't confuse the name of that module with our new package that is now named flask blog okay so we're still running app dot run within this file so we need to import the app to run from our package and to do that we can simply say from flask blog import app and when you're working with packages that is going to import from the Annette PI file within that package so that app variable has to exist within Annette PI and it does you can see that we're creating it here so it will have that okay and lastly we need to go through our other files and clean up our imports so some of the imports within this PI file were only used in our routes so we still need to import flasks here but render template and URL for and all of those were only used in our routes so let's move those there so I'm going to copy this entire line and paste those in to the routes and we don't need this flask object here we only need render template URL for flash and redirect so now if we go back to the knit dot pi file then we can remove all of those imports except for flask so we'll keep that okay so we still need this SQL alchemy here since we use it for our app initialization down here on line 8 now the forms we were also only using within our routes so let's grab those and move those there so I'm just going to cut those out and now paste these into our routes and also now when we do these imports instead of importing from models and forms like we did before now that we're in a package we are going to use the package name and then the module name so it's going to be flask blog dot forms and flask blog dot modules so let's save that and also if we scroll down here a bit in our routes then we can see that our decorators are using this app that so it uses the app to create these decorators so we need to import that app variable into our routes also so we can import that from our package so just like we saw before we can say from flask blog import app now if we go back to our app initialization then we need to import our routes here also so that when we run our application it can find those now even though we fixed the problems with the messy imports we still have to watch for circular imports so remember that our routes are importing this app variable here so we can't import the routes at the top of the file or else we'll get into one of those circular imports again so instead let's do the import of the routes after we've made the application and installation and put it down here at the bottom so I'll say from flask blog import routes and save that okay so we're almost done here so let's also check our forms and models modules as well so let's open both of those up so first let's check our forms so in forms we're not using any other modules from our package we're just using packages that we pip installed so nothing needs to be changed there so lastly we'll check our modules or models okay and here's where we had our messy workaround from before now instead of importing from main we can simply import from flask blog because now we know that's not going to be called double underscore main anymore so we can just say from flask vlog import DB and that's going to come into the Annette PI file and import this DB variable here okay so that should do it but before I run this let me show you the tree structure of what we've done in this video so you can get a better idea of what this looks like so I've installed a nice commandline tool here called tree that allows me to print out this structure okay so we can see that in our project directory we now have this flask blog package and a module called run dot PI that will run our application now within the flask blog package we have this double underscore Annette dot PI file that tells python that this is a package and it also initializes and ties together everything that we need for our app and we now have a routes file that contains all of the logic for those and everything else should be familiar from our other videos but we've just cleaned up the imports so we have the forms and the models modules and also we still have the static and the templates folders and we didn't change anything within those two directories okay so now let's run our application and make sure that this all works properly so I'm going to clear this out and run our application now remember instead of running flask blog PI we're now going to do Python run PI okay so we can see that we didn't get any errors and it says that it's running in debug mode so let me open this up and reload this page and see if all of this works so I'll just click on a few links here it looks like all this is still working and let's see if our fake email login still works here and everything okay so it looks like all of that still works well so that's good now not only does our application network in our browser but we can also create our database again which failed when we tried this before so if I pull up my command line and stop our server and clear this out and now try to create this database again I can say Python to start up our Python interpreter and from our package so I'll do from flask blog import dB and that worked fine this is just that SQL alchemy message it's not a failure so now we can also import our models so we can say from flask blog dot models import user and post and now remember that we deleted our site DB file so let's create that again so we can do DB create all and run that and now if we do a user dot query dot all then we should get an empty list and that's what we get okay so now I'm going to exit out of our Python interpreter and now I'm going to rerun that tree command again to see this structure and again it creates these podcast directories don't worry about those but the important thing is that we can see that the site dot DB file is now inside the package and that's because we set it to a relative location of being in the same directory as that database so that's fine for now okay so I think that is going to do it for this video now I know that in this restructuring video we didn't get much further in our actual application in terms of adding new features but hopefully you have a better idea for why it's a good idea to structure these applications in this way and how it can save you a lot of headaches down the road so in the next video we will be getting back to adding features and we'll modify our register and login routes so that we can actually create real users and our database and be able to authenticate them and also you know login and logout and things like that so if anyone has any questions about what we covered in this video then feel free to ask in the comment section below and I'll do my best to answer those and if you enjoy these tutorials and would like to support them then there are several ways you can do that the easiest way is to simply like the video and give it a thumbs up and also it's a huge help to share these videos with anyone who you think would find them useful and if you have to mean so you can contribute through patreon and there's a link to that page in the description section below be sure to subscribe for future videos and thank you all for watching you

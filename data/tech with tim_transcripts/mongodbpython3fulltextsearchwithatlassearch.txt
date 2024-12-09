@@ -1,0 +1,957 @@
+00:02 - [Music]
+00:08 - in this video i'll be continuing to
+00:10 - teach you about mongodb in python by
+00:12 - covering advanced queries in full text
+00:14 - search i'll be showing you how to search
+00:16 - documents using fuzzy matching and
+00:18 - synonyms how you can auto complete
+00:20 - search queries how to perform compound
+00:22 - queries and how to find documents ranked
+00:24 - by their relevance this video is the
+00:26 - final video in my mongodb with python
+00:29 - series and you can check out the
+00:30 - previous two videos from the link in the
+00:32 - description lastly if you haven't
+00:34 - already you can claim 25 in free mongodb
+00:37 - atlas credits by clicking the link in
+00:39 - the description and using the code mkt
+00:42 - tim i'd also like to thank mongodb for
+00:44 - sponsoring this video and providing you
+00:46 - all with this discount code and with
+00:48 - that said let's go ahead and learn about
+00:50 - full text search so to begin here i want
+00:52 - to give you a brief on what full text
+00:54 - search is so full text search refers to
+00:56 - searching some text inside of extensive
+00:58 - text data that's stored electronically
+01:01 - and returning results that contain some
+01:02 - or all of the words from the search
+01:04 - query so full text search is different
+01:06 - from searches based on metadata or on
+01:08 - pieces of the original text like titles
+01:11 - regions etc
+01:12 - since the full text search engine is
+01:14 - examining all of the words in every
+01:16 - single stored document so wherever you
+01:18 - have a collection of documents or even
+01:19 - just a single document and you want to
+01:21 - search through all of the text in those
+01:23 - documents for some keywords you can use
+01:25 - full text search so the obvious example
+01:27 - here is something like the internet that
+01:29 - contains a high volume of text that's
+01:31 - stored in some type of documents and
+01:33 - when we're looking for something say by
+01:34 - using google we're looking for a
+01:36 - specific word or words or some related
+01:38 - topic to our query now when we get our
+01:40 - results back we want relevancy rankings
+01:43 - on how well the piece of content matched
+01:45 - our query and this can be very basic
+01:47 - from an exact match to something like
+01:49 - fuzzy matching where the words don't
+01:51 - quite match but they are equivalent so
+01:53 - the internet is just one large example
+01:55 - of this but many types of websites and
+01:57 - applications need efficient and fully
+01:59 - featured full-text search so as you can
+02:01 - imagine there's a good demand for people
+02:03 - who know understand and want to work in
+02:05 - this area and usually they are called
+02:07 - search engineers now a search engineer
+02:09 - has two primary responsibilities and
+02:11 - those are to develop and program search
+02:13 - engines and to optimize web content to
+02:16 - achieve the best possible rankings in
+02:18 - search results so obviously what comes
+02:20 - to mind here is working for google as a
+02:22 - search engineer but there are like 20
+02:24 - people doing this job and it's likely
+02:26 - that you need a phd to actually work at
+02:28 - google and do this however there are a
+02:30 - lot of other available options it's kind
+02:32 - of an undiscovered gold mine in terms of
+02:34 - engineering and starting salaries for
+02:36 - this position at least according to
+02:38 - glassdoor are 125 000 and up so this is
+02:41 - kind of a fascinating area and there's a
+02:43 - lot of opportunity and so i thought i'd
+02:45 - show you some full text search concepts
+02:47 - in action using non-relational data via
+02:50 - mongodb's full text search
+02:52 - implementation so now that we have an
+02:53 - idea of what full text search is let's
+02:55 - drop into a cluster with some sample
+02:57 - data and i'll show you how you can
+02:59 - perform full text search on a mongodb
+03:01 - database alright so i'm here in mongodb
+03:04 - atlas i've already set up a collection
+03:05 - and a database i have some sample data
+03:08 - in here i'm just going to show it to you
+03:09 - and then we'll start looking at full
+03:11 - text search on this data so here i have
+03:13 - a bunch of jeopardy questions i have
+03:15 - about 156 000 of them the full data set
+03:18 - i'm using has over 200 000 i just
+03:21 - haven't inserted all of them into the
+03:22 - collection anyways for every single
+03:24 - question we have a category an error
+03:26 - date the actual question a value the
+03:29 - answer to the question the round and
+03:31 - then a show number and you can imagine
+03:33 - that this would make decent data for us
+03:35 - to be able to search through if we're
+03:36 - looking for a specific question if we're
+03:38 - looking for a question associated with
+03:40 - an answer if maybe we want to find all
+03:42 - of the questions in a specific round
+03:44 - there's all kinds of stuff that we can
+03:46 - kind of search through this data with so
+03:47 - it'll make a good example for this video
+03:50 - now if you want to mess around with this
+03:51 - data yourself i'll leave a link to where
+03:54 - you can download the data set from the
+03:55 - description all i've done is downloaded
+03:57 - the json file and then i've loaded the
+03:59 - json file into my python script and just
+04:02 - inserted all of the documents into
+04:04 - mongodb if you're unfamiliar with how to
+04:06 - do that then please check out the first
+04:08 - two videos in this series again this
+04:10 - will be linked in the description so now
+04:11 - that we have a basic idea of what the
+04:13 - data looks like i'm going to go here in
+04:15 - vs code and we'll start writing some
+04:17 - stuff that we can use for full text
+04:19 - search so as you can see here my basic
+04:21 - setup is done i've already connected to
+04:23 - my cluster connected to my jeopardy
+04:25 - database and then my question collection
+04:27 - so the first thing we're going to have a
+04:28 - look at here is how we perform fuzzy
+04:30 - matching and then how we use synonyms
+04:33 - when we're actually searching for stuff
+04:35 - inside of our text so what i mean by
+04:37 - that is if we search for something say
+04:39 - like beer maybe we're going to have pine
+04:41 - to be a synonym of beer and that way if
+04:43 - we see either of those words then we'll
+04:45 - return them as if they were equivalent
+04:47 - right i'm sure you guys know what
+04:49 - synonyms are i don't really need to
+04:50 - explain that but i'll show you how we
+04:51 - perform that using mongodb search so the
+04:54 - first thing we actually need to do here
+04:56 - is go back to our cluster and we need to
+04:58 - create something known as a search index
+05:00 - now if you're unfamiliar with indexes
+05:02 - essentially what this is is a special
+05:04 - data structure that holds the data of a
+05:07 - few fields in our documents on which the
+05:09 - index is created now what this allows us
+05:12 - to do is search through the index which
+05:14 - is containing less data than the entire
+05:16 - collection itself so we can speed up our
+05:19 - searching operations on our database
+05:21 - i'll put up the official definition of
+05:23 - an index on the screen so you can read
+05:24 - through it but that's the basic idea is
+05:26 - that by creating an index we're storing
+05:28 - less data that we need to search through
+05:30 - and then the index will kind of point us
+05:32 - to the original documents and it just
+05:34 - speeds up our search operations so i'm
+05:36 - going to go here to search indexes and
+05:39 - i'm going to create an index on my
+05:40 - collection now if you're following along
+05:42 - with this you'll need to do this on your
+05:43 - collection as well if you want to do the
+05:45 - fuzzy matching and the synonym search so
+05:48 - we're going to click on create search
+05:50 - index here now there's the option to use
+05:52 - a json editor where you can just type
+05:53 - all this in
+05:54 - like kind of raw you don't have a visual
+05:56 - editor but we're going to use the visual
+05:58 - editor for right now
+06:00 - okay so let's go into the visual editor
+06:02 - for our search index we can call this
+06:04 - whatever we want but i'm just going to
+06:05 - call this my language search because we
+06:08 - want to create a search index here
+06:10 - that's going to allow us to search for
+06:12 - text specifically english text now in
+06:15 - terms of the collection we're going to
+06:16 - select this one right here the question
+06:17 - collection on our jeopardy database okay
+06:20 - so let's go next here so now we need to
+06:23 - kind of mess around with a few of these
+06:24 - parameters so we need to click on refine
+06:26 - your index here we need to modify some
+06:28 - of these parameters specifically the
+06:30 - index analyzer and the search analyzer
+06:33 - so for this we're going to select the
+06:35 - leucine.language and then english it
+06:37 - should change both of them for us and i
+06:39 - apologize if i'm mispronouncing this i'm
+06:41 - not sure exactly how you say that now
+06:43 - what these are is essentially our full
+06:45 - text search engine so this is what's
+06:47 - actually going to perform the search for
+06:49 - us when we make a search query and what
+06:52 - this will do is essentially ignore
+06:54 - insignificant words for us and provide
+06:56 - some context to our text so when we do
+06:59 - this full text search it's just going to
+07:01 - actually allow this to work properly and
+07:03 - again ignore those insignificant words
+07:05 - and do some other more advanced stuff
+07:06 - that i won't get into here so there's a
+07:08 - few other options as well since we know
+07:10 - we only have english text here i'm
+07:12 - selecting english but if you add a
+07:14 - specific language right you could select
+07:15 - that in here now there's a few other
+07:17 - things you could do not going to get
+07:18 - into it in this video for now this is
+07:20 - all we need for our search index
+07:23 - so we can leave the rest the same
+07:25 - and simply click on save changes here
+07:27 - and then create our search index now
+07:30 - this is going to take a second to
+07:31 - complete once it's done we can actually
+07:33 - start using this language search and
+07:35 - i'll show you how to do that from code
+07:37 - all right so our index is now done and
+07:39 - i'm going to go back to the code here
+07:41 - and we're just going to write a very
+07:42 - simple query that's going to give us all
+07:44 - of the text that matches uh with a
+07:46 - specific search query we're going to use
+07:48 - something called fuzzy matching but for
+07:50 - now let me just write this function so
+07:52 - i'm going to say define
+07:54 - fuzzy underscore matching like that
+07:57 - and inside of here we're going to write
+07:59 - our query so i'm going to say result is
+08:01 - equal to and then this is going to be
+08:03 - question and that not fuzzy but dot
+08:05 - aggregate and instead of here we're
+08:07 - going to put a list with our different
+08:08 - operations so the operation that we're
+08:10 - going to be using here for pretty much
+08:11 - the entire video is search this is how
+08:13 - you perform the full text search and for
+08:16 - search we need to provide the index that
+08:18 - we're going to be using so we're going
+08:20 - to say index and then we're going to
+08:22 - paste in whatever we called our index
+08:24 - which in this case was the search or the
+08:26 - language search sorry probably should
+08:28 - have called that language index but
+08:29 - that's fine
+08:30 - then we're going to provide a keyword
+08:32 - here called text and inside of text we
+08:34 - pass a query this is what we want to
+08:36 - search for so for the query for now
+08:38 - let's go with something simple like
+08:40 - computer we then want to have a path now
+08:43 - the path is going to be the field that
+08:45 - we want to search on so i want to search
+08:48 - on the category here and see if we can
+08:50 - find something that has a category
+08:51 - similar to computer and then lastly here
+08:54 - we're going to pass fuzzy
+08:57 - and i'm just going to pass an empty
+09:00 - object here now what fuzzy says is that
+09:02 - we want to look for something that's
+09:04 - similar to computer but not exactly the
+09:07 - same really what that means is that i
+09:08 - can do something like add an extra r
+09:10 - here i can misspell this slightly uh i
+09:13 - can you know do something like compute
+09:15 - and this will still give me results for
+09:17 - computer because we're doing fuzzy
+09:19 - matching so this is similar to how
+09:20 - google would work right when you spell
+09:22 - something incorrectly or maybe you have
+09:24 - like kind of a grammatical error but it
+09:26 - still gives you the correct results back
+09:28 - now i'm not exactly sure
+09:30 - how off you can be in terms of the query
+09:32 - i know in the mongodb documentation it
+09:34 - does state that but i know with using
+09:36 - the fuzzy search here you can actually
+09:39 - manually pass in some parameters on how
+09:41 - fuzzy you want it to be so how off you
+09:43 - want to allow it to be sorry but for now
+09:46 - we're just leaving this empty because i
+09:47 - just want to use the default parameters
+09:49 - so hopefully that makes a bit of sense
+09:51 - again just performing a fuzzy search or
+09:52 - something kind of similar to computer in
+09:54 - the category field so we want to print
+09:56 - this out so let's use our pretty printer
+09:58 - so printer.p
+10:00 - prints like that and we'll just print
+10:02 - out the list of result
+10:04 - and let's see what we get here when we
+10:06 - call fuzzy matching
+10:08 - so let's call this
+10:10 - let's run our code and let's see what we
+10:13 - get all right so we've just got a ton of
+10:15 - results here from the fuzzy match and
+10:16 - you're going to notice a bunch of them
+10:18 - are not actually that similar to
+10:20 - computer based on how fuzzy matching
+10:22 - works by default so there's actually a
+10:24 - bunch of kind of variations it's going
+10:26 - to search for and it's going to allow
+10:27 - letters to be in kind of the wrong place
+10:30 - and i haven't messed with any of the the
+10:31 - settings right i've just passed in kind
+10:33 - of the default object here and that's
+10:34 - why you see when we have a look at
+10:36 - category we're getting some stuff like
+10:38 - take a comp day right so comp close
+10:40 - enough to computer hence why that's
+10:42 - being returned if we scroll up a little
+10:44 - bit we have completes the play title the
+10:47 - reason we are getting this is because
+10:49 - completes is close enough to computer uh
+10:52 - right that's why we're getting that and
+10:53 - then if we were to continue here you'd
+10:55 - see kind of all of the other categories
+10:57 - that match like campus this is close
+10:59 - enough to computer with the default
+11:01 - fuzzy matching settings now we can
+11:02 - change them i'm not going to do that you
+11:04 - can have a look on your own on how to do
+11:05 - that but if we want to get a more exact
+11:07 - search we can remove this fuzzy
+11:10 - parameter here and run the code again
+11:12 - and now when we do this we should only
+11:14 - get results that actually contain
+11:16 - computer so it doesn't have to be the
+11:17 - last word it could be one of the first
+11:19 - words too like we have computer literacy
+11:21 - here but we're searching exactly for a
+11:23 - computer whereas when we add in fuzzy
+11:25 - we're doing kind of that fuzzy match so
+11:27 - that is the first thing that i wanted to
+11:28 - show you how you perform search for
+11:30 - specific text as well as fuzzy matching
+11:33 - now what i want to show you is how we
+11:35 - look for synonyms so how do we look for
+11:37 - something that's maybe similar to
+11:39 - computer like a laptop or tech while
+11:42 - we're searching for the query computer
+11:44 - now to do this we need to implement a
+11:46 - synonyms collection and kind of combine
+11:48 - that with our search index so we're
+11:51 - going to go back to mongodb atlas and do
+11:52 - that alright so i'm back on mongodb
+11:55 - atlas i've gone to collections here and
+11:57 - the first thing i need to do to
+11:58 - implement this synonym search is create
+12:00 - a collection that contains the different
+12:02 - synonyms so it doesn't actually give
+12:04 - them to you by default you do need to
+12:06 - add your own synonyms although you could
+12:07 - bring in like a pre-built database if
+12:09 - you want however i'm just going to make
+12:10 - a collection here let's call this
+12:12 - synonyms
+12:13 - and let's click on create now inside of
+12:16 - here we're i'm just going to provide one
+12:18 - document that contains some synonyms but
+12:21 - you would put your documents in kind of
+12:22 - the following format that i'm about to
+12:24 - show you so i'm just going to copy this
+12:26 - in and then i will discuss kind of how
+12:28 - this works all right so let's go to
+12:29 - insert document here i'm going to go to
+12:31 - the actual object view and i'm just
+12:33 - going to paste this in where we have a
+12:35 - mapping type which is equal to
+12:36 - equivalent and then we have synonyms and
+12:38 - these are going to be the synonyms that
+12:39 - are equivalent to each other so for now
+12:41 - i've just had a basic one like beer and
+12:43 - pint we could change this and do
+12:44 - something like computer
+12:47 - and
+12:48 - laptop uh if i could type laptop
+12:51 - properly here and maybe we just throw in
+12:53 - tech while we're at it uh just so that
+12:55 - we have a few that are that are similar
+12:56 - so this is a way that you create a kind
+12:58 - of synonym
+13:00 - what would you call this document now
+13:01 - i'm just going to bring up the
+13:02 - documentation on exactly how you do this
+13:05 - and you can see that we have the mapping
+13:06 - type equivalent as one valid option but
+13:09 - we also have the mapping type of
+13:10 - explicit so the first type we have here
+13:13 - is equivalent which is the one that i'm
+13:14 - using and what this means is that all
+13:16 - three of these terms are equivalent to
+13:18 - each other so if i search for vehicle it
+13:20 - will return car and automobile if i
+13:22 - search for automobile it will return
+13:24 - anything with vehicle and car they're
+13:25 - all equivalent however if i explicitly
+13:28 - map something i need to pass another
+13:29 - field here called input and now what i'm
+13:32 - saying is i'm mapping this input to all
+13:34 - three of these terms but not the other
+13:37 - way around so that means if i search for
+13:39 - something like pint only stuff that
+13:41 - contains pint is going to be returned
+13:43 - it's not a synonym of brew and beer it's
+13:46 - only that beer maps to these three terms
+13:49 - so hopefully that makes a bit of sense
+13:50 - you can read through this explanation it
+13:52 - probably explains it better than i just
+13:53 - did and i'll leave this in the
+13:55 - description anyways for now we're going
+13:56 - to go with the mapping type of
+13:57 - equivalent i'm just going to insert this
+13:59 - in
+14:00 - to our document here into our collection
+14:03 - and now that we've done this we actually
+14:05 - need to add the synonyms collection to
+14:07 - our search index so we're gonna go back
+14:09 - to search index here uh and this needs
+14:12 - to be on
+14:13 - so i have the wrong selection here
+14:15 - the language search and what we're going
+14:17 - to do is go to edit index definition
+14:21 - and this time we're actually going to
+14:22 - use the json editor because the add
+14:24 - synonyms at least right now when i'm
+14:26 - filming this video it's not supported in
+14:28 - the visual editor so i need to add a
+14:30 - field here this field is going to be
+14:31 - called synonyms i think i spelt that
+14:33 - correctly this is going to be a list and
+14:36 - we need to pass these objects here which
+14:38 - are going to define the collections that
+14:39 - contain our synonyms so the first thing
+14:42 - i'm going to do is just give a name this
+14:44 - name will just be
+14:45 - i'll say mapping for right now if i
+14:47 - could spell mapping correctly that was
+14:49 - atrocious okay
+14:51 - now that we have mapping i'm going to
+14:53 - pass a source
+14:55 - the source is going to be the collection
+14:57 - that contains our synonyms so actually
+14:58 - this will be an object and inside of
+15:00 - here we're going to say collection
+15:03 - and then we're just going to pass our
+15:04 - collection which is called synonyms
+15:06 - which is in the same database as this so
+15:08 - we don't need to explicitly reference it
+15:10 - and then after this i need to pass an
+15:13 - analyzer for our synonyms and this is
+15:16 - going to be
+15:17 - the leucine
+15:19 - dot and then english
+15:22 - like we've used before so let's spell
+15:24 - english correctly okay let me just make
+15:26 - sure that looks good i think we are
+15:28 - right so we have name we have our source
+15:30 - we have our collection we have our
+15:32 - analyzer and now we can save okay so
+15:35 - we've now added synonyms to this index i
+15:38 - don't think i need to
+15:39 - do anything else i think that's saved
+15:41 - and we are all good and now that we have
+15:43 - the synonyms here we can actually start
+15:44 - searching using them so to do that let's
+15:46 - go back to our code and let's write the
+15:49 - kind of synonym search all right so to
+15:51 - do this actually fairly easy all we're
+15:54 - going to do is add one parameter here
+15:57 - and i really should have made another
+15:58 - function but that's fine we'll do it
+15:59 - inside of fuzzy matching
+16:01 - and this is going to be called synonyms
+16:02 - of course i spelt that incorrectly so
+16:04 - just spell it right for me thank you
+16:06 - very much and for this we're just going
+16:07 - to pass the name of the synonyms that we
+16:11 - added so if i go back here sorry to our
+16:14 - search index and we have a look here and
+16:17 - we go to edit with json editor notice
+16:19 - that for my synonyms here inside of
+16:22 - synonyms i called this one mapping so
+16:24 - since i called that mapping this is the
+16:26 - one i want to access from my code and so
+16:28 - i'm referencing mapping here for the
+16:30 - synonyms field
+16:31 - all right so now that we've done that it
+16:33 - should actually return to us anything
+16:35 - that contains a computer or is a synonym
+16:38 - of computer in the category field so
+16:41 - let's run this and let's see if we do
+16:43 - actually end up getting that okay so it
+16:45 - gave me a ton of results here and notice
+16:46 - that we're getting tech right we're
+16:49 - getting tech again let's scroll up a bit
+16:50 - and find some other ones we're getting
+16:52 - computers okay uh computer characters
+16:55 - let's see if there's any laptop stuff we
+16:57 - get computer geniuses uh okay we get
+17:00 - techno so all this stuff is uh you know
+17:03 - a synonym of computer as i stated not
+17:06 - much more for me to explain all right so
+17:07 - with that said i have now shown you how
+17:09 - we do fuzzy searching or fuzzy matching
+17:12 - how we search with synonyms and how we
+17:14 - do just a regular text search on a
+17:15 - specific field in this case we've been
+17:17 - using category now that we've done that
+17:19 - i want to show you something known as
+17:21 - autocomplete so how we actually do a
+17:23 - search that's going to give us
+17:25 - autocomplete results so i'm sure you're
+17:27 - all familiar with autocomplete but this
+17:29 - is very similar to when you're kind of
+17:31 - typing in like a google search result
+17:33 - or you're searching some website or
+17:35 - something like that and as you're typing
+17:37 - you kind of get results being filled in
+17:39 - based on their relevancy that's what we
+17:41 - want to do here so we want to find all
+17:42 - of the things that could be
+17:43 - auto-completed from what you're typing
+17:45 - and return those so let's make a new
+17:47 - function here let's call this
+17:49 - autocomplete
+17:51 - and inside of here
+17:53 - we'll start writing what we need now the
+17:54 - first thing we actually have to do here
+17:57 - is we have to go back to mongodb atlas
+17:59 - and i just need to remove the synonyms
+18:01 - from this because they're not supported
+18:03 - with the visual editor and we're going
+18:05 - to be using the visual editor to help us
+18:07 - with the autocomplete so let me remove
+18:09 - synonyms
+18:10 - let's save that
+18:12 - let's go here to the visual editor
+18:15 - and what we need to do is add a field
+18:17 - mapping here
+18:18 - with something that is autocomplete so
+18:20 - that i can actually use the autocomplete
+18:22 - feature
+18:22 - so let's make this full screen i'm going
+18:24 - to say add field here and for the field
+18:27 - name i need to select the one that i
+18:28 - want to have autocomplete for so i'm
+18:30 - actually going to go with question
+18:32 - because i think that makes sense for
+18:33 - autocomplete
+18:34 - we'll have enabled dynamic mapping
+18:37 - that's fine and then for the data type
+18:40 - here
+18:41 - are actually going to select not string
+18:43 - but autocomplete so here you can mess
+18:45 - with some of the properties of the
+18:46 - autocomplete i'm not going to change any
+18:49 - of them this is fine for right now and
+18:51 - i'll just hit save so that's what we've
+18:53 - done we've now added the question field
+18:55 - with data types autocomplete and this
+18:57 - means now when i use this search index i
+18:59 - can use the autocomplete feature for the
+19:01 - question field
+19:03 - okay hopefully that's clear let's go
+19:04 - back here to autocomplete and let's
+19:06 - start writing this out so for
+19:08 - autocomplete we need to do something a
+19:10 - little bit more advanced than before
+19:12 - we're going to say result
+19:15 - is equal to and then this is going to be
+19:17 - question.aggregate
+19:18 - and inside of here we're going to pass
+19:20 - our search so we're going to do our
+19:22 - operator and then search like that
+19:26 - for the search again we need to pass the
+19:28 - index so our index is going to be
+19:30 - language search and then at this time
+19:32 - rather than text we're going to do
+19:33 - autocomplete
+19:36 - okay so for our autocomplete we need a
+19:38 - query
+19:40 - so let's go with the query and we're
+19:41 - searching for questions so we can do
+19:43 - something like
+19:45 - what is the
+19:47 - i don't know
+19:48 - fastest uh and maybe that will give us
+19:50 - some autocomplete might have to change
+19:52 - that if there's no results for that but
+19:53 - that's fine for now
+19:54 - next we're going to have a path
+19:57 - and the path here is going to be the
+19:58 - question so that is the field that we
+20:00 - added
+20:01 - in our kind of field mappings right so
+20:04 - we need to use the same one here which
+20:05 - is question
+20:06 - then we're going to have token order so
+20:09 - token order is essentially saying are we
+20:11 - going to be looking for something
+20:13 - sequentially or do we not care about the
+20:15 - order i'll talk about that more in a
+20:17 - second and then lastly i'm going to say
+20:19 - fuzzy
+20:20 - and when we add in fuzzy here it'll give
+20:22 - us a fuzzy matching not just the exact
+20:25 - query which is kind of what we're
+20:26 - looking for here all right so let's just
+20:28 - break this down a little bit here so
+20:29 - token order as i was saying sequential
+20:32 - means that what we've placed right here
+20:34 - we're looking for exactly this where the
+20:36 - different words or what we could call
+20:38 - tokens appear adjacent to each other
+20:41 - in whatever the result is that we're
+20:43 - going to be kind of matching with this
+20:45 - that might be a little bit confusing but
+20:46 - all that means is we're looking for what
+20:48 - is the fastest kind of in this
+20:50 - sequential order if we had the other one
+20:52 - which is any then that means that we're
+20:54 - looking for any four of these words in
+20:56 - any order in the result so it could be
+20:59 - like fastest is the what as opposed to
+21:01 - what is the fastest so use the
+21:03 - appropriate one based on that i also
+21:05 - pull up the documentation here i'll link
+21:07 - this in the description with all the
+21:08 - other options so we have fuzzy enables
+21:10 - fuzzy search right so that's what we're
+21:12 - doing path this is the indexed
+21:14 - autocomplete type of field to search so
+21:15 - we're searching for question we have our
+21:17 - query this is a string or multiple
+21:19 - strings that we're going to search for
+21:20 - if we wanted to do multiple we actually
+21:22 - could just pass an array here
+21:24 - of multiple strings for now though i'm
+21:26 - just going to do one single string okay
+21:28 - so let's do that for now
+21:31 - and just to make this a little bit
+21:32 - easier to see i'm going to add a
+21:34 - projection operation here
+21:36 - just so that we're only projecting the
+21:39 - question
+21:40 - so we don't have to search through so
+21:41 - much text to see if this is working
+21:43 - properly so i'm just going to say
+21:44 - underscore id is 0
+21:46 - and then i need my answer
+21:48 - or not answer sorry this is going to be
+21:50 - question
+21:52 - and this is going to be 1.
+21:54 - okay so let's print this out let's say
+21:57 - printer.pprint
+21:59 - and then the list
+22:01 - of the result
+22:04 - i need to actually call this function
+22:05 - otherwise of course it's not going to do
+22:06 - anything
+22:07 - so let's run this again
+22:10 - okay and let's scroll down and we
+22:13 - actually didn't get any results okay so
+22:15 - what is the fastest wasn't really giving
+22:16 - me any results there so let's do
+22:18 - something that's going to be a bit
+22:20 - better for autocomplete uh let's just
+22:22 - try actually computer programmer and see
+22:25 - if that actually gives us anything at
+22:27 - all with the fuzzy matching
+22:29 - okay so let's have a look here and we
+22:31 - should see computer programmer okay so
+22:33 - gary kasparov recently beat a computer
+22:35 - program okay that's pretty close uh
+22:37 - computer programming language okay
+22:39 - computer program there you go so we're
+22:41 - getting all the autocomplete results
+22:43 - that contain something similar to
+22:44 - computer programmer or exactly computer
+22:47 - programmer okay so that is how you
+22:49 - perform the autocomplete maybe this
+22:51 - wasn't actually the best example using
+22:53 - the jeopardy data set because it's hard
+22:55 - to
+22:56 - really auto complete i guess the
+22:58 - questions there's so many of them that
+22:59 - are very similar to each other you get
+23:01 - the point that's how you do autocomplete
+23:02 - all right so my apologies for the abrupt
+23:04 - cut here but at this point we have
+23:06 - covered autocomplete fuzzy matching
+23:08 - searching with synonyms and i want to
+23:09 - start showing you some more advanced
+23:11 - stuff and how we actually kind of filter
+23:13 - the result here so we have this search
+23:15 - stage right where we're actually going
+23:17 - and we're searching for some specific
+23:19 - text but a lot of times i want to kind
+23:21 - of fine-tune this and make it so that
+23:23 - maybe we're filtering out specific
+23:25 - results or we're prioritizing results
+23:28 - that contain some extra data in our
+23:30 - queries right so i'll show you how we do
+23:32 - that and i'm actually just going to
+23:34 - paste this in and then i'll kind of walk
+23:36 - you through the syntax and explain how
+23:37 - this works so this is something that i
+23:39 - have here that is going to perform a
+23:41 - more advanced search
+23:43 - using this compound operator or this
+23:45 - compound field now i'll bring up the
+23:48 - documentation here so we can have a
+23:49 - quick look all of this will be linked in
+23:51 - the description afterwards so you can
+23:52 - look at it yourself but we can see
+23:54 - compound as the following syntax where
+23:57 - we can pass an object here that contains
+24:00 - must must not should filter etc now
+24:04 - these keywords here you want to use over
+24:06 - something like a match statement in the
+24:08 - aggregation pipeline so rather than
+24:11 - searching getting all the search results
+24:12 - and then trying to match them to a
+24:14 - specific query instead you want to use
+24:16 - this the must must not should and filter
+24:19 - so as you can see here for must this is
+24:20 - kind of mapping to and and it means
+24:22 - anything that we provide here must be
+24:24 - true for a document to be included in
+24:26 - the results must not that's the opposite
+24:29 - and then for should this is going to
+24:30 - prioritize results that do have the
+24:32 - should clause that so the should clause
+24:34 - is true
+24:35 - now as you read here it says if you use
+24:37 - more than one should clause uh you can
+24:39 - use the minimum should match option to
+24:41 - specify a minimum number of should
+24:42 - clauses that must match to include your
+24:44 - document in the results and if omitted
+24:47 - the default is zero which is what we're
+24:48 - going to have
+24:49 - we then have filter
+24:51 - and you can have a read at how that
+24:52 - works i'm not going to go through that
+24:53 - in this video
+24:54 - okay so let's go back here to vs code
+24:58 - and let's actually run compound queries
+25:00 - uh after quickly just having a look at
+25:02 - all the stuff that we've put inside of
+25:03 - here so we have our search we're looking
+25:06 - at the index called language search and
+25:08 - then we have our compound keyword so for
+25:10 - must here we've provided an array of
+25:12 - must clauses in this case we've just
+25:14 - done one which is text
+25:16 - and this is saying that we want to have
+25:17 - computer or coding inside of category so
+25:21 - that must be true for us to return this
+25:23 - continuing we have must not and this is
+25:25 - saying we don't want to have codes
+25:28 - inside of the category path so if we
+25:31 - have codes we cannot return that and
+25:33 - this is in case sensitive by the way so
+25:35 - if this was like a capital codes
+25:37 - same thing it's not going to make a
+25:38 - difference here in this result
+25:40 - continuing we have should so for should
+25:42 - we want application to be a part of the
+25:44 - answer so anything that has application
+25:46 - as a part of the answer we're going to
+25:47 - prioritize returning that and then we're
+25:49 - performing a projection here where we're
+25:51 - getting the question answer and category
+25:54 - and we have a score which is a field
+25:56 - that we're adding to each result which
+25:58 - contains the metadata of the search
+26:00 - score for this kind of search operation
+26:03 - so let's just run this and see what our
+26:04 - result looks like
+26:07 - and notice here that this is what we're
+26:08 - getting so the answer application that's
+26:10 - the first answer that we're getting it
+26:12 - has the highest score of 10. we then
+26:14 - have the question here
+26:16 - the app in killer app stands for this
+26:18 - the category is computers
+26:20 - okay continuing we see all of our scores
+26:23 - down here we have category computers the
+26:25 - answer is not application it wasn't
+26:27 - prioritized blah blah blah blah uh you
+26:30 - guys get the point i'm not going to go
+26:31 - through all of this and you're getting
+26:32 - results uh in terms of their relevancy
+26:34 - right ranked based on that score
+26:37 - nice okay so that is the first operation
+26:39 - right here again to learn more about
+26:40 - this stuff please reference the
+26:41 - documentation it is very time consuming
+26:44 - to try to explain every single field
+26:46 - here in this video actually i'll leave
+26:48 - that there
+26:49 - now though i want to show you something
+26:50 - called relevant search now what we just
+26:52 - did is kind of a relevant search but
+26:55 - this one is more fine-tuned and allows
+26:57 - you to kind of boost answers and change
+26:59 - the score of specific results
+27:02 - based on some specific queries
+27:04 - so let's paste this one in here
+27:06 - it's called relevance i just need to
+27:08 - change this to be search
+27:10 - and what this does is prioritize
+27:12 - questions appearing in the later rounds
+27:14 - as the comment states so we have our
+27:16 - aggregation we're doing search we have
+27:18 - our index and we have compound again
+27:21 - now this time we're looking for anything
+27:23 - that contains geography in the category
+27:26 - and now we have multiple should clauses
+27:28 - so the first one here we're looking for
+27:30 - final jeopardy as the query in the path
+27:33 - round
+27:34 - all of our documents here have a round
+27:36 - and we're saying if it appears in file
+27:38 - of jeopardy we want to boost the score
+27:40 - by a value of three now what boost does
+27:43 - it actually multiplies the score by
+27:45 - three
+27:46 - so that's what we're doing just
+27:47 - multiplying it by three if it appears in
+27:49 - the final round and then we have another
+27:51 - text query here for double jeopardy so
+27:53 - if this appears in one of the later
+27:55 - rounds i believe double jeopardy is i
+27:57 - think the second last round in jeopardy
+27:59 - then we're going to boost the value by
+28:00 - 2.0 now there's a whole bunch of other
+28:02 - stuff that i can do here rather than
+28:04 - multiplying i could add a constant value
+28:07 - i could use a custom function i could
+28:08 - implement something like gaussian decay
+28:10 - i think i'm pronouncing that correctly
+28:12 - but i might not be so please excuse me
+28:14 - if that's the case
+28:15 - and i can really customize kind of how
+28:17 - i'm getting results ranked by relevance
+28:19 - in the way that i define
+28:21 - for now though let's just call this
+28:22 - function
+28:24 - and let's see what the result is
+28:26 - so let's run this
+28:27 - and let's bring our terminal up here and
+28:30 - if i scroll down uh actually let's just
+28:33 - clear and rerun it just so i get
+28:35 - all the results here in the terminal
+28:36 - okay nice so now that i'm here i've just
+28:38 - limited this to 10 by the way so i'm
+28:40 - only getting 10 results you can see i
+28:42 - have my category geography i have my
+28:44 - question it's the only country whose
+28:45 - name begins with an a but doesn't end
+28:47 - with an a okay and this round final
+28:49 - jeopardy that's why it's appearing first
+28:51 - we have a score of 7.7 which means the
+28:53 - score would have been lower but we
+28:55 - multiplied it by three right
+28:57 - continuing we have another one in final
+28:58 - jeopardy and i think
+29:00 - all of these are appearing in final
+29:02 - jeopardy now if i make the limit like
+29:04 - 100 let's rerun this
+29:06 - and let's see if we get some ones that
+29:08 - are appearing in double jeopardy yes you
+29:09 - can see now we have double jeopardy and
+29:11 - we're only multiplying those results by
+29:13 - two so they're going to have less of a
+29:14 - score than the ones that appear in final
+29:16 - jeopardy
+29:18 - and those ones all seem to have kind of
+29:19 - like a seven plus score all right so
+29:21 - there you go that is the relevance
+29:23 - search again as i keep saying there's a
+29:25 - lot more advanced stuff you can do i
+29:26 - can't cover it all in this video it's
+29:28 - really meant to be kind of an
+29:30 - introduction to these topics and
+29:31 - encourage you to go read the
+29:32 - documentation i will bring up the
+29:34 - documentation for this which is
+29:36 - customizing the score in your results
+29:39 - again all this will be in the
+29:40 - description and you can see we have
+29:41 - options like boost constant and function
+29:44 - so the boost is going to multiply result
+29:46 - score
+29:47 - we can actually use a value from the
+29:49 - document for the multiplication factor
+29:52 - or we can just hard code our own value
+29:54 - like two or three which is what we did
+29:57 - we then have uh what else was here uh
+30:00 - the constant this is going to add a
+30:02 - constant amount and then we have
+30:03 - function and if i scroll down here i
+30:05 - think there's some examples yeah so the
+30:06 - constant option replaces the base score
+30:08 - of the specified number so my apologies
+30:10 - actually we're not adding we're just
+30:11 - replacing it with a value
+30:14 - continuing we have function the function
+30:16 - option allows you to alter the final
+30:18 - score of the document using a numeric
+30:20 - field you can specify the numeric field
+30:22 - for computing the final score through an
+30:23 - expression if the final result of the
+30:25 - function score is less than zero atlas
+30:27 - search replace it with zero okay and you
+30:29 - can use stuff like a gaussian decay
+30:32 - and it kind of shows you how you would
+30:33 - do that here not really going to go
+30:35 - through much more of that
+30:37 - okay so i think with that said that is
+30:39 - going to wrap up this video i do
+30:41 - apologize that this wasn't extremely
+30:43 - in-depth but i can't really go through
+30:47 - much more than i covered in this video
+30:49 - because it gets very granular there's
+30:50 - all kinds of options at that point i'm
+30:52 - just really reading the documentation to
+30:54 - you and covering you know all the
+30:56 - different options and kind of specific
+30:57 - stuff that you use really the core thing
+31:00 - i wanted to show you here was this
+31:01 - search operator how you create that
+31:03 - search index and how you can perform
+31:05 - full text search in mongodb because this
+31:07 - is something i've actually never seen
+31:09 - before and that was really cool and then
+31:11 - i wanted to kind of mention to you in
+31:12 - this video so with that said i think i
+31:14 - will wrap it up here another massive
+31:16 - thank you to mongodb for sponsoring this
+31:18 - video and this series hope you guys
+31:20 - enjoyed and learned a bit about mongodb
+31:22 - and python if you did leave a like
+31:24 - subscribe to the channel and i will see
+31:25 - you in another one
+31:29 - [Music]
+31:35 - you

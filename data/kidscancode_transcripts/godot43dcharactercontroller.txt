@@ -1,0 +1,381 @@
+00:00 - welcome back to your recipes in this
+00:02 - episode we're going to create a
+00:03 - character controller for our 3D animated
+00:05 - character to begin we're going to assume
+00:07 - you've already imported your art assets
+00:09 - and set up your animation tree if you
+00:11 - haven't done that already there's a
+00:13 - separate video and text tutorial going
+00:16 - over that so check that out first and
+00:18 - then come back here when you're all set
+00:20 - up and ready to
+00:22 - control the character
+00:24 - so we have our inherited scene from our
+00:27 - character and the first thing we'll
+00:29 - notice is since we set our root node to
+00:31 - be a character body 3D it's complaining
+00:33 - about not having a collision shape so we
+00:36 - want to add that and we'll add a
+00:38 - collision shape 3D
+00:40 - and we're going to use a capsule
+00:44 - now because the characters
+00:46 - origin is set to its feet which is a
+00:49 - really useful thing to do we're going to
+00:51 - need to move the
+00:52 - capsule shape up and you can position it
+00:55 - but the values I've used here I'm making
+00:58 - a height of 2.4
+01:01 - leaving the radius at 0.5 and I'm going
+01:04 - to move its position up to 1.2 meters
+01:08 - and that should give us a nicely
+01:09 - positioned
+01:12 - capsule shape that covers the character
+01:14 - okay the other thing you might have
+01:15 - noticed if you're familiar with godot's
+01:18 - 3D orientation is that forward should be
+01:21 - the negatives the axis and so our
+01:23 - character is facing the wrong direction
+01:25 - and everything will be reversed in our
+01:28 - code so we need to flip this guy around
+01:29 - and we're going to do that we're going
+01:31 - to use the rig to control the player's
+01:35 - rotation so I don't want to set that so
+01:37 - I'm going to go inside the rig here and
+01:39 - then the skeleton 3D I'm going to set
+01:41 - the Y
+01:43 - rotation to 180 degrees so our character
+01:45 - is facing to the negative Z axis
+01:49 - and then that way in our code we can
+01:50 - rotate the rig
+01:53 - node 3D to change the characters facing
+01:56 - direction another thing we need to do is
+01:58 - set up our input map so I've added
+02:00 - actions here for forward back left right
+02:04 - and jump left and right will be strafe
+02:07 - we're going to rotate the camera with
+02:09 - our Mouse but we'll get to that a little
+02:12 - bit later and now let's talk about the
+02:15 - camera so I want the camera to follow
+02:18 - the player around but of course we don't
+02:20 - want the camera to clip into walls and
+02:23 - get blocked by things being between the
+02:26 - camera and the player so our camera
+02:28 - should be able to zoom in and out but it
+02:30 - should also detect obstacles and zoom in
+02:33 - automatically if there's an obstacle in
+02:35 - the way
+02:36 - and we can do that if we add a
+02:40 - spring arm 3D spring arm 3D is a node
+02:43 - that projects a raycast out and whatever
+02:47 - is at the end of the raycast
+02:49 - is its child and it will move it
+02:51 - automatically closer if that raycast
+02:53 - collides and so we're going to set the
+02:56 - spring length of this to
+02:58 - five so that it's nice and long and then
+03:03 - we're going to make the margin
+03:07 - 0.1 that's how close it will allow
+03:09 - things to get to obstacles and we want
+03:12 - the camera to be
+03:13 - to not be at the Collision point because
+03:15 - then it'll be clipping into the wall a
+03:17 - little bit and then we're going to set
+03:18 - its position up above the player's head
+03:20 - so I'm going to set the Y here to 2.5
+03:23 - and there you can see that yellow line
+03:24 - there is that camera raycast
+03:28 - and so to attach the camera to it we
+03:30 - just add a camera 3D as a child
+03:34 - and you'll see in the scene the camera
+03:37 - is positioned right here but the spring
+03:39 - arm will automatically move it to here
+03:42 - and then move it forward if there are
+03:44 - any collisions in the way
+03:46 - all right and that's our node setup our
+03:48 - next step is to start writing some code
+03:50 - so let's add a script to the night and
+03:53 - we're going to talk about the first part
+03:55 - of the movement which is just the wasd
+03:57 - forward and back movement
+04:00 - so here in the script I've got a few
+04:03 - different
+04:05 - variables set up for speed acceleration
+04:09 - and jump speed this will control those
+04:11 - values and we've exported them to make
+04:13 - them easy to set
+04:14 - we're going to grab Gravity from the
+04:17 - project settings and we're gonna have a
+04:19 - variable to keep track of whether we're
+04:21 - jumping
+04:22 - and then we have some on ready variables
+04:24 - to give us some references to the nodes
+04:27 - we want to talk to
+04:29 - the spring arm which we just added the
+04:32 - rig which is our player model itself
+04:34 - which like I said we're going to rotate
+04:36 - and then two references to things in the
+04:39 - animation tree now if you click on the
+04:42 - animation tree
+04:43 - you'll see over here under parameters
+04:45 - these grounded and jumping conditions
+04:48 - and the blend position of the iwr and
+04:51 - those are the things we set up here in
+04:53 - the animation tree the grounded and
+04:55 - jumping transitions where those triggers
+04:57 - that would trigger the transitions
+04:59 - between the jump
+05:01 - uh parts of the jump animation and the
+05:04 - iwr is that blend position between idle
+05:07 - walking strafing and everything that we
+05:10 - would set we're going to set this 2D
+05:12 - Vector here based on our player's
+05:14 - horizontal motion and so that
+05:18 - reference here will let us access these
+05:21 - then we also have a reference called
+05:23 - anim State that's a reference to that
+05:25 - whole tree and that's how we're going to
+05:29 - call those transitions between
+05:31 - animations you know if we want if we're
+05:33 - in this
+05:34 - particular animation we want to
+05:36 - transition to interact That's How we'll
+05:38 - call it next I have my physics process
+05:41 - where we're going to add gravity we're
+05:43 - going to get the input and then we're
+05:45 - going to call move and slide
+05:47 - not much to talk about there
+05:49 - and then how do we get our input well
+05:51 - we're going to apply our input to the
+05:53 - horizontal motion which is x and z we
+05:56 - don't want it affecting y because
+05:58 - gravity is taking care of that so we're
+06:00 - going to temporarily zero out our y
+06:03 - velocity so that we can just add the
+06:05 - vector set the vector directly to our
+06:10 - horizontal motion so we get the input
+06:13 - vector
+06:14 - we apply it to
+06:17 - our to get our Direction and we rotate
+06:19 - it by the direction that the spring arm
+06:21 - is facing because we want to
+06:23 - always move forward in the direction the
+06:25 - camera is facing and so we're going to
+06:27 - get that rotation of the camera which
+06:29 - doesn't rotate yet but it will
+06:31 - we will
+06:32 - interpolate our velocity using our
+06:35 - acceleration so that we'll come up to
+06:37 - speed and then we'll set that y velocity
+06:39 - back so that we haven't lost whatever
+06:41 - accumulated gravity we've gotten now
+06:44 - let's look at camera control so I'm
+06:46 - adding another variable here to control
+06:48 - how sensitive the mouse control of the
+06:51 - camera is
+06:53 - and then down here we're in unhandled
+06:55 - input we're going to look for Mouse
+06:57 - motion events if we get a mouse motion
+06:59 - event we're going to rotate the spring
+07:02 - arm around its x-axis which is going to
+07:04 - tilt It Up and Down based on the Y
+07:06 - movement of the mouse
+07:09 - and then we're also going to clamp that
+07:10 - angle
+07:11 - so it doesn't go all the way around
+07:13 - upside down so this will be negative 90
+07:16 - will be looking straight down at the
+07:18 - player and 30 degrees will be looking
+07:20 - from the ground up
+07:22 - and then we're also going to rotate the
+07:25 - around Y which will change the facing
+07:27 - direction of the camera based on the
+07:29 - left to right movement of the mouse so
+07:31 - let's take a look at what that looks
+07:33 - like
+07:34 - and now I can move my camera back and
+07:36 - forth I can tilt it up I can tilt it
+07:39 - down we get down near the ground and
+07:41 - it's
+07:42 - clipping into the ground a little bit
+07:44 - we'll fix that and now we can see that
+07:47 - if we press forward I'm going to
+07:50 - no matter which way the camera faces
+07:52 - pressing forward is going to go in the
+07:54 - direction that that camera faces
+07:57 - now we need to rotate our player to look
+07:59 - in that direction so what we're going to
+08:01 - do here is we're going to say
+08:05 - if we're moving
+08:08 - we're going to rotate the model which is
+08:10 - that rig
+08:12 - and we're going to interpolate it by
+08:14 - that rotation speed so that we don't
+08:15 - instantly snap to that direction and
+08:18 - that's just going to make us turn
+08:20 - right and face in the direction of the
+08:22 - camera like this so now
+08:25 - no matter which way the camera is facing
+08:28 - I'm going to turn and
+08:30 - face in that direction
+08:32 - now we need to apply this velocity that
+08:35 - we are moving at to our blend space so
+08:37 - we play the right animation and so I'm
+08:40 - going to take this velocity and since
+08:43 - velocity is in global space but we're
+08:45 - rotating the player model we need to
+08:48 - transform that using the model rotation
+08:51 - so that we get the Rel the Velocity in
+08:53 - model space
+08:55 - and then we're going to set that blend
+08:57 - position
+08:58 - to it's a vector 2 so we need to set its
+09:01 - X and Y and we're going to use the X of
+09:04 - the velocity for x and the Z of the
+09:06 - velocity for
+09:08 - Y and since forward Z is negative in 3D
+09:13 - space but in 2D space our blend space
+09:15 - positive y was the moving forward we're
+09:18 - going to negate that and then we need
+09:20 - this to be a value between negative one
+09:22 - and one so we'll divide by our
+09:25 - Max Speed so if we're going maximum
+09:27 - speed this will be one if we're going
+09:29 - backwards at the maximum speed it would
+09:31 - be negative one and so on
+09:33 - and that is going to
+09:36 - set the animations when we start running
+09:37 - so from above we're running forward
+09:40 - we're strafing to the left we're
+09:41 - strafing to the right we're walking
+09:44 - backwards
+09:48 - I mean how about the attack animation so
+09:50 - if I go over here to my project settings
+09:53 - I'm going to add an attack action which
+09:55 - we're going to use the left Mouse button
+09:57 - for
+09:58 - and then in our animation tree we had
+10:01 - three separate attacks so I'm just going
+10:04 - to make a list an array here of the
+10:06 - names of them
+10:08 - and that way in my unhandled input if I
+10:12 - get an attack
+10:14 - action then we're just going to tell the
+10:17 - animation state to travel to
+10:20 - a random one of those attacks
+10:23 - and if we run it here we'll look at if I
+10:26 - every time I click I'm going to play
+10:30 - one of those
+10:32 - animations
+10:34 - so now let's talk about jumping
+10:36 - so first of all if we're standing on the
+10:38 - floor and we press jump then we're going
+10:42 - to jump and and we're going to set those
+10:45 - parameters in the animation tree
+10:48 - jumping and grounded by the way when you
+10:50 - type anim tree.set these will Auto
+10:53 - suggest you can also drag them from the
+10:55 - inspector over if you want to fill those
+10:58 - in
+10:59 - so we're going to set jumping to true or
+11:00 - set grounded to false because remember
+11:02 - grounded will be the setting to that
+11:04 - true will be the transition to hit back
+11:06 - on the ground
+11:07 - now the thing is we need to know
+11:09 - also what are is on floor status was the
+11:14 - previous frame so we've added a variable
+11:16 - here called last floor that we're going
+11:18 - to set
+11:19 - every frame to be is on floor
+11:22 - and that way we can detect if we're on
+11:24 - the floor now
+11:26 - if we're on the floor now and we weren't
+11:28 - last frame then we finished jumping so
+11:31 - we should set jumping to false and set
+11:33 - grounded to True which is going to
+11:34 - trigger that transition to The Landing
+11:37 - animation
+11:39 - and then there's also another condition
+11:40 - we could have which is if we're not on
+11:42 - the floor
+11:44 - and we are not jumping then we must have
+11:47 - just Fallen we stepped off the ledge or
+11:49 - something like that
+11:51 - so we want to jump straight to that jump
+11:53 - idle
+11:54 - animation
+11:55 - and set grounded to false right so
+11:58 - that's
+12:01 - that's going to call
+12:03 - oops animation tree that's going to call
+12:05 - this transition right instead of
+12:08 - bending our knees and jumping up we
+12:10 - walked off the ledge so we're going to
+12:11 - jump straight to jump idle
+12:13 - okay so over here in the test scene I've
+12:15 - put the player up on top of the wall so
+12:17 - we can test that out
+12:19 - so if we play this we'll see when we're
+12:22 - standing here if we jump
+12:24 - we see the
+12:26 - jump animations play
+12:29 - but if I run off the wall
+12:32 - right it starts to fall
+12:35 - and you might have noticed if I play it
+12:37 - again when you walk off the wall
+12:40 - oh that that sudden transition to the
+12:42 - falling animation that's not that great
+12:44 - so if we go to our animation tree and we
+12:46 - pick this transition
+12:47 - we can give it a small
+12:49 - Crossfade time so that it doesn't look
+12:51 - so jarring
+12:54 - and that's going to look a little better
+12:55 - when we run off the wall
+12:59 - by the way if you're experiencing that
+13:01 - glitching when you get down low that the
+13:04 - camera is snapping inside the player's
+13:06 - helmet that's actually happening because
+13:09 - the camera is
+13:11 - or the raycast from the spring arm is
+13:14 - hitting the capsule shape of the player
+13:17 - and what we really want is we don't want
+13:19 - the camera to pay attention to that at
+13:21 - all so really what we need to do is put
+13:24 - the Knight
+13:26 - on a separate Collision layer because
+13:28 - the spring arm is only checking
+13:30 - Collision mask layer one and when we set
+13:34 - up the full game we'll assign these
+13:36 - layers so different things will be on
+13:37 - different layers and we can really be
+13:39 - organized about this
+13:42 - but for right now you just want to make
+13:43 - sure your player is on a different layer
+13:46 - than the layer that the
+13:48 - spring arm is checking and then that's
+13:51 - going to fix that because now you can
+13:55 - go all the way down to the camera and it
+13:57 - doesn't
+13:59 - clip into the player
+14:03 - and that's it that's the start of our
+14:05 - character controller now you can start
+14:07 - laying out your dungeon with all of the
+14:09 - dungeon assets and give yourself
+14:12 - something interesting to walk around and
+14:14 - explore and in future episodes we will
+14:18 - talk about how to add enemies how to add
+14:20 - doors that we can open and close
+14:23 - chests
+14:24 - combat all that kind of stuff so make
+14:28 - sure to like And subscribe so you will
+14:30 - get notified as soon as I add the next
+14:32 - part I'll see you next time
+14:34 - you can find this in many other good old
+14:36 - recipes tutorials examples and tips at
+14:38 - good or recipes.com don't forget to like
+14:41 - And subscribe on YouTube to get the
+14:42 - latest video tutorials and if you'd like
+14:44 - to help support these efforts please
+14:45 - consider clicking the patreon link
+14:47 - thanks

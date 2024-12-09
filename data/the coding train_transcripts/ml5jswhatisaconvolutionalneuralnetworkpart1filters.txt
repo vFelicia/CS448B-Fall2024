@@ -1,0 +1,1035 @@
+00:00 - Hello and welcome to
+another Beginner's Guide
+00:02 - to Machine Learning
+with ml5.js video.
+00:05 - This is a video.
+00:05 - You're watching it.
+00:07 - And I am beginning this journey
+to talk about, and think about,
+00:10 - and attempt to
+explain and implement
+00:12 - convolutional neural networks.
+00:15 - So this is something that I
+refer to in the previous video,
+00:18 - where I took the
+pixels of an image
+00:21 - and made those the inputs
+to a neural network
+00:22 - to perform classification.
+00:24 - And I did this in even earlier
+videos with pretrained models.
+00:28 - And I mentioned that those
+pretrained models included
+00:30 - something called a
+convolutional layer,
+00:32 - but my example didn't include
+a convolutional layer.
+00:35 - So ml5 has a mechanism for
+adding convolutional layers
+00:39 - to your ml5 neural network.
+00:40 - But before I look at
+that mechanism, what
+00:42 - I want to do in this
+video and in the next one
+00:45 - is just explain what
+are the elements
+00:49 - of a convolutional
+neural network,
+00:50 - how do they work, and then
+look at some code examples that
+00:54 - actually implement the features
+of that convolutional layer.
+00:57 - I'm not going to
+build from scratch
+00:59 - a full convolutional
+neural network.
+01:01 - Maybe that's some other video
+series that I'll do someday.
+01:04 - We're going to use the fact
+that the ml5 library just
+01:06 - makes that possible for you.
+01:08 - In the first part
+I will just talk
+01:10 - about from the zoomed out view,
+what a convolutional layer is,
+01:13 - then I will look at with
+code, this idea of a filter.
+01:16 - In the second part,
+I'll come back
+01:18 - and look at this other aspect
+of a convolutional layer called
+01:20 - pooling.
+01:21 - I hope you enjoy this
+and you find it useful.
+01:24 - And I'll see you--
+01:25 - I'll be back in this outfit
+at the end of the video.
+01:28 - Let me start by diagramming
+what the neural networks looked
+01:32 - like with ml5 neural network
+to date in the videos
+01:35 - that I've made.
+01:36 - So there's been two layers--
+01:39 - a hidden layer and
+an output layer--
+01:44 - and then also there's some data
+coming into the neural network.
+01:47 - And in this case, in
+the previous example,
+01:51 - it was an image,
+which was flattened.
+01:56 - So I used the example of 10 by
+10 pixels, each with an R, a G,
+02:01 - and a B. So that made
+an array of 300 inputs.
+02:07 - All these pixel values,
+those are the inputs.
+02:11 - And those go into
+the hidden layer.
+02:14 - But just for the
+sake of argument,
+02:15 - let me simplify this
+diagram and I'm just
+02:18 - going to consider an
+example with four inputs.
+02:23 - I'm going to
+consider that example
+02:24 - as having five hidden nodes--
+02:26 - hidden units.
+02:29 - And then let's say, it's
+a classification problem
+02:32 - and there's three
+possible categories.
+02:36 - So when I call the
+function ml5.neuralNetwork,
+02:42 - it creates this architecture
+behind the scenes
+02:45 - and connects every single
+input to every hidden unit
+02:48 - and every hidden
+unit to each output.
+02:51 - [MUSIC PLAYING]
+03:00 - So this is what the
+neural network looks like.
+03:02 - Each one of these
+connections has
+03:04 - a weight associated with it.
+03:06 - Each unit receives
+the sum of all
+03:09 - of the inputs times the weights
+passed through an activation
+03:12 - function, which then becomes the
+output, which then all of those
+03:16 - with those weights are
+summed into the next layer,
+03:19 - and so on and so forth.
+03:21 - So this is what I have
+worked with before.
+03:24 - While in the previous
+example, I was
+03:27 - able to get this
+kind of architecture
+03:29 - to work with image input and get
+results that produced something
+03:35 - in the output, this
+can be improved upon.
+03:39 - There is information
+in this data that's
+03:41 - coming in that is lost
+when it is flattened
+03:45 - to just a single flat array.
+03:51 - And the information
+that's lost is
+03:54 - the relative spatial
+orientation of the pixels.
+03:57 - It's meaningful that these
+colors are near other colors.
+04:00 - Something in what we're
+seeing in the image
+04:03 - has to do with the spatial
+arrangement of the pixels
+04:06 - themselves in two dimensions.
+04:08 - In order to address
+that, we want
+04:11 - to add into this architecture--
+04:13 - I really spent a lot of
+time drawing this diagram,
+04:16 - which I'm now going
+to mostly erase--
+04:17 - we want to add something
+called a convolutional layer.
+04:21 - So in this video, I want to
+explain what are the elements.
+04:25 - There are units,
+nodes, neurons, so
+04:29 - to speak, in a convolutional
+layer, but what are they?
+04:33 - And the word that's
+typically used
+04:35 - is actually called a filter,
+which makes a lot of sense.
+04:38 - Now, convolutional
+neural networks
+04:40 - can be applied to lots of
+scenarios besides images
+04:43 - and there's a lot of
+research into different ways
+04:45 - that they can be
+used effectively,
+04:47 - but I'm going to stick
+with the context of working
+04:50 - with images because the word
+"filter" really fits with that.
+04:53 - We're filtering an image.
+04:55 - How is this layer
+filtering an image?
+04:57 - So the idea of a convolutional
+layer is not a new concept,
+05:00 - and it predates
+the era that we're
+05:02 - in now of so-called
+deep learning.
+05:05 - And if you want to go back
+and look at the origins
+05:08 - of convolutional
+neural networks,
+05:10 - you can find them in this paper
+called "Gradient-Based Learning
+05:13 - Applied to Document
+Recognition" from 1998.
+05:16 - Section two, convolutional
+neural networks
+05:18 - for isolated
+character recognition.
+05:21 - And here, we can see
+this diagram, which
+05:24 - is I'm attempting to
+kind of talk through
+05:27 - and create my own version of
+over here on the whiteboard
+05:31 - itself.
+05:32 - This is also the
+original paper associated
+05:34 - with the MNIST dataset--
+05:37 - a dataset of handwritten
+digits that's
+05:40 - been used umpteen amounts
+of times in research papers
+05:44 - over the years related
+to machine learning.
+05:46 - I know I'm going back
+and forth a lot here,
+05:48 - but let's go back to
+thinking of the input
+05:50 - as a two-dimensional
+image itself.
+05:53 - So this two-dimensional image--
+05:55 - and let's not say it's 10 by 10.
+05:57 - Let's use what the
+MNIST dataset is, which
+06:00 - is a 28 by 28 pixel image.
+06:02 - And of course now, much higher
+resolution images are used.
+06:06 - And this is what is coming in to
+the first convolutional layer.
+06:10 - This image is being
+sent to every single one
+06:13 - of these filters.
+06:16 - A filter is a matrix of numbers.
+06:18 - And let's just, for example,
+let's have a 3 by 3 matrix.
+06:21 - Each one of these filters
+represents nine numbers--
+06:23 - a matrix that's 3 by 3.
+06:25 - You could have a 5 by 5
+filter and so on and so forth,
+06:30 - but it a sort of standard size
+or a nice example size for us
+06:33 - to start with is 3 by 3.
+06:35 - Each one of these filters
+is then applied to the image
+06:37 - through a convolutional process.
+06:40 - This by the way,
+is not a concept
+06:42 - exclusive to machine learning.
+06:44 - This idea of a convolutional
+filter to an image
+06:47 - has been part of
+image processing,
+06:49 - and computer science, and
+computer vision algorithms
+06:52 - for a very long time.
+06:53 - To demonstrate this, let
+me actually open up--
+06:56 - I can't believe I'm
+going to do this,
+06:58 - but I'm going to
+open up Photoshop.
+07:00 - So here I am in
+Photoshop and I've
+07:01 - opened this image of a kitten.
+07:02 - And there's a menu
+option called Filter.
+07:04 - This word is not
+filter by accident.
+07:07 - There's a connection.
+07:08 - So all of these types of
+operations that you might do--
+07:10 - for example, like
+blur an image--
+07:13 - these are filters-- convolutions
+applied to the image.
+07:18 - I'm going to go down here
+under Other and select Custom.
+07:22 - All of a sudden, you're
+going to see here,
+07:25 - I have this matrix of numbers.
+07:27 - This matrix of
+numbers in Photoshop
+07:30 - is exactly the same thing
+as this matrix of numbers
+07:34 - I'm drawing right here.
+07:36 - Each one of these filters
+in the convolutional layer
+07:40 - represents a matrix
+of numbers that
+07:42 - will be applied to the image.
+07:44 - So let me actually just
+put some numbers in here.
+07:47 - [MUSIC PLAYING]
+07:51 - This particular set
+of numbers happens
+07:54 - to be a filter for
+finding edges in an image.
+07:58 - And you can think
+of it as these are
+08:00 - all weights for a given pixel.
+08:02 - So for any given pixel,
+I want to subtract colors
+08:05 - that are to the left
+of it and emphasize
+08:07 - colors that are at that
+pixel and above and below.
+08:11 - This draws out
+areas of the image
+08:14 - where the neighboring pixels
+are very, very different.
+08:17 - Interestingly enough, I
+could switch these to 0.
+08:20 - [MUSIC PLAYING]
+08:22 - Switching the filter to have
+the negative numbers on the top,
+08:25 - you can see now I'm
+still detecting edges,
+08:27 - but I'm detecting
+horizontal edges.
+08:30 - If you go back and
+look at the cat
+08:32 - that I had previously
+versus this one,
+08:33 - you can see vertical edges
+versus horizontal edges.
+08:36 - So there are known
+filters, which draw out
+08:39 - certain features of an image.
+08:41 - And that's exactly what each
+one of these filters does.
+08:45 - If all of the nodes
+of a neural network
+08:48 - can draw out and highlight
+different aspects of an image,
+08:52 - those can be weighted
+to indicate and classify
+08:55 - the image in certain ways.
+08:57 - The big difference between
+a convolutional layer,
+08:59 - and a neural network,
+and what I'm doing here
+09:02 - by hardcoding in
+sort of known filters
+09:05 - is that the neural
+network is not
+09:07 - going to have filters
+hardcoded into them.
+09:09 - It's going to learn filters that
+do a good job of identifying
+09:14 - features in an image.
+09:16 - This relates to the idea
+of weights, I think.
+09:18 - So if I go back to
+my previous diagram,
+09:23 - where every single
+input is connected
+09:24 - to each hidden
+neuron with a weight,
+09:28 - now the input image is
+connected to every single one
+09:32 - of these filters.
+09:33 - In a way, there are now nine
+weights for every single one.
+09:37 - Instead of learning
+a single weight,
+09:39 - it's going to learn a set of
+weights for an area of pixels
+09:42 - to identify a
+feature in the image.
+09:46 - All of these filters will start
+with random values, and then
+09:50 - the same gradient
+descent process--
+09:53 - the error backpropagating
+through the network,
+09:56 - adjusting all the dials,
+adjusting all the weights
+09:58 - in these matrices and
+all of these filters--
+10:00 - works in the same way.
+10:02 - So in the ml5 series,
+I haven't really
+10:05 - gone through and looked at
+the gradient descent learning
+10:07 - algorithm to adjust all
+the weights in detail.
+10:10 - I do have another
+set of videos that
+10:12 - do that if you're interested,
+but the same gradient descent
+10:14 - algorithm that is
+applied to these weights
+10:16 - is applied to all of
+the different values
+10:18 - in each one of these filters.
+10:20 - Incidentally, just to show
+a very common convolution
+10:23 - operation to blur an
+image, blurring an image
+10:26 - is taking the average of a given
+pixel and all of its neighbors.
+10:31 - So here, you can see if I give
+the same weight to a 5 by 5
+10:34 - matrix of pixels
+around a center pixel,
+10:37 - and then divide that
+scale-- let's divide by 25
+10:39 - because there's 25--
+10:40 - that's averaging
+all of the colors.
+10:42 - If I click on Preview,
+blurred, not blurred,
+10:45 - blurred, not blurred.
+10:47 - Of course, there are other more
+sophisticated convolutions,
+10:50 - like a Gaussian blur.
+10:52 - You can take a look
+a Gaussian blur.
+10:53 - There's different
+ways to pronounce it.
+10:55 - You can take a look and
+research what that is,
+10:57 - but again, I'm not
+going down the road
+10:59 - to look at common image
+processing convolutions.
+11:03 - Instead, talking about the
+concept of a convolution as
+11:05 - applied to an image
+in the process
+11:08 - of a convolutional
+neural network.
+11:11 - Just to take this a
+little bit further,
+11:12 - I'm going to demonstrate
+how to code the convolution
+11:15 - algorithm in p5.js.
+11:17 - In truth, ml5 and
+TensorFlow.js are
+11:20 - going to handle all of the
+convolution operations for us
+11:23 - and creating all the filters.
+11:25 - We're just going to configure
+a convolutional layer
+11:27 - from a high level.
+11:28 - But I think it's
+interesting to look
+11:29 - at how you might code an image
+processing algorithm in p5.
+11:33 - I have some videos that do
+things like this previously,
+11:35 - but let's look at
+it in this context.
+11:37 - So I took a low resolution
+28 by 28 image of a cat.
+11:42 - This comes from the Quick Draw
+dataset, which I've made videos
+11:45 - about before and I
+will also use to see
+11:47 - if we can create a
+doodle classifier as part
+11:49 - of this series.
+11:51 - And all I want to do is apply
+a convolution to that image.
+11:55 - So first, I'm going
+to create a variable
+11:56 - and I'm going to call it filter.
+11:58 - So this is going
+to be our filter.
+12:00 - And I'm going to make it
+a two-dimensional array.
+12:03 - So let me just put all
+zeros in it to start.
+12:07 - So this is the filter.
+12:08 - And let's go with that
+one that looks for edges.
+12:14 - The cat image is actually
+quite low resolution,
+12:15 - just 28 by 28 pixels, but I'm
+drawing it at twice the size.
+12:19 - I want to write the code to
+apply this filter to the image
+12:22 - and draw the filtered
+image to the right.
+12:25 - I'm going to create a variable
+called dim for dimensions
+12:27 - and just call this 28.
+12:31 - And then I want another variable
+to store the filtered image.
+12:37 - And in setup, I can
+create that image.
+12:40 - This creates a blank image
+of the same dimensions
+12:42 - as the original cat drawing.
+12:44 - Then I can write a loop.
+12:49 - And this loop is going to
+look at every single pixel
+12:53 - for all the columns x
+and all of the rows y.
+12:56 - And I wrote int there
+because I'm half the time
+12:58 - programming in Java.
+13:00 - But one thing that's
+important here,
+13:02 - if we're going to take
+this 3 by 3 matrix
+13:05 - and apply it to every single
+pixel of the original image,
+13:08 - if we're applying it to
+that first pixel 0,0,
+13:11 - there's no pixel to the
+left and no pixel above it.
+13:14 - It doesn't have all
+of its neighbors.
+13:16 - So there's various
+ways around this.
+13:17 - I'm just going to ignore
+all the edge pixels.
+13:20 - So the loop will go from
+1 to dimensions minus 1.
+13:27 - Now, there's a lot more work
+to be done here just to apply
+13:31 - this filter to any given pixel.
+13:35 - I think a way that
+might make sense
+13:36 - to do this is to actually
+have a new function.
+13:39 - I would call the
+function filter--
+13:41 - let's just call it convolution.
+13:43 - I'm going to write a
+function called convolution.
+13:47 - It receives an image, an
+x and a y, and a filter,
+13:53 - and it returns a new color.
+14:00 - So the idea of this
+function is that it receives
+14:02 - all the things it needs.
+14:04 - It receives the original image,
+the filter to apply to it,
+14:07 - which particular pixel
+we want to process,
+14:09 - and then will return
+back to new RGB value
+14:13 - after that pixel is processed.
+14:15 - And the reason why I'm doing
+that in a separate function
+14:17 - is I need another nested
+loop to go over the filter.
+14:20 - So I need to go from 0 to 3--
+14:25 - 0, 1, 2 columns in the filter,
+0, 1, 2 rows in the filter.
+14:31 - And it would be getting
+to be quite a lot
+14:33 - if I had four nested
+loops right in here.
+14:37 - Now, I probably
+shouldn't have some
+14:39 - of this hardcoded in
+here-- the number 3
+14:41 - and that sort of
+thing-- but you can
+14:42 - imagine how you might
+need to use variables
+14:44 - if the filter size is flexible.
+14:46 - Now, we have a really sort
+of like sad fact, which
+14:50 - is true about most cases
+where you're doing image
+14:53 - processing with some framework.
+14:56 - And in this case, our framework
+is JavaScript, and canvas,
+14:59 - and p5.js.
+15:00 - And the sad fact is though even
+though all of this is built--
+15:05 - all of this discussion
+is built upon the fact
+15:07 - that we are retaining
+the spatial orientation
+15:10 - of the pixels.
+15:10 - We're thinking of it as
+a two-dimensional matrix
+15:13 - of numbers.
+15:14 - The actual data is
+stored in one array.
+15:18 - And so I've gone over this
+in probably countless videos,
+15:21 - but there's a simple formula to
+look at if I have a given x,y
+15:25 - position in a
+two-dimensional matrix,
+15:28 - how do I find the
+one-dimensional lookup
+15:31 - into that matrix, assuming
+that the pixels were counted
+15:35 - by rows--
+15:36 - 0, 1, 2, 3, 4, 5, 6, 7, blah,
+blah, blah, next row, 28, 29,
+15:40 - 30, blah, blah blah.
+15:41 - And that formula is let index--
+15:44 - oh, well, I need to do that
+before this nested loop
+15:46 - because right now, I just want
+the center pixel-- that x,y.
+15:50 - Let index equal x plus
+y times img.width.
+15:55 - But there's more, oh!
+15:57 - So this is the form.
+15:58 - And if you think about
+it, it makes sense
+15:59 - because it's all the
+x's, and then the
+16:01 - offset along the
+y's is how many rows
+16:04 - times the width of the image.
+16:06 - But there's another
+problem, which
+16:08 - is that in JavaScript in
+canvas, for every single pixel
+16:13 - in this image,
+there are actually
+16:15 - four numbers being stored--
+16:17 - an R, a G, a B, and an alpha--
+16:19 - the red, green,
+and blue channels
+16:20 - and the alpha channels--
+16:23 - channel, singular.
+16:24 - So each pixel takes
+up four spots.
+16:27 - So this index actually
+needs to say times 4.
+16:30 - So guess what?
+16:31 - You know it's going to
+make a lot of sense.
+16:33 - I'm going to need
+this operation a lot.
+16:35 - Let's write a function for it.
+16:38 - I'll just call it index, and it
+receives an x, y, and a width,
+16:44 - and it returns--
+16:45 - you know what?
+16:46 - The width is never going
+to change in my sketch,
+16:49 - so I don't want to be
+so crazy as to have
+16:51 - to pass it around everywhere.
+16:54 - So we're just going to pull
+it from a global variable.
+16:58 - Return x plus y times img.width.
+17:01 - And that's not img,
+it's cat.width.
+17:03 - OK, so once again, this is
+terrible what I'm doing,
+17:06 - but I'm just saving myself
+a little bit of heartache
+17:08 - here and there.
+17:09 - So this index-- ooh,
+let's call this pixel.
+17:15 - Oh, and this should be times 4.
+17:18 - This pixel is that
+function index x,y.
+17:22 - Now, I have something I
+could do to simplify this,
+17:25 - but I might as well write
+the code for if this
+17:27 - were a full RGB image.
+17:29 - This is a grayscale image, but
+it has all the channels in it.
+17:32 - The thing that I need to do
+to perform this convolution
+17:34 - operation is to take
+all of the weights--
+17:38 - the numbers that are
+in the filter matrix--
+17:41 - and I need to multiply each one
+times the pixel value of all
+17:46 - of the neighbors and their
+corresponding locations,
+17:48 - add them all up together,
+and maybe divide by something
+17:51 - if I wanted to sort of,
+like, average it out.
+17:53 - But in this case, I actually
+don't want to divide
+17:55 - by anything.
+17:56 - I'm just going to leave the
+weights are the weights are
+17:58 - the weights are the weights.
+17:59 - And actually, this right
+here is irrelevant.
+18:02 - I need to do this
+inside the loop.
+18:04 - You'll see in a second.
+18:05 - I think it's going
+to make sense.
+18:06 - So I need sum.
+18:07 - I'm going to make a sum
+of all the R values,
+18:11 - a sum of all the green
+values, and a sum of all
+18:16 - the blue values.
+18:18 - All right, wait a sec,
+wait a sec, wait a sec.
+18:20 - Actually, I think this is
+going to make more sense.
+18:22 - Let's go from negative 1 to 2.
+18:24 - You'll see why.
+18:25 - I mean, I'll explain why.
+18:27 - And negative 1 to 2.
+18:28 - Let's do that instead.
+18:29 - And maybe it's more clear to
+say less than or equal to 1.
+18:33 - Less than or equal
+to 1 because--
+18:39 - and let me draw this
+diagram once again--
+18:44 - if this is pixel 0,0, this is
+pixel negative 1, negative 1.
+18:49 - This is 1,1.
+18:50 - This is 1,0.
+18:52 - This is 1, negative 1.
+18:56 - I guess I'll do them all.
+19:00 - So you can see that
+the neighboring
+19:02 - pixels are offset by negative
+1 and 1, and negative 1 and 1.
+19:06 - So the pixel x
+value is x plus i.
+19:12 - The pixel y value is y plus j.
+19:19 - And then the pixel index
+is call the index function
+19:24 - x, which returns the actual
+index into that array
+19:28 - for pixel x and pixel y.
+19:30 - And actually, maybe it
+makes more sense for me
+19:32 - to just say that I
+don't necessarily
+19:33 - need separate variables.
+19:35 - It might actually be
+just as clear just
+19:38 - to put this right in here.
+19:42 - So now, I just need to add the
+red, green, and blue values
+19:45 - of this particular
+pixel to the sum.
+19:48 - So sumR plus equal img.pixels
+at that pixel index.
+19:55 - And then G and B.
+G is the next one,
+20:02 - and B, blue, is the next one.
+20:04 - And let's add a plus 0
+here just to be consistent.
+20:07 - So ultimately, what I'm actually
+returning here is r is sumR,
+20:12 - g is sumB, and b is sum--
+20:17 - oh, sorry, g is
+sumG and b is sumB.
+20:19 - So this is the process now
+of adding up all the pixels.
+20:23 - I've gone through every
+single pixel in a 3
+20:25 - by 3 neighboring
+area and added up
+20:27 - all the reds, greens, and blues,
+and I'm returning those back.
+20:30 - But I'm missing the
+crucial component, which
+20:32 - is as I'm adding all the
+pixels up in that area,
+20:35 - I need to multiply each one by
+the value in the filter itself.
+20:40 - Incidentally, I
+should also mention
+20:41 - that the operation that this
+really is is the dot product,
+20:46 - and in an actual
+machine learning system,
+20:48 - all this would be
+done with matrix math,
+20:50 - but I'm doing it sort
+of like longhand just
+20:53 - to sort of see the
+process and look at it.
+20:55 - What should I call this in
+the filter, like the factor?
+20:59 - Now, I need to look
+up in the filter, i,j.
+21:05 - Only here's the thing--
+21:06 - because I decided to go
+from negative 1 to 1,
+21:09 - negative 1 to 1,
+the filter doesn't
+21:12 - have those index values.
+21:13 - It goes 0, 1, 2, 0, 1, 2.
+21:16 - So this has to be
+i plus 1, j plus 1.
+21:20 - So it's all six of one,
+half dozen of the other,
+21:22 - whether I go from
+0 to 2 there and do
+21:24 - the offset in the pixels.
+21:25 - But the point is
+the pixel array,
+21:26 - I'm looking actually to
+the negative and positive
+21:29 - to the left and right,
+but the filter is just a 3
+21:32 - by 3 array starting with
+0,0 on the top left.
+21:35 - So now, I should be able
+to multiply by factor.
+21:40 - And there we go.
+21:41 - I have the full
+convolution operation.
+21:44 - Now, I might have
+made a mistake here.
+21:45 - I think this is right.
+21:46 - When I run it, we'll find
+out if I made a mistake.
+21:49 - I'm summing up a 3 by 3
+neighborhood of pixels,
+21:54 - all multiplied by weights
+that are in a 3 by 3 filter.
+22:00 - Oh, but I actually have to
+call that function here.
+22:03 - Now, it should be relatively
+easy because all of the work
+22:06 - was in there.
+22:07 - So if I say let I'm just
+going to call this rgb
+22:11 - equal convolution, the
+cat at the given x and y
+22:18 - with the filter, then the new
+image, which is called filter--
+22:23 - oh.
+22:25 - I have to look up.
+22:26 - It's OK.
+22:27 - No problem.
+22:29 - The pixel is index
+x,y, and then filter--
+22:37 - so I have to look up the
+one-dimensional location
+22:40 - in the new image, and then
+at .pixels at that pixel is
+22:48 - the rgb--
+22:49 - the red value that
+came back plus
+22:53 - 0 plus 1 plus 2, green and blue.
+22:57 - And then if all goes
+according to plan,
+23:00 - I should be able to
+draw the filtered image
+23:03 - at offset to the right
+with the same size.
+23:11 - I did miss something
+kind of important,
+23:13 - which is that if I am working
+with pixels of an image in p5,
+23:18 - I need to call loadPixels.
+23:21 - So cat.loadPixels
+filtered.loadPixels.
+23:25 - And then I haven't changed
+the pixels of the original cat
+23:28 - image, but since I changed the
+pixels of the filtered image,
+23:31 - afterwards I need to
+call updatePixels.
+23:35 - And now is the moment of truth.
+23:37 - [DRUM ROLL]
+23:38 - Never good when I press
+the snare drum button.
+23:42 - I'm going to run the sketch.
+23:44 - Whoops.
+23:45 - All right, well, I've
+already got an error.
+23:48 - [SAD TROMBONE]
+23:52 - Cannot read property loadPixels.
+23:54 - Oh, filter, filter, filtered.
+23:57 - That should be filtered.
+23:58 - Also this isn't
+right-- createCanvas.
+24:00 - The size of the canvas is
+times 10 times 2 times 10.
+24:04 - Remember, the image
+is just 28 by 28.
+24:06 - Let's try this again.
+24:08 - [DRUM ROLL]
+24:11 - [SAD TROMBONE]
+24:12 - Well, a little bit better.
+24:14 - We didn't get any errors.
+24:16 - I don't see an image.
+24:19 - Do I need to give it a
+hardcoded transparency of 255?
+24:24 - Yes.
+24:25 - [BELL] Oops.
+24:26 - So it was fully transparent.
+24:29 - So I'm not pulling
+the transparency over.
+24:31 - I could pull it
+over, but I just know
+24:33 - I don't want it
+to be transparent.
+24:34 - Look at that.
+24:35 - Look at how it found the--
+24:37 - oh, oh, oh, oh.
+24:40 - Look at this.
+24:42 - That doesn't look like it's
+finding the vertical edges--
+24:48 - pixels that are
+different to the left.
+24:50 - It looks like it's
+finding horizontal edges.
+24:52 - Even though I've typed
+this out in a way
+24:55 - that visually, these negative
+1's appear in a column,
+24:59 - it's actually those
+correspond not to the j index,
+25:05 - but to the i index.
+25:07 - So I think one way to fix that
+would just be to swap it here.
+25:14 - And maybe there's like a more
+elegant way of doing this,
+25:16 - but this now, if
+I run it this way,
+25:18 - you'll see, ah, look at
+those horizontal edges.
+25:21 - So now, we see how
+this convolution
+25:24 - is applied to the image.
+25:27 - The difference in the
+neural network here--
+25:29 - the convolutional
+neural network--
+25:30 - is we're not hardcoding
+in specific filters
+25:33 - that we know highlight
+things in an image.
+25:35 - The neural network
+is going to learn
+25:37 - what values for the
+filters highlight
+25:40 - important aspects of the image
+to help the machine learning
+25:43 - task at hand, such
+as classification.
+25:46 - So it might draw
+out, you know, cats
+25:48 - tend to have ears that appear
+a certain way and this kind
+25:53 - of filter, like, brings
+that out, and then leads
+25:55 - to the final layer of
+the network activating
+25:59 - with a high value for that
+particular classification.
+26:02 - So just to keep my example
+simulating the neural network
+26:06 - process a bit more, let's
+just every time I run it,
+26:09 - give it a random filter
+because that's what
+26:11 - the layer would begin with.
+26:12 - Just like a neural network
+begins with random weights
+26:14 - and learns the right
+weights, the filters
+26:16 - begin with random values and
+it learns optimal values.
+26:20 - So right here in setup,
+I'll write a nested loop
+26:30 - and give it a random value
+between negative and 1.
+26:33 - In truth, there are other
+mechanisms and strategies
+26:37 - for the initial weights of a
+convolutional neural network,
+26:41 - but picking random
+numbers will work for us
+26:43 - right now just to see.
+26:46 - So every time I
+run it, you can see
+26:48 - we get a different resulting
+image that is filtering
+26:52 - the image in a different way.
+26:56 - OK, that was a
+lot and I think it
+26:58 - would be good to take a break.
+26:59 - So this was the first
+part of my explanation,
+27:03 - a long-winded attempt to
+answer the question, what is
+27:06 - a convolutional neural network?
+27:08 - So the first thing to look at
+is the convolutional layer.
+27:11 - It's made up of filters.
+27:12 - And so this video
+attempted to explain that.
+27:16 - And I think we could take
+a break, have a cup of tea,
+27:18 - talk to your pet, or friend, or
+plant, or something, meditate,
+27:24 - relax.
+27:25 - And then if you want--
+27:27 - if you want, you can come
+back and in the next video,
+27:29 - I'm going to look
+at the next piece--
+27:31 - the next component of
+the convolutional layer,
+27:34 - an operation called pooling or
+more specifically, max pooling.
+27:37 - And then I'll be able
+to tie a little ribbon
+27:39 - and put a little bow
+on this explanation
+27:41 - about convolutional
+neural networks
+27:43 - and move towards
+actually implementing one
+27:46 - with the ml5 built-in
+functionality.
+27:48 - All right, so maybe I'll
+see you in the future
+27:51 - and have a great
+rest of your day.
+27:52 - Goodbye.
+27:53 - [MUSIC PLAYING]

@@ -1,0 +1,618 @@
+With timestamps:
+
+00:02 - hello fellow 3d scratchers wow this is
+00:06 - contagious there's a real buzz around
+00:08 - our raycasting tutorial and i've been
+00:10 - inundated with questions on how we can
+00:13 - extend it well how about we look at
+00:15 - adding sprite entities into the game
+00:18 - these come in the form of collectibles
+00:20 - and npcs non-playable characters and are
+00:22 - the perfect addition to our already
+00:24 - awesome 3d engine i mean look at this
+00:28 - cute little guy oh what's not to love
+00:30 - there are however two main problems to
+00:33 - be solved before we can get results that
+00:35 - look like these first we need a little
+00:37 - new maths to project a sprite into our
+00:40 - 3d world but in doing so we will need to
+00:43 - calibrate our raycaster to ensure that
+00:45 - everything will line up perfectly
+00:48 - this will be our main task for this
+00:50 - episode but then in episode 4 we'll move
+00:53 - on to support partial and full occlusion
+00:56 - of the entity sprites as they move
+00:58 - behind walls
+00:59 - so important and wow that's wacky cool
+01:03 - right but how is it done
+01:05 - well you'll have to keep watching to
+01:07 - find out so here we go guys
+01:10 - let's get scratching
+01:13 - we begin where we left off in episode
+01:16 - two i'd recommend you make a copy of
+01:18 - your project
+01:19 - this is episode three
+01:22 - and we'll start by tidying up some
+01:24 - things come into the raycaster sprite
+01:28 - and separate off the setfov and res
+01:30 - variables i want all the game setup code
+01:33 - to be moved into the player sprite so
+01:36 - drag it in there and delete them from
+01:38 - this raycaster sprite okay click back
+01:41 - into the player sprite and there they
+01:43 - are so drag them under the when green
+01:45 - flag clicked script
+01:47 - while we are here i have a small fix to
+01:50 - make i want to set the sprite size to
+01:52 - 150. this will avoid us getting weird
+01:55 - raycasting issues when the player gets
+01:57 - too close to a wall i know a number of
+01:59 - you have been having this problem
+02:02 - now our game loop this forever loop has
+02:05 - become too long i want to split it up so
+02:07 - that's easier to manage
+02:09 - this is mostly player movement code so
+02:12 - make a new custom block naming it player
+02:15 - tick
+02:16 - checking the run without screen refresh
+02:18 - block
+02:19 - i use tick to represent the tick of a
+02:21 - clock we handle the player movement one
+02:23 - tiny tick at a time
+02:26 - now pop a new player tick block in the
+02:28 - forever loop
+02:29 - and stuff the entire player movement
+02:31 - scripts under the new defined block
+02:34 - however hold on there is one exception
+02:38 - come down to the bottom of that script
+02:40 - this broadcast raycast is not part of
+02:43 - the player movement so separate it off
+02:45 - and bring it back up into the forever
+02:47 - loop above
+02:48 - splendid that's much better
+02:51 - now going forward we are going to need
+02:53 - to use the player's direction a lot more
+02:56 - we already created a variable in the
+02:58 - raycaster for this reason but now we'll
+03:00 - make it official make a new custom block
+03:03 - initialize raycaster
+03:06 - and run without screen refresh
+03:10 - we'll make use of it before broadcasting
+03:13 - raycast
+03:14 - this means anything we need to do before
+03:16 - the raycast can be put in here
+03:19 - for now
+03:20 - that will be to set our direction
+03:22 - variable so make a new variable naming
+03:24 - it
+03:25 - camera
+03:26 - dir dir for direction
+03:28 - for all sprites
+03:31 - and simply set it to the direction of
+03:33 - this sprite
+03:35 - that is the player
+03:37 - so as i said we already kind of did this
+03:40 - last episode so click into the raycaster
+03:42 - sprite
+03:46 - here we first set the direction of the
+03:48 - player
+03:48 - so we can replace that with our new
+03:51 - camera der variable
+03:53 - and then and here we go this dir dir
+03:56 - variable is the one we set up last
+03:58 - episode we can remove that
+04:00 - and scrolling to the define single ray
+04:03 - script
+04:04 - all the dir variables can also be
+04:06 - replaced by camera der
+04:10 - right you know what let's give that a
+04:12 - quick test it's always good to see that
+04:14 - everything is still in working order
+04:16 - before we continue and yes it is phew
+04:20 - that's always a relief
+04:23 - so can we start bringing in other
+04:26 - sprites to our game well
+04:28 - not quite yet since the project is
+04:30 - running come over to a wall and i'll
+04:32 - show you why
+04:34 - now remember how we fixed the problem
+04:35 - where the walls would warp away from us
+04:37 - at the edges of the screen well do you
+04:40 - see what i am seeing with the fov the
+04:43 - field of view slider pushed to the max
+04:46 - we can clearly see that the walls are
+04:47 - now warping towards us did we go too far
+04:51 - with our fix
+04:52 - no no this is actually a completely
+04:55 - different yet similar looking type of
+04:57 - level distortion but until we fix it we
+05:00 - will not be able to accurately place our
+05:02 - entity sprites into the scene
+05:04 - so
+05:05 - what is going on here well here's our
+05:08 - player and we happily begin raycasting
+05:11 - firing out our rays each one evenly
+05:14 - spaced out from the one before it
+05:16 - also it appears until we extend these
+05:20 - rays onwards to collide with the wall
+05:22 - ahead and behold the rays do not hit the
+05:26 - wall evenly spaced at all the gaps
+05:28 - between the middle rays are far smaller
+05:31 - than the gaps between the outer rays
+05:33 - this gradual spacing out of rays is what
+05:36 - causes our straight lines in our level
+05:38 - to appear curved
+05:40 - to fix this we need to recalculate the
+05:42 - direction each ray is fired out such
+05:45 - that the rays become equally spaced as
+05:47 - they reach this wall
+05:51 - if we think back to our raycaster
+05:53 - scripts you'll remember we have a
+05:54 - variable x that starts at negative 240
+05:58 - the far left of the screen and as we
+06:00 - raycast it moves right across to 240 the
+06:03 - far right
+06:05 - this will be very useful
+06:07 - take this rightmost ray
+06:09 - we know that when x is 240 the angle of
+06:12 - our ray is at its maximum value and that
+06:15 - is set by 5 divided by 2. okay great
+06:19 - because given this using trigonometry
+06:22 - again thank you wikipedia we can
+06:24 - calculate the distance to the wall it
+06:26 - will be dv
+06:28 - equals 240 divided by tan the tangent of
+06:34 - fov divided by two but hold on there
+06:37 - didn't i just make up this wall how can
+06:39 - we be calculating the distance to it and
+06:41 - so what exactly is this dv distance we
+06:44 - have calculated
+06:47 - this imaginary wall has a special
+06:49 - property in our 3d scene remember how
+06:51 - perspective causes objects to appear
+06:53 - smaller the further away they become
+06:56 - well there is a point where the size of
+06:58 - a wall in pixels on our level would be
+07:01 - exactly the same size in a 3d scene a
+07:05 - one pixel to one pixel ratio
+07:08 - the magic perfect distance away
+07:11 - and that is exactly what we just
+07:12 - calculated dv is that distance this is
+07:16 - super useful to know because it finally
+07:19 - will allow us to size objects precisely
+07:21 - without calling for guessing numbers
+07:23 - like the large 4000 value we used for
+07:26 - wall heights you'll see soon enough
+07:28 - but i digress
+07:30 - right now what we can do is to take any
+07:32 - other value of x like 120 for example
+07:35 - and use a little more trigonometry angle
+07:39 - equals the arctan of x divided by dv
+07:43 - that's a tan
+07:44 - and now we've calculated the direction
+07:47 - required to fire out array to hit the x
+07:50 - value perfect you see those math lessons
+07:53 - really were super useful
+07:55 - okay let's do it click into the player
+07:58 - sprite and find our initialize raycaster
+08:01 - script
+08:02 - we need that new variable dv making it
+08:06 - for all sprites
+08:07 - then following the math we just went
+08:09 - over set dv to
+08:12 - 240 divided by
+08:17 - the tan
+08:24 - of fov divided by two
+08:32 - great
+08:34 - now click into the raycaster sprite and
+08:36 - find the when i receive raycast event
+08:41 - since our direction will now be
+08:42 - calculated from x we can remove the
+08:44 - point in direction block from here
+08:47 - and scrolling down to the define vaca
+08:49 - script we can also remove the initial
+08:51 - turn left block
+08:55 - and the turn right block
+08:59 - these are all going to be replaced by a
+09:01 - new calculated point in direction block
+09:07 - start with an addition
+09:09 - and we point the same way as the player
+09:12 - with the camera der variable
+09:14 - and here we go
+09:16 - using our clever maths the arctan atan
+09:20 - of
+09:26 - and a division block
+09:29 - we divide x
+09:33 - by dv
+09:35 - oh wow so much explaining for such a
+09:38 - little bit of code right but that should
+09:41 - be it shall we test it out
+09:43 - well the good news is the scene is still
+09:46 - drawing even though we completely
+09:47 - changed the angles of the projection
+09:50 - what's more the walls are looking pretty
+09:52 - straight don't you think
+09:54 - let's change that field of view variable
+09:56 - to really check this out
+10:02 - oh my word that is amazing what a change
+10:05 - the lines are now completely straight no
+10:08 - warping in sight trigonometry saves the
+10:11 - day that's beautiful
+10:14 - and that brings us to an interesting
+10:16 - point
+10:17 - why does changing the field of view
+10:19 - cause all the walls to come closer
+10:21 - together without also affecting the
+10:23 - height of the walls
+10:25 - well that's a good question because it
+10:27 - should so let's fix it scroll over to
+10:30 - the define single ray script and down to
+10:33 - where we are setting the height variable
+10:36 - here
+10:37 - remember we added this 4000 value to
+10:40 - represent the height of the walls
+10:42 - i said it was a large value and it was
+10:43 - tricky to explain why well this value is
+10:46 - related to the new dv variable we just
+10:49 - calculated if we drop dv in on the left
+10:52 - this now will result in a wall with the
+10:55 - same height as a one pixel wide wall
+10:58 - drawn in the level costume
+11:00 - and that's too small though so let's
+11:02 - multiply it by 10 10 pixels
+11:06 - and now width and height are linked so
+11:09 - i'm dead excited to show you how that
+11:11 - changes how the raycaster looks here we
+11:14 - go find a wall and then slide the field
+11:17 - of view up
+11:19 - and now suddenly things make so much
+11:22 - more sense wow what the field of view
+11:24 - slider now does is control the zoom of
+11:28 - the camera it can go from wide angle to
+11:30 - telephoto in the blink of an eye and
+11:32 - that's crazy cool don't you think this
+11:35 - opens up lots of opportunities for
+11:37 - exciting game mechanics i can just
+11:39 - imagine it being used for binoculars or
+11:41 - a telescopic lens wow that's so fun
+11:45 - more importantly though this now means
+11:47 - we can move on and try to bring entities
+11:50 - into our game yeah delay the foundation
+11:54 - click into the player sprite and find
+11:56 - our forever loop
+11:58 - after the broadcast raycast add another
+12:00 - broadcast with the new message
+12:03 - entity tick
+12:06 - yeah so this will run after we've done
+12:09 - our raycasting
+12:11 - so just as we have one sprite to
+12:13 - represent the player on the level map
+12:15 - and another to do the 3d drawing so we
+12:18 - will now do the same with the new entity
+12:21 - click to paint a new sprite and name it
+12:24 - entities
+12:26 - and just like the player we need that
+12:28 - little hitbox costume click into the
+12:31 - player sprite and drag a copy of the
+12:33 - hitbox costume into the new entities
+12:35 - sprite oh man that scratch gooey does
+12:39 - jump around a lot sometimes back into
+12:41 - the entities sprite again we can delete
+12:44 - costume one
+12:46 - that's the only costume we need right
+12:47 - now so click back into the coding tab
+12:50 - when flag clicked
+12:53 - let's keep things stable with a set
+12:55 - rotation style two
+12:57 - don't rotate
+12:59 - then size the entity up with a set size
+13:02 - to two to five to twenty five percent
+13:05 - that will stop them clipping into walls
+13:06 - later on
+13:08 - now to position the entity on our level
+13:11 - i'm just going to quickly start and stop
+13:13 - the project there now the entity is
+13:16 - sized and we can easily drag it around
+13:17 - the stage a good place to put it would
+13:20 - be right in front of the player so that
+13:23 - it will be visible as soon as the game
+13:24 - starts up
+13:26 - once positioned drag in a go to xy block
+13:29 - and that will fix the entity in place
+13:32 - great that's the setup done now let's
+13:35 - handle the entity tick event when i
+13:38 - receive entity tick
+13:40 - this is broadcast after the raycaster
+13:42 - has drawn the level what we need to do
+13:44 - next is take the entity positioned on
+13:47 - our stage and somehow project it into
+13:49 - our 3d scene
+13:51 - doing this requires nothing but a small
+13:53 - amount of clever maths but luckily each
+13:56 - step is quite logical and so let's break
+13:58 - it down step one we want to view the
+14:01 - entity from the player's point of view
+14:03 - we do this by subtracting the player's
+14:05 - position from the entity's position and
+14:08 - that places the player right at the
+14:09 - center of the action
+14:11 - next we rotate the view so that the
+14:14 - player is facing directly forward
+14:17 - nice
+14:18 - because that gives us everything we need
+14:20 - to redraw the sprite using the same 3d
+14:22 - maths used for our raycaster that is an
+14:24 - x position and a distance
+14:27 - but just rewind one step
+14:31 - how exactly do we rotate the scene
+14:33 - ah you notice that
+14:36 - okay another visit to wikipedia needed
+14:39 - so we have a point at x and y
+14:42 - we want to rotate it by degrees
+14:45 - counterclockwise around the origin that
+14:47 - is the player
+14:48 - the new position nx ny is given by the
+14:52 - following awesome formula
+14:55 - nx is equal to
+14:57 - x multiplied by the cosine of der
+15:00 - minus y
+15:02 - multiplied by the sine of der
+15:04 - and ny is equal to
+15:07 - x multiplied by the sine of der
+15:10 - plus y multiplied by the cosine of der
+15:14 - brilliant a little scary but brilliant
+15:17 - okay then let's try and plug this all
+15:19 - together
+15:21 - make two new variables
+15:23 - vx for this point only
+15:28 - and v y also for this sprite only
+15:31 - we begin by calculating the position of
+15:34 - the entity offset from the player so set
+15:37 - vx2
+15:40 - subtract
+15:42 - x position
+15:48 - subtract the x position of the player
+15:57 - and similarly set v y to
+16:00 - [Music]
+16:02 - y position
+16:07 - subtract
+16:08 - the y position of the player
+16:11 - okay now for that rotation maths
+16:14 - make a new custom block for the job
+16:16 - we'll name it rotate view
+16:19 - and add a numeric input of x and another
+16:22 - one of y
+16:24 - ensure to tick the run without screen
+16:26 - refresh
+16:28 - now pop in the rotate view block here
+16:30 - and feed it with the vx and vy variables
+16:35 - great so now we can concentrate on
+16:37 - rotating these x and y inputs by the
+16:40 - camera der variable
+16:42 - we'll reuse the vx and vy to hold the
+16:45 - rotated position so set vx2
+16:48 - and here we go
+16:50 - subtract
+16:52 - and we need the cos block
+16:58 - this will be x multiplied by the cosine
+17:04 - of camera de
+17:09 - next duplicate the math so that we can
+17:12 - write y
+17:15 - multiplied by the sine of camera der
+17:19 - that's it x multiplied by the cosine of
+17:22 - camera
+17:23 - subtract y multiplied by the sine of
+17:27 - camera
+17:28 - wow that's exciting
+17:30 - now we need to do something very similar
+17:32 - for v y
+17:34 - so set v y to
+17:36 - and this time drop in now careful now
+17:39 - not a subtraction but an addition block
+17:41 - this time
+17:42 - now we can duplicate the cosine and sine
+17:45 - blocks and pop them down below into this
+17:48 - addition
+17:49 - finally we change the left cos for a
+17:52 - sine
+17:53 - and the right sign for a cosine because
+17:58 - oh man it would be too easy to get this
+17:59 - bit wrong so check over this a few times
+18:02 - once you're done to ensure we get it
+18:04 - right
+18:06 - well we are close now all we need to do
+18:09 - is apply the perspective maths to
+18:10 - visualize this in 3d but hold on there
+18:14 - we don't want to do that in this sprite
+18:17 - it's important for this sprite to live
+18:18 - on as the entity positioned on the 2d
+18:21 - level we'll use a completely new sprite
+18:23 - to do the final 3d drawing
+18:26 - so make a new sprite
+18:28 - now this is going to be such fun what
+18:30 - costume will represent this entity in
+18:32 - our level i'm thinking um nano might be
+18:36 - a fine character because they have such
+18:37 - a great range of expressions
+18:40 - why so serious nano
+18:42 - if you want you could choose a sprite
+18:44 - that is a collectible or an npc or
+18:46 - whatever you want to bring into your
+18:48 - game it's just too fun
+18:51 - so now making sure this sprite is just
+18:53 - the right size will help us no end when
+18:56 - bringing them into the game to do this
+18:58 - first we'll make sure to group the whole
+19:01 - sprite select the whole costume and
+19:03 - click the group button
+19:05 - next use the rectangle tool and draw
+19:08 - while holding down the shift key a
+19:10 - largish square that completely covers
+19:13 - nano like so
+19:14 - this will be our sizing guide
+19:17 - check the resultant size over here and
+19:19 - now simply resize the large square until
+19:22 - you get the size to read roughly 200 by
+19:25 - 200 pixels
+19:27 - slightly bigger is better than smaller
+19:29 - there we go perfect
+19:32 - now pay attention here
+19:34 - once sized we must drag the square until
+19:37 - it snaps perfectly into the center of
+19:40 - the drawing canvas
+19:41 - this is very important if you want your
+19:44 - sprites to appear at the right location
+19:46 - in the game
+19:47 - click to send the square to the back
+19:50 - there you are nano sorry about all that
+19:53 - right the idea of this purple box is to
+19:55 - inform us where the floor and the
+19:57 - ceiling is in relation to nano we should
+20:00 - therefore move nano so that their feet
+20:02 - are on the floor that is the bottom of
+20:04 - this square and then we can size them as
+20:07 - you see fit it's worth noting that the
+20:09 - middle point of the canvas represents
+20:12 - our player's eye level so that gives us
+20:14 - a way of judging size better i want nano
+20:17 - to appear smaller than us so i'm sizing
+20:19 - them below this midpoint
+20:21 - and after resizing always reposition the
+20:24 - entity to be in the center and touching
+20:26 - the floor
+20:28 - splendid this is going to be so cool now
+20:31 - rather than deleting this square
+20:32 - afterwards just select it and change its
+20:35 - fill color to transparent so that it's
+20:37 - still there if we need it
+20:39 - cool delete costume one to tidy up and
+20:41 - oops i never named this sprite sorry
+20:44 - about that give it the name
+20:46 - pen
+20:49 - okay let's code when i receive
+20:55 - a new message
+20:57 - paint i like the sound of that
+20:59 - first we need the distance from the
+21:01 - camera so make a new variable
+21:04 - distance for this sprite only
+21:08 - and set distance to
+21:11 - yeah we need that of block from the
+21:13 - sensing category
+21:16 - select entities on the right and then we
+21:19 - choose v y on the left
+21:22 - this is the rotated position of the
+21:24 - entity specifically the distance
+21:26 - from this we can use perspective maths
+21:29 - to calculate how tall the entity needs
+21:31 - to be drawn on the screen
+21:32 - make a new variable
+21:34 - height for this sprite only
+21:38 - we use the exact same mass that we use
+21:40 - for drawing the raycast walls here so
+21:42 - set height to 10
+21:45 - this is the same height we use for the
+21:46 - walls
+21:47 - multiply that by
+21:51 - dv divided by distance
+21:57 - there that's our perspective calculation
+21:59 - done
+22:00 - we can just pop that into a set size
+22:03 - block there set size to height
+22:08 - next up we position the sprite on the
+22:10 - screen
+22:11 - go to x y
+22:14 - the x position needs scaling for
+22:16 - perspective too so duplicate the maths
+22:19 - from the set height block
+22:21 - but we need to change the 10 for the vx
+22:25 - variable of the entity
+22:27 - pop it in on the left and make sure it's
+22:29 - referencing the vx variable this time
+22:32 - are you still with me it's a bit fiddly
+22:35 - but i'm sure you can do it
+22:37 - lastly the y position
+22:39 - that's always zero since we have no up
+22:42 - and down movement at this present time
+22:44 - and hey that's all the maths all that's
+22:48 - left to do is to make sure we broadcast
+22:50 - this paint event
+22:52 - click into the player sprite
+22:54 - and find the game loop under the green
+22:56 - flag block
+22:58 - bring in a broadcast block and broadcast
+23:01 - paint as the last event in this forever
+23:03 - loop perfect we are ready to test run
+23:07 - the project
+23:09 - haha there's nano that's an awesome site
+23:12 - and they're right where i'd expect them
+23:15 - let's try looking around
+23:17 - oh yeah they appear to be holding their
+23:19 - position very well let's move around a
+23:21 - bit
+23:22 - oh guys this is really awesome the
+23:25 - position is spot on all that work fixing
+23:28 - the camera projection has really paid
+23:30 - off this is terrific i cannot understand
+23:32 - why this hasn't brought a smile to
+23:34 - nano's face because to me this is really
+23:37 - fantastic stuff
+23:38 - hey watch this you'll like it if we
+23:40 - click into the player sprite i want to
+23:43 - make the 2d player visible so alter the
+23:45 - set ghost effect to be zero
+23:48 - and now we do the same on the level
+23:50 - sprite
+23:51 - ghost effect to zero
+23:53 - now in the entity sprite
+23:56 - under the sensing category use a set
+23:59 - drag mode block to set the entity sprite
+24:02 - to draggable
+24:04 - what does this do for us well run the
+24:07 - project and now when we're running full
+24:09 - screen we can drag the entity on the
+24:12 - stage and watch them get moved around in
+24:14 - the 3d scene oh man this is fun we can
+24:18 - put them anywhere we want and then go
+24:20 - and take a look to see if it all matches
+24:22 - up which of course it does yay you can
+24:25 - start to see how we're gonna be able to
+24:27 - make these entities move around the
+24:28 - level right but i guess you've seen our
+24:30 - next stumbling block haven't you
+24:32 - although positioned correctly this
+24:34 - entity is always drawn in front of all
+24:37 - the level walls even when they should
+24:39 - actually be fully or partially hidden
+24:41 - behind them
+24:43 - somehow we're going to need to bring
+24:44 - some of these walls in front of nano and
+24:47 - that
+24:48 - that is sadly a task we will have to put
+24:51 - off until episode 4.
+24:53 - and wow it's going to be awesome we'll
+24:56 - not only be integrating the entities and
+24:58 - raycasting code together
+25:00 - but we'll add depth sorting to the mix
+25:03 - we'll give the entities their correct
+25:05 - brightness and of course ramp up the
+25:06 - number of entities to really fill this
+25:09 - level with fun
+25:10 - if you enjoyed this episode and are
+25:12 - pumped for part four then smash that
+25:14 - like button and subscribe to the channel
+25:15 - so that you don't miss out on the
+25:17 - notification bell when the next episode
+25:18 - goes public and of course if you can't
+25:21 - wait then there's the option of joining
+25:23 - my early access channel membership where
+25:25 - members get to see the videos as soon as
+25:27 - they are made before everyone else
+25:29 - well that's it though thank you for
+25:32 - watching have a great week ahead and
+25:34 - scratch on guys
+25:42 - [Music]
+25:52 - you
+
+Cleaned transcript:
+
+hello fellow 3d scratchers wow this is contagious there's a real buzz around our raycasting tutorial and i've been inundated with questions on how we can extend it well how about we look at adding sprite entities into the game these come in the form of collectibles and npcs nonplayable characters and are the perfect addition to our already awesome 3d engine i mean look at this cute little guy oh what's not to love there are however two main problems to be solved before we can get results that look like these first we need a little new maths to project a sprite into our 3d world but in doing so we will need to calibrate our raycaster to ensure that everything will line up perfectly this will be our main task for this episode but then in episode 4 we'll move on to support partial and full occlusion of the entity sprites as they move behind walls so important and wow that's wacky cool right but how is it done well you'll have to keep watching to find out so here we go guys let's get scratching we begin where we left off in episode two i'd recommend you make a copy of your project this is episode three and we'll start by tidying up some things come into the raycaster sprite and separate off the setfov and res variables i want all the game setup code to be moved into the player sprite so drag it in there and delete them from this raycaster sprite okay click back into the player sprite and there they are so drag them under the when green flag clicked script while we are here i have a small fix to make i want to set the sprite size to 150. this will avoid us getting weird raycasting issues when the player gets too close to a wall i know a number of you have been having this problem now our game loop this forever loop has become too long i want to split it up so that's easier to manage this is mostly player movement code so make a new custom block naming it player tick checking the run without screen refresh block i use tick to represent the tick of a clock we handle the player movement one tiny tick at a time now pop a new player tick block in the forever loop and stuff the entire player movement scripts under the new defined block however hold on there is one exception come down to the bottom of that script this broadcast raycast is not part of the player movement so separate it off and bring it back up into the forever loop above splendid that's much better now going forward we are going to need to use the player's direction a lot more we already created a variable in the raycaster for this reason but now we'll make it official make a new custom block initialize raycaster and run without screen refresh we'll make use of it before broadcasting raycast this means anything we need to do before the raycast can be put in here for now that will be to set our direction variable so make a new variable naming it camera dir dir for direction for all sprites and simply set it to the direction of this sprite that is the player so as i said we already kind of did this last episode so click into the raycaster sprite here we first set the direction of the player so we can replace that with our new camera der variable and then and here we go this dir dir variable is the one we set up last episode we can remove that and scrolling to the define single ray script all the dir variables can also be replaced by camera der right you know what let's give that a quick test it's always good to see that everything is still in working order before we continue and yes it is phew that's always a relief so can we start bringing in other sprites to our game well not quite yet since the project is running come over to a wall and i'll show you why now remember how we fixed the problem where the walls would warp away from us at the edges of the screen well do you see what i am seeing with the fov the field of view slider pushed to the max we can clearly see that the walls are now warping towards us did we go too far with our fix no no this is actually a completely different yet similar looking type of level distortion but until we fix it we will not be able to accurately place our entity sprites into the scene so what is going on here well here's our player and we happily begin raycasting firing out our rays each one evenly spaced out from the one before it also it appears until we extend these rays onwards to collide with the wall ahead and behold the rays do not hit the wall evenly spaced at all the gaps between the middle rays are far smaller than the gaps between the outer rays this gradual spacing out of rays is what causes our straight lines in our level to appear curved to fix this we need to recalculate the direction each ray is fired out such that the rays become equally spaced as they reach this wall if we think back to our raycaster scripts you'll remember we have a variable x that starts at negative 240 the far left of the screen and as we raycast it moves right across to 240 the far right this will be very useful take this rightmost ray we know that when x is 240 the angle of our ray is at its maximum value and that is set by 5 divided by 2. okay great because given this using trigonometry again thank you wikipedia we can calculate the distance to the wall it will be dv equals 240 divided by tan the tangent of fov divided by two but hold on there didn't i just make up this wall how can we be calculating the distance to it and so what exactly is this dv distance we have calculated this imaginary wall has a special property in our 3d scene remember how perspective causes objects to appear smaller the further away they become well there is a point where the size of a wall in pixels on our level would be exactly the same size in a 3d scene a one pixel to one pixel ratio the magic perfect distance away and that is exactly what we just calculated dv is that distance this is super useful to know because it finally will allow us to size objects precisely without calling for guessing numbers like the large 4000 value we used for wall heights you'll see soon enough but i digress right now what we can do is to take any other value of x like 120 for example and use a little more trigonometry angle equals the arctan of x divided by dv that's a tan and now we've calculated the direction required to fire out array to hit the x value perfect you see those math lessons really were super useful okay let's do it click into the player sprite and find our initialize raycaster script we need that new variable dv making it for all sprites then following the math we just went over set dv to 240 divided by the tan of fov divided by two great now click into the raycaster sprite and find the when i receive raycast event since our direction will now be calculated from x we can remove the point in direction block from here and scrolling down to the define vaca script we can also remove the initial turn left block and the turn right block these are all going to be replaced by a new calculated point in direction block start with an addition and we point the same way as the player with the camera der variable and here we go using our clever maths the arctan atan of and a division block we divide x by dv oh wow so much explaining for such a little bit of code right but that should be it shall we test it out well the good news is the scene is still drawing even though we completely changed the angles of the projection what's more the walls are looking pretty straight don't you think let's change that field of view variable to really check this out oh my word that is amazing what a change the lines are now completely straight no warping in sight trigonometry saves the day that's beautiful and that brings us to an interesting point why does changing the field of view cause all the walls to come closer together without also affecting the height of the walls well that's a good question because it should so let's fix it scroll over to the define single ray script and down to where we are setting the height variable here remember we added this 4000 value to represent the height of the walls i said it was a large value and it was tricky to explain why well this value is related to the new dv variable we just calculated if we drop dv in on the left this now will result in a wall with the same height as a one pixel wide wall drawn in the level costume and that's too small though so let's multiply it by 10 10 pixels and now width and height are linked so i'm dead excited to show you how that changes how the raycaster looks here we go find a wall and then slide the field of view up and now suddenly things make so much more sense wow what the field of view slider now does is control the zoom of the camera it can go from wide angle to telephoto in the blink of an eye and that's crazy cool don't you think this opens up lots of opportunities for exciting game mechanics i can just imagine it being used for binoculars or a telescopic lens wow that's so fun more importantly though this now means we can move on and try to bring entities into our game yeah delay the foundation click into the player sprite and find our forever loop after the broadcast raycast add another broadcast with the new message entity tick yeah so this will run after we've done our raycasting so just as we have one sprite to represent the player on the level map and another to do the 3d drawing so we will now do the same with the new entity click to paint a new sprite and name it entities and just like the player we need that little hitbox costume click into the player sprite and drag a copy of the hitbox costume into the new entities sprite oh man that scratch gooey does jump around a lot sometimes back into the entities sprite again we can delete costume one that's the only costume we need right now so click back into the coding tab when flag clicked let's keep things stable with a set rotation style two don't rotate then size the entity up with a set size to two to five to twenty five percent that will stop them clipping into walls later on now to position the entity on our level i'm just going to quickly start and stop the project there now the entity is sized and we can easily drag it around the stage a good place to put it would be right in front of the player so that it will be visible as soon as the game starts up once positioned drag in a go to xy block and that will fix the entity in place great that's the setup done now let's handle the entity tick event when i receive entity tick this is broadcast after the raycaster has drawn the level what we need to do next is take the entity positioned on our stage and somehow project it into our 3d scene doing this requires nothing but a small amount of clever maths but luckily each step is quite logical and so let's break it down step one we want to view the entity from the player's point of view we do this by subtracting the player's position from the entity's position and that places the player right at the center of the action next we rotate the view so that the player is facing directly forward nice because that gives us everything we need to redraw the sprite using the same 3d maths used for our raycaster that is an x position and a distance but just rewind one step how exactly do we rotate the scene ah you notice that okay another visit to wikipedia needed so we have a point at x and y we want to rotate it by degrees counterclockwise around the origin that is the player the new position nx ny is given by the following awesome formula nx is equal to x multiplied by the cosine of der minus y multiplied by the sine of der and ny is equal to x multiplied by the sine of der plus y multiplied by the cosine of der brilliant a little scary but brilliant okay then let's try and plug this all together make two new variables vx for this point only and v y also for this sprite only we begin by calculating the position of the entity offset from the player so set vx2 subtract x position subtract the x position of the player and similarly set v y to y position subtract the y position of the player okay now for that rotation maths make a new custom block for the job we'll name it rotate view and add a numeric input of x and another one of y ensure to tick the run without screen refresh now pop in the rotate view block here and feed it with the vx and vy variables great so now we can concentrate on rotating these x and y inputs by the camera der variable we'll reuse the vx and vy to hold the rotated position so set vx2 and here we go subtract and we need the cos block this will be x multiplied by the cosine of camera de next duplicate the math so that we can write y multiplied by the sine of camera der that's it x multiplied by the cosine of camera subtract y multiplied by the sine of camera wow that's exciting now we need to do something very similar for v y so set v y to and this time drop in now careful now not a subtraction but an addition block this time now we can duplicate the cosine and sine blocks and pop them down below into this addition finally we change the left cos for a sine and the right sign for a cosine because oh man it would be too easy to get this bit wrong so check over this a few times once you're done to ensure we get it right well we are close now all we need to do is apply the perspective maths to visualize this in 3d but hold on there we don't want to do that in this sprite it's important for this sprite to live on as the entity positioned on the 2d level we'll use a completely new sprite to do the final 3d drawing so make a new sprite now this is going to be such fun what costume will represent this entity in our level i'm thinking um nano might be a fine character because they have such a great range of expressions why so serious nano if you want you could choose a sprite that is a collectible or an npc or whatever you want to bring into your game it's just too fun so now making sure this sprite is just the right size will help us no end when bringing them into the game to do this first we'll make sure to group the whole sprite select the whole costume and click the group button next use the rectangle tool and draw while holding down the shift key a largish square that completely covers nano like so this will be our sizing guide check the resultant size over here and now simply resize the large square until you get the size to read roughly 200 by 200 pixels slightly bigger is better than smaller there we go perfect now pay attention here once sized we must drag the square until it snaps perfectly into the center of the drawing canvas this is very important if you want your sprites to appear at the right location in the game click to send the square to the back there you are nano sorry about all that right the idea of this purple box is to inform us where the floor and the ceiling is in relation to nano we should therefore move nano so that their feet are on the floor that is the bottom of this square and then we can size them as you see fit it's worth noting that the middle point of the canvas represents our player's eye level so that gives us a way of judging size better i want nano to appear smaller than us so i'm sizing them below this midpoint and after resizing always reposition the entity to be in the center and touching the floor splendid this is going to be so cool now rather than deleting this square afterwards just select it and change its fill color to transparent so that it's still there if we need it cool delete costume one to tidy up and oops i never named this sprite sorry about that give it the name pen okay let's code when i receive a new message paint i like the sound of that first we need the distance from the camera so make a new variable distance for this sprite only and set distance to yeah we need that of block from the sensing category select entities on the right and then we choose v y on the left this is the rotated position of the entity specifically the distance from this we can use perspective maths to calculate how tall the entity needs to be drawn on the screen make a new variable height for this sprite only we use the exact same mass that we use for drawing the raycast walls here so set height to 10 this is the same height we use for the walls multiply that by dv divided by distance there that's our perspective calculation done we can just pop that into a set size block there set size to height next up we position the sprite on the screen go to x y the x position needs scaling for perspective too so duplicate the maths from the set height block but we need to change the 10 for the vx variable of the entity pop it in on the left and make sure it's referencing the vx variable this time are you still with me it's a bit fiddly but i'm sure you can do it lastly the y position that's always zero since we have no up and down movement at this present time and hey that's all the maths all that's left to do is to make sure we broadcast this paint event click into the player sprite and find the game loop under the green flag block bring in a broadcast block and broadcast paint as the last event in this forever loop perfect we are ready to test run the project haha there's nano that's an awesome site and they're right where i'd expect them let's try looking around oh yeah they appear to be holding their position very well let's move around a bit oh guys this is really awesome the position is spot on all that work fixing the camera projection has really paid off this is terrific i cannot understand why this hasn't brought a smile to nano's face because to me this is really fantastic stuff hey watch this you'll like it if we click into the player sprite i want to make the 2d player visible so alter the set ghost effect to be zero and now we do the same on the level sprite ghost effect to zero now in the entity sprite under the sensing category use a set drag mode block to set the entity sprite to draggable what does this do for us well run the project and now when we're running full screen we can drag the entity on the stage and watch them get moved around in the 3d scene oh man this is fun we can put them anywhere we want and then go and take a look to see if it all matches up which of course it does yay you can start to see how we're gonna be able to make these entities move around the level right but i guess you've seen our next stumbling block haven't you although positioned correctly this entity is always drawn in front of all the level walls even when they should actually be fully or partially hidden behind them somehow we're going to need to bring some of these walls in front of nano and that that is sadly a task we will have to put off until episode 4. and wow it's going to be awesome we'll not only be integrating the entities and raycasting code together but we'll add depth sorting to the mix we'll give the entities their correct brightness and of course ramp up the number of entities to really fill this level with fun if you enjoyed this episode and are pumped for part four then smash that like button and subscribe to the channel so that you don't miss out on the notification bell when the next episode goes public and of course if you can't wait then there's the option of joining my early access channel membership where members get to see the videos as soon as they are made before everyone else well that's it though thank you for watching have a great week ahead and scratch on guys you

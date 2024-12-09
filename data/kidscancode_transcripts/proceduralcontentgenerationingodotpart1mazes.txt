@@ -1,0 +1,340 @@
+00:00 - welcome to a new Godot 3d game
+00:02 - development series in this series we'll
+00:04 - be talking about procedural content
+00:06 - generation or PCG sometimes also called
+00:09 - proc gen I'll be explaining and
+00:11 - demonstrating some of the most common
+00:13 - PCG algorithms and showing you how you
+00:15 - can use them in your games the first PCG
+00:18 - topic we'll be looking at is mazes for
+00:20 - this part we'll be using the recursive
+00:23 - backtrack or algorithm which you can see
+00:25 - an example of running here this is also
+00:28 - known as depth-first search and what it
+00:31 - does is explore the whole area and carve
+00:34 - out a maze as it goes and it's one of
+00:37 - the easier maze algorithms to implement
+00:39 - so it's good one to start with and so
+00:43 - what it's based on is a grid so we have
+00:45 - a grid of squares restart it again here
+00:48 - it says we have a grid of squares and
+00:51 - the algorithm explores the grid by cell
+00:55 - by cell connecting them as it goes but
+00:57 - never crossing over itself in
+00:59 - mathematical terms this is what's called
+01:02 - a spanning tree and this means that
+01:04 - there's no loops and there's only one
+01:06 - path from any one point to another but
+01:08 - every point every two points on the
+01:10 - graph are connected so there's always a
+01:14 - route between point a and point B and
+01:16 - always only one route and that's the
+01:19 - recursive backtrack or algorithm here's
+01:22 - an overview of how the backtrack or
+01:23 - algorithm works so we start by picking a
+01:26 - starting cell could be anywhere on the
+01:28 - grid and we mark it as having been
+01:30 - visited and then if any neighbors of
+01:34 - that cell have not been visited then we
+01:36 - want to pick one of them randomly and
+01:39 - remove the wall between them add the
+01:43 - current cell the one we started with to
+01:45 - the stack and make the chosen two random
+01:49 - chosen neighbor the current cell and we
+01:51 - mark that visited and then if there
+01:54 - aren't any unvisited neighbors then we
+01:56 - take the top cell from the stack and
+01:58 - make it current and we just keep doing
+02:00 - that over and over from step two until
+02:03 - there's no more unvisited cells in the
+02:06 - whole grid now if that doesn't make
+02:10 - sense to you yet don't worry we will
+02:13 - talk
+02:13 - about what we mean by stack and what we
+02:15 - mean by the walls between the cells but
+02:18 - this is the steps that it takes to make
+02:21 - the maze and this is the code we're
+02:24 - gonna write to generate our maze in
+02:26 - Godot now the first step whenever you're
+02:29 - doing any kind of procedural generation
+02:31 - is to figure out how you're gonna
+02:33 - represent your data now since we're
+02:35 - using Godot and we want a square grid
+02:38 - Godot has a tile map node built into it
+02:41 - that's perfect for this it's designed to
+02:44 - handle a grid of squares what we have to
+02:48 - decide is how to represent the walls
+02:50 - between the different nodes and so
+02:54 - here's a picture of a cell this is one
+02:56 - cell in the grid and the cell has four
+02:59 - walls each of those four walls can
+03:02 - either be solid or it can be open and
+03:06 - we're gonna we use binary representation
+03:09 - for that then we could say the the wall
+03:12 - if it has a one it is solid and if it
+03:15 - has a zero it's open so that means that
+03:19 - with any combination of four zeros and
+03:21 - ones we could represent what state the
+03:24 - cell is in which walls are solid and
+03:26 - which walls are open so if we use a
+03:28 - single bit to represent each wall state
+03:30 - then a 4 bit number is gonna represent
+03:33 - the entire cells state and it would look
+03:37 - something like this now we could
+03:38 - represent these in whatever order we
+03:40 - like but I'm just gonna use the order
+03:43 - west south east north so the rightmost
+03:47 - digit is gonna represent the north wall
+03:49 - and that's the ones place the east wall
+03:52 - is the twos place the south wall is the
+03:56 - first place and the west wall is the
+03:59 - eights place and so now any 4-bit number
+04:01 - is going to represent any possible
+04:04 - arrangement of these walls and that will
+04:08 - be a number between 0 and 15 and every
+04:14 - possible tile if we lay them out is
+04:16 - going to look like this so these are all
+04:19 - the possible combinations of tiles and
+04:21 - that number in the center is what binary
+04:24 - number represents that cell
+04:27 - if you get a tile set a set of images
+04:29 - with 16 tiles representing these 16
+04:33 - combinations you can use that tile set
+04:36 - to represent your maze and so for this
+04:39 - project I've selected Kenny's Road
+04:41 - textures pack and if we make these into
+04:45 - a tile set in Godot with the tile ID
+04:49 - matching the wall pattern that you see
+04:51 - here on the screen we can use the tile
+04:53 - map data to record our maze data as well
+04:56 - so whichever tile ID is in a particular
+05:00 - cell say for example if it's number 9
+05:03 - then we know that the East and South
+05:06 - walls are open so this is really nice
+05:09 - because it means we won't need a
+05:10 - separate data structure to store
+05:12 - information about our walls we can just
+05:14 - use the tile ID in our tile map so if
+05:18 - you download the starting project you'll
+05:20 - get a scene containing a Tom map with
+05:23 - the tile set attached containing all of
+05:27 - the road tiles that we just looked at
+05:29 - okay so let's attach a script and we're
+05:31 - gonna start by defining some properties
+05:34 - firstly I have the four directions the
+05:38 - north east south and west like we looked
+05:40 - at in the picture and they're binary
+05:43 - values for what place they represent and
+05:45 - just naming them in ES and W is gonna
+05:49 - make it a little easier to refer to them
+05:50 - in code so that down below if we put the
+05:55 - number 8 well why is the 8 there well
+05:57 - we're talking about the west wall we'll
+05:58 - just use a W and then this dictionary
+06:00 - here cell walls is a mapping between
+06:02 - those 4 values and what direction they
+06:06 - represent what what actual physical
+06:08 - direction on the grid is that wall on so
+06:12 - the vector the up Vector is the north
+06:15 - wall the down vector is the south wall
+06:18 - and so on next I have a few more
+06:21 - variables that I'm going to track tile
+06:25 - size is going to be the tile size that
+06:28 - we have set in our tile map we at right
+06:30 - now is 64 by 64 but if you decide you
+06:33 - want to use different size tiles that
+06:35 - can change and then width and height is
+06:38 - how big we want our map to be how many
+06:40 - tiles
+06:41 - and how many tiles tall so that's how
+06:43 - big a maze we're gonna make and then
+06:46 - here I'm getting a reference to the tile
+06:48 - map just putting in the variable map
+06:51 - because I don't want to have to type
+06:53 - dollar sign tom map and do that lookup
+06:55 - all the time this is just a convenient
+06:57 - way to cache that get node lookup and
+06:59 - then we have our ready function where
+07:02 - we're just going to randomize so that we
+07:04 - can get a nice random distribution we're
+07:08 - gonna set that tile size variable based
+07:10 - on the cell size we've set in the tile
+07:13 - map node and then we're going to call
+07:15 - our make maze function which is kind of
+07:18 - the point of this exercise and before we
+07:21 - can generate the maze we're going to
+07:23 - need a helper function that if we give
+07:26 - it a cell and a list of all the cells
+07:28 - that are unvisited will return a list of
+07:32 - which neighbors are unvisited right
+07:36 - because that's how we in our algorithm
+07:38 - check or choose which cell to move into
+07:41 - next so given our current cell and all
+07:45 - the unvisited ones this will go through
+07:47 - and check each of the neighbors and if
+07:50 - the neighbor is unvisited add it to a to
+07:54 - a list and return that list so that way
+07:57 - we know which potential cells we can
+08:00 - choose randomly to move into and that'll
+08:04 - take us to our make maze function so the
+08:06 - make maze function is going to start by
+08:08 - declaring a couple variables that were
+08:10 - going to need we're gonna have an array
+08:12 - called unvisited that's going to keep
+08:13 - track of the tiles that we haven't
+08:17 - visited yet and then we're gonna have
+08:18 - another array to be our stack so g-d
+08:23 - script does not have a stack datatype
+08:27 - but we can use an array because we can
+08:30 - use the append method which texts an
+08:33 - object on to the end of the array and
+08:35 - then we can use the pop back method
+08:38 - which will remove the rightmost element
+08:41 - of the array and so that'll make it act
+08:44 - like a stack then we're gonna clear the
+08:47 - map and set all of its tiles to solid by
+08:53 - looping through the width
+08:55 - the height we're gonna add every tile to
+08:57 - the unvisited array because to start
+09:00 - with they are all unvisited and they're
+09:03 - going to set every cell to every cell
+09:08 - location - north east south west which
+09:12 - combined together is 15 and that's the
+09:16 - solid the solid green tile then we're
+09:19 - gonna pick our current starting cell
+09:22 - we're gonna start in the upper left hand
+09:24 - corner but you could start in any cell
+09:26 - of the map and it would the maze would
+09:27 - work just as well we're just gonna pick
+09:29 - the top left corner and remove that from
+09:32 - the unvisited list and then we're ready
+09:34 - to start the actual maze generation
+09:38 - algorithm now that we have everything
+09:40 - set up now some of you may be wondering
+09:43 - what this what's going on here with this
+09:46 - weird symbol here in between the
+09:49 - different direction letters and in GT
+09:52 - script and in most other languages this
+09:54 - is what's called the bitwise or what
+09:58 - does that mean well let's take a look at
+10:00 - the definition here so when you use a
+10:06 - bitwise operator between two numbers it
+10:09 - means that it operates on those numbers
+10:12 - as if they were in binary
+10:13 - so digit by digit in binary so for
+10:17 - example if I have eleven or five my
+10:20 - result is going to be 15 and the reason
+10:22 - for that is if we look at the numbers in
+10:24 - binary this is the number 11 this is the
+10:26 - number of five and then we do an or
+10:28 - operation on each digit well 1 or 1 is 1
+10:33 - 1 or 0 is 1 and etc and so that's why we
+10:38 - wind up with a 15 so when we have our 4
+10:42 - Direction values and we do in or E or s
+10:48 - or W and we get 15 that's because
+10:51 - remember north is 1 South is 2 or sorry
+10:54 - East is 2 south is 4 and west is 8 so 1
+10:59 - or 2 or 4 or 8 results in 15 and that's
+11:04 - why we have that so this is a very
+11:06 - pretty common operation when you're you
+11:09 - different what are called bit flags
+11:11 - different positions in a binary number
+11:13 - to represent different values and so
+11:16 - that's what we're doing with our 4-bit
+11:18 - number here each bit is representing one
+11:21 - of the walls and oaring them together
+11:24 - will give us the result of having all
+11:27 - four walls now there's also a bitwise
+11:30 - operator called and which we're gonna
+11:33 - use later so I'm going to explain that
+11:34 - in a little bit so now we're ready to
+11:37 - run our algorithm in here it is so as
+11:40 - long as the unvisited array is not empty
+11:44 - they're still unvisited cells we're
+11:46 - gonna keep doing this procedure and the
+11:50 - procedure is just like we talked about
+11:51 - and text earlier we're gonna check the
+11:53 - neighbors of the current cell all right
+11:57 - this this is our function that gives us
+11:59 - how many unvisited neighbors we have so
+12:01 - if we have at least one unvisited
+12:03 - neighbor we will pick a random one put
+12:07 - the current cell on the stack then we
+12:10 - need to remove the walls between the two
+12:12 - so next - current is going to give us a
+12:16 - direction vector for which direction we
+12:19 - just moved in and so using that we can
+12:22 - get the cell at current and we can
+12:26 - subtract whatever direction that is so
+12:29 - for example if the current cell has a
+12:32 - value of 15 we're going to subtract cell
+12:37 - walls dirt well dirt is let's say we
+12:41 - moved up if we moved up then the
+12:44 - direction is going to be zero negative
+12:46 - one well zero negative one means we
+12:49 - remove the north wall so we subtract one
+12:53 - so our 15 will become 14 and that is a
+12:59 - cell with the north wall open for the
+13:03 - next cell we do the opposite we just
+13:08 - reverse the direction because we want to
+13:10 - remove the south wall of the wall of the
+13:13 - cell above us right if we move the north
+13:15 - wall from the current cell we need to
+13:16 - remove the south wall from the one we
+13:18 - moved into then we set the map cells to
+13:22 - match
+13:22 - values right these are the values we
+13:24 - calculated these values we just we set
+13:26 - the current cell to 14 we set the next
+13:29 - cell then we make the next cell the
+13:32 - current cell and take it out of the
+13:35 - unvisited array and now we have a new
+13:40 - current and we'll do it again and we'll
+13:42 - keep doing it again unless we have no
+13:45 - neighbors if we have no neighbors then
+13:48 - if there's something in the stack we're
+13:50 - gonna pop the next one off of the stack
+13:52 - and use that that's the backtracking
+13:54 - part that's gonna make us go back now if
+13:57 - we run this we're gonna see a maze but
+14:00 - it's going to just pop up boom there's
+14:04 - our maze right we started here and off
+14:06 - we went and that's nice but it's also
+14:09 - sometimes kind of nice to see everything
+14:12 - running so at the end of the while loop
+14:16 - here we can add a yield and if we yield
+14:21 - let's say get tree idle frame that means
+14:26 - we want to basically update the screen
+14:30 - it's going to update the drawing on the
+14:32 - screen every frame or every iteration
+14:34 - through this while loop and so we'll see
+14:37 - the maze sort of get generated slowly
+14:42 - and so you see how it is backtracking I
+14:48 - made the size a little bigger then the
+14:50 - screen is so it's going off the screen a
+14:52 - little bit well up to it we can correct
+14:54 - that but you can see we're slowly going
+14:57 - around and uncovering tiles and then
+15:04 - backing up when we hit a dead end
+15:11 - so I'm just going to update the size
+15:13 - here and so now we have a maze generator
+15:18 - now I've kept this very generic to begin
+15:22 - with because there's a lot of different
+15:24 - applications where you could use this in
+15:27 - your game and the maze generation
+15:29 - algorithm itself doesn't really change
+15:32 - depending on what you are using it for
+15:35 - so in the next video we'll talk about
+15:38 - some applications of this in some ways
+15:40 - you can use this in your game to
+15:42 - generate say a city map to populate it
+15:46 - with decorations and things like that
+15:48 - you can use this for an isometric map
+15:52 - you can use this with a 3d grid map
+15:54 - there's a lot of different possibilities
+15:56 - and we'll talk about that a little bit
+15:58 - more in the next video
+16:00 - please leave your questions and comments
+16:02 - in the comment section below and I'll
+16:05 - see you in the next video
+16:14 - you

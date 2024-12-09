@@ -1,0 +1,1686 @@
+With timestamps:
+
+00:00 - hello and welcome i'm your code monkey
+00:02 - and here let's learn to build a free
+00:04 - online leaderboard we're going to do
+00:05 - this with the help of microsoft azure
+00:07 - cloud learn how to create an azure
+00:09 - function with azure storage to read and
+00:11 - write some data we're going to build a
+00:13 - demo where we can play our game get some
+00:15 - score then upload that score to the
+00:16 - cloud and display the full leaderboard
+00:18 - in-game for most developers this is
+00:20 - likely completely free since there is a
+00:22 - very generous free tier per month
+00:24 - now this is a tutorial for how to make
+00:26 - an online leaderboard but really
+00:28 - everything covered here can be applied
+00:29 - to a multitude of online mechanics i'm
+00:31 - currently working on a video showcasing
+00:33 - multiple examples of all the mechanics
+00:35 - that you could build so you can use this
+00:37 - exact logic to make something like the
+00:38 - messaging system in eldon ring or dark
+00:40 - zones you can build a histogram like in
+00:43 - the zachtronics games you can construct
+00:45 - a shared online world like in this
+00:47 - trending make an asynchronous
+00:48 - multiplayer game you can create your own
+00:50 - custom scene workshop and so on all
+00:52 - those mechanics share the same base
+00:54 - infrastructure that we're going to build
+00:56 - here and the same thing for non-game use
+00:57 - cases this is really a tutorial on
+00:59 - creating azure functions and connecting
+01:01 - them with azure storage and if you know
+01:03 - nothing about the cloud then don't worry
+01:05 - it's pretty simple once you learn the
+01:06 - basic terms i cover the basics of azure
+01:08 - in another video so go watch that just
+01:10 - so you know the basics and with that you
+01:12 - should be able to follow everything in
+01:13 - this tutorial here's everything that
+01:15 - we're going to do we're going to look at
+01:17 - my fun starting demo then create a
+01:19 - serverless azure function called get
+01:21 - leaderboard we're going to implement the
+01:23 - code in unity to trigger that azure
+01:25 - function parse the leaderboard and show
+01:27 - it
+01:28 - then implement azure storage to store
+01:30 - that leaderboard data
+01:32 - make another function to add scores to
+01:33 - the leaderboard which will grab the file
+01:35 - from storage add some data and write it
+01:37 - back and put it all together in a nice
+01:39 - working demo there's timestamps for all
+01:41 - the parts in the video okay so that's
+01:43 - our goal let's get to it if you use
+01:46 - unity in any way definitely get my
+01:48 - ultimate in the overview course it will
+01:49 - teach you how to use the many tools and
+01:51 - features that emt has so you can be more
+01:53 - effective and make better games faster
+01:55 - there's no need to build something
+01:56 - yourself from scratch if there's already
+01:58 - a built-in tool that works great unt has
+02:00 - tons of them that you might not know
+02:02 - about the course already has 15 lectures
+02:04 - each covering a different two hour
+02:05 - feature of the engine and is constantly
+02:07 - getting free updates or if you prefer
+02:09 - step by step courses on making a
+02:10 - specific game check out my builder
+02:12 - defender course i also have a phone
+02:14 - course only on using visual scripting
+02:16 - there isn't a single line of code in any
+02:18 - of those games and if you're past the
+02:19 - beginner stage and you want a guided
+02:21 - path to help you make the jump from
+02:22 - beginner to advanced and get my turn
+02:24 - based strategy course it will help you
+02:26 - massively improve your programming and
+02:28 - game dev skills on all courses i'm
+02:30 - always available in the q a section
+02:32 - answering all of your questions every
+02:33 - single day so check them out with the
+02:35 - link in the description all right so
+02:37 - here let's build a nice free online
+02:38 - leaderboard using azure functions and
+02:40 - storage over here is my demo game i have
+02:43 - my character in third person i made this
+02:45 - in a previous video
+02:47 - then i have some shooting targets along
+02:49 - with some destruction that i also
+02:50 - covered in another video and this is
+02:52 - basically the same demo scene that i
+02:53 - covered in the quantum console video
+02:56 - so i can aim and shoot at the targets
+02:58 - then i just added some mini game rooms
+03:00 - so the targets i spawned and i need to
+03:01 - shoot them then there's a timer counting
+03:03 - down after the timer is elapsed we have
+03:06 - a game over and out pops out a nice
+03:08 - input window i covered this simple
+03:09 - window in a previous video so it has the
+03:12 - player for the name i can type in
+03:13 - anything
+03:15 - then press ok and it shows the
+03:17 - leaderboard now the missing pieces we
+03:19 - would like to upload the score to a
+03:20 - server so we can see what score other
+03:22 - players got
+03:23 - so it's a pretty simple but fun minigame
+03:25 - which is going to be the perfect demo
+03:26 - for our online leaderboard now like i
+03:28 - said we're going to be using azure for
+03:30 - our online infrastructure i made a
+03:32 - detailed getting started tutorial
+03:34 - another video definitely go watch that
+03:35 - one before this one here i will assume
+03:37 - you know everything over there so i
+03:39 - assume you know the basics of what is
+03:40 - the cloud how azure works what is a
+03:42 - subscription resource and so on
+03:44 - and actually when i said this is free
+03:46 - that's not exactly technically 100 true
+03:50 - azure has a great pricing calculator so
+03:52 - over here you can see all the various
+03:54 - things that azure has and you can add
+03:56 - them to see how much they cost the
+03:58 - resource that we're going to use is
+03:59 - azure functions
+04:01 - and if you add them over here we can see
+04:03 - yep the cost is indeed zero dollars so
+04:05 - this one is familiar free
+04:07 - you have 400 gigabytes per second of
+04:09 - execution time and a million executions
+04:11 - for free every single month so unless
+04:13 - your game is a mega hit you're never
+04:15 - going to hit this amount so the
+04:16 - functions part is indeed pretty much
+04:18 - free now the other part to make our
+04:20 - leaderboard work is adding some storage
+04:22 - so on the pricing template if we add the
+04:24 - storage account then here if we set up
+04:26 - the storage so in my case i'm going to
+04:28 - use west europe we're going to be using
+04:30 - blob storage on the standard premium
+04:33 - and now we see that storage does not
+04:34 - have any free tier
+04:36 - however it is extremely cheap since this
+04:38 - is going to be in leaderboard which is a
+04:40 - tiny tiny amount of data pretty much in
+04:42 - the order of kilobytes so not even
+04:44 - megabytes and certainly not gigabytes
+04:47 - so if i put the smallest number possible
+04:49 - and discount later on pretty much all
+04:50 - the operations so ten thousand
+04:52 - operations one gigabyte ten thousand ten
+04:55 - thousand so on so if i put pretty much
+04:57 - the smallest values on all these if so
+04:59 - then this comes at a monthly cost of 14
+05:01 - cents per month
+05:02 - and if you have less than these so less
+05:04 - than ten thousand operations and less
+05:06 - than one gigabyte which will definitely
+05:08 - be much lower than that then yep it's
+05:10 - definitely not even going to get to 14
+05:12 - cents so technically this leaderboard
+05:14 - that we're going to cover here isn't 100
+05:16 - free instead it costs probably around
+05:18 - one to five cents per month which i'm
+05:19 - not sure they would even try charging
+05:21 - that much
+05:22 - okay so let's build our online
+05:23 - leaderboard now the first thing we need
+05:25 - is on the server side we need something
+05:27 - to listen to an event from our game so
+05:29 - over here on the azure dashboard let's
+05:31 - create a brand new resource
+05:33 - and over here for the type for this we
+05:35 - have mainly two options we can use a web
+05:38 - api or we can use a function both them
+05:40 - work i cover the web api in the azure
+05:42 - basics video but over here let's
+05:44 - actually go with a function since it's
+05:46 - so simple and super easy to use so go
+05:48 - ahead and find function either go down
+05:50 - to compute or search for function and
+05:52 - yep you find the function app then let's
+05:54 - go through the basic setup so choose the
+05:56 - default subscription i'm selling the
+05:58 - free tiers so yep then let's create a
+06:00 - new resource group so in this case let's
+06:02 - call leaderboard tutorial
+06:05 - then for a function name
+06:07 - let's say tutorial leaderboard code
+06:10 - monkey and yep the name is available
+06:12 - okay
+06:13 - next we want to publish with code
+06:15 - runtime stack let's go with net
+06:17 - version.net six okay then region i want
+06:20 - something close to me
+06:22 - so the closest to where i live over here
+06:23 - in portugal the closest is the one on
+06:25 - friend central then for operating system
+06:27 - let's go with windows which is what i'm
+06:29 - using
+06:30 - and for the plan let's go with
+06:31 - consumption which is the serverless plan
+06:33 - again if you think i'm going too fast
+06:34 - here make sure you watch that other
+06:36 - video in there i covered all these
+06:38 - settings all of them in detail okay so
+06:40 - we have this basic setup and all the
+06:42 - other ones can be default so let's go
+06:44 - ahead and review and create
+06:45 - although actually let me make a note
+06:47 - here in my case i'm still using the free
+06:50 - azure account i didn't upgrade yet
+06:52 - and for some reason when using the free
+06:54 - account over here you see different
+06:55 - options
+06:56 - all i can see is basics then networking
+06:58 - monitoring and so on
+07:00 - whereas if you're using a regular azure
+07:02 - account with that you might see an extra
+07:04 - tab over here for some storage
+07:06 - so if you do see that then just go ahead
+07:08 - and create some storage but if you're
+07:10 - using a free trial account like i have
+07:11 - here then there's no storage option so
+07:13 - let's just go ahead review and create
+07:15 - and don't worry about that we're going
+07:17 - to manually create some storage in a bit
+07:19 - okay here it is all the settings seem
+07:20 - correct so let's go ahead and create all
+07:23 - right everything is the point let's wait
+07:24 - a bit
+07:25 - and yep deployment completed so let's go
+07:27 - to our resource
+07:28 - alright so here it is everything is
+07:30 - looking good so far
+07:31 - again we see this warning up here
+07:33 - because we are on the free tier and we
+07:35 - didn't get an option to create a storage
+07:36 - account i will cover how to fix this in
+07:38 - a bit when we manually create storage
+07:40 - but still everything should be working
+07:42 - fine so with this our function app is
+07:44 - already running
+07:45 - now let's create a proper function
+07:47 - let's go here to the left side under
+07:49 - functions and let's click on the button
+07:51 - to create the brand new function
+07:53 - then we've got the development
+07:54 - environment
+07:55 - we can choose the development portal
+07:57 - meaning inside the browser so let's use
+07:59 - this one for now and then in the next
+08:01 - function i will showcase how to develop
+08:03 - using visual studio so let's go with
+08:05 - that then for the template this is how
+08:07 - you can trigger the function
+08:08 - as you can see you've got all kinds of
+08:10 - very interesting triggers so you can
+08:12 - make it on a timer so it triggers every
+08:14 - certain time you can make it based on q
+08:16 - storage mob storage event cosmos db and
+08:19 - so on you can connect it to iot devices
+08:22 - as you can see there's tons of really
+08:23 - interesting triggers and the one that we
+08:25 - want here is an http trigger we want
+08:28 - this function to run when we get an http
+08:30 - request so similar to a web api so let's
+08:32 - go with this one then down here for the
+08:34 - function name let's call it get
+08:36 - leaderboard
+08:37 - and for the authorization level over
+08:40 - here you have three options function
+08:42 - means that we're going to have a
+08:43 - function secret key just for this
+08:45 - function
+08:46 - admin would be the same key for multiple
+08:48 - functions and anonymous means we don't
+08:50 - require a key so let's go with default
+08:52 - option using a function auth okay
+08:54 - so everything's set up let's create
+08:56 - alright the function has been created we
+08:58 - can already try calling it
+09:00 - so up here we can get the function url
+09:02 - and we can generate the url based on the
+09:04 - function key the host key master key and
+09:06 - so on we set it up with the function key
+09:08 - so let's use that one and note how this
+09:10 - url first of all it's the url that we
+09:12 - set so to turn on leaderboard code
+09:14 - monkey so this is the standard function
+09:15 - app url
+09:17 - then we've got our endpoint api get
+09:19 - leaderboard and importantly over here
+09:20 - we've got the function code
+09:22 - if we don't include the code since we
+09:24 - defined it to use function as the out if
+09:26 - we don't include this then the function
+09:27 - won't run so let's just copy this code
+09:30 - and if there it is everything worked so
+09:31 - here we have our default function return
+09:33 - okay so far so good
+09:35 - now back on the dashboard over here on
+09:37 - the side let's go to code plus test we
+09:39 - set this function up with a browser
+09:41 - environment so over here we can write
+09:42 - some code directly on the browser and
+09:44 - over here let's begin by making a few
+09:46 - changes here and essentially just return
+09:48 - some basic json if you don't know what
+09:50 - is json check out my video on it it's a
+09:52 - really simple really useful text based
+09:54 - data format now over here for returning
+09:56 - json first we need to make a class so
+09:58 - let's make it
+09:59 - so let's make a public class call it
+10:01 - leaderboard
+10:04 - then inside let's have a list of another
+10:06 - type called leaderboard single
+10:10 - and then that class
+10:12 - for each leaderboard entry we're going
+10:14 - to have a string for the name and then
+10:17 - also we're going to have an end for the
+10:18 - actual score okay so this is the basic
+10:21 - structure of our leaderboard each entry
+10:23 - has a name in the score and then we
+10:25 - store in a list of our entries
+10:26 - then up here let's get rid of all this
+10:29 - default code let's just keep the return
+10:31 - so let's remove all this just keep this
+10:33 - all right
+10:34 - then over here note how by default it
+10:36 - already includes the newton's soft json
+10:38 - library so with this we can easily
+10:40 - convert our object into json so let's
+10:42 - first create the object so in
+10:43 - leaderboard
+11:00 - all right so here i created a
+11:01 - leaderboard and inside on the array just
+11:03 - created two entries
+11:04 - then for returning it again we want to
+11:06 - return some json
+11:08 - so for the response message let's go
+11:11 - into json convert which again this is a
+11:13 - class inside newtown south json
+11:16 - on this one let's serenalize this object
+11:19 - it's the leaderboard object
+11:21 - and then we just return okay great
+11:24 - also here i should point out one thing
+11:26 - depending on the settings that you use
+11:27 - for this json library
+11:29 - you might see this object convert
+11:31 - correctly or maybe not maybe you might
+11:33 - see some empty json if so that has to do
+11:36 - with the settings so sometimes the
+11:37 - library is only set up to convert the
+11:40 - public properties and not public fields
+11:43 - over here as you can see i'm using
+11:44 - fields now properties which if you're
+11:46 - not a unity developer you might be used
+11:48 - to using properties but in unity
+11:50 - development regular fields are the
+11:51 - standard so that's what i'm using here
+11:54 - but like i said depending on your
+11:55 - settings this might be causing issues
+11:56 - and not converting json so if not if
+11:59 - this returns pretty much empty json
+12:02 - if so then you can just convert these
+12:04 - into properties by pretty much setting a
+12:05 - get and a set
+12:07 - so with this now this is a property
+12:09 - instead of a field
+12:10 - so if this was returning empty then this
+12:12 - change should solve it
+12:13 - i just wanted to quickly point that out
+12:15 - because i actually ran into that same
+12:16 - issue which drove me crazy for quite
+12:18 - some time my code wasn't returning any
+12:20 - json and took me quite a while to figure
+12:22 - out the reason and it was because it
+12:23 - wasn't parsing fields only parsing
+12:25 - properties so beware about that
+12:28 - but over here everything should be
+12:29 - working fine with films just like this
+12:31 - so we can test this
+12:33 - and by the way another quick note when
+12:35 - writing code here make sure you are
+12:36 - writing everything correctly this code
+12:38 - editor is pretty basic it works but it
+12:41 - won't tell you if you have some errors
+12:42 - or call function that does not exist for
+12:44 - example initially i thought the function
+12:46 - on the json convert i thought this was
+12:48 - called to json instead of serialized
+12:50 - object
+12:51 - and if you call that
+12:53 - then there's no red squiggly line
+12:54 - there's nothing telling you that this
+12:56 - function does not exist it will only run
+12:58 - when you try to actually run the test
+13:00 - so just be aware that this editor
+13:02 - doesn't have any kind of error checking
+13:04 - so if you don't know what is wrong with
+13:05 - this then maybe try copy pasting it into
+13:08 - visual studio to make sure all the
+13:09 - syntax is correct and one more final
+13:11 - thing before we test make sure to save
+13:13 - the file so you can press on control s
+13:16 - or up here click on save then also on
+13:18 - this drop down menu over here we can
+13:20 - select which file we want to edit so
+13:22 - let's edit the function.json file and
+13:24 - over here in this file we see the
+13:26 - various methods we have for interacting
+13:27 - with this function by default we have
+13:29 - both a get and a post but for this
+13:32 - function we just want to get the
+13:33 - leaderboard we don't want any post data
+13:35 - so we can remove that to only allow get
+13:37 - requests
+13:38 - okay that should do it make sure you
+13:40 - save this file then up here and let's
+13:41 - click on test and run then over here on
+13:44 - the side let's select our test so for
+13:46 - http method we made it with a get so
+13:48 - let's go with get for the key and let's
+13:50 - use the default function key then we
+13:52 - don't have any special queries we don't
+13:54 - have any special headers and for the
+13:56 - body this is meant to be empty
+13:58 - okay so that's it super simple let's run
+14:00 - and yep there it is we have a 200 okay
+14:02 - response and here is our leaderboard
+14:04 - with all of our data all right so far so
+14:07 - good
+14:07 - down here you can even see a nice log
+14:09 - telling the status you can see this
+14:11 - message here which is this message here
+14:14 - so you can use this logger object to
+14:15 - unlock any kind of information all right
+14:18 - so everything is working on the server
+14:19 - side now let's handle getting this in
+14:21 - unity now i already covered how to do
+14:23 - http requests in unity in another
+14:25 - tutorial
+14:26 - in there i made a proper super easy to
+14:28 - use class although in that video i also
+14:31 - focus mainly just on the get so i have
+14:33 - since upgraded this class to have also a
+14:35 - post method as well as a post json
+14:38 - method this is what we're going to use
+14:39 - in a bit to upload some scores
+14:41 - so i've pretty much just improved upon
+14:43 - the class made in that video and this
+14:45 - phone class is including the project
+14:46 - files for this video which you can
+14:48 - download linked in the description
+14:50 - so for contacting our function we're
+14:52 - just going to use get so we just need
+14:53 - the url then we get the return
+14:56 - so let's make a script to run our
+14:57 - testing code so we need uc sharp script
+15:00 - let's call it test leaderboard
+15:03 - let's make a game object to run it
+15:07 - let's attach the script and open okay so
+15:09 - now here let's make some super simple
+15:11 - code first of all let's do our update
+15:14 - and on update let's ask for a key input
+15:16 - so get key down let's see on the t key
+15:20 - when we get that then let's use the web
+15:22 - requests we're going to use a get
+15:25 - then for the url let's copy the url
+15:28 - so back in the dashboard over here we
+15:29 - can go into the overview
+15:31 - and let's get the function url and copy
+15:33 - the whole thing all right so we just do
+15:35 - again on this url then let's capture if
+15:38 - we have any error
+15:47 - and let's capture the success response
+16:00 - all right that's it super simple let's
+16:02 - test okay so here we are let's press the
+16:04 - t key
+16:05 - and if there you go here we have our
+16:07 - response so we've got the exact same
+16:08 - thing that we said there so we've got a
+16:10 - leaderboard single list with one score
+16:12 - and another score all right awesome the
+16:15 - next step is to interpret this as json
+16:18 - and now for json unity already has a
+16:20 - built-in json utility class
+16:22 - so we could use this
+16:24 - but we should probably use the same
+16:25 - library just to make sure json converts
+16:27 - exactly however at the same time the
+16:29 - newtonsoft library also has some issues
+16:32 - with unt types but still just for
+16:34 - learning purposes let's learn how to use
+16:36 - it
+16:36 - so let's remove this then here let's
+16:38 - open up the package manager so let's
+16:40 - open it up
+16:41 - let's click on the plus icon and let's
+16:43 - add a package from a git url then let's
+16:46 - add this url so
+16:49 - nougat com.unity.nuget.org newton soft
+16:51 - dash json
+16:52 - let's install this package all right
+16:54 - there it is newton's off json
+16:57 - this is pretty much that package but
+16:59 - made by unity meant to use it while
+17:01 - inside unity
+17:02 - alright so back in the dashboard over
+17:04 - here let's copy both these the
+17:05 - leaderboard and leaderboard single
+17:07 - and yep over here on the nt project
+17:09 - let's paste those classes so we now have
+17:11 - these two types so let's go into the
+17:13 - test leaderboard script so over here
+17:14 - we've got the response all right so
+17:16 - let's deserialize this data so first we
+17:19 - need using newtonsoft.json
+17:21 - and then over here let's use the same
+17:23 - thing so json convert
+17:26 - and this guys let's deserialize the
+17:28 - object into a leaderboard
+17:30 - and it's going to be our response
+17:37 - then just as a quick test make sure this
+17:38 - is working let's do a debug.log go into
+17:41 - the leaderboard access the single list
+17:43 - the first one and let's print out the
+17:44 - name okay so let's see if this log works
+17:47 - and if there it is the log did work it
+17:49 - did grab the response it did parse it
+17:51 - and did grab the name for the very first
+17:53 - lead board now let me briefly mention
+17:55 - the issue with this library and ent
+17:57 - types just so you know
+17:59 - if you ever want to store something
+18:01 - using for example a vector3
+18:04 - so here if you make a public class call
+18:06 - it say vector3
+18:08 - and inside really just have a vector3
+18:14 - if we do this then up here let's try
+18:16 - using newton's soft json to serialize
+18:18 - this type
+18:19 - so let's do json convert
+18:22 - let's serialize this object let's create
+18:24 - a new save vector3
+18:27 - and let's put some vector three so back
+18:29 - three dot out doesn't really matter
+18:31 - so let's see if this line does work
+18:33 - and nope over here we have our error
+18:36 - it's saying self-referencing loop
+18:37 - detected on the property normalized
+18:40 - basically it's trying to serialize the
+18:41 - normalized property which in itself is a
+18:43 - vector3 which in itself has a normalized
+18:45 - and so on so on so this is a pretty big
+18:47 - issue with this specific library when
+18:50 - using the specific unity factor three
+18:52 - and yet another issue
+18:54 - is with the c-sharp vector3 type
+18:57 - so here is the default vector3 inside
+18:59 - system.numerics and over here we can see
+19:01 - it does have fields
+19:03 - for the x y and z but note how these are
+19:05 - capitalized whereas in unity they are
+19:07 - not capitalized and they have some more
+19:09 - things so basically all of this to say
+19:11 - that if you want to save some vector 3s
+19:14 - then you should be using unity's
+19:15 - built-in json utility you should be
+19:18 - using that to serialize it as opposed to
+19:19 - using this json convert and then on the
+19:22 - azure function c-sharp side on there
+19:24 - make sure you create a custom vector 3
+19:26 - with the x y and z exactly like unity
+19:29 - again the reason why i'm mentioning
+19:30 - these issues because i stumbled upon
+19:32 - them while doing my own research it
+19:34 - drove me crazy for quite a bit so
+19:35 - hopefully now you won't fall for those
+19:37 - same problems just like it did okay so
+19:39 - with this we have our working
+19:40 - leaderboard object so over here we get
+19:42 - the eliteboard all right then over here
+19:45 - i have a leaderboard dui element that i
+19:47 - prepared previously it's pretty much
+19:48 - what i made in the high score table
+19:50 - video it's just a basic ui element
+19:53 - has some background so on and then an
+19:55 - entry for a high score entry then it has
+19:57 - this leaderboard ui script and on this
+20:00 - one i've got this only function shown
+20:01 - leaderboard which takes a leaderboard
+20:03 - object then it cycles through all of the
+20:05 - leaderboard signal entries lists
+20:07 - sorts them all by their score
+20:09 - it destroys the previous entries on the
+20:11 - list and creates a brand new ones so
+20:13 - just a pretty simple ui element on our
+20:15 - testing script let's just call this
+20:16 - function so over here after we get the
+20:18 - leaderboard object
+20:20 - let's go into the leaderboard ui access
+20:23 - the static instance and let's call show
+20:26 - and pass in our leaderboard
+20:28 - alright that's it so let's test and see
+20:30 - if this is accessing our url to get the
+20:32 - leaderboard that we have stored in our
+20:34 - function and then displaying that in our
+20:36 - ui
+20:37 - so here we are let's press the button
+20:39 - and if there you go there's our nice
+20:41 - leaderboard so with this we are
+20:43 - successfully contacting our online
+20:45 - function and displaying the results
+20:47 - alright awesome
+20:48 - now the next step is to make this
+20:50 - dynamic instead of always returning the
+20:52 - same result for that we're going to need
+20:54 - some storage and then connect our
+20:55 - function to it but before that let's
+20:57 - actually make another function just very
+20:59 - quickly without any special behavior so
+21:01 - let's make one but actually this time
+21:04 - instead of adding it over here on
+21:05 - dashboard by hitting create like within
+21:07 - instead of that instead of using the
+21:09 - browser environment let's use it with
+21:11 - visual studio so let's open up visual
+21:13 - studio over here i'm using version 22
+21:15 - community also make sure your visual
+21:17 - studio installation has the azure module
+21:19 - installed
+21:20 - if you're not sure go ahead and run the
+21:21 - visual studio installer
+21:23 - then on your visual studio install click
+21:25 - on modify
+21:26 - and up here make sure you have azure
+21:28 - development and probably also the
+21:30 - asp.net so make sure those modules are
+21:32 - installed
+21:33 - then on visual studio let's go ahead and
+21:35 - create a new project for the project
+21:37 - type let's scroll down and find azure
+21:40 - functions so let's use this type then
+21:42 - let's give the project a name so
+21:43 - something like leaderboard functions
+21:46 - then select the same thing we selected
+21:47 - so net6 with our http trigger everything
+21:51 - else with defaults okay let's create
+21:53 - all right the project has been created
+21:55 - with default function
+21:56 - now let's first of all rename this so
+21:58 - over here on solution x r on the
+22:00 - function instead of calling it function
+22:01 - one let's call this add score
+22:03 - and yep let's use visual studio to
+22:05 - automatically rename the class and up
+22:06 - here also add score
+22:09 - okay this is our function
+22:10 - and for now let's get rid of all this
+22:12 - and pretty much just return a standard
+22:14 - message so let's get rid of all this and
+22:16 - just up here
+22:18 - let's do a response message and just
+22:21 - return something like success
+22:24 - then over here on the law again like you
+22:25 - saw you can add anything so let's say
+22:27 - just add score
+22:29 - all right so our extremely basic
+22:31 - function is ready for publishing to
+22:32 - azure
+22:33 - however one extremely extremely
+22:36 - important thing before you do
+22:37 - over here i showcase both methods so
+22:39 - first of all i'm creating a function
+22:41 - with the browser id and now using visual
+22:43 - studio
+22:44 - i showcase both methods for learning
+22:46 - purposes however if i now go ahead and
+22:48 - publish this project to azure
+22:51 - if i do that then it won't commonly
+22:52 - destroy the function that we made
+22:53 - previously
+22:54 - basically when you publish a project
+22:56 - from visual studio it won't overwrite
+22:58 - anything previously on the function app
+23:00 - so you either need to always use the
+23:02 - browser id for making every function or
+23:04 - always use visual studio you cannot mix
+23:06 - them so before we publish it let's
+23:08 - actually go and copy our previous
+23:09 - function
+23:10 - so let's copy our get leaderboard
+23:12 - function which also means we have to
+23:13 - copy our leaderboard structure so up
+23:15 - here let's start with just that so let's
+23:17 - create and first of all let's add just a
+23:20 - new item
+23:21 - let's go with an empty c sharp class
+23:23 - let's call this leaderboard
+23:26 - then let's copy our leaderboard class
+23:28 - and over here let's paste it okay
+23:30 - exactly the same thing
+23:32 - now for creating the function
+23:34 - over here on the solution let's right
+23:35 - click on the project and we're going to
+23:37 - add and this time a new azure function
+23:40 - then let's name it get leaderboard and
+23:42 - okay
+23:43 - now for the type let's go with the exact
+23:45 - same thing so an http trigger
+23:46 - authorization on the function okay and
+23:49 - so here we have yet another function
+23:50 - let's just copy the code so here on
+23:52 - dashboard let's copy exactly just this
+23:54 - just a log and all this copy it and over
+23:57 - here let's replace all this there you go
+23:59 - just like this
+24:00 - okay so everything has been copied
+24:02 - exactly
+24:03 - however pay attention to what i did here
+24:05 - i only copy pasted the internals of the
+24:07 - function
+24:08 - i did not override the function
+24:10 - definition
+24:11 - that's important because over here it's
+24:12 - slightly different
+24:14 - you can see when making the function
+24:15 - over here we've got the function name
+24:18 - then we've got an http trigger with a
+24:19 - whole bunch of parameters whereas on the
+24:21 - browser id it does not have those
+24:23 - parameters does not have function name
+24:24 - and so on basically on the browser id
+24:26 - all that data is on a separate
+24:28 - function.json so when copying make sure
+24:30 - you don't copy the wrong syntax so with
+24:32 - this we have everything correct so we've
+24:34 - got our get leaderboard function we've
+24:36 - got the only board definition and the
+24:38 - add score function and again the reason
+24:39 - why we need to add the get leaderboard
+24:41 - function here is because the function
+24:43 - that we created previously that one is
+24:44 - going to be overwritten as soon as we
+24:46 - publish this project to azure and also
+24:48 - one more tiny thing before we publish we
+24:50 - can actually test this project locally
+24:52 - so it's really simple we just need to go
+24:54 - up here and click on the play button to
+24:55 - test and yep it opens up this nice
+24:57 - command line window and over here we can
+24:59 - see all the various endpoints that were
+25:01 - created as usual these are standard
+25:03 - localhost urls so for example the get
+25:05 - leaderboard here let's just copy this so
+25:07 - just copy this url ctrl c
+25:09 - then over here on the browser let's just
+25:11 - paste our url
+25:13 - any of the yet leaderboard is working
+25:14 - exactly the same as previously
+25:16 - okay so everything is working correct
+25:18 - now we can finally publish so on the
+25:20 - solution explorer let's right click on
+25:22 - the project again that's right click on
+25:24 - the project not the solution if you're
+25:25 - writing on the solution you don't see
+25:27 - publish so make sure you right click on
+25:28 - the project and publish then for the
+25:30 - target let's go with azure we made a
+25:32 - function app on windows yep then make
+25:34 - sure you're signed in make sure you
+25:36 - select the right subscription and then
+25:38 - over here you should be able to find it
+25:39 - so yep here is our tutorial leaderboard
+25:42 - codemonkey function
+25:43 - so let's go ahead and select this one
+25:45 - all right it's done creating the profile
+25:47 - so everything is ready for publishing so
+25:49 - just go ahead and up here click on
+25:51 - publish all right it's publishing we can
+25:53 - check the status down here on the output
+25:55 - let's just wait a bit all right the
+25:57 - function app is ready so everything
+25:58 - worked
+25:59 - back in the azure dashboard let's click
+26:01 - on refresh
+26:03 - again this might take a few tries to
+26:04 - update but yep after refreshing yep you
+26:07 - should be able to see both our functions
+26:09 - so we have the get leaderboard and the
+26:10 - add score function now both these
+26:12 - functions were published for our project
+26:14 - so what that means is that these
+26:16 - functions are now marked as read only
+26:19 - so if i go inside the get leaderboard
+26:20 - like we were seeing previously on this
+26:22 - one we do see this little warning so it
+26:24 - says the package is in read only because
+26:26 - you are running from a package file if
+26:28 - you go up here to code and test yep we
+26:30 - do not see any code to edit so like i
+26:32 - said the browser made version made
+26:34 - previously that one was commonly
+26:35 - overridden by the one we have in visual
+26:36 - studio all right so everything should be
+26:39 - working so let's do a quick test so over
+26:41 - here on this one let's go into test and
+26:43 - run
+26:44 - for this one let's use the get let's use
+26:46 - the function key no query no headers no
+26:48 - bottom let's run and yep there's indeed
+26:51 - our result okay so far so good
+26:53 - now let's also do another quick test on
+26:55 - the add score function just make sure
+26:56 - everything is working
+26:58 - so back in the functions let's go into
+26:59 - add score
+27:00 - let's test our function and for this one
+27:02 - we actually enabled both get and post
+27:04 - even though in the end we're only going
+27:06 - to enable post but here lets us out send
+27:08 - a post let's end default function key no
+27:11 - query no headers no body run
+27:13 - and yep there's our success message
+27:16 - okay great so far so good everything is
+27:18 - working now let's call this from unity
+27:20 - so over here in the ent project
+27:23 - in the test leaderboard script
+27:25 - let's do a different input test so input
+27:27 - get key down
+27:29 - let's go with the y key
+27:31 - let's go into the web request class and
+27:34 - let's do a post and this time use the
+27:36 - post with json so previously we did just
+27:38 - a regular get now we're going to do a
+27:40 - post with json
+27:41 - let's copy the url with the function key
+27:44 - so we're here on the add score dashboard
+27:46 - on the overview let's wait for the get
+27:47 - function url to be clickable
+27:49 - okay and let's click make sure we are
+27:51 - using the function key and let's copy
+27:53 - this
+27:53 - then over here let's paste our key then
+27:55 - we have the json data that we're going
+27:57 - to send again right now we don't want to
+27:59 - send anything we just want to test this
+28:00 - so let's just send an empty json object
+28:03 - then we've got the usual error success
+28:04 - and so on so let's actually copy this
+28:06 - from this one so let's copy that code
+28:08 - pretty much the same thing so we've got
+28:09 - an error do a log then get the response
+28:11 - and let's also just do a log okay that's
+28:14 - it so let's test and run this so here we
+28:16 - are let's press the button wait a bit
+28:18 - and if there we have our response
+28:20 - success alright great so with this we
+28:22 - can now interact with both of our
+28:24 - functions one we get and one with post
+28:26 - alright awesome now this is working
+28:28 - let's get to the second very important
+28:30 - step let's handle storage although like
+28:32 - i said if you don't have a free azure
+28:34 - trial account then you already created
+28:36 - the storage account during setup so if
+28:38 - you did that then you can skip ahead
+28:39 - this part just verify that you have
+28:41 - storage linked but if you don't like me
+28:43 - are using the free account then let's go
+28:44 - ahead and manually create it so back
+28:47 - into the azure dashboard let's create a
+28:48 - resource
+28:49 - then over here let's find storage which
+28:51 - is right over here on the popular azure
+28:53 - services so a storage account that's
+28:55 - what we want let's choose our azure
+28:57 - subscription for the resource group
+28:59 - let's use the same one so the
+29:00 - leaderboard tutorial the same one that
+29:02 - we created then let's give it an account
+29:04 - name
+29:08 - and for the region for performance let's
+29:11 - go with standard
+29:12 - and redundancy we really don't need
+29:14 - anything special so just locally we're
+29:15 - done storage okay so that's it pretty
+29:17 - simple setup let's review
+29:19 - and yep everything is looking good so
+29:21 - let's create
+29:22 - everything is deploying let's wait a bit
+29:24 - all alright it's done let's go to
+29:26 - resource and up here is our brand new
+29:28 - storage everything is correct
+29:30 - now in azure the way that storage works
+29:32 - is you have four types inside a storage
+29:34 - account you can see over here under data
+29:36 - storage the four types you have
+29:38 - containers this is for blob storage
+29:40 - which is meant for storing binary files
+29:42 - or text
+29:43 - then you have file shares this is if you
+29:45 - want to use kind of like a virtual drive
+29:48 - you have queues which is a simple way to
+29:50 - queue and dequeue messages and finally
+29:52 - tables this is pretty much a nosql
+29:54 - database for our use case we're going to
+29:56 - use blobs and pretty much just use one
+29:58 - file to keep our entire leaderboard
+30:00 - so let's go into containers then up here
+30:03 - and let's create a container which is
+30:04 - really basically a folder
+30:06 - so let's create it call it leaderboard
+30:08 - container
+30:10 - let's keep it private with no anonymous
+30:12 - access
+30:13 - basically we're going to use a key in
+30:14 - order to read and write from this
+30:16 - okay let's go ahead click on create
+30:18 - all right we have our container we can
+30:20 - go inside and yep so far the container
+30:22 - is empty
+30:24 - now let's upload our star on leaderboard
+30:26 - now you could write the code to
+30:27 - automatically be smart enough to know if
+30:29 - the leaderboard already exists or not
+30:31 - but in our case let's keep things simple
+30:33 - and just start with a pre-made board
+30:35 - so let's go to our get leaderboard
+30:37 - function and just copy the default
+30:38 - leaderboard we've been using so over
+30:40 - here and let's just press ctrl s to save
+30:42 - this file
+30:43 - so here i have my simple file i just
+30:45 - named it leaderboard.json
+30:47 - by the way the extension doesn't really
+30:49 - matter so you can make it text or
+30:51 - completely remove the extension doesn't
+30:52 - really matter for me i'm going to add
+30:54 - json just to make it easily identifiable
+30:56 - so here's the file now let's just upload
+30:58 - it so on the leaderboard container let's
+31:00 - upload
+31:01 - then select the file
+31:03 - and just upload
+31:04 - all right so the file is there and over
+31:07 - here we can even see a bunch of stats
+31:08 - from the file and also in these buttons
+31:10 - we have button to edit so this is super
+31:12 - useful for testing so over here we can
+31:14 - read the file and edit any of this data
+31:16 - okay so far so good everything's looking
+31:18 - great
+31:19 - now for connecting this storage account
+31:21 - to our function
+31:22 - let's go back into visual studio and
+31:24 - let's go into the publish tab
+31:26 - and down here under service dependencies
+31:28 - we see something for storage
+31:30 - so let's click on these three dots and
+31:32 - let's connect the storage again make
+31:34 - sure you're signed in and over here
+31:36 - select the subscription and it should
+31:37 - automatically grab all of the storage if
+31:40 - not go ahead and hit on refresh
+31:42 - so over here yep i do see the storage
+31:44 - zero leaderboard so that's the one that
+31:45 - i created just now so let's select that
+31:47 - one and click on next
+31:49 - then let's store it with the default
+31:51 - connection string name
+31:52 - and here it should automatically grab
+31:54 - the connection string from azure
+31:56 - so it should look something like this so
+31:58 - default endpoints protocol then account
+32:00 - key and there's your key if it doesn't
+32:02 - grab this automatically then you can
+32:03 - grab it from the dashboard
+32:05 - so on dashboard if we go into the
+32:07 - tutorial leaderboard into the storage
+32:09 - over here on the left side we've got the
+32:11 - access keys
+32:12 - and if over here you can show and copy
+32:14 - the connection string but it probably
+32:16 - already grabbed it by default so no need
+32:17 - to touch anything
+32:19 - then let's save the string in the azure
+32:20 - app settings and let's click on next
+32:23 - then yep let's select everything and
+32:25 - finish
+32:26 - and yep azure storage is configured okay
+32:28 - great now we can verify that it worked
+32:30 - by over here under hosting click on
+32:32 - three dots and let's manage the azure
+32:35 - app service settings and over here you
+32:36 - should be able to see the azure web job
+32:38 - storage you should be able to see this
+32:40 - ring and here with our account key okay
+32:42 - so everything worked correctly now let's
+32:44 - interact with our storage
+32:46 - over here in the get leaderboard
+32:47 - function
+32:48 - let's work with storage although for
+32:50 - that there are actually two methods that
+32:52 - we can use here
+32:53 - so there's a manual method which can be
+32:55 - useful to learn if you want to use for
+32:57 - interacting with blob storage from
+32:59 - outside of functions so for example if
+33:01 - you want to interact with it directly
+33:02 - from unity or any other c sharp code so
+33:04 - that can be useful to learn and then
+33:06 - there's another easier method
+33:07 - specifically made for easily integrating
+33:09 - functions with blobs so for learning
+33:11 - purposes let's learn about both methods
+33:13 - first the generic method that can be
+33:15 - used outside of functions first thing we
+33:17 - need is to grab the connection string
+33:18 - from the environment variables where we
+33:20 - added it just a while ago
+33:22 - so the string for the connection string
+33:27 - and we're going to into the environment
+33:30 - and let's get the environment variable
+33:33 - and default name is azure web job
+33:36 - storage if you don't remember the name
+33:39 - or if you give it a different name
+33:41 - just go up here into the publish into
+33:43 - the hosting manage
+33:44 - and yep this is the variable that we
+33:46 - want to get so we have our connection
+33:48 - string then afterwards let's grab our
+33:51 - container name so a string for the
+33:52 - container name
+33:55 - and we named it leaderboard container
+33:59 - and now for connecting we are going to
+34:01 - need to make a new blob container
+34:04 - client this is inside
+34:07 - azure.storage.blobs
+34:10 - so let's create this one
+34:11 - it requires a connection string and then
+34:14 - the container name
+34:21 - all right we've got the container client
+34:23 - and then inside let's get the blob
+34:25 - client
+34:26 - and now we require the file name so we
+34:29 - called it leaderboard.json
+34:39 - all right so with this over here we have
+34:41 - a reference to our file now let's
+34:43 - download it
+34:44 - to download we go up here and we call
+34:46 - download
+34:49 - this returns a blob download info
+34:58 - let's add using azure storage blobs
+35:00 - models
+35:02 - then inside this one we have the content
+35:06 - and this is a stream for reading all the
+35:08 - data
+35:09 - so let's read it so let's do using a new
+35:11 - stream reader
+35:15 - so let's make a new stream reader with
+35:17 - this stream
+35:18 - and let's just read to the end so stream
+35:20 - reader
+35:22 - let's read to the end
+35:26 - all right so here we are reading the
+35:27 - entire file so let's get rid of the
+35:29 - previous default leaderboard and set for
+35:32 - the response message
+35:33 - let's define it up here
+35:36 - and then read it
+35:37 - and paste it in there
+35:40 - and then just return that one
+35:42 - okay that's it so again we grab the
+35:44 - connection string
+35:45 - we define a container name we get the
+35:47 - container blob client then we get the
+35:49 - blob client for the actual file we want
+35:51 - to download
+35:52 - and then just download the file and read
+35:54 - the stream to read the whole contents
+35:56 - okay now before we can test first just
+35:58 - make sure the environment variable is
+36:00 - correct so again up here under hosting
+36:02 - let's manage
+36:04 - so make sure this one is set and also
+36:06 - importantly if we want to test locally
+36:08 - then let's make sure we copy the remote
+36:10 - variable and paste it also over here on
+36:13 - the local
+36:14 - we need to do this otherwise when we
+36:16 - test locally it would be using emulated
+36:18 - storage instead of actually grabbing it
+36:19 - from the online storage so just go ahead
+36:21 - and do that click on ok
+36:23 - so let's click play to test locally here
+36:26 - we have our url so let's copy the get
+36:28 - leaderboard let's copy this endpoint and
+36:30 - over here let's go to that endpoint
+36:32 - and yep we have our return value now
+36:34 - let's just verify that it is indeed
+36:36 - grabbing from the search file so on the
+36:38 - storage account let's go into containers
+36:39 - inside the leaderboard container then
+36:41 - let's go inside the leaderboard json
+36:43 - let's edit
+36:45 - and let's change the name from ironman
+36:47 - let's say spiderman okay let's press on
+36:49 - save all right then over here and let's
+36:51 - refresh and if there you go it does work
+36:54 - so we have successfully confirmed that
+36:55 - we are indeed grabbing the value from
+36:57 - the storage now let's add the same
+36:59 - storage connection to the add score
+37:01 - function
+37:02 - so let's copy pretty much the exact same
+37:03 - thing that we did here since on the
+37:05 - score we're going to need to read then
+37:07 - add then save back so let's copy all
+37:09 - this
+37:10 - let's go into the add store function and
+37:12 - let's face it
+37:13 - okay we're doing the same thing the same
+37:15 - connections ring same container same
+37:16 - file
+37:17 - let's read the file yep
+37:19 - then instead of reading it onto the
+37:21 - response message
+37:22 - let's make a leaderboard object
+37:25 - leaderboard
+37:27 - and then over here we set the
+37:29 - leaderboard equals and we're going to
+37:31 - use json convert and we're going to
+37:33 - convert we're going to deserialize the
+37:35 - object of type leaderboard and the
+37:38 - object is what we read from the file
+37:40 - okay so with this we have our
+37:41 - leaderboard
+37:43 - now for the add score let's just add a
+37:44 - dummy score
+37:46 - so i just go into the leaderboard into
+37:47 - the leaderboard single list let's add
+37:50 - let's make a new leaderboard
+37:54 - then for the name let's say thor
+37:56 - and for the score let's say 30.
+37:59 - alright so we add the new entry to our
+38:01 - leaderboard so now our leaderboard is
+38:03 - indeed updated so now to save the
+38:05 - changes back first of all let's convert
+38:07 - the leaderboard into json
+38:09 - so let's find a string for the save blob
+38:12 - data let's go into the json convert and
+38:15 - this time let's serialize this object so
+38:17 - the leaderboard okay so we now have a
+38:19 - string that we want to save
+38:21 - and for uploading a good thing that we
+38:22 - can use is a memory stream so memory
+38:25 - stream let's do a new one
+38:28 - this requires a byte array so we need to
+38:30 - convert our string into bytes
+38:32 - so for that let's use
+38:33 - system.txt.encoding
+38:37 - let's encode into utf-8 let's get the
+38:40 - bytes for this string
+38:42 - and that's the save bot data
+38:46 - all right so we have a memory stream
+38:51 - and with the stream we can now use the
+38:52 - same blob client since we're going to
+38:54 - upload to the same file so this one
+38:56 - let's call upload
+38:58 - this one takes a stream with our content
+39:00 - so that's our memory stream
+39:02 - and then the override flag we do want to
+39:04 - overwrite what is there so let's just
+39:05 - overwrite
+39:06 - and after uploading let's make sure to
+39:08 - dispose of our memory stream
+39:11 - okay so this is going to upload our new
+39:13 - data
+39:14 - and then for the response message let's
+39:16 - just print out what this one returns
+39:19 - so let's go into the blob client info
+39:21 - and on this one let's get the raw
+39:22 - response
+39:26 - alright so that's it let's test this and
+39:29 - for testing let's make sure we have the
+39:31 - get in here just to make it easier to
+39:32 - test
+39:33 - and let's test locally so let's just run
+39:36 - the function here we have our endpoints
+39:38 - is the same as previously so let's first
+39:40 - just refresh the get leaderboard just
+39:42 - refresh and yup returns the same thing
+39:44 - so codemonkey56 and spiderman with 12.
+39:47 - now let's copy the at score endpoint so
+39:49 - let's copy this
+39:52 - let's go there and if there it is here
+39:54 - we have our response so we've got a 201
+39:57 - so that's okay and yep it was created
+39:59 - and so on and now if we go back into the
+40:01 - get leaderboard and now if we refresh
+40:02 - this and if there you go here we have a
+40:04 - brand new score added to our
+40:05 - leaderboards all right awesome
+40:08 - okay so everything is working here we
+40:10 - have the method for reading and writing
+40:12 - to a blob storage
+40:14 - like i said this method this code you
+40:15 - can run this from anywhere any c sharp
+40:18 - project doesn't have to be just
+40:19 - functions but now let's see the other
+40:21 - method specifically for using with
+40:22 - functions and azure connected projects
+40:24 - which is much much simpler
+40:26 - but again for learning purposes let's
+40:28 - not get rid of all this so let's
+40:30 - actually duplicate these classes just so
+40:31 - we have access to this code so let's
+40:33 - just duplicate both this so the add
+40:35 - score let's duplicate this one
+40:38 - let's call this one
+40:39 - non-func so for the non-function method
+40:43 - let's just make sure to rename the class
+40:49 - okay it's all good
+40:51 - then for the get the leaderboard same
+40:52 - thing copy paste let's rename this to
+40:55 - non-func
+40:58 - and for the function name and so on okay
+41:00 - great again i'm just doing this so that
+41:02 - all the code is included in project
+41:03 - files
+41:04 - now let's go into the get leaderboards
+41:06 - class and over here let's use the second
+41:08 - method and for the second method over
+41:11 - here on the run we can receive another
+41:12 - parameter and for that parameter we can
+41:15 - use the attribute blob
+41:17 - and now here if you cannot find the blob
+41:19 - attribute this is actually a very tricky
+41:20 - part that took me quite a while to
+41:22 - figure out
+41:23 - you can try to use the blob attribute
+41:25 - and then if you put the cursor on there
+41:27 - here visual studio tells you some
+41:29 - potential fixes and one of them is
+41:31 - indeed this one install the package
+41:33 - microsoft azure web jobs extension
+41:35 - storage
+41:36 - so you can go ahead and try doing this
+41:38 - however nope there's an error it does
+41:40 - not work
+41:41 - basically what we have here is an error
+41:43 - related to version mismatch if on the
+41:45 - solution explorer we right click on the
+41:47 - project and let's manage the nuget
+41:49 - packages then over here on the install
+41:51 - packages when we installed our storage
+41:54 - when we connected it it automatically
+41:56 - installed these packages and as the time
+41:58 - of this recording that one automatically
+41:59 - installed version 12.3 and over here
+42:02 - 12.2 and if we search for the package
+42:04 - we're trying to install so if you go
+42:06 - over here into browse and let's go to
+42:07 - search
+42:08 - search for microsoft
+42:10 - azure web jobs extension storage
+42:14 - if we search for this one then we find
+42:16 - this package
+42:17 - as you can see the latest stable version
+42:19 - is 5.0.1
+42:21 - however if you try installing this
+42:23 - then yes and sound this one yes except
+42:25 - and no tons of errors again this is an
+42:28 - issue with version mismatch basically
+42:31 - this version version 5.0 requires a
+42:33 - different version on the azure storage
+42:35 - functions
+42:36 - so the solution here is instead of
+42:37 - installing the latest stable you can
+42:39 - install a previous one
+42:40 - the one that i found was version 4.0 or
+42:43 - another option is simply going to
+42:45 - updates and let's update all of the
+42:47 - packages
+42:48 - so all of these have updates so let's
+42:50 - try updating all these let's click on
+42:52 - update
+42:53 - yes make the changes
+42:55 - yes accept
+42:57 - all right all of those were updated into
+42:58 - the latest versions at time this
+43:00 - recording and with this now if we go
+43:02 - back into the get leaderboard and click
+43:04 - on the attribute and let's use the quick
+43:07 - actions to install the package and find
+43:09 - the latest
+43:10 - and yep we no longer have that error the
+43:12 - type is now being recognized believe me
+43:14 - figuring out these version issues that
+43:16 - took a ton of time a ton of stress
+43:18 - trying to figure out why all this was
+43:19 - not working so if you're finding this
+43:21 - video helpful please hit the like button
+43:22 - it really helps okay so with that we
+43:25 - have the blob attribute everything is
+43:26 - working correctly so now let's use this
+43:29 - now over here we can see the first one
+43:31 - is going to be the block path so for the
+43:33 - blood pass first of all the container so
+43:35 - that's the leaderboard container then
+43:37 - inside the name of the file
+43:38 - leaderboard.json
+43:40 - then for the file access for this one on
+43:42 - the get leaderboard we just want to read
+43:45 - and then finally let's also add the
+43:46 - connection string
+43:48 - and again let's use the same thing so we
+43:50 - stored it inside azure web job storage
+43:54 - okay so this is the attribute that is
+43:55 - going to handle the connection for us
+43:57 - then for the top of the parameter you
+43:59 - can check the docs from types that you
+44:00 - can use
+44:02 - over here on the docs for the blob
+44:03 - attribute class down here you can see
+44:05 - all the types that you can use
+44:07 - and for our case for reading a simple
+44:09 - text file then string is super easy
+44:11 - so up here let's make this a type string
+44:13 - and call leaderboard blob string
+44:17 - okay that's it so basically this one
+44:19 - line this is going to do pretty much all
+44:21 - the code that we're doing here
+44:22 - so we can literally remove all of this
+44:24 - code and we just returned the
+44:26 - leaderboard block string so with that
+44:28 - you can see the code is quite a lot
+44:30 - simpler it's literally just the
+44:31 - attribute and everything is handled
+44:33 - automatically okay so now let's do the
+44:35 - exact same thing on the add score
+44:37 - so let's copy our attribute then over
+44:39 - here on the add score okay let's add
+44:41 - another one
+44:42 - again for this one we need to read and
+44:44 - then we need to write so for reading
+44:45 - let's do the same thing we get a string
+44:47 - then for another one for this one final
+44:49 - access dot right
+44:50 - we use the same connection string on the
+44:52 - same file okay
+44:53 - however for writing we cannot write onto
+44:55 - a string so for writing the simplest one
+44:58 - would be a text writer
+45:04 - all right so now let's use this instead
+45:06 - of all of this code so instead of the
+45:08 - connection string container name and all
+45:10 - that so we get the leaderboard yep
+45:13 - then we create the leaderboard and we're
+45:15 - going to use json convert and we're
+45:16 - going to convert the leaderboard blob
+45:18 - string okay so let's convert this one
+45:26 - with that we have the leaderboard then
+45:28 - let's add a dummy thing
+45:30 - then we serialize the object again in
+45:31 - order to get the save blob data
+45:34 - and then for writing instead of having
+45:35 - to do all this
+45:37 - let's just go into the leaderboard blob
+45:39 - text writer onto this one
+45:41 - and let's just write and we're going to
+45:43 - write our save blob data
+45:47 - then for returning let's just return the
+45:48 - save blob data okay that's it as you can
+45:51 - see super simple
+45:52 - now one quick note here you might think
+45:54 - you can simplify this further by just
+45:57 - making one of these functions one of
+45:58 - these inputs and using file access dot
+46:01 - read and write however if you use this
+46:03 - it doesn't actually work if you do you
+46:05 - get an error and the error is saying you
+46:06 - cannot use read write on a blob
+46:08 - attribute so if you want to read and
+46:10 - write you must separate them into one
+46:12 - read one right
+46:13 - okay so as you can see this compared to
+46:15 - the previous code is much much simpler
+46:17 - and also another extremely important
+46:19 - note here which is by defining this
+46:20 - attribute for writing by doing this you
+46:23 - are opening a writing stream and if you
+46:25 - don't do anything to this then the file
+46:27 - will still be written to you but it
+46:29 - won't be empty so if you just add this
+46:31 - attribute this input and then down here
+46:33 - you don't write onto it so if you
+46:35 - comment this out it will still open that
+46:37 - file and it will still be empty so if
+46:40 - you add the attribute with write access
+46:42 - make sure you actually write something
+46:44 - onto it otherwise the file will be empty
+46:46 - the reason why i'm making this note is
+46:48 - because this confused me for quite a
+46:49 - while
+46:50 - for testing i first focused on making
+46:52 - sure that the reading worked
+46:53 - so i didn't do this and i just read then
+46:56 - on the second test that i did i tried to
+46:58 - write onto it and then i had an issue
+47:00 - because the file was now empty so don't
+47:02 - make the same mistake that i didn't make
+47:04 - sure that if you add a writing input
+47:06 - make sure you always write something
+47:08 - onto it all right so we can do a local
+47:10 - test just to verify that everything is
+47:11 - still working exactly the same let's
+47:13 - just rename this let's put the hulk
+47:16 - let's make sure all of our files are
+47:17 - saved okay let's run in local test
+47:20 - all right it's running so let's run the
+47:22 - same thing over here for the get
+47:24 - leaderboard let's refresh
+47:25 - and yep it still returns the exact same
+47:27 - thing okay great then for the add score
+47:30 - let's also refresh
+47:31 - and if there go it add the score and
+47:33 - this one as you can see and add the
+47:34 - score and return the current state of
+47:36 - the leaderboard so this is going to help
+47:38 - us prevent from having too many function
+47:39 - calls just when we add the score it
+47:41 - automatically adds and returns the new
+47:43 - leaderboard with all the scores so now
+47:45 - you'll learn both methods for
+47:46 - interacting with storage mobs
+47:48 - you can use the first method you can use
+47:50 - this one in any c sharp code doesn't
+47:52 - have to be functions so for example you
+47:54 - could use this code directly inside
+47:56 - unity but if you're using functions then
+47:58 - you can use this second one which is
+48:00 - much much simpler
+48:02 - all right great so with all this really
+48:04 - all the tough parts are done now it's
+48:06 - just making the proper leaderboard logic
+48:08 - and connecting it into unity so first
+48:11 - let's make our add score let's make this
+48:12 - proper so instead of having a dummy
+48:14 - object let's add something proper
+48:17 - we're going to receive json body in our
+48:19 - http request
+48:21 - so how we access that
+48:23 - is we have the request.body
+48:26 - this one as you can see is a stream so
+48:28 - let's read this
+48:29 - so let's do a new stream reader
+48:32 - let's read the request.body
+48:34 - let's read to the end
+48:38 - so this is going to return our request
+48:41 - body
+48:43 - then let's just parse this into an
+48:45 - object of type leaderboard single
+48:58 - okay so our request is going to be of
+49:00 - type leaderboardsingle and then we just
+49:02 - do the exact same thing so instead of
+49:03 - adding a dummy leaderboard single we add
+49:06 - exactly just this one so this one
+49:08 - directly onto the leaderboard
+49:12 - and then everything else is exactly the
+49:13 - same so we've got the save blob data so
+49:15 - we serialize it we write it and return
+49:17 - it all right so that's it super simple
+49:20 - and the get leaderboard function this
+49:21 - one is also already working correctly
+49:23 - now let's just use the correct endpoints
+49:25 - so for the get leaderboard we only want
+49:27 - to get we don't want to allow post so
+49:30 - let's save this and on the add score for
+49:32 - this one we only want to allow posts
+49:34 - let's get rid of the get alright so with
+49:36 - that done let's publish this to azure so
+49:38 - let's go into our publish and just click
+49:40 - on publish
+49:41 - and now while that is publishing let's
+49:43 - go into our unity project and let's
+49:46 - still use our testing script just to
+49:47 - make sure that it all works so when we
+49:49 - post instead of sending some empty json
+49:51 - let's send some proper one
+49:53 - so let's create a new leaderboard single
+49:59 - over here for the name let's say thanos
+50:01 - with a score of one
+50:05 - so we've got a leaderboard single and
+50:07 - then over here for the json let's
+50:09 - convert that so use json convert
+50:12 - and let's serialize this object
+50:16 - all right that's it super simple let's
+50:18 - test just wait for the function app to
+50:20 - be ready okay it's ready and let's test
+50:23 - here we are let's first grab the current
+50:25 - score so let's press on t and yep
+50:27 - there's the current score okay great now
+50:29 - let's press on y to add another score
+50:31 - and yep there's the response now let's
+50:33 - press on t again to get it again and if
+50:35 - there go here's our new score alright
+50:37 - awesome so everything is indeed working
+50:39 - all that's left is just to add this
+50:41 - logic directly onto the game over code
+50:44 - so here is my main target range class
+50:46 - that is handling this minigame so
+50:48 - basically just counts on a simple timer
+50:50 - and when the timer is elapsed then we've
+50:51 - got our game over state then on the game
+50:54 - over we show our nice input window
+50:56 - again i covered this window in a
+50:58 - previous video so on this one we asked
+51:00 - the player for the input and then over
+51:02 - here we've got the input string so over
+51:04 - here let's submit our score we can copy
+51:06 - the exact same code that we have here so
+51:08 - let's copy all this
+51:10 - then over here let's paste it
+51:11 - then over here let's use the player name
+51:13 - that the player wrote let's use the
+51:15 - score that was calculated let's add the
+51:18 - using for the json convert
+51:20 - so you post json we send this object
+51:22 - with our new input string new score
+51:24 - we log if there's an error and if
+51:26 - there's a response and this is going to
+51:27 - be the leaderboard
+51:29 - so if so then let's see what we were
+51:31 - doing on the previous test
+51:32 - so over here we're going to pretty much
+51:34 - do this so deserialize the object and
+51:35 - show it so here when we have the
+51:37 - response let's do exactly that so dc
+51:39 - realize this object and then show the
+51:41 - leaderboard alright so that's it super
+51:44 - simple let's test alright so here we are
+51:46 - and let's start the game and start
+51:48 - shooting down some really nice targets
+51:49 - try to get the highest score possible
+51:52 - and the timer is counting down and one
+51:54 - second zero seconds and there you go now
+51:56 - write my name and now let's say that i'm
+51:58 - iron man
+51:59 - let's press on okay there's our high
+52:01 - score unloading and yep here it is our
+52:03 - high score
+52:04 - alright awesome so everything is indeed
+52:06 - working perfectly we connect to azure we
+52:08 - upload our new score which updates the
+52:10 - file in storage and then returns the
+52:12 - updated saved delete board and shows it
+52:14 - over here in game
+52:15 - okay great so the demo is perfectly
+52:18 - working now i should point out some
+52:19 - things if you want to build upon this
+52:21 - demo one of the main things is player
+52:23 - identification so right now this
+52:25 - leaderboard is acting very much like an
+52:27 - old-school arcade leaderboard meaning
+52:28 - it's just adding names and scores
+52:31 - there's no score updating and the names
+52:33 - can be duplicated so if you wanted you
+52:35 - could add some proper user
+52:36 - identification rather than just a name
+52:38 - for example you could use unity
+52:40 - authentication which i also covered in a
+52:42 - quick video or in more detail in my
+52:44 - ultimate indie overview course with that
+52:46 - unity 2 you can get a unique id for the
+52:48 - player and then you can use that on the
+52:50 - leaderboard perhaps with an automatic
+52:52 - player name then you could add logic on
+52:54 - the leaderboard to update the score for
+52:55 - the same player and keep the best
+52:57 - instead of adding multiple entries for
+52:58 - the same player with the same name
+53:00 - another thing is over here on the show
+53:02 - leaderboard function over here receives
+53:04 - the only board object and then manually
+53:06 - sorts it so the sorting happens locally
+53:09 - but another alternative would be to run
+53:10 - this sorting logic on the function
+53:12 - itself and perhaps only send the top 10
+53:14 - instead of sending the entire
+53:15 - leaderboard
+53:16 - although at the same time i don't
+53:18 - believe that bandwidth has a cost so
+53:20 - perhaps sending the whole thing and
+53:21 - storing it locally might make more sense
+53:23 - and one very very important thing that
+53:25 - you definitely need to add in order to
+53:27 - use this code in production would be
+53:29 - handling concurrency
+53:30 - if you have tons and tons of players and
+53:33 - lots of functions running at the same
+53:34 - time then it would be possible for one
+53:37 - at score function to be running this
+53:38 - code then that score function would be
+53:41 - going right here right about to upload
+53:43 - the new values
+53:44 - and at the same time another add score
+53:46 - function would run and would once again
+53:48 - grab the same values which still hadn't
+53:49 - been saved and with that the first add
+53:51 - score would pretty much be in last
+53:53 - forever as general rule you really never
+53:55 - want to lose any player data so you
+53:57 - definitely need to handle that use case
+53:59 - there's a really helpful page on docs
+54:01 - showing multiple ways of solving that
+54:03 - concurrency problem so definitely check
+54:05 - it out if you want to build upon this
+54:07 - another thing related to that is to use
+54:08 - the retry pattern
+54:10 - so if there's concurrency issues maybe
+54:12 - try again a bit instead of just failing
+54:14 - or if there's random connectivity issues
+54:17 - again try maybe once or twice before
+54:19 - returning a permanent failure starting
+54:20 - this is definitely a must to help your
+54:22 - game be much more stable much more
+54:24 - reliable and in general just check out
+54:26 - the page with the best practices for
+54:28 - azure functions it covers lots of tiny
+54:31 - things to make your functions perform
+54:32 - always at their best
+54:34 - so with all that here we have everything
+54:35 - working
+54:36 - we have our two functions one to get
+54:38 - leaderboard and one to add some score
+54:40 - we're using azure storage to store our
+54:43 - persistent leaderboard phone with those
+54:45 - two together we can read this file and
+54:47 - add more scores onto it and we can
+54:49 - interact with all of that from inside
+54:51 - ent and again in terms of cost this
+54:53 - whole system is either completely free
+54:54 - or only costing at most about one cent
+54:56 - per month so everything is really
+54:58 - awesome and now that you'll learn how to
+55:00 - do this you can do so many more things
+55:02 - pretty much all of the interesting
+55:04 - cloud-based mechanics that i'm going to
+55:05 - showcase in the next video of them are
+55:07 - all based on this general concept
+55:09 - it's pretty much all just based on
+55:11 - having a simple azure function that
+55:12 - interacts with some storage and then
+55:14 - interacting with those functions from
+55:16 - inside unity or really anywhere where
+55:18 - you can make an http request
+55:20 - stay tuned for that video to see
+55:22 - examples of the kind of interesting
+55:23 - mechanics that you could build with the
+55:24 - cloud so now go ahead take this newly
+55:27 - acquired knowledge and build something
+55:28 - awesome alright hope that's useful check
+55:31 - out these videos to learn some more
+55:33 - thanks to these awesome patreon
+55:34 - supporters for making these videos
+55:36 - possible thank you for watching and i'll
+55:38 - see you next time
+55:43 - [Music]
+
+Cleaned transcript:
+
+hello and welcome i'm your code monkey and here let's learn to build a free online leaderboard we're going to do this with the help of microsoft azure cloud learn how to create an azure function with azure storage to read and write some data we're going to build a demo where we can play our game get some score then upload that score to the cloud and display the full leaderboard ingame for most developers this is likely completely free since there is a very generous free tier per month now this is a tutorial for how to make an online leaderboard but really everything covered here can be applied to a multitude of online mechanics i'm currently working on a video showcasing multiple examples of all the mechanics that you could build so you can use this exact logic to make something like the messaging system in eldon ring or dark zones you can build a histogram like in the zachtronics games you can construct a shared online world like in this trending make an asynchronous multiplayer game you can create your own custom scene workshop and so on all those mechanics share the same base infrastructure that we're going to build here and the same thing for nongame use cases this is really a tutorial on creating azure functions and connecting them with azure storage and if you know nothing about the cloud then don't worry it's pretty simple once you learn the basic terms i cover the basics of azure in another video so go watch that just so you know the basics and with that you should be able to follow everything in this tutorial here's everything that we're going to do we're going to look at my fun starting demo then create a serverless azure function called get leaderboard we're going to implement the code in unity to trigger that azure function parse the leaderboard and show it then implement azure storage to store that leaderboard data make another function to add scores to the leaderboard which will grab the file from storage add some data and write it back and put it all together in a nice working demo there's timestamps for all the parts in the video okay so that's our goal let's get to it if you use unity in any way definitely get my ultimate in the overview course it will teach you how to use the many tools and features that emt has so you can be more effective and make better games faster there's no need to build something yourself from scratch if there's already a builtin tool that works great unt has tons of them that you might not know about the course already has 15 lectures each covering a different two hour feature of the engine and is constantly getting free updates or if you prefer step by step courses on making a specific game check out my builder defender course i also have a phone course only on using visual scripting there isn't a single line of code in any of those games and if you're past the beginner stage and you want a guided path to help you make the jump from beginner to advanced and get my turn based strategy course it will help you massively improve your programming and game dev skills on all courses i'm always available in the q a section answering all of your questions every single day so check them out with the link in the description all right so here let's build a nice free online leaderboard using azure functions and storage over here is my demo game i have my character in third person i made this in a previous video then i have some shooting targets along with some destruction that i also covered in another video and this is basically the same demo scene that i covered in the quantum console video so i can aim and shoot at the targets then i just added some mini game rooms so the targets i spawned and i need to shoot them then there's a timer counting down after the timer is elapsed we have a game over and out pops out a nice input window i covered this simple window in a previous video so it has the player for the name i can type in anything then press ok and it shows the leaderboard now the missing pieces we would like to upload the score to a server so we can see what score other players got so it's a pretty simple but fun minigame which is going to be the perfect demo for our online leaderboard now like i said we're going to be using azure for our online infrastructure i made a detailed getting started tutorial another video definitely go watch that one before this one here i will assume you know everything over there so i assume you know the basics of what is the cloud how azure works what is a subscription resource and so on and actually when i said this is free that's not exactly technically 100 true azure has a great pricing calculator so over here you can see all the various things that azure has and you can add them to see how much they cost the resource that we're going to use is azure functions and if you add them over here we can see yep the cost is indeed zero dollars so this one is familiar free you have 400 gigabytes per second of execution time and a million executions for free every single month so unless your game is a mega hit you're never going to hit this amount so the functions part is indeed pretty much free now the other part to make our leaderboard work is adding some storage so on the pricing template if we add the storage account then here if we set up the storage so in my case i'm going to use west europe we're going to be using blob storage on the standard premium and now we see that storage does not have any free tier however it is extremely cheap since this is going to be in leaderboard which is a tiny tiny amount of data pretty much in the order of kilobytes so not even megabytes and certainly not gigabytes so if i put the smallest number possible and discount later on pretty much all the operations so ten thousand operations one gigabyte ten thousand ten thousand so on so if i put pretty much the smallest values on all these if so then this comes at a monthly cost of 14 cents per month and if you have less than these so less than ten thousand operations and less than one gigabyte which will definitely be much lower than that then yep it's definitely not even going to get to 14 cents so technically this leaderboard that we're going to cover here isn't 100 free instead it costs probably around one to five cents per month which i'm not sure they would even try charging that much okay so let's build our online leaderboard now the first thing we need is on the server side we need something to listen to an event from our game so over here on the azure dashboard let's create a brand new resource and over here for the type for this we have mainly two options we can use a web api or we can use a function both them work i cover the web api in the azure basics video but over here let's actually go with a function since it's so simple and super easy to use so go ahead and find function either go down to compute or search for function and yep you find the function app then let's go through the basic setup so choose the default subscription i'm selling the free tiers so yep then let's create a new resource group so in this case let's call leaderboard tutorial then for a function name let's say tutorial leaderboard code monkey and yep the name is available okay next we want to publish with code runtime stack let's go with net version.net six okay then region i want something close to me so the closest to where i live over here in portugal the closest is the one on friend central then for operating system let's go with windows which is what i'm using and for the plan let's go with consumption which is the serverless plan again if you think i'm going too fast here make sure you watch that other video in there i covered all these settings all of them in detail okay so we have this basic setup and all the other ones can be default so let's go ahead and review and create although actually let me make a note here in my case i'm still using the free azure account i didn't upgrade yet and for some reason when using the free account over here you see different options all i can see is basics then networking monitoring and so on whereas if you're using a regular azure account with that you might see an extra tab over here for some storage so if you do see that then just go ahead and create some storage but if you're using a free trial account like i have here then there's no storage option so let's just go ahead review and create and don't worry about that we're going to manually create some storage in a bit okay here it is all the settings seem correct so let's go ahead and create all right everything is the point let's wait a bit and yep deployment completed so let's go to our resource alright so here it is everything is looking good so far again we see this warning up here because we are on the free tier and we didn't get an option to create a storage account i will cover how to fix this in a bit when we manually create storage but still everything should be working fine so with this our function app is already running now let's create a proper function let's go here to the left side under functions and let's click on the button to create the brand new function then we've got the development environment we can choose the development portal meaning inside the browser so let's use this one for now and then in the next function i will showcase how to develop using visual studio so let's go with that then for the template this is how you can trigger the function as you can see you've got all kinds of very interesting triggers so you can make it on a timer so it triggers every certain time you can make it based on q storage mob storage event cosmos db and so on you can connect it to iot devices as you can see there's tons of really interesting triggers and the one that we want here is an http trigger we want this function to run when we get an http request so similar to a web api so let's go with this one then down here for the function name let's call it get leaderboard and for the authorization level over here you have three options function means that we're going to have a function secret key just for this function admin would be the same key for multiple functions and anonymous means we don't require a key so let's go with default option using a function auth okay so everything's set up let's create alright the function has been created we can already try calling it so up here we can get the function url and we can generate the url based on the function key the host key master key and so on we set it up with the function key so let's use that one and note how this url first of all it's the url that we set so to turn on leaderboard code monkey so this is the standard function app url then we've got our endpoint api get leaderboard and importantly over here we've got the function code if we don't include the code since we defined it to use function as the out if we don't include this then the function won't run so let's just copy this code and if there it is everything worked so here we have our default function return okay so far so good now back on the dashboard over here on the side let's go to code plus test we set this function up with a browser environment so over here we can write some code directly on the browser and over here let's begin by making a few changes here and essentially just return some basic json if you don't know what is json check out my video on it it's a really simple really useful text based data format now over here for returning json first we need to make a class so let's make it so let's make a public class call it leaderboard then inside let's have a list of another type called leaderboard single and then that class for each leaderboard entry we're going to have a string for the name and then also we're going to have an end for the actual score okay so this is the basic structure of our leaderboard each entry has a name in the score and then we store in a list of our entries then up here let's get rid of all this default code let's just keep the return so let's remove all this just keep this all right then over here note how by default it already includes the newton's soft json library so with this we can easily convert our object into json so let's first create the object so in leaderboard all right so here i created a leaderboard and inside on the array just created two entries then for returning it again we want to return some json so for the response message let's go into json convert which again this is a class inside newtown south json on this one let's serenalize this object it's the leaderboard object and then we just return okay great also here i should point out one thing depending on the settings that you use for this json library you might see this object convert correctly or maybe not maybe you might see some empty json if so that has to do with the settings so sometimes the library is only set up to convert the public properties and not public fields over here as you can see i'm using fields now properties which if you're not a unity developer you might be used to using properties but in unity development regular fields are the standard so that's what i'm using here but like i said depending on your settings this might be causing issues and not converting json so if not if this returns pretty much empty json if so then you can just convert these into properties by pretty much setting a get and a set so with this now this is a property instead of a field so if this was returning empty then this change should solve it i just wanted to quickly point that out because i actually ran into that same issue which drove me crazy for quite some time my code wasn't returning any json and took me quite a while to figure out the reason and it was because it wasn't parsing fields only parsing properties so beware about that but over here everything should be working fine with films just like this so we can test this and by the way another quick note when writing code here make sure you are writing everything correctly this code editor is pretty basic it works but it won't tell you if you have some errors or call function that does not exist for example initially i thought the function on the json convert i thought this was called to json instead of serialized object and if you call that then there's no red squiggly line there's nothing telling you that this function does not exist it will only run when you try to actually run the test so just be aware that this editor doesn't have any kind of error checking so if you don't know what is wrong with this then maybe try copy pasting it into visual studio to make sure all the syntax is correct and one more final thing before we test make sure to save the file so you can press on control s or up here click on save then also on this drop down menu over here we can select which file we want to edit so let's edit the function.json file and over here in this file we see the various methods we have for interacting with this function by default we have both a get and a post but for this function we just want to get the leaderboard we don't want any post data so we can remove that to only allow get requests okay that should do it make sure you save this file then up here and let's click on test and run then over here on the side let's select our test so for http method we made it with a get so let's go with get for the key and let's use the default function key then we don't have any special queries we don't have any special headers and for the body this is meant to be empty okay so that's it super simple let's run and yep there it is we have a 200 okay response and here is our leaderboard with all of our data all right so far so good down here you can even see a nice log telling the status you can see this message here which is this message here so you can use this logger object to unlock any kind of information all right so everything is working on the server side now let's handle getting this in unity now i already covered how to do http requests in unity in another tutorial in there i made a proper super easy to use class although in that video i also focus mainly just on the get so i have since upgraded this class to have also a post method as well as a post json method this is what we're going to use in a bit to upload some scores so i've pretty much just improved upon the class made in that video and this phone class is including the project files for this video which you can download linked in the description so for contacting our function we're just going to use get so we just need the url then we get the return so let's make a script to run our testing code so we need uc sharp script let's call it test leaderboard let's make a game object to run it let's attach the script and open okay so now here let's make some super simple code first of all let's do our update and on update let's ask for a key input so get key down let's see on the t key when we get that then let's use the web requests we're going to use a get then for the url let's copy the url so back in the dashboard over here we can go into the overview and let's get the function url and copy the whole thing all right so we just do again on this url then let's capture if we have any error and let's capture the success response all right that's it super simple let's test okay so here we are let's press the t key and if there you go here we have our response so we've got the exact same thing that we said there so we've got a leaderboard single list with one score and another score all right awesome the next step is to interpret this as json and now for json unity already has a builtin json utility class so we could use this but we should probably use the same library just to make sure json converts exactly however at the same time the newtonsoft library also has some issues with unt types but still just for learning purposes let's learn how to use it so let's remove this then here let's open up the package manager so let's open it up let's click on the plus icon and let's add a package from a git url then let's add this url so nougat com.unity.nuget.org newton soft dash json let's install this package all right there it is newton's off json this is pretty much that package but made by unity meant to use it while inside unity alright so back in the dashboard over here let's copy both these the leaderboard and leaderboard single and yep over here on the nt project let's paste those classes so we now have these two types so let's go into the test leaderboard script so over here we've got the response all right so let's deserialize this data so first we need using newtonsoft.json and then over here let's use the same thing so json convert and this guys let's deserialize the object into a leaderboard and it's going to be our response then just as a quick test make sure this is working let's do a debug.log go into the leaderboard access the single list the first one and let's print out the name okay so let's see if this log works and if there it is the log did work it did grab the response it did parse it and did grab the name for the very first lead board now let me briefly mention the issue with this library and ent types just so you know if you ever want to store something using for example a vector3 so here if you make a public class call it say vector3 and inside really just have a vector3 if we do this then up here let's try using newton's soft json to serialize this type so let's do json convert let's serialize this object let's create a new save vector3 and let's put some vector three so back three dot out doesn't really matter so let's see if this line does work and nope over here we have our error it's saying selfreferencing loop detected on the property normalized basically it's trying to serialize the normalized property which in itself is a vector3 which in itself has a normalized and so on so on so this is a pretty big issue with this specific library when using the specific unity factor three and yet another issue is with the csharp vector3 type so here is the default vector3 inside system.numerics and over here we can see it does have fields for the x y and z but note how these are capitalized whereas in unity they are not capitalized and they have some more things so basically all of this to say that if you want to save some vector 3s then you should be using unity's builtin json utility you should be using that to serialize it as opposed to using this json convert and then on the azure function csharp side on there make sure you create a custom vector 3 with the x y and z exactly like unity again the reason why i'm mentioning these issues because i stumbled upon them while doing my own research it drove me crazy for quite a bit so hopefully now you won't fall for those same problems just like it did okay so with this we have our working leaderboard object so over here we get the eliteboard all right then over here i have a leaderboard dui element that i prepared previously it's pretty much what i made in the high score table video it's just a basic ui element has some background so on and then an entry for a high score entry then it has this leaderboard ui script and on this one i've got this only function shown leaderboard which takes a leaderboard object then it cycles through all of the leaderboard signal entries lists sorts them all by their score it destroys the previous entries on the list and creates a brand new ones so just a pretty simple ui element on our testing script let's just call this function so over here after we get the leaderboard object let's go into the leaderboard ui access the static instance and let's call show and pass in our leaderboard alright that's it so let's test and see if this is accessing our url to get the leaderboard that we have stored in our function and then displaying that in our ui so here we are let's press the button and if there you go there's our nice leaderboard so with this we are successfully contacting our online function and displaying the results alright awesome now the next step is to make this dynamic instead of always returning the same result for that we're going to need some storage and then connect our function to it but before that let's actually make another function just very quickly without any special behavior so let's make one but actually this time instead of adding it over here on dashboard by hitting create like within instead of that instead of using the browser environment let's use it with visual studio so let's open up visual studio over here i'm using version 22 community also make sure your visual studio installation has the azure module installed if you're not sure go ahead and run the visual studio installer then on your visual studio install click on modify and up here make sure you have azure development and probably also the asp.net so make sure those modules are installed then on visual studio let's go ahead and create a new project for the project type let's scroll down and find azure functions so let's use this type then let's give the project a name so something like leaderboard functions then select the same thing we selected so net6 with our http trigger everything else with defaults okay let's create all right the project has been created with default function now let's first of all rename this so over here on solution x r on the function instead of calling it function one let's call this add score and yep let's use visual studio to automatically rename the class and up here also add score okay this is our function and for now let's get rid of all this and pretty much just return a standard message so let's get rid of all this and just up here let's do a response message and just return something like success then over here on the law again like you saw you can add anything so let's say just add score all right so our extremely basic function is ready for publishing to azure however one extremely extremely important thing before you do over here i showcase both methods so first of all i'm creating a function with the browser id and now using visual studio i showcase both methods for learning purposes however if i now go ahead and publish this project to azure if i do that then it won't commonly destroy the function that we made previously basically when you publish a project from visual studio it won't overwrite anything previously on the function app so you either need to always use the browser id for making every function or always use visual studio you cannot mix them so before we publish it let's actually go and copy our previous function so let's copy our get leaderboard function which also means we have to copy our leaderboard structure so up here let's start with just that so let's create and first of all let's add just a new item let's go with an empty c sharp class let's call this leaderboard then let's copy our leaderboard class and over here let's paste it okay exactly the same thing now for creating the function over here on the solution let's right click on the project and we're going to add and this time a new azure function then let's name it get leaderboard and okay now for the type let's go with the exact same thing so an http trigger authorization on the function okay and so here we have yet another function let's just copy the code so here on dashboard let's copy exactly just this just a log and all this copy it and over here let's replace all this there you go just like this okay so everything has been copied exactly however pay attention to what i did here i only copy pasted the internals of the function i did not override the function definition that's important because over here it's slightly different you can see when making the function over here we've got the function name then we've got an http trigger with a whole bunch of parameters whereas on the browser id it does not have those parameters does not have function name and so on basically on the browser id all that data is on a separate function.json so when copying make sure you don't copy the wrong syntax so with this we have everything correct so we've got our get leaderboard function we've got the only board definition and the add score function and again the reason why we need to add the get leaderboard function here is because the function that we created previously that one is going to be overwritten as soon as we publish this project to azure and also one more tiny thing before we publish we can actually test this project locally so it's really simple we just need to go up here and click on the play button to test and yep it opens up this nice command line window and over here we can see all the various endpoints that were created as usual these are standard localhost urls so for example the get leaderboard here let's just copy this so just copy this url ctrl c then over here on the browser let's just paste our url any of the yet leaderboard is working exactly the same as previously okay so everything is working correct now we can finally publish so on the solution explorer let's right click on the project again that's right click on the project not the solution if you're writing on the solution you don't see publish so make sure you right click on the project and publish then for the target let's go with azure we made a function app on windows yep then make sure you're signed in make sure you select the right subscription and then over here you should be able to find it so yep here is our tutorial leaderboard codemonkey function so let's go ahead and select this one all right it's done creating the profile so everything is ready for publishing so just go ahead and up here click on publish all right it's publishing we can check the status down here on the output let's just wait a bit all right the function app is ready so everything worked back in the azure dashboard let's click on refresh again this might take a few tries to update but yep after refreshing yep you should be able to see both our functions so we have the get leaderboard and the add score function now both these functions were published for our project so what that means is that these functions are now marked as read only so if i go inside the get leaderboard like we were seeing previously on this one we do see this little warning so it says the package is in read only because you are running from a package file if you go up here to code and test yep we do not see any code to edit so like i said the browser made version made previously that one was commonly overridden by the one we have in visual studio all right so everything should be working so let's do a quick test so over here on this one let's go into test and run for this one let's use the get let's use the function key no query no headers no bottom let's run and yep there's indeed our result okay so far so good now let's also do another quick test on the add score function just make sure everything is working so back in the functions let's go into add score let's test our function and for this one we actually enabled both get and post even though in the end we're only going to enable post but here lets us out send a post let's end default function key no query no headers no body run and yep there's our success message okay great so far so good everything is working now let's call this from unity so over here in the ent project in the test leaderboard script let's do a different input test so input get key down let's go with the y key let's go into the web request class and let's do a post and this time use the post with json so previously we did just a regular get now we're going to do a post with json let's copy the url with the function key so we're here on the add score dashboard on the overview let's wait for the get function url to be clickable okay and let's click make sure we are using the function key and let's copy this then over here let's paste our key then we have the json data that we're going to send again right now we don't want to send anything we just want to test this so let's just send an empty json object then we've got the usual error success and so on so let's actually copy this from this one so let's copy that code pretty much the same thing so we've got an error do a log then get the response and let's also just do a log okay that's it so let's test and run this so here we are let's press the button wait a bit and if there we have our response success alright great so with this we can now interact with both of our functions one we get and one with post alright awesome now this is working let's get to the second very important step let's handle storage although like i said if you don't have a free azure trial account then you already created the storage account during setup so if you did that then you can skip ahead this part just verify that you have storage linked but if you don't like me are using the free account then let's go ahead and manually create it so back into the azure dashboard let's create a resource then over here let's find storage which is right over here on the popular azure services so a storage account that's what we want let's choose our azure subscription for the resource group let's use the same one so the leaderboard tutorial the same one that we created then let's give it an account name and for the region for performance let's go with standard and redundancy we really don't need anything special so just locally we're done storage okay so that's it pretty simple setup let's review and yep everything is looking good so let's create everything is deploying let's wait a bit all alright it's done let's go to resource and up here is our brand new storage everything is correct now in azure the way that storage works is you have four types inside a storage account you can see over here under data storage the four types you have containers this is for blob storage which is meant for storing binary files or text then you have file shares this is if you want to use kind of like a virtual drive you have queues which is a simple way to queue and dequeue messages and finally tables this is pretty much a nosql database for our use case we're going to use blobs and pretty much just use one file to keep our entire leaderboard so let's go into containers then up here and let's create a container which is really basically a folder so let's create it call it leaderboard container let's keep it private with no anonymous access basically we're going to use a key in order to read and write from this okay let's go ahead click on create all right we have our container we can go inside and yep so far the container is empty now let's upload our star on leaderboard now you could write the code to automatically be smart enough to know if the leaderboard already exists or not but in our case let's keep things simple and just start with a premade board so let's go to our get leaderboard function and just copy the default leaderboard we've been using so over here and let's just press ctrl s to save this file so here i have my simple file i just named it leaderboard.json by the way the extension doesn't really matter so you can make it text or completely remove the extension doesn't really matter for me i'm going to add json just to make it easily identifiable so here's the file now let's just upload it so on the leaderboard container let's upload then select the file and just upload all right so the file is there and over here we can even see a bunch of stats from the file and also in these buttons we have button to edit so this is super useful for testing so over here we can read the file and edit any of this data okay so far so good everything's looking great now for connecting this storage account to our function let's go back into visual studio and let's go into the publish tab and down here under service dependencies we see something for storage so let's click on these three dots and let's connect the storage again make sure you're signed in and over here select the subscription and it should automatically grab all of the storage if not go ahead and hit on refresh so over here yep i do see the storage zero leaderboard so that's the one that i created just now so let's select that one and click on next then let's store it with the default connection string name and here it should automatically grab the connection string from azure so it should look something like this so default endpoints protocol then account key and there's your key if it doesn't grab this automatically then you can grab it from the dashboard so on dashboard if we go into the tutorial leaderboard into the storage over here on the left side we've got the access keys and if over here you can show and copy the connection string but it probably already grabbed it by default so no need to touch anything then let's save the string in the azure app settings and let's click on next then yep let's select everything and finish and yep azure storage is configured okay great now we can verify that it worked by over here under hosting click on three dots and let's manage the azure app service settings and over here you should be able to see the azure web job storage you should be able to see this ring and here with our account key okay so everything worked correctly now let's interact with our storage over here in the get leaderboard function let's work with storage although for that there are actually two methods that we can use here so there's a manual method which can be useful to learn if you want to use for interacting with blob storage from outside of functions so for example if you want to interact with it directly from unity or any other c sharp code so that can be useful to learn and then there's another easier method specifically made for easily integrating functions with blobs so for learning purposes let's learn about both methods first the generic method that can be used outside of functions first thing we need is to grab the connection string from the environment variables where we added it just a while ago so the string for the connection string and we're going to into the environment and let's get the environment variable and default name is azure web job storage if you don't remember the name or if you give it a different name just go up here into the publish into the hosting manage and yep this is the variable that we want to get so we have our connection string then afterwards let's grab our container name so a string for the container name and we named it leaderboard container and now for connecting we are going to need to make a new blob container client this is inside azure.storage.blobs so let's create this one it requires a connection string and then the container name all right we've got the container client and then inside let's get the blob client and now we require the file name so we called it leaderboard.json all right so with this over here we have a reference to our file now let's download it to download we go up here and we call download this returns a blob download info let's add using azure storage blobs models then inside this one we have the content and this is a stream for reading all the data so let's read it so let's do using a new stream reader so let's make a new stream reader with this stream and let's just read to the end so stream reader let's read to the end all right so here we are reading the entire file so let's get rid of the previous default leaderboard and set for the response message let's define it up here and then read it and paste it in there and then just return that one okay that's it so again we grab the connection string we define a container name we get the container blob client then we get the blob client for the actual file we want to download and then just download the file and read the stream to read the whole contents okay now before we can test first just make sure the environment variable is correct so again up here under hosting let's manage so make sure this one is set and also importantly if we want to test locally then let's make sure we copy the remote variable and paste it also over here on the local we need to do this otherwise when we test locally it would be using emulated storage instead of actually grabbing it from the online storage so just go ahead and do that click on ok so let's click play to test locally here we have our url so let's copy the get leaderboard let's copy this endpoint and over here let's go to that endpoint and yep we have our return value now let's just verify that it is indeed grabbing from the search file so on the storage account let's go into containers inside the leaderboard container then let's go inside the leaderboard json let's edit and let's change the name from ironman let's say spiderman okay let's press on save all right then over here and let's refresh and if there you go it does work so we have successfully confirmed that we are indeed grabbing the value from the storage now let's add the same storage connection to the add score function so let's copy pretty much the exact same thing that we did here since on the score we're going to need to read then add then save back so let's copy all this let's go into the add store function and let's face it okay we're doing the same thing the same connections ring same container same file let's read the file yep then instead of reading it onto the response message let's make a leaderboard object leaderboard and then over here we set the leaderboard equals and we're going to use json convert and we're going to convert we're going to deserialize the object of type leaderboard and the object is what we read from the file okay so with this we have our leaderboard now for the add score let's just add a dummy score so i just go into the leaderboard into the leaderboard single list let's add let's make a new leaderboard then for the name let's say thor and for the score let's say 30. alright so we add the new entry to our leaderboard so now our leaderboard is indeed updated so now to save the changes back first of all let's convert the leaderboard into json so let's find a string for the save blob data let's go into the json convert and this time let's serialize this object so the leaderboard okay so we now have a string that we want to save and for uploading a good thing that we can use is a memory stream so memory stream let's do a new one this requires a byte array so we need to convert our string into bytes so for that let's use system.txt.encoding let's encode into utf8 let's get the bytes for this string and that's the save bot data all right so we have a memory stream and with the stream we can now use the same blob client since we're going to upload to the same file so this one let's call upload this one takes a stream with our content so that's our memory stream and then the override flag we do want to overwrite what is there so let's just overwrite and after uploading let's make sure to dispose of our memory stream okay so this is going to upload our new data and then for the response message let's just print out what this one returns so let's go into the blob client info and on this one let's get the raw response alright so that's it let's test this and for testing let's make sure we have the get in here just to make it easier to test and let's test locally so let's just run the function here we have our endpoints is the same as previously so let's first just refresh the get leaderboard just refresh and yup returns the same thing so codemonkey56 and spiderman with 12. now let's copy the at score endpoint so let's copy this let's go there and if there it is here we have our response so we've got a 201 so that's okay and yep it was created and so on and now if we go back into the get leaderboard and now if we refresh this and if there you go here we have a brand new score added to our leaderboards all right awesome okay so everything is working here we have the method for reading and writing to a blob storage like i said this method this code you can run this from anywhere any c sharp project doesn't have to be just functions but now let's see the other method specifically for using with functions and azure connected projects which is much much simpler but again for learning purposes let's not get rid of all this so let's actually duplicate these classes just so we have access to this code so let's just duplicate both this so the add score let's duplicate this one let's call this one nonfunc so for the nonfunction method let's just make sure to rename the class okay it's all good then for the get the leaderboard same thing copy paste let's rename this to nonfunc and for the function name and so on okay great again i'm just doing this so that all the code is included in project files now let's go into the get leaderboards class and over here let's use the second method and for the second method over here on the run we can receive another parameter and for that parameter we can use the attribute blob and now here if you cannot find the blob attribute this is actually a very tricky part that took me quite a while to figure out you can try to use the blob attribute and then if you put the cursor on there here visual studio tells you some potential fixes and one of them is indeed this one install the package microsoft azure web jobs extension storage so you can go ahead and try doing this however nope there's an error it does not work basically what we have here is an error related to version mismatch if on the solution explorer we right click on the project and let's manage the nuget packages then over here on the install packages when we installed our storage when we connected it it automatically installed these packages and as the time of this recording that one automatically installed version 12.3 and over here 12.2 and if we search for the package we're trying to install so if you go over here into browse and let's go to search search for microsoft azure web jobs extension storage if we search for this one then we find this package as you can see the latest stable version is 5.0.1 however if you try installing this then yes and sound this one yes except and no tons of errors again this is an issue with version mismatch basically this version version 5.0 requires a different version on the azure storage functions so the solution here is instead of installing the latest stable you can install a previous one the one that i found was version 4.0 or another option is simply going to updates and let's update all of the packages so all of these have updates so let's try updating all these let's click on update yes make the changes yes accept all right all of those were updated into the latest versions at time this recording and with this now if we go back into the get leaderboard and click on the attribute and let's use the quick actions to install the package and find the latest and yep we no longer have that error the type is now being recognized believe me figuring out these version issues that took a ton of time a ton of stress trying to figure out why all this was not working so if you're finding this video helpful please hit the like button it really helps okay so with that we have the blob attribute everything is working correctly so now let's use this now over here we can see the first one is going to be the block path so for the blood pass first of all the container so that's the leaderboard container then inside the name of the file leaderboard.json then for the file access for this one on the get leaderboard we just want to read and then finally let's also add the connection string and again let's use the same thing so we stored it inside azure web job storage okay so this is the attribute that is going to handle the connection for us then for the top of the parameter you can check the docs from types that you can use over here on the docs for the blob attribute class down here you can see all the types that you can use and for our case for reading a simple text file then string is super easy so up here let's make this a type string and call leaderboard blob string okay that's it so basically this one line this is going to do pretty much all the code that we're doing here so we can literally remove all of this code and we just returned the leaderboard block string so with that you can see the code is quite a lot simpler it's literally just the attribute and everything is handled automatically okay so now let's do the exact same thing on the add score so let's copy our attribute then over here on the add score okay let's add another one again for this one we need to read and then we need to write so for reading let's do the same thing we get a string then for another one for this one final access dot right we use the same connection string on the same file okay however for writing we cannot write onto a string so for writing the simplest one would be a text writer all right so now let's use this instead of all of this code so instead of the connection string container name and all that so we get the leaderboard yep then we create the leaderboard and we're going to use json convert and we're going to convert the leaderboard blob string okay so let's convert this one with that we have the leaderboard then let's add a dummy thing then we serialize the object again in order to get the save blob data and then for writing instead of having to do all this let's just go into the leaderboard blob text writer onto this one and let's just write and we're going to write our save blob data then for returning let's just return the save blob data okay that's it as you can see super simple now one quick note here you might think you can simplify this further by just making one of these functions one of these inputs and using file access dot read and write however if you use this it doesn't actually work if you do you get an error and the error is saying you cannot use read write on a blob attribute so if you want to read and write you must separate them into one read one right okay so as you can see this compared to the previous code is much much simpler and also another extremely important note here which is by defining this attribute for writing by doing this you are opening a writing stream and if you don't do anything to this then the file will still be written to you but it won't be empty so if you just add this attribute this input and then down here you don't write onto it so if you comment this out it will still open that file and it will still be empty so if you add the attribute with write access make sure you actually write something onto it otherwise the file will be empty the reason why i'm making this note is because this confused me for quite a while for testing i first focused on making sure that the reading worked so i didn't do this and i just read then on the second test that i did i tried to write onto it and then i had an issue because the file was now empty so don't make the same mistake that i didn't make sure that if you add a writing input make sure you always write something onto it all right so we can do a local test just to verify that everything is still working exactly the same let's just rename this let's put the hulk let's make sure all of our files are saved okay let's run in local test all right it's running so let's run the same thing over here for the get leaderboard let's refresh and yep it still returns the exact same thing okay great then for the add score let's also refresh and if there go it add the score and this one as you can see and add the score and return the current state of the leaderboard so this is going to help us prevent from having too many function calls just when we add the score it automatically adds and returns the new leaderboard with all the scores so now you'll learn both methods for interacting with storage mobs you can use the first method you can use this one in any c sharp code doesn't have to be functions so for example you could use this code directly inside unity but if you're using functions then you can use this second one which is much much simpler all right great so with all this really all the tough parts are done now it's just making the proper leaderboard logic and connecting it into unity so first let's make our add score let's make this proper so instead of having a dummy object let's add something proper we're going to receive json body in our http request so how we access that is we have the request.body this one as you can see is a stream so let's read this so let's do a new stream reader let's read the request.body let's read to the end so this is going to return our request body then let's just parse this into an object of type leaderboard single okay so our request is going to be of type leaderboardsingle and then we just do the exact same thing so instead of adding a dummy leaderboard single we add exactly just this one so this one directly onto the leaderboard and then everything else is exactly the same so we've got the save blob data so we serialize it we write it and return it all right so that's it super simple and the get leaderboard function this one is also already working correctly now let's just use the correct endpoints so for the get leaderboard we only want to get we don't want to allow post so let's save this and on the add score for this one we only want to allow posts let's get rid of the get alright so with that done let's publish this to azure so let's go into our publish and just click on publish and now while that is publishing let's go into our unity project and let's still use our testing script just to make sure that it all works so when we post instead of sending some empty json let's send some proper one so let's create a new leaderboard single over here for the name let's say thanos with a score of one so we've got a leaderboard single and then over here for the json let's convert that so use json convert and let's serialize this object all right that's it super simple let's test just wait for the function app to be ready okay it's ready and let's test here we are let's first grab the current score so let's press on t and yep there's the current score okay great now let's press on y to add another score and yep there's the response now let's press on t again to get it again and if there go here's our new score alright awesome so everything is indeed working all that's left is just to add this logic directly onto the game over code so here is my main target range class that is handling this minigame so basically just counts on a simple timer and when the timer is elapsed then we've got our game over state then on the game over we show our nice input window again i covered this window in a previous video so on this one we asked the player for the input and then over here we've got the input string so over here let's submit our score we can copy the exact same code that we have here so let's copy all this then over here let's paste it then over here let's use the player name that the player wrote let's use the score that was calculated let's add the using for the json convert so you post json we send this object with our new input string new score we log if there's an error and if there's a response and this is going to be the leaderboard so if so then let's see what we were doing on the previous test so over here we're going to pretty much do this so deserialize the object and show it so here when we have the response let's do exactly that so dc realize this object and then show the leaderboard alright so that's it super simple let's test alright so here we are and let's start the game and start shooting down some really nice targets try to get the highest score possible and the timer is counting down and one second zero seconds and there you go now write my name and now let's say that i'm iron man let's press on okay there's our high score unloading and yep here it is our high score alright awesome so everything is indeed working perfectly we connect to azure we upload our new score which updates the file in storage and then returns the updated saved delete board and shows it over here in game okay great so the demo is perfectly working now i should point out some things if you want to build upon this demo one of the main things is player identification so right now this leaderboard is acting very much like an oldschool arcade leaderboard meaning it's just adding names and scores there's no score updating and the names can be duplicated so if you wanted you could add some proper user identification rather than just a name for example you could use unity authentication which i also covered in a quick video or in more detail in my ultimate indie overview course with that unity 2 you can get a unique id for the player and then you can use that on the leaderboard perhaps with an automatic player name then you could add logic on the leaderboard to update the score for the same player and keep the best instead of adding multiple entries for the same player with the same name another thing is over here on the show leaderboard function over here receives the only board object and then manually sorts it so the sorting happens locally but another alternative would be to run this sorting logic on the function itself and perhaps only send the top 10 instead of sending the entire leaderboard although at the same time i don't believe that bandwidth has a cost so perhaps sending the whole thing and storing it locally might make more sense and one very very important thing that you definitely need to add in order to use this code in production would be handling concurrency if you have tons and tons of players and lots of functions running at the same time then it would be possible for one at score function to be running this code then that score function would be going right here right about to upload the new values and at the same time another add score function would run and would once again grab the same values which still hadn't been saved and with that the first add score would pretty much be in last forever as general rule you really never want to lose any player data so you definitely need to handle that use case there's a really helpful page on docs showing multiple ways of solving that concurrency problem so definitely check it out if you want to build upon this another thing related to that is to use the retry pattern so if there's concurrency issues maybe try again a bit instead of just failing or if there's random connectivity issues again try maybe once or twice before returning a permanent failure starting this is definitely a must to help your game be much more stable much more reliable and in general just check out the page with the best practices for azure functions it covers lots of tiny things to make your functions perform always at their best so with all that here we have everything working we have our two functions one to get leaderboard and one to add some score we're using azure storage to store our persistent leaderboard phone with those two together we can read this file and add more scores onto it and we can interact with all of that from inside ent and again in terms of cost this whole system is either completely free or only costing at most about one cent per month so everything is really awesome and now that you'll learn how to do this you can do so many more things pretty much all of the interesting cloudbased mechanics that i'm going to showcase in the next video of them are all based on this general concept it's pretty much all just based on having a simple azure function that interacts with some storage and then interacting with those functions from inside unity or really anywhere where you can make an http request stay tuned for that video to see examples of the kind of interesting mechanics that you could build with the cloud so now go ahead take this newly acquired knowledge and build something awesome alright hope that's useful check out these videos to learn some more thanks to these awesome patreon supporters for making these videos possible thank you for watching and i'll see you next time

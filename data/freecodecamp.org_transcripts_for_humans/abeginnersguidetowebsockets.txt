@@ -1,0 +1,884 @@
+With timestamps:
+
+00:00 - uh today as you were saying i'm gonna be
+00:02 - talking about websockets
+00:04 - and we're gonna be talking about it from
+00:06 - sort of a beginner's standpoint so
+00:07 - someone who's never actually really used
+00:09 - it more has sort of like heard of what
+00:11 - websockets is but has never actually
+00:13 - gone to the effort of actually using it
+00:15 - in one of their projects
+00:18 - so a bit about me
+00:20 - i'm don misik that's my name
+00:23 - i'm a full-time associate developer at
+00:24 - weistec currently
+00:27 - i study at uts doing the bit co-op
+00:29 - scholarship so that's the bachelor of
+00:31 - information technology
+00:34 - i spoke at pycon last year some of you
+00:35 - might have been at my talk
+00:37 - and i did a bit of data science work
+00:40 - at the anu last year as well and so i'm
+00:42 - 18 years old and i'm obviously from
+00:43 - canberra and have recently moved up here
+00:45 - to study
+00:48 - um and to give you guys a bit of
+00:49 - structure
+00:50 - about what we're going to be going
+00:52 - through today
+00:53 - we're going to sort of start off with a
+00:55 - basic low-level understanding of some of
+00:57 - the protocols which we're going to be
+00:58 - talking about today sort of to get an
+00:59 - idea of where everything
+01:01 - sits in the whole it world
+01:04 - we're going to go over some of the use
+01:05 - cases and the applications which you
+01:07 - might find using websockets
+01:09 - and i'm going to go over some of the
+01:11 - previous technologies
+01:13 - which might be used in place of
+01:15 - websockets since it's still quite
+01:17 - relatively new
+01:18 - and we'll go a bit about the browser
+01:20 - support and the characteristics of
+01:22 - websockets as a protocol
+01:23 - and how fast it is in comparison to
+01:27 - other implementations
+01:29 - and of course what you're here for is
+01:30 - the python aspect of it so we're going
+01:32 - to go over
+01:33 - how python has a role to play with it
+01:35 - and how easy it is to do things with
+01:37 - websockets with python
+01:39 - and just a quick note at the end we're
+01:41 - going to go quickly over how deploying
+01:43 - websockets works over the web
+01:47 - so to get into it we're going to start
+01:48 - off with a pretty contrived example and
+01:50 - so anyone who's done any sort of
+01:51 - networking or taking any networking
+01:53 - courses would have seen something
+01:55 - similar to this
+01:56 - you probably would have seen something
+01:57 - called the osi networking layers um so
+02:00 - this is the internet protocol suite
+02:02 - and this is sort of just to get an idea
+02:04 - of where everything sits
+02:05 - relative to each other so i'm going to
+02:07 - start off from the bottom
+02:08 - you'll see the transport layer
+02:12 - so these are things which
+02:14 - define the way that data packets are
+02:17 - transferred over the web right so these
+02:18 - are things such as tcp and udp
+02:21 - and so tcp guarantees that
+02:24 - any packet that you send over the web
+02:27 - will reach its destination in the same
+02:28 - order which they were sent right and it
+02:30 - does this by acknowledging
+02:32 - um the packet
+02:33 - once it's reached its destination so say
+02:35 - i want to send a packet to a web server
+02:38 - tcp guarantees that all of my packets
+02:40 - will get there
+02:41 - and i want to mention that udp the less
+02:44 - important one to tcp
+02:46 - is a bit more careless and it doesn't
+02:48 - really care about this guarantee of
+02:49 - order and it's generally used for things
+02:51 - like
+02:51 - streaming video data where we don't care
+02:54 - if we lose some of the packets on the
+02:55 - way
+02:57 - and so tcp is sort of the underlying
+03:01 - transport layer
+03:02 - behind a lot of the things i'm gonna be
+03:04 - talking about today and so then you move
+03:05 - up to the next stage which is the
+03:06 - internet layer uh so this is things uh
+03:09 - like ipv4 and ipv6 which define the
+03:13 - addresses which packets are sent right
+03:15 - so everyone has an ip address you've
+03:16 - probably heard of this in any um
+03:19 - regards
+03:20 - it's it's pretty much where data is sent
+03:23 - on the web
+03:24 - and so we then get to the application
+03:26 - layer which is sort of the top level
+03:27 - layer and this is where http websockets
+03:32 - and the rest of them all sit um this is
+03:34 - the sort of stuff that you guys might
+03:35 - interface with when uh actually
+03:37 - developing things
+03:38 - now again i want to uh admit that this
+03:40 - is a very contrived example so take this
+03:43 - um layers in with like a grain of salt
+03:47 - i would suggest if you want to do a
+03:48 - further reading into where everything
+03:49 - sits to either google the
+03:52 - osi layer model
+03:53 - or just looking into any networking
+03:55 - courses that you can
+03:58 - now i'm going to start off basic um just
+04:00 - to get everyone sort of up to speed and
+04:02 - you probably all know what http is but
+04:04 - for those that don't um
+04:06 - it's pretty much this request model
+04:08 - where a client
+04:09 - sends a request to a server
+04:11 - the server then processes that request
+04:14 - and then responds with like anything so
+04:16 - right we it could be a html page it
+04:18 - could be anything
+04:20 - and so generally you type in a url the
+04:22 - client is that browser that sends that
+04:25 - request
+04:26 - and the server does the processing so
+04:28 - that could be anything and in our cases
+04:30 - this is generally a web application like
+04:32 - flask or django
+04:34 - and then it returns a response
+04:39 - okay
+04:40 - so i'm going to be talking a bit about
+04:41 - what http is and a bit of the
+04:42 - characteristics behind it so you can
+04:43 - sort of understand where http and
+04:46 - websockets sit relative to each other
+04:49 - so http stands for hypertext transfer
+04:51 - protocol
+04:53 - and it's a stateless protocol which
+04:54 - means uh after the initial request is
+04:57 - done
+04:58 - that's it the
+05:00 - the channel between the client the
+05:01 - server is completely lost after this
+05:02 - initial request right and so i like to
+05:04 - think of it as flipping a coin you flip
+05:06 - a coin once and you get your result
+05:08 - heads or tails and if you flip it again
+05:11 - that result doesn't have anything to do
+05:13 - with the previous result right so the
+05:15 - connection
+05:17 - is completely lost after that initial
+05:18 - request
+05:20 - in the http model clients who are
+05:22 - requesting data have to specify an
+05:24 - action so that's either a get post put
+05:26 - or delete
+05:28 - this just tells the server what they
+05:29 - want to do so a get request is
+05:31 - retrieving some data a post request is
+05:34 - making something new on the server
+05:36 - a put request is replacing something uh
+05:39 - if it does exist like a resource on the
+05:41 - server or creating a new one and the
+05:44 - delete one is deleting a resource on the
+05:46 - server
+05:48 - and these things
+05:49 - these methods and
+05:51 - characteristics are all put into a thing
+05:52 - called a header
+05:54 - which is sent over the web
+05:56 - to tell the server what it wants it to
+05:57 - do right and the server also responds
+06:00 - with this header
+06:02 - so i'm just going to quickly give you a
+06:04 - quick example
+06:07 - of a basic
+06:10 - http request
+06:12 - and i'm just going to show you how you
+06:13 - can find these headers and
+06:15 - look at what these things look like so
+06:18 - if you open up any web page like my
+06:20 - awesome web page here
+06:22 - um if you open up the inspect tools and
+06:24 - go into the networks tab
+06:27 - and then you can have a look down here
+06:28 - at all the requests you've made to the
+06:30 - server
+06:32 - and if you can click on that you can
+06:33 - look in greater detail at what the
+06:35 - request is actually doing
+06:38 - so in a general sense you have all of
+06:40 - the
+06:41 - um chrome that does this nicely and it
+06:43 - sort of gets the data that you will
+06:44 - probably want to look at at the top and
+06:47 - then it gives you more detail beneath
+06:48 - right and so you can
+06:50 - view the url which you might want to
+06:52 - request so i've requested that url
+06:55 - and i specified that i wanted to get
+06:56 - that web page
+06:58 - and then the server responded with a 200
+07:00 - ok response which means that my response
+07:02 - was valid and it returned this data so
+07:05 - you can also look in greater detail into
+07:07 - the request and the response headers
+07:08 - down here by just clicking view source
+07:11 - and you can look at exactly what headers
+07:13 - were sent up in the web now a lot of you
+07:14 - who have done web work probably have
+07:16 - interface with this but i thought i
+07:18 - might start off and show you exactly
+07:20 - where you should be looking for this
+07:21 - sort of data now there's a couple other
+07:23 - tabs which might be useful when
+07:25 - inspecting this sort of stuff
+07:26 - like the response tab so you can see
+07:28 - that the server responded
+07:30 - with a html page and all my browser's
+07:32 - done has loaded that page
+07:34 - and then you have a timing page which
+07:35 - also
+07:37 - shows you how long it took to download
+07:39 - all the data for this page
+07:42 - cool so in 2005 uh we realized that that
+07:46 - model wasn't
+07:48 - really what we wanted we wanted the web
+07:49 - to be able to do more than just respond
+07:51 - with some data okay
+07:53 - and so we invented this technology known
+07:56 - as ajax which stands for asynchronous
+07:58 - javascript and xml okay
+08:01 - and so what this allowed us to do is
+08:02 - asynchronously send data to the server
+08:05 - after the initial request so
+08:07 - as you can see with the model the client
+08:09 - sends the initial request for the html
+08:11 - page it gets responded with that and
+08:13 - then it can continue to make requests um
+08:15 - after that
+08:18 - and that did a lot of cool things for us
+08:20 - so we could do a whole range of new
+08:23 - things with that
+08:24 - and i'm going to show you another quick
+08:25 - example just to sort of stick with that
+08:27 - um explain an example type thing
+08:30 - so you guys can get used to looking at
+08:31 - headers
+08:32 - in the inspect tab so
+08:34 - this is just a basic page which where
+08:36 - you click the button and it makes an
+08:38 - ajax request to an api
+08:40 - and the api responds with some data so
+08:42 - if i click this
+08:44 - you'll see i'll make a request i'll just
+08:46 - sort of make the headers tab a little
+08:47 - bit
+08:48 - smaller
+08:49 - um
+08:50 - and so what i've done here is just
+08:51 - printed out what the request is so i did
+08:54 - a get method to this url
+08:57 - and i went to that api
+09:00 - okay and then that responded with
+09:03 - a greeting
+09:04 - just this arbitrary grading which i
+09:06 - created
+09:08 - and this is great right so we could do
+09:10 - these things now where we do the initial
+09:12 - request
+09:13 - and then we can get more data from the
+09:14 - server so if we want to grab
+09:16 - information we can just ask the server
+09:18 - for it and it's a really cool thing we
+09:19 - don't have to refresh the page and we
+09:21 - can do a whole lot of things
+09:23 - but what happens when you want to do
+09:25 - something which is a bit
+09:27 - more
+09:28 - real time okay
+09:30 - what if i've got something like a feed
+09:33 - or a facebook feed or a chat application
+09:35 - right where i want users to be able to
+09:36 - instantly in real time be able to talk
+09:39 - to each other
+09:40 - okay
+09:41 - imagine if
+09:42 - say a facebook wall or a chat requires
+09:45 - you to press get all posts to see the
+09:48 - posts of your friends you you wouldn't
+09:50 - want to be able to sit there the whole
+09:52 - time pressing get all posts
+09:55 - the whole day
+09:56 - looking for new things
+10:04 - i'm sorry
+10:07 - um but you get the point right you don't
+10:08 - want to sit there the whole day pressing
+10:09 - get all posts but if you if you did it's
+10:12 - i guess it would work and this this
+10:14 - model
+10:15 - could work for certain applications but
+10:16 - for stuff that we want to be real-time
+10:18 - it's not the ideal thing
+10:21 - and so ideally
+10:22 - what we want is a model where you can
+10:24 - make a request and get a response for
+10:26 - the initial page and then if the server
+10:29 - happens to have some new data
+10:31 - in its events it can send that data back
+10:33 - down to me as you can see sort of by the
+10:35 - model
+10:36 - it shows when there's any new data it
+10:37 - can send it down right
+10:39 - so in the case of a chat application if
+10:41 - i'm sending a message to a group chat
+10:43 - with all my friends
+10:45 - the server will get that message and
+10:46 - then about okay i've got this message
+10:48 - let me send it to all the people that
+10:50 - want to know about that message
+10:52 - and if they're connected to this the
+10:53 - server can then send that message to
+10:55 - everyone that's connected
+10:59 - so that's what websockets does right um
+11:02 - websockets is built to solve that
+11:04 - inherent problem with http and to
+11:07 - develop that dual channel right so what
+11:09 - websockets does is it defines this fully
+11:13 - duplex bi-directional communication
+11:15 - channel between the client and the
+11:17 - server i know that's a whole lot of
+11:18 - jargon but pretty much it means that the
+11:20 - client and the server can talk in real
+11:22 - time without having to continuously make
+11:25 - requests so
+11:27 - what it does is
+11:29 - it if you want to do web sockets over
+11:31 - the web you send a header to the server
+11:33 - saying okay i want to upgrade from http
+11:36 - to web sockets
+11:38 - and it uses that same tcp connection
+11:40 - that it originally established loading
+11:42 - the page
+11:43 - and the server's like okay let's upgrade
+11:46 - once this upgrade is done
+11:48 - those two
+11:49 - the client and server can continuously
+11:51 - send data back and forth with each other
+11:52 - without the overhead which http might
+11:55 - bring with it and we're going to talk a
+11:57 - bit a bit about the
+11:58 - performance benefits you can have by
+12:00 - removing uh headers from
+12:03 - requests
+12:04 - so essentially one of the great things
+12:06 - about it is it's really easy to
+12:07 - implement and we'll get into some of the
+12:09 - details with that soon and it's
+12:11 - standardized and it's been standardized
+12:12 - for quite a while so i don't understand
+12:14 - why people
+12:15 - aren't really implementing it more than
+12:17 - they are
+12:18 - and as the last point says there the
+12:20 - headers are only sent once so in that
+12:21 - initial handshake where the server and
+12:23 - the client agree to upgrade to
+12:25 - websockets that's the only
+12:27 - headers that are sent the rest is
+12:30 - just sending data back and forth and so
+12:31 - you don't have that
+12:32 - overhead
+12:34 - when sending data
+12:37 - so i'm going to sort of go over a brief
+12:39 - example again
+12:41 - with that same feed idea
+12:43 - um feel free to go on this if you want
+12:46 - we can try crash my server
+12:50 - and so
+12:51 - i'm going to sort of show you how you
+12:52 - can inspect them um and sort of see what
+12:55 - a websocket looks like so if you want
+12:56 - you can again feel free to go on there
+12:58 - and post a message so i could be like
+13:00 - okay my name's dion and i could be like
+13:02 - hey
+13:04 - i can make that post okay and so what's
+13:06 - happening here is i've made the initial
+13:09 - request to the server we've upgraded our
+13:11 - connection
+13:12 - i've sent my message
+13:13 - and the server saved that message to
+13:15 - some database on the side and then it
+13:18 - sent that message out to anyone that's
+13:19 - connected
+13:20 - okay
+13:21 - and if we look at the
+13:23 - websockets headers which you can find by
+13:25 - going
+13:26 - in this
+13:27 - little tab
+13:29 - you can see this initial header
+13:32 - so i'll just quickly
+13:35 - drag that open it's not
+13:38 - okay
+13:38 - um
+13:40 - so you see the initial headers um which
+13:42 - happened with that upgrade connection so
+13:44 - you can see
+13:45 - the status code from the server was okay
+13:47 - we're going to switch protocols to web
+13:49 - sockets
+13:59 - and so if you want to look further into
+14:03 - please be reasonable
+14:08 - did i just see your drop tables
+14:10 - [Music]
+14:11 - okay so if you want to look more into
+14:14 - what's actually going on behind the
+14:15 - scenes you can go into this little tab
+14:16 - called the frames tab
+14:18 - um and you can see everything which is
+14:20 - happening um behind the scenes so you
+14:23 - can see in my case all that's happening
+14:25 - for me is i've been i've upgraded my
+14:27 - connection to websockets and now all i'm
+14:30 - doing is receiving that data from the
+14:31 - server so when you guys are making those
+14:33 - posts it's going up into the server
+14:35 - saving them to the database and then
+14:36 - sending them back to me
+14:38 - and you can see that by looking at these
+14:40 - here right so
+14:46 - um you could you can see exactly what
+14:48 - the event was so i made an event on my
+14:50 - client saying add to wall which um does
+14:53 - what it says and it just adds that text
+14:54 - to the wall and you can see the the data
+14:57 - that came with it right so you have um
+14:58 - the username of the person that sent it
+15:01 - um and the message that came with it as
+15:02 - well
+15:04 - and this probably isn't the best
+15:05 - implementation of it but it sort of just
+15:06 - um
+15:07 - defines
+15:09 - jesus
+15:12 - it defines that um that connection
+15:15 - okay so we'll go away from that
+15:19 - i also do apologize in advance um for
+15:22 - including all the um the curly braces in
+15:24 - my slides i didn't realize until
+15:26 - afterwards i just did it sort of as an
+15:27 - aesthetic thing
+15:29 - and then i was like wow i'm actually
+15:30 - presenting this to a bunch of python
+15:32 - people they probably don't know what
+15:33 - those are
+15:36 - anyway
+15:37 - so
+15:38 - a lot of people criticize web sockets
+15:41 - for its browser support
+15:42 - and we can now go ahead and say that
+15:44 - that is sort of a myth because
+15:45 - websockets is widely supported now in
+15:47 - all of the latest versions of the
+15:50 - browsers including ie which is good i
+15:52 - guess
+15:53 - if you still support that
+15:55 - and if you want to do further reading
+15:56 - and
+15:57 - find these sorts of things for other
+15:59 - things i'd urge you to go to this
+16:00 - website can i use dot com
+16:03 - most web developers who've done any
+16:04 - front-end stuff would probably
+16:06 - interface with that but it's just a nice
+16:08 - little way of seeing if
+16:10 - you can use it
+16:14 - okay so i mentioned earlier that we're
+16:16 - going to be talking about other
+16:16 - technologies used to achieve
+16:19 - quite similar real-time goals to what
+16:21 - websockets does
+16:22 - and you may have heard of these
+16:24 - technologies before and i'm not trying
+16:26 - to de-credit them because they still are
+16:28 - used today
+16:29 - but i'm saying websockets can do all
+16:30 - this but it's a more standard way
+16:33 - okay so
+16:34 - there are these two things called
+16:36 - polling and long polling okay so polling
+16:38 - is sending an ajax request any x number
+16:41 - of seconds so i could tell my my client
+16:44 - every five seconds make a request to the
+16:46 - server for some new data
+16:47 - now
+16:48 - my work actually does something like
+16:50 - this right and
+16:51 - it's not probably the best way to do
+16:53 - things
+16:54 - but it does work so you will get some
+16:56 - sense of real time i guess because you
+16:58 - will be getting data every x amount of
+17:00 - seconds
+17:01 - and it's sort of a workaround to not
+17:03 - having to use that websocket and it
+17:04 - should be used um
+17:05 - sometimes when you only want to be
+17:07 - receiving data on intervals
+17:10 - we also came up with another way of
+17:12 - doing this called long polling now this
+17:14 - is still i think widely used today from
+17:16 - what i can see and if you look at a lot
+17:18 - of applications where you'd expect
+17:19 - websockets to be used like for example a
+17:21 - chat um you'll often see that you won't
+17:24 - be able to inspect any web soccer
+17:25 - headers and that's because people still
+17:27 - do use this long polling
+17:29 - technique
+17:30 - you might have also heard this referred
+17:32 - to as comment programming but
+17:34 - essentially what it does is it makes a
+17:35 - request to the server and it tells the
+17:37 - server not to close that request until
+17:39 - it has any new data
+17:41 - so it keeps that connection open until
+17:43 - the server finds something to give it
+17:45 - and then after it gives it back
+17:47 - the client is just like okay i'm going
+17:48 - to send you another request to do the
+17:49 - same thing
+17:50 - and by doing that you sort of achieve
+17:53 - that goal of having dual connection
+17:55 - between a client and a server
+17:58 - and there are upsides to it and
+17:59 - downsides to it and we'll get onto that
+18:01 - quite soon
+18:03 - another way of doing it
+18:05 - is called server events um or service
+18:08 - events sorry um and it uses this thing
+18:10 - called the event source api
+18:12 - to send events from the server and it's
+18:14 - not truly bidirectional because
+18:16 - it's really based from the server
+18:18 - sending it to the client not an
+18:20 - interaction between the two of them and
+18:21 - that's sort of the distinction between
+18:23 - them and websockets where websockets
+18:25 - expect both the client and server to
+18:26 - continuously communicate
+18:28 - this expects the client to sometimes
+18:30 - communicate with a server but mainly for
+18:32 - it to be server data being sent back
+18:35 - and so this generally requires an event
+18:36 - loop or asynchronous server and one of
+18:40 - the downsides is you don't have that
+18:41 - binary message capability which you will
+18:43 - receive with websockets which supports
+18:45 - uh binary data
+18:48 - and one of the main upsides of this
+18:49 - method and i guess is the arguable thing
+18:52 - you might want to
+18:53 - consider when choosing to use web
+18:54 - sockets or not is
+18:56 - using this method allows you to co-exist
+18:58 - with existing technologies and when i
+19:00 - say that i'm saying
+19:02 - it works well with rest apis and with
+19:05 - things like oauth right so existing
+19:06 - technologies which use that
+19:09 - that model
+19:10 - now websockets can't really interface
+19:12 - with them properly and there's a bit of
+19:14 - an issue
+19:16 - trying to request from an api using
+19:18 - websockets so you've got to kind of
+19:21 - consider if you want to be using those
+19:22 - sorts of technologies and if
+19:25 - it's worth the trade-off
+19:27 - now the browser support for service and
+19:29 - events isn't as good as web sockets
+19:31 - which is funny
+19:33 - it's pretty much everything except for
+19:34 - internet explorer
+19:36 - but that can also be polyfilled so i
+19:38 - guess it's arguable that you can pretty
+19:39 - much use web circuits or these in
+19:41 - replace of each other
+19:44 - the intended use case of websockets
+19:48 - this is sort of a topic which is i guess
+19:50 - controversial so i don't want to make my
+19:52 - opinion um change this
+19:55 - but one of the things i want to get
+19:57 - clear to you guys is web sockets is not
+19:59 - a complete replacement for http right
+20:02 - websockets is an upgrade we saw earlier
+20:05 - with the headers it's it's not a
+20:06 - replacement for the http model but it's
+20:09 - more an upgrade for that channel
+20:12 - so
+20:13 - you can't just replace http to use this
+20:15 - because http provides you a number of
+20:17 - benefits
+20:19 - which you won't receive with just native
+20:21 - uh websockets like for example as i
+20:23 - mentioned on the slide
+20:25 - automatic caching um and you can
+20:27 - communicate with those other
+20:28 - technologies like rest and oauth
+20:31 - and one of the things that's often
+20:34 - another critical point about websockets
+20:36 - is
+20:37 - load balancing
+20:39 - the servers
+20:40 - is often quite hard
+20:42 - with the websocket protocol and it makes
+20:43 - the whole implementation of deployment a
+20:45 - little bit more complicated than just
+20:47 - doing a http server
+20:50 - and so the intended use case for
+20:51 - websockets is generally things
+20:53 - where you need that full duplex client
+20:55 - server interaction so it's things where
+20:57 - you're doing things in real time like
+20:58 - creating maybe a game on the web
+21:01 - chatting applications where you've
+21:02 - constantly got that interaction
+21:05 - anything which needs that low latency
+21:07 - real-time connection over the web
+21:11 - okay so we're going to get into some of
+21:12 - the clients which are used to interface
+21:14 - with websockets so these are the things
+21:18 - which
+21:19 - you use to talk to a server and the
+21:21 - server either upgrades or doesn't
+21:23 - upgrade with you and i'll get into what
+21:24 - that means in a second so
+21:26 - these clients are built in a lot of
+21:28 - different languages including python
+21:30 - which is an upside
+21:32 - and even microplay and arduino have them
+21:34 - which is kind of cool so if you're into
+21:35 - iot sort of things you can use web
+21:37 - sockets which is awesome so if you want
+21:39 - to control
+21:40 - any iot devices you can
+21:42 - create that websocket connection with a
+21:44 - web browser so for example if i wanted
+21:46 - to interface with uh one of my iot
+21:50 - devices let's say some kind of robot or
+21:52 - something i could control it
+21:54 - using
+21:55 - my web browser
+21:57 - with a websocket connection
+21:59 - and so clients which
+22:01 - interface with websockets aren't
+22:02 - necessarily
+22:04 - web browsers like we'd expect but the
+22:05 - most popular implementation of these
+22:07 - clients are built in javascript
+22:10 - and are used as web clients
+22:12 - and obviously they require the server to
+22:14 - be able to interface with web sockets um
+22:17 - if a client tries to request an upgrade
+22:20 - with a server that doesn't support it
+22:22 - it'll obviously respond with an error
+22:25 - and you won't get that upgrade
+22:28 - and if you want to read more into sort
+22:29 - of clients and looking for the right one
+22:31 - that you might want to use for in your
+22:33 - projects
+22:34 - i'd consider looking at socket i o which
+22:36 - i'm going to go into a lot more depth in
+22:38 - a second
+22:39 - and looking into just some of the
+22:40 - websocket libraries just by doing a
+22:41 - simple google search for a websocket
+22:44 - client and if obviously you guys are
+22:46 - python people so i'd assume you'd be
+22:48 - looking for things in python and those
+22:49 - do exist
+22:52 - so for this example i'm going to be
+22:53 - showing you um the native websocket
+22:55 - support which is in javascript um and
+22:58 - i'm going to show you a bit of code sort
+22:59 - of work through how quite easy it is to
+23:02 - create a client which can interface with
+23:04 - a websocket server
+23:06 - so in this example um
+23:08 - we start off with the initial socket
+23:09 - connection which is just a new websocket
+23:12 - uh object and again i'm sorry for
+23:14 - pushing javascript on you guys i know
+23:15 - you're not here for this um but you give
+23:17 - this this new websocket connection
+23:20 - and you define a ws
+23:22 - route
+23:24 - so for this example i'm connecting to my
+23:26 - local host
+23:27 - and then you have to define a couple of
+23:29 - uh functions so
+23:31 - the this socket object has an on open
+23:33 - event which means once the protocol has
+23:36 - been swapped and upgraded to web sockets
+23:39 - this function gets called right and so
+23:41 - in the example that i've got up on the
+23:43 - screen
+23:44 - it's just a lambda way of
+23:46 - dealing with that so
+23:48 - for example in my example i open that
+23:50 - connection
+23:51 - and then i send using socket.send i send
+23:55 - the string pyconau up to the server
+23:59 - and then
+24:01 - when the server sends something back to
+24:02 - me the socket on message is called
+24:07 - i just realized i don't have too much
+24:08 - time
+24:09 - so socket io is
+24:11 - another thing i want to also mention and
+24:13 - it's sort of the main thing i want to
+24:14 - push at you guys to use
+24:16 - this is a nicer way of interfacing with
+24:19 - websocket servers because it's
+24:22 - sort of like a jquery to javascript
+24:24 - right so it's sort of like this this
+24:26 - library that takes the native websockets
+24:28 - and makes a lot nicer and easier to use
+24:31 - right and so it includes things like
+24:32 - auto reconnection and fallbacks so say a
+24:36 - server and a client don't agree on the
+24:37 - handshake
+24:39 - what it does is it uses a fallback
+24:40 - mechanism
+24:41 - to use long polling instead which is
+24:44 - quite good if you want to support older
+24:45 - browsers um and it gives you that
+24:47 - ability to do that uh it also uh
+24:50 - as native websockets does handles
+24:52 - disconnection and connection and it
+24:53 - gives this ability to create these
+24:55 - things called namespaces which is sort
+24:57 - of like a group of
+24:58 - clients which
+25:00 - the server can talk to
+25:04 - and so a socket i o client-side code is
+25:06 - quite similar to what you saw before you
+25:08 - create that initial connection
+25:10 - and you give it the namespace as one of
+25:12 - the parameters to the url
+25:14 - you have a connect event
+25:16 - and you can also send events to
+25:18 - custom-made events right so the native
+25:20 - websockets can only send events to
+25:23 - a message event on the server
+25:26 - whereas this i can define custom events
+25:28 - to do that
+25:29 - and i'm going to skip over this slide
+25:31 - because i'm slowly running out of time
+25:34 - but there's a lot of support for python
+25:36 - servers which
+25:38 - do do this and i'm going to be using
+25:39 - flask for a lot of my examples which we
+25:41 - should hopefully fly through
+25:43 - but
+25:44 - there's a lot of different
+25:45 - implementations for using socket io
+25:48 - and it's really really quite easy so you
+25:51 - create a flask application most of you
+25:53 - might have used flask if you'd ever done
+25:55 - any web stuff with python
+25:57 - but it's as easy as wrapping the app
+26:00 - with the provided socket
+26:03 - object
+26:04 - and then creating a route which
+26:06 - takes in a
+26:08 - custom event name like for example my
+26:10 - sockets
+26:12 - um sorry this is actually an example for
+26:15 - native websockets
+26:16 - so this is where you're using that
+26:18 - native connection um and then socket io
+26:21 - is where you can do custom events and so
+26:23 - this name space allows me to address a
+26:24 - group of people let's say the name space
+26:27 - pycon so i get all the people that
+26:28 - connect to this namespace python and
+26:30 - then i can send messages back and forth
+26:32 - to anyone that's connected to that
+26:34 - python namespace which is really quite
+26:36 - cool for managing groups of people so
+26:37 - let's say you've got chat groups you can
+26:39 - use this namespace to achieve that
+26:43 - and also like i said before the
+26:44 - performance comparison between
+26:46 - websockets and just http
+26:49 - is quite big
+26:50 - so http requests they always send that
+26:52 - header whereas websockets don't
+26:55 - so after that initial connection is done
+26:57 - every other request is only framed by a
+27:00 - two byte uh header
+27:02 - frame i think it's called a frame
+27:04 - and it it's not as heavy as the multiple
+27:07 - kilobytes which a
+27:10 - http request might have
+27:13 - but then there's also that socket io
+27:15 - idea from before also does contribute to
+27:18 - adding latency to their websockets but
+27:20 - it's not as much as http might
+27:24 - i'm going to quickly go to a speed test
+27:25 - if i can
+27:28 - this is just on my local host and what
+27:30 - it does is
+27:32 - i enter a number of requests i want it
+27:34 - to perform
+27:35 - and it just does that so i just send in
+27:37 - a basic um string to either my
+27:41 - websocket endpoint or my api endpoint
+27:44 - and
+27:45 - you'll see how much quicker websockets
+27:48 - is in comparison to ajax
+27:51 - this isn't actually hosted on the on the
+27:52 - web because i wanted to take latency out
+27:54 - of it out of the equation but you can
+27:57 - see
+27:59 - it looks a bit small here cause it's in
+28:01 - milliseconds but you can imagine having
+28:02 - a thousand hundreds of thousands of
+28:04 - users connected to a connection all
+28:07 - doing these requests you can see how
+28:08 - that can quickly get quite expensive
+28:13 - now i was going to do a live demo but
+28:14 - i'm quickly out of time
+28:17 - i'm just going to quickly touch on
+28:18 - deploying these websockets
+28:20 - and so synchronous servers don't
+28:22 - generally have support for this so we
+28:24 - have to use libraries such as eventlet
+28:26 - and g event to monkey patch
+28:29 - some of the standard libraries in python
+28:31 - so synchronous just means that it it
+28:33 - uses blocking functions and using these
+28:36 - libraries unblocks it
+28:38 - um i'll go into more detail if anyone
+28:40 - wants to know about deploying it
+28:41 - afterwards because i think i've
+28:42 - literally got a minute
+28:45 - but
+28:46 - deploying websockets does add that
+28:47 - little extra layer of complexity and
+28:50 - doing them with asynchronous servers
+28:51 - makes your life a lot easier and that's
+28:53 - sort of the point i wanted to get across
+28:56 - so unfortunately i'm going to have to
+28:57 - wrap up early but if you do want to talk
+28:59 - more about this
+29:00 - feel free to
+29:01 - find me outside i'll probably be
+29:03 - loitering around for a little bit
+29:04 - and thank you for coming
+29:08 - [Music]
+29:13 - thank you dion as you can see he's very
+29:15 - enthusiastic about it so i'm sure he'll
+29:18 - answer your questions later on thank you
+
+Cleaned transcript:
+
+uh today as you were saying i'm gonna be talking about websockets and we're gonna be talking about it from sort of a beginner's standpoint so someone who's never actually really used it more has sort of like heard of what websockets is but has never actually gone to the effort of actually using it in one of their projects so a bit about me i'm don misik that's my name i'm a fulltime associate developer at weistec currently i study at uts doing the bit coop scholarship so that's the bachelor of information technology i spoke at pycon last year some of you might have been at my talk and i did a bit of data science work at the anu last year as well and so i'm 18 years old and i'm obviously from canberra and have recently moved up here to study um and to give you guys a bit of structure about what we're going to be going through today we're going to sort of start off with a basic lowlevel understanding of some of the protocols which we're going to be talking about today sort of to get an idea of where everything sits in the whole it world we're going to go over some of the use cases and the applications which you might find using websockets and i'm going to go over some of the previous technologies which might be used in place of websockets since it's still quite relatively new and we'll go a bit about the browser support and the characteristics of websockets as a protocol and how fast it is in comparison to other implementations and of course what you're here for is the python aspect of it so we're going to go over how python has a role to play with it and how easy it is to do things with websockets with python and just a quick note at the end we're going to go quickly over how deploying websockets works over the web so to get into it we're going to start off with a pretty contrived example and so anyone who's done any sort of networking or taking any networking courses would have seen something similar to this you probably would have seen something called the osi networking layers um so this is the internet protocol suite and this is sort of just to get an idea of where everything sits relative to each other so i'm going to start off from the bottom you'll see the transport layer so these are things which define the way that data packets are transferred over the web right so these are things such as tcp and udp and so tcp guarantees that any packet that you send over the web will reach its destination in the same order which they were sent right and it does this by acknowledging um the packet once it's reached its destination so say i want to send a packet to a web server tcp guarantees that all of my packets will get there and i want to mention that udp the less important one to tcp is a bit more careless and it doesn't really care about this guarantee of order and it's generally used for things like streaming video data where we don't care if we lose some of the packets on the way and so tcp is sort of the underlying transport layer behind a lot of the things i'm gonna be talking about today and so then you move up to the next stage which is the internet layer uh so this is things uh like ipv4 and ipv6 which define the addresses which packets are sent right so everyone has an ip address you've probably heard of this in any um regards it's it's pretty much where data is sent on the web and so we then get to the application layer which is sort of the top level layer and this is where http websockets and the rest of them all sit um this is the sort of stuff that you guys might interface with when uh actually developing things now again i want to uh admit that this is a very contrived example so take this um layers in with like a grain of salt i would suggest if you want to do a further reading into where everything sits to either google the osi layer model or just looking into any networking courses that you can now i'm going to start off basic um just to get everyone sort of up to speed and you probably all know what http is but for those that don't um it's pretty much this request model where a client sends a request to a server the server then processes that request and then responds with like anything so right we it could be a html page it could be anything and so generally you type in a url the client is that browser that sends that request and the server does the processing so that could be anything and in our cases this is generally a web application like flask or django and then it returns a response okay so i'm going to be talking a bit about what http is and a bit of the characteristics behind it so you can sort of understand where http and websockets sit relative to each other so http stands for hypertext transfer protocol and it's a stateless protocol which means uh after the initial request is done that's it the the channel between the client the server is completely lost after this initial request right and so i like to think of it as flipping a coin you flip a coin once and you get your result heads or tails and if you flip it again that result doesn't have anything to do with the previous result right so the connection is completely lost after that initial request in the http model clients who are requesting data have to specify an action so that's either a get post put or delete this just tells the server what they want to do so a get request is retrieving some data a post request is making something new on the server a put request is replacing something uh if it does exist like a resource on the server or creating a new one and the delete one is deleting a resource on the server and these things these methods and characteristics are all put into a thing called a header which is sent over the web to tell the server what it wants it to do right and the server also responds with this header so i'm just going to quickly give you a quick example of a basic http request and i'm just going to show you how you can find these headers and look at what these things look like so if you open up any web page like my awesome web page here um if you open up the inspect tools and go into the networks tab and then you can have a look down here at all the requests you've made to the server and if you can click on that you can look in greater detail at what the request is actually doing so in a general sense you have all of the um chrome that does this nicely and it sort of gets the data that you will probably want to look at at the top and then it gives you more detail beneath right and so you can view the url which you might want to request so i've requested that url and i specified that i wanted to get that web page and then the server responded with a 200 ok response which means that my response was valid and it returned this data so you can also look in greater detail into the request and the response headers down here by just clicking view source and you can look at exactly what headers were sent up in the web now a lot of you who have done web work probably have interface with this but i thought i might start off and show you exactly where you should be looking for this sort of data now there's a couple other tabs which might be useful when inspecting this sort of stuff like the response tab so you can see that the server responded with a html page and all my browser's done has loaded that page and then you have a timing page which also shows you how long it took to download all the data for this page cool so in 2005 uh we realized that that model wasn't really what we wanted we wanted the web to be able to do more than just respond with some data okay and so we invented this technology known as ajax which stands for asynchronous javascript and xml okay and so what this allowed us to do is asynchronously send data to the server after the initial request so as you can see with the model the client sends the initial request for the html page it gets responded with that and then it can continue to make requests um after that and that did a lot of cool things for us so we could do a whole range of new things with that and i'm going to show you another quick example just to sort of stick with that um explain an example type thing so you guys can get used to looking at headers in the inspect tab so this is just a basic page which where you click the button and it makes an ajax request to an api and the api responds with some data so if i click this you'll see i'll make a request i'll just sort of make the headers tab a little bit smaller um and so what i've done here is just printed out what the request is so i did a get method to this url and i went to that api okay and then that responded with a greeting just this arbitrary grading which i created and this is great right so we could do these things now where we do the initial request and then we can get more data from the server so if we want to grab information we can just ask the server for it and it's a really cool thing we don't have to refresh the page and we can do a whole lot of things but what happens when you want to do something which is a bit more real time okay what if i've got something like a feed or a facebook feed or a chat application right where i want users to be able to instantly in real time be able to talk to each other okay imagine if say a facebook wall or a chat requires you to press get all posts to see the posts of your friends you you wouldn't want to be able to sit there the whole time pressing get all posts the whole day looking for new things i'm sorry um but you get the point right you don't want to sit there the whole day pressing get all posts but if you if you did it's i guess it would work and this this model could work for certain applications but for stuff that we want to be realtime it's not the ideal thing and so ideally what we want is a model where you can make a request and get a response for the initial page and then if the server happens to have some new data in its events it can send that data back down to me as you can see sort of by the model it shows when there's any new data it can send it down right so in the case of a chat application if i'm sending a message to a group chat with all my friends the server will get that message and then about okay i've got this message let me send it to all the people that want to know about that message and if they're connected to this the server can then send that message to everyone that's connected so that's what websockets does right um websockets is built to solve that inherent problem with http and to develop that dual channel right so what websockets does is it defines this fully duplex bidirectional communication channel between the client and the server i know that's a whole lot of jargon but pretty much it means that the client and the server can talk in real time without having to continuously make requests so what it does is it if you want to do web sockets over the web you send a header to the server saying okay i want to upgrade from http to web sockets and it uses that same tcp connection that it originally established loading the page and the server's like okay let's upgrade once this upgrade is done those two the client and server can continuously send data back and forth with each other without the overhead which http might bring with it and we're going to talk a bit a bit about the performance benefits you can have by removing uh headers from requests so essentially one of the great things about it is it's really easy to implement and we'll get into some of the details with that soon and it's standardized and it's been standardized for quite a while so i don't understand why people aren't really implementing it more than they are and as the last point says there the headers are only sent once so in that initial handshake where the server and the client agree to upgrade to websockets that's the only headers that are sent the rest is just sending data back and forth and so you don't have that overhead when sending data so i'm going to sort of go over a brief example again with that same feed idea um feel free to go on this if you want we can try crash my server and so i'm going to sort of show you how you can inspect them um and sort of see what a websocket looks like so if you want you can again feel free to go on there and post a message so i could be like okay my name's dion and i could be like hey i can make that post okay and so what's happening here is i've made the initial request to the server we've upgraded our connection i've sent my message and the server saved that message to some database on the side and then it sent that message out to anyone that's connected okay and if we look at the websockets headers which you can find by going in this little tab you can see this initial header so i'll just quickly drag that open it's not okay um so you see the initial headers um which happened with that upgrade connection so you can see the status code from the server was okay we're going to switch protocols to web sockets and so if you want to look further into please be reasonable did i just see your drop tables okay so if you want to look more into what's actually going on behind the scenes you can go into this little tab called the frames tab um and you can see everything which is happening um behind the scenes so you can see in my case all that's happening for me is i've been i've upgraded my connection to websockets and now all i'm doing is receiving that data from the server so when you guys are making those posts it's going up into the server saving them to the database and then sending them back to me and you can see that by looking at these here right so um you could you can see exactly what the event was so i made an event on my client saying add to wall which um does what it says and it just adds that text to the wall and you can see the the data that came with it right so you have um the username of the person that sent it um and the message that came with it as well and this probably isn't the best implementation of it but it sort of just um defines jesus it defines that um that connection okay so we'll go away from that i also do apologize in advance um for including all the um the curly braces in my slides i didn't realize until afterwards i just did it sort of as an aesthetic thing and then i was like wow i'm actually presenting this to a bunch of python people they probably don't know what those are anyway so a lot of people criticize web sockets for its browser support and we can now go ahead and say that that is sort of a myth because websockets is widely supported now in all of the latest versions of the browsers including ie which is good i guess if you still support that and if you want to do further reading and find these sorts of things for other things i'd urge you to go to this website can i use dot com most web developers who've done any frontend stuff would probably interface with that but it's just a nice little way of seeing if you can use it okay so i mentioned earlier that we're going to be talking about other technologies used to achieve quite similar realtime goals to what websockets does and you may have heard of these technologies before and i'm not trying to decredit them because they still are used today but i'm saying websockets can do all this but it's a more standard way okay so there are these two things called polling and long polling okay so polling is sending an ajax request any x number of seconds so i could tell my my client every five seconds make a request to the server for some new data now my work actually does something like this right and it's not probably the best way to do things but it does work so you will get some sense of real time i guess because you will be getting data every x amount of seconds and it's sort of a workaround to not having to use that websocket and it should be used um sometimes when you only want to be receiving data on intervals we also came up with another way of doing this called long polling now this is still i think widely used today from what i can see and if you look at a lot of applications where you'd expect websockets to be used like for example a chat um you'll often see that you won't be able to inspect any web soccer headers and that's because people still do use this long polling technique you might have also heard this referred to as comment programming but essentially what it does is it makes a request to the server and it tells the server not to close that request until it has any new data so it keeps that connection open until the server finds something to give it and then after it gives it back the client is just like okay i'm going to send you another request to do the same thing and by doing that you sort of achieve that goal of having dual connection between a client and a server and there are upsides to it and downsides to it and we'll get onto that quite soon another way of doing it is called server events um or service events sorry um and it uses this thing called the event source api to send events from the server and it's not truly bidirectional because it's really based from the server sending it to the client not an interaction between the two of them and that's sort of the distinction between them and websockets where websockets expect both the client and server to continuously communicate this expects the client to sometimes communicate with a server but mainly for it to be server data being sent back and so this generally requires an event loop or asynchronous server and one of the downsides is you don't have that binary message capability which you will receive with websockets which supports uh binary data and one of the main upsides of this method and i guess is the arguable thing you might want to consider when choosing to use web sockets or not is using this method allows you to coexist with existing technologies and when i say that i'm saying it works well with rest apis and with things like oauth right so existing technologies which use that that model now websockets can't really interface with them properly and there's a bit of an issue trying to request from an api using websockets so you've got to kind of consider if you want to be using those sorts of technologies and if it's worth the tradeoff now the browser support for service and events isn't as good as web sockets which is funny it's pretty much everything except for internet explorer but that can also be polyfilled so i guess it's arguable that you can pretty much use web circuits or these in replace of each other the intended use case of websockets this is sort of a topic which is i guess controversial so i don't want to make my opinion um change this but one of the things i want to get clear to you guys is web sockets is not a complete replacement for http right websockets is an upgrade we saw earlier with the headers it's it's not a replacement for the http model but it's more an upgrade for that channel so you can't just replace http to use this because http provides you a number of benefits which you won't receive with just native uh websockets like for example as i mentioned on the slide automatic caching um and you can communicate with those other technologies like rest and oauth and one of the things that's often another critical point about websockets is load balancing the servers is often quite hard with the websocket protocol and it makes the whole implementation of deployment a little bit more complicated than just doing a http server and so the intended use case for websockets is generally things where you need that full duplex client server interaction so it's things where you're doing things in real time like creating maybe a game on the web chatting applications where you've constantly got that interaction anything which needs that low latency realtime connection over the web okay so we're going to get into some of the clients which are used to interface with websockets so these are the things which you use to talk to a server and the server either upgrades or doesn't upgrade with you and i'll get into what that means in a second so these clients are built in a lot of different languages including python which is an upside and even microplay and arduino have them which is kind of cool so if you're into iot sort of things you can use web sockets which is awesome so if you want to control any iot devices you can create that websocket connection with a web browser so for example if i wanted to interface with uh one of my iot devices let's say some kind of robot or something i could control it using my web browser with a websocket connection and so clients which interface with websockets aren't necessarily web browsers like we'd expect but the most popular implementation of these clients are built in javascript and are used as web clients and obviously they require the server to be able to interface with web sockets um if a client tries to request an upgrade with a server that doesn't support it it'll obviously respond with an error and you won't get that upgrade and if you want to read more into sort of clients and looking for the right one that you might want to use for in your projects i'd consider looking at socket i o which i'm going to go into a lot more depth in a second and looking into just some of the websocket libraries just by doing a simple google search for a websocket client and if obviously you guys are python people so i'd assume you'd be looking for things in python and those do exist so for this example i'm going to be showing you um the native websocket support which is in javascript um and i'm going to show you a bit of code sort of work through how quite easy it is to create a client which can interface with a websocket server so in this example um we start off with the initial socket connection which is just a new websocket uh object and again i'm sorry for pushing javascript on you guys i know you're not here for this um but you give this this new websocket connection and you define a ws route so for this example i'm connecting to my local host and then you have to define a couple of uh functions so the this socket object has an on open event which means once the protocol has been swapped and upgraded to web sockets this function gets called right and so in the example that i've got up on the screen it's just a lambda way of dealing with that so for example in my example i open that connection and then i send using socket.send i send the string pyconau up to the server and then when the server sends something back to me the socket on message is called i just realized i don't have too much time so socket io is another thing i want to also mention and it's sort of the main thing i want to push at you guys to use this is a nicer way of interfacing with websocket servers because it's sort of like a jquery to javascript right so it's sort of like this this library that takes the native websockets and makes a lot nicer and easier to use right and so it includes things like auto reconnection and fallbacks so say a server and a client don't agree on the handshake what it does is it uses a fallback mechanism to use long polling instead which is quite good if you want to support older browsers um and it gives you that ability to do that uh it also uh as native websockets does handles disconnection and connection and it gives this ability to create these things called namespaces which is sort of like a group of clients which the server can talk to and so a socket i o clientside code is quite similar to what you saw before you create that initial connection and you give it the namespace as one of the parameters to the url you have a connect event and you can also send events to custommade events right so the native websockets can only send events to a message event on the server whereas this i can define custom events to do that and i'm going to skip over this slide because i'm slowly running out of time but there's a lot of support for python servers which do do this and i'm going to be using flask for a lot of my examples which we should hopefully fly through but there's a lot of different implementations for using socket io and it's really really quite easy so you create a flask application most of you might have used flask if you'd ever done any web stuff with python but it's as easy as wrapping the app with the provided socket object and then creating a route which takes in a custom event name like for example my sockets um sorry this is actually an example for native websockets so this is where you're using that native connection um and then socket io is where you can do custom events and so this name space allows me to address a group of people let's say the name space pycon so i get all the people that connect to this namespace python and then i can send messages back and forth to anyone that's connected to that python namespace which is really quite cool for managing groups of people so let's say you've got chat groups you can use this namespace to achieve that and also like i said before the performance comparison between websockets and just http is quite big so http requests they always send that header whereas websockets don't so after that initial connection is done every other request is only framed by a two byte uh header frame i think it's called a frame and it it's not as heavy as the multiple kilobytes which a http request might have but then there's also that socket io idea from before also does contribute to adding latency to their websockets but it's not as much as http might i'm going to quickly go to a speed test if i can this is just on my local host and what it does is i enter a number of requests i want it to perform and it just does that so i just send in a basic um string to either my websocket endpoint or my api endpoint and you'll see how much quicker websockets is in comparison to ajax this isn't actually hosted on the on the web because i wanted to take latency out of it out of the equation but you can see it looks a bit small here cause it's in milliseconds but you can imagine having a thousand hundreds of thousands of users connected to a connection all doing these requests you can see how that can quickly get quite expensive now i was going to do a live demo but i'm quickly out of time i'm just going to quickly touch on deploying these websockets and so synchronous servers don't generally have support for this so we have to use libraries such as eventlet and g event to monkey patch some of the standard libraries in python so synchronous just means that it it uses blocking functions and using these libraries unblocks it um i'll go into more detail if anyone wants to know about deploying it afterwards because i think i've literally got a minute but deploying websockets does add that little extra layer of complexity and doing them with asynchronous servers makes your life a lot easier and that's sort of the point i wanted to get across so unfortunately i'm going to have to wrap up early but if you do want to talk more about this feel free to find me outside i'll probably be loitering around for a little bit and thank you for coming thank you dion as you can see he's very enthusiastic about it so i'm sure he'll answer your questions later on thank you

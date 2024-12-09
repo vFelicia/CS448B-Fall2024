@@ -1,0 +1,707 @@
+00:00 - in this video i'll show you how to set
+00:02 - up prometheus in kubernetes cluster
+00:05 - in the theoretic part of prometheus i
+00:07 - explained how it works
+00:08 - and what are the parts or components of
+00:11 - prometheus
+00:12 - so there is a prometheus server at its
+00:14 - core
+00:15 - that stores and processes the metrics
+00:17 - data
+00:18 - and there is an alert manager that you
+00:21 - can use to
+00:22 - send alerts based on the data prometheus
+00:25 - collected and processed
+00:26 - and of course you want to see the data
+00:28 - you have gathered
+00:30 - and scraped in prometheus visualized in
+00:33 - the ui
+00:34 - prometheus has its own ui but you can
+00:36 - also use a ui for
+00:38 - data visualization like gerfana which
+00:40 - lets you build
+00:41 - pretty powerful visualization dashboards
+00:44 - from prometheus metrics data
+00:46 - so there are several moving parts and
+00:48 - components
+00:50 - in prometheus monitoring stack so how do
+00:52 - you go about
+00:53 - deploying it in kubernetes cluster and
+00:56 - there's actually
+00:57 - several different ways of doing that
+00:59 - first one
+01:00 - is putting together all the
+01:03 - configuration files
+01:04 - you need for all the parts so for
+01:07 - each component of the prometheus
+01:09 - monitoring stack
+01:11 - basically creating those yemo files for
+01:13 - prometheus stateful set
+01:15 - alert manager grafana deployments all
+01:18 - the config maps and secrets that you
+01:20 - need
+01:20 - etc and then going ahead and executing
+01:23 - them
+01:24 - in the right order because of the
+01:26 - dependencies
+01:27 - honestly i can't really think of many
+01:29 - use cases
+01:30 - in which you would go with this option
+01:32 - because it's pretty inefficient it's a
+01:34 - lot of effort and you pretty much need
+01:36 - to know
+01:37 - what you're doing or you have to find a
+01:39 - good step-by-step guide and hope that
+01:42 - each step works as described
+01:44 - which usually it doesn't the second way
+01:47 - and a more efficient way is using what's
+01:50 - called
+01:51 - operator i will explain the concept of
+01:54 - operators
+01:55 - in more detail in a later video and i'll
+01:57 - link it up there
+01:58 - but generally speaking think of an
+02:01 - operator as a manager
+02:03 - of all prometheus individual components
+02:06 - that you create
+02:08 - so stateful set and deployment for
+02:10 - example will manage their pod replicas
+02:13 - like restart them when they die make
+02:15 - sure they're accessible
+02:16 - and so on in the same way operator will
+02:19 - keep an eye and manage the combination
+02:21 - of stateful set deployments and all the
+02:24 - other components
+02:26 - that make up prometheus stack
+02:29 - as one unit so that you don't have to
+02:32 - manually manage those separate
+02:33 - pieces so in this option you would go
+02:35 - and find an operator
+02:37 - for prometheus and deployed in a cluster
+02:40 - using the configuration files of the
+02:42 - operator the third option which
+02:44 - i think is the most efficient one is
+02:46 - using
+02:47 - helm chart to deploy the operator
+02:49 - prometheus operator has
+02:51 - a helm chart that is maintained by the
+02:53 - helm community itself
+02:55 - and this is the option that we will use
+02:58 - in this video to set up prometheus
+03:00 - monitoring
+03:02 - so helm will do the initial setup
+03:05 - and operator will then manage
+03:08 - the running prometheus setup so let's
+03:11 - jump right into the demo
+03:12 - clean mini cube state so i don't have
+03:14 - any components
+03:16 - here yet and i have
+03:20 - a link to prometheus operator helm chart
+03:23 - and here in the documentation i can see
+03:27 - the helm command to install that helm
+03:30 - chart
+03:30 - so i'm gonna take that
+03:34 - and we can give it a name so i'm gonna
+03:37 - call it prometheus
+03:40 - this is the repository name the helm
+03:42 - repository
+03:43 - the official one and the name of the
+03:45 - chart and i'm gonna execute this
+03:48 - and we will see all the different pieces
+03:52 - that will be created
+03:53 - from that helm chart so the execution is
+03:56 - done but this will take a couple of
+03:57 - minutes to actually start
+03:59 - up all the different components
+04:04 - so you see all the components are
+04:07 - running these are just the parts that
+04:08 - were created
+04:09 - and you saw how fast the actual
+04:11 - installation was with
+04:12 - helm it was just one command and all the
+04:14 - components got created
+04:16 - so now let's actually take a look at
+04:18 - everything or different parts that were
+04:20 - created
+04:21 - so i'm gonna do cube ctl get all
+04:25 - and here all the different kubernetes
+04:28 - components
+04:29 - of prometheus clusters so i had a clean
+04:31 - mini cube cluster these are
+04:33 - everything that was just created so
+04:35 - let's go through different parts these
+04:37 - are all the pods
+04:39 - and these are the services of different
+04:41 - prometheus stack
+04:42 - components and let's actually start from
+04:44 - here because these are the managing the
+04:46 - high level
+04:47 - components so we have two stateful sets
+04:51 - so the first one is prometheus itself
+04:54 - so here you see this weird chained name
+04:57 - there are
+04:58 - three prometheus names here and this is
+05:01 - the actual
+05:02 - core prometheus server based on the main
+05:05 - image
+05:06 - and here you see that the prometheus pod
+05:09 - stateful set was actually created and is
+05:12 - going to be managed
+05:13 - by the operator that's why you see the
+05:15 - upper prefix
+05:16 - here the other stateful set is the alert
+05:19 - manager which is another part of the
+05:21 - stack
+05:22 - here you see three deployments so we
+05:25 - have
+05:26 - prometheus operator itself this is
+05:30 - the main one that actually created
+05:32 - prometheus
+05:33 - and alert manager stateful sets that's
+05:36 - why they have the same
+05:37 - prefix here and we have graffana which
+05:39 - is its own deployment
+05:41 - and we have cube state metrics cubesat
+05:44 - metrics is basically its own helm chart
+05:48 - so it's a dependency of this help chart
+05:50 - that we just installed so
+05:51 - cube state metrics application basically
+05:53 - what it does
+05:54 - is it scrapes kubernetes component
+05:58 - metrics themselves so it monitors the
+06:00 - health of
+06:01 - deployments and stateful sets and parts
+06:04 - inside the cluster
+06:06 - and makes it available for prometheus to
+06:09 - scrape
+06:10 - which is pretty cool because you get
+06:13 - the kubernetes infrastructure monitoring
+06:15 - out of the box with this
+06:16 - setup so you don't have to configure
+06:18 - anything for that
+06:20 - and the replica sets are created by
+06:22 - deployment so
+06:23 - this is just underlying component of
+06:25 - this one
+06:26 - so it's the same for grafana keepstate
+06:28 - metrics and prometheus operator
+06:30 - and an interesting one you have a daemon
+06:33 - set
+06:34 - in this stack of node exporter so first
+06:37 - of all
+06:37 - daemon set is a component
+06:41 - which will run on every single
+06:44 - worker node of kubernetes that's what a
+06:46 - demon set
+06:47 - characteristic is and node exporter
+06:51 - component of prometheus basically what
+06:53 - it does is
+06:54 - it connects to the server itself
+06:57 - or it lays over the server and
+07:00 - it translates the server metrics
+07:03 - worker node metric so to say like cpu
+07:06 - usage the load on that server and all
+07:09 - the stuff
+07:10 - it transforms them into prometheus
+07:12 - metrics
+07:13 - so they can be scraped so that's also
+07:16 - pretty neat because you have
+07:17 - that information also configured inside
+07:20 - this stack
+07:21 - out of the box and obviously those pods
+07:23 - are just coming from the deployments and
+07:25 - stateful sets
+07:27 - and you have also a bunch of services
+07:28 - which each component
+07:30 - has its own you have an alert manager
+07:31 - grafana and so on
+07:33 - so just to put it in a perspective or in
+07:36 - a in a big picture perspective
+07:38 - we have set up the monitoring stack
+07:40 - itself that is going to monitor
+07:42 - different parts
+07:43 - and in addition to that by default you
+07:46 - already get
+07:47 - a out of the box monitoring
+07:50 - configuration
+07:51 - for your kubernetes cluster so your
+07:53 - worker notes
+07:54 - and the statistics on the worker nodes
+07:57 - are being monitored
+07:58 - and the kubernetes components like pods
+08:01 - and deployments and replicas
+08:03 - stateful sets and so on are also being
+08:05 - monitored
+08:06 - and this configuration is there out of
+08:08 - the box so
+08:09 - where does this configuration actually
+08:10 - come from let's actually check
+08:12 - we also have config maps that were
+08:15 - created
+08:15 - and you see there are a bunch of them
+08:18 - and obviously we're not gonna
+08:19 - go and look in each one of them but just
+08:22 - briefly
+08:23 - you have configurations for all the
+08:26 - different parts
+08:27 - they're also managed by the operator as
+08:29 - you see with the prefix here
+08:31 - and this includes all the information to
+08:33 - how
+08:34 - prometheus monitoring stack will connect
+08:37 - to
+08:37 - the default metrics scrape that
+08:39 - information and
+08:41 - and do all this stuff so you have the
+08:42 - configuration uh files
+08:45 - and you also have the default rule file
+08:48 - for prometheus
+08:49 - and you also have secrets
+08:52 - also for grafana for prometheus the
+08:55 - operator itself again for different
+08:58 - components
+08:59 - this will include the certificates this
+09:01 - will include the username passwords for
+09:03 - different ui
+09:04 - parts and so on so you have a bunch of
+09:07 - different stuff
+09:08 - so maybe now it makes even more sense
+09:11 - what i said at the beginning that the
+09:12 - first option of putting all these
+09:14 - different yaml files together yourself
+09:18 - would be a lot of effort because then
+09:19 - you have to go through and
+09:21 - really set up this whole thing yourself
+09:24 - whereas it
+09:25 - has already been done for you and it's
+09:27 - maintained and managed so you can just
+09:29 - reuse it and another interesting thing
+09:32 - that
+09:32 - was also created from this stack are the
+09:35 - crds
+09:37 - crds are custom resource definitions
+09:40 - this is another concept in kubernetes
+09:43 - which i will make a separate video about
+09:45 - it and explain it
+09:46 - in detail what are the concepts why is
+09:49 - it used
+09:50 - but just so you know that prometheus
+09:52 - monitoring
+09:53 - stack setup includes these custom
+09:56 - resource definitions so there's
+09:58 - more stuff to it we can also check
+10:00 - what's inside the prometheus operator
+10:03 - and other parts actually what containers
+10:06 - are running inside which images are they
+10:08 - based on and so on
+10:09 - so i'm gonna print out the stateful sets
+10:15 - and this is the prometheus one so
+10:19 - we can do describe
+10:25 - stateful set
+10:32 - and we can save it in the file so that
+10:35 - we can see the
+10:36 - syntax highlighting and stuff better so
+10:38 - i'm just going to call it
+10:40 - prometheus and we can also see what's
+10:44 - inside alert manager
+10:50 - and what's also interesting is the
+10:53 - operator itself so this one right here
+10:59 - it's a deployment describe
+11:03 - deployment
+11:06 - and this is the operator
+11:11 - so basically describe just gives you um
+11:14 - some information
+11:16 - about the container and the images and
+11:18 - stuff like this
+11:19 - you can also get the whole uh
+11:20 - configuration file
+11:22 - using kubectl get um deployment
+11:25 - and then you output it as a yemel but i
+11:28 - just want to look into the
+11:30 - containers in the images so let's
+11:32 - actually open those files
+11:34 - in the editor so these are the files
+11:37 - let's actually go to the
+11:39 - section where the containers are
+11:42 - and that's it right so these are the
+11:45 - containers
+11:46 - this is the main pod where the whole
+11:48 - thing is
+11:49 - running where the actual prometheus is
+11:52 - running
+11:53 - and we have prometheus container we have
+11:55 - the config reloader
+11:56 - and we have rules config reloader and
+11:58 - i'm going to explain in
+12:00 - just a minute what they are so let's
+12:02 - first look at the prometheus
+12:03 - sometimes it's interesting to see what
+12:06 - images they're based on
+12:08 - and which versions you have so you can
+12:10 - check it here actually
+12:11 - um you also see which port they're
+12:13 - running at and so on
+12:15 - and all the arguments in case you need
+12:17 - to check
+12:18 - something here what's also interesting
+12:20 - are the mounts
+12:21 - so this is where prometheus gets
+12:23 - actually all the configuration
+12:25 - data so for example there's prometheus
+12:27 - configuration file
+12:28 - there is a rules file and some
+12:31 - certificates
+12:32 - and everything all these is mounted into
+12:35 - prometheus pod
+12:36 - so that it has access to it so what you
+12:39 - need to know
+12:40 - about this is that configuration file is
+12:43 - where prometheus basically defines
+12:45 - what endpoints it should scrape so it
+12:48 - has all the
+12:49 - addresses of applications they'd
+12:52 - expose the slash metrics endpoint so it
+12:55 - knows where to
+12:56 - get them from and it also has rules file
+12:59 - rules file basically defines different
+13:02 - rules
+13:03 - for example it could be alerting rules
+13:06 - that
+13:06 - states that when for example something
+13:08 - happens on the server or
+13:10 - cpu usage spikes to a certain percentage
+13:14 - then send out this email to some people
+13:17 - so these are separate configuration
+13:19 - files
+13:19 - and both of them are mounted into a
+13:22 - prometheus pod
+13:23 - and here these two side containers
+13:26 - so to say the helper containers of the
+13:29 - main prometheus
+13:30 - they help reloading so for example when
+13:33 - the configuration
+13:34 - changes these containers are responsible
+13:37 - for reloading
+13:38 - and letting prometheus know that there
+13:40 - are changes in the configuration
+13:42 - so this is the config reloader and
+13:45 - obviously
+13:46 - the config reloader has access to
+13:48 - prometheus configuration file
+13:51 - and this is the endpoint of prometheus
+13:53 - itself
+13:54 - because it's running on a port 9090
+13:57 - and this is a mount path inside the pod
+14:00 - so each container can access that
+14:02 - path and then we also have the rules
+14:05 - config file that does the same but for
+14:06 - the rules file basically and this one
+14:08 - obviously has access to
+14:10 - where the rules file lives now you may
+14:13 - be asking where does the configuration
+14:15 - come from where does the rules file come
+14:17 - from right because we haven't defined
+14:18 - that
+14:19 - that is also part of the stack out of
+14:21 - the box you get this default
+14:22 - prometheus configuration file with
+14:24 - default configuration
+14:26 - and you get the default rules file and
+14:28 - these are created as config
+14:30 - maps so if we print out the config maps
+14:33 - we see there is a whole list of them so
+14:36 - it might be
+14:37 - actually difficult to search it in at
+14:39 - least so the way that you can actually
+14:41 - easily find that is here
+14:44 - for example for the config file right
+14:47 - here you have
+14:48 - the mount path right so it's prometheus
+14:51 - config and you have this yaml file
+14:53 - and if you go to the mouse you see
+14:56 - the path and you see where this mount is
+14:59 - coming from
+15:00 - right so first how the mount works is
+15:02 - you mount a volume
+15:04 - inside the pod and then the individual
+15:07 - containers
+15:08 - can actually mount those volumes inside
+15:11 - the container path
+15:13 - so they can access those mounts of the
+15:15 - pots so
+15:16 - this is the volume that was mounted
+15:18 - inside inside the pot
+15:19 - so we can go and check that so these are
+15:22 - the pod volumes
+15:23 - and we have the config one so this is
+15:26 - the one right here
+15:28 - and you see it's a secret type so it's
+15:30 - not a config map
+15:31 - it's a secret and this is the name of
+15:33 - the secret so we can go back
+15:35 - and check the secrets
+15:40 - and we can also look inside
+15:43 - so i'm gonna do uh get
+15:47 - secret and the name of the secret
+15:50 - this is the one and
+15:54 - we can do yemo output
+15:58 - and i'm also going to save it into a
+16:00 - secret
+16:06 - demo
+16:09 - let's clear that and let's see our
+16:12 - secret
+16:13 - so you see the prometheus yemo file
+16:17 - and this is the name that is mounted
+16:19 - here and this is obviously basic 64
+16:22 - encoded because the secret
+16:23 - but you can decode it and see all the
+16:26 - information there
+16:27 - and we can also see where a rules file
+16:30 - is coming from
+16:31 - so in the rules file config reloader we
+16:34 - have
+16:34 - mount and this comes from
+16:40 - the pod volume which is called
+16:43 - this long thing and if we go down
+16:47 - in the volumes part this is a config map
+16:50 - with the name of this so again i'm gonna
+16:54 - do
+16:55 - get config map with the name
+16:58 - and put it as yemo and i'm gonna save it
+17:04 - dot demo
+17:07 - like this and this is the rules file
+17:10 - so we have the name of the file here and
+17:14 - this is the file contents basically
+17:17 - where
+17:17 - the different rules are defined so we
+17:20 - have the alert
+17:20 - rules and some other stuff so this is
+17:24 - how you can check where this default
+17:26 - stuff is coming from and then you can
+17:27 - also check the configuration
+17:29 - and obviously when you have to adjust
+17:31 - something for example add a new endpoint
+17:33 - to
+17:34 - scrape you will go to the secret file
+17:37 - the prometheus yaml file and you're
+17:39 - gonna do adjustments there
+17:40 - in a later demo video i'll also show you
+17:42 - how to add an exporter
+17:44 - as a site container for for example a
+17:46 - database pod that you have running
+17:48 - and then configure prometheus to scrape
+17:51 - that
+17:52 - endpoint as well so in that video you
+17:53 - will see how to adjust the configuration
+17:55 - file so you can add a new scraping
+17:57 - endpoint
+17:58 - so let's also quickly check what's in
+18:00 - the alert manager
+18:02 - so here we have again the main container
+18:04 - which is alert manager
+18:06 - and we have all the configuration stuff
+18:09 - here as well
+18:10 - and this one also has a default
+18:13 - configuration file
+18:14 - alertmanager.yemo and the same helper
+18:17 - container
+18:18 - config reload and then we also have the
+18:20 - operator
+18:21 - which basically has this prometheus
+18:23 - operator you can also check what the
+18:25 - the image documentation what it does and
+18:28 - how it works
+18:29 - and this is basically the orchestrator
+18:31 - of the whole
+18:32 - prometheus monitoring stack so this
+18:35 - manages all the different moving parts
+18:36 - of that stack
+18:38 - it loads all this configuration stuff
+18:40 - and it kind of orchestrates
+18:42 - how everything works so all these things
+18:45 - are kind of
+18:46 - interconnected with each other but
+18:48 - obviously you don't need to understand
+18:50 - how
+18:50 - all these things work important thing to
+18:52 - understand is how to
+18:54 - add or adjust the alert rules
+18:57 - or alert configuration and the second
+18:59 - one is how to adjust the prometheus
+19:01 - configuration so you can add
+19:03 - new endpoints for example for scraping
+19:05 - so these are two things that you have to
+19:07 - understand
+19:08 - the rest is just for overview to have a
+19:10 - bit of understanding
+19:11 - how these components are made up
+19:15 - so now let's go back to the console
+19:18 - let's actually clear that
+19:19 - and i'm gonna print out the services
+19:22 - that we have
+19:24 - so here you see grafana this is the ui
+19:27 - or data visualization for um prometheus
+19:30 - data
+19:31 - so how do we access the ui for grafana
+19:34 - as you see all the services are cluster
+19:36 - ip type which is
+19:37 - the internal service so they're not open
+19:40 - to external
+19:41 - requests they're all closed so usually
+19:43 - in production what you would do
+19:45 - is you would configure ingress and then
+19:48 - point ingress rules
+19:50 - to prometheus grafana so in this setup
+19:52 - we're gonna access grafana
+19:54 - um using port forward so for that we
+19:57 - need a deployment actually and not
+19:59 - service so i'm gonna
+20:03 - check that so we need graphana
+20:06 - deployment
+20:07 - the command is cube ctl port forward
+20:14 - actually let's get the pod cube cdl pod
+20:18 - and let's check the port where grafana
+20:21 - is running
+20:24 - keep ctl locks
+20:29 - so we have multiple containers inside
+20:32 - and we need to choose one graffana
+20:36 - so we see servers listening at port 3000
+20:39 - this is the port we're going to forward
+20:41 - and we also have user the default user
+20:44 - which is
+20:45 - called admin let's actually clear that
+20:49 - cube ctl port forward
+20:52 - deployment deployment
+20:56 - prometheus grafana that's what
+20:59 - that's what it was called and port 3000
+21:04 - and this will open port 3000 localhost
+21:08 - 3000 and we have the login page
+21:11 - so we saw that default username is
+21:14 - admin the password actually looked up
+21:17 - here in the chart
+21:18 - the prometheus operator chart here you
+21:21 - have the default password
+21:25 - you can change it of course and now we
+21:28 - have the
+21:30 - grafana ui so in grafana you have a
+21:33 - pretty good overview of the whole stack
+21:35 - for example you can see different alert
+21:37 - rules you can also
+21:39 - use promql query language to
+21:42 - create the data from the prometheus
+21:44 - database and you can get different kinds
+21:46 - of data
+21:47 - and you can also see the data that
+21:48 - prometheus is already collecting and
+21:50 - scraping
+21:51 - so in manage dashboards you have a list
+21:53 - of the things that
+21:54 - prometheus stack is monitoring already
+21:57 - so as i said
+21:59 - node exporter already scrapes the
+22:01 - information about the
+22:02 - node itself we just have one node which
+22:05 - is mini cube
+22:06 - so this is the ip address of the mini
+22:08 - cube node
+22:09 - you can check that here so this is the
+22:12 - same one
+22:14 - and here you can see uh different
+22:16 - metrics
+22:17 - of minicube node like cpu usage memory
+22:20 - usage etc
+22:22 - so i'm gonna get parts doesn't matter
+22:26 - so this is a node exporter that scrapes
+22:29 - that
+22:29 - and the with the cube state metrics we
+22:32 - also have
+22:32 - information of different parts or
+22:35 - different components
+22:36 - of kubernetes like api server the parts
+22:39 - name
+22:40 - spaces and so on so we can actually
+22:42 - check that for example in
+22:43 - the pod you can get different metrics
+22:45 - like again cpu usage
+22:48 - memory bandwidth and so on and
+22:51 - here you can choose the namespace and
+22:53 - you can choose different parts that you
+22:55 - want to
+22:56 - check the status of you also have
+23:00 - monitoring of the master processes like
+23:03 - the scheduler
+23:04 - and api server where you can also see
+23:06 - some stuff
+23:07 - and prometheus also monitors itself by
+23:10 - default so you have a prometheus
+23:11 - endpoint
+23:12 - that is being scraped and here you can
+23:14 - see different stuff
+23:16 - later when we add configuration to
+23:17 - prometheus
+23:19 - to scrape different endpoints we will
+23:21 - see some additional components here as
+23:23 - well
+23:24 - and you can also create your own
+23:25 - dashboards depending on what
+23:27 - information you want to see in addition
+23:29 - to grafana you also have
+23:32 - other ui so for example prometheus
+23:35 - itself has its own ui so we can access
+23:39 - them also using the port forward
+23:42 - port forward
+23:46 - and as we saw prometheus is running on
+23:48 - port 1990
+23:51 - so let's do that
+23:54 - t90 and here you have the prometheus ui
+23:59 - where you can also display the alerts
+24:01 - you can also display the configuration
+24:02 - which metric endpoints are being
+24:04 - executed and you can also
+24:06 - use the prom qr language to query
+24:08 - different stuff
+24:09 - so here you have the alerts some default
+24:12 - alerts
+24:13 - which are configured from the default
+24:15 - alert rules file
+24:17 - and here you can see the configuration
+24:19 - of prometheus
+24:20 - which is pretty long if you're just
+24:22 - starting off it might take time to
+24:24 - learn that because i think it's pretty
+24:25 - complex and here you can also display
+24:27 - the targets
+24:29 - so each target that are scraping where
+24:32 - here you see the pods that are
+24:33 - being monitored and their health status
+24:37 - and here you see for example some things
+24:39 - down
+24:40 - and here again you can see your rules
+24:44 - configuration
+24:45 - so prometheus ui can also be helpful or
+24:48 - interesting in some cases and you can
+24:50 - get a lot of information there as well
+24:53 - so to summarize basically we deployed
+24:56 - the whole prometheus monitoring stack
+24:59 - using helm
+25:00 - the deployment process was pretty easy
+25:02 - and straightforward it was just one
+25:03 - command
+25:04 - which basically in the background
+25:06 - creates the whole array of
+25:08 - components that make up the stack
+25:11 - and you saw like a very brief overview
+25:14 - of what these different components are
+25:16 - what they do
+25:17 - and in the later videos i will make a
+25:18 - prometheus demo where we configure
+25:20 - an additional metrics endpoint for um
+25:24 - for example a database application that
+25:26 - you have running in a cluster so
+25:28 - basically how you can monitor
+25:29 - different services that you have running
+25:32 - in the cluster
+25:33 - and also your own application by
+25:36 - exposing metrics and point
+25:38 - so thank you for watching and see you in
+25:40 - the next video

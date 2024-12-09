@@ -1,0 +1,912 @@
+With timestamps:
+
+00:00 - this video is made possible by my game
+00:02 - bomber play seven awesome games and help
+00:04 - support the channel get the steam game
+00:05 - bundle at unity code monkey comm slash
+00:08 - game bomb in this video we're going to
+00:10 - take our dots pathfinding code and apply
+00:12 - it to the entity component system so we
+00:14 - have our entities they add a component
+00:16 - to request a path and it's calculated
+00:18 - using the super fast dots path finding
+00:20 - and finally return to the entity let's
+00:22 - begin
+00:23 - [Music]
+00:27 - okay so here is our goal over here I
+00:30 - have a simple character and my map now I
+00:32 - can right-click anywhere in order to
+00:34 - make areas walkable or unwalkable and
+00:37 - with the left-click there you go the
+00:39 - unit receives the order commonly it's a
+00:40 - path and moves towards it so if I try to
+00:43 - go through wall there you go it avoids
+00:45 - the walls and now here I've made the
+00:47 - units roam around randomly and by
+00:49 - pressing a button I can spawn some more
+00:51 - units every time I press there is 500
+00:53 - new units being spawned and again all of
+00:55 - them moving randomly and calculating
+00:57 - their path so here in the stats we can
+00:59 - see the number of units so right now
+01:01 - with a thousand units everything is
+01:03 - running in about 4 to 5 milliseconds so
+01:05 - I can spawn a whole bunch more okay so
+01:09 - here we are at 10,000 units on running
+01:11 - pathfinding and roaming around randomly
+01:13 - inside of this grid and we're still
+01:15 - managing to get it within 15 to 20
+01:17 - milliseconds so that's an insane number
+01:20 - of units and just like that you can see
+01:21 - how insanely fast this works and
+01:23 - actually most of the time that we're
+01:25 - spending in here is working on the
+01:26 - renderer and not actually on the
+01:28 - pathfinding illogic so here in the
+01:29 - profiler I'm looking at a single frame
+01:31 - you can see that the actual pathfinding
+01:34 - is all the way in here we have to zoom
+01:35 - in there you go taking just one
+01:37 - millisecond and you can see over here a
+01:39 - whole bunch of jobs all of them running
+01:41 - in parallel all of them with bursts
+01:42 - enable so as you can see most of the
+01:44 - time that we're spending on a single
+01:45 - frame is actually on rendering and not
+01:47 - on the path finding which is insanely
+01:49 - fast so if you had a better render like
+01:51 - for example the one I made where I
+01:53 - managed to get a hundred thousand
+01:54 - animated sprites at once then you could
+01:56 - push this a lot further
+01:58 - these dots videos take quite a lot of
+01:59 - time to research and put together so if
+02:02 - you find a video home phone consider
+02:03 - supporting me on patreon or picking up
+02:05 - the game bundle so thank you to these
+02:07 - awesome supporters for making this video
+02:09 - possible go to patreon.com/scishow to
+02:11 - code monkey to get some perks and help
+02:13 - keep the videos free for everyone ok so
+02:15 - in the previous video we implemented
+02:17 - pathfinding using the other elements of
+02:19 - the dot stack we made it work with the
+02:21 - job system and Ebers compound now here
+02:24 - we want to make it work with the entity
+02:25 - component system now if you haven't seen
+02:28 - it yet go watch that video and then come
+02:29 - back to this one check the link in the
+02:31 - description so here when I have my unit
+02:33 - waiting around
+02:34 - he's just a simple sprite converted into
+02:36 - an entity so if we pause
+02:38 - and look if they're yo the unit is not
+02:40 - on the scene as a game object but rather
+02:42 - as an empty so if we one look into the
+02:44 - entity debugger
+02:45 - there it is over here we have the unit
+02:47 - and here in the inspector of the
+02:49 - components so you can see for example
+02:50 - the various pathfinding components that
+02:52 - we're going to use in order to request a
+02:53 - path and follow it so here we have the
+02:56 - path final component as well as the path
+02:58 - position which is the dynamic buffer so
+03:00 - over here as I click it adds a component
+03:02 - to the unit here you can see that added
+03:05 - the path finding params component so
+03:07 - this component contains the path finding
+03:08 - information so the start and end
+03:10 - positions and then the path finding
+03:12 - system is looking for entities that have
+03:14 - this component when it finds one it runs
+03:16 - path finding with those parameters and
+03:18 - places the resulting path back in the
+03:21 - path position dynamic buffer so over
+03:23 - here you can see all the positions in
+03:25 - order to reach our target position so
+03:27 - there it is dynamic buffers are great
+03:29 - and if you want to learn more about them
+03:31 - check the video and link to the
+03:31 - description so as I click you can see
+03:34 - the unit correctly following the path
+03:35 - now another very interesting thing that
+03:37 - I have implemented here is the base for
+03:40 - the path finding map and II visual so
+03:42 - here I'm using the grid that we made in
+03:44 - a previous video which is the same grid
+03:45 - class that we used to create our
+03:47 - object-oriented path finding so the word
+03:49 - is composed of instances of this grid
+03:51 - node class and the visual is handled by
+03:53 - this game object so the very interesting
+03:55 - thing here is how we're mixing game
+03:57 - objects in the dots world into one
+03:59 - single thing I've seen a bunch of
+04:01 - comments from people concerned that
+04:02 - either you have to make your game
+04:03 - composer with dots or completely with
+04:05 - game objects but the answer is you can
+04:07 - mix and match so you can use dots for
+04:10 - whenever you need absolute performance
+04:11 - like for example path finding and sick
+04:13 - with game objects where performance is
+04:15 - not an issue so over here we have a
+04:17 - practical example of that being used ok
+04:20 - so now that we've seen our goal and how
+04:21 - we're going to reach it let's actually
+04:23 - implement alright here we are in our
+04:25 - starting everything is working like in
+04:27 - the previous video so if you haven't
+04:29 - seen that one yet then go watch it and
+04:30 - then come back here that video covers
+04:33 - implementing the a star path finding
+04:34 - algorithm using only value types so it
+04:36 - works with the job system and the burst
+04:38 - compiler ok so how we're going to make
+04:40 - it work with the entity component system
+04:42 - is by adding a component with the path
+04:44 - parameters so let's begin by creating a
+04:47 - new c-sharp script call this our path
+04:49 - crams so here it is and now this won't
+04:52 - be a very simple struct implemented by
+04:55 - component data and inside we're going to
+04:59 - have two fields so we're going to have
+05:01 - an into for the start position and then
+05:04 - into for the end position all right so
+05:08 - here we have a simple component that
+05:10 - holds the parameters that we need to
+05:11 - calculate our path okay now let's see
+05:13 - how we're going to add this to an entity
+05:15 - so let's make a system to listen to
+05:17 - input so we can tell the unit where to
+05:18 - move to so here let's create a new C
+05:21 - sharp script call this B unit move order
+05:24 - system and now in here let's use unity
+05:29 - empties we're going to make this a
+05:33 - component system now here let's just for
+05:38 - a simple input mouse button down so when
+05:43 - we press the left mouse button
+05:45 - let's pass in a pathfinding order and
+05:47 - first i reason let you send them from a
+05:49 - fixed position into another so we do a
+05:51 - entities dot for each so we second
+05:57 - through entities that have the
+05:58 - translation component and now in here
+06:00 - let's add our params component all right
+06:12 - so there it is when we press the in left
+06:14 - mouse button
+06:14 - we're going to add the component into
+06:16 - our entity and that component will
+06:18 - contain a start position of 0 0 going
+06:20 - into for 0 alright now let's go into the
+06:22 - editor in order to make our entity so
+06:25 - here we are and we're going to create a
+06:26 - new 3d object and let's make it a quant
+06:29 - and now in here I have a basic texture
+06:31 - so just try it yep there you go there's
+06:32 - our unit and to make it into an entity
+06:36 - only need this to entity convert to
+06:37 - entity script and that's it
+06:39 - if you want to know more about
+06:40 - converting and spawning entities check
+06:42 - out the video linked in the description
+06:43 - all right so let's test and yep there
+06:46 - you go over here in the corner on 0 0 we
+06:47 - have our entity ok so we have our entity
+06:51 - and now let's click and if we pause over
+06:54 - here we can see that we do not have the
+06:56 - unit game object but if we only look
+06:57 - into the empty debugger yep there it is
+06:59 - over here is our unit and over here in
+07:02 - the inspector we can
+07:03 - look and see that indeed we do have the
+07:05 - pathfinding params component with a
+07:07 - start on zero zero and an end on four
+07:08 - zero alright so we have our entity
+07:10 - receiving a component on click awesome
+07:12 - now that we have this let's run
+07:14 - pathfinding based on these parameters so
+07:16 - over here is the pathfinding script that
+07:18 - we made in the previous video so we
+07:21 - already have our fine path job that has
+07:23 - burst compiled enabled so now let's use
+07:25 - this job with those pathfinding
+07:27 - parameters so first let's go up here and
+07:29 - convert this into a component system all
+07:36 - right now on our update and let's do the
+07:38 - usual entities for each so we grab the
+07:42 - entity and also the path finding params
+07:45 - so here we're cycling through every
+07:47 - entity that contains a path finding
+07:48 - params component and now in here now
+07:50 - let's create a job using these
+07:52 - parameters alright so we in Senshi 8 a
+07:58 - new instance of our job passing the
+08:00 - parameters and then we run the job now
+08:02 - to see this working let's just add a
+08:04 - debug log and after running our job in
+08:08 - order to make sure that the path finding
+08:10 - only runs once for each entity we can go
+08:12 - into the post update commands and tell
+08:15 - it to remove a component of time path
+08:17 - finding params on this entity so every
+08:21 - time an entity receives a path finding
+08:22 - params it's gonna run this code it's
+08:24 - gonna count alike the path and then
+08:25 - remove these pathfinding params so
+08:27 - that's how we make sure that we find a
+08:29 - path for a specific entity only once
+08:30 - alright let's test ok here we are with
+08:32 - our entity idle and we click and you're
+08:35 - over here we can see that we are running
+08:36 - our fine path code and correctly
+08:39 - calculating the exact path so we have
+08:41 - one right next to it so we're going from
+08:43 - 0 0 to 1 0 to 1 3 1 and finally for 0
+08:47 - all right so our system is running I'm
+08:49 - looking for a path as soon as the entity
+08:51 - receives its parameters so now that we
+08:53 - have our parameters in path being
+08:54 - calculated let's see how we can make our
+08:56 - unit phone with firstly in order to
+08:58 - store the path we're going to use a
+08:59 - dynamic buffer holding a list of into
+09:02 - positions if you're not familiar with
+09:04 - dynamic buffers check the video linked
+09:06 - in the description so let's make our
+09:07 - buffer element to create a new C sharp
+09:09 - script called s the path position
+09:15 - alright here we have our buffer element
+09:18 - that defined what we have is really
+09:20 - meant to for the position of each path
+09:22 - position so now that we have our buffer
+09:24 - element let's make a offering component
+09:26 - so we can easily add it on to our entity
+09:28 - so back in the Edit term let's create a
+09:31 - new script call it the path position
+09:34 - authoring alright here's our authoring
+09:44 - component again if you're not familiar
+09:45 - with the convert game object to entity
+09:48 - check out the videos on the dynamic
+09:50 - buffer and on incent shading prefabs so
+09:52 - essentially this runs when we convert a
+09:54 - game object onto an entity so it calls
+09:56 - this function with the created entity
+09:58 - and the entity manager and so in here we
+10:00 - can simply add our buffer of path
+10:03 - position so now we can go back into the
+10:05 - editor and over here select our entity
+10:07 - and all we need to do is drag the path
+10:10 - position authoring component so now if
+10:12 - we test and yep the game is running and
+10:14 - over here on the entity debugger we can
+10:16 - select the unit and there you indeed it
+10:18 - does have a path position buffer alright
+10:20 - so far so good now let's go into our
+10:22 - path finding script and in here we are
+10:24 - cycling through our entity with the path
+10:26 - finding params and now let's also
+10:28 - receive our dynamic buffer so you grab
+10:32 - it in here and now let's also pass it
+10:34 - down to the job all right so now the job
+10:39 - receives a dynamic buffer and now we can
+10:41 - go all the way down here after we
+10:44 - complete our current path here we go
+10:46 - this is where we're actually generating
+10:48 - the path so previously just for testing
+10:50 - we were creating a native list of into a
+10:52 - race and now instead of doing that we're
+10:54 - going to add it directly on to the
+10:55 - dynamic buffer so here and let's do
+10:57 - another version of this function and
+11:01 - instead we're going to return void and
+11:05 - we receive the dynamic buffer
+11:14 - and yet there it is so we're doing
+11:17 - pretty much the same logic as previously
+11:19 - except previously we were incent
+11:21 - sheeting a new native list and in here
+11:23 - we're receiving the buffer and we're
+11:25 - directly adding the path positions onto
+11:26 - our buffer okay so now appear and let's
+11:29 - use this function instead all right so
+11:34 - just like that and now again since we're
+11:36 - adding positions to the buffer before we
+11:38 - do this let's make sure that we actually
+11:39 - clear okay right so all this should be
+11:43 - working
+11:43 - let's test okay here we are there's the
+11:45 - entity now we click and now let's look
+11:47 - into the entity debugger and over here
+11:49 - we have our entity and if there you go
+11:51 - we have our path position buffer being
+11:53 - correctly filled there we go you can see
+11:54 - going from 0 0 to 1 0 to 1 3 1 and
+11:57 - finally 4 0 so we have our dynamic
+12:00 - buffer being correctly filmed with the
+12:01 - positions that were calculated awesome
+12:03 - now that we have a path being calculated
+12:05 - let's make a system to actually fold so
+12:08 - let's make a new script from this key
+12:11 - path following system all right we have
+12:17 - our simple component system now here and
+12:19 - let's cycle through the entities with
+12:21 - dynamic buffer and the translation all
+12:28 - right we are secondly through all the
+12:30 - entities with the buffer and the
+12:31 - translation so now here we have a
+12:34 - question and the question is how do we
+12:36 - know which path position in the buffer
+12:38 - should we actually follow so should we
+12:39 - go into index 0 in the x1 or whatever so
+12:42 - to solve that we need another component
+12:44 - in order to keep track of the current
+12:45 - path index that we're following so for
+12:47 - that let's make a very simple script
+12:49 - call this our path follow alright so
+12:55 - here it is we have a very basic
+12:57 - component all we have is an integer for
+12:59 - the path in X and we're automatically
+13:01 - generating the authoring component so we
+13:03 - can go into the editor and here we
+13:05 - select our unit and let's drag the path
+13:08 - followed component there it is
+13:09 - and for default let's set the path in
+13:11 - the x2 minus 1 to indicate that for
+13:13 - stars we don't have a valid path all
+13:15 - right so now let's go into the follow
+13:17 - system and our here we need the buffer
+13:19 - the transmission and all so let's grab
+13:21 - our
+13:22 - follow and now if the path follow dot
+13:28 - index if the path index is actually
+13:31 - bounded so more than zero then let's
+13:33 - grab the current path position so we
+13:41 - access the buffer on this MX and we
+13:43 - gravity position and now we just do some
+13:45 - simple code in order to move towards it
+13:55 - all right so here there is just some
+13:57 - basic follow code so you grab the path
+13:59 - position convert that into a float three
+14:01 - for our target position we can't let the
+14:03 - move direction based on the turret
+14:04 - position and the current translation
+14:06 - value define a certain move speed and
+14:09 - simply move towards emu direction but
+14:10 - move speed x down time and finally we
+14:13 - check distance if it's close enough then
+14:15 - we set to go into the next Waypoint and
+14:18 - now if you remember in the last video
+14:19 - when we come later the path we had the
+14:21 - path actually reversed so that's why
+14:23 - here when we reach the path position we
+14:25 - go into the next index which is actually
+14:27 - the one before so we do index - - okay
+14:30 - so just like this our system should be
+14:32 - working now all we need to do is set up
+14:34 - the path for no component so let's go
+14:36 - back into our path finding script and
+14:38 - let's go down to the part where we are
+14:40 - calculating the path so here we come
+14:42 - like the path which means that we are
+14:43 - actually filling up the buffer so we
+14:45 - need to set the path for component for
+14:47 - that and let's go up here in order to
+14:49 - add another field we're going to add a
+14:51 - field of type component data from entity
+14:54 - of type at fall now here if you're not
+14:59 - familiar with this type it essentially
+15:01 - lets you access component data from a
+15:02 - specific entity so we're going to access
+15:04 - this using the entity as the index so
+15:07 - for that well it's also grabbed the
+15:08 - current entity and now we can go down
+15:12 - where we calculate our path so here we
+15:14 - are we calculate the path if we do not
+15:16 - find something then we ask the component
+15:18 - data from entity of this entity and we
+15:22 - set it to a new path from when you set
+15:24 - the path index in this case to minus 1
+15:25 - because it's invalid and down here when
+15:28 - the path is violent we asked the
+15:30 - position buffer in our key gravity only
+15:32 - all right so there it is now we just
+15:35 - need to
+15:35 - this to the job so let's go up here when
+15:38 - we're in San Shi a ting the job we need
+15:40 - to pass this and now the way that we get
+15:42 - this is by using the function get
+15:44 - component data from entity and passing
+15:46 - our type and we also need to pass in the
+15:50 - empty alright that should do it
+15:53 - let's test ok here we are with the
+15:56 - entity on the corner there now as I
+15:59 - click and there you go the entity starts
+16:01 - moving and follows the path correctly
+16:02 - awesome and right now since the e
+16:04 - parameters are fixed when I click it
+16:06 - goes back into zero zero and then
+16:08 - follows a path in order to reach for
+16:10 - zero okay so over here we already have
+16:13 - quite a lot working when we click we add
+16:15 - the path finding parameters then the
+16:17 - path finding system listens to entities
+16:19 - with path finding parameters and runs
+16:21 - the path finding job to come late the
+16:22 - path when the path is calculated it gets
+16:25 - added into a dynamic buffer and Wesley
+16:27 - the path for most system follows each
+16:29 - path position in our buffer until it
+16:31 - reaches the destination alright so over
+16:33 - here we have our unit correctly
+16:35 - following the calculated path now you
+16:37 - might have noticed that we still have
+16:38 - one crucial thing missing here right now
+16:40 - our press find grid is being completely
+16:43 - created and in Senshi ated over here as
+16:45 - we begin our job so we don't have a
+16:47 - separate grid map working with our path
+16:49 - finding now here as you might have
+16:51 - noticed I set up this scene to use a
+16:52 - grid so I can right click in order to
+16:55 - make a certain position either walkable
+16:56 - or not so this is using the grid system
+16:59 - that we created previously as well as
+17:01 - the visual and over here this is the
+17:03 - script that is setting it up so we
+17:05 - create a path finding grid which is a
+17:06 - grid with instances of grid node here it
+17:09 - is a grid node as you can see extremely
+17:11 - simple we just have an X a Y and a
+17:13 - boolean for is walkable very basic so
+17:15 - here we create the grid and on
+17:17 - right-click I can set it to walkable or
+17:19 - not so here by right-clicking there your
+17:21 - divisional updates and says that
+17:23 - something is workable or not but again
+17:25 - right now the job is creating its own
+17:27 - grid so for example I can make this one
+17:29 - visually blocked but the path finding
+17:31 - isn't connect to the grid at all so as I
+17:33 - click there you go he does not know
+17:34 - there's one there and just goes through
+17:36 - it
+17:36 - alright so let's make the path finding
+17:38 - grid be created and accentuated outside
+17:40 - of the job and here this is also an
+17:42 - excellent example of how you can mix
+17:44 - unity dots with regular game objects so
+17:46 - the grid in here is made using a class
+17:48 - displayed using a game object so if I
+17:51 - pause you can see that this is working
+17:52 - me on the path finding visual so there
+17:54 - it is I can move around so what we're
+17:56 - going to do is take this and convert it
+17:58 - into a stroke that we can then use with
+17:59 - the path fighting system again the great
+18:01 - setup in this class where we have a
+18:03 - static instance that we can use to
+18:06 - access our public path fine and grid all
+18:08 - right so let's go into the path fighting
+18:10 - system and in here and let's make a
+18:12 - function that won't take the grid and
+18:13 - convert it into a native array of these
+18:15 - types of path nodes so we're going to
+18:17 - instantiate this right here all right
+18:28 - here it is as you can see we are
+18:30 - building the native array pretty much
+18:32 - the same thing as we were doing
+18:34 - previously down here so we access the
+18:36 - grid that we are using and we simply
+18:38 - cycle through the width and height and
+18:40 - create a bunch of Pat nodes and place
+18:42 - them in a flat native all right so you
+18:44 - can see we're grabbing the is one cable
+18:46 - from the other grid that we created
+18:48 - previously and that we're using as our
+18:49 - base and as our visual now this returns
+18:52 - a native array of Pat nodes which is
+18:55 - going to be our path finding grid map so
+18:57 - down here now let's modify the job to
+18:59 - receive the native array of our path
+19:01 - nodes and since this is a flat native
+19:04 - array we also need to receive a into for
+19:07 - our grid size and down here in the job
+19:09 - instead of creating the grid all we need
+19:11 - to do is set it up for stars alright so
+19:20 - there it is pretty much we're just
+19:21 - completing the h cost based on the end
+19:24 - position that we receive in DeJong ok so
+19:26 - here we are creating our path node wind
+19:28 - and now let's go up here in order to
+19:30 - pass it on to our job so we do is
+19:32 - passing the path know the rain and we
+19:35 - get deep at another right we also need
+19:38 - the grid size
+19:46 - all right so here this now we have set
+19:49 - up everything now here just one more
+19:51 - thing since we are creating the pattern
+19:53 - of the Ray outside of it and then
+19:55 - passing it into the job down here
+19:57 - previously we were calling Pat another
+19:59 - ride out this post now instead of doing
+20:01 - it in here we can simply add Dion locate
+20:04 - on job completion so that won't take
+20:06 - care of the allocating the array all
+20:08 - right let's test okay so here we are now
+20:10 - the start and end positions are still
+20:12 - fixed but we know he's going to go from
+20:14 - this position over this position so by
+20:16 - default it won't go around this wall so
+20:18 - as I click yep there we go goes around
+20:20 - that wrong and ends on the end position
+20:22 - now let's place a bunch of moral wrongs
+20:24 - so here I'm going to right click in
+20:25 - order to modify the grid and now click
+20:28 - again he goes back to the start and now
+20:29 - let's see any up there yo now he
+20:31 - correctly saw that these two are walls
+20:33 - and he did not go through them so the
+20:35 - path fighting grid that the job received
+20:36 - is now correctly matching what we see in
+20:39 - here awesome
+20:40 - ok now let's make it actually go to
+20:42 - where we click so here we are in the
+20:45 - system where we're grabbing the mouse
+20:47 - click now let's grab the mouse position
+20:49 - and convert it into a grid position all
+21:01 - right so here this we're grabbing the
+21:03 - mouse position we're using the code mock
+21:05 - utilities which is always you can grab
+21:07 - for free from Unity code monkey calm
+21:08 - here is the function in case you want to
+21:10 - implement it yourself
+21:11 - all it does is wrong just say warm
+21:13 - camera and screen to run point all right
+21:15 - so we get the Mouser on position we get
+21:17 - the cell size for the pathfinding grid
+21:19 - we get the x and y position that matches
+21:22 - the mouse warm position then we just
+21:24 - validated to make sure that it's inside
+21:26 - of the grid so bigger than 0 smaller
+21:28 - than width and height so we do that to
+21:30 - calculate the end position and then we
+21:32 - cycle through the entities and we do the
+21:34 - same thing to validate the starting
+21:35 - position and we add the path fighting
+21:37 - params component all right so there it
+21:40 - is very simple let's test ok so here we
+21:42 - have our unit in core now let's put it
+21:44 - in here and click and there you go the
+21:46 - unit come way to the path and went
+21:48 - exactly to the mouse position so click
+21:50 - again and there you go no went from
+21:51 - there there click and there you are
+21:53 - awesome so here we have the start and
+21:55 - end position
+21:56 - correctly working and again we already
+21:58 - made work with one so let's right-click
+22:00 - make a bunch of ones in here and I'm
+22:02 - gonna click for him to go in there and
+22:04 - yep there you go he goes around there
+22:06 - there there and there right awesome so
+22:09 - we have our unit following the available
+22:11 - path going from start to finish okay so
+22:13 - just like this we have our path finding
+22:15 - system working we can add this path
+22:18 - finding params component in order to set
+22:20 - the path finding parameters then our
+22:22 - path finding system looks for entities
+22:24 - that contain the path finding parameters
+22:26 - when it finds those entities it creates
+22:28 - a path finding job and finally we have
+22:30 - the path for system which looks for
+22:33 - entities that have a valid path and
+22:34 - similarly makes them follow it alright
+22:36 - so here we have a working system however
+22:38 - there's still one thing missing and it's
+22:40 - actually one of the most important
+22:42 - things so right now over here we've been
+22:44 - testing this with just a single unit
+22:46 - obviously we want our path finding code
+22:49 - to be working nicely in parallel with
+22:50 - multiple units so here let's just
+22:53 - duplicate this object and there you go
+22:55 - now we have two units so here we are and
+22:57 - I click and there you go it does seem
+23:00 - like it's still working
+23:01 - however if we look in the profiler and
+23:04 - over here we can see the issue so it is
+23:06 - working but you can see one path in here
+23:08 - and one in here so it's working but it's
+23:10 - working sequentially so we have both
+23:12 - jobs working on the main thread and over
+23:14 - here and look at all of our job workers
+23:16 - on compiling
+23:17 - idle what we really want is to have them
+23:19 - running the jobs in parallel so back in
+23:22 - the path finding script now the way that
+23:24 - we make them work in parallel is first
+23:27 - we schedule all the jobs and then we
+23:28 - tell them to complete them all so in
+23:30 - here let's create a native list of job
+23:33 - handle so we create a list then we add
+23:40 - to the list our job instead of running
+23:42 - it we call schedule and then down here
+23:45 - we use job handle and we call complete
+23:49 - own and we pass in our job handle list
+23:54 - alright so that's it firstly schedule
+23:56 - all the jobs in the new random all in
+23:58 - parallel
+23:58 - let's test so here we are and click and
+24:01 - there yo we have found our error it's
+24:04 - essentially telling you is that we
+24:06 - cannot schedule two jobs that access the
+24:08 - exact same data so in this case
+24:09 - see component R from entity now this is
+24:12 - the job system protecting us from
+24:14 - causing race conditions over here we
+24:16 - have multiple jobs on accessing this
+24:18 - component data from entity which is
+24:20 - actually a native array however here we
+24:22 - know what we're doing we know that even
+24:24 - though multiple jobs receive the same
+24:26 - component data from entity we know that
+24:28 - each job will access this array with a
+24:30 - different entity so there's no actual
+24:32 - race condition so the solution here is
+24:35 - to tell me compiler that we know exactly
+24:36 - what we're doing and we want to disable
+24:38 - safety so for that we go all the way up
+24:40 - here north to add another reusing using
+24:43 - unity that collections dot low-level dot
+24:47 - and say and inside of that namespace now
+24:51 - we can add the attribute disabled
+24:55 - container safety restriction so by
+24:58 - adding this attribute we're telling the
+25:00 - compiler do not worry about safety when
+25:02 - accessing this field so now this won't
+25:05 - correctly work but again be very careful
+25:07 - when you using these types of attributes
+25:08 - if you do end up with the race condition
+25:11 - your game will crash so make sure your
+25:13 - code is working perfectly before you
+25:15 - start messing around with safety all
+25:16 - right so let's test so here we are and
+25:19 - click and now here we have an error
+25:21 - although we did fix the other error so
+25:23 - we fix the issue with concurrently
+25:24 - accessing the component data from entity
+25:26 - field but now we have the same issue
+25:29 - when accessing the dynamic buffer so to
+25:31 - verify that we fix the issue and let's
+25:33 - stop using the buffer so here let's
+25:35 - comment out everything related to the
+25:36 - buffer ok there it is we are no longer
+25:39 - using the buffer so let's test here we
+25:41 - are and click any app theory oh the game
+25:43 - is running and everything is correct so
+25:45 - we do not have any race conditions and
+25:47 - there's no crash awesome so now here
+25:49 - when dealing with the dynamic buffer
+25:51 - it's something that I actually found
+25:52 - quite strange so you would assume that
+25:55 - we could just have the exact same
+25:56 - attribute in order to disable safety and
+25:59 - be able to access the buffers in
+26:00 - parallel we can use something similar to
+26:03 - the component data from entity by
+26:04 - instead of using the dynamic buffer we
+26:06 - use buffer from entity so we would
+26:09 - assume that this would work again we
+26:11 - know we're never going to access the
+26:12 - same buffer of the same entity in two
+26:14 - jobs so we know we're safe however just
+26:17 - adding this attribute does not appear to
+26:18 - disable safety over here there we go we
+26:21 - still have our error so I'm not sure if
+26:23 - this is an issue specific with dynamic
+26:25 - buffers that won't be fixed or if
+26:27 - dynamic buffers are special and somehow
+26:29 - cannot be accessed in parallel at all it
+26:31 - seems like it should work just like this
+26:33 - other one but apparently it doesn't I
+26:35 - spent quite a long time looking into
+26:37 - this and I could not find the solution
+26:38 - to disable the safety completely however
+26:41 - I did find another alternate solution
+26:43 - that works well enough so the solution
+26:45 - is quite simple which is just don't do
+26:47 - it in parallel so we can still calculate
+26:49 - the path and get everything working
+26:51 - correctly in parallel and then we make a
+26:53 - second type of job that won't run just
+26:55 - on the main thread and it's solely
+26:57 - responsible for filling up the buffers
+26:59 - with the calculated path ok so let's go
+27:01 - all the way up here to make that
+27:02 - secondary job ok here it is the set
+27:06 - buffer path job so here we just have the
+27:08 - pattern of the Ring which after going
+27:11 - through this job the pattern of the Ray
+27:13 - has already been set up so essentially
+27:15 - all the path nodes already have the came
+27:16 - from node index correctly set up so we
+27:19 - just use that in order to generate our
+27:21 - path and by doing that we end up with
+27:25 - the path position buffer correctly
+27:27 - filmed so down here let's get rid of all
+27:30 - mentions of the buffer so all of this
+27:33 - will be done on the other job and also
+27:36 - here make sure that we only the allocate
+27:38 - the pattern of the Ray after we set the
+27:40 - buffer so in this one let's get rid of
+27:42 - this attribute okay and now appear when
+27:45 - we incent she ate our jobs so first we
+27:48 - schedule all the jobs that do not use
+27:50 - the buffer we do all of those we
+27:52 - complete all of those and after
+27:53 - completing then let's run the buffers
+27:55 - while sequentially
+28:13 - all right so here it is over here when
+28:16 - you create our normal find path jobs
+28:18 - we're adding them into this space list
+28:20 - so we instantiate them and put them
+28:22 - inside of this list and then in here we
+28:24 - just cycle through the list after the
+28:25 - previous job has been completed and we
+28:28 - simply grab data that we used on that
+28:30 - same job in order to make this new job
+28:32 - and fill up the correct buffers from
+28:34 - entity so again I wish it were possible
+28:36 - to make all of this inside of the other
+28:39 - job and I'm not sure if this is intended
+28:41 - or a bug but still unity dots is so fast
+28:44 - that even with this part running on the
+28:46 - main thread it still ends up being
+28:48 - insanely fast all right so let's see it
+28:50 - in action okay so here we are in click
+28:52 - and there you go both units calculate
+28:54 - the paths in parallel and they both go
+28:56 - to the target position and if we look
+28:58 - into the profile over here in the
+29:00 - profiler you can now see indeed we have
+29:02 - two worker threads correctly working
+29:04 - working on the fine path job both in
+29:07 - parallel so now let's play some more
+29:09 - units so we're here and let's just
+29:11 - duplicate this one place a bunch more
+29:13 - all right we have a whole bunch of units
+29:16 - and click any of there you go they all
+29:18 - come later the path and now went
+29:19 - straight to the target position awesome
+29:21 - ok so here we have our complete system
+29:24 - working we have multiple units working
+29:26 - as entities and we can click to set the
+29:28 - parameters which will then get
+29:30 - calculated by the path fighting system
+29:32 - so right now we can look into the
+29:33 - profiler in order to test our speed so
+29:36 - just here in the code in order to make
+29:37 - sure that we test the path finding speed
+29:39 - we can simply comment out the post
+29:41 - update command in order to remove the
+29:43 - path finding params
+29:44 - so this way this component will not be
+29:46 - removed so it will be trying to look for
+29:48 - paths on every single frame so here we
+29:51 - are in the profiler with seven units
+29:53 - waiting for a path and right now it's
+29:54 - seeking one millisecond which is still
+29:56 - quite a bit and the reason is because we
+29:58 - are missing our magic bullet so that is
+30:00 - the burst component so just go over to
+30:02 - jobs burst and enable a burst
+30:04 - compilation and let's test and there you
+30:07 - go now here we have burst enabled and
+30:09 - look at that the entire path finding is
+30:11 - taking point three seven and we have to
+30:13 - zoom in real far in order to actually
+30:16 - see our jobs working in parallel so you
+30:18 - can see all of them here
+30:19 - in parallel and then afterwards we
+30:22 - haven't here the various jobs in order
+30:23 - to set the buffer so this is in parallel
+30:26 - and this is not but it so ends up being
+30:27 - insanely fast now let's try out with a
+30:30 - hundred units alright so here we have
+30:32 - 100 units we can look into the stats in
+30:34 - here to see the batch is 100 yep we got
+30:36 - a hundred and we click to enable
+30:38 - pathfinding and here in the profiler you
+30:40 - can indeed see a whole ton of fine path
+30:43 - jobs all working in parallel only using
+30:45 - bursts and then afterwards of the ones
+30:47 - setting the buffer elements so I'm
+30:50 - looking at the path finding we have 100
+30:52 - units searching for path all in the
+30:54 - exact same single frame and it's taking
+30:56 - just four milliseconds so this is
+30:58 - insanely fast alright so over here I
+31:01 - have set up the units to look for a
+31:03 - random position and when they get there
+31:05 - and look for another random position so
+31:07 - as you can see they are all roaming
+31:08 - around very random and over here on
+31:10 - these stats you can see just how quickly
+31:12 - this code is running so we have 1,000
+31:15 - units randomly doing path finding in
+31:17 - just 4 milliseconds and again I can
+31:19 - modify the path finding grid by
+31:20 - right-clicking so let's put a wall in
+31:23 - there
+31:23 - and yet there you go you can see them
+31:25 - avoiding the positions with walls and
+31:27 - every time I press the button I can
+31:29 - spawn 500 units so there yeah now we got
+31:31 - 1500 and they all spawn over there on
+31:33 - the corner now we got 2000 and again
+31:35 - everything's still running at about 5 to
+31:37 - 6 milliseconds alright so let's see how
+31:39 - far we can push this ok here we have
+31:42 - 5000 running at about 10-12 milliseconds
+31:45 - and around 8,000 we finally go under 60
+31:49 - fps and at 20,000 we are around 30 fps
+31:52 - and this is all once I'm still recording
+31:54 - the screen so without that it will go
+31:56 - much further so here we have 20,000
+31:59 - units randomly running around our level
+32:01 - and it's running at 30 frames per second
+32:03 - and really half of that time is just
+32:05 - spent on rendering so we can look into
+32:07 - the profiler so here we have the
+32:09 - profiler and as you can see for 20,000
+32:12 - units all of our pathfinding is over
+32:14 - here running in just 2.9 milliseconds
+32:17 - then we have the path phone system in
+32:18 - point 7 milliseconds and then a lot of
+32:21 - the time is actually spent on rendering
+32:23 - so if we were using the rendering system
+32:25 - that I made in a previous video which
+32:27 - supported over a hundred thousand
+32:29 - animated sprites by using that system we
+32:32 - could push this even for
+32:33 - all right so here we have implemented a
+32:35 - star pathfinding in unity dots we're
+32:38 - using the entirety of the dot stack so
+32:40 - we have the job system calculating paths
+32:42 - in parallel we have the worst compiler
+32:44 - converting all of that code into
+32:46 - superfast machine code and we have our
+32:48 - data oriented entities running the logic
+32:50 - and being displayed so here it is
+32:52 - insanely fast supporting tons of Units
+32:55 - alright so this video and the previous
+32:57 - one were quite tough to make but I'm
+32:58 - really happy with the results now with
+33:00 - this working I can start to work on
+33:02 - making a simple art yes or maybe combine
+33:05 - this with the dots physics in order to
+33:06 - watch entities looking for paths and
+33:08 - pushing each other around let me know
+33:10 - what type of videos you'd like to see
+33:11 - this system apply to and also this took
+33:14 - quite a long time to research in put
+33:16 - together so if you find a video home
+33:17 - phone consider supporting on patreon or
+33:19 - picking up the game bundle so thank you
+33:22 - to these awesome supporters for making
+33:23 - this video possible go to
+33:25 - patreon.com/scishow
+33:26 - code monkey to get some perks and help
+33:28 - keep the videos free for everyone as
+33:30 - always you can download the project
+33:32 - files in Usagi's from unity calm calm
+33:34 - subscribe to the channel for more unity
+33:36 - tutorials posting first in heaven
+33:38 - comments and I'll see you next time
+33:41 - [Music]
+
+Cleaned transcript:
+
+this video is made possible by my game bomber play seven awesome games and help support the channel get the steam game bundle at unity code monkey comm slash game bomb in this video we're going to take our dots pathfinding code and apply it to the entity component system so we have our entities they add a component to request a path and it's calculated using the super fast dots path finding and finally return to the entity let's begin okay so here is our goal over here I have a simple character and my map now I can rightclick anywhere in order to make areas walkable or unwalkable and with the leftclick there you go the unit receives the order commonly it's a path and moves towards it so if I try to go through wall there you go it avoids the walls and now here I've made the units roam around randomly and by pressing a button I can spawn some more units every time I press there is 500 new units being spawned and again all of them moving randomly and calculating their path so here in the stats we can see the number of units so right now with a thousand units everything is running in about 4 to 5 milliseconds so I can spawn a whole bunch more okay so here we are at 10,000 units on running pathfinding and roaming around randomly inside of this grid and we're still managing to get it within 15 to 20 milliseconds so that's an insane number of units and just like that you can see how insanely fast this works and actually most of the time that we're spending in here is working on the renderer and not actually on the pathfinding illogic so here in the profiler I'm looking at a single frame you can see that the actual pathfinding is all the way in here we have to zoom in there you go taking just one millisecond and you can see over here a whole bunch of jobs all of them running in parallel all of them with bursts enable so as you can see most of the time that we're spending on a single frame is actually on rendering and not on the path finding which is insanely fast so if you had a better render like for example the one I made where I managed to get a hundred thousand animated sprites at once then you could push this a lot further these dots videos take quite a lot of time to research and put together so if you find a video home phone consider supporting me on patreon or picking up the game bundle so thank you to these awesome supporters for making this video possible go to patreon.com/scishow to code monkey to get some perks and help keep the videos free for everyone ok so in the previous video we implemented pathfinding using the other elements of the dot stack we made it work with the job system and Ebers compound now here we want to make it work with the entity component system now if you haven't seen it yet go watch that video and then come back to this one check the link in the description so here when I have my unit waiting around he's just a simple sprite converted into an entity so if we pause and look if they're yo the unit is not on the scene as a game object but rather as an empty so if we one look into the entity debugger there it is over here we have the unit and here in the inspector of the components so you can see for example the various pathfinding components that we're going to use in order to request a path and follow it so here we have the path final component as well as the path position which is the dynamic buffer so over here as I click it adds a component to the unit here you can see that added the path finding params component so this component contains the path finding information so the start and end positions and then the path finding system is looking for entities that have this component when it finds one it runs path finding with those parameters and places the resulting path back in the path position dynamic buffer so over here you can see all the positions in order to reach our target position so there it is dynamic buffers are great and if you want to learn more about them check the video and link to the description so as I click you can see the unit correctly following the path now another very interesting thing that I have implemented here is the base for the path finding map and II visual so here I'm using the grid that we made in a previous video which is the same grid class that we used to create our objectoriented path finding so the word is composed of instances of this grid node class and the visual is handled by this game object so the very interesting thing here is how we're mixing game objects in the dots world into one single thing I've seen a bunch of comments from people concerned that either you have to make your game composer with dots or completely with game objects but the answer is you can mix and match so you can use dots for whenever you need absolute performance like for example path finding and sick with game objects where performance is not an issue so over here we have a practical example of that being used ok so now that we've seen our goal and how we're going to reach it let's actually implement alright here we are in our starting everything is working like in the previous video so if you haven't seen that one yet then go watch it and then come back here that video covers implementing the a star path finding algorithm using only value types so it works with the job system and the burst compiler ok so how we're going to make it work with the entity component system is by adding a component with the path parameters so let's begin by creating a new csharp script call this our path crams so here it is and now this won't be a very simple struct implemented by component data and inside we're going to have two fields so we're going to have an into for the start position and then into for the end position all right so here we have a simple component that holds the parameters that we need to calculate our path okay now let's see how we're going to add this to an entity so let's make a system to listen to input so we can tell the unit where to move to so here let's create a new C sharp script call this B unit move order system and now in here let's use unity empties we're going to make this a component system now here let's just for a simple input mouse button down so when we press the left mouse button let's pass in a pathfinding order and first i reason let you send them from a fixed position into another so we do a entities dot for each so we second through entities that have the translation component and now in here let's add our params component all right so there it is when we press the in left mouse button we're going to add the component into our entity and that component will contain a start position of 0 0 going into for 0 alright now let's go into the editor in order to make our entity so here we are and we're going to create a new 3d object and let's make it a quant and now in here I have a basic texture so just try it yep there you go there's our unit and to make it into an entity only need this to entity convert to entity script and that's it if you want to know more about converting and spawning entities check out the video linked in the description all right so let's test and yep there you go over here in the corner on 0 0 we have our entity ok so we have our entity and now let's click and if we pause over here we can see that we do not have the unit game object but if we only look into the empty debugger yep there it is over here is our unit and over here in the inspector we can look and see that indeed we do have the pathfinding params component with a start on zero zero and an end on four zero alright so we have our entity receiving a component on click awesome now that we have this let's run pathfinding based on these parameters so over here is the pathfinding script that we made in the previous video so we already have our fine path job that has burst compiled enabled so now let's use this job with those pathfinding parameters so first let's go up here and convert this into a component system all right now on our update and let's do the usual entities for each so we grab the entity and also the path finding params so here we're cycling through every entity that contains a path finding params component and now in here now let's create a job using these parameters alright so we in Senshi 8 a new instance of our job passing the parameters and then we run the job now to see this working let's just add a debug log and after running our job in order to make sure that the path finding only runs once for each entity we can go into the post update commands and tell it to remove a component of time path finding params on this entity so every time an entity receives a path finding params it's gonna run this code it's gonna count alike the path and then remove these pathfinding params so that's how we make sure that we find a path for a specific entity only once alright let's test ok here we are with our entity idle and we click and you're over here we can see that we are running our fine path code and correctly calculating the exact path so we have one right next to it so we're going from 0 0 to 1 0 to 1 3 1 and finally for 0 all right so our system is running I'm looking for a path as soon as the entity receives its parameters so now that we have our parameters in path being calculated let's see how we can make our unit phone with firstly in order to store the path we're going to use a dynamic buffer holding a list of into positions if you're not familiar with dynamic buffers check the video linked in the description so let's make our buffer element to create a new C sharp script called s the path position alright here we have our buffer element that defined what we have is really meant to for the position of each path position so now that we have our buffer element let's make a offering component so we can easily add it on to our entity so back in the Edit term let's create a new script call it the path position authoring alright here's our authoring component again if you're not familiar with the convert game object to entity check out the videos on the dynamic buffer and on incent shading prefabs so essentially this runs when we convert a game object onto an entity so it calls this function with the created entity and the entity manager and so in here we can simply add our buffer of path position so now we can go back into the editor and over here select our entity and all we need to do is drag the path position authoring component so now if we test and yep the game is running and over here on the entity debugger we can select the unit and there you indeed it does have a path position buffer alright so far so good now let's go into our path finding script and in here we are cycling through our entity with the path finding params and now let's also receive our dynamic buffer so you grab it in here and now let's also pass it down to the job all right so now the job receives a dynamic buffer and now we can go all the way down here after we complete our current path here we go this is where we're actually generating the path so previously just for testing we were creating a native list of into a race and now instead of doing that we're going to add it directly on to the dynamic buffer so here and let's do another version of this function and instead we're going to return void and we receive the dynamic buffer and yet there it is so we're doing pretty much the same logic as previously except previously we were incent sheeting a new native list and in here we're receiving the buffer and we're directly adding the path positions onto our buffer okay so now appear and let's use this function instead all right so just like that and now again since we're adding positions to the buffer before we do this let's make sure that we actually clear okay right so all this should be working let's test okay here we are there's the entity now we click and now let's look into the entity debugger and over here we have our entity and if there you go we have our path position buffer being correctly filled there we go you can see going from 0 0 to 1 0 to 1 3 1 and finally 4 0 so we have our dynamic buffer being correctly filmed with the positions that were calculated awesome now that we have a path being calculated let's make a system to actually fold so let's make a new script from this key path following system all right we have our simple component system now here and let's cycle through the entities with dynamic buffer and the translation all right we are secondly through all the entities with the buffer and the translation so now here we have a question and the question is how do we know which path position in the buffer should we actually follow so should we go into index 0 in the x1 or whatever so to solve that we need another component in order to keep track of the current path index that we're following so for that let's make a very simple script call this our path follow alright so here it is we have a very basic component all we have is an integer for the path in X and we're automatically generating the authoring component so we can go into the editor and here we select our unit and let's drag the path followed component there it is and for default let's set the path in the x2 minus 1 to indicate that for stars we don't have a valid path all right so now let's go into the follow system and our here we need the buffer the transmission and all so let's grab our follow and now if the path follow dot index if the path index is actually bounded so more than zero then let's grab the current path position so we access the buffer on this MX and we gravity position and now we just do some simple code in order to move towards it all right so here there is just some basic follow code so you grab the path position convert that into a float three for our target position we can't let the move direction based on the turret position and the current translation value define a certain move speed and simply move towards emu direction but move speed x down time and finally we check distance if it's close enough then we set to go into the next Waypoint and now if you remember in the last video when we come later the path we had the path actually reversed so that's why here when we reach the path position we go into the next index which is actually the one before so we do index okay so just like this our system should be working now all we need to do is set up the path for no component so let's go back into our path finding script and let's go down to the part where we are calculating the path so here we come like the path which means that we are actually filling up the buffer so we need to set the path for component for that and let's go up here in order to add another field we're going to add a field of type component data from entity of type at fall now here if you're not familiar with this type it essentially lets you access component data from a specific entity so we're going to access this using the entity as the index so for that well it's also grabbed the current entity and now we can go down where we calculate our path so here we are we calculate the path if we do not find something then we ask the component data from entity of this entity and we set it to a new path from when you set the path index in this case to minus 1 because it's invalid and down here when the path is violent we asked the position buffer in our key gravity only all right so there it is now we just need to this to the job so let's go up here when we're in San Shi a ting the job we need to pass this and now the way that we get this is by using the function get component data from entity and passing our type and we also need to pass in the empty alright that should do it let's test ok here we are with the entity on the corner there now as I click and there you go the entity starts moving and follows the path correctly awesome and right now since the e parameters are fixed when I click it goes back into zero zero and then follows a path in order to reach for zero okay so over here we already have quite a lot working when we click we add the path finding parameters then the path finding system listens to entities with path finding parameters and runs the path finding job to come late the path when the path is calculated it gets added into a dynamic buffer and Wesley the path for most system follows each path position in our buffer until it reaches the destination alright so over here we have our unit correctly following the calculated path now you might have noticed that we still have one crucial thing missing here right now our press find grid is being completely created and in Senshi ated over here as we begin our job so we don't have a separate grid map working with our path finding now here as you might have noticed I set up this scene to use a grid so I can right click in order to make a certain position either walkable or not so this is using the grid system that we created previously as well as the visual and over here this is the script that is setting it up so we create a path finding grid which is a grid with instances of grid node here it is a grid node as you can see extremely simple we just have an X a Y and a boolean for is walkable very basic so here we create the grid and on rightclick I can set it to walkable or not so here by rightclicking there your divisional updates and says that something is workable or not but again right now the job is creating its own grid so for example I can make this one visually blocked but the path finding isn't connect to the grid at all so as I click there you go he does not know there's one there and just goes through it alright so let's make the path finding grid be created and accentuated outside of the job and here this is also an excellent example of how you can mix unity dots with regular game objects so the grid in here is made using a class displayed using a game object so if I pause you can see that this is working me on the path finding visual so there it is I can move around so what we're going to do is take this and convert it into a stroke that we can then use with the path fighting system again the great setup in this class where we have a static instance that we can use to access our public path fine and grid all right so let's go into the path fighting system and in here and let's make a function that won't take the grid and convert it into a native array of these types of path nodes so we're going to instantiate this right here all right here it is as you can see we are building the native array pretty much the same thing as we were doing previously down here so we access the grid that we are using and we simply cycle through the width and height and create a bunch of Pat nodes and place them in a flat native all right so you can see we're grabbing the is one cable from the other grid that we created previously and that we're using as our base and as our visual now this returns a native array of Pat nodes which is going to be our path finding grid map so down here now let's modify the job to receive the native array of our path nodes and since this is a flat native array we also need to receive a into for our grid size and down here in the job instead of creating the grid all we need to do is set it up for stars alright so there it is pretty much we're just completing the h cost based on the end position that we receive in DeJong ok so here we are creating our path node wind and now let's go up here in order to pass it on to our job so we do is passing the path know the rain and we get deep at another right we also need the grid size all right so here this now we have set up everything now here just one more thing since we are creating the pattern of the Ray outside of it and then passing it into the job down here previously we were calling Pat another ride out this post now instead of doing it in here we can simply add Dion locate on job completion so that won't take care of the allocating the array all right let's test okay so here we are now the start and end positions are still fixed but we know he's going to go from this position over this position so by default it won't go around this wall so as I click yep there we go goes around that wrong and ends on the end position now let's place a bunch of moral wrongs so here I'm going to right click in order to modify the grid and now click again he goes back to the start and now let's see any up there yo now he correctly saw that these two are walls and he did not go through them so the path fighting grid that the job received is now correctly matching what we see in here awesome ok now let's make it actually go to where we click so here we are in the system where we're grabbing the mouse click now let's grab the mouse position and convert it into a grid position all right so here this we're grabbing the mouse position we're using the code mock utilities which is always you can grab for free from Unity code monkey calm here is the function in case you want to implement it yourself all it does is wrong just say warm camera and screen to run point all right so we get the Mouser on position we get the cell size for the pathfinding grid we get the x and y position that matches the mouse warm position then we just validated to make sure that it's inside of the grid so bigger than 0 smaller than width and height so we do that to calculate the end position and then we cycle through the entities and we do the same thing to validate the starting position and we add the path fighting params component all right so there it is very simple let's test ok so here we have our unit in core now let's put it in here and click and there you go the unit come way to the path and went exactly to the mouse position so click again and there you go no went from there there click and there you are awesome so here we have the start and end position correctly working and again we already made work with one so let's rightclick make a bunch of ones in here and I'm gonna click for him to go in there and yep there you go he goes around there there there and there right awesome so we have our unit following the available path going from start to finish okay so just like this we have our path finding system working we can add this path finding params component in order to set the path finding parameters then our path finding system looks for entities that contain the path finding parameters when it finds those entities it creates a path finding job and finally we have the path for system which looks for entities that have a valid path and similarly makes them follow it alright so here we have a working system however there's still one thing missing and it's actually one of the most important things so right now over here we've been testing this with just a single unit obviously we want our path finding code to be working nicely in parallel with multiple units so here let's just duplicate this object and there you go now we have two units so here we are and I click and there you go it does seem like it's still working however if we look in the profiler and over here we can see the issue so it is working but you can see one path in here and one in here so it's working but it's working sequentially so we have both jobs working on the main thread and over here and look at all of our job workers on compiling idle what we really want is to have them running the jobs in parallel so back in the path finding script now the way that we make them work in parallel is first we schedule all the jobs and then we tell them to complete them all so in here let's create a native list of job handle so we create a list then we add to the list our job instead of running it we call schedule and then down here we use job handle and we call complete own and we pass in our job handle list alright so that's it firstly schedule all the jobs in the new random all in parallel let's test so here we are and click and there yo we have found our error it's essentially telling you is that we cannot schedule two jobs that access the exact same data so in this case see component R from entity now this is the job system protecting us from causing race conditions over here we have multiple jobs on accessing this component data from entity which is actually a native array however here we know what we're doing we know that even though multiple jobs receive the same component data from entity we know that each job will access this array with a different entity so there's no actual race condition so the solution here is to tell me compiler that we know exactly what we're doing and we want to disable safety so for that we go all the way up here north to add another reusing using unity that collections dot lowlevel dot and say and inside of that namespace now we can add the attribute disabled container safety restriction so by adding this attribute we're telling the compiler do not worry about safety when accessing this field so now this won't correctly work but again be very careful when you using these types of attributes if you do end up with the race condition your game will crash so make sure your code is working perfectly before you start messing around with safety all right so let's test so here we are and click and now here we have an error although we did fix the other error so we fix the issue with concurrently accessing the component data from entity field but now we have the same issue when accessing the dynamic buffer so to verify that we fix the issue and let's stop using the buffer so here let's comment out everything related to the buffer ok there it is we are no longer using the buffer so let's test here we are and click any app theory oh the game is running and everything is correct so we do not have any race conditions and there's no crash awesome so now here when dealing with the dynamic buffer it's something that I actually found quite strange so you would assume that we could just have the exact same attribute in order to disable safety and be able to access the buffers in parallel we can use something similar to the component data from entity by instead of using the dynamic buffer we use buffer from entity so we would assume that this would work again we know we're never going to access the same buffer of the same entity in two jobs so we know we're safe however just adding this attribute does not appear to disable safety over here there we go we still have our error so I'm not sure if this is an issue specific with dynamic buffers that won't be fixed or if dynamic buffers are special and somehow cannot be accessed in parallel at all it seems like it should work just like this other one but apparently it doesn't I spent quite a long time looking into this and I could not find the solution to disable the safety completely however I did find another alternate solution that works well enough so the solution is quite simple which is just don't do it in parallel so we can still calculate the path and get everything working correctly in parallel and then we make a second type of job that won't run just on the main thread and it's solely responsible for filling up the buffers with the calculated path ok so let's go all the way up here to make that secondary job ok here it is the set buffer path job so here we just have the pattern of the Ring which after going through this job the pattern of the Ray has already been set up so essentially all the path nodes already have the came from node index correctly set up so we just use that in order to generate our path and by doing that we end up with the path position buffer correctly filmed so down here let's get rid of all mentions of the buffer so all of this will be done on the other job and also here make sure that we only the allocate the pattern of the Ray after we set the buffer so in this one let's get rid of this attribute okay and now appear when we incent she ate our jobs so first we schedule all the jobs that do not use the buffer we do all of those we complete all of those and after completing then let's run the buffers while sequentially all right so here it is over here when you create our normal find path jobs we're adding them into this space list so we instantiate them and put them inside of this list and then in here we just cycle through the list after the previous job has been completed and we simply grab data that we used on that same job in order to make this new job and fill up the correct buffers from entity so again I wish it were possible to make all of this inside of the other job and I'm not sure if this is intended or a bug but still unity dots is so fast that even with this part running on the main thread it still ends up being insanely fast all right so let's see it in action okay so here we are in click and there you go both units calculate the paths in parallel and they both go to the target position and if we look into the profile over here in the profiler you can now see indeed we have two worker threads correctly working working on the fine path job both in parallel so now let's play some more units so we're here and let's just duplicate this one place a bunch more all right we have a whole bunch of units and click any of there you go they all come later the path and now went straight to the target position awesome ok so here we have our complete system working we have multiple units working as entities and we can click to set the parameters which will then get calculated by the path fighting system so right now we can look into the profiler in order to test our speed so just here in the code in order to make sure that we test the path finding speed we can simply comment out the post update command in order to remove the path finding params so this way this component will not be removed so it will be trying to look for paths on every single frame so here we are in the profiler with seven units waiting for a path and right now it's seeking one millisecond which is still quite a bit and the reason is because we are missing our magic bullet so that is the burst component so just go over to jobs burst and enable a burst compilation and let's test and there you go now here we have burst enabled and look at that the entire path finding is taking point three seven and we have to zoom in real far in order to actually see our jobs working in parallel so you can see all of them here in parallel and then afterwards we haven't here the various jobs in order to set the buffer so this is in parallel and this is not but it so ends up being insanely fast now let's try out with a hundred units alright so here we have 100 units we can look into the stats in here to see the batch is 100 yep we got a hundred and we click to enable pathfinding and here in the profiler you can indeed see a whole ton of fine path jobs all working in parallel only using bursts and then afterwards of the ones setting the buffer elements so I'm looking at the path finding we have 100 units searching for path all in the exact same single frame and it's taking just four milliseconds so this is insanely fast alright so over here I have set up the units to look for a random position and when they get there and look for another random position so as you can see they are all roaming around very random and over here on these stats you can see just how quickly this code is running so we have 1,000 units randomly doing path finding in just 4 milliseconds and again I can modify the path finding grid by rightclicking so let's put a wall in there and yet there you go you can see them avoiding the positions with walls and every time I press the button I can spawn 500 units so there yeah now we got 1500 and they all spawn over there on the corner now we got 2000 and again everything's still running at about 5 to 6 milliseconds alright so let's see how far we can push this ok here we have 5000 running at about 1012 milliseconds and around 8,000 we finally go under 60 fps and at 20,000 we are around 30 fps and this is all once I'm still recording the screen so without that it will go much further so here we have 20,000 units randomly running around our level and it's running at 30 frames per second and really half of that time is just spent on rendering so we can look into the profiler so here we have the profiler and as you can see for 20,000 units all of our pathfinding is over here running in just 2.9 milliseconds then we have the path phone system in point 7 milliseconds and then a lot of the time is actually spent on rendering so if we were using the rendering system that I made in a previous video which supported over a hundred thousand animated sprites by using that system we could push this even for all right so here we have implemented a star pathfinding in unity dots we're using the entirety of the dot stack so we have the job system calculating paths in parallel we have the worst compiler converting all of that code into superfast machine code and we have our data oriented entities running the logic and being displayed so here it is insanely fast supporting tons of Units alright so this video and the previous one were quite tough to make but I'm really happy with the results now with this working I can start to work on making a simple art yes or maybe combine this with the dots physics in order to watch entities looking for paths and pushing each other around let me know what type of videos you'd like to see this system apply to and also this took quite a long time to research in put together so if you find a video home phone consider supporting on patreon or picking up the game bundle so thank you to these awesome supporters for making this video possible go to patreon.com/scishow code monkey to get some perks and help keep the videos free for everyone as always you can download the project files in Usagi's from unity calm calm subscribe to the channel for more unity tutorials posting first in heaven comments and I'll see you next time

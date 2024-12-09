@@ -1,0 +1,1029 @@
+00:00 - dive into the world of infrastructure as
+00:02 - code with this Hands-On course by
+00:04 - rishabh Kumar who will guide you through
+00:06 - the essentials of deploying a website on
+00:09 - Google Cloud platform using terraform
+00:12 - through this course you'll gain hands-on
+00:14 - experience deploying a fully functional
+00:16 - website on Google Cloud platform you'll
+00:19 - learn to write terraform code manage
+00:21 - Cloud resources and handle custom domain
+00:24 - configurations all while understanding
+00:26 - the principles of effective and
+00:28 - efficient infrastructure management
+00:31 - by the end of this course you'll be well
+00:33 - equipped with the Knowledge and Skills
+00:35 - to leverage terraform in creating and
+00:38 - managing scalable and automated
+00:40 - infrastructures on the cloud so let's
+00:43 - begin today I'll talk about the famous
+00:46 - infrastructure as code tool known as
+00:49 - terraform and will deploy a website to
+00:52 - gcp which is the Google Cloud platform
+00:55 - and if you are not familiar with
+00:57 - infrastructure as code it is one of the
+00:59 - important devops principle which allows
+01:02 - you to deploy your infrastructure to any
+01:05 - of the cloud providers using a code file
+01:07 - which makes automation easy
+01:10 - so let's dive into what we'll be needing
+01:13 - today so for the requirements first of
+01:16 - all you need a gcp account which would
+01:18 - allow you to deploy resources to the
+01:21 - Google Cloud platform you'll also need
+01:24 - terraform installed on your Dev machine
+01:27 - and since we'll be deploying a website
+01:29 - you need a domain name that we can point
+01:32 - our website to and at last we also need
+01:36 - the gcloud CLI installed and
+01:39 - authenticated on our Dev machine going
+01:42 - over the architecture diagram this is
+01:45 - what we'll deploy today
+01:46 - so if any of the users try to visit our
+01:50 - website Cloud DNS which is a gcp service
+01:53 - we'll handle that request of whatever
+01:56 - our domain name is or go to the CDN
+01:59 - which is again gcp service known as
+02:02 - content distribution Network
+02:05 - and then we'll be using a cloud load
+02:08 - balancer to forward those requests to
+02:10 - cloud storage where we will have a
+02:13 - bucket containing our website content so
+02:16 - this is the architecture diagram gives
+02:19 - you kind of an overview of all the
+02:21 - resources that we'll be needing today in
+02:23 - gcp to deploy our website so before we
+02:26 - start with any terraform code
+02:29 - I want to make sure you have your Google
+02:31 - Cloud account set up so if you haven't
+02:34 - created an account you'll need an
+02:37 - account with active billing even though
+02:39 - the cost for this project will be
+02:42 - minimal since we are using Google Cloud
+02:45 - Storage to store our website content
+02:48 - couple of cents for that per month but
+02:52 - you can incur charges for your load
+02:55 - balancers as we saw in the architecture
+02:57 - diagram that being said you still get
+03:00 - some credits you also get a free tier
+03:03 - from Google Cloud so for your Google
+03:05 - account what you want to do is in order
+03:08 - to manage the resources efficiently you
+03:12 - have projects in Google Cloud so you can
+03:15 - go ahead and create a new project after
+03:18 - you have created your account for you to
+03:21 - deploy the infrastructure so I have
+03:23 - created a YouTube Project here as you
+03:25 - can see and have selected that
+03:28 - Google Cloud gives a random project ID
+03:31 - or you can choose your own project ID
+03:33 - and I have selected that as my project
+03:36 - for today's course now there are a few
+03:39 - apis that you have to make sure are
+03:41 - enabled so you need Cloud DNS API since
+03:46 - we'll be using a domain name you also
+03:48 - need compute engine API since we'll be
+03:51 - using the load balancer and you also
+03:54 - need IIM API and I'll tell you why in
+03:57 - order to enable these apis on your home
+04:01 - page of the project you can see there's
+04:03 - quick access menu and you have API and
+04:06 - services
+04:07 - if you click on that you'll be able to
+04:10 - enable different apis and services
+04:14 - so you can search for cloud DNS API
+04:22 - and as you can see
+04:23 - it shows up the cloud DNS API on my
+04:27 - project it's already enabled but if you
+04:31 - don't have it enabled here will be a
+04:33 - button saying enable this API similarly
+04:36 - if we search for compute engine API for
+04:39 - our load balancer
+04:44 - we can enable that too
+04:46 - and then last but not the least is IM
+04:50 - API
+04:54 - so make sure all these apis are enabled
+04:58 - and we need these in order to proceed
+05:01 - with our project today so after we have
+05:03 - done that what I'll do is create a
+05:06 - service account for terraform to
+05:09 - authenticate to Google Cloud since we'll
+05:12 - be using terraform to deploy our
+05:14 - infrastructure for our website it needs
+05:17 - a way to authenticate to Google Cloud to
+05:21 - deploy that infrastructure and the way
+05:24 - it does that is through a service
+05:26 - account
+05:27 - there is a documentation available from
+05:30 - Google Cloud on how to create a service
+05:32 - account and I'll make sure it's linked
+05:35 - down in the resources below
+05:37 - but I'll just show you how you can
+05:40 - create one
+05:41 - so if we go to service account which is
+05:44 - available in IIM and admin and if you go
+05:49 - to service accounts you'll see that I
+05:51 - have two service accounts here let's
+05:54 - click on create a service account
+05:57 - and now you can name this accordingly so
+06:00 - let's name it free code Camp Dash
+06:03 - terraform and then Google Cloud will
+06:06 - also sign it a service account ID
+06:09 - and you can put in the description
+06:10 - saying terraform gcp
+06:14 - and then you can click on Create and
+06:16 - continue where It'll ask which role you
+06:19 - want to assign
+06:20 - so I highly suggest you fine grain the
+06:23 - access that you provide the service
+06:25 - account
+06:26 - since I showed in the architecture
+06:29 - diagram that will be using Cloud DNS CDN
+06:33 - load balancing and cloud storage you can
+06:36 - limit the access for this service
+06:38 - account only for those Services by
+06:41 - searching for those Services here but
+06:44 - for the purposes of this demo I'm just
+06:47 - gonna go with basic and click owner but
+06:49 - you can see there is a message saying
+06:51 - full access to most Google Cloud
+06:53 - resources see the list of included
+06:56 - permissions if by mistake you expose
+07:01 - your service key
+07:03 - which will generate and store today for
+07:06 - our terraform project if you expose it
+07:09 - publicly you have the risk of
+07:11 - individuals having access to your entire
+07:14 - Google Cloud account so make sure you
+07:17 - have fine-grained your access to this
+07:20 - service account
+07:21 - but I'll choose owner for the purposes
+07:24 - of this demo
+07:27 - so I have given the owner access and now
+07:31 - we can click on done and you can see it
+07:33 - generated a service account called free
+07:36 - code Camp terraform
+07:38 - so now we'll need an API key for this
+07:42 - service account and how you can do that
+07:45 - is by clicking on Keys click on ADD key
+07:48 - create new key and let's go with the
+07:52 - Json format it's also the recommended
+07:55 - format by Google Cloud
+07:57 - if you click on create what I'll do is
+08:00 - ask you to save the key locally on your
+08:03 - machine let's do that and then once we
+08:07 - get to the terraform part of this where
+08:09 - terraform needs to authenticate and
+08:11 - deploy infrastructure to gcp I'll show
+08:15 - you how you can use this API key but
+08:18 - yeah this was how you can create a
+08:20 - service account and we also created the
+08:23 - terraform project inside gcp and we
+08:27 - needed to enable Cloud DNS compute
+08:29 - engine and IM API now let's go with
+08:33 - second requirement that was installing
+08:35 - terraform so I'm on the official
+08:37 - terraform website from hashicorp and
+08:41 - installing terraform on Mac OS is pretty
+08:45 - easy you can just use Homebrew by typing
+08:48 - the command Brew tab hashicorp tab and
+08:52 - then Brew install hashicob slash tab
+08:54 - slash tariff so let's go ahead and do
+08:56 - that let's copy the First Command and go
+08:59 - to our terminal
+09:01 - paste it
+09:03 - and let's copy the second command which
+09:05 - will install terraform
+09:11 - and there we go so I already had
+09:14 - terraform
+09:16 - 1.4.6 installed which is up to date so
+09:20 - that's why you're seeing that message
+09:21 - but in your case if you don't have
+09:23 - terraform installed Brew will go ahead
+09:25 - and install it for you so now let's
+09:29 - start writing some code what I'm gonna
+09:32 - do is go to the right directory
+09:35 - on my Dev machine here and then create a
+09:39 - new directory called terraform with gcp
+09:43 - and let's open that up in vs code
+09:52 - okay so I have the directory open here
+09:55 - in vs code and as you can see it's an
+09:58 - empty directory so let's start with
+10:01 - creating a folder for our infrastructure
+10:04 - and let's name it infra I'll start with
+10:06 - the fundamental terraform file that we
+10:08 - need which is usually named as main.tf
+10:13 - and this is where most of our terraform
+10:16 - code will go but we also need to pull
+10:19 - the provider gcp from terraforms
+10:22 - registry and I'll show you how you'll do
+10:25 - that and the best practice is to have it
+10:28 - not in main.tf but another file called
+10:31 - provider.tf so let's do that right now
+10:34 - as we are starting so provider.tf and
+10:37 - we'll bring the gcp provider in this
+10:40 - terraform file so let's start writing
+10:43 - some HCL so I'm just going to make a
+10:46 - comment here saying gcp provider on the
+10:49 - top and then what we are going to do is
+10:53 - pull that Provider from the terraform
+10:55 - registry so provider
+11:02 - and then we'll go with Google as our
+11:05 - provider
+11:07 - and we also need to specify some config
+11:10 - for this provider
+11:12 - first off it is the credentials so this
+11:15 - is where our service account which we
+11:18 - created before will come in
+11:21 - which will allow us to authenticate to
+11:23 - gcp
+11:29 - and a project so what project should the
+11:34 - infrastructure be deployed in and as you
+11:36 - can see I'm using VAR here which stands
+11:39 - for variable which basically means it
+11:41 - allows us to assign variable values and
+11:45 - not hard code it into the provider
+11:47 - column here so let's go with gcp under
+11:50 - project and you can name your variables
+11:53 - accordingly
+11:56 - and last one is region
+11:59 - which for me the nearest One Is Us East
+12:02 - one but we'll Define that in the
+12:05 - variable files that you'll see later
+12:12 - and there we go
+12:14 - so we have our gcp provider pulling in
+12:17 - into provider.tf
+12:20 - let's go back to main.tf and let's start
+12:24 - with creating a cloud storage bucket
+12:28 - where all of our website code will exist
+12:31 - so let's start with a comment saying
+12:33 - bucket to store website
+12:36 - and then let's create
+12:38 - resource and you can do that by typing
+12:42 - resource
+12:43 - and let's go with storage
+12:46 - underscore bucket
+12:50 - and let's call it website since we'll be
+12:53 - using it as a website hosting so there
+12:56 - we go we created a resource called
+12:59 - bucket and then provider
+13:02 - you can specify that if you're using
+13:04 - multiple providers in your provider.tf
+13:07 - file or you can leave it if you only
+13:10 - have one provider which is in our case
+13:12 - so let's go ahead and
+13:15 - delete it
+13:17 - so now let's name our bucket
+13:20 - and again you can use a variable here
+13:23 - but I'll just go and name it example
+13:28 - website
+13:31 - by rishab
+13:33 - that's a long name I feel like it'll be
+13:35 - unique make sure you choose a bucket
+13:39 - name that's unique because they need to
+13:41 - be globally unique
+13:43 - as per the instructions by gcp and then
+13:47 - location is us for our bucket
+13:52 - so we have just created our first
+13:55 - resource in the terraform file mind you
+13:58 - it hasn't been deployed yet and you'll
+14:01 - see how you can do that later but let's
+14:03 - go ahead and we'll need a index.html
+14:07 - file that will upload to this bucket and
+14:11 - I'm gonna cheat here a little bit I
+14:13 - already have
+14:14 - index.html that contains my Social Links
+14:18 - like Twitter GitHub LinkedIn Instagram
+14:21 - and I can show you locally here but I'm
+14:24 - gonna use that and upload it to this
+14:26 - bucket so let's create a folder here in
+14:30 - our root directory called website
+14:33 - and in that website directory I'll have
+14:37 - an index.html
+14:40 - and this will serve as our code for the
+14:43 - website
+14:47 - okay so this is the index.html I was
+14:50 - talking about I can show you locally
+14:52 - here how it looks like how the website
+14:55 - is so I have a local server running and
+14:59 - if I go to localhost code 5500 you'll
+15:03 - see the website
+15:05 - so this is the website that I was
+15:07 - talking about nothing fancy simple
+15:10 - index.html with some Social Links for
+15:14 - myself
+15:15 - and remember if you're using gcp cloud
+15:19 - storage bucket to store your to host
+15:23 - your website it needs to be static it
+15:26 - can have JavaScript and CSS but you
+15:30 - can't host a dynamic website on cloud
+15:33 - storage so there we go we have a simple
+15:35 - website that will deploy to gcp using
+15:38 - terraform
+15:39 - and now
+15:40 - let's come back to our terraform file
+15:44 - and upload this index.html from local
+15:48 - storage to our bucket and how you do
+15:51 - that is by creating resource for object
+15:54 - so items in a bucket are known as
+15:58 - objects so let's do that I'll create a
+16:01 - comment saying upload e HTML file to the
+16:06 - bucket and let's create that resource so
+16:08 - resource and then we'll be using Google
+16:11 - storage bucket object
+16:19 - and we'll name it static
+16:22 - underscore site underscore source and
+16:25 - now let's name the object itself so this
+16:29 - name represents what the object will be
+16:31 - called in the bucket and not locally and
+16:34 - now we can Define The Source where this
+16:37 - object is being uploaded from so in our
+16:39 - case it's the root directory and then
+16:42 - website and then
+16:44 - index.html and you also have to specify
+16:47 - which bucket you want to upload this to
+16:49 - and I'll show you how you can use
+16:52 - in order to use our website bucket that
+16:55 - we created on top we can just go ahead
+16:58 - and do dot website dot name so that we
+17:02 - don't have to hard code it I'll just
+17:04 - grab whatever the bucket name is which
+17:06 - is example Dash website Dash by Dash
+17:10 - reship this helps because if you used a
+17:14 - variable here and you created a
+17:17 - different bucket name your code will not
+17:19 - be broken if you're hard coding it here
+17:21 - so that's how you do that in terraform
+17:24 - and one key thing to remember is since
+17:27 - we'll be hosting a website are objects
+17:30 - in the bucket need to be public
+17:33 - so let's go ahead and do that by
+17:35 - defining an object access control so
+17:39 - let's do that before
+17:41 - we upload the object so make new objects
+17:45 - public
+17:49 - and since I won't be using this bucket
+17:52 - for anything else I'm fine with having
+17:55 - my index.html publicly accessible but
+17:59 - make sure you know what you're doing
+18:00 - don't upload sensitive information to a
+18:04 - public bucket so resource and then this
+18:06 - time we are creating an object access
+18:09 - control so Google Google storage object
+18:14 - Access Control
+18:19 - and we'll name this public underscore
+18:22 - rule so by now you
+18:25 - might have realized that first we have
+18:28 - the resource which the terraform will
+18:31 - call to the provider's API so this is
+18:35 - all defined by the gcp provider how to
+18:39 - create a storage bucket how to create a
+18:41 - storage object so all of this naming
+18:44 - convention is predefined by the gcp
+18:47 - provider and you can read about it in
+18:50 - the gcp provider documentation available
+18:52 - on terraform's website whereas the
+18:55 - second part of the resource syntax is
+18:59 - the name that you're giving to this
+19:02 - resource in the terraform file so this
+19:04 - is not the name that will be on gcp but
+19:08 - it's the name that terraform knows it
+19:10 - has and then gcp itself will have this
+19:13 - bucket name that we defined for that
+19:15 - resource
+19:16 - so just trying to explain the syntax of
+19:19 - terraform so now we are creating the
+19:21 - object Access Control let's go ahead and
+19:24 - Define our object here so again we'll be
+19:27 - using the index.html name but we can do
+19:31 - is Google storage underscore bucket
+19:35 - underscore object dot static site source
+19:38 - and Dot name so that we are not hard
+19:42 - coding the name and then same thing for
+19:45 - our bucket
+19:56 - dot website dot name so now you can kind
+20:00 - of relate why this name here in the
+20:03 - double quotes is a reference in
+20:06 - terraform but not the actual name of the
+20:09 - bucket because we can repurpose it in
+20:12 - different blocks later when we are
+20:15 - creating resources that are dependent on
+20:18 - the initial resource
+20:22 - will give the role to through this ACL
+20:26 - as reader
+20:30 - and the entity which can be a user a
+20:35 - single user a group in our case I want
+20:38 - it to be public so all users
+20:42 - and there we go so far we have created
+20:45 - three resources in our main.tf one of
+20:49 - them is the storage bucket where we'll
+20:51 - store our website contents the next one
+20:54 - is
+20:56 - a storage object access control which
+21:00 - allows the objects in the bucket to be
+21:02 - public since we want
+21:04 - people on the internet to be able to
+21:06 - access our website and then the third
+21:09 - resource in our main.tf is uploading the
+21:12 - index.html file from our website
+21:14 - directory to the gcp cloud storage
+21:17 - bucket so remember I showed you how to
+21:19 - create a service account and an API key
+21:22 - in gcp for our terraform project to be
+21:26 - able to authenticate we will use that
+21:28 - key now
+21:29 - so what I want you to do is copy that
+21:33 - key that you downloaded then to your
+21:36 - project directory right now so I'm gonna
+21:39 - do that as well so in my route of the
+21:43 - project directory I'm just gonna paste
+21:45 - the key
+21:47 - and as you can see the Json key that I
+21:51 - downloaded is now in the root of my
+21:54 - project now we will use this key to
+21:58 - authenticate terraform to gcp to deploy
+22:01 - resources and that's where you can see
+22:04 - how you know we had this segment in our
+22:09 - provider.tf where it says credentials
+22:11 - use file and then we are referring to a
+22:15 - variable called dot gcp underscore
+22:18 - service underscore key so let's create
+22:21 - variables.tf in our infra folder
+22:29 - and here we will declare the variables
+22:31 - we need to have for our project which we
+22:33 - haven't done yet even though we were
+22:35 - specifying it in the provider.tf so
+22:38 - let's go ahead and do that the first
+22:40 - variable is gcp service key so gcp
+22:44 - underscore service underscore key and
+22:47 - I'm going to leave the other arguments
+22:49 - blank for now
+22:50 - the next variable is gcp project and the
+22:54 - last one is gcpe region
+22:58 - and again I'm Gonna Leave the arguments
+23:01 - for these variables blank for now so
+23:03 - let's save that and there are multiple
+23:05 - ways you can assign these variables the
+23:09 - values so you can either do it during
+23:11 - running the terraform CLI command or you
+23:15 - can provide with the TF vars file so
+23:18 - let's go ahead and create that too let's
+23:20 - name it
+23:22 - terraform.tf Wars
+23:25 - so let's for an example let's say you
+23:28 - wanted to deploy this to a Dev
+23:31 - environment in your gcp and you had a
+23:34 - different project so you will specify
+23:36 - the details of the dev environment in
+23:39 - this terraform.tfrs and similarly you
+23:41 - will have a different TF Wars file for
+23:44 - production environment which you can
+23:47 - call
+23:48 - prod.tf Wars and that would have you
+23:51 - know project ID of production
+23:54 - environment region of production
+23:56 - environment and a service key that
+23:58 - allows access to the production project
+24:00 - instead of the dev ones so you can see
+24:02 - how you can use the dot TF Wars file in
+24:06 - you know different cases so in our case
+24:08 - since we only have one environment let's
+24:11 - go ahead and assign those variables
+24:13 - value so the gcp
+24:16 - service key is the first one which
+24:18 - allows us to authenticate terraform to
+24:21 - gcp so that it can deploy infrastructure
+24:25 - and I'm gonna copy the name of my
+24:30 - service key here
+24:32 - and paste it
+24:34 - so now I have my service key next
+24:36 - variable was gcp project and it's
+24:40 - literal Academy
+24:43 - 314813 and you can find your project ID
+24:46 - in the gcp console which we created in
+24:50 - the beginning of this course so if you
+24:52 - go to your console in browser and if you
+24:55 - click on projects remember I created
+24:58 - Youtube and you can get the ID of that
+25:01 - project from this screen
+25:04 - so going back to TFR files let's go with
+25:08 - gcp region which is the last variable
+25:11 - I am closest to us East so I'm gonna use
+25:16 - Us East today to deploy my website so
+25:19 - there we go we have assigned the
+25:22 - variables that we defined in
+25:24 - variables.tf some values according to
+25:27 - our need and I'll save that file
+25:30 - and let's go back to main.tf and now
+25:33 - let's deploy the bucket and see if our
+25:37 - terraform code works so right now what
+25:40 - I'm doing is
+25:42 - since we have the code for cloud storage
+25:44 - all figured out in terraform let's try
+25:48 - deploying this
+25:49 - and see if we have an object called
+25:52 - index.html in our bucket in a cloud
+25:55 - storage so what I'm going to do is open
+25:57 - up the terminal let's clear the screen
+26:00 - and now let's go to the directory of my
+26:05 - project which is called terraform with
+26:08 - gcp and now let's change the directory
+26:11 - to infra because that's where our
+26:13 - terraform files are and now in order to
+26:16 - initiate the terraform project you have
+26:19 - to do terraform init
+26:22 - so this will generate some boilerplate
+26:25 - files that are needed like the state
+26:27 - file and I'll explain what it does
+26:31 - so let's do terraform in it it will also
+26:34 - go and check the provider that we are
+26:37 - using so in our case we are using
+26:39 - hashicops Google Provider from their
+26:42 - registry and you can see it's installing
+26:44 - that provider and we can also see that
+26:48 - terraform has been successfully
+26:50 - initiated
+26:51 - so if I go back to my code editor we'll
+26:55 - see a bunch of files
+26:57 - that were created in a directory called
+27:00 - dot terraform was created this is where
+27:03 - the state files will exist and what I
+27:07 - mean by state is once we deploy our
+27:10 - bucket now
+27:11 - let's say we want to destroy it or we
+27:14 - change something in our main.tf it'll
+27:17 - remember the infrastructure State the
+27:20 - last time we did a terraform apply so
+27:22 - let's say we
+27:24 - add load balancer and we add Cloud CDN
+27:28 - and Cloud DNS it will not create the
+27:31 - bucket again because it already had done
+27:34 - that and you'll see this once we do
+27:36 - terraform apply since it can remember
+27:39 - the state of the infrastructure it will
+27:43 - not deploy the bucket again but would
+27:45 - just deploy the changes which is adding
+27:49 - Cloud DNS Cloud CDN and load balancer so
+27:52 - that's what all these files are let's go
+27:56 - back to our terminal and do terraform
+27:59 - plan so terraform plan basically tells
+28:03 - you what all resources would be deployed
+28:06 - so it won't actually deploy the
+28:08 - infrastructure but just give you an idea
+28:10 - of what all resources will be deployed
+28:13 - to gcp in our case so you can see
+28:16 - there's the bucket there's the
+28:18 - index.html and then there is the object
+28:21 - Access Control public rule that we
+28:23 - created So the plan says three to add
+28:26 - zero to change and 0 to destroy so this
+28:29 - is what I meant by state now let's do
+28:31 - terraform apply
+28:34 - yes
+28:37 - so it went ahead and added all those
+28:40 - three resources
+28:43 - now if we go back to my Google Cloud
+28:45 - console and we navigate we navigate to
+28:49 - cloud storage we should see a bucket
+28:52 - named example website so search for
+28:56 - cloud storage and you can see we have an
+28:59 - example website by reshope that was just
+29:02 - created so let's click on that it has an
+29:05 - object called index.html which is
+29:09 - according to the public access it is
+29:11 - public to the internet
+29:13 - so let's open that
+29:15 - it has a public URL let's try to visit
+29:19 - that
+29:21 - and there we go that was the website we
+29:25 - had locally right so this is localhost
+29:27 - Port 5500 that I showed you in the
+29:30 - beginning the index.html that I created
+29:33 - and this is on the Google Cloud Storage
+29:36 - so our site is basically live but we are
+29:40 - still accessing the object directly from
+29:43 - the storage what I would like to have is
+29:46 - a load balancer in front and
+29:48 - Cloud CDN which will help us with
+29:50 - caching the content of our website and
+29:54 - DNS which would give our site a more
+29:57 - friendly domain name so yeah we have
+30:00 - been successful in deploying the three
+30:03 - resources we defined in our main.tf now
+30:07 - let's move forward with the load
+30:09 - balancer CDN DNS so let's go ahead with
+30:13 - the next part of our architecture which
+30:17 - will be using the load balancer and one
+30:21 - thing with load balancer is that you
+30:23 - will be given an IP address and I want
+30:26 - to make sure that IP address is static
+30:29 - not Dynamic so what I'll do is reserve
+30:33 - an external IP before I create the load
+30:36 - balancer so let's go ahead and do that
+30:39 - so I'm gonna make a comment saying
+30:42 - reserve a static external IP address
+30:45 - and then what I'll do is create that
+30:48 - resource so resource and the way you
+30:51 - create an external IP is Google
+30:54 - underscore compute underscore Global
+30:58 - underscore address and then we'll call
+31:01 - this website underscore IP so the name
+31:06 - can be and this is the name that will go
+31:09 - in gcp so website
+31:13 - let's put lb which stands for load
+31:16 - balancer and then IP and we are good so
+31:19 - that gives us an IP that will be
+31:21 - reserved for us that we'll use later in
+31:24 - our load balancer also so the way I have
+31:27 - set up my DNS zone I'll show you in gcp
+31:30 - so since we are talking about IP address
+31:33 - for our load balancer let's also go over
+31:36 - how we will configure the domain name
+31:39 - so what you have to do in order to
+31:42 - configure the domain name is you have to
+31:45 - first enable the cloud DNS service you
+31:49 - can already see that I have a Zone name
+31:53 - reshap Dash example and it has a DNS
+31:56 - name
+31:57 - gcp.reshup.cloud so you could have any
+32:00 - domain name service provider like
+32:02 - namecheap or Google domains or Route 53
+32:06 - but what you will have to do is either
+32:10 - transfer that domain name to Cloud DNS
+32:13 - or you can create a zone for a subdomain
+32:16 - so let's say I want to create a zone for
+32:19 - this project called terraform Dash gcp
+32:23 - the DNS name that I own is reship.cloud
+32:27 - so I'll create a sub domain here called
+32:31 - test.reship.cloud and then for the other
+32:33 - settings you can leave it default and
+32:36 - click on create so what it'll give you
+32:38 - is a list of name servers and if you
+32:42 - click on the NS record you can see those
+32:44 - four name servers that the cloud DNS for
+32:47 - gcp uses and what you will have to do is
+32:51 - go into your domain name server service
+32:53 - provider so namecheap or Route 53
+32:56 - and create this record with the DNS name
+32:59 - test Dot reship.cloud and the type being
+33:03 - name servers which is NS and paste all
+33:07 - these four values in there the DNS
+33:10 - propagation can take some time and
+33:12 - that's why I already have the example
+33:15 - Zone setup that I'll be using in this
+33:18 - project which points to
+33:21 - gcp.reshup.cloud so since I already have
+33:23 - the DNS Zone created what I want to do
+33:27 - here is not to create it but get
+33:30 - D managed zone so get the managed DNS
+33:34 - Zone and how you can do that is through
+33:37 - data so data Google DNS managed Zone and
+33:42 - then what the name of that zone will be
+33:44 - in this terraform file so let's name
+33:47 - that DNS Zone pretty straightforward and
+33:50 - now we will get that data from the gcp
+33:54 - provider so in my case the DNS Zone was
+33:58 - named reship Dash example so just to
+34:01 - clarify we are not creating the Zone we
+34:04 - are getting it from the Google cloud
+34:06 - provider says since it already exists so
+34:09 - now let's add that IP address that we
+34:13 - reserved to this DNS Zone
+34:16 - so add the IP to the DNS so that the
+34:21 - name translation happens fine so if we
+34:24 - go to
+34:26 - website.gcp.reshup.cloud it translates
+34:28 - to whatever the reserved IP points to
+34:31 - the load balancer
+34:40 - and let's name this website
+34:44 - so the name that I want is website dot
+34:49 - but then I want to use whatever the DNS
+34:52 - Zone got us so you can use dollar sign
+34:57 - and then curly brackets and you already
+35:00 - see the terraform extensions that I have
+35:02 - installed is auto populating that DNS
+35:05 - Zone name so let's go ahead and type it
+35:08 - out instead so data and then I can copy
+35:11 - this manage DNS Zone record
+35:14 - it's called VNS Zone
+35:17 - and at last
+35:19 - it's DNS name so there we go the new
+35:22 - record that will be created for our
+35:25 - reserved IP would be something like
+35:29 - website.gcp.reshup.cloud and I could
+35:31 - have put in anything in front here it
+35:34 - would be
+35:36 - xyz.gcp dot reship.cloud so I hope you
+35:39 - understand what I'm trying to do here
+35:41 - the type since it is an IP address will
+35:45 - be a and not a z name and then TTL which
+35:49 - is time to live let's go with 300
+35:51 - seconds which is 5 minutes the managed
+35:54 - Zone that we will be using again we
+35:58 - don't need to hard code it we can just
+36:00 - use the zone that we got from gcp
+36:03 - earlier and at the end we'll not need
+36:06 - DNS name but just the name which is
+36:09 - vishub Dash example so instead of hard
+36:12 - coding this here I just am relying on
+36:15 - terraform to figure it out itself
+36:18 - now we have the RR details which is the
+36:21 - string data for the records in our case
+36:23 - since it's an A type record will be the
+36:26 - reserved IP address for the load
+36:29 - balancer
+36:31 - moving along let's add the bucket as a
+36:35 - CDN backup remember we are using a cloud
+36:39 - load balancer which will need a back end
+36:42 - to serve the content which is our bucket
+36:45 - so the resource before the load balancer
+36:48 - that we are creating is that backend so
+36:50 - Google compute back and bucket
+36:53 - and let's call it website Dash backend
+36:56 - and let's also name it website backend
+36:59 - and then for the bucket name we have the
+37:02 - Google storage bucket dot website.name
+37:05 - which it will pull up from here so this
+37:08 - is the bucket name that it'll get let's
+37:11 - also add a description to the to the
+37:15 - back end so contains files needed for
+37:20 - the website and this is where you also
+37:23 - enable CDN so enable CDN
+37:26 - is equal to true
+37:29 - so this will
+37:31 - enable Cloud CDN for us for our backend
+37:34 - bucket so we created the backend bucket
+37:37 - now let's create a URL map
+37:43 - so this is a property in the load
+37:46 - balancer which allows us to specify what
+37:50 - when a user enters a specific URL path
+37:53 - that is being served by the load
+37:56 - balancer what it should direct the
+37:58 - traffic to in our case it will be the
+38:01 - back end bucket that we just created so
+38:04 - let's go ahead and do that so resource
+38:06 - Google underscore compute URL map
+38:11 - and let's name it website of the name
+38:15 - can be website Dash URL Dash map the
+38:19 - default service that it's going to use
+38:21 - is the backend bucket that we build here
+38:25 - so you can get the name of that
+38:29 - back end is by doing Google underscore
+38:32 - compute underscore bucket dot website
+38:35 - Dash back-end dot self underscore link
+38:38 - and now we have to also specify the host
+38:42 - rules so host underscore Rule and this
+38:45 - is where you can tell like where the
+38:48 - traffic should be pointed to depending
+38:50 - on what host the user is asking for so
+38:53 - let's say you hosted in this bucket you
+38:55 - had images and videos and you wanted the
+38:58 - load balancer to manage that the traffic
+39:01 - based on the type of content that is
+39:04 - being asked for so you would have
+39:05 - something like slash images as the path
+39:09 - for images and then slash videos for the
+39:12 - video content and this property lets you
+39:16 - define those rules
+39:18 - so for a host I'm gonna go with anything
+39:24 - needs to be in double quotes
+39:28 - and you also need a path matcher so path
+39:32 - matcher for all paths and then we also
+39:35 - have to Define that path matcher so path
+39:38 - matcher name is equal to all paths
+39:45 - and default service
+39:48 - is our backend website
+39:51 - so so the back end that we created with
+39:55 - CDN enabled we need that so
+39:58 - it will be dot website Dash backend dot
+40:02 - self underscore link so this is where
+40:05 - all the paths will lead to which is what
+40:07 - I want because we don't have any spec
+40:10 - anything specific being hosted on a
+40:12 - different path I just want everyone who
+40:14 - accesses
+40:17 - xyz.reshup.cloud to go to the index.html
+40:21 - that is being served by this backend so
+40:23 - there we go we have our URL map setup
+40:27 - now let's create our load balancer so
+40:32 - the resource that we want now is the
+40:35 - Google Google compute Target HTTP proxy
+40:43 - and let's name it website again and you
+40:46 - can name the resources accordingly as
+40:49 - you like or if there is a specific
+40:52 - naming convention that you follow so
+40:55 - let's go ahead and for the actual name
+40:58 - in gcp let's call it website Target
+41:01 - proxy
+41:06 - and then the URL map that we created we
+41:09 - want to use that for this target proxy
+41:11 - so it'll be Google underscore compute
+41:15 - underscore URL underscore map
+41:19 - dot website
+41:22 - yep so we named it website
+41:25 - with entire form so website dot self
+41:29 - underscore link
+41:32 - so that is the URL map we want to use
+41:34 - and now we can go ahead
+41:37 - with creating the forwarding rule for
+41:40 - our load balancer so let's make a
+41:43 - comment saying gcp
+41:46 - forwarding rule
+41:51 - and then let's create that resource
+42:06 - okay so we have the Google compute
+42:09 - Global forwarding rule
+42:11 - and let's name it default in terraform
+42:15 - for the name in gcp let's call it
+42:18 - website forwarding root load balancing
+42:22 - scheme is gonna be external since we
+42:25 - need an external load balancer that
+42:27 - listens to internet requests IP address
+42:30 - and this is where we will use the IP
+42:34 - address that we blocked on the top
+42:36 - remember we had
+42:38 - a resource that would reserve a static
+42:40 - external IP address for us so we'll use
+42:43 - that here
+42:46 - so we can refer to it in terraform by
+42:50 - doing Google compute underscore Global
+42:53 - underscore address dot website
+42:57 - underscore IP dot address so this will
+43:00 - link that reserved IP to our load
+43:03 - balancer and then the IP protocol we
+43:05 - have to Define is TCP so listen to that
+43:09 - Port range so in terms of best practices
+43:12 - you should be using Port 443 here
+43:16 - and you'll need an additional resource
+43:19 - in order to do that is the SSL
+43:22 - certificate which you can get from gcp
+43:25 - and I can show you the code bit that's
+43:28 - required to get the SSL certificate but
+43:31 - the SSL certificate creation process can
+43:35 - take some time and hence for the
+43:39 - purposes of this demo I will not be
+43:42 - including the SSL certificate resource
+43:45 - itself so that's why I'm using Port 80
+43:47 - so that we have a working website that
+43:50 - is being served by a load balancer on
+43:53 - our custom domain and Target as you can
+43:57 - guess will be our proxy website that we
+44:01 - created here so Google compute Target
+44:04 - HTTP proxy dot website dot self link so
+44:08 - we have all the resources that are
+44:11 - necessary to according to the
+44:14 - architecture diagram we had so we we
+44:17 - have the cloud storage account that we
+44:19 - already deployed and we saw we could
+44:21 - access the index.html
+44:24 - we have the load balancer now we have a
+44:27 - backend that is being served by the load
+44:30 - balancer which has CDN enabled and we
+44:34 - have the DNS that we configured in our
+44:37 - main.tf so let's save our main.tf go to
+44:41 - our terminal here and do terraform plan
+44:46 - we'll see that it plans on adding five
+44:48 - resources instead of eight or nine
+44:51 - because we already deployed the bucket
+44:54 - and we also uploaded the index.html in
+44:57 - the previous terraform apply so this is
+45:00 - where the state comes in state remembers
+45:02 - what all infrastructure has already been
+45:04 - deployed from our terraform code
+45:07 - and it will not redeploy that again or
+45:10 - if we changed the index.html to
+45:12 - something else it'll have detected that
+45:15 - change and would have said one to change
+45:17 - so that's the concept of terraform State
+45:21 - file let's go ahead and do terraform
+45:23 - apply to deploy our changes to Google
+45:26 - Cloud It'll ask you to enter yes if you
+45:29 - are willing to deploy these changes
+45:32 - let's go ahead and do that and wait for
+45:34 - these changes to be deployed
+45:45 - okay so we have the apply complete we
+45:50 - have added five resources now we can go
+45:53 - to our gcp account and look for those
+45:56 - resources so the first thing I would
+46:00 - love to check is the load balancer so
+46:02 - let's go to load balancer
+46:07 - there we go
+46:09 - so you can see it did create a website
+46:13 - Dash URL Dash map which is a classic
+46:16 - HTTP load balancer and has a back-end
+46:20 - bucket
+46:21 - let's go ahead and look at it so this
+46:24 - was the IP address that was reserved for
+46:27 - us the backend bucket is the example
+46:30 - website by rishab which we wanted and
+46:34 - the cloud CDN is enabled
+46:37 - so basically we have deployed all of the
+46:41 - parts of this architecture diagram now
+46:43 - what we have to do is see if we can
+46:46 - access our website by going to this IP
+46:50 - slash index.html
+46:53 - so I'm gonna paste that in the URL bar
+46:56 - here
+46:59 - and there we go we have our website that
+47:03 - I wanted to be deployed to gcp being
+47:06 - served by the load balancer the next
+47:09 - thing to test would be the domain name
+47:12 - so if we go back to terraform file and
+47:16 - look at our DNS record set it's website
+47:19 - Dot and then whatever the domain name I
+47:22 - had in gcp which is gcp.reaship.cloud
+47:27 - and I can show you here because we
+47:30 - should see in Cloud DNS we should see a
+47:34 - new record so if I open that up we have
+47:36 - website.gcp.reshup.cloud
+47:39 - and it is pointing to the IP address of
+47:43 - the load balancer that we just visited
+47:45 - so now terraform did it part where it
+47:49 - created that DNS record and pointed it
+47:52 - to the load balancer IP let's just test
+47:54 - it out so website.gcp dot reship.cloud
+47:58 - index.html
+48:01 - and there we go we have our website
+48:04 - being served on a custom domain with a
+48:07 - load balancer and the cloud CDN and
+48:10 - cloud storage as the bucket for our
+48:13 - project so that was
+48:16 - the project today we deployed all the
+48:19 - resources necessary using terraform to
+48:22 - gcp the one bit that I want to cover as
+48:27 - we're towards the end is is the https or
+48:31 - SSL certificate if you want to create
+48:34 - the external load balancer that's on
+48:37 - Port 443 which is the recommended
+48:40 - practice
+48:41 - so all of the code for this project is
+48:46 - available on GitHub if you ran into some
+48:49 - issue and I'll link the GitHub repo in
+48:52 - the description below but this is how
+48:54 - you can get the https certificate so you
+48:58 - have to create a resource called Google
+49:01 - compute managed SSL certificate and the
+49:04 - domain name for that which you can use
+49:06 - the previous resource we created
+49:09 - which was website.gcp dot reship.cloud
+49:13 - so I have gone ahead and did that but it
+49:17 - still needs some time for the SSL so to
+49:21 - be provisioned but you can see it is
+49:23 - getting an SSL certificate for
+49:27 - website.gcp.reship.cloud by which
+49:29 - my load balancer would be able to serve
+49:32 - traffic over Port 443 so the code will
+49:36 - be available on GitHub but that's the
+49:38 - way to get an SSL certificate and if you
+49:42 - want to clean up your resources you can
+49:45 - do that by doing terraform destroy which
+49:48 - will delete all the resources that we
+49:51 - just added so not only the five
+49:54 - resources but also the bucket that we
+49:57 - added in the beginning so you can see
+49:58 - the total resources to be destroyed are
+50:01 - nine so you can do that and clean up
+50:04 - your environment this also depends on
+50:07 - the state so that's how it knows that it
+50:09 - needs to delete nine resources but yeah
+50:13 - terraform destroys the command to clean
+50:15 - up those resources so yeah the important
+50:18 - commands for terraform are terraform
+50:20 - init which initializes your project
+50:23 - telephone plan which will tell you what
+50:26 - it plans on deploying terraform apply
+50:29 - which needs a yes argument for it to
+50:32 - deploy the infrastructure to your cloud
+50:34 - provider and then terraform to destroy
+50:37 - which also need a yes argument to
+50:40 - destroy all the infrastructure as it is
+50:43 - happening right now so all of our nine
+50:45 - resources have been destroyed one last
+50:48 - thing before you all go
+50:50 - wanted to mention is if you plan on
+50:53 - hosting your code on GitHub make sure
+50:57 - you have added a git ignore to the root
+51:00 - of your project and you have added the
+51:05 - service key to not be pushed to a public
+51:09 - GitHub repository because it's important
+51:11 - it's your API key that gives you access
+51:14 - to your Google Cloud account
+51:17 - so the template for the git ignore
+51:20 - includes some terraform State files too
+51:23 - and can be found on the same GitHub
+51:26 - repository that I've shared in the
+51:28 - description so you can copy that for
+51:31 - your own git ignore but make sure you
+51:34 - have added the service key to the bottom
+51:36 - of the git ignore so that was the
+51:38 - project we built today we learned
+51:41 - about terraform which is an
+51:44 - infrastructure as cold tool also great
+51:46 - principle in the devops helps you
+51:49 - automate all infrastructure things and
+51:52 - we also learned how you can host a
+51:55 - website in gcp by using load balancer
+51:59 - cloud storage and also how to have a
+52:02 - custom domain pointed to it I hope this
+52:05 - project helped you understand these
+52:06 - Concepts and I can't wait to see what
+52:09 - you build

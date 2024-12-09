@@ -1,0 +1,337 @@
+00:00 - In this video, Brandon will teach you about 10 common JavaScript security vulnerabilities
+00:06 - and how to protect against them.
+00:08 - Brandon is an engineer at Semgrep and teaches at Carnegie Mellon University.
+00:13 - To make it interesting and fun, it's in a quiz format.
+00:16 - He shows you a small code snippet and asks you to find the vulnerabilities.
+00:20 - Feel free to pause the video to see if you can answer.
+00:24 - After that, he talks about the vulnerabilities, explains how they are vulnerable, and provides
+00:29 - an example of remediation code.
+00:31 - Semgrep provided a grant to make this video possible.
+00:34 - Semgrep is an open source code security tool that can find vulnerabilities in your code
+00:39 - and your dependencies.
+00:41 - How much do you know about software security?
+00:44 - Think you've got what it takes to diagnose a real vulnerable application?
+00:48 - My name is Brandon.
+00:49 - I'm a program analysis engineer at a software security company called Semgrep.
+00:53 - In this video, I'll be showing you 10 examples of common vulnerabilities in real code.
+00:58 - And I'm here to challenge you on how many of them you can figure out.
+01:01 - Your goal will be to figure out both the kind of vulnerability demonstrated as well as how
+01:05 - it can be exploited.
+01:07 - I'll show you the code and then go over the answers with you afterwards.
+01:10 - Give it a try.
+01:11 - You might just learn something.
+01:14 - All right, without further ado, let's get started.
+01:16 - This first example I have for you is in JavaScript, and it's just rendering a simple web app.
+01:21 - This is known to be vulnerable.
+01:22 - I'll talk a little bit about what it does, and then I'll let you try to figure out why
+01:26 - it's vulnerable.
+01:27 - So this query params demo, it was demoing query parameters.
+01:31 - What's happening is that we're using this use query function we defined and using this
+01:35 - use location function that we imported from this React router DOM library.
+01:39 - And what that's doing is it's constructing this new object of the URL search params class.
+01:45 - Now, the point of this class is that it lets us interface with these things called query
+01:48 - parameters.
+01:50 - For instance, if our website that this web app was at was https colon slash slash example.com
+01:56 - and let's say slash settings or a query parameter is something that looks like this.
+02:01 - It's redirect equals foo.
+02:04 - What this means is that redirect is being is a query parameter whose value is foo.
+02:10 - And that means that when we click on this button over here, we're going to get that
+02:15 - query parameters value.
+02:16 - So we'll get the foo here and then clicking upon this return home button will end up making us
+02:22 - go to that whatever that value is.
+02:24 - OK, so, for instance, if this was our overall URL of the website that we were at, then that
+02:30 - means that clicking on this return home button would make us go to this URL.
+02:34 - In other words, going home.
+02:37 - So I'll let you think a little bit about why this is vulnerable,
+02:40 - but we'll come back in a second and talk about it.
+02:43 - All right, let's get into it.
+02:44 - So this code is vulnerable because of a vulnerability called cross-site scripting.
+02:48 - Cross-site scripting is when a malicious attacker tries to get code to execute on
+02:52 - your machine through your browser.
+02:54 - They try to get a script to run cross-site.
+02:56 - So in this particular example, this has to do with this query parameters thing I was talking
+03:01 - about earlier.
+03:02 - In particular, something you need to know about is this JavaScript protocol.
+03:06 - The JavaScript protocol means that when you visit a URL that looks like JavaScript colon slash slash
+03:12 - everything after the slash slash is interpreted as JavaScript code and executed within your
+03:17 - browser.
+03:18 - That means that if I were to write do something bad as a function call here,
+03:22 - if I visited this URL, it would try to execute this do something bad function,
+03:26 - which potentially could be unsafe because it could execute arbitrary code.
+03:31 - Now, in particular, if we combine it with this query parameter idea,
+03:34 - we know that for this code, for this website, if I click the return home button,
+03:39 - it'll take this value from the redirect query parameter and go to it.
+03:43 - In particular, though, we might actually take this and put it in place of that query
+03:49 - parameters value, meaning that if this were our URL,
+03:52 - if we clicked on this button, instead of visiting through or home or whatever,
+03:57 - we would visit this, which executes the do something bad or any kind of arbitrary code.
+04:02 - That means that someone might give us a malicious link that could execute
+04:05 - arbitrary code in our machine across a scripting attack.
+04:09 - To fix this, what we need to do is we need to sanitize the URL or validate it to make
+04:14 - sure that we're not going to run into this JavaScript protocol attack.
+04:17 - So, what we're going to do is we're going to do that by writing this validate URL function,
+04:22 - and we're going to take in this URL.
+04:24 - So, what we're going to do is first, we're going to create a new URL object
+04:29 - using this built-in URL class.
+04:31 - And what this will do is it'll give us access to some other information about this URL.
+04:35 - In particular, we want to know what its protocol is.
+04:38 - We know that if it's a JavaScript protocol, that's pretty unsafe,
+04:42 - but also in particular, HTTPS is okay.
+04:45 - So, let's say that we're going to condition on whether or not this user supplied URL object,
+04:50 - whether or not its protocol is equal to HTTPS.
+04:54 - And if it is, then we know we're safe.
+04:56 - In that case, we're just going to return the original URL we were given
+04:59 - because we know that it's not going to cause an attack.
+05:02 - Otherwise, if we're not, then let's just say we return slash,
+05:06 - which will essentially make us go home.
+05:08 - And then once we have this validate URL function,
+05:10 - we're going to pass in the value that we got from the query parameter into it
+05:14 - so that we can validate the URL
+05:16 - and make sure that we don't fall prey to a cross-site scripting attack.
+05:20 - And that's all.
+05:23 - Okay, let's get into the second example.
+05:25 - So, this is another JavaScript program,
+05:27 - and it's just defining a simple web app that listens for get requests.
+05:31 - It's going to be listening on this endpoint slash API slash data.
+05:34 - So, if we had our previous website as before, example.com slash API slash data,
+05:40 - it's listening to these requests.
+05:41 - And like the previous example, it's using query parameters.
+05:45 - In particular, we're looking at this URL query parameter, which would look like this.
+05:50 - So, in this example, if we were to visit this URL,
+05:53 - the foo would be what gets assigned to this URL const.
+05:57 - And then what happens is the web app will then fetch the data from that URL
+06:01 - and then return it, turn it to a JSON and then return it back to the user.
+06:05 - Now, going along with this, in this hypothetical example,
+06:09 - we have some kind of like internal website where we're storing our data.
+06:13 - And there's some publicly facing data.
+06:15 - Like we have this countries.json file that is publicly facing,
+06:20 - and there's also a states.json publicly facing data.
+06:25 - So, if we were to visit these two URLs, what would happen is that
+06:29 - the web app would then read in the query parameter and then try to fetch the data
+06:33 - from this internal states.json or countries.json.
+06:36 - All right, try to figure out why it's vulnerable,
+06:39 - and then we'll come back and talk about it in a second.
+06:43 - Okay, let's do it.
+06:44 - So, this code is vulnerable because of a vulnerability called
+06:47 - server-side request forgery or SSRF for short.
+06:51 - What that means is that an attacker tries to dupe a server into doing dirty work for them
+06:56 - by using permissions that the attacker wouldn't ordinarily have,
+06:59 - by getting the server to execute some kind of query
+07:02 - that the attacker wouldn't be able to normally do.
+07:05 - So, in this instance, I talked about how we have this setup that
+07:08 - this internal website has some publicly available data
+07:10 - that we're trying to scrape using this web app.
+07:13 - But it's not the case necessarily that all of the data is public.
+07:17 - In fact, there might be some kind of confidential.json on the server.
+07:21 - In which case, if we visited this URL, we would then get this URL from the query parameter,
+07:28 - and this server, this web app, would then fetch the data from this confidential.json.
+07:33 - And it might be able to do it because the server has more permissions in this case.
+07:37 - So, we want to make sure that we only visit the stuff that we're allowed to, this public data,
+07:42 - without being able to do an SSRF attack to get confidential data we're not supposed to see.
+07:47 - So, to remedy this, something we can do is we can make a const of allowed URLs.
+07:53 - And this is just going to be a list of two things.
+07:55 - The two, let's say, publicly available data JSONs that we want to see.
+08:00 - So, let's put both of them in there, states.json.
+08:06 - And then what we want to do is we want to make sure that this URL,
+08:09 - whatever we're going to be fetching from, is not not in the allowed list.
+08:14 - So, we're going to say that if it's not the case that allowed URLs includes this URL,
+08:20 - well, then we have a problem.
+08:21 - It's not in our allowed URLs.
+08:23 - So, what we're going to do is we're going to do something like we did down here with these
+08:26 - statuses, we're going to return res.status 400 to signal there's an error.
+08:31 - And we're going to say, error, we got a bad URL, because we don't want to visit this URL
+08:38 - if it's not allowed explicitly.
+08:40 - We don't want the server to make that mistake.
+08:42 - And just by doing that, we make sure that we only visit the public data that we're allowed to
+08:47 - without the server being able to give away this confidential data that we wouldn't want to otherwise.
+08:52 - And that's how we prevent an SSRF attack.
+08:54 - All right, let's talk about the next example.
+08:58 - So, in this example, suppose that we have some kind of check token function.
+09:01 - Basically, we have some user supplied information specifying some kind of account.
+09:06 - And we want to check whether or not the user supplied information
+09:08 - has some kind of secret token that matches the account's secret token that's on record.
+09:13 - And we're going to use triple equals and return true if it's true.
+09:16 - Otherwise, we'll return false.
+09:18 - Okay, that's it.
+09:20 - Think about why it's vulnerable.
+09:21 - And we'll come back and talk about it in a second.
+09:23 - Okay, this code is vulnerable because of something called a timing attack.
+09:27 - Basically, what happens is that in JavaScript, when comparing two strings,
+09:31 - this triple equals function is going to just iterate through each character and compare them.
+09:35 - And if they don't match, it'll just return false.
+09:39 - So, in particular, suppose that the account secret token was like ABC.
+09:43 - Well, then if the token that we supply is like D, we look at A, we look at D, we compare them,
+09:50 - we see that it's false, and we return no. But what if it was a little bit more similar,
+09:54 - like it was AE? Well, then triple equals would look at both A's.
+09:58 - It would say, okay, looks good. It would move on to B and E.
+10:01 - Oh, they're not the same. It would return false.
+10:04 - But if you pay attention, you notice that it takes a little bit longer before it gets
+10:09 - to returning false in the second case because the prefix, this A and A, were actually the same.
+10:14 - That means that if a malevolent attacker was sitting around with their stopwatch going,
+10:18 - and they had all the time in the world, they could brute force a bunch of strings to try
+10:22 - and see which strings take a little bit longer than others, at which point it would figure out
+10:29 - that it was getting closer and closer to the real token that it wouldn't otherwise know,
+10:33 - a timing attack. So, what we need to do is we want to make sure that that won't happen.
+10:38 - We want to make sure that we don't give away information about the token based on how fast
+10:43 - we return false. So, to fix this, what we'll do is we'll import crypto from this crypto package.
+10:49 - And instead of using triple equals, we're going to use a crypto equality function that is
+10:55 - a little less transparent about the timing. So, this crypto timing safe equal function is going
+11:01 - to be the same as our triple equals, but it'll be better about not giving away how similar the
+11:06 - inputs were. And just by doing that simple one line, two line change, we prevent us timing attack.
+11:11 - All right, example number four. So, in this example, we've got a validate token function
+11:17 - and it's taking an HTTP request. What's happening is that we're checking the header,
+11:22 - the header at this key of token, and we're going to pass it into this buffer.from function,
+11:27 - which decodes it from this basic C4 encoding. And then what we're going to do is we also have
+11:32 - this sum object thing, which is let's say empty. We want to check whether or not this token that
+11:37 - we pass into the server is a member of this sum object. But right now it's empty. So,
+11:43 - this should always be false. And then if it were to be in it, we would send true.
+11:48 - But because it's empty, we should always send false in this case. But I'll tell you that
+11:53 - there's a vulnerability where we can get it to sometimes send true. All right,
+11:58 - I'll let you think about it. We'll come back and talk about what the vulnerability is real soon.
+12:02 - All right, the vulnerability here has to do with prototype pollution in JavaScript. The idea is
+12:10 - that JavaScript is a prototype based every object has a prototype, which is a parent class that it
+12:16 - inherits its methods from. Now the idea is that if you if you index in with a string underscore
+12:22 - underscore proto, it'll try and fetch that prototype object for you. And even though the
+12:27 - sum object is empty, it does have a prototype because every object has a prototype. So if
+12:33 - you manage to pass in the string underscore underscore proto, what will happen is that this
+12:37 - sum object indexed into it is going to fetch that prototype object, it'll end together with the
+12:42 - proto string. And then because those are truthy, this if will actually evaluate to true, and then
+12:48 - we'll send true, even though it should have been false, even because we should have been looking
+12:52 - for the token in the object, and the token in the object is empty, so it shouldn't have had the
+12:56 - token. So to protect against this, we want to make sure that instead of indexing in with this token,
+13:02 - we want to make sure that we only look at the properties of the object in question.
+13:07 - And it turns out we can do that using this has own property function. So we use this method,
+13:13 - we pass in the token and then instead of even if we were to pass in this underscore underscore proto
+13:18 - string, it's not going to go and fetch the proto, it's going to go and just check whether or not
+13:23 - that property exists in the object. And because the object is empty, this will never evaluate to
+13:28 - true, and then we'll never send true. And that's how we prevent the prototype pollution attack.
+13:34 - Alright, example number five. So this is another JavaScript program that is just a simple app
+13:39 - that's taking in post requests from slash user. What we're doing is we're looking inside of a
+13:44 - database of users to try and find users whose username matches the thing that's in the request.
+13:50 - If we find it, then we just send it back. Otherwise, we're going to send an error message.
+13:55 - Alright, think about why this one's insecure, and then come back when you're done.
+13:59 - Alright, so this code is vulnerable because of a vulnerability called a NoSQL injection,
+14:04 - which is basically like a SQL injection, but not limited to just SQL queries. In this case,
+14:09 - the user could possibly enter a query that could allow them to access things that they shouldn't.
+14:13 - In particular, what's happening is we're finding every entry, every document in our users
+14:18 - that has this username matching rec.body.username. But it's not guaranteed that rec.body.username
+14:24 - needs to be a string. In fact, what it might be is it might be this object here when we have
+14:29 - $ne to null. And what this means is this is a special MongoDB operator, where $ne means
+14:38 - not equal, not equal to null. In essence, if we were to try and find with this query instead,
+14:44 - we would find every single instance of a user in our database that had a username where the
+14:50 - username was set. This is really bad, because we're not just finding the username, we're finding
+14:55 - things by the username, but finding all the data associated to it within our database. That means
+15:01 - that this username could be paired with all sorts of sensitive data, like credit card number, like
+15:05 - social security number, like date of birth, stuff that we're not supposed to see. So what we want
+15:10 - to do is make sure that someone can't abuse this database by putting in some malformed query,
+15:16 - something that's not a string, essentially. So what we can do is we can do if type of rec.body.username,
+15:23 - and we can case some other that's not string. And if it's not a string, then it could be one of
+15:28 - this MongoDB operator stuff that causes them to scrape data that they shouldn't be able to see,
+15:34 - in which case, what we'll do is we'll return the status 400 on them, and then we'll say,
+15:38 - we'll return a message that says, this is a bad username or an invalid username. This way,
+15:44 - people can't access stuff that they don't want, and we're only constraining requests that are
+15:49 - actually usernames that they want to look up. This way, we prevent the NoSQL injection attack.
+15:55 - All right, challenge six. So we've got another JavaScript program here, and we've got an app
+16:00 - taking in post requests at slash validate email. Now, what we've got here is assume that this
+16:05 - regex is a gigantically, incredibly complex regex that happens to validate emails. And what we're
+16:12 - doing is we're taking in this rec.body.email in the request, and we're checking for whether or
+16:17 - not it passes against this regular expression. If it doesn't, then we'll say invalid email and
+16:22 - complain, and otherwise, we'll send back valid as true. Okay? All right, try to figure out why this
+16:28 - code is vulnerable, and then we'll talk about it in a second. All right, let's talk about it.
+16:34 - So this code is insecure because of an attack called a redos attack, or regular expression
+16:39 - denial of service. What this means is that this regular expression is really complicated. Don't
+16:44 - worry too much about what it does, but it might take a really long time to validate certain inputs
+16:49 - because the regular expression has to try out a bunch of options. It might take a very long time,
+16:53 - depending on what the input that is being fed into it is. And because the input is under the
+16:58 - control of the person making the request, this is not within our control and could potentially be
+17:04 - crafted by some malicious attacker leading to denial of service, because we might hang on
+17:08 - certain inputs. So instead of rolling your own regular expression and doing this whole thing,
+17:13 - what we can instead do is we could say we could use this validator library, which is very efficient.
+17:19 - And then what we'll do instead is of instead of using this email regex test, we're going to say,
+17:25 - if not validator dot is email, which is a function that already exists. And then this way, we can
+17:31 - test for whether or not it adheres to the email structure, both without needing to roll our own
+17:35 - regex, and also while ensuring that we can do so relatively efficiently and prevent these denial
+17:41 - of service attacks. All right, example number seven. Now, this one's actually not in JavaScript,
+17:46 - but it's a Dockerfile that's running in the root directory of some node.js application. And what
+17:52 - this Dockerfile is doing is it's going to create an app directory. It'll copy the package.json,
+17:57 - describing the app dependencies to that directory. It'll set the user privileges to root,
+18:02 - run npm install, copy the source of the app to that directory, and then run the app on port 8080.
+18:10 - Okay, think about why this code is vulnerable, and then we'll come back to it in a little bit.
+18:15 - Okay, so this code is vulnerable because of a potential security misconfiguration.
+18:20 - This happens because when we set the user permissions, we set them to root,
+18:24 - which means administrator level privileges on this whole Docker image. This is really bad
+18:29 - because something that happens afterwards, like npm install, or even running the server itself,
+18:34 - we could be installing some kind of malicious package, or we could have a vulnerability
+18:38 - within the app itself. If this happens, that means that because this whole Docker image has
+18:43 - these administrator level permissions, this could potentially have disastrous consequences
+18:48 - for the machine that we're running on. We don't want to give away administrator privileges
+18:52 - willy-nilly. So what we can do is instead of doing that, let's run with just user level
+18:57 - permissions so that we don't have the potential to wreck everything, if there's something
+19:02 - malicious going on here. And by doing this, we prevent the security misconfiguration vulnerability.
+19:08 - Okay, so this code is vulnerable because of hard coded credentials. We see here there's
+19:13 - this const secret that we have here, my super duper secret key, it is pretty secret, but not
+19:18 - secret enough, because we have it in our app source. In general, it's not a great idea to hard
+19:23 - code secrets like this inside of your application code. If you were giving up the source, you'd be
+19:28 - able to see it. If you were giving out even a compiled version, it'd be quite possible to
+19:32 - reverse engineer the precise value, which means that your secret would get leaked, which is really,
+19:37 - really bad. So what you want to do is in general, it's a better practice to use something like
+19:42 - environment variables. So we could write something like process dot n dot JWT token, which means
+19:48 - that we're reading the environment variable JWT token to find the identity of the secret,
+19:53 - but it's not within the app source itself. This is both more secure for the reasons I mentioned
+19:58 - earlier, as well as it makes it easier to swap out the token if we so need to, for instance,
+20:03 - if we were to compromise our previous token. So just by using something like environment variables,
+20:08 - we no longer have hard coded credentials. And this is no longer a security vulnerability.
+20:15 - All right, example nine, we've got another JavaScript app that's taking in post requests
+20:19 - at a slash sign up endpoint. And what we're doing is we're looking in a database of users
+20:24 - to find a user whose username matches the username given in the request. And then what we do is if
+20:30 - there's an error, we do some error handling. But otherwise, if we don't find that user with that
+20:35 - username, then we just insert the rec dot body as a new user. And then we return success,
+20:40 - try to figure out why this code is vulnerable. And then we'll come back in a second.
+20:45 - Alright, so this code is vulnerable because of something called a mass assignment attack.
+20:49 - Mass assignment is when user input might be able to set properties on an object that it shouldn't
+20:54 - be able to. Now, we the reason why this happens is because we're looking up usernames by the
+20:59 - rec dot body dot username. But if we don't find it, we insert the entire rec dot body object.
+21:05 - Now, suppose that our database has a few things in it associated to a username. It's not just a
+21:10 - username, but also let's say a password, an email and an is admin flag. Now when we insert the entire
+21:17 - rec dot body, this could potentially be an object that sets this is admin flag that should not be
+21:23 - able to be set by just anybody, nobody should be able to just make themselves an admin. But because
+21:28 - we insert the entire rec dot body, we don't have control over this. And someone could specify all
+21:33 - these fields together. So what we'll do is instead of inserting the entire rec dot body,
+21:38 - we'll make a new object that only sets the things that we know are safe. So we'll set username to
+21:43 - be string of rec dot body dot username, we'll set email to be string of rec dot body dot email.
+21:50 - And let's also say that we set password to be string of rec dot body dot password.
+21:55 - This is cool, but also it's probably not a good idea for us to store the password in our database
+22:02 - in plain text. So what we can do also is we can do import encrypt password. And supposedly just
+22:09 - have this dot slash utils, slash passwords thing lying around. And we have this encrypt password
+22:14 - method. And the next thing we'll do is instead of storing the password as a string, we're just
+22:19 - going to call encrypt password on it. This way, we prevent ourselves from the mass assignment
+22:25 - attack. But also we encrypt the password so that it's not stored in our database in plain text.
+22:30 - And just like that, we prevent the security vulnerability.
+22:36 - All right, by example. So here we've got this web app that's taking post requests,
+22:41 - and they're taking a generate password reset URL link. What's happening here is that we're trying
+22:46 - to generate a password reset for some kind of customer for some web app. So assuming the
+22:51 - customer exists, we find the customer using the email, and then we get the password reset token
+22:57 - via the customer's ID. What then happens is that we generate this reset password URL using this
+23:03 - rep dot header dot host. Using password reset, we just make the URL out of string interpolation,
+23:09 - and then we send back the URL in a JSON object. Try to figure out why this one's vulnerable,
+23:15 - and then we'll talk about it in a second. Okay, so this code is vulnerable because of
+23:20 - a host header injection attack. The reason why this might happen is we use this rec dot header
+23:26 - of host. So we use the host header basically as one of the parameters to this URL. But this is
+23:32 - actually under control of the person making the request in possible control of the attacker. By
+23:37 - convention, this is usually just going to be something that's safe, but this could be changed
+23:42 - by the person who's making the request. So in general, it's not a great idea to use the host
+23:47 - header, because this could be used to send back a malicious link that then when clicked on could
+23:52 - send the user anywhere. So best not to use this host header. So what we want to do is we want to
+23:58 - use something that's more robust than just using the host header of the requests we're getting
+24:02 - from the user. So suppose that we have this process dot m dot host URL environment variable
+24:08 - lying around, it would be a lot safer if in the server in the web app, we were referencing this
+24:13 - host URL instead of looking at the host header given to us by the request itself. By doing just
+24:19 - the simple step, we prevent the host header injection because we're no longer using a
+24:24 - potentially malicious source of data. Alright, that's it. Alright, that's the end of the video.
+24:31 - I hope you managed to find all 10 vulnerabilities, but definitely leave a comment below on how many
+24:36 - of them you managed to figure out. If you want more resources on how to learn about security,
+24:40 - they'll be linked in the description below. But definitely check out some of the other
+24:44 - videos that bring code camp has their excellent resources for learning more about computer
+24:48 - science. Security is something that's becoming more and more important by the day. So taking
+24:53 - the time to educate yourself now can pay off a lot in the future. Thanks so much for watching
+24:58 - the video. I hope you learned something more about security and till next time.

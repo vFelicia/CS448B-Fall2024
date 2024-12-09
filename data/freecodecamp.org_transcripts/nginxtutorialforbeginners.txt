@@ -1,0 +1,445 @@
+00:00 - NGINX is an open source web server software used for reverse proxy, load balancing, and caching.
+00:06 - It's important to understand, especially if you're a backend developer. You'll learn all about NGINX
+00:12 - in this crash course from senior developer Laith Harb. Hello everybody, welcome back to the channel
+00:18 - in this video. What we're going to do is we're going to cover NGINX in great, great detail.
+00:25 - Now let's actually go ahead and begin by discussing what exactly is NGINX and what its purpose is.
+00:33 - And I think the best way to show this is to show an example where NGINX is being used. So what I'm
+00:40 - going to do is I'm going to go to my browser right over here, and I'm going to go to Airbnb.ca.
+00:46 - Now as soon as I go to Airbnb.ca, you can see that my browser is served a bunch of different
+00:53 - content. You can see there's content here. We have this huge image right over here. We have this image,
+00:59 - et cetera, et cetera. Now the question is, is how did my browser get all of this content?
+01:07 - Well, in order to understand this, we can actually dissect this by inspecting it,
+01:13 - right click, inspect, and then looking at the network tabs right over here. So what I'm going
+01:19 - to do is I'm going to refresh, and as soon as I refresh, you can see here I get bombarded with
+01:24 - a bunch of different networks. So these are network requests that were made from the browser
+01:30 - to a particular server in order to get content. Now I'm going to go ahead and click on the very
+01:37 - first network request just to get a little bit more information about it. So you can see here,
+01:42 - this is the URL that was made to a particular server. You can get a bunch of more information,
+01:47 - but I want to go over here, scroll down a little bit, and what I want to do is I want to go to this
+01:56 - server section right over here. So you can see here the server is actually Nginx. So Nginx was the
+02:06 - one that served us content, served us this web content to our browser. And that's why Nginx is
+02:16 - very typically known as a web server. It is a server that is going to serve web content
+02:24 - to our browser. Now that's not particularly accurate because it has another definition.
+02:30 - We'll talk about that later, but it is typically used and treated as a web server. So again,
+02:37 - a server that is going to serve us web content to our browser. Now I hope that makes sense,
+02:43 - but if it doesn't, I actually have a bunch of diagrams that I would like to show you.
+02:49 - So let's actually go ahead and go through this example, but in diagram format. So over here,
+02:53 - let's say I am on my computer and I go to Airbnb.ca. Now, typically what we would think would happen
+03:01 - is we make a request over the internet to a server that Airbnb is hosting. I'm pretty sure
+03:08 - Airbnb uses AWS. So let's say there is a server on AWS that it is hosting. And once we make a
+03:16 - request is going to process that request and send back a response for that web content, whether it's
+03:23 - the image, the content, et cetera. Now you might be thinking where in the world does Nginx fit in
+03:28 - here? I don't see Nginx at all. Well, right here, there is no Nginx, but this is typically not how
+03:35 - web content is served. Typically it is served something like this. So instead of when I go to
+03:43 - Airbnb.com, instead of making a request directly to the, to the Airbnb server, I make a request
+03:52 - to Nginx, an Nginx server. So the browser makes the request to the Nginx server. And then the Nginx
+04:01 - server makes a request to the Airbnb server. The Airbnb server responds to the Nginx server,
+04:09 - gives all the content. And then Nginx, what it does is it sends back the content to the browser.
+04:16 - Now, if you're familiar with infrastructure and architecture, this is actually known as a reverse
+04:23 - proxy. Again, treated as a web server, but the technical term for this is a reverse proxy. Now
+04:30 - you might be thinking, why in the world do I even want this middleman here? This just seems like a
+04:34 - whole lot of more work. Why can't I just make a request directly to the Airbnb server? Well,
+04:42 - this wouldn't be a bad idea if we weren't getting a lot of traffic to our application. However,
+04:50 - if we get a lot of traffic, what we need to do is we need to somehow increase the number of servers
+04:56 - that we have inside of our AWS account. Now, the reason for this is because Airbnb is very popular,
+05:06 - has millions and millions of users using it all the time. If you only had one server,
+05:12 - then this over here is going to get so many requests that it's going to reach a bottleneck.
+05:17 - And eventually the latency is going to be extremely low. So what we need to do is we just need to
+05:23 - increase the number of servers that we have. Now, by increasing the number of servers,
+05:28 - this actually presents another problem. Well, now what we need to do is somehow go to this
+05:35 - server one time, go to this server another time, go to this server another time. So how do we do
+05:41 - that? Well, this is where Nginx comes into place. So over here, the client only sends the request
+05:49 - to Nginx. We have one instance of Nginx right over here, and Nginx is responsible for forwarding
+05:57 - forwarding this request to a available server. Now, this is actually known as a load balancer. So
+06:04 - Nginx can act as a load balancer. So for example, right now we make a request to Nginx, Nginx makes
+06:11 - a request to this server, gets the response, sends it back. Maybe the next time we make a request,
+06:18 - another person makes a request, it makes a request to Nginx. See, we're still just making a request
+06:23 - to Nginx. But then this time Nginx is making a request to this server. And then it's getting
+06:27 - the response and sending it back. Now the client doesn't have to do all this, it just makes a
+06:32 - request to this load balancer. And then it's just going to get the response. And this is very good
+06:37 - for scaling your application. Okay, so I hope you can see this is just one really, really important
+06:45 - use case. You can see Nginx can act as a load balancer. Now another very important use case
+06:53 - is encryption. So if you ever go to a website, you can either see that it is either HTTP or HTTPS.
+07:01 - So if it's HTTPS, that means that the server is encrypting the data that is being sent and
+07:08 - returned. So it's encrypting and decrypting this data. And that's the way that we get HTTPS,
+07:16 - and we have a secure server. Now this actually presents a problem when we have multiple servers,
+07:22 - because if you have multiple servers, we're going to have to encrypt every single one.
+07:26 - Well, that's why we would probably want to use Nginx. Instead of encrypting every single,
+07:33 - instead of having this encryption and decryption process in every single server,
+07:37 - you can just have it right over here in Nginx. And then and then we can make a request, it can be
+07:43 - encrypted, send it to the servers, get it back, decrypt it back over here. And you can see this,
+07:48 - this is way easier to set up HTTPS. Now there's a bunch of other methods or a bunch of bunch of
+07:55 - other good reasons why you'd want to use Nginx and reverse proxy in general. But those were the two
+08:00 - most important, you can actually look up why you would want to use a reverse proxy, you can just
+08:05 - search it up. And there's a bunch of different content, but I hope this diagram illustrates
+08:11 - that. Now with that being said, let's just go ahead and get started with actually coding out
+08:16 - Nginx. In this section of the course, what we're going to do is install Nginx on our local machine
+08:22 - so we can get started and work with it. Now I'm going to show you how to install Nginx on a Mac.
+08:30 - However, if you are on a Windows device, it is not that difficult, I will leave a link in the
+08:36 - description as to how to install it. Now if you're on a Mac, let's go ahead and install it. So in
+08:42 - order to do this, what we're going to need to do is open up our terminal. And very simply just do
+08:48 - brew install Nginx. Now in order to do this, you're going to need to have Homebrew installed,
+08:54 - which is the package manager, I'll have a link in the description as to how to install this again,
+08:59 - relatively simple. Now I already did this. So you go ahead and do it if you haven't already. Now
+09:05 - what this is going to do is is going to create an Nginx directory inside of the user slash local
+09:11 - slash etc file. So over here, we're going to have an Nginx directory. And if you do an LS and inspect
+09:18 - what's inside it, you can see we have a bunch of different files and folders. So to open this up in
+09:23 - VS code, I'm just going to do code dot, let's go over here. And right away, you can see we have
+09:30 - again, a server's directory. And then we also have a bunch of different files. Now specifically,
+09:37 - what we're going to be working on is just one file. And that is this file right over here,
+09:42 - the nginx.conf, which is the configuration file for configuring nginx, the reverse proxy. So this
+09:50 - is where we're going to do a lot of the configuration where it's going to reach out to a particular
+09:53 - server, and then serve us our web content. So this is what we're going to be editing. And in the
+10:00 - future section, I'm going to go ahead and just completely remove everything and start from
+10:04 - scratch. But for now, what I want to do is they want to start up nginx. To start up nginx, all you
+10:10 - have to do is say nginx like so. And then let's go ahead over here to our browser. And let's go to
+10:19 - localhost 880. And right away, you can see that we get this file right over here. So what's happening
+10:26 - is we're making a request our browser, once we go to localhost 880, it's making a request to nginx,
+10:33 - nginx is then going ahead and serving this content. And of course, we can always see this by looking
+10:39 - at the network tabs. So let's go over here, let's do a quick refresh. And then you can see here that
+10:46 - we're making this particular request, you can see that the server is indeed nginx. Okay, so this is
+10:53 - looking quite good. Now let's go ahead and start actually returning some other files and folders
+11:00 - and images that we want for our application. Now that we have installed nginx, and we are running
+11:08 - it locally on our machine, let's just talk about some of the important nginx terminology. So in
+11:15 - order to do this, let's go to our nginx.conf file. And let's go ahead and explore exactly what is
+11:21 - going on here. Now there's quite a bit and this might be confusing at first. But if you look
+11:26 - around, you can see that there are two distinct things that exist inside of this file. So the
+11:34 - first thing that exists is something that looks like a key value pair. So right over here we have
+11:40 - the key, in this case, the key is worker underscore processes. And then the value is one, you can see
+11:46 - here, we also have another key include, then we have the value of mime dot types, over here,
+11:53 - default type as the key, and then we have this value right over here. So you can see that we
+11:58 - have a bunch of these things. But we also have this other thing right over here, this events block,
+12:05 - so this block of code, and then within it, we have those key value pairs. So instead of referring to
+12:12 - them as things, let's actually go ahead and define exactly what these are. So this right here, these
+12:19 - key value pairs, they are known as directives. So over here, we have the key, we have the value,
+12:26 - this right here is a directive, this right here is a directive, this is a directive, this is a
+12:31 - directive. Now these blocks of code, so with the curly braces, well, these are known as the context,
+12:40 - and within the context, you can have directives for that specific context. Now right over here,
+12:46 - we have the HTTP context. And what that is going to do is define our HTTP server. And then within
+12:52 - this HTTP context, we have directives that are going to define it. All right, so that's pretty
+12:58 - much all it is that we need to know in terms of the definition, let's actually go ahead and just
+13:04 - completely remove everything right in here. And we're going to start from scratch. All right,
+13:10 - my good friends, now that we have that all set up, let's talk about exactly how we can start serving
+13:16 - content to our web page. Specifically, we're going to work on serving static content. And what I mean
+13:23 - by static content are simple files like HTML files, CSS files and images to our web browser.
+13:31 - So let's actually go ahead and go to our terminal, I'm going to move into my desktop, I'm going to
+13:37 - make a new directory. So with miktor, I'm going to say my site, I'm going to move into my site,
+13:44 - and I'm going to say code dots to open up a VS code instance. So let's go over here. And I'm
+13:52 - going to go ahead and open that up. And then right in here, I'm going to create an index dot HTML
+13:58 - file. And I'm going to add an HTML tag, let me zoom in here, HTML tag, and then I'm going to add
+14:06 - a body. And then I'm going to add an h1. And then in here, I'm going to say Hello, my friends,
+14:14 - I am served from nginx. Alright, so this is looking great. So now what I want to do is somehow configure
+14:26 - nginx to serve this index dot HTML file whenever I go to localhost 8080. So how are we going to do
+14:36 - this? Well, of course, what we need to do is we need to define some context as well as directives.
+14:43 - Now, because what we're doing is we're dealing with HTTP responses, what we need is we need
+14:49 - an HTTP context, we also need an events context that we're not going to use, we just need to define
+14:56 - it for nginx configuration to work. So right over here, what we're going to do right inside of the
+15:03 - HTTP, we're going to define another context, and this is going to be the server. And then inside
+15:10 - of the server, this is where we're going to define a bunch of different directives that are going to
+15:15 - configure this nginx server. So the first thing that we want to do is we want to have the listen
+15:22 - directive, we want to say that we want to listen on port 8080. Now the next directive is going to
+15:30 - be is the root directive. And this is going to be a file path that is going to contain a bunch of
+15:38 - different files that we want to serve when we go to this port right over here. Now, this path is
+15:47 - going to be well, this folder right over here, this my sites folder. So what we can actually do here
+15:55 - is we can go here, copy the path. And then we can say root is this path, and we can remove the index
+16:02 - dot HTML and just have a semi colon. So we're saying once we go right over here to this port,
+16:10 - I want to serve all the files from this route. Now what it's going to do is it's going to look
+16:15 - for an index dot HTML and serve it once we hit this path. So that's pretty much all it is that
+16:22 - we need to do in order to well, serve this static HTML. So let's go ahead and save that. Now if we
+16:29 - go back to localhost 880, and we do a refresh, you can see that we're still getting this default. So
+16:36 - it's not serving our HTML. And that's because what we need to do is we need to reload nginx with this
+16:43 - new configuration. This is relatively easy thing to do, you can go ahead and open up any terminal,
+16:48 - I'm using the integrated VS code terminal, and I'm going to say nginx dash s, and then reload.
+16:56 - So that's pretty much all it is that you need to do. And now if you click refresh, you can see that
+17:01 - now nginx is serving this wonderful, beautifully designed static HTML file. So I hope this makes
+17:12 - sense. We have these directives, and then right in the server, we're saying, hey, we want to listen
+17:17 - on localhost 880. And this is what we want to serve. So we this is this is where the file that
+17:24 - we want to serve that we want to serve lives. In this video, what we're going to do is learn
+17:31 - exactly about mime types. Now to explain what this is, what I'm going to do is I'm going to go over
+17:37 - here to the website. And let's say I'm sick and tired of this plain old website, what I need
+17:44 - are some styles. So I'm going to go over here, I'm going to add a styles dot CSS file. And then
+17:52 - in here, I want to style the h1, I wanted to have a background color pink, I also wanted to have
+17:59 - a color of aqua, like so. And then over here, what we're going to do is we're going to rework this so
+18:07 - we can actually go ahead and use this style. So at the very top, what I want to do is I want to say
+18:14 - doc type HTML. And then over here, inside of the HTML tag, I'm going to add a head. And then I'm
+18:24 - going to add meta. I'm over here going to say char set is equal to UTF dash eight. Let's also
+18:35 - add a title might as well just saying my nginx project. And then lastly, what I'm going to do
+18:47 - is I'm going to add a link. And this is going to link the styles dot CSS. All right, so let's go
+18:55 - ahead and refresh. And now if I go here, you can see that the styles actually isn't being applied.
+19:02 - Now, why is that? Is it not being served by nginx? Well, let's go ahead and inspect. And you can see
+19:12 - if we go over here to the console, you can see that well, it doesn't seem as though it is served.
+19:19 - However, if I go to the network tab, and I were to refresh, let's go ahead and refresh this. After
+19:29 - a few more reloading, you can see that the styles dot CSS is actually served to the web page. So why
+19:36 - do we not see the styles inside of this HTML file? Well, the reason for this, and we can actually
+19:43 - explore this when we click on it, let's go ahead and click on the styles dot CSS. I'm going to zoom
+19:48 - in here. And let's, let's just give us a little bit more real estate. Actually, we can just close
+19:56 - this. That looks good. And now if we go scroll down over here, you can see that the content type is
+20:02 - text dash plane, whereas it should be text dash CSS. So that is the issue that we're facing right
+20:11 - now, any type of file is going to be relayed with this content type. And what we need to do is we
+20:17 - need to change it. So right over here, what we can actually do inside of the HTTP context, we can
+20:23 - define all of the different types. So I'm going to say something that is text dot CSS is going to
+20:30 - have a CSS extension. So it's gonna have dot CSS, anything that is going to be HTML. Well, this is
+20:40 - going to have an HTML extension. So now what I'm gonna do is I'm gonna go ahead and reload this.
+20:46 - And now if I were to refresh this, and click on the content type, you can see it's still text
+20:54 - plane. Let's just do a hard reload now. Now you can see that it is indeed text CSS. So that's what
+21:03 - it should have been. I just needed to do a hard reload because the caching was was showing that
+21:09 - is text plane. So hard reload is command shift R. And I can see that finally that the styles are
+21:16 - being applied because now we have the correct content type. Now this right over here is good,
+21:22 - the approach that we did, but there's so many different files out there, we're gonna have to
+21:27 - catch all of the files manually. And we're going to need to add them inside of this types right
+21:32 - over here. Now, luckily, we actually do not have to do this, because nginx comes with default mime
+21:40 - types. So right over here, we can actually click on the mime types. And let's go ahead over here.
+21:46 - And you can see all of the different types that we can have, we can have gifts, we can have JPEG,
+21:51 - and these are just a bunch of different configurations that we can add. So what we can do is we can
+21:57 - actually copy this and paste it in here, we can actually do one better. Instead, what we can do
+22:03 - is just completely get rid of this and use the include directive. I'm going to say I want to
+22:10 - include the mime types. And this is just going to include include all of the different types inside
+22:17 - of this nginx configuration. So let's go over here, I'm going to go ahead and just reload the nginx
+22:25 - server. And of course, we need a semi colon right over here. Reload the nginx configuration, let's do
+22:35 - a hard refresh. And now you can see that everything is working the exact same way. So that right there
+22:42 - are mime types. In this section of the course, what we're going to do is we're going to learn
+22:46 - about the location block or the location context. Now, this is a very, very important concept in
+22:54 - nginx, because it allows us to specify certain endpoints, certain pages that we can hit. And then
+23:00 - we can serve different types of HTML elements. So for example, let's go to my site. And what I'm
+23:07 - going to do is I'm going to create a directory, let's call this fruits. So let's say over here,
+23:12 - this is a website that is going to list a bunch of different food. And then over here inside of the
+23:17 - index dot HTML, I'm going to go ahead and just copy everything that we have right over here. And we
+23:24 - have an index dot HTML inside of this fruits directory. And let's just get rid of the styles
+23:30 - here, we don't need that. And then over here, let's create a list item, or a UL, and then an
+23:40 - li. And then inside of the li, let's say mango, add another li, let's say here strawberry. And then
+23:50 - lastly, I want another li. And let's add another fruit watermelon, something like so. So what we
+23:59 - want to do is when we hit the slash fruits directory, we want to serve this index dot HTML.
+24:06 - And now we can do that with a location context. Now this is going to live inside of the server.
+24:13 - So over here, what we can do is we can say location. And this is going to take a second
+24:18 - argument. And this is going to be the path that we want to hit. So I'm going to say fruits.
+24:24 - So this is when we go to localhost 8080 slash fruits, what we want you to do is we want you
+24:30 - to serve the index dot HTML inside of the fruits directory. So what we can actually do here is
+24:37 - very simply just grab the same exact route and paste it in here. Now what this is going to do
+24:44 - is it's going to specify is the root when we hit the slash fruits directory, a slash user slash
+24:50 - lathe, harp slash desktop slash my site, they might be thinking, well, is that going to serve
+24:55 - this index dot HTML file and not this index HTML file? Well, if that was it, then yes, it would
+25:03 - serve the this parent index dot HTML file. But when we use location, what what's going to happen
+25:09 - is it's also going to grab this right over here, the slash fruits and add it in like so. And that's
+25:16 - why we didn't specify slash fruits at the very end, because then what would happen is we'd grab
+25:24 - this right over here and then append it like that. So it'd be slash fruits, slash fruits.
+25:28 - So hope that is nice and clear. So let's go over here, let's go back to our terminal.
+25:35 - And let's do a reload. So I'm going to go here, say engine x slash reload. And then over here,
+25:41 - let's get rid of this for now, we don't need that. And now if we go to slash fruits, you can see that
+25:48 - now we are serving this index dot HTML. How incredible is that? Now, let's say what we want
+25:58 - to do now is we want to go to slash carbs, for example. And right now, of course, we're getting
+26:05 - a 404. But what I want to do is I want to go to slash carbs, and I want to get these same
+26:11 - fruits over here, because these are very carb heavy foods might as well reuse them for slash carbs.
+26:17 - So how are we going to do that? Well, you might be thinking that we can just do the exact same
+26:23 - thing, we can do slash location. And then over here, we can say carbs, and then we can specify
+26:29 - the root over here. Now, this is going to present an issue because well, what's going to happen is,
+26:35 - it's going to go ahead and append slash carbs right over here, a not slash fruit. And as you can see,
+26:42 - we do not have any carbs directory inside of our application. So instead, what we're going to do
+26:50 - is we're going to somehow need to specify, hey, I don't want to, I don't want to append this to
+26:55 - the very end of the route. And I want it to be slash fruits. So in cases like these, instead of
+27:02 - using groups, what you would use is alias. And so alias is not going to append this right over here
+27:09 - into the very end. So right here, what we can say is slash fruits like so. And then let's go ahead
+27:16 - and copy that, open up the terminal. And let's go here, reload. And now if I go to slash carbs,
+27:28 - slash carbs, like so you can see now we're getting the exact same index dot HTML file.
+27:34 - So remember, alias is not going to append this path over here, like root would. So anytime we
+27:42 - use root, you actually have to make sure you have that exact same directory inside of your application.
+27:49 - Whereas with alias, you do not need to have a carbs directory. Okay, so this is looking really,
+27:55 - really good. This is incredible. But now what I want to do is I want to add another directory,
+28:02 - let's add a vegetables directory. So this is a tough word to spell. So just make sure you have
+28:08 - it right. It's V, G, E, and then tables like so. And let's say inside of this directory,
+28:18 - we actually do not have, we actually do not have an index dot HTML file. Instead, what we have is,
+28:28 - let's say a, let's say a veggies dot HTML file. So it's not index, it's a veggies dot HTML. I'm
+28:38 - gonna go ahead and just copy this, paste that in there. And let's go ahead and name some vegetables,
+28:45 - lettuce. What are some other vegetables, just say eggplants. And then one more vegetable onion.
+28:56 - Okay, so now what we want to do is, well, we'll say when we go to, when we go to
+29:04 - veggie tables, veggie tables, like so, what we want to do is we want, well, the specify
+29:12 - roots because we have the vegetables directory over here. Now, do you think that this is going
+29:18 - to work? So let's go ahead and actually just give this a quick little test. And then let's go here,
+29:25 - let's do a quick little reload. Let's go to slash vegetables, slash veggie tables. And then you can
+29:35 - see we're actually getting a 403 forbidden. So it's not a 404, but it's a 403. Because we cannot
+29:41 - find an index dot HTML file in here. Now we do not want to serve the index dot HTML. Instead,
+29:49 - what we want to serve is the veggies dot HTML. So in order to do this, what we can do is we can
+29:55 - actually add another directive right over here called try files. So by default, it's going to
+30:03 - look for an index dot HTML. However, when we specify try files, we can say here try files,
+30:11 - and we can specify a bunch of different bunch of different directories that we want you to try.
+30:18 - So over here, what we're going to say is, hey, we want you to look for vegetables, slash,
+30:26 - and then vegetable slash, and then over here, we're going to say, veggies dot HTML.
+30:32 - So this is going to be from the, the root path. So vegetable slash veggies, HTML. So look for this
+30:40 - file. So if this file exists, then go ahead and use it. So use this file indeed. Now if this file
+30:49 - does not exist, though, we can also say here is, well, use the, you can say use the index dot HTML.
+30:59 - So this is going to be this file right over here, right in the default. So that's going to say,
+31:05 - Hello, my friends, I am from nginx. Now, if none of these exist, then what we want you to do is just
+31:11 - to just throw a 404 error. And so let's actually go ahead and give this a try now. So I'm going to
+31:17 - say nginx reload. And now you can see now we have lettuce, eggplant and onion. And so what I'm going
+31:25 - to do now is I'm going to change this. So let's say I change this to veggies with a Z. So what it's
+31:30 - going to do is it's going to try to find this file. And if it can't find this file, then it's going to
+31:35 - use the index dot HTML that exists in the root. So now if I refresh, you can see Hello, my friends,
+31:42 - I am serving from nginx. Now if I can't find neither of these, it's going to throw a 404 error.
+31:48 - So let me just quickly go ahead and maybe just rename this to let's say indie.
+31:54 - I'm going to rename them back. Now you can see we're getting a 404.
+31:57 - So that is the premise of try file. So let's go ahead and just rename all of these back to
+32:06 - veggies dot HTML and HTML is all good. Another thing that we can actually do
+32:11 - is we can actually have regular expressions to these location context. So over here,
+32:17 - let's say I have a location, and I have maybe a pass count. And then and then over here,
+32:24 - I want a specific number. So what we can do here is we can say from zero to nine,
+32:30 - you can add any number. And in order to actually specify this, we can say tilde star as a regular
+32:36 - expression. Now over here, what we can say is, well, I just want you to take me to the root of
+32:41 - the website. And we can just add a try file right over here. So it just takes us to the index dot
+32:47 - HTML. So I'm gonna say try file index dot HTML. And if that doesn't exist, just throw a 404.
+32:57 - So now what we what's going to happen is anytime we go to slash count slash four slash count slash
+33:03 - five slash count slash six, is going to redirect us to the index dot HTML in the root directory.
+33:09 - So let's go here and let's just do a quick reload. And if I were to go to slash count slash
+33:17 - five, you can see, now we are redirected back. If I go to two, again, we're redirected back,
+33:23 - because now we have this really awesome, regular expression. So I think that pretty much sums up
+33:31 - the location block the location context, pretty important to learn because it is heavily used
+33:37 - inside of nginx. Alright, everybody, now that we have explored the location block, let's go ahead
+33:44 - and talk about some more advanced concepts, specifically redirects and rewrites. We're
+33:51 - going to start with redirects because they're relatively simple. So I'm going to go right over
+33:56 - to the nginx configuration file. And let's say what I want to do is, whenever you go to slash,
+34:07 - I don't know, let's just say slash crops, I want to show the stuff that is inside of this file right
+34:15 - over here. So one way of doing that is of course, adding another location block, but we've already
+34:20 - done this. Instead, what I want to do is whenever you go to slash crops, I want to redirect you to
+34:27 - slash fruits and then show the HTML file in this route. So how are we going to do that? Well,
+34:35 - really, really simple, actually, this is going to be another location block. So I'm going to say
+34:41 - location. And then over here, I'm going to say that this location block is going to be slash crops.
+34:48 - And then I'm going to say return. So I'm going to go ahead and return early this time, I'm not going
+34:54 - to specify a route. And I'm going to return a 307. So this is a HTTP code that is going to redirect
+35:04 - the user. And we're going to specify that we want to redirect to slash fruits. So let's go ahead and
+35:13 - copy this and let's go ahead and reload our nginx configuration. And now what I'm going to do
+35:21 - is I am going to go to slash crops. And now you can see we get redirected to slash fruits. And if
+35:30 - you look at the URL, I just went ahead and copied it, you can see that whenever I go to slash crops,
+35:35 - it will always redirect me to slash fruits. What if, however, I don't want this behavior whenever
+35:42 - I hit slash crops, I wanted to stay at slash crops, but forward me the HTML inside of that location
+35:49 - context, instead of the fruits location context, how are we going to do that? Let's actually look
+35:55 - at another example. So right over here, we have this context right over here slash count slash
+36:00 - number. Let's say I want to have another location block or another endpoint that is slash number,
+36:07 - and then slash whatever the number is, and I want to forward it to this location context here.
+36:13 - However, I want the URL to stay like this and not essentially change to slash count slash the
+36:20 - particular number zero to nine. So in that case, what we're going to do instead is a rewrite rather
+36:27 - than a redirect. Now, for a rewrite, we do not have to specify the location directive or the
+36:34 - location context. Instead, we just have a rewrite directive. And then over here, what we can say
+36:40 - is, well, I want number. And then after the number, what we can do is we can just wrap this in braces.
+36:49 - And over here, we can say the back bracket w plus, and this is just a variable over here.
+36:57 - And then what we can say is we want to rewrite this right over here. So number slash whatever
+37:02 - to count slash. And then over here, we can say dollar sign one, which is just going to be the
+37:13 - variable. So dollar sign one. So this right over here is going to be this right here. And then we
+37:19 - can just close it off like so. And that's all it is that we really need to do. So let's go ahead
+37:23 - and just do an nginx reload. And now what I'm going to do is I'm going to go to number slash,
+37:30 - let's say three. And you can see numbers slash three stays exactly the same. However, we are
+37:36 - essentially getting redirected to this because what we're doing is we're relaying this index dot HTML
+37:42 - file. In this very last section, let's explore how we can configure nginx as a load balancer.
+37:51 - So let's remember exactly what I mean about a load balancer. When our application starts getting a
+37:57 - lot of users, what we need to do is scale our application. And the best way to scale our
+38:03 - application is just to build multiple servers within our infrastructure. Now this obviously
+38:09 - presents an issue, how is the client going to make the request to the server and which a server
+38:15 - will it make the request to. So this can get really complicated. And that's why we have nginx
+38:21 - in the middle. So instead of the client worrying exactly where to make the request to, it's just
+38:27 - going to make a request straight to the internet. And that's going to be caught by nginx. And then
+38:32 - it's nginx responsibility to forward that request to any particular server that it chooses. And this
+38:38 - is typically done by a specific algorithm. Now the most common algorithm is a round robin algorithm,
+38:46 - where, well, the first request comes in, it just forwards it to this server and then sends it right
+38:51 - back. Then the next request comes in, well, already sent it to this one, that's going to send it to
+38:56 - this one over here, this server and then forward the request back. And then it's going to go ahead
+39:00 - and send it to this and then send it and forward the request back. And it can just keep going back
+39:05 - and forth in a round robin approach. Okay, so that is what we need to configure. Now in order to do
+39:12 - this, what we're going to need to do is actually build a well, we need to build multiple servers.
+39:19 - And the best way to do this is through Docker, because Docker allows us to build a server
+39:25 - containers that are completely isolated, we can actually spin up as much as we want. So that's
+39:31 - what we are going to do. So we're going to build up a Docker container right over here. So if
+39:37 - you're unfamiliar with Docker, and if you don't have Docker installed, that is a okay, you can
+39:41 - just follow along. But if you do, I'll have some resources below. I also do have a Docker crash
+39:47 - course. Alright, so what I'm going to do here is I'm going to create a brand new directory,
+39:52 - and I'm going to call this just server. And then in here, what I'm going to do is I'm going to
+39:57 - create an index.js. And then let's go to our terminal. And then I am going to do CD. And I'm
+40:07 - going to move into that server directory. And I'm going to do NPM in it to initialize a node
+40:12 - application. So let's go ahead and let's do empty NPM in it dash y. And then what I'm going to do
+40:19 - is I'm going to go over here, and I'm going to just say NPM install Express, because that's going
+40:27 - to be my server. So let's go here. And now I'm going to say const express is equal to require
+40:35 - express. And then let's go ahead and do const app is equal to express. And then over here,
+40:44 - I'm going to say app dot, let's just make a guest request here. And then I'm going to say
+40:52 - that this is going to take in the rec and the res. And it's going to just respond with
+41:00 - I am a endpoint or something like that something silly. Lastly, what I want to do is I want to
+41:07 - app dot listen. So I'm going to say listen on port, let's say port 7777. And then over here,
+41:14 - we can have a callback, we can say console dot log console dot log, listening on port 7777.
+41:30 - So very, very simple, node application. So in order to actually start this up,
+41:35 - what we can very simply do is we can just say node index dot j s. But a better way to do this
+41:42 - is to go over here to our scripts. And then right here, we can say start a new script,
+41:51 - and we can say NPM run start like so. So let's just say NPM run start now. And we should start
+41:58 - up the server, let's give it some time. The server should start, come on, come on. I was expecting
+42:08 - the console log, but let's actually go ahead and see if this server is running at this point.
+42:14 - Let's go here. And of course, I'm checking MBA scores. So let's go here, let's go to local host
+42:21 - 7777, I believe it was. And the server cannot be reached. Oh, okay, of course. So this should be
+42:32 - node index, it shouldn't be NPM run start. This is my fault for rushing. There we go. Now listening,
+42:39 - listening on port 777. There we go. I am an endpoint. So now what we need to do is we need
+42:46 - to actually write a Docker file for this application. This is how we're going to build an image and spin
+42:53 - up multiple containers of our image. Again, if you're unfamiliar with this, it's a okay,
+42:59 - I'm actually just going to go ahead and just research Docker file for Express app,
+43:05 - just so we don't have to build it out ourselves. So let's go here. Let's go here. Let's see. Okay,
+43:17 - so this is looking pretty good. I'm going to go ahead and just copy this. And I am going to go
+43:23 - over to here, and I'm going to say Docker file. I'm going to paste in this Docker file configuration.
+43:32 - So what is going on here? So let's change this to 777. So the first thing that we're doing is
+43:38 - we're specifying a a in an image, a base image. So it's going to have the basic configuration
+43:46 - with just the basics of node and NPM and stuff like that. Then what we're going to do is we're
+43:52 - going to specify a working directory. And then we're going to copy the package dot JSON. And then
+43:59 - we're going to do an NPM install to install all the dependencies, then we're going to copy
+44:03 - everything. And then over here, we can either do node, index.js, or we could do NPM run start.
+44:10 - So let's go ahead and do that. NPM run. Start. And that's pretty much all it is that we need.
+44:19 - Again, if you're interested in learning more about Docker, I do have a Docker crash course
+44:23 - that covers all this stuff in great detail. But now what I want to do is I want to spin up,
+44:28 - let's say, four different containers that have this particular application.
+44:35 - So let's go over here. And what we can do now is, well, we first need to build this image,
+44:42 - this shouldn't be a very long thing. So let's move into the server directory,
+44:46 - I'm going to say Docker build dot, I'm going to give it the tag name of, let's say, my server,
+44:54 - something like that. So let's go ahead and wait for this process. Now, as this goes,
+45:01 - what you can actually do if you have the Docker utility tool, so you can go over here to Docker.
+45:08 - And I actually have a bunch of other apps spined up, let me go ahead and remove them.
+45:13 - Because they're all running on the ports that I probably want to run on.
+45:16 - So these are these are the containers, what we can do now is we can actually go to the image.
+45:24 - And we should see my server eventually pop up here. So we got the node app,
+45:31 - let's go back over here, it's taking its sweet time, but it should pop up right over here.
+45:40 - Let me zoom in, I guess it's not possible to zoom in. So yeah, so this is a tool that you get,
+45:46 - which is Docker desktop, in order to see all the images that you have, as well as all of the
+45:52 - different containers that you're running, as well as some other really cool neat things.
+45:58 - Now, this is going to take some time. So I'm probably just going to pause the video,
+46:02 - and I'll meet you back. So it seems like it's all done. Now that we have built the image,
+46:07 - what we want to do is run containers based off that image. So to do this, what we can do is we
+46:13 - can do Docker run. And then over here, I'm going to specify the ports. So remember, this application
+46:18 - was running on port 777. So I should go ahead and close it from here. So what we can do here is we
+46:24 - can actually do port mapping. So I can say, even though the container is running on port 7777,
+46:31 - I can map it to port 1111 on my machine. And this is how we can spin up multiple instances of our
+46:38 - app. So over here, I'm going to say port 1111 is going to map port 7777 inside of the container,
+46:45 - I'm also going to run this in detached mode, and I'm going to specify the image that we have just
+46:52 - created, which is my server. So let's go ahead and do that. And now what should happen if we go to
+46:59 - our tools and go to container, we should see we have a container running on port 1111. And if we
+47:06 - go on local host 1111, we should see I am an endpoint. So our server is running. Now we can
+47:13 - do the exact same thing over here. So I can say this time 2222. And then over here, we can say
+47:23 - 3333. And then lastly, I can say 4444. Alright, so this is looking quite nice. Now what is it that
+47:40 - we want to do? So now let's go back to our nginx configuration. And now what we want to do is we
+47:47 - want to add a load balancer. So whenever we hit port localhost 8080, I want to hit one of these
+47:55 - servers. And then whenever I make another request, I want to hit the other server and then the other
+47:59 - server and the other server, I want to round robin across these four different servers that I have
+48:04 - created. So let's actually go right here to our configuration. And what we're going to do here
+48:13 - is we're going to remove the route because once we hit the slash route, so just a localhost 8080
+48:19 - without any path, we want to serve our back end. So over here, let's just go ahead and get rid of
+48:26 - this this route for now. So I'm going to go ahead and get rid of that route. And actually, no,
+48:34 - we're not really know what we can actually leave the route as is. Instead, what we can do here is
+48:39 - we can say location dash. And then whenever we hit this, we're going to specify the round robin.
+48:46 - Now, right after right before the server context, what we're going to need to do is we're going to
+48:53 - specify our backend. So I'm going to say here, upstream, and then I'm going to call this backend
+49:00 - server, we can call this whatever it is that we want. And this is going to be a context. And then
+49:05 - in here, we can specify all of the different backend URLs that we have. So well, we have 1111,
+49:13 - we have 2222, we have 3333, and we have 4444. So over here, we can say 127.0.0.1. And then I can
+49:24 - say colon 1111. And then I can do the exact same thing. So over here, let's just go ahead and say 2222
+49:35 - 3333444. And then over here, what we can very simply do is say proxy pass. And then I'm going
+49:44 - to specify HTTP colon dash dash, and then this back end server. So this name is important,
+49:53 - you have to go over here, we're going to say backend server, dash, then we're going to close
+49:57 - it off with the semicolon. And so by default, what this is going to do is it's going to round robin
+50:04 - anytime we make a request to slash, it's going to round robin to this server, then this server,
+50:10 - then this server, and then this server, and it's going to move back to this server, move back to
+50:14 - this server, etc, etc. So that's pretty much all it is that is going to do. So let's actually go
+50:19 - ahead and give this a quick go. So I'm going to do the nginx reload configuration seems fine. Now
+50:28 - when I hit localhost 8080. You can see here, I have to just quickly do a refresh, you can see
+50:35 - that it hit I am an endpoint. And then if I enter it again, it's not really visible here, maybe we
+50:42 - should have added a log, but it is indeed round robining across all of the different servers that
+50:49 - we have up. Again, you're probably gonna have to just take my word for it. But it is indeed doing
+50:54 - it. Alright, so that pretty much sums up this nginx course. I hope you guys enjoyed it. And I'll see
+51:00 - you in the next one.

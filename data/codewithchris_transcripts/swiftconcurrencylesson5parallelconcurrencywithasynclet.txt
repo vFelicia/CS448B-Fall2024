@@ -1,0 +1,297 @@
+00:00 - Hi.
+My name is Stewart Lynch.
+00:02 - This is the fifth of six videos
+in the iOS concurrency series.
+00:06 - By the end of the fourth video,
+we had converted our getJSON function
+00:10 - into one that uses the new Async and await
+concurrency method introduced in iOS 15.
+00:16 - In this video, we're going to extend
+00:18 - that even further by introducing you
+to parallel Asynchronous concurrency.
+00:22 - Using Async lead,
+we'll create a new model to contain a user
+00:28 - and all of that users posts in an array
+and use that model after fetching all
+00:33 - users and posts up front and two
+asynchronous calls in parallel when
+00:37 - the user odes, thus potentially reducing
+the number of network requests.
+00:43 - Now, if you're just jumping into the start
+00:45 - of this series,
+you can download the completed code
+00:47 - from the fourth video of this series
+from the link in the description below.
+00:53 - Now that we have much more easily readable
+00:55 - code, I want to show you
+where this really shines.
+00:59 - Let's create a new experimental branch
+01:01 - on this current branch,
+so make sure you select
+01:05 - the Source Control Navigator,
+then right click on Async and await
+01:10 - and create a new branch from here
+and call it parallel concurrency
+01:16 - and make sure you check out that branch
+if it's not done automatically.
+01:22 - What I'd like to do now is to fetch all
+01:24 - of our users and all of the posts before
+presenting the list view and add account
+01:30 - of the number of posts per user alongside
+their name in the user's list view.
+01:36 - Then, since I have all of the users posts,
+01:39 - I can pass them on to the post list view
+for that user instead of when I get there.
+01:45 - This should limit the number
+of server requests to two.
+01:48 - Then no matter how many times I go
+01:50 - from users to posts,
+so to do this, I'm going to need a new
+01:55 - model that we can use
+to consolidate this information
+02:00 - in the Models folder,
+create a new Swift file called User
+02:03 - and Posts and in there create
+a struct with the same name.
+02:10 - I'm going to be using this in the users
+02:12 - list view, so I want to conform
+to the identifiable protocol.
+02:20 - We'll need an ID property to make sure
+that it does conform to that protocol,
+02:24 - so to make it easy, let's just
+create one and we'll use the UUID.
+02:34 - Now each object will contain a user
+and that users post
+02:38 - the user will be of type user
+and posts will be an array of post.
+02:45 - I do want one more thing though,
+02:47 - and that is the number of posts
+so that I can display it.
+02:50 - So I can create a computed property
+for this called number of posts,
+02:55 - and it will be an Int
+that returns the post count
+03:05 - in the user's list view model.
+03:06 - Right now we have a single
+function that fetches users.
+03:10 - What if after we fetch users,
+03:11 - then we fetch all of the posts and then
+run a loop through our users,
+03:16 - filtering the post by ID and then
+assigning them to that user.
+03:20 - So let's change this published property
+03:23 - here to no longer be an array of user
+but an array of user and posts.
+03:32 - Of course, this is going to break our code
+because we no longer have that published
+03:36 - user's property,
+but we still have to keep track of them
+03:39 - until we build our now
+empty user and post array.
+03:43 - So let's just preface this with a let
+03:46 - to create a constant users containing
+the array of fetched users.
+03:51 - But this is a new property and users won't
+know what it's expecting to retrieve.
+03:56 - So we'll need to specify that it
+expects an array of user
+04:02 - this convenient in it no longer uses any
+04:06 - users, and we've not set up any in our
+mock data for our new users and posts.
+04:11 - So let's just comment this out for now.
+04:17 - So how do we get all posts?
+04:20 - Well, the URL for that can be found
+in the API documentation,
+04:25 - and we put that endpoint URL as
+a comment at the top of our post struct.
+04:30 - We'll copy that now and we'll create a new
+instance of the API service passing.
+04:37 - In that endpoint.
+04:43 - Then we can asynchronously fetch all
+04:45 - of the posts the same way that we
+fetched all of our users.
+04:48 - But this time for posts,
+and it's an array of posts.
+04:58 - Now, if we had to do this with our old
+callback method, we'd be in a little bit
+05:02 - of trouble since we would need to have
+nested these requests within an API
+05:06 - service getJSON callback function
+with a completion handler.
+05:11 - Here the power of async
+and a weight really shines.
+05:15 - This fetch post request won't be executed
+05:18 - until the above one has completed,
+so it looks almost synchronous.
+05:24 - Well, now that we have both users
+05:26 - and posts, we can loop on users,
+and then we can determine that particular
+05:32 - users post by filtering the post array
+where the user ID is equal to the user ID.
+05:41 - And we can use the array filter operation
+05:43 - for this using a higher order
+function really condenses your code.
+05:49 - And if you're familiar with the syntax,
+it's quite easy to read.
+05:53 - If you are unfamiliar with this,
+you can check out my video on higher order
+05:56 - functions, and this one here in particular
+includes the filter function.
+06:03 - Now that we have a user and all of her
+posts, we can create a new user and posts
+06:10 - so we can pass in the user and all of her
+06:12 - posts, and then we can append it to our
+users and posts publish property
+06:21 - users in list view, of course,
+06:23 - is broken because we no longer
+have an array of users.
+06:26 - We have an array of user and posts.
+06:29 - So in the navigation link we no longer
+are going to pass in the user ID.
+06:35 - We want to pass the entire array,
+06:38 - so we'll just have to fix the post
+list view as well in a minute.
+06:42 - So for now, let's just change this to post
+ListView posts being user and post posts
+06:52 - for the label.
+We'll need to change this to user and post
+06:56 - user to access the user's name
+and the user's email properties.
+07:04 - I also mentioned we want to display
+the number of posts so we can do
+07:07 - that right here by embedding
+the name text view in an H stack,
+07:13 - and then after the name,
+07:14 - we'll add a spacer
+and then present another text view
+07:18 - with the computed property of the number
+of posts from our model and use string
+07:24 - interpolation to surround
+the number with brackets.
+07:36 - All we have to do now is
+fix up that post list view.
+07:42 - Now, instead of having to create a view
+07:44 - model, I can remove this
+state object altogether.
+07:48 - We're not expecting a user ID anymore.
+07:51 - We're expecting an array of posts.
+07:55 - Since our posts are no longer
+in a view model, we can remove the VM.
+08:01 - There will no longer be a need
+for the alert here because we're not going
+08:04 - to be fetching anything here,
+and we can also remove the overlay
+08:10 - and the task.
+08:13 - Now our preview is complaining here,
+08:15 - so we'll need to fix that,
+which means that we'll need more mock
+08:18 - data, but we'll come back
+to that for the moment.
+08:21 - Let's just comment the preview out here.
+08:24 - I'm still getting an error
+when I want to build.
+08:27 - Yeah, I see.
+I forgot that I commented
+08:29 - on that convenience initializer,
+so it no longer exists.
+08:33 - So I need to remove it
+here when we initialize.
+08:39 - If we test this in the simulator now it
+08:41 - works and we see the number
+of posts Besides each user.
+08:46 - It just so happens that this API
+actually has ten posts per user.
+08:50 - But trust me, if the count were different
+per user, this would still work.
+08:56 - So let's fix that mock
+data for our preview.
+09:02 - We can create a new extension in our mock
+09:04 - data file for user and posts,
+and then create a static computed property
+09:10 - that's called users and posts that is
+an array of our new user and post object.
+09:19 - So we then repeat the same process that we
+did when we are in our users view model.
+09:27 - We'll create an empty array of new user
+09:30 - and posts, and then we'll loop through
+our mock users from the user model.
+09:38 - We'll create a new user and post
+09:42 - filtering the posts to get just
+the post for that particular user,
+10:00 - and then we'll append it to that new user
+and post array,
+10:05 - and once the loop is completed,
+we can return the new users and posts
+10:16 - back then to the user's list view model.
+10:19 - We can fix that extension so that users
+10:22 - and posts is user and post
+mock users and posts,
+10:31 - and then in the post list view.
+10:32 - Then we can uncomment the preview
+10:35 - to change that argument to post and pass
+in the post mock single users post array.
+10:45 - Then back in the users list view.
+10:47 - We could add back that convenience
+initializer because we have it again
+10:51 - and whether we are in the preview mode or
+not, we can decide if we want to see
+10:56 - that mock data in the canvas
+when it's set to true.
+11:01 - If it's set to false, it disappears.
+11:07 - If we go back and check out our code.
+11:09 - Now, however, there is something
+that can be improved on even more.
+11:14 - We're fetching all of our users and then
+11:16 - waiting until they're all fetched
+before we fetch all of the posts.
+11:20 - The fetching of the post is not
+reliant on the fetching of users.
+11:24 - In fact, we could be
+doing this in parallel.
+11:28 - Well, welcome to Async Lead.
+11:31 - We can simply preface each of our API
+11:34 - service calls with Async
+so that it now reads async let.
+11:42 - Now, this creates errors in our for loop
+11:44 - because we'll need to wait for them
+to have finished first before carrying
+11:47 - on before we can access
+both the users and posts.
+11:51 - So we'll need to try and await for both.
+11:54 - We can do that by assigning
+them to a new variable.
+11:58 - But as I said, we'll have
+to await for both of them.
+12:01 - So let fetched users fetch posts in the
+tuple await for the users and posts.
+12:10 - But as I said, these are failing because
+we'll have to try for each of them.
+12:19 - Then all we need to do in our loop
+is to change user to fetch users
+12:26 - and posts to fetch posts.
+12:30 - We're now getting both the users and posts
+12:33 - at the same time,
+and then we can then run our loop
+12:39 - testing.
+12:39 - Now we see that it all works nicely and
+we're now saving on costly network calls.
+12:50 - Let's finish now.
+12:51 - Then, by committing this
+branch to our Git repository
+13:02 - in the final video of this series,
+we'll be checking out that old main branch
+13:06 - again and branching off of it to change
+our target back to iOS 14 and see if we
+13:12 - can use these new Asynchronous
+functions in an earlier iOS.
+13:17 - This is what's promised in Xcode 13.
+13:20 - Two.
+13:24 - This should be interesting.
+13:25 - So make sure you subscribe
+13:26 - to Chris's Channel and ring this Bell
+to get notification of new videos.
+13:32 - Thanks for watching and see
+you in the next one.
+13:35 - Bye.
+Okay.
+13:37 - Bye.

@@ -1,0 +1,920 @@
+With timestamps:
+
+00:00 - alrighty guys welcome back to another
+00:02 - tutorial and now that we have the basic
+00:04 - registration logic built out
+00:06 - what we can do now is we can start
+00:08 - listening to the blockchain
+00:10 - for transactions sent to our bot account
+00:13 - aka deposits or payments whatever you
+00:16 - want to call them basically coins sent
+00:18 - to our bot account
+00:20 - and remember like we said the first time
+00:22 - they are going to send coins it's
+00:25 - because they are trying to register
+00:26 - their account in other words link their
+00:28 - blockchain account to their discord
+00:30 - account
+00:31 - now
+00:32 - after they are registered they can
+00:35 - continue to send coins and this is going
+00:37 - to be we're just going to have it update
+00:38 - a balance on their user object but you
+00:41 - can have it where
+00:42 - you know maybe they're buying like
+00:43 - digital gold or buying in-game items
+00:46 - whatever you want to do
+00:47 - that part is kind of up to the developer
+00:50 - but either way what we are going to be
+00:52 - doing is listening
+00:54 - for those payments from our bank that we
+00:57 - already have set up in like the first or
+00:59 - second tutorial
+01:00 - and before we get into more of the
+01:03 - technical details or any of the code i
+01:05 - want to walk you guys through this
+01:06 - deposit object
+01:08 - because this is what we're going to be
+01:10 - storing in so
+01:13 - the first thing of course like every
+01:14 -  object this is gonna have an id
+01:18 - in this id we're gonna get from the
+01:21 - bank's
+01:22 - transactions the bank already creates a
+01:24 - unique id for each transaction
+01:26 - and we'll be taking a closer look at
+01:28 - that later on but that's what this is
+01:30 - now the amount of course you can
+01:32 - probably guess this
+01:34 - this is just the amount of coins the
+01:35 - user is sending to our account
+01:38 - and the block id this is a little bit
+01:40 - more technical
+01:42 - it's for
+01:43 - it's pretty much the unique idea of the
+01:44 - block as it's stored on the blockchain
+01:47 - and we'll see how this comes in handy in
+01:48 - just a bit
+01:49 - now confirmation checks is related to
+01:52 - this right here so by default
+01:55 - whenever a user first sends a payment to
+01:59 - the new boston blockchain network
+02:02 - that payment is not confirmed it's just
+02:04 - like an attempted payment or they're
+02:06 - trying to pay someone now
+02:09 - that is why whenever our bot first
+02:11 - receives these deposits it's going to
+02:14 - set is confirmed equal to false this
+02:16 - means that yes we see the payment out
+02:18 - there but it doesn't have any
+02:19 - confirmations yet meaning it didn't
+02:22 - officially get added to the blockchain
+02:24 - or it wasn't verified yet basically
+02:26 - now this confirmation checks if you
+02:28 - remember this is gonna say okay once we
+02:31 - receive this payment how many times are
+02:33 - we gonna hit the network and say hey is
+02:35 - this verified yet
+02:37 - is this verified yet is this verified
+02:39 - yet so we are going to do that up to 20
+02:42 - times
+02:43 - because
+02:44 - this um process is actually going to
+02:46 - have a five second delay so
+02:49 - this should really never take longer
+02:51 - than like two checks so two checks means
+02:53 - like there was ten seconds and that
+02:55 - means that like the network was acting
+02:57 - slow but we're just going to put 20 as
+03:00 - max just to be super safe
+03:03 - and the memo of course as you guys saw
+03:06 - this is just
+03:08 - the description that they add in the
+03:10 - transaction
+03:12 - and for ours
+03:14 - that's what that random code generated
+03:16 - is going to be now afterwards when
+03:18 - they're already registered and they're
+03:20 - just sending payments it doesn't really
+03:21 - matter what they type in the memo the
+03:23 - memo we are just using for the
+03:25 - registration process but you know they
+03:27 - can type whatever now another thing that
+03:29 - i want to mention and i saw some users
+03:31 - talking about this pattern in the
+03:32 - community
+03:34 - is that instead of this registration
+03:36 - process yada yada you can actually have
+03:38 - this memo
+03:39 - be linked to
+03:40 - something directly like a digital item
+03:43 - or in-game currency or whatever and then
+03:46 - technically users don't even have to
+03:48 - register
+03:49 - so
+03:50 - you can just have people like it's
+03:52 - almost like a unique upc or an item code
+03:55 - where users can just pay for those
+03:57 - things directly but we get some other
+03:59 - benefits with um registering as well so
+04:01 - anyways going to continue along just
+04:03 - want to point that out in case you guys
+04:05 - have any cool ideas
+04:06 - the sender of course is the sender's
+04:08 - account number and this is our basic
+04:10 - deposit structure
+04:12 - so what we are going to be doing in our
+04:14 - code is we're going to be running more
+04:15 - or less two processes the first process
+04:18 - is going to listen for these deposits
+04:21 - and then the second process is going to
+04:23 - say okay what deposits did we receive
+04:26 - that are not confirmed yet and have less
+04:29 - than 20 confirmation checks and that
+04:31 - process is independently going to go
+04:34 - look at confirmations and once a payment
+04:37 - is confirmed then we process their
+04:39 - payment or update their balance
+04:42 - all right so the last technical thing i
+04:44 - want to point out to avoid any confusion
+04:47 - is
+04:48 - this right here
+04:50 - so
+04:51 - whenever a user from their client right
+04:54 - here they go ahead and send coins what
+04:57 - this is going to do is it's going to
+04:59 - send an entire block
+05:01 - now the block
+05:03 - from a network protocol point of view it
+05:06 - includes all your transactions which of
+05:08 - course include the amount the recipient
+05:10 - any optional memo if it's a fee or if
+05:13 - it's just a regular transaction so on
+05:15 - and so forth the block contains a lot of
+05:17 - information
+05:18 - a lot of this is just kind of specific
+05:20 - to the network protocol
+05:22 - involves like signatures to make sure
+05:24 - that no one can you know cheat and
+05:26 - pretend to be your account so on and so
+05:28 - forth so why am i saying all this
+05:30 - instead of coding in discord well i say
+05:32 - this because
+05:34 - what we are doing
+05:35 - is we are connected to the bank
+05:38 - now what the bank does to make it easier
+05:40 - for the user to actually store and query
+05:42 - this data is it takes these transactions
+05:46 - out of the block and it stores those as
+05:48 - a separate object called bank
+05:50 - transactions so you can think of a bank
+05:53 - transaction is really all the user
+05:55 - specific information in the block that
+05:58 - isn't part of the network protocol that
+05:59 - only the users are really going to care
+06:01 - about
+06:02 - now to show you guys what this object
+06:03 - looks like whenever it's stored i'm
+06:06 - actually at the bank transactions
+06:08 - endpoint that we're going to hit in just
+06:09 - a second
+06:10 - and you can see that
+06:12 - within each transaction it's either a
+06:14 - fee for the primary validator or the
+06:17 - bank
+06:18 - now typically a big transaction looks
+06:22 - like this without any fee
+06:24 - and it just has an id
+06:27 - and this is what we're going to be
+06:28 - storing as our id
+06:31 - and then of course it has an amount a
+06:34 - memo the recipient and
+06:37 - so this is of course the recipient which
+06:40 - is going to be our bot account
+06:42 - now there are a lot of other
+06:43 - transactions going to be happening on
+06:45 - the network but we only want to make
+06:47 - sure that we are looking at the
+06:49 - transactions that were sent to our bot
+06:50 - account i really don't care if user a
+06:52 - sent user b some coins for pizza or
+06:55 - whatever
+06:56 - and another thing is it has a reference
+06:58 - to
+06:59 - its block or in other other words its
+07:01 - parent or its container
+07:04 - now
+07:04 - why am i saying all this again because
+07:06 - of this
+07:08 - even though
+07:09 - we are going to be looking at bank
+07:11 - transactions right here those bank
+07:13 - transactions came from a block
+07:16 - now it's the block itself
+07:20 - which has confirmations on it so again
+07:23 - even though we're going to be looking at
+07:25 - the bank transactions and essentially
+07:27 - converting those
+07:28 - to deposits pulled open the wrong thing
+07:32 - deposits right here that we're going to
+07:33 - be storing in
+07:35 - the deposits are not going to have
+07:37 - confirmations themselves in order to
+07:40 - check if these deposits are confirmed
+07:43 - we're going to need to look at the block
+07:45 - and then we're going to have to say does
+07:47 - the block have any confirmations on it
+07:50 - if the block itself is confirmed then
+07:52 - all transactions aka deposits within are
+07:56 - also confirmed so that's why we need to
+07:59 - follow this two-step process
+08:01 - we just can't say okay if you have some
+08:04 - transactions right here
+08:05 - without any confirmations then we can
+08:07 - just like accept the payment no no we
+08:10 - need the confirmation and this says yes
+08:12 - this payment is valid
+08:14 - okay so hopefully i have that pounded in
+08:16 - your head
+08:17 - hard enough so now let's go ahead and
+08:20 - get to the code
+08:21 - so the first thing i want to do is i
+08:23 - want to update this honor ready because
+08:27 - i want to call a function after here
+08:29 - that is going to pull the blockchain
+08:32 - now
+08:33 - actually can make that
+08:35 - right here
+08:36 - so we'll say it's going to be
+08:38 - asynctask and
+08:41 - if i can spell async async def
+08:46 - blockchain
+08:47 - okay
+08:48 - so this is going to actually
+08:51 - be the parent function that calls two
+08:53 - other functions and we'll say it's gonna
+08:56 - pull the blockchain
+08:57 - for new
+08:59 - transactions or deposits now another
+09:02 - thing is that why
+09:05 - am i doing this so these are called bank
+09:07 - transactions we're going to be looking
+09:09 - at an endpoint called bank transactions
+09:11 - why did i decide to rename it to deposit
+09:15 - in our architecture it seems like i'm
+09:16 - just making things more confusing
+09:18 - well
+09:19 - whenever i think of a transaction
+09:21 - especially like at my bank for example
+09:23 - i'm thinking that i can send someone
+09:25 - something and that's a transaction and
+09:27 - also that i can receive
+09:30 - something and then that's a transaction
+09:32 - as well
+09:33 - now for this system it's basically just
+09:36 - going to be like a payment integration
+09:38 - where you can receive funds but we don't
+09:41 - have a withdrawal system built or
+09:43 - anything like that so i want to make it
+09:45 - very clear that these are just deposits
+09:47 - these are just payments coming in to our
+09:49 - bot account and then we're gonna sell
+09:51 - some service or digital good or whatever
+09:54 - but either way i i just think it was a
+09:56 - little bit more clear looking at
+09:57 - everything
+09:58 - so anyways we're gonna say pull the
+10:00 - blockchain for new transactions aka
+10:02 - deposits
+10:04 - sent to the bot account which is the
+10:07 - account that we own
+10:09 - now i'm going to leave another note here
+10:12 - guys here's that ding what the heck was
+10:14 - that
+10:15 - and i'll say only
+10:17 - accept
+10:19 - confirm transactions
+10:23 - okay
+10:24 - so here we go this is going to be my
+10:26 - poll blockchain and it's going to be do
+10:29 - these two things and i'm gonna break
+10:31 - this up into two different functions
+10:33 - that we're gonna write later on one is
+10:35 - gonna be called check
+10:38 - deposits and the other one is gonna be
+10:40 - called check
+10:43 - confirmations
+10:44 - what is this get out of here check
+10:46 - confirmations and you guys can probably
+10:48 - tell what these are going to do this one
+10:50 - is going to look
+10:52 - for
+10:53 - keep holding this open this one is going
+10:55 - to query this endpoint and see if there
+10:57 - are any new deposits or any new payments
+11:00 - that someone tried to send to our bot
+11:02 - account and then this one i don't have
+11:04 - the endpoint ready but it's basically
+11:05 - going to check for those confirmations
+11:08 - so for now let me just
+11:11 - let me just comment those out and write
+11:13 - pass so my ide doesn't freak out and all
+11:15 - right
+11:16 - now another thing that i want to do is i
+11:18 - actually want to pull this blockchain
+11:22 - not just once where as soon as my bot
+11:25 - starts up then i'm just going to pull it
+11:27 - and say okay
+11:28 - uh that's it you check it once and you
+11:30 - don't have to check anymore this needs
+11:33 - to run
+11:34 - again and again and again now i just
+11:36 - don't want to run it as fast as it
+11:38 - possibly can like on a while loop
+11:40 - because then it's going to unnecessarily
+11:42 - hit the network and it's guys going to
+11:44 - say do you have any new transactions do
+11:46 - you have any new transactions
+11:47 - so i think that was a little much so
+11:49 - instead i'm going to put it on a 5
+11:52 - second loop
+11:53 - now anytime you want to make a command
+11:55 - in discord that needs to run these
+11:57 - periodic tasks it's actually really easy
+12:00 - you don't have to set up celery you
+12:02 - don't have to set up any cron job or
+12:04 - linux task in the background they
+12:07 - actually make it a piece of cake so in
+12:11 - where you import commands from
+12:13 - discord.ext import something called
+12:15 - tasks as well
+12:17 - and then
+12:18 - go back to right above pull blockchain
+12:21 - and then what we're going to add is a
+12:23 - decorator
+12:24 - and that is tess
+12:26 - we're going to run this on a loop
+12:28 - and then for seconds we're just going to
+12:30 - say 5.
+12:32 - so this means and i'll put 5.0 just to
+12:34 - uh make it very clear
+12:36 - so this function right here is gonna run
+12:40 - every five seconds
+12:43 - now it just doesn't run right off the
+12:45 - bat because we still didn't call it from
+12:47 - anywhere yet or invoke it so we have to
+12:49 - do that from our on ready command
+12:52 - so in order to run this function as a
+12:55 - task what we need to do is we need to
+12:57 - call pull blockchain but instead of just
+13:00 - running it just like this we actually
+13:02 - need to call start on it
+13:04 - so again anytime you want to run a
+13:07 - periodic task then you can just make
+13:09 - this decorator and then you can call the
+13:12 - function name and then dot start and
+13:15 - just to show you guys that this is
+13:16 - working i'm going to say
+13:18 - um we'll just say i'm gonna print out
+13:21 - apples every five seconds and this is
+13:23 - just purely to test that this is indeed
+13:26 - running as a periodic task
+13:28 - so
+13:28 - in our console we should see ready
+13:31 - apples
+13:34 - if i could zoom in
+13:36 - apples and let's just do it one more
+13:38 - time even though i think we get the
+13:40 - point right now apples there you go
+13:42 - so we did indeed set up our function to
+13:45 - run on a five second delay or five
+13:48 - second interval
+13:49 - so now let's go ahead and create this
+13:51 - check deposits function so let's go
+13:54 - ahead and delete this print apples i
+13:55 - don't think we need that anymore and
+13:57 - i'll uncomment check deposits and of
+13:59 - course we don't have it created yet so
+14:01 - we need to go ahead and do that
+14:03 - so i'm going to make a function called
+14:05 - check deposits and what is this
+14:09 - going to do
+14:10 - [Music]
+14:11 - all right so
+14:13 - what it's going to do is it's going to
+14:15 - fetch bank
+14:18 - transactions from uh we'll say from the
+14:20 - bank and then we'll
+14:23 - insert
+14:25 - a new
+14:26 - deposits into database
+14:32 - all right beautiful beautiful beautiful
+14:35 - so
+14:35 - [Music]
+14:36 - let's pop back open our
+14:39 - why is chrome only open like half the
+14:41 - time okay
+14:42 - so we're gonna be using this endpoint uh
+14:45 - bank transactions now let me just go
+14:47 - ahead and copy this
+14:49 - and all right
+14:51 - so what we can actually do if i pop that
+14:53 - open one more time is this
+14:56 - so whenever we call this endpoint right
+14:58 - here which is just our banks ip bank
+15:01 - transactions what it returns is not only
+15:04 - all of these results but it returns some
+15:06 - metadata too and this says
+15:09 - if you have a next page in other words
+15:12 - if there are more results because this
+15:14 - page it only sends back 50 results at a
+15:18 - time
+15:19 - so either way if you have more results
+15:22 - that are not showing on this page or
+15:24 - this result set
+15:25 - then it's going to come back with a link
+15:27 - to next right here
+15:29 - now if we don't have any link to next
+15:32 - then it's going to be null just like
+15:33 - this this one doesn't have a previous
+15:35 - page because we are on the very first
+15:37 - page so either way i say this because
+15:40 - whenever we are checking for new
+15:42 - transactions then we can add a filter to
+15:44 - say instead of all the bank transactions
+15:48 - which are the transactions to and from
+15:49 - everyone
+15:51 - we want to filter this down where we are
+15:53 - only looking at the bank transactions
+15:55 - for our bot
+15:57 - and also whenever we order these we want
+16:00 - to start with the newest ones first
+16:02 - so
+16:03 - with that filter and we're going to be
+16:05 - writing that in just a second what we
+16:07 - can do is we can basically iterate
+16:09 - through
+16:10 - until next equals null that means we got
+16:12 - to the end of the result set in that we
+16:14 - don't have any more results to check
+16:18 - all right so let me go ahead and well i
+16:20 - can copy this right here it doesn't
+16:22 - really matter
+16:24 - so what i'm going to do is i am going to
+16:26 - make a variable called next url and this
+16:30 - is going to be the very first url that
+16:32 - we query
+16:34 - and again once we are done querying this
+16:36 - first url then if it does have a next
+16:39 - page for us to view
+16:42 - right here then that is going to be
+16:44 - stored in next url so even though it
+16:47 - technically is the first url right now
+16:49 - it makes more sense in just a bit
+16:52 - so i'm going to make an f string
+16:54 - and the first thing i want to do is
+16:56 - replace some of these with my constants
+17:00 - so we already stored the bank ip
+17:03 - and did i import these nope
+17:06 - so from
+17:06 - config settings i'm going to import bank
+17:09 - ip
+17:10 - and what do we need bank protocol
+17:15 - and also that ba account number
+17:20 - okay
+17:22 - man kind of annoying how it always bumps
+17:24 - it back okay
+17:25 - so bank ip first
+17:28 - so i'm going to replace this section
+17:29 - with the bank ip i'm going to replace
+17:32 - this section with the bank protocol
+17:35 - and then what we can do is this okay
+17:40 - so the limit offset we don't need
+17:42 - instead we are going to add a filter
+17:44 - called recipient
+17:47 - because remember if i pop this open
+17:49 - again
+17:51 - in these bank transactions they have a
+17:53 - recipient key and this means the person
+17:56 - who is receiving the coins
+17:58 - so we don't care about this uh we don't
+18:01 - care about this we only want to look at
+18:03 - the transactions that are coming to our
+18:05 - account
+18:06 - so we're going to say a filter on this
+18:08 - where recipient equals
+18:12 - bot account number so only our
+18:15 - transactions coming in
+18:17 - and another thing that i want to do
+18:20 - is there's an ordering
+18:25 - um flag available and this says how do
+18:27 - you want to order these transactions
+18:29 - whenever you get them from the api and
+18:31 - what we want to do
+18:32 - is we want to order these
+18:35 - by the blocks
+18:37 - created date and when we do that we
+18:39 - pretty much just say give us the most
+18:41 - recent blocks aka the most recent
+18:43 - transactions first
+18:45 - now in order to do that with the nested
+18:48 - field you do block
+18:50 - two underscores and then you do create a
+18:52 - date
+18:53 - and just make sure that spell everything
+18:56 - correctly
+18:58 - block underscore underscore created date
+19:01 - so
+19:02 - this is essentially going to give us the
+19:04 - result set from the api of all of our
+19:06 - new transactions coming to the bot
+19:08 - account and then what i'm going to do is
+19:11 - i'm going to make a while loop and i'm
+19:13 - going to say
+19:14 - while you have a next url
+19:18 - continue to fetch this data because
+19:21 - whenever we get to the end like i said
+19:23 - in that next url is going to be null
+19:25 - then we just want to break out of our
+19:27 - loop we say we fetch all the data that
+19:29 - we have
+19:30 - all right now in order to make this
+19:32 - network request what i'm actually going
+19:34 - to be doing is making another utils
+19:38 - and i'm just going to call this network
+19:42 - and that we can say import
+19:45 - requests let me bump this up
+19:49 - and all this is going to do by the way
+19:50 - is it's going to use this request
+19:52 - library to
+19:54 - fetch
+19:55 - an endpoint fetch some api data and then
+19:58 - it's going to convert it back to python
+20:00 - in other words a python dictionary and
+20:02 - it just cleans up a little bit of you
+20:04 - know the dirty work
+20:07 - so i'm just gonna name it fetch
+20:12 - and then just so i enforce named
+20:14 - arguments we're just gonna say what url
+20:16 - do you want to fetch from are there
+20:18 - gonna be any headers i don't believe
+20:20 - we're going to have any headers in this
+20:22 - but i always like to include it
+20:24 - and then we are just going to say send
+20:28 - get
+20:30 - pressed in
+20:36 - all right so send a get request and
+20:38 - return response is a python object
+20:40 - and we'll just say the response
+20:45 - is equal to the request
+20:47 - dot get
+20:48 - and it takes url
+20:51 - and the headers equal the headers that
+20:53 - we pass in so basically just taking
+20:56 - whatever we call to
+20:58 - fetch and just routing it to request.get
+21:01 - to make sure it's a get request
+21:03 - and after that we want to return this
+21:05 - response but before we do we just want
+21:07 - to go ahead and convert it to json
+21:10 - and that's going to give us a python
+21:11 - dict to work with
+21:13 - all right so simple enough and now if i
+21:16 - go ahead and say
+21:20 - from utils
+21:22 - dot network import fetch okay beautiful
+21:27 - so now we got that fetch command now
+21:30 - just to actually do this so let me say
+21:34 - print
+21:35 - next url okay so this isn't the actual
+21:38 - logic that we're gonna have however what
+21:40 - i do want to do
+21:42 - is run this and i did kick off okay
+21:44 - check the posits so i just want to print
+21:47 - out the url because
+21:49 - this is like the most laziest way to do
+21:51 - it but um i just want to print out the
+21:52 - url
+21:54 - all right so let me stop that and i'm
+21:57 - just going to copy this url
+21:59 - and then we'll pop it back open
+22:02 - okay
+22:03 - so i just want to throw it in my browser
+22:06 - so we can take a little bit better look
+22:08 - at the response that's coming back
+22:10 - so in this case since i only had five
+22:14 - transactions ever sent to this bot
+22:16 - account that's why we don't have a next
+22:17 - page because these pages
+22:19 - uh like i said they either return 50
+22:22 - results at a time i believe
+22:24 - but either way
+22:26 - uh let's just take a note of this
+22:28 - response so it comes back with the count
+22:30 - that says how many total
+22:32 - deposits have been sent to this bot
+22:34 - account
+22:35 - is there a next page that you have to
+22:37 - check no there isn't a previous page
+22:39 - doesn't really matter for us because
+22:41 - we're only parsing in one direction
+22:43 - and then we get our results right here
+22:46 - in these results
+22:48 - are a list of bank transactions
+22:51 - okay so now we can get to actually
+22:53 - parsing out this data
+22:57 - so let me scroll back up here and okay
+23:01 - so the first thing i want to do is say
+23:03 - for all of that data that came back even
+23:05 - the metadata what i want to do is call
+23:08 - fetch and the url is going to be equal
+23:11 - to the next url in other words
+23:13 - the very first time it's just going to
+23:15 - be equal to this endpoint that we're
+23:17 - looking at right here
+23:21 - and that for the headers
+23:23 - uh this isn't going to take any special
+23:25 - headers but i did want to enforce the
+23:27 - passing in of those but you can just
+23:29 - pass in an empty object just like this
+23:32 - so the next thing that i want to do is i
+23:34 - want to take these results
+23:36 - which remember is just a list of bank
+23:38 - transactions and i just want to store it
+23:40 - in a variable that is just a little bit
+23:42 - more intuitive other than results
+23:46 - so i'm just going to call those bank
+23:48 - transactions
+23:51 - and set this equal to the data which is
+23:53 - all the data that we get back
+23:56 - in other words
+23:57 - this entire thing so it's going to be
+23:59 - equal to data results
+24:03 - so data results just like that
+24:06 - now after this what i want to do is i
+24:09 - want to update this next url so the url
+24:12 - is important whenever we're fetching
+24:13 - data but after we get the data what i
+24:16 - would like to do is set it equal to the
+24:18 - next url that needs queried now in this
+24:22 - case we don't have any more pages to
+24:24 - query so it's going to be null and
+24:26 - that's going to be an indication for our
+24:28 - bot to say hey we don't have any more
+24:30 - data to fetch
+24:31 - we can go ahead and break out of this
+24:32 - loop now
+24:34 - so how do we do that we can just say the
+24:36 - next url
+24:38 - that we have to fetch is equal to
+24:40 - whatever the response is in the next key
+24:44 - so this is either equal to like i said a
+24:46 - url or no
+24:48 - all right so
+24:50 - at the end of this loop right here
+24:52 - since this is going to be equal to null
+24:54 - that's why this loop is going to only
+24:56 - iterate once or in other words it's only
+24:58 - going to iterate
+25:00 - the number of pages that you have to
+25:02 - parse so that's all this
+25:04 - and now what we want to do is this so we
+25:07 - took all those bank transactions and
+25:09 - remember
+25:10 - these bank transactions are now only for
+25:14 - our bot account if you see the recipient
+25:17 - 5982 or what is it 59842
+25:21 - all of these since we threw in that
+25:23 - query param these are all for our
+25:28 - i can't talk because i'm fleming my
+25:29 - throat these are all for our ba accounts
+25:32 - so what we want to do is we want to go
+25:34 - through each of these all of the bank
+25:36 - transactions and we want to insert them
+25:39 - into our deposits collection which we
+25:42 - actually don't even have yet let's go
+25:43 - ahead and make that
+25:50 - and remember that this is going to be
+25:51 - the shape of it right here so let me
+25:54 - actually go ahead and copy that and i'll
+25:56 - paste it right here just so we have a
+25:58 - reference okay
+26:01 - and maybe i'll zoom out a little bit so
+26:02 - you guys can see
+26:04 - and actually let me know the text size
+26:06 - on youtube if this is too small too big
+26:08 - whatever
+26:09 - but either way
+26:10 - what we're going to be doing
+26:12 - is we are going to say for
+26:14 - bank transaction
+26:16 - in bank transactions so
+26:19 - iterate through all of our bank
+26:20 - transactions one by one
+26:22 - and remember we're going to start with
+26:24 - the newest first
+26:26 - so what we can do is we can essentially
+26:28 - just try to insert those into our
+26:30 - collections one at a time
+26:32 - now since we are
+26:35 - using the id
+26:38 - which the bank gave us
+26:40 - if we are
+26:41 - going to
+26:42 - try to insert the same one one that we
+26:45 - already inserted then it's going to
+26:47 - throw an issue because remember in
+26:49 - this id it has to be unique so show you
+26:53 - guys a cool little trick
+26:54 - whenever we get one of these bank
+26:56 - transactions right here we can either
+26:58 - look at the idea of it and we can say
+27:00 - does this id already exist in your
+27:02 - deposits collection if so
+27:05 - then just skip it if not then go ahead
+27:08 - and insert it
+27:09 - now
+27:10 - think that through whenever you take
+27:12 - that and you query the database and say
+27:14 - does this exist or not that's one query
+27:16 - now whenever it says no it doesn't exist
+27:19 - and you say okay insert it again that's
+27:21 - another query that's two queries however
+27:23 - what you can do is you can just go ahead
+27:25 - and try to insert it
+27:27 - and that's just going to take one query
+27:28 - if everything's chill now if that
+27:30 - doesn't work because that transaction
+27:33 - already exists then the database is just
+27:36 - going to send back an error anyways but
+27:38 - either way it minimizes the amount of
+27:39 - queries from two down to one
+27:42 - now again there's probably a more
+27:44 - efficient way to do this but uh i just
+27:46 - want to talk you guys through the
+27:47 - initial process
+27:48 - so anyways what we are going to try to
+27:50 - do is essentially uh insert
+27:53 - one of these bank transactions
+27:55 - now another thing that i want to do is
+27:57 - this
+28:00 - from pi errors there is an error
+28:03 - called duplicate key error and this is
+28:06 - what we're going to be expecting if we
+28:07 - try to insert a bank transaction and it
+28:10 - already exists in other words maybe we
+28:12 - just inserted it like five seconds ago
+28:14 - or whatever
+28:15 - so in our case whenever we receive one
+28:18 - of these duplicate key errors meaning
+28:20 - hey
+28:22 - these bank transactions you already
+28:24 - parse these you already insert them into
+28:27 -  everything is good to go already
+28:29 - what we can do is just break out of this
+28:31 - loop so again this while loop is going
+28:34 - to continue fetching api data it's going
+28:38 - to continue pulling in bank transactions
+28:40 - until one of two things happen one it
+28:42 - runs out of pages to fetch which means
+28:45 - we just parse the entire um bank
+28:47 - database
+28:48 - another thing is that whenever we get to
+28:51 - a bank transaction that we already added
+28:53 - it's gonna say bro you already added
+28:55 - this we're just gonna break out of the
+28:57 - loop now and the reason that this works
+28:59 - is because we are ordering from newest
+29:02 - to oldest now if we were iterating
+29:05 - through the oldest ones first then we
+29:06 - would have some issues but we're not so
+29:08 - that's why this entire system is going
+29:10 - to work
+29:11 - okay
+29:12 - so now instead of here we actually need
+29:14 - to insert those deposits so we're going
+29:16 - to say for each bank transaction we're
+29:19 - going to in our deposits collection
+29:22 - insert one
+29:24 - and then how do we need to insert it
+29:26 - well it depends on this info right here
+29:29 - so the
+29:31 - id
+29:32 - of this is going to be equal to the bank
+29:34 - transaction
+29:36 - in this id if you guys can see
+29:39 - it doesn't have an underscore
+29:42 - so that's what i'm doing right there
+29:44 - and i can probably copy this and
+29:49 - now i won't be that lazy okay
+29:51 - so after id what do we need we need the
+29:54 - amount
+29:56 - so the amount on a bank transaction
+30:00 - how do we get that
+30:02 - okay it just looks like the amount
+30:06 - beautiful this is almost too easy
+30:10 - and all right what do we need to add
+30:11 - after this the block id
+30:17 - so the block id this is going to be
+30:19 - equal to the bank transaction and how do
+30:22 - we get the block id
+30:24 - so you need to look at the block
+30:27 - dictionary and then the id from that
+30:32 - so that
+30:34 - you do block and then for the block you
+30:37 - get
+30:38 - the id
+30:41 - all right now after this what do we need
+30:44 - confirmation checks
+30:46 - so confirmation checks
+30:48 - we don't get this from the bank
+30:49 - transaction api data we are just going
+30:51 - to set this equal to zero at first
+30:54 - because remember what we're doing right
+30:56 - now is we're just taking these bank
+30:58 - transactions and pretty much just
+30:59 - cloning those over to we didn't
+31:01 - check for any confirmations yet we are
+31:04 - not doing anything fancy so we're just
+31:05 - gonna set confirmation checks at zero
+31:08 - is confirmed this is the easy one by
+31:11 - default is it confirmed well i'm
+31:13 - guessing if we never even checked for
+31:15 - confirmations yet we probably cannot
+31:17 - confirm that payment so we're gonna be
+31:19 - setting that to false by default
+31:22 - and for this memo
+31:26 - so the memo we're gonna store is just
+31:28 - whatever memo they had on that bank
+31:30 - transaction and that is going to
+31:32 - be called
+31:33 - memo i don't know why i copied that but
+31:35 - uh
+31:36 - there you go let me just copy this all
+31:38 - right
+31:39 - so it's just equal to the memo field
+31:41 - and last but not least what do we have
+31:44 - okay
+31:45 - so the last bit of information that we
+31:47 - need to store
+31:48 - is the sender
+31:51 - so we'll say that the sender and how do
+31:53 - we get the sender
+31:56 - so in the center we gotta query the
+31:57 - block again and there's a key or an
+32:01 - attribute in this block called sender
+32:04 - so we had similar structure up here
+32:07 - but instead of the blocks id we're going
+32:09 - to get the block
+32:12 - sender there we go and believe it or not
+32:15 - this deposit
+32:17 - logic should be complete did we fetch
+32:20 - bank transactions from the bank yup it
+32:22 - looked like it did we insert new
+32:24 - deposits into the database well it looks
+32:27 - like that but let's just go ahead and
+32:29 - test that now
+32:32 - so
+32:33 - what actually we can add for now
+32:39 - uh
+32:40 - okay let's just print out something like
+32:43 - a polling
+32:47 - blockchain
+32:48 - even though you may not want to do this
+32:50 - if you are releasing this production
+32:52 - because it just might clutter up your
+32:55 - logs or whenever you try to debug stuff
+32:57 - however just for testing let's go ahead
+33:00 - and run this
+33:03 - okay so ready polling blockchain and
+33:06 - that's good now let's pop over in
+33:09 - and see what we got going on gonna
+33:11 - refresh this and check this out okay
+33:14 - so it looks like we now got some
+33:15 - deposits in there and
+33:17 - yeah it's looking pretty good displaying
+33:19 - documents one of five
+33:22 - so what it did is it essentially queried
+33:24 - this endpoint which was good that's the
+33:27 - one we were hoping it to query
+33:29 - and it took all those and it converted
+33:31 - them to deposits and it stored it in our
+33:33 - deposits collection
+33:35 - so right now even if i refresh the
+33:38 - confirmation checks remain at zero and
+33:40 - is confirmed is false because even
+33:42 - though it's aware of these incoming
+33:44 - payments
+33:45 - since we don't have the confirmation
+33:47 - logic bill in it can never confirm or
+33:49 - process any of the users payments
+33:52 - so
+33:53 - that is uh not good but everything else
+33:55 - seems to be working so in the next
+33:58 - tutorial what we can do is we can work
+34:00 - on that deposit confirmation logic i'm
+34:03 - pumped up so i'll see you guys then
+
+Cleaned transcript:
+
+alrighty guys welcome back to another tutorial and now that we have the basic registration logic built out what we can do now is we can start listening to the blockchain for transactions sent to our bot account aka deposits or payments whatever you want to call them basically coins sent to our bot account and remember like we said the first time they are going to send coins it's because they are trying to register their account in other words link their blockchain account to their discord account now after they are registered they can continue to send coins and this is going to be we're just going to have it update a balance on their user object but you can have it where you know maybe they're buying like digital gold or buying ingame items whatever you want to do that part is kind of up to the developer but either way what we are going to be doing is listening for those payments from our bank that we already have set up in like the first or second tutorial and before we get into more of the technical details or any of the code i want to walk you guys through this deposit object because this is what we're going to be storing in so the first thing of course like every object this is gonna have an id in this id we're gonna get from the bank's transactions the bank already creates a unique id for each transaction and we'll be taking a closer look at that later on but that's what this is now the amount of course you can probably guess this this is just the amount of coins the user is sending to our account and the block id this is a little bit more technical it's for it's pretty much the unique idea of the block as it's stored on the blockchain and we'll see how this comes in handy in just a bit now confirmation checks is related to this right here so by default whenever a user first sends a payment to the new boston blockchain network that payment is not confirmed it's just like an attempted payment or they're trying to pay someone now that is why whenever our bot first receives these deposits it's going to set is confirmed equal to false this means that yes we see the payment out there but it doesn't have any confirmations yet meaning it didn't officially get added to the blockchain or it wasn't verified yet basically now this confirmation checks if you remember this is gonna say okay once we receive this payment how many times are we gonna hit the network and say hey is this verified yet is this verified yet is this verified yet so we are going to do that up to 20 times because this um process is actually going to have a five second delay so this should really never take longer than like two checks so two checks means like there was ten seconds and that means that like the network was acting slow but we're just going to put 20 as max just to be super safe and the memo of course as you guys saw this is just the description that they add in the transaction and for ours that's what that random code generated is going to be now afterwards when they're already registered and they're just sending payments it doesn't really matter what they type in the memo the memo we are just using for the registration process but you know they can type whatever now another thing that i want to mention and i saw some users talking about this pattern in the community is that instead of this registration process yada yada you can actually have this memo be linked to something directly like a digital item or ingame currency or whatever and then technically users don't even have to register so you can just have people like it's almost like a unique upc or an item code where users can just pay for those things directly but we get some other benefits with um registering as well so anyways going to continue along just want to point that out in case you guys have any cool ideas the sender of course is the sender's account number and this is our basic deposit structure so what we are going to be doing in our code is we're going to be running more or less two processes the first process is going to listen for these deposits and then the second process is going to say okay what deposits did we receive that are not confirmed yet and have less than 20 confirmation checks and that process is independently going to go look at confirmations and once a payment is confirmed then we process their payment or update their balance all right so the last technical thing i want to point out to avoid any confusion is this right here so whenever a user from their client right here they go ahead and send coins what this is going to do is it's going to send an entire block now the block from a network protocol point of view it includes all your transactions which of course include the amount the recipient any optional memo if it's a fee or if it's just a regular transaction so on and so forth the block contains a lot of information a lot of this is just kind of specific to the network protocol involves like signatures to make sure that no one can you know cheat and pretend to be your account so on and so forth so why am i saying all this instead of coding in discord well i say this because what we are doing is we are connected to the bank now what the bank does to make it easier for the user to actually store and query this data is it takes these transactions out of the block and it stores those as a separate object called bank transactions so you can think of a bank transaction is really all the user specific information in the block that isn't part of the network protocol that only the users are really going to care about now to show you guys what this object looks like whenever it's stored i'm actually at the bank transactions endpoint that we're going to hit in just a second and you can see that within each transaction it's either a fee for the primary validator or the bank now typically a big transaction looks like this without any fee and it just has an id and this is what we're going to be storing as our id and then of course it has an amount a memo the recipient and so this is of course the recipient which is going to be our bot account now there are a lot of other transactions going to be happening on the network but we only want to make sure that we are looking at the transactions that were sent to our bot account i really don't care if user a sent user b some coins for pizza or whatever and another thing is it has a reference to its block or in other other words its parent or its container now why am i saying all this again because of this even though we are going to be looking at bank transactions right here those bank transactions came from a block now it's the block itself which has confirmations on it so again even though we're going to be looking at the bank transactions and essentially converting those to deposits pulled open the wrong thing deposits right here that we're going to be storing in the deposits are not going to have confirmations themselves in order to check if these deposits are confirmed we're going to need to look at the block and then we're going to have to say does the block have any confirmations on it if the block itself is confirmed then all transactions aka deposits within are also confirmed so that's why we need to follow this twostep process we just can't say okay if you have some transactions right here without any confirmations then we can just like accept the payment no no we need the confirmation and this says yes this payment is valid okay so hopefully i have that pounded in your head hard enough so now let's go ahead and get to the code so the first thing i want to do is i want to update this honor ready because i want to call a function after here that is going to pull the blockchain now actually can make that right here so we'll say it's going to be asynctask and if i can spell async async def blockchain okay so this is going to actually be the parent function that calls two other functions and we'll say it's gonna pull the blockchain for new transactions or deposits now another thing is that why am i doing this so these are called bank transactions we're going to be looking at an endpoint called bank transactions why did i decide to rename it to deposit in our architecture it seems like i'm just making things more confusing well whenever i think of a transaction especially like at my bank for example i'm thinking that i can send someone something and that's a transaction and also that i can receive something and then that's a transaction as well now for this system it's basically just going to be like a payment integration where you can receive funds but we don't have a withdrawal system built or anything like that so i want to make it very clear that these are just deposits these are just payments coming in to our bot account and then we're gonna sell some service or digital good or whatever but either way i i just think it was a little bit more clear looking at everything so anyways we're gonna say pull the blockchain for new transactions aka deposits sent to the bot account which is the account that we own now i'm going to leave another note here guys here's that ding what the heck was that and i'll say only accept confirm transactions okay so here we go this is going to be my poll blockchain and it's going to be do these two things and i'm gonna break this up into two different functions that we're gonna write later on one is gonna be called check deposits and the other one is gonna be called check confirmations what is this get out of here check confirmations and you guys can probably tell what these are going to do this one is going to look for keep holding this open this one is going to query this endpoint and see if there are any new deposits or any new payments that someone tried to send to our bot account and then this one i don't have the endpoint ready but it's basically going to check for those confirmations so for now let me just let me just comment those out and write pass so my ide doesn't freak out and all right now another thing that i want to do is i actually want to pull this blockchain not just once where as soon as my bot starts up then i'm just going to pull it and say okay uh that's it you check it once and you don't have to check anymore this needs to run again and again and again now i just don't want to run it as fast as it possibly can like on a while loop because then it's going to unnecessarily hit the network and it's guys going to say do you have any new transactions do you have any new transactions so i think that was a little much so instead i'm going to put it on a 5 second loop now anytime you want to make a command in discord that needs to run these periodic tasks it's actually really easy you don't have to set up celery you don't have to set up any cron job or linux task in the background they actually make it a piece of cake so in where you import commands from discord.ext import something called tasks as well and then go back to right above pull blockchain and then what we're going to add is a decorator and that is tess we're going to run this on a loop and then for seconds we're just going to say 5. so this means and i'll put 5.0 just to uh make it very clear so this function right here is gonna run every five seconds now it just doesn't run right off the bat because we still didn't call it from anywhere yet or invoke it so we have to do that from our on ready command so in order to run this function as a task what we need to do is we need to call pull blockchain but instead of just running it just like this we actually need to call start on it so again anytime you want to run a periodic task then you can just make this decorator and then you can call the function name and then dot start and just to show you guys that this is working i'm going to say um we'll just say i'm gonna print out apples every five seconds and this is just purely to test that this is indeed running as a periodic task so in our console we should see ready apples if i could zoom in apples and let's just do it one more time even though i think we get the point right now apples there you go so we did indeed set up our function to run on a five second delay or five second interval so now let's go ahead and create this check deposits function so let's go ahead and delete this print apples i don't think we need that anymore and i'll uncomment check deposits and of course we don't have it created yet so we need to go ahead and do that so i'm going to make a function called check deposits and what is this going to do all right so what it's going to do is it's going to fetch bank transactions from uh we'll say from the bank and then we'll insert a new deposits into database all right beautiful beautiful beautiful so let's pop back open our why is chrome only open like half the time okay so we're gonna be using this endpoint uh bank transactions now let me just go ahead and copy this and all right so what we can actually do if i pop that open one more time is this so whenever we call this endpoint right here which is just our banks ip bank transactions what it returns is not only all of these results but it returns some metadata too and this says if you have a next page in other words if there are more results because this page it only sends back 50 results at a time so either way if you have more results that are not showing on this page or this result set then it's going to come back with a link to next right here now if we don't have any link to next then it's going to be null just like this this one doesn't have a previous page because we are on the very first page so either way i say this because whenever we are checking for new transactions then we can add a filter to say instead of all the bank transactions which are the transactions to and from everyone we want to filter this down where we are only looking at the bank transactions for our bot and also whenever we order these we want to start with the newest ones first so with that filter and we're going to be writing that in just a second what we can do is we can basically iterate through until next equals null that means we got to the end of the result set in that we don't have any more results to check all right so let me go ahead and well i can copy this right here it doesn't really matter so what i'm going to do is i am going to make a variable called next url and this is going to be the very first url that we query and again once we are done querying this first url then if it does have a next page for us to view right here then that is going to be stored in next url so even though it technically is the first url right now it makes more sense in just a bit so i'm going to make an f string and the first thing i want to do is replace some of these with my constants so we already stored the bank ip and did i import these nope so from config settings i'm going to import bank ip and what do we need bank protocol and also that ba account number okay man kind of annoying how it always bumps it back okay so bank ip first so i'm going to replace this section with the bank ip i'm going to replace this section with the bank protocol and then what we can do is this okay so the limit offset we don't need instead we are going to add a filter called recipient because remember if i pop this open again in these bank transactions they have a recipient key and this means the person who is receiving the coins so we don't care about this uh we don't care about this we only want to look at the transactions that are coming to our account so we're going to say a filter on this where recipient equals bot account number so only our transactions coming in and another thing that i want to do is there's an ordering um flag available and this says how do you want to order these transactions whenever you get them from the api and what we want to do is we want to order these by the blocks created date and when we do that we pretty much just say give us the most recent blocks aka the most recent transactions first now in order to do that with the nested field you do block two underscores and then you do create a date and just make sure that spell everything correctly block underscore underscore created date so this is essentially going to give us the result set from the api of all of our new transactions coming to the bot account and then what i'm going to do is i'm going to make a while loop and i'm going to say while you have a next url continue to fetch this data because whenever we get to the end like i said in that next url is going to be null then we just want to break out of our loop we say we fetch all the data that we have all right now in order to make this network request what i'm actually going to be doing is making another utils and i'm just going to call this network and that we can say import requests let me bump this up and all this is going to do by the way is it's going to use this request library to fetch an endpoint fetch some api data and then it's going to convert it back to python in other words a python dictionary and it just cleans up a little bit of you know the dirty work so i'm just gonna name it fetch and then just so i enforce named arguments we're just gonna say what url do you want to fetch from are there gonna be any headers i don't believe we're going to have any headers in this but i always like to include it and then we are just going to say send get pressed in all right so send a get request and return response is a python object and we'll just say the response is equal to the request dot get and it takes url and the headers equal the headers that we pass in so basically just taking whatever we call to fetch and just routing it to request.get to make sure it's a get request and after that we want to return this response but before we do we just want to go ahead and convert it to json and that's going to give us a python dict to work with all right so simple enough and now if i go ahead and say from utils dot network import fetch okay beautiful so now we got that fetch command now just to actually do this so let me say print next url okay so this isn't the actual logic that we're gonna have however what i do want to do is run this and i did kick off okay check the posits so i just want to print out the url because this is like the most laziest way to do it but um i just want to print out the url all right so let me stop that and i'm just going to copy this url and then we'll pop it back open okay so i just want to throw it in my browser so we can take a little bit better look at the response that's coming back so in this case since i only had five transactions ever sent to this bot account that's why we don't have a next page because these pages uh like i said they either return 50 results at a time i believe but either way uh let's just take a note of this response so it comes back with the count that says how many total deposits have been sent to this bot account is there a next page that you have to check no there isn't a previous page doesn't really matter for us because we're only parsing in one direction and then we get our results right here in these results are a list of bank transactions okay so now we can get to actually parsing out this data so let me scroll back up here and okay so the first thing i want to do is say for all of that data that came back even the metadata what i want to do is call fetch and the url is going to be equal to the next url in other words the very first time it's just going to be equal to this endpoint that we're looking at right here and that for the headers uh this isn't going to take any special headers but i did want to enforce the passing in of those but you can just pass in an empty object just like this so the next thing that i want to do is i want to take these results which remember is just a list of bank transactions and i just want to store it in a variable that is just a little bit more intuitive other than results so i'm just going to call those bank transactions and set this equal to the data which is all the data that we get back in other words this entire thing so it's going to be equal to data results so data results just like that now after this what i want to do is i want to update this next url so the url is important whenever we're fetching data but after we get the data what i would like to do is set it equal to the next url that needs queried now in this case we don't have any more pages to query so it's going to be null and that's going to be an indication for our bot to say hey we don't have any more data to fetch we can go ahead and break out of this loop now so how do we do that we can just say the next url that we have to fetch is equal to whatever the response is in the next key so this is either equal to like i said a url or no all right so at the end of this loop right here since this is going to be equal to null that's why this loop is going to only iterate once or in other words it's only going to iterate the number of pages that you have to parse so that's all this and now what we want to do is this so we took all those bank transactions and remember these bank transactions are now only for our bot account if you see the recipient 5982 or what is it 59842 all of these since we threw in that query param these are all for our i can't talk because i'm fleming my throat these are all for our ba accounts so what we want to do is we want to go through each of these all of the bank transactions and we want to insert them into our deposits collection which we actually don't even have yet let's go ahead and make that and remember that this is going to be the shape of it right here so let me actually go ahead and copy that and i'll paste it right here just so we have a reference okay and maybe i'll zoom out a little bit so you guys can see and actually let me know the text size on youtube if this is too small too big whatever but either way what we're going to be doing is we are going to say for bank transaction in bank transactions so iterate through all of our bank transactions one by one and remember we're going to start with the newest first so what we can do is we can essentially just try to insert those into our collections one at a time now since we are using the id which the bank gave us if we are going to try to insert the same one one that we already inserted then it's going to throw an issue because remember in this id it has to be unique so show you guys a cool little trick whenever we get one of these bank transactions right here we can either look at the idea of it and we can say does this id already exist in your deposits collection if so then just skip it if not then go ahead and insert it now think that through whenever you take that and you query the database and say does this exist or not that's one query now whenever it says no it doesn't exist and you say okay insert it again that's another query that's two queries however what you can do is you can just go ahead and try to insert it and that's just going to take one query if everything's chill now if that doesn't work because that transaction already exists then the database is just going to send back an error anyways but either way it minimizes the amount of queries from two down to one now again there's probably a more efficient way to do this but uh i just want to talk you guys through the initial process so anyways what we are going to try to do is essentially uh insert one of these bank transactions now another thing that i want to do is this from pi errors there is an error called duplicate key error and this is what we're going to be expecting if we try to insert a bank transaction and it already exists in other words maybe we just inserted it like five seconds ago or whatever so in our case whenever we receive one of these duplicate key errors meaning hey these bank transactions you already parse these you already insert them into everything is good to go already what we can do is just break out of this loop so again this while loop is going to continue fetching api data it's going to continue pulling in bank transactions until one of two things happen one it runs out of pages to fetch which means we just parse the entire um bank database another thing is that whenever we get to a bank transaction that we already added it's gonna say bro you already added this we're just gonna break out of the loop now and the reason that this works is because we are ordering from newest to oldest now if we were iterating through the oldest ones first then we would have some issues but we're not so that's why this entire system is going to work okay so now instead of here we actually need to insert those deposits so we're going to say for each bank transaction we're going to in our deposits collection insert one and then how do we need to insert it well it depends on this info right here so the id of this is going to be equal to the bank transaction in this id if you guys can see it doesn't have an underscore so that's what i'm doing right there and i can probably copy this and now i won't be that lazy okay so after id what do we need we need the amount so the amount on a bank transaction how do we get that okay it just looks like the amount beautiful this is almost too easy and all right what do we need to add after this the block id so the block id this is going to be equal to the bank transaction and how do we get the block id so you need to look at the block dictionary and then the id from that so that you do block and then for the block you get the id all right now after this what do we need confirmation checks so confirmation checks we don't get this from the bank transaction api data we are just going to set this equal to zero at first because remember what we're doing right now is we're just taking these bank transactions and pretty much just cloning those over to we didn't check for any confirmations yet we are not doing anything fancy so we're just gonna set confirmation checks at zero is confirmed this is the easy one by default is it confirmed well i'm guessing if we never even checked for confirmations yet we probably cannot confirm that payment so we're gonna be setting that to false by default and for this memo so the memo we're gonna store is just whatever memo they had on that bank transaction and that is going to be called memo i don't know why i copied that but uh there you go let me just copy this all right so it's just equal to the memo field and last but not least what do we have okay so the last bit of information that we need to store is the sender so we'll say that the sender and how do we get the sender so in the center we gotta query the block again and there's a key or an attribute in this block called sender so we had similar structure up here but instead of the blocks id we're going to get the block sender there we go and believe it or not this deposit logic should be complete did we fetch bank transactions from the bank yup it looked like it did we insert new deposits into the database well it looks like that but let's just go ahead and test that now so what actually we can add for now uh okay let's just print out something like a polling blockchain even though you may not want to do this if you are releasing this production because it just might clutter up your logs or whenever you try to debug stuff however just for testing let's go ahead and run this okay so ready polling blockchain and that's good now let's pop over in and see what we got going on gonna refresh this and check this out okay so it looks like we now got some deposits in there and yeah it's looking pretty good displaying documents one of five so what it did is it essentially queried this endpoint which was good that's the one we were hoping it to query and it took all those and it converted them to deposits and it stored it in our deposits collection so right now even if i refresh the confirmation checks remain at zero and is confirmed is false because even though it's aware of these incoming payments since we don't have the confirmation logic bill in it can never confirm or process any of the users payments so that is uh not good but everything else seems to be working so in the next tutorial what we can do is we can work on that deposit confirmation logic i'm pumped up so i'll see you guys then

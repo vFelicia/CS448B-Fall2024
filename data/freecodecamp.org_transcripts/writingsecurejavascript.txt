@@ -1,0 +1,755 @@
+00:00 - [Music]
+00:13 - hi everybody um thanks for uh for having
+00:16 - me here so i'm going to talk today about
+00:18 - writing secure javascript code
+00:20 - um just a little bit about me just for
+00:22 - history is that i come from kind of a
+00:24 - long time security application security
+00:26 - type of experience through the israeli
+00:28 - army and a bunch of application security
+00:29 - companies and then did about six years
+00:31 - in performance so for some people here i
+00:34 - know through that world and i kind of
+00:35 - back into a security startup dealing
+00:37 - with using open source securely
+00:40 - so
+00:41 - kind of jumping into it we all know i
+00:43 - think probably everybody here agrees
+00:44 - that javascript is awesome right you
+00:46 - know we all love it and we like to talk
+00:48 - about how javascript has one
+00:50 - and it's the most popular language and
+00:51 - it's a kind of out there by any metric
+00:54 - kind of growing faster than anything
+00:56 - else
+00:57 - and there's a lot of reasons for it
+00:58 - right there's a lot of goodness in it
+01:00 - and all sorts of core javascript traits
+01:03 - some are just sort of scripting traits
+01:04 - and some are specific to javascript
+01:05 - around you know built-in memory
+01:07 - management and
+01:08 - native serialization with json and the
+01:11 - fact that it's naturally scalable
+01:12 - various sort of uh
+01:14 - great capabilities that help us be
+01:16 - productive right it helps us run run
+01:17 - faster
+01:19 - and
+01:20 - those are our amazing capabilities and
+01:22 - their core right and they are indeed
+01:24 - parts of the reason that javascript is
+01:25 - is so successful and that in general we
+01:27 - can create these awesome things
+01:29 - but sometimes the same capabilities
+01:31 - that are sort of unique and make it
+01:33 - awesome also make it vulnerable right so
+01:35 - you look at these different capabilities
+01:37 - and you know while you might see kind of
+01:38 - built-in memory management i would look
+01:40 - for the flaws there and i will see you
+01:42 - know buffer object kind of leaking
+01:43 - memory from server side if you talk
+01:45 - about native serialization attackers
+01:47 - would look and they would say well you
+01:48 - can do some type manipulation because
+01:50 - types are decided in runtime can i
+01:51 - manipulate those can i change
+01:53 - so a lot of this talk today is just
+01:55 - going to be understanding a little bit
+01:56 - about how these capabilities can be
+01:58 - abused right how can attackers use them
+02:00 - to to
+02:02 - understand the weaknesses in your system
+02:03 - and run forward
+02:06 - the other thing that's important to
+02:07 - remember is that these vulnerabilities
+02:09 - and these types of flaws don't just
+02:10 - happen in your code
+02:12 - as part of a core uh kind of a core part
+02:15 - of the javascript ecosystem are packages
+02:17 - or libraries npm in node
+02:19 - you know it doesn't matter if you use
+02:20 - bower if you use javascript libraries if
+02:22 - you just download jquery
+02:24 - away much and much of your code is
+02:26 - third-party code open source code that
+02:28 - you are using and you know npm is also
+02:30 - awesome and as a result
+02:33 - its usage has exploded i'm kind of
+02:34 - picking on npm but really this is true
+02:36 - for package management as a whole and it
+02:37 - has some like ridiculous number of
+02:39 - downloads and packages every time and
+02:41 - it's sort of update the slide
+02:43 - and the result is that a typical
+02:45 - application i will focus on node but
+02:47 - this is increasingly the pattern in in
+02:49 - front and javascript as well has a ton
+02:51 - of dependencies hundreds often times
+02:53 - thousands one study put it at 350 on
+02:55 - average
+02:56 - and it leads to the situation where this
+02:58 - is your app and this is your code
+03:01 - and and this may seem like a negative
+03:03 - slide but it's actually not right you
+03:05 - could create all that orange value by
+03:07 - just writing that little purplish dot uh
+03:09 - orangish value so it's a good thing but
+03:11 - it also is a risky one or a slightly
+03:15 - frightening one from a security
+03:16 - perspective it gives an entirely
+03:17 - different meaning to javascript as one
+03:20 - definitely on the dependency metrics
+03:21 - javascript is also leading the charts
+03:24 - so
+03:25 - so with that context when you think
+03:26 - about security it's also remember to
+03:28 - understand that most of your app's code
+03:30 - comes from npm which also means that
+03:31 - most of your app's vulnerabilities come
+03:33 - from npm or come from these packages so
+03:35 - it's different sources that can lead
+03:37 - into your system
+03:39 - this is not a theoretical problem it's
+03:40 - practical roughly one in seven one in
+03:42 - eight packages
+03:44 - in npm carries a known vulnerability
+03:46 - doesn't mean that 14 of them are
+03:48 - vulnerable but the packages themselves
+03:49 - use other packages that use other
+03:51 - packages and within that ecosystem
+03:53 - roughly 14 would bring in a
+03:54 - vulnerability with them and we see that
+03:56 - pretty much every node shop has those
+04:01 - and this risks node apps and this is
+04:04 - kind of the focus that i talk about here
+04:05 - but when you talk about javascript it's
+04:07 - not limited to just node it's also true
+04:09 - for front-end application with jquery
+04:11 - has a very prevalent
+04:13 - scripting vulnerability if you're using
+04:14 - a specific component of it uh you know
+04:16 - in react and angular in
+04:19 - in in with brazorify with all of these
+04:21 - components you pull in npm packages and
+04:23 - again the same concepts apply for bower
+04:25 - and also risks the internet of things so
+04:26 - there's a lot of chatter today about
+04:28 - mirai about all these like ddos attacks
+04:29 - massive attacks that take down the
+04:31 - internet that are built on these devices
+04:32 - many of these devices run
+04:34 - node apps or very small lightweight apps
+04:36 - and those could have vulnerabilities
+04:39 - so those are that's kind of setting the
+04:40 - stage and most of the time i'm not going
+04:41 - to send in presentation but what we're
+04:43 - going to do is we're going to try and
+04:45 - combine those two and what we'll do is
+04:47 - we'll look at real world vulnerabilities
+04:49 - in these npm packages it's i find it
+04:51 - more useful than fabricating an example
+04:53 - these are real packages with real
+04:55 - vulnerabilities then you may actually be
+04:56 - using and has a bit of a dual purpose
+04:58 - one of it one aspect of it is to see the
+05:00 - vulnerabilities and how can you kind of
+05:02 - code to not have them
+05:04 - and on the other side
+05:07 - understand a little bit the security
+05:08 - risks you might be pulling in through
+05:10 - those packages and we're going to focus
+05:11 - on node but as i said this is sort of
+05:13 - applicable
+05:14 - more broadly
+05:16 - so with that let me switch out of this
+05:17 - and introduce
+05:18 - goof so this is a javascript talk
+05:20 - clearly it needs a surprise i'm the
+05:21 - first one to have a model view control
+05:23 - like an mvc app
+05:24 - in a javascript conference
+05:26 - and it allows you to do great things
+05:28 - like you know to-do lists say you know
+05:29 - call mom
+05:31 - and you know it has some
+05:33 - markdown supports to emphasize important
+05:35 - things
+05:37 - and you know just just sort of some
+05:39 - features
+05:40 - and it uses a bunch of packages on it
+05:42 - i'm going to use rtool uh snake it's on
+05:45 - github by the way and on snake goof and
+05:47 - you're welcome to clone this and play
+05:48 - with us after and run those exploits
+05:50 - yourselves
+05:51 - so we're going to use sneak to to test
+05:53 - this application to try to find some of
+05:54 - these vulnerabilities then i have some
+05:56 - pre-opened tabs just in case it doesn't
+05:58 - play ball
+05:59 - as we go so
+06:01 - we will
+06:02 - test our different repositories and we
+06:03 - will find our little vulnerable app here
+06:06 - and we'll see that goof has a bunch of
+06:07 - these vulnerable dependencies so we're
+06:09 - going to pick on that and expand
+06:12 - and i will kind of randomly choose a
+06:13 - specific set not randomly but you know
+06:15 - i've chosen a set of these
+06:17 - and show a bunch of exploits and there
+06:19 - you know each of these uh there would be
+06:21 - some explanation that says this is a
+06:23 - vulnerable package this is the
+06:24 - vulnerability on it and how it manifests
+06:26 - we're gonna start with this one with st
+06:28 - who here is familiar with st
+06:30 - not that many it's a it's a package
+06:33 - written by isaac from from npm it's used
+06:35 - to serve static resources js and css on
+06:37 - our our website as well as our about
+06:40 - page
+06:41 - and it serves static resources from the
+06:43 - the slash public url so to attack st st
+06:46 - is susceptible to
+06:48 - a
+06:49 - directory traversal vulnerability and
+06:51 - typically you would read the
+06:53 - advisor here but you have me so you
+06:55 - don't need to see if this font is big
+06:57 - enough
+06:58 - so what happens is you know if we have
+07:00 - some aliases to uh
+07:02 - sparingly some typing but if we go on
+07:04 - and we do
+07:06 - a curl and we fetch the about html page
+07:08 - we're switching to the to the terminal
+07:10 - because the browser has all sorts of
+07:11 - convenience features around
+07:13 - normalization things like that that kind
+07:15 - of get in the way of attackers so
+07:17 - we can get the about page through here
+07:18 - as well
+07:20 - and as an attacker if there's a if i
+07:22 - know or i suspect there's a directory
+07:23 - traversal attack then the first thing
+07:25 - i'm going to do is try to break out of
+07:26 - the static file folder this is these are
+07:30 - components that are supposed to serve a
+07:31 - set of static resources but you don't
+07:33 - want them to to serve more than those
+07:35 - resources so i will put a dot dot slash
+07:37 - dot dot slash
+07:39 - dot slash and if i do that
+07:42 - i will get uh nothing actually so if you
+07:45 - kind of scroll up you will see that i
+07:46 - just got redirected to the home page of
+07:48 - it because sd is a smart package and it
+07:50 - has a security control on it it's not
+07:52 - that they didn't think about security it
+07:53 - just omitted something there's another
+07:55 - way that i can represent a dot in a url
+07:57 - which is
+07:59 - thought
+08:00 - url encoding so i can do percent to e
+08:04 - percent to e percent to e percent to e
+08:06 - and that would get me all the way up to
+08:08 - the roots and i can do as many of those
+08:09 - that i want and then i might want to add
+08:11 - some sensitive files say like an atc
+08:13 - pass wd
+08:14 - and
+08:15 - and voila i get the adc pass wd so
+08:19 - okay so this is just we're just getting
+08:20 - started
+08:21 - simple
+08:23 - simple vulnerability uh and uh and you
+08:27 - know sort of prevalent enough so we're
+08:28 - getting roamed up we're gonna go from
+08:29 - simple to complex right um our
+08:31 - vulnerability at its core the
+08:34 - vulnerability that st had here and this
+08:36 - is a common vulnerability we see around
+08:37 - is just not dealing with encodings you
+08:38 - have to think about the different ways
+08:41 - that a character can get represented in
+08:42 - your system
+08:43 - so
+08:45 - this was on the url side so we showed a
+08:48 - bit of a url encoding vulnerability but
+08:50 - let's look at another one in marked
+08:52 - which is more in the html side so who
+08:55 - who here is familiar with marked
+08:57 - a few more hands so marked is one of the
+08:59 - more popular markdown parsing libraries
+09:02 - uh out there and it's it gets about 2
+09:04 - million downloads a month you know it's
+09:05 - quite prevalent
+09:07 - and we use it to sort of do that you
+09:08 - know emphasize beer and things like that
+09:10 - in our system now we know that it's
+09:12 - susceptible to a cross-site scripting
+09:13 - vulnerability so what's the first thing
+09:15 - we're going to do
+09:19 - yeah an alert script so we're going to
+09:20 - try to do something like this we'll say
+09:22 - alert one slash script
+09:25 - and we'll try to do this because
+09:26 - markdown oftentimes many of these
+09:28 - packages including marked actually
+09:30 - support some html snippets in there as
+09:31 - well so we're going to do this and
+09:35 - nothing uh we're just going to get the
+09:36 - text and that's because marked has a
+09:37 - sanitize function in it now surprisingly
+09:40 - or not sanitize is actually turned off
+09:42 - by default so that's something to
+09:44 - consider many of these packages actually
+09:45 - have uh
+09:47 - insecure defaults so they might have a
+09:48 - security feature might not be on all the
+09:50 - time
+09:51 - but in this case we did turn it on we
+09:52 - wanted to be secure but there are other
+09:54 - ways to get a script onto a page
+09:56 - how else can i invoke a script
+09:58 - thoughts
+10:00 - yeah i can do a link so i can do there's
+10:03 - a bunch of these i can also do like
+10:04 - attributes i can do a non-error i'm
+10:06 - gonna focus on this right i might do a
+10:08 - script like this
+10:10 - so this is i'm still within markdown and
+10:12 - i will do an alert one
+10:15 - and then what happens here if i do this
+10:18 - no
+10:19 - nothing because mark catches this and
+10:22 - again the sanitized function is quite
+10:23 - comprehensive in fact it is fully spec
+10:24 - compliant
+10:26 - so even if i try to do
+10:28 - get fancy here and i will try to use an
+10:30 - html entity so html entity is kind of
+10:32 - the html little sister
+10:34 - version of url encoding or maybe the
+10:36 - other way around
+10:37 - and i will represent this colon with a
+10:40 - ampersand and a hash and i think it's a
+10:42 - 51 and also from kind of past experience
+10:45 - i know that i also need to encode
+10:47 - this thing to i think a 40 let me sort
+10:49 - of cheat here a little bit oh sorry this
+10:51 - is 41 and the other one needed to be 48
+10:53 - 58. and these are uh just sort of ascii
+10:56 - representations just american
+10:57 - representations of this character and if
+11:00 - i do this i'm now evading some of the
+11:02 - security controls and if i do this i get
+11:06 - nothing
+11:07 - so again like security control is going
+11:09 - to be pretty tricky and this is on the
+11:10 - html side something that's important to
+11:12 - understand is
+11:14 - market is actually fully spec compliant
+11:15 - and it catches these things and there's
+11:16 - no known exploits that are not spec
+11:18 - compliant but browsers not so much uh so
+11:22 - browsers tend to be very tolerant
+11:24 - towards html mistakes and if i come here
+11:27 - say after this eight and i say
+11:29 - i'm just going to zoom in further and i
+11:30 - add the word this so the browser sort of
+11:32 - sees oh you know you said an amp percent
+11:35 - and you had like the hash mark and you
+11:36 - had 58. you didn't go all the way but i
+11:38 - kind of know what you mean you know i
+11:39 - think i think you mean a collin and they
+11:42 - would pull a call in there and
+11:44 - then the remainder of that is just
+11:46 - script
+11:47 - and this is a valid thing to call in
+11:49 - script and i get a link here
+11:51 - and we got our alert
+11:53 - so
+11:54 - vulnerability number two okay so
+11:56 - kind of first lesson from those
+11:58 - components you know one is just again
+11:59 - think about those think about the
+12:00 - different encodings and there's the url
+12:02 - side of it and there's the html side of
+12:05 - it
+12:06 - let's get fans here
+12:08 - so
+12:09 - in both of those cases we talked about
+12:11 - uh
+12:11 - uh encoding vulnerabilities but there
+12:13 - are other properties of uh of javascript
+12:17 - one of javascript's kind of bigger
+12:18 - claims to fame is uh is that it's
+12:21 - naturally scalable right it is event
+12:24 - driven so it doesn't require a thread
+12:26 - for processing every incoming request
+12:28 - and
+12:28 - it also means that it's a bit of a point
+12:30 - of fragility because if one of those
+12:32 - threads if there is an action on the
+12:34 - thread that makes
+12:36 - makes the thread take a long time some
+12:38 - algorithm some you know infinite loop
+12:39 - like the wild truth that jake showed
+12:40 - before right if you had the wrong
+12:41 - conditions you get those prompts in the
+12:43 - browser that says this script is you
+12:44 - know running for too long uh or you
+12:47 - might take down a thread on the server
+12:49 - and because javascript is naturally
+12:50 - scalable even high scale production
+12:52 - systems have a relatively small number
+12:54 - of threads so it can quickly lead to a
+12:56 - denial of service vulnerabilities
+12:58 - now the most
+12:59 - prevalent type of algorithm that we run
+13:01 - although we don't think about it that
+13:02 - way often is a regular expression it's
+13:05 - an algorithm it runs
+13:07 - and depending on how you write the
+13:08 - algorithm but almost always true to an
+13:11 - extent
+13:12 - uh the the time it takes to calculate or
+13:15 - sort of apply a regular expression is
+13:16 - non-linear to the length of the input
+13:18 - string now that linearity may be hard or
+13:22 - maybe low so depending on your regular
+13:23 - expression let me kind of switch back to
+13:25 - the slides a moment and show you
+13:27 - a bit of an example of this
+13:30 - in a
+13:31 - an aptly name
+13:33 - problem in regular expression referred
+13:34 - to as catastrophic backtracking um so
+13:36 - you look at this regular expression and
+13:38 - it's it seems pretty simple right it's
+13:40 - just sort of a b c d e and you could
+13:41 - have like more of the c occurrences and
+13:43 - then maybe a wild card but what happens
+13:46 - here is the regular expressions are you
+13:48 - know very stubborn
+13:50 - they try to match
+13:52 - so if you give them a pattern if you
+13:54 - give them a methodology where they can
+13:57 - almost match like almost get there but
+13:59 - not quite they will backtrack and they
+14:01 - will try to figure out another path and
+14:03 - by having nested groups like this so
+14:06 - first if you have multiple c's they
+14:08 - could apply to the c plus
+14:11 - inside the group or they could apply to
+14:13 - the star outside the group and that just
+14:15 - creates a ridiculously large set of
+14:18 - possibilities and most regular
+14:20 - expression engines including the ones in
+14:21 - javascript would just try them all
+14:23 - and as a result you can see that by just
+14:25 - having this fairly s short string there
+14:28 - i know that like 30ish characters i can
+14:30 - make
+14:31 - calculating this regard take a second
+14:33 - and then every character i add would
+14:35 - double that amount of time this is on a
+14:37 - sample machine but it's definitely a lot
+14:38 - of time
+14:40 - so a moment a very popular package has
+14:42 - recently had this vulnerability
+14:45 - i don't have an easy demo on that one
+14:46 - but another package that's very popular
+14:48 - that had it is ms
+14:50 - and ms is used for do i have it here
+14:53 - yeah ms is used for
+14:55 - calculating milliseconds
+14:57 - or a time stamp in a million seconds so
+14:58 - we can say you know call mom in two days
+15:01 - and it would calculate those two days to
+15:03 - say you know this is the number of times
+15:04 - milliseconds i can set a reminder
+15:07 - so
+15:08 - ms has this vulnerability
+15:10 - a little bit less extremely so it also
+15:11 - has a regular expression now service
+15:13 - vulnerability
+15:14 - but it's not quite as extreme
+15:17 - so what we're going to do is first of
+15:18 - all we're going to
+15:20 - again kind of make this call mom in 20
+15:22 - minutes and i'm going to use http or
+15:25 - http which is the same as a curl just
+15:27 - like with some syntax highlighting and
+15:29 - it goes on if i go back to my
+15:31 - application i will see that i added a
+15:32 - little bit of a record here but what we
+15:35 - will do is we will try to give it an
+15:36 - especially long string
+15:39 - so and again i'm just going to cheat
+15:40 - because i have it
+15:43 - just to spare myself some timing here
+15:46 - and what we'll do here is we will print
+15:49 - sixty thousand fives as the duration and
+15:52 - then we're gonna add another twist which
+15:54 - is we're going to swap the last
+15:55 - character here instead of being an s to
+15:57 - an a so it almost matches but doesn't
+15:59 - quite
+16:01 - and when i do this
+16:03 - it takes a long time to respond now it
+16:05 - takes a long time to respond it's not a
+16:06 - problem but the problem is then the
+16:08 - meantime my application here
+16:11 - is irresponsive so in this case i have a
+16:14 - single thread and this is just taking
+16:15 - out one heroku dyno here
+16:17 - but you know first of all i can hike up
+16:19 - my bill and if i added another zero you
+16:20 - know it wouldn't complete before the end
+16:22 - of this talk uh now this way it will i
+16:25 - think in about 10 or 15 seconds complete
+16:27 - an end but this type of regular
+16:29 - expression denial of service is a very
+16:30 - prevalent vulnerability and you have to
+16:32 - be very careful about regular
+16:33 - expressions both in your content and in
+16:36 - uh
+16:37 - code overall and now in this case you
+16:39 - might say hey this is 60 000 characters
+16:41 - who in their white right mind would sort
+16:43 - of pass 60 000 characters but if it's
+16:45 - not explicitly blocked it is allowed
+16:48 - there's nothing really there
+16:49 - the fix in ms by the way in the package
+16:51 - is a little mediocre they just capped it
+16:53 - i think it's like a thousand or ten
+16:54 - thousand characters uh the the right
+16:56 - solution is to have a logical cap there
+16:58 - to allow 20 characters or 30 characters
+17:01 - in the different sections so that you
+17:03 - truly limit it because otherwise it
+17:04 - doesn't take down the server but it
+17:06 - takes a very long amount of time to
+17:07 - process
+17:08 - okay so our application will recover
+17:10 - here we can just
+17:12 - kind of go back here and we deleted a
+17:13 - bunch of items so this was redos and it
+17:15 - really comes back to the event loop and
+17:17 - the same type of problem can kind of
+17:19 - happen on front end
+17:22 - for my last trick
+17:24 - i will show
+17:25 - a couple of other vulnerabilities so
+17:27 - this was in ms
+17:29 - and the last vulnerability i will show
+17:31 - is in
+17:32 - mongoose who here knows of mongoose
+17:35 - yeah everybody uh
+17:37 - so so mongoose is um
+17:40 - uh everybody knows mongoose is the way
+17:42 - to access mongodb it's kind of the top
+17:44 - one and it has an interesting
+17:45 - vulnerability
+17:47 - in that it tripped over an object called
+17:49 - buffer a buffer is a very very tricky
+17:51 - object in the world of node
+17:54 - typically when you when we work in
+17:55 - javascript we don't really think about
+17:56 - memory management right memory is this
+17:59 - thing that's just sort of handled for us
+18:01 - but buffer allows us to to to play with
+18:04 - it a little bit and to pre-allocate some
+18:05 - memory and it has a couple of
+18:07 - constructors actually i went to the
+18:09 - advisory here but i can probably show
+18:10 - you here if i just do if i just run node
+18:13 - i'll just
+18:14 - move this up a little bit so you can see
+18:16 - it and if i do i can do new buffer and
+18:19 - say 100 and i will get a buffer
+18:22 - allocated with those three characters
+18:23 - one zero zero but if i do a new buffer
+18:26 - and give it 100 i will get 100 bytes of
+18:28 - memory that's intended however that
+18:30 - memory is not zeroed as you can tell
+18:32 - here if i do this a few times you'll
+18:34 - notice that you have very different
+18:35 - values in the different items because
+18:37 - this is just what happens to be in
+18:39 - memory in those 100 bytes that i just
+18:40 - allocated so as an attacker if i can
+18:45 - make the application allocate such
+18:47 - memory and then get access to that this
+18:49 - is remote memory exposure and if i do
+18:51 - this enough times i basically can get
+18:53 - anything that's in the system's memory
+18:54 - including keys and source code and a lot
+18:56 - of those components this is like
+18:57 - heartbleed in openssl except running in
+18:59 - the node process so only access to the
+19:01 - secrets that the node process has
+19:04 - so buffer has tripped up many popular
+19:06 - packages mongoose included and for us we
+19:10 - we have a little bit of a simple schema
+19:11 - here that allows us to we use buffer as
+19:14 - the content
+19:15 - field and um
+19:18 - you know so we can have images and and
+19:20 - other uploads
+19:22 - and buffering mongoose indeed had a
+19:24 - vulnerability where it did not enforce
+19:27 - the the right type that goes into the
+19:29 - component so what we're going to do to
+19:30 - exploit this is first again we're going
+19:32 - to move to
+19:34 - uh
+19:37 - to the browser so we've already seen
+19:38 - that we can do a curl command to invoke
+19:40 - an item but what we will do is uh our
+19:43 - application like many node applications
+19:44 - also supports another form of input
+19:47 - which is
+19:48 - json
+19:50 - so i can do echo with a instead of a
+19:52 - form field of content a json parameter
+19:54 - of content and say fix the bike
+19:57 - and if i do this then if i go back to my
+19:59 - application i will see that we've indeed
+20:01 - added an item that says fix the bike but
+20:03 - because this is json i now have the
+20:06 - ability to modify it a little bit and
+20:09 - instead of saying fix the bike i can say
+20:11 - 800 like this
+20:12 - which would give me
+20:14 - 800 as a string
+20:16 - or because this is just naturally
+20:18 - serializable i can say 800 like this
+20:21 - when this gets serialized in the
+20:22 - application
+20:24 - it allocates 800 bytes and that memory
+20:26 - is now a to-do item that's exposed to me
+20:29 - and if i look here i will see just like
+20:30 - a bunch of binary components if i just
+20:32 - do this enough then you know it depends
+20:33 - on the every every demo i get something
+20:35 - different but you might see some
+20:36 - snippets of of text and source code you
+20:38 - kind of need to trust me here that if
+20:39 - you run this enough and you do a loop
+20:41 - you just sort of extract those of course
+20:42 - as an attacker you would kind of clean
+20:44 - up after you you would delete these
+20:45 - items right after
+20:47 - so buffer has tripped many items it's
+20:49 - really not just mongoose but it's a
+20:50 - pretty severe one because it touches on
+20:52 - memory and allows that to sort of be
+20:53 - leaked out it also demonstrates a
+20:56 - general a broader problem called a type
+20:58 - manipulation which is
+21:00 - true for any
+21:02 - kind of type
+21:04 - dynamic typing language and specifically
+21:05 - javascript
+21:07 - and can happen with json but also can
+21:09 - happen in other components a good
+21:10 - example of that is qs and qs if i parse
+21:13 - a string like this i get a json object
+21:15 - or a javascript object with two fields a
+21:17 - and b but if i pass it to a's i get an
+21:20 - array
+21:21 - and for instance this tripped das js
+21:23 - which is a linkedin templating library
+21:24 - that paypal used and actually had a
+21:26 - real-world vulnerability on paypal
+21:29 - because a sanitization logic only
+21:31 - happened on strings nobody anticipated
+21:33 - that an input that came through the
+21:35 - query string could be anything but a
+21:37 - string but with qs it can be with json
+21:40 - it can be so it's just something to be
+21:42 - aware of to say do you know which type
+21:44 - is is the one that you're using
+21:48 - and just sort of as a last anecdote is
+21:49 - type manipulation can also be used to do
+21:51 - something called no sql injection so
+21:54 - we've shown strings and arrays but if
+21:56 - you have something like this where you
+21:57 - use mongoose to find users by a username
+22:00 - and a password
+22:01 - and it's meant to be used like this
+22:02 - where you have an admin and a string
+22:04 - however if you can control a json input
+22:07 - then you can do something like this and
+22:08 - instead of a string in the password you
+22:10 - pass it
+22:11 - a a mongoose function that allows you
+22:13 - say greater than nothing which is
+22:15 - everything which means that if you've
+22:17 - done this you just get basically like
+22:18 - sql injection you get a no sql injection
+22:21 - to return all the records and depending
+22:23 - on your application logic this might
+22:24 - have just been a pretty major thing
+22:28 - so
+22:31 - so just to cap off
+22:34 - i want to show you a couple of things so
+22:35 - before we close off here one thing i do
+22:37 - want to show you is you know we talked
+22:38 - about a bunch of vulnerabilities there
+22:39 - are clearly many many more that we can
+22:40 - talk about uh hopefully these give you a
+22:42 - tidbit and the other thing you should
+22:44 - talk about is you know on one hand you
+22:45 - should understand the security flaws and
+22:46 - on the other hand you should understand
+22:48 - this application has been made
+22:49 - vulnerable without writing any of this
+22:51 - vulnerable code it just pulled it in
+22:53 - externally so you know a little bit of a
+22:55 - shameless plug you can try out sneak to
+22:57 - help this it'll help find those issues
+22:59 - you know free for open source kind of
+23:00 - try it out and it would also help you
+23:02 - fix those issues just sort of open a fix
+23:04 - pull request with a single click
+23:07 - like magic
+23:09 - and
+23:11 - just sort of try it out and take over
+23:12 - protect yourself
+23:15 - going back here
+23:17 - so yeah as you sort of seen when i move
+23:19 - the slide don't start hacking website
+23:21 - you know you you could get tremble in
+23:22 - trouble uh and either way it's impolite
+23:25 - um
+23:27 - i i will encourage you above and beyond
+23:29 - sort of general awareness to first of
+23:31 - all think about the javascript takeaways
+23:32 - and these mistakes and and how can you
+23:34 - avoid them in your own code and second
+23:36 - is think about the specific
+23:38 - vulnerabilities in these npm packages
+23:40 - use a tool like sneak like no security
+23:42 - project there's a bunch of these tools
+23:43 - out there to help you find those issues
+23:45 - use tools
+23:46 - to help you
+23:48 - fix those through upgrades through
+23:50 - patches through whatever means necessary
+23:52 - don't discount this this is a part of
+23:54 - your job this is a part of software uh
+23:56 - part of software quality these security
+23:58 - concerns so to recap js and npm are
+24:01 - awesome but
+24:02 - please use responsibly
+24:04 - [Applause]
+24:04 - [Music]
+24:07 - [Applause]
+24:08 - [Music]

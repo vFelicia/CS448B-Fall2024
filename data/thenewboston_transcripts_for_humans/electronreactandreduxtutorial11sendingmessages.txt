@@ -1,0 +1,553 @@
+With timestamps:
+
+00:00 - all right so now that we got the
+00:01 - connection status component up and
+00:03 - running what we can do next is start
+00:05 - working on this main button logic
+00:07 - however before we just jump right into
+00:09 - that I want to kind of take a step back
+00:11 - and do a little recap of exactly how
+00:13 - this app is going to work
+00:15 - so whenever we hit that go button what's
+00:18 - going to happen is my device is going to
+00:20 - send a message through the core server
+00:23 - to the receiving device and then once
+00:27 - this receiving device receives this all
+00:29 - it's going to do is it's going to send
+00:30 - back a message
+00:32 - back through the server to my device and
+00:34 - we'll say that this first request we're
+00:37 - going to call it the ping request and
+00:39 - then this response we'll call it the
+00:40 - pong so a ping pong message pretty
+00:43 - simple architecture but before digging
+00:45 - into the code let's go ahead and take a
+00:47 - look at the structure for exactly how
+00:49 - these blocks are going to be formatted
+00:51 - so these blocks or in other words chunks
+00:53 - of data that are going to be sent
+00:55 - between devices they always need to have
+00:57 - a unique ID and for this you can just
+01:00 - have any valid uuid and the reason that
+01:03 - we need this is just to ensure that this
+01:05 - core server it isn't processing the same
+01:08 - exact blocks again and again and again
+01:10 - it also allows for you to specify an
+01:13 - amount we're not going to need this in
+01:14 - this tutorial this is just so if you
+01:16 - ever want to transfer some messaging
+01:18 - credits from one device to another then
+01:20 - you can do it right there again like I
+01:22 - said this is just going to be zero for
+01:23 - this tutorial the recipient in the
+01:26 - center this is pretty simple it's the
+01:28 - account number of the receiving device
+01:30 - in the one who sent this block
+01:34 - and this transaction fee this we have
+01:37 - set up on the core to be one by default
+01:39 - and the reason that we have this is kind
+01:41 - of for our security purposes if anyone
+01:44 - ever steals my device it effectively
+01:46 - throttles the amount of traffic or
+01:48 - messages they can send back and forth so
+01:50 - the core server like I said just
+01:51 - requires one messaging credit to send a
+01:53 - message to another device on the network
+01:55 - now this payload will dig into in just a
+01:58 - second but lastly the signature field is
+02:01 - just for the digital signing process to
+02:03 - ensure that the sender is indeed the one
+02:06 - who is sending this message so now on to
+02:09 - the payload so if we take a look at the
+02:12 - source code for the server we can see
+02:14 - that the payload is a Json field so you
+02:18 - can include as this payload any valid
+02:20 - Json however for tnbos just to keep
+02:23 - things standardized we always shape the
+02:26 - payload in this format we have a PID
+02:29 - which stands for process ID and what
+02:32 - this effectively translates to it's the
+02:36 - ID of the application that is sending or
+02:39 - receiving this data in that way let me
+02:42 - pop this open again whenever we have
+02:44 - blocks coming into tnbos
+02:47 - tnbos is going to know which app to
+02:50 - Route those blocks to depending on this
+02:53 - process ID so again for us it's just
+02:55 - going to be a speed test but for chat
+02:57 - it's chat so on and so forth basically
+02:59 - saying which app is this data for now
+03:01 - aside from that we have this FN in
+03:04 - params value because essentially
+03:06 - whenever we are sending data to another
+03:09 - device
+03:11 - in a lot of ways it works similar to a
+03:13 - RPC or remote procedure call or remote
+03:16 - function call where we are essentially
+03:19 - calling a function on another device so
+03:21 - the two functions that we're going to be
+03:23 - writing are a ping function and then a
+03:26 - pong function and for both of those
+03:28 - functions the params are going to be the
+03:29 - same and that is just going to be the
+03:31 - Run ID and the reason for that is
+03:34 - whenever I send out this request and
+03:36 - that device sends something back I know
+03:39 - which run it's referring to so now let
+03:42 - me go ahead and open my IDE and start
+03:45 - writing some of the typescript
+03:47 - definitions for I'll start with these
+03:49 - functions so in types I'm going to
+03:52 - create a new typescript file and I'll
+03:53 - say FNS I don't like using the word
+03:56 - function anywhere because it's a reserve
+03:58 - keyword so that's why I decided to use
+04:00 - FN rather than function in a lot of
+04:02 - these places so export enum and I'll say
+04:04 - speed test
+04:07 - FN
+04:09 - in like I said we're gonna have two
+04:11 - functions a ping and a pong
+04:19 - and palm
+04:22 - and for each of these functions we'll
+04:24 - write a separate interface and for this
+04:27 - I'll say the Ping params whenever we
+04:29 - call this function
+04:31 - this is just gonna take in a run ID and
+04:36 - this is going to be a string value
+04:38 - and then I'll do the same exact thing
+04:41 - for the pong function
+04:43 - so whenever you use the pong function
+04:46 - also pass in params of the Run ID now we
+04:50 - can probably combine these into one
+04:51 - interface but I like to be super
+04:53 - explicit whenever I'm writing the params
+04:55 - for each function and on that note what
+04:57 - we can do now is just go ahead and
+04:59 - import everything
+05:01 - under
+05:03 - functions
+05:05 - import
+05:07 - all of that all right now from here what
+05:11 - I like to do is create utility functions
+05:13 - for generating these payloads
+05:15 - and you'll see why in just a second so
+05:18 - under speed test I'm going to create a
+05:20 - new directory called payloads
+05:23 - and for the naming convention is just
+05:25 - the function name followed by payload so
+05:29 - first we'll do the Ping
+05:33 - [Music]
+05:35 - and R right so for the Ping payload
+05:38 - again it needs three things process ID
+05:39 - function name and params
+05:42 - so let me go ahead and sense our
+05:47 - process ID is just the app ID and that
+05:50 - is stored in this app registration I'm
+05:52 - going to import the speed test
+05:53 - registration so M4 speed test
+05:55 - registration from apps speed test
+05:58 - registration
+06:00 - and then after this let me go ahead and
+06:03 - import
+06:05 - some of these types so
+06:15 - all right so we are going to need this
+06:18 - speed test function and these pink
+06:21 - params
+06:24 - and no the only other thing that I need
+06:27 - is a little helper interface that I
+06:30 - wrote from system types
+06:33 - and that is app
+06:39 - payload right there I'll show you what
+06:41 - this is
+06:42 - so all this is saying is that for this
+06:44 - interface it requires a function which
+06:46 - is a string params which can be anything
+06:48 - in process ID which is a string
+06:50 - basically ensuring that we follow this
+06:54 - format right here which is just the
+06:56 - tnbos standard
+06:59 - all right now this function
+07:03 - say ping payload it's equal to
+07:06 - a function
+07:09 - and this function is going to return
+07:10 - that app payload and the only thing that
+07:13 - we're going to be passing in here are
+07:15 - params matching the pink params in other
+07:17 - words in this case just a run ID
+07:20 - now the reason that we're only going to
+07:22 - pass this in is because whenever we
+07:25 - return this payload the function name is
+07:28 - always going to be equal to speed test
+07:30 - functioning.ping
+07:32 - and the params
+07:35 - those are just going to be set to
+07:36 - whatever params that we passed in and
+07:38 - for the process ID is speed test
+07:40 - registration the app ID right there
+07:47 - all right and this can be our default
+07:49 - export
+07:53 - all right so there we go this is uh
+07:55 - looking good for our ping payload
+07:58 - function and now let me go ahead and
+08:00 - pretty much write the exact same thing
+08:02 - for the pong
+08:04 - payload and we'll just copy this
+08:09 - Place ping with pong
+08:13 - and then for uppercase ping
+08:16 - replace it with uppercase pong
+08:20 - now last but not least just like kind of
+08:23 - our standard convention gonna create an
+08:25 - index file and Export both of these into
+08:27 - here and that way whenever we use these
+08:31 - in our components then our Imports are
+08:33 - just a little bit cleaner
+08:35 - so we want to import first ping payload
+08:37 - [Music]
+08:46 - dang for pong payload
+08:50 - [Music]
+08:58 - King and Pawn
+09:01 - all right beautiful
+09:03 - now just like we wrote those helper
+09:05 - functions to generate these payloads
+09:07 - what I also want to do is write helper
+09:09 - functions to generate these blocks and
+09:11 - that's just going to make it a lot more
+09:12 - clean whenever we work with this
+09:16 - in our components so let me close all
+09:18 - this
+09:19 - make a new directory called blocks
+09:22 - and we're going to have two blocks which
+09:24 - is the Ping Block in the pong block so
+09:26 - start with the pin block
+09:32 - and import everything I need to and this
+09:34 - is just going to have one function and
+09:36 - I'll say
+09:37 - ping block
+09:42 - comes pin Block in
+09:48 - the default export all right
+09:51 - so this ping block function will pass in
+09:56 - an object and let me type out the
+09:58 - interface right now so the interface
+10:00 - I'll just say ping block
+10:01 - just make sure that we pass in all the
+10:04 - correct Rams so whenever we generate a
+10:06 - ping block or in other words
+10:08 - send a ping block to another device we
+10:12 - need to give it three pieces of
+10:14 - information the first one is the network
+10:16 - ID
+10:17 - which network are you going to be
+10:19 - sending this over
+10:21 - the other one
+10:25 - is the recipient which is just the
+10:27 - account number of the receiving device
+10:29 - and lastly we need to pass in the bramps
+10:33 - and these for this are just the pink
+10:35 - params so now we can say actually let me
+10:40 - do this
+10:43 - ping block and just the structure right
+10:45 - here so network ID
+10:47 - params and recipients
+10:50 - and actually since this function right
+10:54 - here it's not only going to generate the
+10:56 - Ping block but actually send it over the
+10:58 - network what we can do is make this an
+11:00 - async function because we're going to be
+11:03 - awaiting a nested call in here now
+11:05 - before we even start writing the block
+11:07 - structure what I want to do is say const
+11:14 - I want to get
+11:16 - a property from the system
+11:22 - called self and this refers to basically
+11:26 - the self account in other words my
+11:29 - account on this device and the reason
+11:31 - that I want this is because whenever we
+11:33 - generate that block we need to sign it
+11:35 - with our signing key so that signing key
+11:38 - is stored in this self property right
+11:40 - here
+11:41 - so we're going to be using that in just
+11:43 - a sec but for now what I want to do is
+11:46 - Define where you're at right here
+11:50 - so we're going to start defining this
+11:52 - block structure and what we're going to
+11:54 - do is we're going to Define all of these
+11:56 - uh properties aside from signature
+11:58 - because signature is going to be
+12:00 - generated in a different kind of way so
+12:03 - let me just do that right now so data
+12:05 - this is going to be equal to an unsigned
+12:07 - Block in other words
+12:10 - a block with all these fields excluding
+12:12 - the signature
+12:14 - so
+12:17 - the first thing that we need to do is
+12:19 - specify an amount and this is just
+12:21 - always going to be zero and then for the
+12:24 - ID remember I said that we need a unique
+12:26 - uuid and instead of writing our own
+12:30 - function for that
+12:32 - there is this function right here from
+12:34 - the crypto Library random uuid gonna
+12:36 - give you a new one each time
+12:38 - now for the payload
+12:41 - for this we are going to take that
+12:44 - function that we just created
+12:46 - ping payload helper function and
+12:49 - remember this is just going to accept
+12:51 - the Ping params and those are these
+12:54 - params right here
+12:57 - now after this we just need to specify
+12:59 - the recipient which is the receiving
+13:01 - account number the sender
+13:04 - that is on self dot account number
+13:07 - basically my own account number and for
+13:10 - the transaction fee we just created a
+13:12 - constant for this core transaction fee
+13:14 - since it's always just one
+13:17 - so let me clean this up in art so once
+13:21 - we have our unsigned block what we need
+13:23 - to do is add the signature to it and we
+13:26 - created a helper function for this as
+13:27 - well which is block
+13:29 - sign data and what do you want to sign
+13:31 - well this data right here this unsigned
+13:34 - block and as the second param what we
+13:37 - need to do is pass in the signing key
+13:38 - that we want to sign in with and that's
+13:40 - just self signing key so again this self
+13:43 - is an object that consists of my account
+13:45 - number in the related signing key
+13:48 - so there you go so the only other thing
+13:51 - that we have to do now now that we have
+13:52 - that block signed is just send it over
+13:54 - the network
+13:55 - so to do this I'm actually going to
+13:57 - return a function called create block
+14:01 - and you can see that it takes a block
+14:03 - and the network ID basically saying what
+14:07 - network do you want to send it over so
+14:09 - the block is of course just block and
+14:11 - the network ID is equal to the network
+14:13 - ID that we pass in
+14:15 - and just to look at this real quick
+14:17 - again all this does is it takes a block
+14:19 - which we pass it in and it sends it over
+14:22 - this network that's it
+14:24 - so now that we have that taken care of
+14:26 - for the Ping block I'm going to go ahead
+14:28 - and
+14:30 - copy this
+14:34 - and pretty much just need to do find and
+14:36 - replace to say pong
+14:39 - to replace ping with pong uppercase and
+14:42 - then ping with pong just like that
+14:47 - and there you go
+14:48 - so now that we have our two block
+14:51 - generator helper functions as always
+14:54 - just go ahead and make an index file
+15:00 - ping block
+15:03 - [Music]
+15:09 - import block
+15:18 - and Export these bad boys ping and pong
+15:21 - block
+15:22 - all right so now that we got all our
+15:25 - helper functions written we can finally
+15:28 - hop back into main button and start
+15:30 - hooking everything up
+15:34 - or it's everything I'm gonna need and
+15:36 - all right
+15:38 - so again what is going to happen
+15:39 - whenever you click this go button is
+15:42 - it's going to send a block to this
+15:45 - account on this network
+15:48 - and that is our active account number
+15:50 - and Active network that we're going to
+15:51 - need to pluck off so const
+15:53 - active account number and this is equal
+15:57 - to that
+15:59 - slice of get active account number
+16:02 - and same thing for
+16:04 - the Active network ID so get back the
+16:07 - network ID
+16:13 - and then aside from this we're also
+16:15 - going to be dispatching that run to our
+16:18 - Redux store
+16:19 - so for this we need to use dispatch
+16:23 - and this is equal to use dispatch
+16:27 - type of this is just our
+16:30 - app dispatch and the other thing that
+16:33 - we're going to need is that
+16:36 - use is connected hook
+16:39 - use is connected and remember we use
+16:42 - this for our connection status right
+16:44 - here but the reason that we're going to
+16:46 - use it in this main button is because if
+16:47 - we're not connected then we want to just
+16:49 - make sure that this button is disabled
+16:52 - so on that note what we can probably
+16:55 - right now is that uh on click Handler so
+16:58 - what happens whenever you click the
+17:00 - button I'll say
+17:01 - and we'll click
+17:04 - and since this is going to be sending a
+17:05 - block we'll make it an async function
+17:09 - and all right so first of all I want to
+17:11 - say that if you are not connected then
+17:15 - we can just go ahead and return
+17:16 - and then
+17:19 - the what I would actually want to do
+17:21 - after this is this I want to go ahead
+17:22 - and generate a run ID and run ID this is
+17:26 - just going to be equal to crypto.random
+17:29 - uuid
+17:31 - and now that we have that right after
+17:33 - what I want to do is I want to generate
+17:36 - this run and dispatch it to our Redux
+17:38 - store
+17:39 - so I'm going to dispatch a new run and
+17:42 - for that I'll say set run
+17:45 - now the shape of a run let me just go
+17:47 - ahead and
+17:49 - see what we need to create a run
+17:51 - actually you can probably just do this
+17:53 - copy all these params and just replace
+17:55 - them so the network ID is going to be
+17:57 - equal to our Active network ID
+18:01 - and this is probably going to give an
+18:04 - issue because it's Active network ID
+18:07 - right here it can be a string or null
+18:08 - however
+18:10 - we are going to say that we definitely
+18:13 - have it because if we're not connected
+18:14 - in other words if we don't have a
+18:16 - network ID then we're not going to be
+18:18 - connected so this logic is never going
+18:20 - to run so at this point we can guarantee
+18:22 - that we have it now for the recipient
+18:24 - this is going to be the active account
+18:25 - number
+18:29 - now for the request dates we can use
+18:32 - this utility function right here current
+18:34 - system date
+18:36 - and I'll show you what this is going to
+18:38 - return basically just a date formatted
+18:41 - in the standardized format
+18:44 - now for our response date this is going
+18:46 - to be no because remember whenever we
+18:49 - first generate this run we're going to
+18:51 - send it off to the other device but
+18:53 - we're not going to of course have a
+18:55 - response at that time because we don't
+18:56 - even know if they're going to respond so
+18:58 - set that equal to null this is going to
+19:00 - be set whenever we get a response of
+19:01 - course now for the Run ID it's just
+19:05 - the same as this run ID right here and
+19:08 - for the status this is going to be equal
+19:10 - to run status pending
+19:12 - so pending by default and then depending
+19:15 - what response we get back it's either a
+19:18 - success or timeout so
+19:24 - clean up
+19:25 - all right so whenever we click this
+19:28 - button what we'll do
+19:30 - is we'll say
+19:32 - on click handle click so you click the
+19:35 - button what happens it generates this
+19:37 - run stores it in our Redux store now
+19:40 - right after that we'll go ahead and send
+19:42 - out that request and remember that
+19:44 - function was called ping block
+19:48 - and if we take a look at this interface
+19:50 - we'll see that it requires a network ID
+19:55 - and this is just going to be equal to
+19:57 - the Active network ID
+20:00 - the recipient active account number
+20:04 - and for those params
+20:07 - those params are just the Run ID
+20:13 - so now let me just go ahead and pretty
+20:15 - this up
+20:20 - remove this
+20:23 - and our right
+20:25 - now to test this out I do need a
+20:28 - connection
+20:30 - so I'm gonna go ahead and open my
+20:32 - MacBook right now and I'm booting up
+20:34 - tmbos
+20:38 - and sweet now that we are connected let
+20:40 - me go ahead and hop in my network tab
+20:43 - that looks good and clear this out and
+20:45 - hopefully when I hit go sweet all right
+20:49 - and you saw that invalid block receive
+20:52 - error message and that's because we
+20:54 - didn't write the logic for my MacBook to
+20:55 - actually understand what the heck that
+20:57 - block was so it's probably sending uh
+20:59 - Becca error message right now
+21:01 - but uh before we even fix that what I
+21:03 - want to do is fix this little situation
+21:05 - right here because the logic that we
+21:07 - want is if you are not connected then I
+21:11 - want to just make sure that this button
+21:12 - is disabled since you shouldn't be even
+21:15 - allowed to click this or it shouldn't
+21:16 - even look clickable if you don't have a
+21:19 - connection so do that back in my
+21:21 - component is
+21:29 - and the Styles follow I'll go ahead and
+21:31 - add in this disabled mixing
+21:37 - CSS and what this is going to do is just
+21:40 - add some disabled styling to the button
+21:43 - and to actually accept these I need to
+21:46 - pass in some props to this container
+21:49 - and I'll just say
+21:53 - I'll have it enabled prop and right now
+21:56 - we're probably going to need to make
+21:57 - some adjustments to this but we'll just
+21:59 - say it's enabled in other words this
+22:02 - button is enabled if you are connected
+22:04 - and now what we can do is
+22:07 - say for this Boolean
+22:13 - I forgot my curly brackets all right so
+22:16 - this is going to accept an enabled prop
+22:18 - in with this
+22:20 - what we want to do is just say
+22:31 - with this enabled prop
+22:34 - we will say that if you are not enabled
+22:41 - then go ahead and render this disabled
+22:44 - mix in
+22:45 - clean this up
+22:48 - and all right everything looks good
+22:52 - so check it out all right so this is
+22:54 - pretty cool so I am not I'll show you
+22:56 - what's going on right here so right now
+22:58 - I am connected to my iMac but I'm not
+23:01 - connected to my Linux desktop
+23:03 - so you can see I have Linux desktop I'm
+23:05 - trying to connect you right now it's
+23:07 - good this go button is disabled however
+23:10 - whenever I choose my iMac everything is
+23:12 - connected and then I can then send the
+23:15 - request of course uh my iMac still
+23:17 - doesn't understand what the heck data is
+23:19 - receiving so it's sending back an error
+23:21 - but uh yeah there you go the basic block
+23:24 - structure is working and also this is
+23:27 - the very first time where we are now
+23:28 - sending data to another device and it is
+23:30 - sending data back even though it doesn't
+23:33 - understand what that data is at least we
+23:35 - have something up and running
+23:37 - communicating pretty cool checkpoint so
+23:40 - in the next video what we'll do is we'll
+23:41 - start working on this timer right here
+23:44 - get this up and running and then the
+23:47 - history table from there so yeah making
+23:49 - some sweet progress here see you next
+23:51 - video
+
+Cleaned transcript:
+
+all right so now that we got the connection status component up and running what we can do next is start working on this main button logic however before we just jump right into that I want to kind of take a step back and do a little recap of exactly how this app is going to work so whenever we hit that go button what's going to happen is my device is going to send a message through the core server to the receiving device and then once this receiving device receives this all it's going to do is it's going to send back a message back through the server to my device and we'll say that this first request we're going to call it the ping request and then this response we'll call it the pong so a ping pong message pretty simple architecture but before digging into the code let's go ahead and take a look at the structure for exactly how these blocks are going to be formatted so these blocks or in other words chunks of data that are going to be sent between devices they always need to have a unique ID and for this you can just have any valid uuid and the reason that we need this is just to ensure that this core server it isn't processing the same exact blocks again and again and again it also allows for you to specify an amount we're not going to need this in this tutorial this is just so if you ever want to transfer some messaging credits from one device to another then you can do it right there again like I said this is just going to be zero for this tutorial the recipient in the center this is pretty simple it's the account number of the receiving device in the one who sent this block and this transaction fee this we have set up on the core to be one by default and the reason that we have this is kind of for our security purposes if anyone ever steals my device it effectively throttles the amount of traffic or messages they can send back and forth so the core server like I said just requires one messaging credit to send a message to another device on the network now this payload will dig into in just a second but lastly the signature field is just for the digital signing process to ensure that the sender is indeed the one who is sending this message so now on to the payload so if we take a look at the source code for the server we can see that the payload is a Json field so you can include as this payload any valid Json however for tnbos just to keep things standardized we always shape the payload in this format we have a PID which stands for process ID and what this effectively translates to it's the ID of the application that is sending or receiving this data in that way let me pop this open again whenever we have blocks coming into tnbos tnbos is going to know which app to Route those blocks to depending on this process ID so again for us it's just going to be a speed test but for chat it's chat so on and so forth basically saying which app is this data for now aside from that we have this FN in params value because essentially whenever we are sending data to another device in a lot of ways it works similar to a RPC or remote procedure call or remote function call where we are essentially calling a function on another device so the two functions that we're going to be writing are a ping function and then a pong function and for both of those functions the params are going to be the same and that is just going to be the Run ID and the reason for that is whenever I send out this request and that device sends something back I know which run it's referring to so now let me go ahead and open my IDE and start writing some of the typescript definitions for I'll start with these functions so in types I'm going to create a new typescript file and I'll say FNS I don't like using the word function anywhere because it's a reserve keyword so that's why I decided to use FN rather than function in a lot of these places so export enum and I'll say speed test FN in like I said we're gonna have two functions a ping and a pong and palm and for each of these functions we'll write a separate interface and for this I'll say the Ping params whenever we call this function this is just gonna take in a run ID and this is going to be a string value and then I'll do the same exact thing for the pong function so whenever you use the pong function also pass in params of the Run ID now we can probably combine these into one interface but I like to be super explicit whenever I'm writing the params for each function and on that note what we can do now is just go ahead and import everything under functions import all of that all right now from here what I like to do is create utility functions for generating these payloads and you'll see why in just a second so under speed test I'm going to create a new directory called payloads and for the naming convention is just the function name followed by payload so first we'll do the Ping and R right so for the Ping payload again it needs three things process ID function name and params so let me go ahead and sense our process ID is just the app ID and that is stored in this app registration I'm going to import the speed test registration so M4 speed test registration from apps speed test registration and then after this let me go ahead and import some of these types so all right so we are going to need this speed test function and these pink params and no the only other thing that I need is a little helper interface that I wrote from system types and that is app payload right there I'll show you what this is so all this is saying is that for this interface it requires a function which is a string params which can be anything in process ID which is a string basically ensuring that we follow this format right here which is just the tnbos standard all right now this function say ping payload it's equal to a function and this function is going to return that app payload and the only thing that we're going to be passing in here are params matching the pink params in other words in this case just a run ID now the reason that we're only going to pass this in is because whenever we return this payload the function name is always going to be equal to speed test functioning.ping and the params those are just going to be set to whatever params that we passed in and for the process ID is speed test registration the app ID right there all right and this can be our default export all right so there we go this is uh looking good for our ping payload function and now let me go ahead and pretty much write the exact same thing for the pong payload and we'll just copy this Place ping with pong and then for uppercase ping replace it with uppercase pong now last but not least just like kind of our standard convention gonna create an index file and Export both of these into here and that way whenever we use these in our components then our Imports are just a little bit cleaner so we want to import first ping payload dang for pong payload King and Pawn all right beautiful now just like we wrote those helper functions to generate these payloads what I also want to do is write helper functions to generate these blocks and that's just going to make it a lot more clean whenever we work with this in our components so let me close all this make a new directory called blocks and we're going to have two blocks which is the Ping Block in the pong block so start with the pin block and import everything I need to and this is just going to have one function and I'll say ping block comes pin Block in the default export all right so this ping block function will pass in an object and let me type out the interface right now so the interface I'll just say ping block just make sure that we pass in all the correct Rams so whenever we generate a ping block or in other words send a ping block to another device we need to give it three pieces of information the first one is the network ID which network are you going to be sending this over the other one is the recipient which is just the account number of the receiving device and lastly we need to pass in the bramps and these for this are just the pink params so now we can say actually let me do this ping block and just the structure right here so network ID params and recipients and actually since this function right here it's not only going to generate the Ping block but actually send it over the network what we can do is make this an async function because we're going to be awaiting a nested call in here now before we even start writing the block structure what I want to do is say const I want to get a property from the system called self and this refers to basically the self account in other words my account on this device and the reason that I want this is because whenever we generate that block we need to sign it with our signing key so that signing key is stored in this self property right here so we're going to be using that in just a sec but for now what I want to do is Define where you're at right here so we're going to start defining this block structure and what we're going to do is we're going to Define all of these uh properties aside from signature because signature is going to be generated in a different kind of way so let me just do that right now so data this is going to be equal to an unsigned Block in other words a block with all these fields excluding the signature so the first thing that we need to do is specify an amount and this is just always going to be zero and then for the ID remember I said that we need a unique uuid and instead of writing our own function for that there is this function right here from the crypto Library random uuid gonna give you a new one each time now for the payload for this we are going to take that function that we just created ping payload helper function and remember this is just going to accept the Ping params and those are these params right here now after this we just need to specify the recipient which is the receiving account number the sender that is on self dot account number basically my own account number and for the transaction fee we just created a constant for this core transaction fee since it's always just one so let me clean this up in art so once we have our unsigned block what we need to do is add the signature to it and we created a helper function for this as well which is block sign data and what do you want to sign well this data right here this unsigned block and as the second param what we need to do is pass in the signing key that we want to sign in with and that's just self signing key so again this self is an object that consists of my account number in the related signing key so there you go so the only other thing that we have to do now now that we have that block signed is just send it over the network so to do this I'm actually going to return a function called create block and you can see that it takes a block and the network ID basically saying what network do you want to send it over so the block is of course just block and the network ID is equal to the network ID that we pass in and just to look at this real quick again all this does is it takes a block which we pass it in and it sends it over this network that's it so now that we have that taken care of for the Ping block I'm going to go ahead and copy this and pretty much just need to do find and replace to say pong to replace ping with pong uppercase and then ping with pong just like that and there you go so now that we have our two block generator helper functions as always just go ahead and make an index file ping block import block and Export these bad boys ping and pong block all right so now that we got all our helper functions written we can finally hop back into main button and start hooking everything up or it's everything I'm gonna need and all right so again what is going to happen whenever you click this go button is it's going to send a block to this account on this network and that is our active account number and Active network that we're going to need to pluck off so const active account number and this is equal to that slice of get active account number and same thing for the Active network ID so get back the network ID and then aside from this we're also going to be dispatching that run to our Redux store so for this we need to use dispatch and this is equal to use dispatch type of this is just our app dispatch and the other thing that we're going to need is that use is connected hook use is connected and remember we use this for our connection status right here but the reason that we're going to use it in this main button is because if we're not connected then we want to just make sure that this button is disabled so on that note what we can probably right now is that uh on click Handler so what happens whenever you click the button I'll say and we'll click and since this is going to be sending a block we'll make it an async function and all right so first of all I want to say that if you are not connected then we can just go ahead and return and then the what I would actually want to do after this is this I want to go ahead and generate a run ID and run ID this is just going to be equal to crypto.random uuid and now that we have that right after what I want to do is I want to generate this run and dispatch it to our Redux store so I'm going to dispatch a new run and for that I'll say set run now the shape of a run let me just go ahead and see what we need to create a run actually you can probably just do this copy all these params and just replace them so the network ID is going to be equal to our Active network ID and this is probably going to give an issue because it's Active network ID right here it can be a string or null however we are going to say that we definitely have it because if we're not connected in other words if we don't have a network ID then we're not going to be connected so this logic is never going to run so at this point we can guarantee that we have it now for the recipient this is going to be the active account number now for the request dates we can use this utility function right here current system date and I'll show you what this is going to return basically just a date formatted in the standardized format now for our response date this is going to be no because remember whenever we first generate this run we're going to send it off to the other device but we're not going to of course have a response at that time because we don't even know if they're going to respond so set that equal to null this is going to be set whenever we get a response of course now for the Run ID it's just the same as this run ID right here and for the status this is going to be equal to run status pending so pending by default and then depending what response we get back it's either a success or timeout so clean up all right so whenever we click this button what we'll do is we'll say on click handle click so you click the button what happens it generates this run stores it in our Redux store now right after that we'll go ahead and send out that request and remember that function was called ping block and if we take a look at this interface we'll see that it requires a network ID and this is just going to be equal to the Active network ID the recipient active account number and for those params those params are just the Run ID so now let me just go ahead and pretty this up remove this and our right now to test this out I do need a connection so I'm gonna go ahead and open my MacBook right now and I'm booting up tmbos and sweet now that we are connected let me go ahead and hop in my network tab that looks good and clear this out and hopefully when I hit go sweet all right and you saw that invalid block receive error message and that's because we didn't write the logic for my MacBook to actually understand what the heck that block was so it's probably sending uh Becca error message right now but uh before we even fix that what I want to do is fix this little situation right here because the logic that we want is if you are not connected then I want to just make sure that this button is disabled since you shouldn't be even allowed to click this or it shouldn't even look clickable if you don't have a connection so do that back in my component is and the Styles follow I'll go ahead and add in this disabled mixing CSS and what this is going to do is just add some disabled styling to the button and to actually accept these I need to pass in some props to this container and I'll just say I'll have it enabled prop and right now we're probably going to need to make some adjustments to this but we'll just say it's enabled in other words this button is enabled if you are connected and now what we can do is say for this Boolean I forgot my curly brackets all right so this is going to accept an enabled prop in with this what we want to do is just say with this enabled prop we will say that if you are not enabled then go ahead and render this disabled mix in clean this up and all right everything looks good so check it out all right so this is pretty cool so I am not I'll show you what's going on right here so right now I am connected to my iMac but I'm not connected to my Linux desktop so you can see I have Linux desktop I'm trying to connect you right now it's good this go button is disabled however whenever I choose my iMac everything is connected and then I can then send the request of course uh my iMac still doesn't understand what the heck data is receiving so it's sending back an error but uh yeah there you go the basic block structure is working and also this is the very first time where we are now sending data to another device and it is sending data back even though it doesn't understand what that data is at least we have something up and running communicating pretty cool checkpoint so in the next video what we'll do is we'll start working on this timer right here get this up and running and then the history table from there so yeah making some sweet progress here see you next video

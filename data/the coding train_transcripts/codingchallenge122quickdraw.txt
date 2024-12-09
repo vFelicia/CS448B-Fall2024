@@ -1,0 +1,992 @@
+00:00 - (ding)
+00:01 - - Hello, and welcome
+to a Coding Challenge,
+00:03 - Quick, Draw edition.
+00:04 - Now, I have been talking about doing this
+00:06 - for a very long time, and I'm excited
+00:07 - to finally try this on my channel.
+00:09 - One of my favorite data
+sets that is out there
+00:11 - in the world is the quick draw dataset.
+00:13 - Now, here's the reason, one of the reasons
+00:16 - why I'm interested in this
+is not just this dataset
+00:19 - of 50 million drawings,
+which is interesting
+00:21 - and fun to play with on its own,
+00:23 - but there is something called Sketch RNN,
+00:27 - which was developed by
+a set of researchers
+00:30 - at Google, Google Brain,
+00:31 - and you can see some of them
+here who wrote this paper,
+00:34 - and explained how Sketch
+RNN is a neural network,
+00:39 - a recurrent neural network
+that learned about how
+00:42 - to draw various things
+from the quick draw dataset
+00:45 - and then can try and imagine
+and create new drawings
+00:49 - based on how it learned
+and can even interact
+00:51 - and draw with you.
+00:52 - So many possibilities.
+00:53 - So, this is where I'm going with this.
+00:55 - I am going to make...
+00:56 - Sketch RNN has recently been
+added to the ML5 library,
+00:58 - (ding)
+01:00 - and I'm going to show you an example,
+01:03 - and I'm going to build
+that with Sketch RNN ML5,
+01:05 - but I feel like before we start making
+01:09 - the artificially intelligent
+system that generates
+01:11 - the drawings, let's look
+at the actual data itself
+01:15 - that it was trained on.
+01:16 - So first, where did that data come from?
+01:19 - So, and apologies if I get anything wrong,
+01:21 - please let me know in the comments,
+01:23 - 'cause this is not my
+project, I am just inspired
+01:25 - and enthused by it, so
+the quick draw project
+01:28 - is a project, the AI experiment,
+01:30 - made by friends from Google,
+01:32 - and it is a game that you can play
+01:34 - where you say draw a
+pencil in under 20 seconds,
+01:37 - okay here we go, (vocalizing),
+01:39 - - [Robot] I see marker or lipstick.
+01:41 - - No.
+- Or crayon.
+01:42 - - No, no that's really like a pencil.
+01:44 - If I put an eraser here.
+- I see rocket.
+01:46 - - No, rocket, I'm the worst.
+01:49 - Aah.
+01:50 - - [Robot] I'm not sure what that is.
+01:51 - - Yeah, I don't know what that is either.
+01:53 - (ticking)
+01:54 - Time is runnin' out.
+01:57 - - [Robot] Sorry, I couldn't guess it.
+01:59 - - All right, let's try a basketball.
+02:02 - - [Robot] I see nose or moon or blueberry
+02:04 - or baseball or bracelet.
+02:06 - (laughs)
+02:08 - - [Robot] Oh, I know, it's basketball
+02:09 - (ding)
+02:10 - - All right, I win, okay,
+so you get the idea.
+02:11 - I could be stuck here for quite a while.
+02:13 - Now, what you might not, when
+you are playing this game,
+02:17 - your doodles are being collected,
+02:20 - and over 15 millions of
+players have contributed
+02:23 - millions of drawings playing Quick, Draw,
+02:26 - oh and I've used this before, right,
+02:27 - I made a example with a neural network
+02:29 - that tried to recognize your drawings.
+02:31 - This has been done on my channel before,
+02:33 - but what I haven't actually looked at,
+02:35 - what I looked at before was I looked
+02:36 - at all the drawings as pixels.
+02:38 - What's actually, what's
+interesting about the data,
+02:41 - is that the data which you find here,
+02:43 - information about it on
+GitHub, is not pixels,
+02:46 - it's actually the pixel
+paths of the people making
+02:50 - the drawings with timing information.
+02:52 - So you could load that data
+and replay any drawing back,
+02:57 - and each data, each drawing, has the word
+03:01 - that was associated with it,
+03:02 - the country where the
+person is from who drew,
+03:05 - at least the IP address presumably,
+03:06 - and then whether it was recognized
+03:08 - and then the actual drawing itself.
+03:11 - So, what I want to do, and you
+can see here that the format
+03:16 - of the data is a whole of XY positions,
+03:18 - XY, XY, XY, with timing, what
+time was I at the first point,
+03:23 - the second point, the third point.
+03:24 - Then, I might have lifted up
+my pen, moved and started doing
+03:28 - another one, so it's a bunch of strokes.
+03:30 - So this is, it's a little
+tricky 'cause I can't use
+03:32 - the word stroke as a variable name in P5,
+03:35 - 'cause stroke is a
+function that actually sets
+03:37 - the pen color, but the
+idea is that if I do this,
+03:41 - it's sampling a bunch of my points,
+03:44 - as I drew along that path,
+03:45 - each one of these is
+an XY point associated
+03:48 - with a given time, and
+then there is an array
+03:51 - with all of the Xs, all
+of the corresponding Ys
+03:54 - and the corresponding times.
+03:56 - Now, what I'm actually
+going to use in this video
+03:59 - is if there are a bunch of
+different versions of the data,
+04:02 - I'm going to use a
+simplified version of it
+04:03 - because these are huge data files,
+04:06 - but I encourage you as
+an exercise to try to do
+04:08 - what I'm going to do but with
+the non simplified version,
+04:10 - maybe with the timing aspect of it,
+04:12 - but the simplified drawing files are
+04:19 - the same exact thing,
+the same exact thing,
+04:21 - but no timing information,
+04:24 - and also they have been sub sampled,
+04:27 - meaning in theory, as
+the person is drawing,
+04:31 - as the user is drawing, a lot
+of points are being captured,
+04:34 - but maybe you don't need
+that level of detail,
+04:36 - and that's often referred
+to as pixel factor
+04:38 - or scale factor, I believe,
+or epsilon value, I guess.
+04:41 - You can say simplify all strokes using
+04:43 - the Ramer-Douglas-Peucker algorithm,
+04:46 - I don't know if I
+pronounced that correctly.
+04:48 - With epsilon value of two.
+04:50 - So, these are available as
+something called ndjson.
+04:53 - Now, if you've watched my videos before,
+04:55 - you're probably familiar with json,
+04:57 - JavaScript object
+notation, that is a format
+05:01 - where you can store data
+05:02 - that's in JavaScript object notation.
+05:04 - I have some videos about what is json.
+05:06 - Ndjson is a funny thing,
+ha ha, so hilarious,
+05:09 - it's the most, the funniest
+version of json, no,
+05:13 - and it is actually a set
+of multiple json elements,
+05:19 - each on a different line in a file,
+05:20 - so it makes sense to do
+it that each drawing's
+05:22 - its own sort of json object
+on a different line in a file.
+05:26 - So, let's go grab one of these files,
+05:28 - so getting the data, we can actually go
+05:30 - to the public data sets.
+05:32 - Oops, no, I'm sorry, I
+just want to go to the list
+05:35 - the files in the cloud
+console, which is right here.
+05:38 - I'm going to say I agree, and
+I don't want an email updates,
+05:41 - but I accept, okay.
+05:44 - Accept!
+05:46 - So I'm going to go to full.
+05:48 - I realize you can't see anything here,
+05:49 - so let's try to make this bigger.
+05:52 - Let me dismiss this
+right now, and come on.
+05:55 - I guess I'll make this
+smaller, and I'll just zoom in.
+05:58 - So these are the different formats,
+06:00 - they're actually all the data in binary,
+06:02 - there's this numpy.bitmap,
+which is useful for other kinds
+06:04 - of machine learning, different
+things you might want to try.
+06:06 - The raw data, but let's
+look at the simplified data,
+06:09 - and let's pick, oh, I don't know,
+06:12 - which model should I pick?
+06:14 - There's so many, banana,
+bandage, baseball, basketball,
+06:17 - bat, beach, bear, beard,
+I guess I should do beard.
+06:21 - Right?
+06:22 - That's kind of lame though.
+06:24 - Birthday cake, is there a unicorn?
+06:26 - Maybe there's a unicorn.
+06:29 - No, was there a rainbow?
+06:31 - Yes, there's a rainbow, (ding), all right,
+06:35 - so we'll use the rainbow.
+06:36 - So I am going to, oops,
+download this file.
+06:40 - So here's the thing.
+06:42 - This is a very large file.
+06:45 - I had a reason why I was
+doing this challenge also.
+06:47 - This is a 43 megabyte file.
+06:49 - Now I could just use some bode
+in my client side JavaScript
+06:53 - to load that file and put it on the web,
+06:56 - and at some point, I might
+show you some techniques
+06:58 - for doing that, stay tuned in the future,
+07:01 - but I think this is a good
+case where my video series,
+07:05 - sort of module for my
+programming from A to Z class,
+07:08 - or the program with text
+class, building an API
+07:10 - with Node and Express, this
+is a case where I've got this,
+07:13 - what if I wanted to have every drawing,
+07:14 - some of the just millions of them.
+07:17 - I don't want to load hundreds of megabytes
+07:19 - and gigabytes of files in
+my client side JavaScript.
+07:21 - I could write a little Node
+program whose sole purpose
+07:24 - is to hold on to all that data,
+07:26 - and my client side JavaScript
+could just request it.
+07:28 - So this could be because what
+I want to do is create an API
+07:32 - out in the world for people
+to get drawing information,
+07:35 - but this isn't data that I own in a way
+07:36 - that I would necessarily do that.
+07:38 - We'd have to look at the licensing
+07:40 - to see if that's even
+something reasonable to do.
+07:42 - Where is that eraser?
+07:44 - But, what I can do,
+07:47 - is on my computer here,
+right, the idea here is oh,
+07:52 - I'm going to make a server, and
+the server is going to hold all
+07:56 - of the drawings, and then
+my P5 sketch can just say,
+08:00 - hey, can make a request,
+like a get request,
+08:04 - please, could I have a rainbow?
+08:06 - And then the server's going to
+send back just a single drawing.
+08:09 - It's not going to send back
+hundreds of megabytes of data,
+08:11 - it's storing all the data,
+but it's going to send back
+08:14 - just one piece.
+08:15 - The interesting thing is this server
+08:16 - can easily just also run on the laptop.
+08:18 - And I could connect to it,
+so there's a variety of ways
+08:21 - you could deploy this and use this,
+08:23 - but I'm going to do it
+all from this laptop.
+08:26 - All right, so, to run a
+server with Node and Express,
+08:28 - you could go back and
+watch some of these videos
+08:30 - where I step through this in more detail,
+08:32 - I'm just going to start it in
+the directory in my console,
+08:35 - then I'm going to say npm init,
+08:38 - and I'm going to call this
+codingtrain_quickdraw_example,
+08:44 - and it's version 0.0.1, it is
+an example that I am making
+08:49 - on the Coding Train,
+and you know, whatever,
+08:52 - I'm going to skip through
+a lot of this stuff.
+08:54 - Yes.
+08:55 - Okay, so now, if I go to my code,
+08:57 - you can actually see I have
+this package.json file.
+09:00 - The package.json file
+has all that information
+09:03 - that I just entered.
+09:04 - This is the configuration
+file for my project.
+09:07 - Notice this, we're central
+manager of this project now.
+09:10 - So, I need a couple Node packages
+09:13 - to be able to make this work.
+09:14 - I need to use express, express
+is what I'm going to use
+09:18 - to handle that get request,
+this http get request.
+09:23 - So I'm going to say npm install express,
+09:25 - and then I also need something
+to load that ndjson file.
+09:29 - So ndjson Node, let's just,
+09:32 - I've actually used this
+before, but let's look.
+09:35 - So this is a Node package
+for loading an ndjson file,
+09:40 - so I'm going to say npm install ndjson.
+09:44 - Great, there we go, and now,
+09:46 - I meant to show you what does that ndj,
+09:48 - oh I got to grab that file now,
+09:51 - so I also need, I'm just going to change,
+09:53 - rename this to rainbow.ndjson,
+I'm going to drag it here
+09:57 - into my project, so now
+this is a huge file,
+10:00 - and so you can see that Visual Studio Code
+10:03 - is freaking out, it's
+like I don't want to deal
+10:05 - with this file because it's too big,
+10:08 - but you can see that what this is
+10:11 - is every single drawing on one line,
+10:15 - so it's like this is my
+database, essentially,
+10:17 - database of rainbow drawings.
+10:19 - I have a database of rainbow
+drawings, what could be better?
+10:23 - Okay, so what was I doing?
+10:25 - Back to the code in the server.
+10:28 - Where, oh, I don't have a server
+yet, I'm going to add one,
+10:32 - I'm going to call it server.js,
+I could call it app.js
+10:36 - or index.js, and here, I'm
+going to go back to this,
+10:40 - and basically I just
+want to do exactly this.
+10:44 - So the first thing, I want to use this,
+10:47 - I need the file system module,
+10:49 - so I'm going to say const
+fs = require file system.
+10:52 - File system is a module
+that comes with Node,
+10:55 - I don't have to install it,
+but I also want the ndjson
+11:01 - module, which, it doesn't come with Node,
+11:04 - but I've added it.
+11:07 - And,
+11:09 - here we go, and we can see, by the way,
+11:10 - that when install those,
+they are now dependencies
+11:13 - in the package.json file.
+11:15 - And now,
+11:17 - (vocalizing)
+11:18 - ah, there we go, now this
+is, so what is this doing?
+11:21 - This is streaming it, so
+this is really useful.
+11:23 - It's a huge file.
+11:25 - Rainbow.ndjson, I certainly
+could load it just using,
+11:30 - loading the file into a big string,
+11:32 - chopping it up and parsing it,
+11:34 - but when you have a big
+file, like an ndjson file,
+11:36 - you want to read it as a stream,
+11:38 - essentially one line at
+a time 'cause it could be
+11:39 - a gigabyte file.
+11:41 - I'm not going to, in this
+case, I'm just going to say,
+11:43 - I'm going to make a empty
+array, and every single object,
+11:48 - I'm just going to
+11:52 - push into that array, but
+let's console log them
+11:55 - just to see that this is working.
+11:57 - So this is the stream.
+11:59 - As it reads line by line by line,
+12:02 - the ndjson file, it's going
+to console log that object,
+12:06 - okay, so let's go here, and I'm
+going to say node server.js,
+12:13 - and there you can, you can see this is it,
+12:14 - this is every single drawing,
+it's going to take quite a while
+12:17 - 'cause there's thousands
+and thousands and thousands
+12:19 - of them, but you can
+see, this is the word,
+12:22 - this was the country code, this is whether
+12:24 - it was recognized, it has
+an ID, and then drawing
+12:26 - is in these arrays, which
+aren't console logging,
+12:28 - but I can get access to them, wonderful.
+12:30 - So I now have
+12:33 - an array that has every single
+12:37 - drawing in it, now how
+do I get access to that?
+12:41 - I need to be able to make a
+get request to the server.
+12:46 - So let's see how we would do that.
+12:47 - So I need to make an
+express servery thing,
+12:51 - let's just look up express Node, and go to
+12:56 - the kind of like quick
+getting started, hello world,
+12:59 - the hello world express example
+is all we need, basically.
+13:02 - I'm going to grab all of this,
+13:05 - and I'm going to put it into my code.
+13:08 - So what's going on?
+13:09 - Number one is I need to
+require the express library,
+13:12 - I need to create an app,
+13:13 - which is calling the express function.
+13:15 - I'm adding the semicolons, gosh darn it,
+13:18 - I need semicolons to live, I
+can't, I can't do without them.
+13:21 - I need to pick a port, so port,
+this is somewhat arbitrary,
+13:24 - but I'm going to use the port 3000,
+13:26 - and then I'm going to
+setup a route, so the idea,
+13:29 - and I prefer to be a little
+more long winded about this,
+13:33 - this is using the arrows syntax,
+13:35 - which is a kind of ES6 JavaScript syntax.
+13:42 - And I'm just going to,
+13:46 - I just have to do things
+the way that I do them.
+13:50 - So there's two functions that
+I care about with my app,
+13:54 - one is that I needed
+to listen on the port,
+13:56 - so this, I'm setting up
+the, creating a server,
+13:59 - and that server is listening,
+14:01 - 'cause ultimately, I got
+to get to that P5 sketch,
+14:02 - it's going to make the drawing,
+14:04 - I haven't even gotten there yet.
+14:06 - Now, I then want to setup a route,
+14:10 - and then when the user makes
+a request to that route,
+14:13 - send something back.
+14:15 - So in this hello world
+example, if I run the server,
+14:20 - and go to local host 3000,
+14:24 - it says hello world, but
+that's not what I want.
+14:27 - I don't care about sending hello world.
+14:30 - What I want to do is let me
+make a route called rainbow.
+14:35 - Then what I'm going to
+do is I'm going to say
+14:37 - let a random number =
+math.floor, math.random,
+14:44 - times drawings.length,
+so however many drawings
+14:48 - have been loaded when
+someone goes to this route,
+14:50 - pick a random one, and
+then I'm going to say,
+14:53 - and this could be a const, I guess,
+14:55 - and I'm going to say response,
+send drawings index r,
+14:59 - and I suppose I should call this index,
+15:02 - so now,
+15:04 - whoops, index, let's rerun the server,
+15:08 - and there is a tool called
+nodemon, which well reset
+15:10 - the server for you, I'm
+going to do this manually,
+15:13 - and then I'm going to go here.
+15:15 - Cannot get slash because there
+is no route anymore at slash,
+15:20 - but if I go to slash rainbow, there we go.
+15:26 - There is the drawing.
+15:28 - All right, I just installed
+a Chrome extension to format
+15:31 - the json so I could see it,
+so here's a random drawing,
+15:34 - and this is all the information.
+15:36 - Now, all I need to do
+is have P5 request json
+15:41 - from this route and
+then render the drawing.
+15:45 - So now the questions is
+where do I run my P5 sketch,
+15:49 - and there are a variety of ways.
+15:50 - In theory, this is an API
+that anyone could make
+15:52 - a request to, whether
+or not I'm opening it up
+15:56 - for other people to request to it or not,
+15:57 - is a complicated question, but
+one way that I could use it
+16:00 - is just have this particular
+server host a P5 sketch
+16:04 - in the first place, so the way to do that,
+16:06 - if I go back to my files, and
+I go to desktop, quick, draw,
+16:11 - this is where all the files
+are, I'm actually going,
+16:13 - I have a P5, the HTML file
+and a sketch.js file in here,
+16:18 - but I'm going to make another
+directory called public,
+16:20 - so these would be the, where
+I want files that are hosted
+16:24 - by the server to live public,
+16:27 - and then I'm going to
+say something in my code,
+16:30 - app., I don't remember,
+static file hosting express.
+16:37 - Serving static files in
+express, it's just this,
+16:41 - so basically, what I
+want to do is serve up
+16:44 - the HTML and the JavaScript files as well.
+16:48 - So I'm going to do that
+here, I'm going to add this.
+16:51 - So now, look at this, now,
+and let's go to the P5 code,
+16:56 - and let's say background zero.
+16:59 - So I, all this P5 code does
+is create a 100 by 100 canvas
+17:03 - with a background of
+zero, so now, guess what?
+17:06 - If I go to local host 300/rainbow,
+17:09 - I get a drawing 'cause I'm
+handling that rainbow route
+17:13 - with a, by sending back
+a drawing, but I if I go
+17:18 - to just slash, oh I didn't
+restart the server, did I?
+17:22 - Restart the server, go to
+slash, there's the P5 sketch.
+17:26 - So now, my P5 sketch can
+finally ask for the server
+17:32 - for the drawing, okay.
+17:35 - I'm going to go over here,
+and I'm going to say,
+17:37 - first of all, one thing is, by the way,
+17:38 - that simplified dataset, all
+of the simplified version
+17:41 - of the quick, draw dataset,
+all of the drawings
+17:44 - were simplified or scaled
+to 255 by 255 pixels,
+17:48 - so that makes things easier to work with.
+17:50 - I'm going to call the function
+load json, and guess what?
+17:53 - I'm just going to say load json
+rainbow gotRainbow, all right,
+17:58 - and then I'm going to
+write a function gotRainbow
+18:02 - that gets some data, and I'm
+going to say console log data,
+18:06 - so this is the idea, now, if
+you've seen load json before,
+18:09 - maybe before I've used it for
+load this actual json file,
+18:13 - or maybe I said load json
+from an API like Wordnik.
+18:17 - Now, I'm going to the slash rainbow route,
+18:19 - which is local to this particular
+server, and guess what?
+18:21 - I don't actually even
+need to restart the server
+18:25 - 'cause this will be loaded dynamically.
+18:26 - So let's go here.
+18:28 - And we can see, there it is.
+18:29 - This is the rainbow drawing right here.
+18:32 - I'm going to give myself some more room,
+18:33 - and here's the drawing itself.
+18:35 - So all I need to do now is
+write an algorithm to go through
+18:38 - and draw this drawing.
+18:40 - All right, we're ready.
+18:41 - So let me make the background 200,
+18:45 - let me say the drawing
+18:48 - is
+18:49 - in
+18:51 - data.drawing,
+18:52 - is that right?
+18:54 - Console log drawing, let's look at that.
+18:57 - Yeah, so this is the actual drawing.
+18:59 - It's just two arrays 'cause
+it was just two strokes.
+19:02 - Now I am going to say for
+19:04 - let i = 0,
+19:07 - i is less than drawing dot,
+19:12 - oh, let me figure this
+out, this is an array,
+19:16 - oh right, oh weird.
+19:18 - Sorry I'm lost, oh right,
+okay, so, ah, the drawing,
+19:21 - this was only one stroke,
+19:23 - that's why this was confusing here.
+19:24 - Some of these rainbows, there we go,
+19:25 - this is what I want to look at.
+19:27 - I have three different strokes.
+19:29 - So first I need to look
+at all the strokes, sorry.
+19:32 - So I want to say let, and
+I'm going to call it a path.
+19:36 - So for let path of drawing,
+this is each and every path,
+19:40 - path zero, path one,
+path two, then each path
+19:44 - has a bunch of points,
+path zero, it has 15,
+19:47 - path one has 10, path two has six.
+19:50 - I'm going to say for let i = 0,
+19:53 - i is less than path,
+19:56 - path index 0.length 'cause this,
+19:59 - and then, the x is
+20:03 - path index 0 ,index 1,
+20:07 - wait no, index i, sorry,
+this is confusing,
+20:10 - and the y is path index 1, index i, right,
+20:14 - so this is what I'm doing.
+20:15 - I am looping through
+20:18 - zero, one, two, that's the outer loop,
+20:20 - each path, each path is two arrays.
+20:25 - Path zero is all the Xs,
+path 1 is all the Ys.
+20:28 - I need to look at all
+the Xs and all the Ys,
+20:30 - and then set a vertex X, Y,
+so I can say begin shape,
+20:36 - end shape,
+20:39 - I can say no fill, stroke 0,
+20:44 - whoops,
+20:45 - stroke 0, and maybe I'll say stroke
+20:49 - weight 3, just to make the
+lines a little bit thicker,
+20:53 - and let's see what I see.
+20:55 - There we go.
+20:56 - Rainbows, rainbows galore,
+these are everybody's rainbows.
+21:01 - Each time I hit refresh.
+21:03 - You know one thing I could
+do now is when it finishes,
+21:07 - I could just say load json again.
+21:12 - Ooh, maybe I would want to
+21:17 - redraw the background every
+time, that might make sense.
+21:22 - And here we go, this is
+a random drawing over
+21:25 - and over and over again, so,
+I could start to do things
+21:27 - like request a specific
+drawing from a certain country,
+21:30 - I could download different,
+I mean, you know,
+21:33 - different models, let's just,
+let me pause for a second
+21:36 - and grab another model.
+21:38 - Okay, so I downloaded
+one more set of drawings,
+21:41 - the cat files.
+21:42 - So I'm going to, the cat drawings,
+so I'm going to copy that
+21:46 - into here, and we can see
+now I have cat ndjson.
+21:49 - If I go back to my server, I could do,
+21:52 - I'm going to say, I'm going
+to call this rainbows,
+21:56 - and I'm going to do a
+different one for cat.
+22:00 - And I'm also going to do cats,
+22:04 - cats push object, and then
+I'm going to make another
+22:09 - route for,
+22:12 - for cats.
+22:16 - So now,
+22:18 - if I rerun the server,
+22:22 - and I go back to my actual sketch,
+22:25 - and I switch to going to the cat route,
+22:29 - now where was that?
+22:31 - Here I am, I'm going to hit
+enter, ooh, I got some issue.
+22:36 - Cat, internal server error,
+so what's going on here?
+22:41 - Drawings is not defined, so I
+made a mistake in my server.
+22:46 - Oh, this is,
+22:48 - over here is rainbows.length,
+and this is cats.length,
+22:54 - and I would have seen that error here
+22:55 - if I was paying closer attention.
+22:58 - There, now I've got cats,
+and now, ah, let's look at
+23:03 - a lot of cats.
+23:04 - Ooh.
+23:06 - Ooh, it's still giving me rainbows.
+23:08 - Did I not hit save?
+23:12 - Load json cat,
+23:14 - oh, load json cat, whatever,
+I'm not being too thoughtful
+23:17 - about this, give me the cats,
+I want to see the meow meow.
+23:23 - What's going on?
+23:25 - Aah.
+23:29 - (buzz)
+23:30 - this is what I get for
+trying to code so quickly.
+23:31 - This is supposed to say cat.json,
+23:35 - cat.ndjson, now here we go.
+23:39 - Oh wait, I have to restart the server.
+23:42 - And, here we go.
+23:44 - Finally, cats, there's a lot
+of different cat drawings.
+23:47 - I really should slow this down,
+23:49 - let me just slow this down a little bit.
+23:51 - Here's what I want to do actually.
+23:52 - Oh, this video should
+really be over, but why not?
+23:55 - You've already watched
+this much, you could watch
+23:56 - a little bit more, right?
+23:59 - I really want to draw
+the drawing in sequence.
+24:03 - Now, I'm not, I don't have
+the timing information,
+24:07 - and that would be useful to have,
+24:08 - but let's make it actually animate.
+24:11 - So I'm going to add a draw function.
+24:17 - I'm not going to add a
+page transition event,
+24:19 - and so when I've got a cat,
+and I'll just change this.
+24:24 - What I'm actually going to do
+24:27 - is just set
+24:30 - current,
+24:32 - I'm going to just set cat equal to data,
+24:35 - so I'm going to take out all of this,
+24:36 - cat equal to data.drawing.
+24:40 - So I'm going to comment this out.
+24:44 - Let's think about this,
+and then I'm going to say
+24:48 - let x, y, and I'm going to have,
+24:53 - I'm going to say if cat,
+then I now need to keep track
+24:57 - of where I am.
+24:59 - Let stroke index
+25:03 - = 0,
+25:06 - let pen index = 0.
+25:09 - So I need to keep track
+of two indices, right?
+25:12 - Because I'm going to walk
+through one at a time,
+25:14 - each vector of the first stroke,
+and that stroke's going to go
+25:20 - from zero to one and go
+through each of the other ones,
+25:23 - so if there's a cat, the first
+thing I need to do is say,
+25:30 - so if, I'm going to say x
+=, and what was this stuff?
+25:36 - It is path,
+25:40 - oh, drawing, so cat index,
+25:46 - stroke index,
+25:50 - index,
+25:52 - pen index,
+25:55 - index 0.
+25:57 - Boy, this is really awkward
+about how it's using just arrays
+26:00 - for everything, but in the first stroke,
+26:02 - in the first, pen is not the right term,
+26:04 - I don't know what to call
+it, vertex, but whatever,
+26:06 - I could actually just
+call this index maybe.
+26:09 - The stroke index and
+index, then 0 is for x,
+26:13 - and then
+26:15 - one is for y, and let me just,
+just to see that this works,
+26:18 - let me say point,
+26:24 - let me say point x, y, and
+these don't need to be global.
+26:31 - So let's see what this does.
+26:33 - So first of all, let's just run this.
+26:37 - Oh boy, I freaked it
+out, it won't ever stop.
+26:44 - I think, by the way, I killed this,
+26:45 - I need to build in a
+little more of a delay
+26:47 - with these API calls.
+26:48 - So cat is not defined, sketch.js line 12.
+26:53 - If cat, that needs to
+be a global variable.
+26:58 - So, and let me just say here,
+27:02 - console log x,y, let's
+see, did I get x, y?
+27:05 - Yes, so I've got that first
+point over and over again,
+27:08 - and presumably, 52, 48, I
+don't know why I don't see,
+27:12 - I guess I need to say stroke 0,
+27:16 - stroke
+27:18 - weight
+27:19 - 3.
+27:22 - There we go, so there it
+is, that's the first point,
+27:25 - so now what I need to do is say
+27:29 - index ++, if index is
+greater than or equal
+27:35 - to cat stroke index
+27:39 - dot length,
+27:42 - then stroke index
+27:45 - ++
+27:47 - and index = 0.
+27:49 - So this is me marching
+through them one at a time.
+27:54 - So, ooh, and I don't have the Y.
+27:58 - Right, you can see that
+something's wrong here.
+28:01 - (ding) Okay, something
+is terribly wrong here,
+28:02 - and actually, I have not
+been carefully looking
+28:05 - at how those arrays are
+organized, it's very confusing
+28:08 - to store all these data as
+arrays, but there are 11 strokes,
+28:15 - and this stroke has 23 points,
+this stroke has nine points,
+28:20 - but notice that the, I have
+the order wrong, right?
+28:25 - This is an array of an array of arrays,
+28:28 - and so basically, the
+stroke, the zero element
+28:34 - of the stroke is all
+the different x values,
+28:37 - and this one element of the stroke
+28:39 - is all the different y values.
+28:42 - I had those out of order, and then here,
+28:44 - the number of points is
+not the number of strokes,
+28:48 - but rather, the number of Xs.
+28:51 - So now, if I redo this,
+28:54 - you can see the outline of a cat there.
+28:57 - You can start to see the
+outline of a cat here.
+29:00 - Of course it gets stuck at the
+end, it's giving me an error,
+29:02 - so first let me fix that error.
+29:04 - So the error that I need
+to check is if stroke index
+29:09 - equals
+29:12 - cat.length,
+29:15 - then I'm done, then I'm
+going to say cat = null.
+29:19 - I'm going to say no more to
+the cat, and there we go.
+29:23 - So this is the drawing of the cat.
+29:24 - Now, of course, I'm just
+drawing all the points,
+29:26 - I need to connect the previous
+points to the other points,
+29:30 - so I'm going to add a
+previous x, previous y,
+29:34 - and then I'm going to say here
+down here, previous x = x,
+29:41 - previous y = y, and then
+here, I'm going to say a line
+29:46 - between previous x,
+previous y and x and y.
+29:50 - Now, it should do nothing
+when those values are null,
+29:54 - so now we see there, ooh, oh wait a sec,
+29:57 - no, no, no, no, no, no, ah,
+when I get to the next stroke,
+30:02 - then I need to say previous
+x = undefined again,
+30:06 - and previous y = un, 'cause
+I don't want to draw,
+30:08 - I don't want to connect the strokes.
+30:10 - So that's a little bit of
+an awkward way of doing it.
+30:12 - It's still doing that, isn't it?
+30:15 - So, and then I want to say if previous x,
+30:19 - maybe if I do this,
+30:21 - does not equal undefined,
+then draw the line,
+30:26 - let's see if this works,
+whoops, sketch line 19,
+30:30 - I always have this extra equals there.
+30:33 - Oh, weird.
+30:36 - It's still connecting everything,
+a lovely little cat there.
+30:40 - What am I missing?
+30:42 - Right, I don't want to draw the line.
+30:45 - Uh, these are undefined at the beginning,
+30:49 - oh it gets set to here,
+so I need an else here.
+30:53 - Else,
+30:55 - don't set it if it's at the end, okay.
+31:00 - There we go, finally, we are drawing cats.
+31:03 - Now, all I have to do is
+then when I reset there,
+31:07 - I can just ask for a new one.
+31:10 - So let's ask for a new cat,
+31:13 - and whenever I've got a cat,
+let's draw a white background,
+31:18 - let's make,
+31:20 - a little bit gray, we'll set
+it gray at the beginning,
+31:23 - there we go, now, here
+we go, we're now going to
+31:27 - draw lots of cats, it should finish one.
+31:29 - Ooh, didn't get another
+one, sketch on line 13.
+31:35 - Uh...
+31:37 - Cat is
+31:39 - undefined,
+31:41 - and then, there should be no
+more cat until I've got a cat.
+31:46 - Try that again.
+31:49 - There we go, I don't
+know what I did wrong.
+31:52 - Ooh.
+31:53 - (ding)
+31:55 - Thank you to BIMSoMe and
+Louise, both in the chat,
+31:58 - who just pointed out that my
+technique here is correct,
+32:03 - but the issue is that I
+need to reset everything
+32:05 - back to zero, so here, I
+need to set stroke index
+32:10 - back to zero, and I think
+index will already be zero,
+32:12 - yeah index is already zero,
+so yes, the stroke index needs
+32:15 - to go back to the beginning,
+and now I think we're ready
+32:17 - to enjoy a whole bunch of cats.
+32:22 - (upbeat music)
+32:29 - Cat drawings.
+32:31 - All right, thanks for
+watching this Coding Challenge
+32:34 - with the Google Quick, Draw dataset.
+32:36 - Stay tuned for a future
+video where I show how to,
+32:45 - what do I do?
+32:46 - This is where I show how
+to create new drawings
+32:48 - with the Sketch RNN model,
+the machine learning model
+32:51 - that was trained on these drawings,
+32:53 - and if this was one of
+your drawings, (blows kiss)
+32:55 - thank you for making this beautiful cat,
+32:56 - and I'll see you in a
+future Coding Challenge.
+32:57 - Good bye (ding).
+33:01 - (upbeat music)

@@ -1,0 +1,1125 @@
+With timestamps:
+
+00:00 - in this video we're going to talk about
+00:02 - a git ops tool that is gaining
+00:04 - popularity in the devops world which is
+00:06 - called argo cd if you don't know what
+00:09 - git ops is you can check out my other
+00:11 - video about git ups after which this
+00:13 - video will make much more sense to you
+00:16 - first i'm going to explain what argo
+00:17 - city is and what are the common use
+00:20 - cases or why we need argo cd we will
+00:24 - then see how argo city actually works
+00:26 - and how it does its job and in the final
+00:29 - part we will do a hands-on demo project
+00:32 - where we deploy argo cd and set up a
+00:35 - fully automated cd pipeline for
+00:38 - kubernetes configuration changes to get
+00:41 - some practical experience with argo cd
+00:44 - right away
+00:48 - argo city is as the name already tells
+00:50 - you a continuous delivery tool and to
+00:53 - understand argo cd as a cd tool or
+00:56 - continuous delivery tool let's first
+00:59 - understand how continuous delivery is
+01:02 - implemented in most projects using
+01:05 - common tools like jenkins or gitlab cicd
+01:08 - and then see how argo city compares to
+01:11 - them and in that context we will answer
+01:14 - the questions such as is argo city just
+01:17 - another cd tool or what is so special
+01:20 - about it and if it's so special does it
+01:22 - actually replace any of these other
+01:25 - established tools like jenkins or
+01:28 - gitlabci icd so let's say we have a
+01:30 - microservices application and we're
+01:33 - running it in a kubernetes cluster when
+01:35 - things change in the application code
+01:38 - like new feature or a bug fix gets added
+01:41 - the ci pipeline on jenkins for example
+01:44 - will be automatically triggered and will
+01:46 - test the changes build a new docker
+01:48 - image and push it to a docker repository
+01:51 - now how does this new image get deployed
+01:55 - to kubernetes
+01:57 - we update applications deployment yaml
+01:59 - file for kubernetes with the new image
+02:02 - tag and this yaml file then should be
+02:05 - applied in kubernetes in most projects
+02:08 - these steps are the continuation of the
+02:11 - ci pipeline so after the image gets
+02:14 - pushed to the repository
+02:16 - jenkins
+02:17 - will update the deployment yaml file for
+02:20 - the application and using cubectl tool
+02:23 - for example will apply the updated
+02:26 - deployment file to kubernetes and this
+02:30 - is how many projects are set up however
+02:33 - there are a couple of challenges with
+02:35 - this approach first of all you need to
+02:38 - install and set up tools like cubectl or
+02:42 - helm etc to access kubernetes cluster
+02:45 - and execute changes
+02:47 - on those
+02:48 - build automation tools right so you
+02:50 - would need to install and configure them
+02:52 - on jenkins
+02:54 - you also need to configure access to
+02:56 - kubernetes for these tools because
+02:59 - kubectl is just the kubernetes client
+03:02 - and in order for it to connect to
+03:03 - kubernetes it needs to provide some
+03:05 - credentials so you will need to
+03:07 - configure credentials for kubernetes
+03:10 - cluster in jenkins if you're using eks
+03:14 - cluster which is a kubernetes managed
+03:17 - cluster on aws for example in addition
+03:20 - you would also need access to aws so
+03:22 - you'd have to add aws credentials in
+03:25 - addition to the kubernetes credentials
+03:27 - also to jenkins and this is not only a
+03:30 - configuration effort but also a security
+03:33 - challenge because you need to give your
+03:35 - cluster credentials to external services
+03:38 - and tools especially we have 50 projects
+03:41 - that deploy applications to the cluster
+03:44 - each project application will need its
+03:47 - own kubernetes credentials so that it
+03:50 - can only access
+03:51 - that specific application resources in
+03:54 - the cluster same way if we have 50
+03:56 - clusters where things get deployed we
+03:58 - would have to configure it for each and
+04:01 - every cluster and the third challenge
+04:03 - and probably the most important one is
+04:05 - that
+04:06 - once jenkins deploys the application to
+04:10 - kubernetes or it applies any changes to
+04:13 - kubernetes configuration it has no
+04:16 - further visibility in the deployment
+04:18 - status so once cube ctl apply was
+04:22 - executed
+04:23 - jenkins doesn't actually know the status
+04:26 - of that execution did the application
+04:29 - actually get created is it in a healthy
+04:31 - status or is it actually failing to
+04:34 - start and so on you can only find that
+04:36 - out with following test steps
+04:40 - so the city part of the pipeline
+04:42 - when working with kubernetes
+04:43 - specifically can be improved and made
+04:46 - more efficient
+04:48 - and argo city was built for this
+04:50 - specific use case to make continuous
+04:53 - delivery to kubernetes clusters
+04:56 - specifically more efficient argo city
+04:59 - was actually purpose built for
+05:01 - kubernetes with github's principles and
+05:03 - we will see why this is a good thing
+05:06 - throughout this video so how does argo
+05:08 - city make the cd process more efficient
+05:12 - and address the challenges with the
+05:14 - common city flow that i mentioned
+05:17 - we basically just reverse the flow
+05:20 - instead of externally accessing cluster
+05:23 - from the cicd tool like jenkins the tool
+05:27 - is itself part of the cluster and
+05:30 - instead of pushing the changes to the
+05:32 - cluster
+05:33 - we use a pull workflow where an agent in
+05:36 - the cluster which is argo cd pulls those
+05:39 - changes and applies them there so now
+05:42 - let's see how does the workflow look
+05:44 - like when we replace the common cd setup
+05:47 - with argo city first we deploy arcgis
+05:50 - city in the cluster and then we
+05:52 - configure argo city and tell it hey
+05:54 - connect to this git repository and start
+05:57 - watching for any changes and if
+05:59 - something changes there automatically
+06:02 - pull those changes and apply in the
+06:04 - cluster so now when developers commit
+06:07 - the application changes to the
+06:09 - application source code repository sci
+06:12 - pipeline on jenkins since we're using
+06:14 - jenkins as an example will automatically
+06:17 - start a build process it will test the
+06:20 - changes build the image push it to the
+06:22 - repository and finally update kubernetes
+06:26 - manifest file like deployment.yml with a
+06:29 - new image version now a very important
+06:32 - note here about repositories is that it
+06:35 - has been established as a best practice
+06:38 - to have separate repositories for
+06:40 - application source code and application
+06:43 - configuration code so kubernetes
+06:46 - manifest files for the application would
+06:49 - be hosted in its own git repository and
+06:52 - one of the main reasons for that is
+06:55 - because the application configuration
+06:57 - code is not only the deployment file but
+07:00 - it could be config map secret service
+07:04 - ingress and so on and basically
+07:06 - everything that the application may need
+07:09 - to run in the cluster and these files
+07:12 - can all change completely independent of
+07:15 - the source code right and when you
+07:17 - update a service yemo file for the
+07:20 - application which is just application
+07:22 - configuration and not part of the code
+07:25 - you don't want to run the whole ci
+07:27 - pipeline for the application because the
+07:29 - code itself has not changed and you also
+07:32 - don't want to have a complex logic in
+07:34 - your build pipeline that has to decide
+07:37 - and check what actually changed so again
+07:40 - the jenkins ci pipeline will update the
+07:43 - deployment.yaml file in a separate git
+07:46 - repository where the kubernetes manifest
+07:50 - files are for the application and as
+07:52 - soon as the configuration file changes
+07:54 - in the git repository argo cd in the
+07:58 - cluster will immediately know about it
+08:01 - because we configured it at the
+08:03 - beginning to constantly monitor the
+08:05 - repository for changes and it will pull
+08:08 - and apply those changes in the cluster
+08:11 - automatically argo cd supports
+08:13 - kubernetes manifests defined as plain
+08:16 - yml files helm charts customize files or
+08:20 - other template files which eventually
+08:22 - all get generated into plain kubernetes
+08:24 - yaml files so you can use all of these
+08:27 - with argo cd and the repository for
+08:29 - configuration files which is tracked and
+08:32 - synced by argo cd which is a git ops
+08:36 - tool is sometimes also called a git
+08:38 - githubs repository so now whether the
+08:41 - application configuration repository
+08:43 - gets updated by jenkins in case of an
+08:47 - image version update in the deployment
+08:49 - yaml file or by devops engineers where
+08:52 - they change other manifest files the
+08:55 - changes will get automatically pulled
+08:57 - and applied
+08:59 - in the cluster by argo cd and as a
+09:02 - result
+09:03 - we end up having separate ci and cd
+09:06 - pipelines where the ci pipeline is owned
+09:09 - mostly by developers
+09:11 - and configured on jenkins for example
+09:14 - and cd pipeline is owned by operations
+09:18 - or devops teams and configured using
+09:21 - argo cd in this way we can still have an
+09:24 - automated ci cd pipeline but with a
+09:27 - separation of concerns where different
+09:30 - teams are responsible for different
+09:32 - parts of that full pipeline now let's
+09:35 - see some benefits that using git ops in
+09:37 - your project has with an example of argo
+09:40 - cd the first benefit is that we have the
+09:44 - whole kubernetes configuration defined
+09:46 - as code in a git repository so instead
+09:49 - of everyone doing stuff from their
+09:51 - laptops and executing scripts and doing
+09:54 - cube ctl apply or helm install commands
+09:58 - they all use the same interface to make
+10:01 - any changes in the cluster
+10:03 - and that could be the first
+10:05 - big benefit of using this model
+10:08 - now a very interesting use case arises
+10:10 - here when someone in the team decides
+10:12 - you know what let me just quickly update
+10:14 - something in a cluster it's much quicker
+10:17 - to just do a cube ctl apply
+10:20 - than to write the code changes commit
+10:22 - that push that and get a review from
+10:25 - colleagues and then eventually merge it
+10:27 - in the repository so now what happens
+10:30 - when people update the cluster manually
+10:33 - in addition to having the configuration
+10:36 - code defined in the git repository well
+10:38 - arcgis cd does not only watch the
+10:41 - changes in the git repository but it
+10:44 - also watches the changes in the cluster
+10:46 - and anytime a change happens either in
+10:50 - the git repository or the cluster it
+10:52 - compares those two states and if it sees
+10:56 - that something has changed in any of the
+10:59 - two places and they don't match anymore
+11:02 - so the desired state defined in the git
+11:04 - repository does not match
+11:06 - the actual life state in the cluster it
+11:09 - knows that it has to do something and
+11:12 - that something is always to sync
+11:14 - whatever is defined in the git
+11:16 - repository to the cluster
+11:19 - so in that case if someone goes and
+11:21 - makes manual changes in the cluster argo
+11:24 - city will detect that and it will
+11:26 - see that the states have diverged so the
+11:29 - cluster state is different than the git
+11:32 - repository state and it will sync the
+11:35 - changes and basically overwrite whatever
+11:38 - was done manually and this is really
+11:40 - useful because
+11:42 - this actually guarantees that git
+11:45 - repository and whatever is defined there
+11:48 - remains at any time the only source of
+11:51 - truth for your cluster state and it also
+11:54 - gives you a full transparency of the
+11:56 - cluster because you know that whatever
+11:58 - is defined in that git repository as a
+12:00 - configuration code is exactly the state
+12:04 - which you have in the cluster now it
+12:07 - could be that many projects need time to
+12:10 - adjust to these workflows and sometimes
+12:13 - team members or engineers absolutely
+12:15 - need a quick way to update things in the
+12:18 - cluster before changing that in the code
+12:21 - and you can actually configure argo cd
+12:23 - to not automatically override and undo
+12:26 - those manual cluster changes but instead
+12:29 - send out an alert that something has
+12:32 - changed in the cluster manually and that
+12:34 - it needs to be updated in the code as
+12:36 - well so you have that option to
+12:38 - configure argo cd in this way and
+12:40 - finally as a result of using
+12:43 - git as a single interface for making
+12:46 - changes in the cluster instead of
+12:48 - untrackable cube ctl apply commands we
+12:51 - have each change documented in a version
+12:55 - controlled way which gives us history of
+12:58 - changes as well as an audit trail of who
+13:01 - changed what in the cluster but also
+13:05 - this gives teams a way to collaborate on
+13:08 - any changes in the cluster like
+13:10 - proposing a change in kubernetes which
+13:13 - others can discuss and work on and when
+13:15 - done just merge those changes in the
+13:18 - main branch another benefit of using git
+13:21 - for config files is an easy rollback
+13:25 - arcacity pulls any changes and applies
+13:27 - them in the cluster if something breaks
+13:30 - with these changes or let's say a new
+13:33 - application version fails to start we
+13:35 - can revert to the previous working state
+13:38 - in the git history
+13:40 - basically just by moving back to the
+13:42 - last working version
+13:44 - especially we have thousands of clusters
+13:46 - that all get updated by the same git
+13:48 - repository this is going to be very
+13:51 - efficient because you don't have to
+13:53 - manually revert
+13:54 - each and every component doing cube ctl
+13:57 - delete or helm uninstall and basically
+13:59 - clean up all the things you simply
+14:02 - declare the previous working state and
+14:04 - cluster will be synced to that state
+14:07 - again another advantage is
+14:10 - cluster disaster recovery
+14:12 - which becomes
+14:14 - super easy with this setup so if i have
+14:17 - an eks cluster in a region 1a and that
+14:21 - cluster completely crashes i can create
+14:24 - a new cluster point it to the git
+14:27 - repository where the complete cluster
+14:30 - configuration is defined and it will
+14:32 - recreate the same exact state as the
+14:35 - previous one without any intervention
+14:38 - from our side because again i have
+14:40 - described my whole cluster in code in a
+14:43 - declarative way and i want to mention
+14:46 - here that these are all actually
+14:49 - github's principles and benefits that
+14:51 - you get when implementing these
+14:54 - principles
+14:55 - using whatever githubs tool you want so
+14:58 - these are not specific benefits of argo
+15:00 - city itself but argos city just helps
+15:03 - implement those principles
+15:05 - however there are some benefits that
+15:07 - using argo city specifically has
+15:13 - now of course you don't want every team
+15:15 - member to be able to make changes to
+15:18 - cluster especially in a production
+15:20 - environment so again using it you can
+15:22 - actually configure access rules easily
+15:26 - you can say every member of the devops
+15:28 - team
+15:29 - or operations team even junior engineers
+15:33 - can initiate or propose any change to
+15:35 - the cluster and make pull requests and
+15:38 - only a handful of senior engineers can
+15:41 - then approve and merge those requests
+15:44 - and this gives you a clean way of
+15:46 - managing cluster permissions indirectly
+15:49 - through git without having to create
+15:52 - cluster roles and users for each team
+15:55 - member with different access permissions
+15:57 - so basically we have a benefit of easy
+16:00 - cluster access management
+16:02 - and because of the pull model you only
+16:05 - need to give engineers access to the git
+16:08 - repository and not cluster directly now
+16:11 - in addition to human user access with
+16:14 - this workflow we also have a benefit of
+16:18 - easier cluster access management for
+16:20 - non-human users like cicd tools such as
+16:24 - jenkins so in this case you don't need
+16:26 - to give external cluster access to
+16:29 - jenkins or other external tools because
+16:31 - argo city is already
+16:33 - running in the cluster and is the only
+16:35 - one that actually applies those changes
+16:38 - so basically cluster credentials don't
+16:40 - have to be outside the cluster anymore
+16:43 - because the agent runs inside the
+16:45 - cluster and this makes managing security
+16:48 - in all your kubernetes clusters
+16:51 - way easier
+16:55 - as i mentioned an advantage of using
+16:57 - argo city is that it's deployed directly
+16:59 - in the kubernetes cluster but it's not
+17:02 - just deployed in the cluster because you
+17:04 - can actually deploy jenkins in the
+17:06 - cluster too but it's really an extension
+17:09 - to the kubernetes api so argo city
+17:12 - actually leverages the kubernetes
+17:13 - resources itself and instead of building
+17:16 - all the functionality itself
+17:18 - it uses some of the existing kubernetes
+17:21 - functionalities for doing its job like
+17:24 - using its id for storing the data and
+17:27 - using kubernetes controllers for
+17:29 - monitoring and comparing this actual and
+17:32 - desired state and what is the benefit of
+17:34 - that the main benefit is the visibility
+17:37 - in the cluster
+17:39 - that jenkins for example does not have
+17:42 - that allows argo city to give us
+17:45 - real-time updates of the application
+17:47 - state so argo city can monitor
+17:49 - deployment state after the application
+17:52 - was deployed or after the changes in the
+17:55 - cluster configuration have been made so
+17:58 - for example when you deploy a new
+18:00 - application version you can actually see
+18:02 - in real time in argo city ui
+18:05 - that configuration files were applied
+18:08 - pods were created application is running
+18:11 - and in a healthy status or if it's in a
+18:14 - failing status and a rollback is needed
+18:17 - so if we zoom out and look at a big
+18:19 - picture we have git repository on one
+18:23 - side and kubernetes cluster on another
+18:26 - and argo city in the middle of these two
+18:28 - and git is the desired state of our
+18:31 - cluster at any time and kubernetes
+18:34 - cluster is the actual state and argo
+18:37 - city is
+18:39 - an agent in the middle that makes sure
+18:42 - these two are always in sync
+18:44 - updating the actual state with the
+18:46 - desired state as soon as they diverge
+18:50 - now how do we actually configure argo
+18:52 - city to do all this
+18:54 - basically we deploy argo city in
+18:56 - kubernetes just like we deploy
+18:58 - prometheus istio or any other tool
+19:02 - and since it was purpose built for
+19:04 - kubernetes it extends kubernetes api
+19:07 - with crds or custom resource definitions
+19:12 - which allows configuring argo cd using
+19:14 - kubernetes native yaml files and the
+19:17 - main
+19:18 - component of argo cd is
+19:20 - an application and we can define this
+19:23 - application crd in a kubernetes native
+19:26 - yaml file and it looks like this
+19:29 - and the main part of the configuration
+19:31 - of application is we define which git
+19:34 - repository should be synced with which
+19:37 - kubernetes cluster
+19:39 - and this could be any git repository in
+19:41 - any kubernetes cluster in terms of
+19:43 - kubernetes cluster this could be the
+19:46 - cluster where argo city itself is
+19:48 - running in
+19:49 - but it could also be an external cluster
+19:52 - that argo cd manages and you can
+19:54 - configure multiple such applications for
+19:57 - different microservices for example for
+20:00 - your cluster and if some applications
+20:02 - belong together you can group them in
+20:05 - another crd called app project
+20:10 - now there is one more thing we need to
+20:12 - address which is working with multiple
+20:15 - clusters and how we apply these
+20:18 - processes in a multi-cluster environment
+20:21 - let's say we have three cluster replicas
+20:24 - for a dev environment
+20:26 - in three different regions and in one of
+20:28 - the clusters we have argo cd
+20:31 - running and configured to deploy any
+20:34 - changes
+20:35 - to all three cluster replicas at the
+20:37 - same time and the benefit here is that
+20:40 - that kubernetes administrators will only
+20:42 - have to basically configure and manage
+20:45 - one argo cd instance and the same
+20:48 - instance will be able to configure a
+20:50 - fleet of clusters whether these are
+20:53 - three clusters in three different
+20:54 - regions or thousand cluster replicas
+20:58 - distributed all over the world now what
+21:00 - about multiple cluster environments
+21:02 - let's say we have development staging
+21:05 - and production environments and maybe
+21:07 - each environment with their own cluster
+21:09 - replicas
+21:10 - and in this case in each environment we
+21:12 - may deploy and run own argo city
+21:16 - instance but we still have
+21:18 - one repository where the cluster
+21:20 - configuration is defined and we don't
+21:22 - want to deploy the same configuration to
+21:26 - all environments at once instead if
+21:29 - something changes we need to test the
+21:31 - changes first on each environment and
+21:34 - then promote it to the next one right so
+21:37 - the changes will be applied to the
+21:38 - development environment and only if
+21:40 - these changes are successful
+21:43 - then they will be promoted on a staging
+21:45 - environment and so on
+21:47 - so how do we achieve that in this
+21:50 - workflow for that we have two options
+21:53 - the first one is using multiple branches
+21:55 - in our git repository for each
+21:57 - environment so you would have
+21:59 - development staging and production
+22:01 - branches which is probably not the best
+22:03 - option even though it is commonly used
+22:06 - another and a better option would be to
+22:08 - use overlays with customize where you
+22:11 - have your own context for each
+22:13 - environment so with overlays you can
+22:15 - reuse the same base yaml files and then
+22:19 - selectively change specific parts in
+22:22 - them for different environments so now
+22:24 - the development ci pipeline can update
+22:28 - the template in development overlay the
+22:31 - staging ci pi plan can update the
+22:33 - template in a staging overlay and so on
+22:36 - so using these options you can actually
+22:39 - also automate and streamline applying
+22:42 - changes to different environments
+22:46 - before moving on i want to give a shout
+22:48 - out to castin who made this video
+22:50 - possible
+22:51 - kessen's k10 is the data management
+22:54 - platform for kubernetes
+22:56 - k10 basically takes off most of the load
+23:00 - of doing backup and restore in
+23:01 - kubernetes from the cluster
+23:04 - administrators it has a very simple ui
+23:06 - so it's super easy to work with and has
+23:09 - an intelligent logic which does all the
+23:12 - heavy lifting for you and with my link
+23:14 - you can download k10 for free and get 10
+23:17 - nodes free forever to do your kubernetes
+23:20 - backups so make sure to check out the
+23:22 - link in the video description and now
+23:24 - let's continue
+23:27 - now seeing some of the benefits that
+23:29 - github's workflow and argo cd tool
+23:32 - specifically provides many people may
+23:35 - ask does that mean argo cd will replace
+23:38 - jenkins or gitlab ci cd and such tools
+23:41 - well not really because we still need
+23:44 - the ci pipeline right we still need to
+23:47 - configure pipelines to actually
+23:49 - test and build application code changes
+23:52 - and argo cd as a name also implies is a
+23:56 - replacement for cd pipeline but
+23:59 - specifically for kubernetes so for other
+24:02 - platforms you will still need a
+24:03 - different tool
+24:05 - also argo cd is not the only gear ops cd
+24:09 - tool for kubernetes there are many
+24:12 - alternatives already out there and as
+24:14 - the trend emerges and becomes even more
+24:16 - popular probably some more alternatives
+24:19 - will be created and one of the most
+24:21 - popular ones right now is flux cd which
+24:25 - works with and implements the same git
+24:28 - ops principles
+24:30 - so now that you understand all the
+24:31 - concepts around argo city and not only
+24:34 - what it is but also why we should care
+24:37 - about using it it's time to see argo
+24:39 - city in action and for that we're going
+24:41 - to use a simple but realistic demo
+24:48 - in the demo part we will set up a fully
+24:50 - automated cd pipeline for kubernetes
+24:53 - configuration changes with argo cd i
+24:57 - have a git repository with deployment
+24:59 - and service yaml files
+25:01 - where the deployment file references my
+25:04 - own applications image version 1.0
+25:08 - i have three image versions that i've
+25:10 - already created for this app in my
+25:12 - docker public repository
+25:14 - which means you can also access them and
+25:17 - use that in your demo
+25:19 - so here we can just imagine that some
+25:21 - kind of ci pipeline ran and built these
+25:24 - images but it doesn't matter for us we
+25:26 - just have them available and we also
+25:28 - have an empty
+25:29 - mini cube cluster but again this could
+25:32 - be any kubernetes cluster you want so
+25:34 - with this setup we will first install
+25:36 - argo city in kubernetes cluster and then
+25:39 - configure argo cd with an application
+25:42 - crd component where we tell argo cd hey
+25:45 - this is the git repository you need to
+25:47 - start tracking and syncing with this
+25:51 - mini cube cluster and that's it from
+25:53 - then on we basically don't have to do
+25:55 - anything in kubernetes directly we're
+25:58 - just going to be updating
+26:00 - config files in git repository and argo
+26:02 - cd will pull and apply these changes
+26:04 - automatically so let's get started and
+26:07 - as i said i have an empty mini minikube
+26:09 - cluster
+26:13 - there is nothing running or installed on
+26:15 - it yet
+26:16 - plus i have
+26:18 - an application configuration repository
+26:21 - where only the kubernetes manifest files
+26:23 - for that application are hosted and
+26:26 - inside that i have one
+26:27 - dev folder basically and i have my
+26:30 - deployment and service.yml files here
+26:33 - they're super simple examples of an
+26:35 - internal service and a deployment
+26:40 - like this
+26:42 - with two replicas and an image
+26:45 - that basically points to
+26:47 - my own application image with version
+26:50 - 1.0 and this is a public image that i'm
+26:54 - hosting on a docker hub which you can
+26:56 - also push and use in your demo
+26:59 - which is this one right here and inside
+27:02 - that i have these three image tags we're
+27:04 - using 1.0
+27:06 - in our deployment
+27:07 - and we're going to basically update it
+27:10 - to one of the later versions so that's
+27:13 - the whole setup and you're going to find
+27:15 - the links to all the repositories in the
+27:17 - video description so you can use them as
+27:19 - well and of course since this is only
+27:21 - the configuration repository there is
+27:24 - also an application source code
+27:26 - repository that i used to build this
+27:29 - image which is a separate repository i
+27:31 - will also link that in the video if you
+27:33 - want to see exactly what's in the image
+27:35 - but the source code itself is not very
+27:37 - relevant for us we just want to see how
+27:40 - the deployment in kubernetes works
+27:45 - so the first step is we want argo cd
+27:48 - deployed in our cluster so let's go
+27:50 - ahead and do that
+27:57 - and you can reference the getting
+27:59 - started guide of argo cd for that and
+28:02 - installing argo city in kubernetes
+28:04 - cluster is super easy it's just the one
+28:05 - liner basically and you can also find
+28:07 - the instructions for getting started on
+28:10 - the official documentation page so we
+28:12 - can also reference that in this video so
+28:14 - first of all we're going to create a
+28:16 - namespace argo cd and argo cd and all
+28:19 - these components will be running in that
+28:21 - specific namespace
+28:25 - so these are the two commands that we
+28:26 - need so switching back to my command
+28:28 - line
+28:29 - first i'm going to create an argo cd
+28:31 - namespace in my cluster
+28:34 - and then we're going to basically apply
+28:37 - a yaml file
+28:38 - that installs everything that argo cd
+28:41 - needs now as an alternative you can
+28:44 - first download this yaml file and
+28:46 - basically see what's inside and maybe
+28:48 - save it to know exactly what will be
+28:50 - deployed here i'm just going to apply
+28:52 - directly so
+28:54 - all of these will be installed in an
+28:55 - argo cd namespace so let's execute
+29:00 - and there you go you see that bunch of
+29:02 - components have been created and now if
+29:05 - i do get pod in an argo cd namespace i
+29:08 - should see a bunch of parts being
+29:11 - created
+29:12 - so we're going to wait for all the parts
+29:14 - to get in a running state and then we're
+29:17 - going to access argo cd ui
+29:19 - great so the pods are all running now
+29:22 - how do we access the argo cd ui
+29:25 - if we check
+29:27 - the services that were created we have
+29:30 - one of them which is argo cd server
+29:33 - which is accessible on http and https
+29:36 - ports so we are just going to use cube
+29:39 - ctl port forward to access this service
+29:47 - port forward let's not forget the argo
+29:50 - cd
+29:51 - namespace
+29:53 - and we're going to port forward a
+29:55 - service argo city server
+29:58 - and
+29:59 - make it available locally on port 8080.
+30:02 - so forward the service requests on this
+30:05 - port to localhost port 8080. let's
+30:09 - execute
+30:14 - like this
+30:15 - and
+30:16 - now if i grab that url
+30:20 - we're going gonna get a warning of the
+30:22 - connection because it's https but not
+30:25 - secure
+30:27 - we're gonna proceed anyway and here
+30:29 - we're gonna need to log in to argo city
+30:32 - ui and again going back to getting
+30:35 - started guide we can see how to log in
+30:38 - to the service first of all the username
+30:41 - is admin and the password gets
+30:44 - auto-generated and saved in a secret
+30:47 - called argo cd initial admin secret
+30:55 - so if i get that secret
+31:00 - in an argo cd namespace
+31:03 - let's do
+31:04 - yaml output
+31:06 - here we have a password attribute with a
+31:10 - base64 encoded value so that's basically
+31:14 - the password we're gonna decode it
+31:18 - and there you go so that's the password
+31:20 - you can ignore the percentage sign here
+31:22 - and just copy the string
+31:25 - and use it as a password
+31:28 - paste it in sign in and there you go
+31:31 - and as you see arca city is currently
+31:34 - empty we have no applications because we
+31:37 - first need to configure it so right now
+31:39 - it doesn't do anything
+31:41 - so that's going to be our next step
+31:45 - let's write a configuration file for
+31:47 - argo cd to connect it to the git
+31:50 - repository where the configuration files
+31:53 - are hosted and we're going to put that
+31:55 - argcity configuration file also in this
+31:57 - configuration repository so i have
+31:59 - checked out the project which you can
+32:01 - also go ahead and do so just clone it
+32:04 - and we're gonna work on this project
+32:05 - locally
+32:10 - so i'm gonna switch to that project and
+32:13 - where we have this dev folder with the
+32:15 - configuration files and i'm gonna open
+32:17 - this whole thing in a visual studio code
+32:20 - and there you go
+32:21 - so now let's create an argo cd
+32:23 - configuration and let's call it
+32:25 - application.yaml
+32:28 - the configuration is actually very
+32:29 - simple first of all we have our already
+32:32 - familiar fields from kubernetes which
+32:34 - are api version
+32:36 - and for custom components or custom
+32:39 - resource definitions the api version
+32:42 - is from the project itself so this is
+32:44 - going to be argo
+32:46 - project
+32:48 - io
+32:49 - and that's the version which is still
+32:52 - alpha
+32:53 - then we have the kind which is
+32:56 - application
+32:58 - metadata
+33:00 - where we have the name and the namespace
+33:02 - so let's call this my app argo
+33:05 - application
+33:07 - and the namespace will be argo city so
+33:10 - this application component will be
+33:12 - created in the same name space where
+33:14 - argo city is running and then we have
+33:16 - the specification which is specific to
+33:19 - this application kite now very important
+33:21 - note about the api version this of
+33:24 - course changes so as they move it from
+33:26 - alpha to better and then just basically
+33:28 - release it this will change so when
+33:32 - creating this application kind please
+33:35 - always refer
+33:36 - the documentation to make sure you have
+33:38 - the correct values here and you can see
+33:40 - the example in the documentation right
+33:42 - here the application section you have
+33:44 - this example application definition and
+33:47 - i'm going to link this also in the
+33:49 - description
+33:50 - so moving back to the specification we
+33:52 - have a couple of attributes first of all
+33:54 - we have the project
+33:56 - which as i said you can group multiple
+33:58 - applications into a project if we don't
+34:00 - care about that we just use the default
+34:02 - project that's where everything goes by
+34:04 - default and leave it at that and then we
+34:06 - have two things that we want to
+34:08 - configure in every application the first
+34:11 - one is the git repository that argo cd
+34:14 - will connect to and sync it and the
+34:16 - second one is the destination or the
+34:19 - cluster where argosy will
+34:22 - apply the definitions it found in the
+34:24 - git repository so the source of the
+34:27 - configuration and the target or
+34:29 - destination cluster for that
+34:31 - configuration
+34:32 - so we have source
+34:35 - for the git repository and for this we
+34:38 - have repo
+34:39 - url and that's going to be our git
+34:42 - repository
+34:44 - so just copy this url right here
+34:47 - we also have target
+34:50 - revision
+34:52 - and we're going to point it to head so
+34:54 - that's basically always the last commit
+34:57 - in that git repository
+35:00 - and we also have path attribute
+35:03 - that
+35:04 - lets us specify whether we want to
+35:07 - sync or track a specific
+35:10 - path in that repository and since we
+35:12 - have dev path we're going to
+35:15 - use that one so that's the configuration
+35:17 - for repository as a source and then we
+35:19 - have destination
+35:23 - and that's gonna be the address of the
+35:26 - kubernetes cluster itself which is the
+35:28 - api server and because we're running
+35:30 - argo cd inside the destination cluster
+35:33 - itself we can put a dns name here for
+35:36 - kubernetes api server which is
+35:38 - kubernetes
+35:40 - dot default dot service so that's
+35:43 - basically
+35:44 - an internal service name of kubernetes
+35:47 - api server and
+35:49 - if we check that
+35:51 - if we do a quick ctl get service in the
+35:53 - default namespace you see that we have
+35:55 - this kubernetes service which basically
+35:57 - is the internal service for api server
+36:00 - and because again argo city is running
+36:02 - inside the cluster it can access the
+36:04 - internal services directly we don't have
+36:06 - to provide an external cluster endpoint
+36:09 - but as i said argo city can also connect
+36:12 - to clusters externally or can manage
+36:15 - multiple clusters and synchronize the
+36:18 - definitions to multiple clusters at once
+36:22 - and for that you would then use an
+36:23 - external address of your cluster so
+36:26 - that's going to be the server address
+36:27 - and finally we can also specify a
+36:30 - namespace so basically when argo city
+36:33 - finds those configuration files in which
+36:36 - namespace it should apply them and if
+36:38 - it's not default then we would have to
+36:41 - specify a namespace here
+36:43 - and let's say we want all this
+36:45 - configuration to be created in my app
+36:48 - namespace now
+36:49 - we actually don't have my at namespace
+36:52 - currently
+36:53 - in the cluster so when argo cd tries to
+36:57 - deploy this
+36:58 - we want argo city to
+37:00 - automatically create this namespace if
+37:02 - it doesn't exist already in the cluster
+37:05 - and we need to configure that as well
+37:07 - and to configure that we have another
+37:10 - attribute called
+37:11 - sync
+37:12 - policy
+37:15 - and inside that we have sync options
+37:20 - and one of the sync options or
+37:22 - synchronize options is create
+37:25 - namespace
+37:28 - equals true so by default it's false
+37:31 - it's not going to create a namespace
+37:32 - automatically if it doesn't find it but
+37:34 - we're going to set it to true
+37:36 - using this configuration now there are a
+37:39 - couple more things we want to configure
+37:40 - here the first one is as we said we want
+37:43 - argo city to basically automatically
+37:46 - sync
+37:47 - any changes in the git repository but
+37:50 - default
+37:51 - that is turned off so if you change and
+37:54 - push something to the git repository
+37:56 - argo cd doesn't automatically fetch that
+37:59 - but we can enable it simply
+38:02 - by using automated
+38:05 - attribute
+38:06 - and inside that automated attribute we
+38:08 - have
+38:09 - two more options the first one is as i
+38:11 - mentioned we can configure argo cd to
+38:15 - undo or overwrite any manual changes to
+38:18 - the cluster so if i did cuba city apply
+38:21 - manually in the cluster argo city will
+38:24 - basically override it and sync it with
+38:26 - the git repository state instead and we
+38:29 - can enable it using a self-heal
+38:32 - attribute
+38:33 - set to true and finally if we rename a
+38:36 - component for example or if we deleted
+38:39 - the whole service.yaml file we want
+38:42 - argosy to also delete that component or
+38:45 - that old component in the cluster as
+38:47 - well and that's going to be an attribute
+38:49 - called prune and we're going to set it
+38:51 - to true
+38:52 - now note that
+38:54 - the automated attribute will configure
+38:57 - argo cd to pull the changes in git
+38:59 - repository in three minute intervals so
+39:02 - argo cd will not pull the changes as
+39:05 - soon as they happen in the git
+39:06 - repository but rather it will basically
+39:08 - check every three minutes whether
+39:10 - something has changed and then pull and
+39:12 - apply those changes in the cluster
+39:14 - that's how it's going to work
+39:15 - alternatively if you absolutely needed
+39:17 - to configure your workflow to always
+39:20 - basically apply and synchronize with
+39:22 - cluster as soon as something changes in
+39:25 - the git repository you can actually
+39:27 - configure a web hook
+39:29 - integration between git repository and
+39:32 - argo cd so you have that option as well
+39:34 - but we're gonna just go with the default
+39:37 - where argo city checks for any changes
+39:39 - in the repository regularly now you'll
+39:42 - probably be wondering
+39:43 - why are these things turned off by
+39:45 - defaults so why do i have to enable
+39:47 - automatic sync or
+39:50 - undoing the manual changes and deleting
+39:52 - the applications when their
+39:54 - configuration gets removed and so on and
+39:57 - my assumption is that it's a protection
+39:59 - mechanism that something doesn't get
+40:01 - accidentally deleted so you have to
+40:03 - actually explicitly enable it or that
+40:06 - you don't want automatic syncs in the
+40:08 - cluster or self-healing because your
+40:10 - team needs some time to transition to
+40:12 - this workflow and maybe that's why you
+40:14 - have to explicitly enable them but as
+40:17 - you see enabling them and configuring
+40:19 - that is not very difficult and with this
+40:21 - configuration we're gonna fully automate
+40:23 - all these actions and that's basically
+40:27 - our application configuration for this
+40:30 - specific repository and this specific
+40:32 - path and as you already see from this
+40:34 - configuration
+40:36 - in the same cluster you may have
+40:38 - multiple such applications for different
+40:40 - name spaces um or different environments
+40:44 - that you can create in argo city now we
+40:46 - need to actually apply this
+40:48 - configuration to configure argacity with
+40:51 - this logic so let's go ahead and do that
+40:54 - using cube ctl apply so this is going to
+40:56 - be ideally the only cube ctl apply that
+40:59 - i have to do in this project because
+41:01 - after that everything should be auto
+41:03 - synchronized so first i'm going to add
+41:05 - this to the repository to the remote
+41:07 - repository basically
+41:21 - because again argo cd will connect to
+41:22 - the remote repository so we want the
+41:25 - argo cd
+41:26 - configuration to also be available there
+41:33 - and if i refresh i will see my
+41:35 - application.yemel now argo city doesn't
+41:38 - know anything about this repository or
+41:40 - this configuration yet
+41:42 - for that we need to apply
+41:45 - this
+41:46 - application.yemo in the cluster so let's
+41:49 - go ahead and do that and see application
+41:52 - component was created
+41:57 - and now if we go back to argo city ui
+42:00 - you see that we have my app argo
+42:02 - application
+42:03 - that's the name that we gave the
+42:05 - application component and it seems like
+42:08 - it has successfully synced
+42:11 - everything from this repository and we
+42:13 - can click inside to see more details
+42:15 - details about successful sync but also
+42:18 - a pretty cool feature in the ui is this
+42:21 - overview here of different components
+42:24 - that
+42:25 - the my app argo application triggered to
+42:28 - create so this is the argo city
+42:30 - application
+42:32 - component itself
+42:34 - and
+42:34 - this one actually triggered creation of
+42:37 - the service as you see with the service
+42:39 - icon here and you also see all the
+42:41 - components that have been created in the
+42:42 - background from these top level
+42:44 - components so we have the deployment
+42:46 - here we have the replica set behind that
+42:48 - deployment and we have
+42:52 - the two pod replicas
+42:54 - because we have
+42:56 - two replicas defined here
+42:58 - of this specific image
+43:01 - as you see
+43:02 - in those pots and again you click on one
+43:05 - of these components for even more
+43:06 - details so if i click in the pod you see
+43:09 - the main data including the image
+43:12 - as well as
+43:14 - the actual state manifest
+43:19 - you see the events
+43:21 - for that pod as well as the logs
+43:25 - which are some pretty neat additional
+43:27 - features here and the same way you can
+43:29 - also click into the application and here
+43:32 - you have the details of the application
+43:34 - that we provided like repository url
+43:37 - create namespace automatically enabled
+43:40 - the sync policy prune self-heal and so
+43:43 - on you can edit them here as well and
+43:46 - you also have the manifest view or the
+43:48 - yaml view that we configured right here
+43:55 - awesome so now let's actually test the
+43:58 - automatic sync
+43:59 - by updating something
+44:02 - in the configuration
+44:03 - so what we're going to do is go into the
+44:06 - deployment.yml file
+44:08 - and update
+44:10 - the image
+44:11 - to a later tag
+44:13 - i'm going to do it directly in the
+44:15 - gitlab user interface so we don't have
+44:17 - to commit and push etc and let's change
+44:20 - the tag to 1.2
+44:23 - and commit the changes
+44:25 - and now at a certain interval when argo
+44:29 - cd checks the git repository for any
+44:31 - changes it will see that the desired
+44:34 - state has changed and it's 1.2
+44:38 - and not 1.0 that we have running in the
+44:41 - cluster
+44:42 - and it will automatically sync those
+44:45 - changes
+44:47 - and as you saw argo cd showed the
+44:49 - application stayed out of sync very
+44:51 - briefly and then the deployment got
+44:54 - updated so
+44:56 - a new replica set was created in the
+44:58 - background which then started two pods
+45:01 - and if we check the pods you see that
+45:03 - the image tag is now 1.2
+45:07 - and the deployment desired state
+45:10 - is also image with version 1.2
+45:14 - now let's make one more change in our
+45:16 - configuration repository to test that
+45:20 - pruning the applications
+45:22 - also works which again means if i rename
+45:25 - a resource which means
+45:28 - the resource with the old name doesn't
+45:29 - exist anymore or if i deleted this whole
+45:32 - configuration file then i want argo city
+45:34 - to also delete that component in the
+45:37 - cluster and let's test that
+45:39 - and i'm going to rename my deployment to
+45:42 - just my app
+45:44 - and commit the change
+45:48 - and again after some interval argo city
+45:51 - will sync those changes
+45:56 - and as you see it removed the old
+46:00 - deployment with my app deployment
+46:03 - name and it basically created a new one
+46:05 - with its own replica set and started
+46:08 - those two parts so it means the pruning
+46:10 - works as well and finally let's now try
+46:13 - changing something in the cluster
+46:16 - directly using cubectl command
+46:20 - so let's say i edit the deployment
+46:24 - in
+46:26 - my app namespace with the deployment
+46:28 - name my app
+46:32 - and i want to configure
+46:36 - four replicas instead i'm going to make
+46:39 - my window a little smaller so we can see
+46:41 - that
+46:42 - in life
+46:44 - and as soon as i try to
+46:46 - save these changes
+46:50 - you saw that two pods were added but
+46:53 - argo cd immediately reverted that back
+46:56 - to two replicas because we have
+46:58 - self-heal configured which undoes any
+47:01 - manual changes in the cluster
+47:03 - and if i do cube ctl edit deployment
+47:05 - again you see that it again says two
+47:08 - replicas here
+47:11 - so my change was basically reverted and
+47:14 - finally if you're testing around with
+47:15 - argo cd and you don't want to wait for
+47:17 - the time interval to basically update
+47:20 - your cluster you can also trigger the
+47:22 - synchronization with the git repository
+47:25 - manually so first you basically refresh
+47:28 - which
+47:29 - tells argo city to compare the state in
+47:32 - the cluster with the state in the
+47:34 - repository and then you can do sync
+47:37 - which will then actually synchronize
+47:39 - those states
+47:40 - now if you learned a lot in this video
+47:42 - then please like it and share it with
+47:44 - your colleagues so that they can learn
+47:47 - about these concepts as well and with
+47:49 - that thank you for watching and see you
+47:51 - in the next video
+
+Cleaned transcript:
+
+in this video we're going to talk about a git ops tool that is gaining popularity in the devops world which is called argo cd if you don't know what git ops is you can check out my other video about git ups after which this video will make much more sense to you first i'm going to explain what argo city is and what are the common use cases or why we need argo cd we will then see how argo city actually works and how it does its job and in the final part we will do a handson demo project where we deploy argo cd and set up a fully automated cd pipeline for kubernetes configuration changes to get some practical experience with argo cd right away argo city is as the name already tells you a continuous delivery tool and to understand argo cd as a cd tool or continuous delivery tool let's first understand how continuous delivery is implemented in most projects using common tools like jenkins or gitlab cicd and then see how argo city compares to them and in that context we will answer the questions such as is argo city just another cd tool or what is so special about it and if it's so special does it actually replace any of these other established tools like jenkins or gitlabci icd so let's say we have a microservices application and we're running it in a kubernetes cluster when things change in the application code like new feature or a bug fix gets added the ci pipeline on jenkins for example will be automatically triggered and will test the changes build a new docker image and push it to a docker repository now how does this new image get deployed to kubernetes we update applications deployment yaml file for kubernetes with the new image tag and this yaml file then should be applied in kubernetes in most projects these steps are the continuation of the ci pipeline so after the image gets pushed to the repository jenkins will update the deployment yaml file for the application and using cubectl tool for example will apply the updated deployment file to kubernetes and this is how many projects are set up however there are a couple of challenges with this approach first of all you need to install and set up tools like cubectl or helm etc to access kubernetes cluster and execute changes on those build automation tools right so you would need to install and configure them on jenkins you also need to configure access to kubernetes for these tools because kubectl is just the kubernetes client and in order for it to connect to kubernetes it needs to provide some credentials so you will need to configure credentials for kubernetes cluster in jenkins if you're using eks cluster which is a kubernetes managed cluster on aws for example in addition you would also need access to aws so you'd have to add aws credentials in addition to the kubernetes credentials also to jenkins and this is not only a configuration effort but also a security challenge because you need to give your cluster credentials to external services and tools especially we have 50 projects that deploy applications to the cluster each project application will need its own kubernetes credentials so that it can only access that specific application resources in the cluster same way if we have 50 clusters where things get deployed we would have to configure it for each and every cluster and the third challenge and probably the most important one is that once jenkins deploys the application to kubernetes or it applies any changes to kubernetes configuration it has no further visibility in the deployment status so once cube ctl apply was executed jenkins doesn't actually know the status of that execution did the application actually get created is it in a healthy status or is it actually failing to start and so on you can only find that out with following test steps so the city part of the pipeline when working with kubernetes specifically can be improved and made more efficient and argo city was built for this specific use case to make continuous delivery to kubernetes clusters specifically more efficient argo city was actually purpose built for kubernetes with github's principles and we will see why this is a good thing throughout this video so how does argo city make the cd process more efficient and address the challenges with the common city flow that i mentioned we basically just reverse the flow instead of externally accessing cluster from the cicd tool like jenkins the tool is itself part of the cluster and instead of pushing the changes to the cluster we use a pull workflow where an agent in the cluster which is argo cd pulls those changes and applies them there so now let's see how does the workflow look like when we replace the common cd setup with argo city first we deploy arcgis city in the cluster and then we configure argo city and tell it hey connect to this git repository and start watching for any changes and if something changes there automatically pull those changes and apply in the cluster so now when developers commit the application changes to the application source code repository sci pipeline on jenkins since we're using jenkins as an example will automatically start a build process it will test the changes build the image push it to the repository and finally update kubernetes manifest file like deployment.yml with a new image version now a very important note here about repositories is that it has been established as a best practice to have separate repositories for application source code and application configuration code so kubernetes manifest files for the application would be hosted in its own git repository and one of the main reasons for that is because the application configuration code is not only the deployment file but it could be config map secret service ingress and so on and basically everything that the application may need to run in the cluster and these files can all change completely independent of the source code right and when you update a service yemo file for the application which is just application configuration and not part of the code you don't want to run the whole ci pipeline for the application because the code itself has not changed and you also don't want to have a complex logic in your build pipeline that has to decide and check what actually changed so again the jenkins ci pipeline will update the deployment.yaml file in a separate git repository where the kubernetes manifest files are for the application and as soon as the configuration file changes in the git repository argo cd in the cluster will immediately know about it because we configured it at the beginning to constantly monitor the repository for changes and it will pull and apply those changes in the cluster automatically argo cd supports kubernetes manifests defined as plain yml files helm charts customize files or other template files which eventually all get generated into plain kubernetes yaml files so you can use all of these with argo cd and the repository for configuration files which is tracked and synced by argo cd which is a git ops tool is sometimes also called a git githubs repository so now whether the application configuration repository gets updated by jenkins in case of an image version update in the deployment yaml file or by devops engineers where they change other manifest files the changes will get automatically pulled and applied in the cluster by argo cd and as a result we end up having separate ci and cd pipelines where the ci pipeline is owned mostly by developers and configured on jenkins for example and cd pipeline is owned by operations or devops teams and configured using argo cd in this way we can still have an automated ci cd pipeline but with a separation of concerns where different teams are responsible for different parts of that full pipeline now let's see some benefits that using git ops in your project has with an example of argo cd the first benefit is that we have the whole kubernetes configuration defined as code in a git repository so instead of everyone doing stuff from their laptops and executing scripts and doing cube ctl apply or helm install commands they all use the same interface to make any changes in the cluster and that could be the first big benefit of using this model now a very interesting use case arises here when someone in the team decides you know what let me just quickly update something in a cluster it's much quicker to just do a cube ctl apply than to write the code changes commit that push that and get a review from colleagues and then eventually merge it in the repository so now what happens when people update the cluster manually in addition to having the configuration code defined in the git repository well arcgis cd does not only watch the changes in the git repository but it also watches the changes in the cluster and anytime a change happens either in the git repository or the cluster it compares those two states and if it sees that something has changed in any of the two places and they don't match anymore so the desired state defined in the git repository does not match the actual life state in the cluster it knows that it has to do something and that something is always to sync whatever is defined in the git repository to the cluster so in that case if someone goes and makes manual changes in the cluster argo city will detect that and it will see that the states have diverged so the cluster state is different than the git repository state and it will sync the changes and basically overwrite whatever was done manually and this is really useful because this actually guarantees that git repository and whatever is defined there remains at any time the only source of truth for your cluster state and it also gives you a full transparency of the cluster because you know that whatever is defined in that git repository as a configuration code is exactly the state which you have in the cluster now it could be that many projects need time to adjust to these workflows and sometimes team members or engineers absolutely need a quick way to update things in the cluster before changing that in the code and you can actually configure argo cd to not automatically override and undo those manual cluster changes but instead send out an alert that something has changed in the cluster manually and that it needs to be updated in the code as well so you have that option to configure argo cd in this way and finally as a result of using git as a single interface for making changes in the cluster instead of untrackable cube ctl apply commands we have each change documented in a version controlled way which gives us history of changes as well as an audit trail of who changed what in the cluster but also this gives teams a way to collaborate on any changes in the cluster like proposing a change in kubernetes which others can discuss and work on and when done just merge those changes in the main branch another benefit of using git for config files is an easy rollback arcacity pulls any changes and applies them in the cluster if something breaks with these changes or let's say a new application version fails to start we can revert to the previous working state in the git history basically just by moving back to the last working version especially we have thousands of clusters that all get updated by the same git repository this is going to be very efficient because you don't have to manually revert each and every component doing cube ctl delete or helm uninstall and basically clean up all the things you simply declare the previous working state and cluster will be synced to that state again another advantage is cluster disaster recovery which becomes super easy with this setup so if i have an eks cluster in a region 1a and that cluster completely crashes i can create a new cluster point it to the git repository where the complete cluster configuration is defined and it will recreate the same exact state as the previous one without any intervention from our side because again i have described my whole cluster in code in a declarative way and i want to mention here that these are all actually github's principles and benefits that you get when implementing these principles using whatever githubs tool you want so these are not specific benefits of argo city itself but argos city just helps implement those principles however there are some benefits that using argo city specifically has now of course you don't want every team member to be able to make changes to cluster especially in a production environment so again using it you can actually configure access rules easily you can say every member of the devops team or operations team even junior engineers can initiate or propose any change to the cluster and make pull requests and only a handful of senior engineers can then approve and merge those requests and this gives you a clean way of managing cluster permissions indirectly through git without having to create cluster roles and users for each team member with different access permissions so basically we have a benefit of easy cluster access management and because of the pull model you only need to give engineers access to the git repository and not cluster directly now in addition to human user access with this workflow we also have a benefit of easier cluster access management for nonhuman users like cicd tools such as jenkins so in this case you don't need to give external cluster access to jenkins or other external tools because argo city is already running in the cluster and is the only one that actually applies those changes so basically cluster credentials don't have to be outside the cluster anymore because the agent runs inside the cluster and this makes managing security in all your kubernetes clusters way easier as i mentioned an advantage of using argo city is that it's deployed directly in the kubernetes cluster but it's not just deployed in the cluster because you can actually deploy jenkins in the cluster too but it's really an extension to the kubernetes api so argo city actually leverages the kubernetes resources itself and instead of building all the functionality itself it uses some of the existing kubernetes functionalities for doing its job like using its id for storing the data and using kubernetes controllers for monitoring and comparing this actual and desired state and what is the benefit of that the main benefit is the visibility in the cluster that jenkins for example does not have that allows argo city to give us realtime updates of the application state so argo city can monitor deployment state after the application was deployed or after the changes in the cluster configuration have been made so for example when you deploy a new application version you can actually see in real time in argo city ui that configuration files were applied pods were created application is running and in a healthy status or if it's in a failing status and a rollback is needed so if we zoom out and look at a big picture we have git repository on one side and kubernetes cluster on another and argo city in the middle of these two and git is the desired state of our cluster at any time and kubernetes cluster is the actual state and argo city is an agent in the middle that makes sure these two are always in sync updating the actual state with the desired state as soon as they diverge now how do we actually configure argo city to do all this basically we deploy argo city in kubernetes just like we deploy prometheus istio or any other tool and since it was purpose built for kubernetes it extends kubernetes api with crds or custom resource definitions which allows configuring argo cd using kubernetes native yaml files and the main component of argo cd is an application and we can define this application crd in a kubernetes native yaml file and it looks like this and the main part of the configuration of application is we define which git repository should be synced with which kubernetes cluster and this could be any git repository in any kubernetes cluster in terms of kubernetes cluster this could be the cluster where argo city itself is running in but it could also be an external cluster that argo cd manages and you can configure multiple such applications for different microservices for example for your cluster and if some applications belong together you can group them in another crd called app project now there is one more thing we need to address which is working with multiple clusters and how we apply these processes in a multicluster environment let's say we have three cluster replicas for a dev environment in three different regions and in one of the clusters we have argo cd running and configured to deploy any changes to all three cluster replicas at the same time and the benefit here is that that kubernetes administrators will only have to basically configure and manage one argo cd instance and the same instance will be able to configure a fleet of clusters whether these are three clusters in three different regions or thousand cluster replicas distributed all over the world now what about multiple cluster environments let's say we have development staging and production environments and maybe each environment with their own cluster replicas and in this case in each environment we may deploy and run own argo city instance but we still have one repository where the cluster configuration is defined and we don't want to deploy the same configuration to all environments at once instead if something changes we need to test the changes first on each environment and then promote it to the next one right so the changes will be applied to the development environment and only if these changes are successful then they will be promoted on a staging environment and so on so how do we achieve that in this workflow for that we have two options the first one is using multiple branches in our git repository for each environment so you would have development staging and production branches which is probably not the best option even though it is commonly used another and a better option would be to use overlays with customize where you have your own context for each environment so with overlays you can reuse the same base yaml files and then selectively change specific parts in them for different environments so now the development ci pipeline can update the template in development overlay the staging ci pi plan can update the template in a staging overlay and so on so using these options you can actually also automate and streamline applying changes to different environments before moving on i want to give a shout out to castin who made this video possible kessen's k10 is the data management platform for kubernetes k10 basically takes off most of the load of doing backup and restore in kubernetes from the cluster administrators it has a very simple ui so it's super easy to work with and has an intelligent logic which does all the heavy lifting for you and with my link you can download k10 for free and get 10 nodes free forever to do your kubernetes backups so make sure to check out the link in the video description and now let's continue now seeing some of the benefits that github's workflow and argo cd tool specifically provides many people may ask does that mean argo cd will replace jenkins or gitlab ci cd and such tools well not really because we still need the ci pipeline right we still need to configure pipelines to actually test and build application code changes and argo cd as a name also implies is a replacement for cd pipeline but specifically for kubernetes so for other platforms you will still need a different tool also argo cd is not the only gear ops cd tool for kubernetes there are many alternatives already out there and as the trend emerges and becomes even more popular probably some more alternatives will be created and one of the most popular ones right now is flux cd which works with and implements the same git ops principles so now that you understand all the concepts around argo city and not only what it is but also why we should care about using it it's time to see argo city in action and for that we're going to use a simple but realistic demo in the demo part we will set up a fully automated cd pipeline for kubernetes configuration changes with argo cd i have a git repository with deployment and service yaml files where the deployment file references my own applications image version 1.0 i have three image versions that i've already created for this app in my docker public repository which means you can also access them and use that in your demo so here we can just imagine that some kind of ci pipeline ran and built these images but it doesn't matter for us we just have them available and we also have an empty mini cube cluster but again this could be any kubernetes cluster you want so with this setup we will first install argo city in kubernetes cluster and then configure argo cd with an application crd component where we tell argo cd hey this is the git repository you need to start tracking and syncing with this mini cube cluster and that's it from then on we basically don't have to do anything in kubernetes directly we're just going to be updating config files in git repository and argo cd will pull and apply these changes automatically so let's get started and as i said i have an empty mini minikube cluster there is nothing running or installed on it yet plus i have an application configuration repository where only the kubernetes manifest files for that application are hosted and inside that i have one dev folder basically and i have my deployment and service.yml files here they're super simple examples of an internal service and a deployment like this with two replicas and an image that basically points to my own application image with version 1.0 and this is a public image that i'm hosting on a docker hub which you can also push and use in your demo which is this one right here and inside that i have these three image tags we're using 1.0 in our deployment and we're going to basically update it to one of the later versions so that's the whole setup and you're going to find the links to all the repositories in the video description so you can use them as well and of course since this is only the configuration repository there is also an application source code repository that i used to build this image which is a separate repository i will also link that in the video if you want to see exactly what's in the image but the source code itself is not very relevant for us we just want to see how the deployment in kubernetes works so the first step is we want argo cd deployed in our cluster so let's go ahead and do that and you can reference the getting started guide of argo cd for that and installing argo city in kubernetes cluster is super easy it's just the one liner basically and you can also find the instructions for getting started on the official documentation page so we can also reference that in this video so first of all we're going to create a namespace argo cd and argo cd and all these components will be running in that specific namespace so these are the two commands that we need so switching back to my command line first i'm going to create an argo cd namespace in my cluster and then we're going to basically apply a yaml file that installs everything that argo cd needs now as an alternative you can first download this yaml file and basically see what's inside and maybe save it to know exactly what will be deployed here i'm just going to apply directly so all of these will be installed in an argo cd namespace so let's execute and there you go you see that bunch of components have been created and now if i do get pod in an argo cd namespace i should see a bunch of parts being created so we're going to wait for all the parts to get in a running state and then we're going to access argo cd ui great so the pods are all running now how do we access the argo cd ui if we check the services that were created we have one of them which is argo cd server which is accessible on http and https ports so we are just going to use cube ctl port forward to access this service port forward let's not forget the argo cd namespace and we're going to port forward a service argo city server and make it available locally on port 8080. so forward the service requests on this port to localhost port 8080. let's execute like this and now if i grab that url we're going gonna get a warning of the connection because it's https but not secure we're gonna proceed anyway and here we're gonna need to log in to argo city ui and again going back to getting started guide we can see how to log in to the service first of all the username is admin and the password gets autogenerated and saved in a secret called argo cd initial admin secret so if i get that secret in an argo cd namespace let's do yaml output here we have a password attribute with a base64 encoded value so that's basically the password we're gonna decode it and there you go so that's the password you can ignore the percentage sign here and just copy the string and use it as a password paste it in sign in and there you go and as you see arca city is currently empty we have no applications because we first need to configure it so right now it doesn't do anything so that's going to be our next step let's write a configuration file for argo cd to connect it to the git repository where the configuration files are hosted and we're going to put that argcity configuration file also in this configuration repository so i have checked out the project which you can also go ahead and do so just clone it and we're gonna work on this project locally so i'm gonna switch to that project and where we have this dev folder with the configuration files and i'm gonna open this whole thing in a visual studio code and there you go so now let's create an argo cd configuration and let's call it application.yaml the configuration is actually very simple first of all we have our already familiar fields from kubernetes which are api version and for custom components or custom resource definitions the api version is from the project itself so this is going to be argo project io and that's the version which is still alpha then we have the kind which is application metadata where we have the name and the namespace so let's call this my app argo application and the namespace will be argo city so this application component will be created in the same name space where argo city is running and then we have the specification which is specific to this application kite now very important note about the api version this of course changes so as they move it from alpha to better and then just basically release it this will change so when creating this application kind please always refer the documentation to make sure you have the correct values here and you can see the example in the documentation right here the application section you have this example application definition and i'm going to link this also in the description so moving back to the specification we have a couple of attributes first of all we have the project which as i said you can group multiple applications into a project if we don't care about that we just use the default project that's where everything goes by default and leave it at that and then we have two things that we want to configure in every application the first one is the git repository that argo cd will connect to and sync it and the second one is the destination or the cluster where argosy will apply the definitions it found in the git repository so the source of the configuration and the target or destination cluster for that configuration so we have source for the git repository and for this we have repo url and that's going to be our git repository so just copy this url right here we also have target revision and we're going to point it to head so that's basically always the last commit in that git repository and we also have path attribute that lets us specify whether we want to sync or track a specific path in that repository and since we have dev path we're going to use that one so that's the configuration for repository as a source and then we have destination and that's gonna be the address of the kubernetes cluster itself which is the api server and because we're running argo cd inside the destination cluster itself we can put a dns name here for kubernetes api server which is kubernetes dot default dot service so that's basically an internal service name of kubernetes api server and if we check that if we do a quick ctl get service in the default namespace you see that we have this kubernetes service which basically is the internal service for api server and because again argo city is running inside the cluster it can access the internal services directly we don't have to provide an external cluster endpoint but as i said argo city can also connect to clusters externally or can manage multiple clusters and synchronize the definitions to multiple clusters at once and for that you would then use an external address of your cluster so that's going to be the server address and finally we can also specify a namespace so basically when argo city finds those configuration files in which namespace it should apply them and if it's not default then we would have to specify a namespace here and let's say we want all this configuration to be created in my app namespace now we actually don't have my at namespace currently in the cluster so when argo cd tries to deploy this we want argo city to automatically create this namespace if it doesn't exist already in the cluster and we need to configure that as well and to configure that we have another attribute called sync policy and inside that we have sync options and one of the sync options or synchronize options is create namespace equals true so by default it's false it's not going to create a namespace automatically if it doesn't find it but we're going to set it to true using this configuration now there are a couple more things we want to configure here the first one is as we said we want argo city to basically automatically sync any changes in the git repository but default that is turned off so if you change and push something to the git repository argo cd doesn't automatically fetch that but we can enable it simply by using automated attribute and inside that automated attribute we have two more options the first one is as i mentioned we can configure argo cd to undo or overwrite any manual changes to the cluster so if i did cuba city apply manually in the cluster argo city will basically override it and sync it with the git repository state instead and we can enable it using a selfheal attribute set to true and finally if we rename a component for example or if we deleted the whole service.yaml file we want argosy to also delete that component or that old component in the cluster as well and that's going to be an attribute called prune and we're going to set it to true now note that the automated attribute will configure argo cd to pull the changes in git repository in three minute intervals so argo cd will not pull the changes as soon as they happen in the git repository but rather it will basically check every three minutes whether something has changed and then pull and apply those changes in the cluster that's how it's going to work alternatively if you absolutely needed to configure your workflow to always basically apply and synchronize with cluster as soon as something changes in the git repository you can actually configure a web hook integration between git repository and argo cd so you have that option as well but we're gonna just go with the default where argo city checks for any changes in the repository regularly now you'll probably be wondering why are these things turned off by defaults so why do i have to enable automatic sync or undoing the manual changes and deleting the applications when their configuration gets removed and so on and my assumption is that it's a protection mechanism that something doesn't get accidentally deleted so you have to actually explicitly enable it or that you don't want automatic syncs in the cluster or selfhealing because your team needs some time to transition to this workflow and maybe that's why you have to explicitly enable them but as you see enabling them and configuring that is not very difficult and with this configuration we're gonna fully automate all these actions and that's basically our application configuration for this specific repository and this specific path and as you already see from this configuration in the same cluster you may have multiple such applications for different name spaces um or different environments that you can create in argo city now we need to actually apply this configuration to configure argacity with this logic so let's go ahead and do that using cube ctl apply so this is going to be ideally the only cube ctl apply that i have to do in this project because after that everything should be auto synchronized so first i'm going to add this to the repository to the remote repository basically because again argo cd will connect to the remote repository so we want the argo cd configuration to also be available there and if i refresh i will see my application.yemel now argo city doesn't know anything about this repository or this configuration yet for that we need to apply this application.yemo in the cluster so let's go ahead and do that and see application component was created and now if we go back to argo city ui you see that we have my app argo application that's the name that we gave the application component and it seems like it has successfully synced everything from this repository and we can click inside to see more details details about successful sync but also a pretty cool feature in the ui is this overview here of different components that the my app argo application triggered to create so this is the argo city application component itself and this one actually triggered creation of the service as you see with the service icon here and you also see all the components that have been created in the background from these top level components so we have the deployment here we have the replica set behind that deployment and we have the two pod replicas because we have two replicas defined here of this specific image as you see in those pots and again you click on one of these components for even more details so if i click in the pod you see the main data including the image as well as the actual state manifest you see the events for that pod as well as the logs which are some pretty neat additional features here and the same way you can also click into the application and here you have the details of the application that we provided like repository url create namespace automatically enabled the sync policy prune selfheal and so on you can edit them here as well and you also have the manifest view or the yaml view that we configured right here awesome so now let's actually test the automatic sync by updating something in the configuration so what we're going to do is go into the deployment.yml file and update the image to a later tag i'm going to do it directly in the gitlab user interface so we don't have to commit and push etc and let's change the tag to 1.2 and commit the changes and now at a certain interval when argo cd checks the git repository for any changes it will see that the desired state has changed and it's 1.2 and not 1.0 that we have running in the cluster and it will automatically sync those changes and as you saw argo cd showed the application stayed out of sync very briefly and then the deployment got updated so a new replica set was created in the background which then started two pods and if we check the pods you see that the image tag is now 1.2 and the deployment desired state is also image with version 1.2 now let's make one more change in our configuration repository to test that pruning the applications also works which again means if i rename a resource which means the resource with the old name doesn't exist anymore or if i deleted this whole configuration file then i want argo city to also delete that component in the cluster and let's test that and i'm going to rename my deployment to just my app and commit the change and again after some interval argo city will sync those changes and as you see it removed the old deployment with my app deployment name and it basically created a new one with its own replica set and started those two parts so it means the pruning works as well and finally let's now try changing something in the cluster directly using cubectl command so let's say i edit the deployment in my app namespace with the deployment name my app and i want to configure four replicas instead i'm going to make my window a little smaller so we can see that in life and as soon as i try to save these changes you saw that two pods were added but argo cd immediately reverted that back to two replicas because we have selfheal configured which undoes any manual changes in the cluster and if i do cube ctl edit deployment again you see that it again says two replicas here so my change was basically reverted and finally if you're testing around with argo cd and you don't want to wait for the time interval to basically update your cluster you can also trigger the synchronization with the git repository manually so first you basically refresh which tells argo city to compare the state in the cluster with the state in the repository and then you can do sync which will then actually synchronize those states now if you learned a lot in this video then please like it and share it with your colleagues so that they can learn about these concepts as well and with that thank you for watching and see you in the next video

@@ -1,0 +1,452 @@
+With timestamps:
+
+00:00 - in this video I will show you how to
+00:02 - deploy your own application in covenants
+00:04 - cluster so let's look at a common setup
+00:07 - when deploying your own application in
+00:09 - Co brandies you commit your code get
+00:12 - that triggers jenkins bill that packages
+00:16 - your application with its environmental
+00:18 - configuration into a docker image and
+00:21 - this docker image then gets pushed to a
+00:23 - docker registry and this can be nexus it
+00:26 - could be AWS container registry or some
+00:29 - other private docker repository and now
+00:31 - that you have your docker image in the
+00:35 - private registry the question is how do
+00:37 - you get this docker image on your
+00:39 - communities cluster for images like
+00:41 - MongoDB elastic some of them that I've
+00:44 - shown you in other videos there it's
+00:47 - pretty straightforward because they are
+00:50 - hosted in a public repository like
+00:53 - docker hub and anyone can access them so
+00:55 - I can pull them on my machine without
+00:57 - excess permission but your own
+01:00 - application lives in a private
+01:02 - repository and needs explicit access
+01:04 - from the cluster so how do you pull
+01:07 - their application images from private
+01:08 - repository on cabinets cluster you do
+01:11 - that using two steps the first one is
+01:15 - you create secret component in
+01:17 - kubernetes that contains access token or
+01:20 - credentials to your daughter registry so
+01:24 - that it can authenticate with the
+01:25 - registry and second is you configure
+01:29 - your deployment or your pod to use that
+01:32 - secrets using a specific attribute which
+01:35 - is called image pool secrets so I'm
+01:38 - gonna show you all that in practice and
+01:40 - in order to show you the demo I have my
+01:44 - environment already set up so first of
+01:46 - all I have a docker private repository
+01:48 - which is hosted on AWS so this is the
+01:51 - container registry and I have one
+01:55 - repository there for my app which is a
+01:57 - simple node.js application if you want
+01:59 - to learn how to set up AWS container
+02:02 - registry I have a separate video about
+02:04 - that where I demo the whole process of
+02:07 - tagging and building the image locally
+02:10 - and then pushing it to AWS container
+02:13 - registry so there you can basically
+02:15 - learn how to get to this state and I
+02:17 - will link that video here and in
+02:20 - addition I also link the git repository
+02:21 - of this my application if you want to
+02:24 - use it and inside the repository I have
+02:28 - three images with different version text
+02:31 - so we're gonna use that for the demo and
+02:34 - luckily I have a mini cube cluster setup
+02:37 - which is currently empty so we're gonna
+02:40 - start from a clean state so the first
+02:43 - step as I said is to create a secret
+02:45 - component which will have the access
+02:49 - token or credentials to this private
+02:53 - repository which will allow docker to
+02:56 - actually pull that image inside the
+02:59 - cluster so the first thing we need to do
+03:01 - in order to create this secret is we
+03:04 - need to login to this repository and for
+03:07 - that there is a docker login command
+03:09 - that looks like this so basically with
+03:13 - dr. Logan you provides options which is
+03:15 - username or password and you have the
+03:19 - doctor repository in point there and the
+03:22 - third one is password standard in which
+03:24 - basically means that you don't type in
+03:27 - the password on the command line but you
+03:29 - take it from a standard input source
+03:32 - this is more secure and I think this is
+03:35 - a recent addition or or more recent
+03:38 - decision in docker because you don't
+03:40 - have your password written in the
+03:42 - command line history so I recommend you
+03:45 - use this one generally so for AWS if you
+03:50 - see the view push commands there is a
+03:53 - log in command here actually that gets
+03:57 - the login password into a standard input
+03:59 - and then you can do doctor login on that
+04:01 - but what I'm gonna show you just for
+04:03 - demonstration is I'm gonna show you the
+04:06 - complete log in command that this will
+04:08 - execute and this is the one so you have
+04:11 - docker login the user name this is a
+04:14 - password and I'm showing you the
+04:15 - password because I'm gonna delete the
+04:17 - repository afterwards this is the email
+04:19 - flag which I believe is deprecated in
+04:22 - the new docker version and there is this
+04:26 - URL
+04:26 - and this is basically the endpoint of my
+04:29 - private repository which is this one
+04:35 - right here okay
+04:36 - so with this command I will be able to
+04:39 - log in so if I execute that command so
+04:43 - doctor log in with all the credentials I
+04:46 - see log in succeeded and what it does in
+04:50 - the background is it creates or it
+04:51 - generates a convict JSON file that holds
+04:55 - the authentication to my private
+04:58 - repository so in dot docker directory
+05:02 - and user folder you have a configuration
+05:04 - and this holds the repository access now
+05:09 - there are two ways that this config
+05:12 - Jason will store the authentication
+05:14 - either you will have the authentication
+05:17 - directly here or you had the external
+05:19 - credit stored this is more secure
+05:22 - because your access token isn't stored
+05:25 - in the file but in a credential store
+05:27 - and this is the file that we need for
+05:30 - the secret so now whenever docker
+05:33 - tries to pull the image from my private
+05:36 - repository like this image for example
+05:38 - it will use those credentials for this
+05:42 - private registry to pull that image to
+05:44 - authenticate itself and pull that image
+05:46 - however there is a small problem with
+05:48 - this specific file which is that I am
+05:51 - running my cluster in mini cube and mini
+05:54 - cube doesn't have access to my creds
+05:55 - store because it's running in a virtual
+05:57 - box right so it cannot access my max
+06:01 - credential store so this is not gonna
+06:04 - work so when the docker which is
+06:06 - packaged in the mini cube which I
+06:09 - explained in another video you can check
+06:11 - that out how mini cube is set up some
+06:14 - mini cube has its own darker so when
+06:16 - docker inside the mini cube tries to
+06:18 - pull that image from this private
+06:20 - repository it will see the Kratt store
+06:23 - anyone be able to access that ok but I
+06:27 - showed you this one who demonstrate how
+06:29 - dr. login works with credit store so
+06:32 - what I'm gonna do now is enter the mini
+06:34 - cube so I'm going to SSH into mini cube
+06:36 - which goes like this
+06:38 - you can do
+06:39 - this pretty easy and here I am in the
+06:43 - directory of home docker and just check
+06:49 - there is no dot docker here so what I'm
+06:51 - gonna do is I'm gonna login to my
+06:54 - private repository from mini cube doctor
+06:57 - directly not from my laptop okay and
+07:00 - let's see how that looks like so I'm
+07:03 - gonna copy that command like this and by
+07:09 - the way mini cube has a recent more
+07:11 - recent version of docker that's why it
+07:15 - doesn't recognize the email flag because
+07:18 - it got deprecated so I'm gonna remove
+07:21 - that so you have the same username
+07:23 - password and the private repository URL
+07:27 - so I'm gonna execute that remember I'm
+07:31 - in the mini cube login succeeded and now
+07:34 - if I do - eh I see the dot docker
+07:38 - directory created and now we can see
+07:41 - what's inside the conflict Jason
+07:43 - so you see config Jason doesn't have a
+07:46 - credential store anymore but it has this
+07:49 - is the repository URL it's the same one
+07:52 - here and the credentials or the
+07:56 - authorization is inside those brackets
+08:00 - so right here you have the authorization
+08:02 - token which is this whole thing so
+08:05 - depending on your setup it might look
+08:08 - like this for you or like this but as I
+08:11 - said mini cube can't access my credit
+08:13 - store on my operating system so that's
+08:16 - why I'm logging in directly from the
+08:18 - mini cube talker now what we gonna do is
+08:21 - we're gonna use that file so this file
+08:24 - right here to create the secret for
+08:27 - kubernetes cluster and this is a secret
+08:30 - configuration so basically I have a
+08:33 - secret kind the name of the secret and
+08:36 - note the type here so it's darker config
+08:39 - Jason which is its own secret type for
+08:42 - this specific use case and the dot
+08:44 - docker config Jason the value of this
+08:47 - attribute will contain the base64
+08:51 - encoded contents
+08:53 - of this config JSON file so all this
+09:00 - basics before encoded will be assigned
+09:03 - as a value here now since I have my cube
+09:05 - CTL setup on my laptop not in the mini
+09:08 - cube what I'm gonna do is I'm gonna copy
+09:10 - that file from inside the mini cube to
+09:16 - my host so that I can use it for my cube
+09:19 - CTL command so I'm gonna clear this up
+09:22 - and I'm gonna secure copied from mini
+09:25 - cube and by the way I'm gonna collect
+09:27 - all these commands and the configuration
+09:29 - files and I'm gonna put them in its
+09:31 - repository and link it in the video
+09:33 - description so you can check that out if
+09:35 - you want to follow along the video so
+09:37 - I'm gonna type out the whole command and
+09:39 - I'm gonna explain it so what I'm gonna
+09:41 - do is I'm gonna secure copy and for that
+09:43 - I'm gonna need SSH key which you have in
+09:46 - a variable like this so it will be the
+09:49 - same for you can directly copy this
+09:51 - command and this is the source so we
+09:54 - want to copy it from mini cube this is a
+09:57 - user inside mini cube and this is the IP
+09:59 - address so this is the server IP you can
+10:03 - also login on your console and you can
+10:04 - see what the value of it is and inside
+10:08 - that I want to copy dot docker slash
+10:11 - config Jason and I want to copy now its
+10:15 - destination I want to copied in my
+10:17 - docker
+10:18 - config so I'm gonna replace the one that
+10:21 - I have and as I mentioned directly
+10:23 - having the authorization inside the
+10:25 - configuration file is not as secure as
+10:27 - having it in credit or so if you are
+10:30 - running your kubernetes cluster on some
+10:32 - servers you may want to use credential
+10:35 - store inside but this is just for mini
+10:37 - cube demonstration so I'm gonna execute
+10:40 - that and now if I check my own docker
+10:44 - config see I have replaced the content
+10:48 - now I can go and create a secret from
+10:51 - this file so as I said this should be
+10:53 - basics different Kodi content so what
+10:55 - I'm gonna do is pipe that and base64
+10:59 - encode it and I'm gonna paste it
+11:02 - directly in here okay so this is my
+11:05 - secret
+11:06 - or if you want to spare yourself this
+11:08 - you know base64 encoding it on the
+11:11 - command line and then copying the
+11:12 - contents there you can actually do that
+11:14 - with cube CTL command as well right so
+11:18 - let's clear that up and I'm gonna show
+11:21 - you that keep city away as well so the
+11:24 - cube CTO command will be like this keeps
+11:26 - it will create secret and this is the
+11:29 - secret type generic so let's name of the
+11:33 - secret and let's break the line to have
+11:35 - it structured from file attribute from
+11:39 - which file the secret content should be
+11:42 - created and this is the same attribute
+11:45 - that we have in the secret file docker
+11:48 - config Jason this is the same as this
+11:51 - one here and now we have to specify the
+11:56 - file which it should base64 encode and
+12:00 - finally we specify the type which is
+12:05 - darker config Jason type so it's gonna
+12:09 - create the secret of docker config Jason
+12:11 - type from these files contents and set
+12:16 - it as a valley for these attributes so
+12:19 - I'm gonna apply that so this will do the
+12:21 - same as applying this configuration file
+12:25 - here so we have our secret my registry
+12:31 - key in the cluster so just to review now
+12:35 - we did talk her login in this case I did
+12:38 - from mini cube Stoker and then we use
+12:41 - that file first of all I copied that
+12:43 - file from mini cube to my host where
+12:45 - execute the cube CTL and I use that file
+12:47 - to create the secret which now has
+12:50 - contents like this let's actually see
+12:52 - that gets secret this is output Y mo
+12:56 - file that was created and I have my data
+12:58 - here doctor config jason and this is the
+13:01 - basics de for encoded contents now there
+13:04 - is a second way to create this docker
+13:07 - config jason secret where you don't have
+13:10 - to do it in two steps
+13:12 - you don't have to do doctor login and
+13:14 - then create the secret from that convict
+13:16 - JSON file you can do both in one step so
+13:19 - let's see that
+13:20 - as well so it's gonna be keep CTL create
+13:23 - secret and now instead of generic I'm
+13:26 - gonna specify docker registry the secret
+13:29 - type and let's give it
+13:31 - Oh let's give it name my registry key -
+13:36 - and here I have different flags which
+13:38 - are specific for docker registry right
+13:40 - so I have docker server and I'm actually
+13:44 - gonna execute this command again
+13:47 - so that I see the values so I have
+13:49 - docker server which is my AWS private
+13:52 - registry URL so I'm gonna that here then
+13:57 - I have docker username which is AWS I
+14:07 - have docker password which is this whole
+14:11 - thing here and this is basically it so
+14:16 - this command will do both steps in one
+14:18 - so it's gonna do docker login and it's
+14:20 - gonna create a secret based on the login
+14:23 - authentication so if I execute this I
+14:26 - have both secrets and I can use any of
+14:32 - those for my deployment now you may be
+14:36 - asking why there are two different ways
+14:38 - to do the same thing can we just go with
+14:40 - one but there's a difference between the
+14:43 - two and the difference is that with this
+14:45 - command you can only create one secret
+14:48 - that has access token for one dollar
+14:51 - registering for this specific registry
+14:54 - for example but it's convenient because
+14:55 - you do doctor login and secret creation
+14:57 - in one step however if in your cluster
+15:00 - you're using more than one private
+15:02 - registry where you pull the images from
+15:04 - then it will be more practical more
+15:07 - convenient to go with other option the
+15:10 - first one because for example if you
+15:12 - have five private repositories that I
+15:14 - want to pull the images from I can do
+15:16 - docker login in each one of them and all
+15:20 - the access tokens will get stored in
+15:22 - this config JSON file like this so
+15:27 - you're gonna have a list of them and if
+15:29 - you use that file in your secret then
+15:31 - with one secret you can have access to
+15:33 - all the reports
+15:34 - so this is a difference so depending on
+15:37 - your use case you may prefer to use one
+15:40 - or the other okay so now I've cleared
+15:42 - everything and we see that we have our
+15:44 - two secrets and now the second step is
+15:47 - to configure deployment for my app
+15:52 - application so I have a deployment
+15:54 - configuration here and this is just the
+15:58 - minimum configuration you need for
+16:00 - deployment and this is our pot
+16:02 - specification I have one container the
+16:05 - name is my app and this is the image and
+16:07 - the image name of the application has to
+16:10 - be the complete name which includes the
+16:13 - repository URL and the image name so
+16:16 - it's going to be the complete image URL
+16:18 - I'm gonna copy that and paste it so this
+16:22 - is the repository URL this is the image
+16:25 - name and this is the image version
+16:27 - because if you just write this one
+16:29 - doctor won't know which repository to
+16:32 - pull it from and I have the port 3000
+16:35 - because that's why my application runs
+16:37 - is that no J's application and now since
+16:40 - I already built this all locally on my
+16:43 - laptop I have that image available
+16:46 - locally show that so 1.3 with this
+16:51 - version I have it locally however
+16:53 - because we are testing pulling the image
+16:56 - from the private repository I want to
+16:58 - force docker to pull that image from a
+17:01 - repository instead of taking it from the
+17:04 - local docker repository which is on my
+17:07 - laptop and to do that you can force it
+17:10 - by image pull policy attribute and here
+17:16 - you can say always and every time pod is
+17:21 - created this will force docker to reap
+17:24 - all the image even if it already exists
+17:28 - locally on your localhost so that's what
+17:31 - we're gonna do and the next step will be
+17:33 - to configure these employment with the
+17:37 - secret so I have to give this deployment
+17:39 - access to the secret that I created so
+17:42 - that it will be able to pull that image
+17:45 - from the
+17:46 - stream however I just want to
+17:48 - demonstrate what its gonna do or how
+17:51 - it's going to behave without that secret
+17:54 - configuration so I'm just gonna leave it
+17:56 - like this and let's actually apply this
+17:59 - configuration apply have any documents
+18:04 - like this and if I do cube CTL pod I see
+18:12 - image pull back off and it can connect
+18:18 - to the container because it's waiting
+18:21 - trying and failing to pull the image
+18:24 - because it doesn't have authorization so
+18:27 - the pot started but container can't be
+18:28 - pulled so it's gonna retry now multiple
+18:32 - times so I'm gonna delete that and all
+18:34 - let's actually add that secret reference
+18:37 - to the docker authentication and the way
+18:41 - to do that is in the pod specification
+18:44 - so on the same level as containers we're
+18:48 - gonna configure attribute which is
+18:50 - called image pull secrets image pull
+18:56 - secrets and here we provide a name of
+18:59 - the secret and this is it these two
+19:02 - lines will configure deployment with
+19:05 - access to the secret that contains
+19:08 - docker registry access okay
+19:12 - so let's apply that configuration again
+19:18 - documents and let's see the pot and you
+19:23 - see it's running because it was able to
+19:26 - pull the image so so here we see pulling
+19:32 - image successfully pulled image so
+19:36 - that's how you configure that plumbing
+19:38 - now since we have the second secret as
+19:41 - well it's actually make sure that both
+19:43 - are working so I'm gonna rename my
+19:46 - deployment let's call it
+19:53 - like this and I'm gonna use the second
+19:59 - secret here and let's execute that again
+20:03 - as well so this is how you configure
+20:12 - your cluster to be able to pull the
+20:17 - images from private repository there is
+20:20 - one important note here the secret has
+20:23 - to be in the same namespace as the
+20:26 - deployment or stateful set or any other
+20:29 - component that you're creating that
+20:32 - needs to pull the image from that
+20:34 - repository it has to be in the same
+20:36 - namespace which means we have three
+20:38 - applications in three different
+20:41 - namespaces that all pull images from the
+20:45 - private repository you have to create
+20:47 - the secret three times in each namespace
+20:50 - so to quickly wrap up in order to
+20:53 - configure that you have to create a
+20:55 - secret there's two ways to creating a
+20:57 - secret either you can do dr. Logan
+21:00 - manually and use the generated config
+21:03 - JSON file to create the secret out of it
+21:05 - or you can do it in one step using cube
+21:09 - CTL create secret of docker registry
+21:11 - type where you provide all the
+21:13 - credentials in that command and the
+21:17 - second step you will use that secret in
+21:20 - the deployment or any other component
+21:23 - that needs to pull the image from the
+21:26 - docker registry I hope this was helpful
+21:28 - and you learned something from this
+21:30 - video if you want to see other videos
+21:32 - about kubernetes you can subscribe to my
+21:35 - channel and follow all my tutorials
+21:38 - thank you for watching and see you in
+21:40 - the next video
+
+Cleaned transcript:
+
+in this video I will show you how to deploy your own application in covenants cluster so let's look at a common setup when deploying your own application in Co brandies you commit your code get that triggers jenkins bill that packages your application with its environmental configuration into a docker image and this docker image then gets pushed to a docker registry and this can be nexus it could be AWS container registry or some other private docker repository and now that you have your docker image in the private registry the question is how do you get this docker image on your communities cluster for images like MongoDB elastic some of them that I've shown you in other videos there it's pretty straightforward because they are hosted in a public repository like docker hub and anyone can access them so I can pull them on my machine without excess permission but your own application lives in a private repository and needs explicit access from the cluster so how do you pull their application images from private repository on cabinets cluster you do that using two steps the first one is you create secret component in kubernetes that contains access token or credentials to your daughter registry so that it can authenticate with the registry and second is you configure your deployment or your pod to use that secrets using a specific attribute which is called image pool secrets so I'm gonna show you all that in practice and in order to show you the demo I have my environment already set up so first of all I have a docker private repository which is hosted on AWS so this is the container registry and I have one repository there for my app which is a simple node.js application if you want to learn how to set up AWS container registry I have a separate video about that where I demo the whole process of tagging and building the image locally and then pushing it to AWS container registry so there you can basically learn how to get to this state and I will link that video here and in addition I also link the git repository of this my application if you want to use it and inside the repository I have three images with different version text so we're gonna use that for the demo and luckily I have a mini cube cluster setup which is currently empty so we're gonna start from a clean state so the first step as I said is to create a secret component which will have the access token or credentials to this private repository which will allow docker to actually pull that image inside the cluster so the first thing we need to do in order to create this secret is we need to login to this repository and for that there is a docker login command that looks like this so basically with dr. Logan you provides options which is username or password and you have the doctor repository in point there and the third one is password standard in which basically means that you don't type in the password on the command line but you take it from a standard input source this is more secure and I think this is a recent addition or or more recent decision in docker because you don't have your password written in the command line history so I recommend you use this one generally so for AWS if you see the view push commands there is a log in command here actually that gets the login password into a standard input and then you can do doctor login on that but what I'm gonna show you just for demonstration is I'm gonna show you the complete log in command that this will execute and this is the one so you have docker login the user name this is a password and I'm showing you the password because I'm gonna delete the repository afterwards this is the email flag which I believe is deprecated in the new docker version and there is this URL and this is basically the endpoint of my private repository which is this one right here okay so with this command I will be able to log in so if I execute that command so doctor log in with all the credentials I see log in succeeded and what it does in the background is it creates or it generates a convict JSON file that holds the authentication to my private repository so in dot docker directory and user folder you have a configuration and this holds the repository access now there are two ways that this config Jason will store the authentication either you will have the authentication directly here or you had the external credit stored this is more secure because your access token isn't stored in the file but in a credential store and this is the file that we need for the secret so now whenever docker tries to pull the image from my private repository like this image for example it will use those credentials for this private registry to pull that image to authenticate itself and pull that image however there is a small problem with this specific file which is that I am running my cluster in mini cube and mini cube doesn't have access to my creds store because it's running in a virtual box right so it cannot access my max credential store so this is not gonna work so when the docker which is packaged in the mini cube which I explained in another video you can check that out how mini cube is set up some mini cube has its own darker so when docker inside the mini cube tries to pull that image from this private repository it will see the Kratt store anyone be able to access that ok but I showed you this one who demonstrate how dr. login works with credit store so what I'm gonna do now is enter the mini cube so I'm going to SSH into mini cube which goes like this you can do this pretty easy and here I am in the directory of home docker and just check there is no dot docker here so what I'm gonna do is I'm gonna login to my private repository from mini cube doctor directly not from my laptop okay and let's see how that looks like so I'm gonna copy that command like this and by the way mini cube has a recent more recent version of docker that's why it doesn't recognize the email flag because it got deprecated so I'm gonna remove that so you have the same username password and the private repository URL so I'm gonna execute that remember I'm in the mini cube login succeeded and now if I do eh I see the dot docker directory created and now we can see what's inside the conflict Jason so you see config Jason doesn't have a credential store anymore but it has this is the repository URL it's the same one here and the credentials or the authorization is inside those brackets so right here you have the authorization token which is this whole thing so depending on your setup it might look like this for you or like this but as I said mini cube can't access my credit store on my operating system so that's why I'm logging in directly from the mini cube talker now what we gonna do is we're gonna use that file so this file right here to create the secret for kubernetes cluster and this is a secret configuration so basically I have a secret kind the name of the secret and note the type here so it's darker config Jason which is its own secret type for this specific use case and the dot docker config Jason the value of this attribute will contain the base64 encoded contents of this config JSON file so all this basics before encoded will be assigned as a value here now since I have my cube CTL setup on my laptop not in the mini cube what I'm gonna do is I'm gonna copy that file from inside the mini cube to my host so that I can use it for my cube CTL command so I'm gonna clear this up and I'm gonna secure copied from mini cube and by the way I'm gonna collect all these commands and the configuration files and I'm gonna put them in its repository and link it in the video description so you can check that out if you want to follow along the video so I'm gonna type out the whole command and I'm gonna explain it so what I'm gonna do is I'm gonna secure copy and for that I'm gonna need SSH key which you have in a variable like this so it will be the same for you can directly copy this command and this is the source so we want to copy it from mini cube this is a user inside mini cube and this is the IP address so this is the server IP you can also login on your console and you can see what the value of it is and inside that I want to copy dot docker slash config Jason and I want to copy now its destination I want to copied in my docker config so I'm gonna replace the one that I have and as I mentioned directly having the authorization inside the configuration file is not as secure as having it in credit or so if you are running your kubernetes cluster on some servers you may want to use credential store inside but this is just for mini cube demonstration so I'm gonna execute that and now if I check my own docker config see I have replaced the content now I can go and create a secret from this file so as I said this should be basics different Kodi content so what I'm gonna do is pipe that and base64 encode it and I'm gonna paste it directly in here okay so this is my secret or if you want to spare yourself this you know base64 encoding it on the command line and then copying the contents there you can actually do that with cube CTL command as well right so let's clear that up and I'm gonna show you that keep city away as well so the cube CTO command will be like this keeps it will create secret and this is the secret type generic so let's name of the secret and let's break the line to have it structured from file attribute from which file the secret content should be created and this is the same attribute that we have in the secret file docker config Jason this is the same as this one here and now we have to specify the file which it should base64 encode and finally we specify the type which is darker config Jason type so it's gonna create the secret of docker config Jason type from these files contents and set it as a valley for these attributes so I'm gonna apply that so this will do the same as applying this configuration file here so we have our secret my registry key in the cluster so just to review now we did talk her login in this case I did from mini cube Stoker and then we use that file first of all I copied that file from mini cube to my host where execute the cube CTL and I use that file to create the secret which now has contents like this let's actually see that gets secret this is output Y mo file that was created and I have my data here doctor config jason and this is the basics de for encoded contents now there is a second way to create this docker config jason secret where you don't have to do it in two steps you don't have to do doctor login and then create the secret from that convict JSON file you can do both in one step so let's see that as well so it's gonna be keep CTL create secret and now instead of generic I'm gonna specify docker registry the secret type and let's give it Oh let's give it name my registry key and here I have different flags which are specific for docker registry right so I have docker server and I'm actually gonna execute this command again so that I see the values so I have docker server which is my AWS private registry URL so I'm gonna that here then I have docker username which is AWS I have docker password which is this whole thing here and this is basically it so this command will do both steps in one so it's gonna do docker login and it's gonna create a secret based on the login authentication so if I execute this I have both secrets and I can use any of those for my deployment now you may be asking why there are two different ways to do the same thing can we just go with one but there's a difference between the two and the difference is that with this command you can only create one secret that has access token for one dollar registering for this specific registry for example but it's convenient because you do doctor login and secret creation in one step however if in your cluster you're using more than one private registry where you pull the images from then it will be more practical more convenient to go with other option the first one because for example if you have five private repositories that I want to pull the images from I can do docker login in each one of them and all the access tokens will get stored in this config JSON file like this so you're gonna have a list of them and if you use that file in your secret then with one secret you can have access to all the reports so this is a difference so depending on your use case you may prefer to use one or the other okay so now I've cleared everything and we see that we have our two secrets and now the second step is to configure deployment for my app application so I have a deployment configuration here and this is just the minimum configuration you need for deployment and this is our pot specification I have one container the name is my app and this is the image and the image name of the application has to be the complete name which includes the repository URL and the image name so it's going to be the complete image URL I'm gonna copy that and paste it so this is the repository URL this is the image name and this is the image version because if you just write this one doctor won't know which repository to pull it from and I have the port 3000 because that's why my application runs is that no J's application and now since I already built this all locally on my laptop I have that image available locally show that so 1.3 with this version I have it locally however because we are testing pulling the image from the private repository I want to force docker to pull that image from a repository instead of taking it from the local docker repository which is on my laptop and to do that you can force it by image pull policy attribute and here you can say always and every time pod is created this will force docker to reap all the image even if it already exists locally on your localhost so that's what we're gonna do and the next step will be to configure these employment with the secret so I have to give this deployment access to the secret that I created so that it will be able to pull that image from the stream however I just want to demonstrate what its gonna do or how it's going to behave without that secret configuration so I'm just gonna leave it like this and let's actually apply this configuration apply have any documents like this and if I do cube CTL pod I see image pull back off and it can connect to the container because it's waiting trying and failing to pull the image because it doesn't have authorization so the pot started but container can't be pulled so it's gonna retry now multiple times so I'm gonna delete that and all let's actually add that secret reference to the docker authentication and the way to do that is in the pod specification so on the same level as containers we're gonna configure attribute which is called image pull secrets image pull secrets and here we provide a name of the secret and this is it these two lines will configure deployment with access to the secret that contains docker registry access okay so let's apply that configuration again documents and let's see the pot and you see it's running because it was able to pull the image so so here we see pulling image successfully pulled image so that's how you configure that plumbing now since we have the second secret as well it's actually make sure that both are working so I'm gonna rename my deployment let's call it like this and I'm gonna use the second secret here and let's execute that again as well so this is how you configure your cluster to be able to pull the images from private repository there is one important note here the secret has to be in the same namespace as the deployment or stateful set or any other component that you're creating that needs to pull the image from that repository it has to be in the same namespace which means we have three applications in three different namespaces that all pull images from the private repository you have to create the secret three times in each namespace so to quickly wrap up in order to configure that you have to create a secret there's two ways to creating a secret either you can do dr. Logan manually and use the generated config JSON file to create the secret out of it or you can do it in one step using cube CTL create secret of docker registry type where you provide all the credentials in that command and the second step you will use that secret in the deployment or any other component that needs to pull the image from the docker registry I hope this was helpful and you learned something from this video if you want to see other videos about kubernetes you can subscribe to my channel and follow all my tutorials thank you for watching and see you in the next video

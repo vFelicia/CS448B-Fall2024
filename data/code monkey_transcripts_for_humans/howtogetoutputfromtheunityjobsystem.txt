@@ -1,0 +1,177 @@
+With timestamps:
+
+00:00 - in this video we're going to learn how
+00:01 - we can do some work and get the output
+00:03 - from the unity job system we're going to
+00:05 - make a job scheduled it wait for it to
+00:07 - complete and then grab the result from
+00:09 - the main thread let's begin
+00:13 - [Music]
+00:17 - okay so this is going to be a pretty
+00:20 - simple video getting the output is easy
+00:22 - when you know how but can be tough to
+00:24 - understand that first e2 how the job
+00:25 - system works so hopefully this video
+00:28 - won't show up in search and help people
+00:29 - who have the same question that I had
+00:31 - let's start with what seems like the
+00:33 - illogical way and then we're going to
+00:34 - test to see if it works so here I am in
+00:37 - an empty scene and let's start off by
+00:39 - making a simple testing script so
+00:42 - testing job output let's drag it onto a
+00:45 - new game object and just drag the script
+00:49 - okay so here let's start off with a very
+00:51 - simple job so we need to make a struct
+00:54 - for our simple job which implements a
+00:57 - job if you're completely new to jobs
+01:04 - then first check out the video on
+01:06 - getting started it covers how jobs work
+01:08 - and how to use them check the link in
+01:10 - the description now in here we have our
+01:12 - job struct so let's make the simplest
+01:15 - job possible all we're going to do is
+01:19 - just add two numbers so here we have a
+01:21 - field for an INT for our a value another
+01:24 - int for the b value and then another end
+01:27 - for our result and on our execute all
+01:30 - we're going to do is set the result to
+01:32 - be a plus B okay so we have a very
+01:35 - simple math job calculating a plus B now
+01:38 - let's go up here into our start in order
+01:40 - to create and test our job so first we
+01:43 - have our simple job instance we create a
+01:47 - new simple job then we pass in the a and
+01:51 - let's put it at one for the beam let's
+01:54 - put at 2 and then we won't calculate the
+01:56 - result so we have our job instance we
+01:58 - call simple job schedule
+02:03 - and then we simply wait for the job to
+02:06 - complete okay so this is our very simple
+02:09 - death setup will create our job instance
+02:11 - we give it a value of 1 to the a 2 to
+02:15 - the beam we schedule the job we wait for
+02:17 - it complete then after the job happens
+02:19 - in theory we should have our result
+02:21 - variable to contain 1 plus 2 so it
+02:23 - should contain 3 and let's just do a
+02:24 - debug log to see if that is the case so
+02:28 - we love the simple job result okay so
+02:32 - let's see if our console doesn't need
+02:33 - say 3 and here we are in the console and
+02:37 - right away you can see the result is
+02:38 - showing 0 which is obviously incorrect
+02:41 - so it's here that you might start to ask
+02:43 - yourself ok so how exactly do I get
+02:45 - output from a job the issue that we have
+02:48 - here has to do with how the job system
+02:50 - works now in order for the job system to
+02:53 - protect you from all the issues that are
+02:54 - caused by writing multi-threaded code
+02:56 - the job system works in a very specific
+02:58 - way the way that the job is run is it
+03:01 - gets a copy of the data instead of a
+03:03 - reference so up here when you create our
+03:06 - new simple job struct the job system
+03:08 - gets our instance which contains a copy
+03:11 - of our data so in this case contains an
+03:12 - a of 1 B of 2 and a result of 0 so when
+03:16 - we schedule our job the job system works
+03:18 - on a copy of these values instead of a
+03:20 - reference so down here when the job
+03:23 - triggers its execute method and modifies
+03:25 - the result to be a plus B it's only
+03:28 - modifying the value inside of this copy
+03:30 - so the original object that we create
+03:32 - them down here it still has a result
+03:34 - equals 0 so we need some way for the job
+03:37 - to get a reference of data instead of
+03:39 - just a copy now the way we do that using
+03:42 - our job system is with a native
+03:44 - collection which is inside using unity
+03:47 - collections the most basic native
+03:51 - collection is the native array this is
+03:54 - just like a normal array but the job
+03:55 - system treats it in a very specific way
+03:57 - so here on our simple job instead of
+04:00 - having a result to be just an int which
+04:02 - would receive a copy we're going to have
+04:05 - a result into a native array of pins by
+04:09 - passing a native array despite being a
+04:11 - struct we're actually passing a
+04:12 - reference to a certain position in
+04:13 - memory now in here is the part that
+04:16 - might seem weird
+04:17 - but it's actually the correct way to do
+04:18 - it in this case all we want is a single
+04:21 - result but as you saw by just passing in
+04:24 - an int we're only getting a copy so not
+04:26 - a reference as we want so in this case
+04:28 - we need to pass in our result which
+04:30 - won't be a native array simply with a
+04:32 - size of 1 so here we store on result
+04:36 - index 0 we store our result and now in
+04:39 - here we need to create the array and
+04:41 - pass it into our job so we created a
+04:44 - native array in order to hold int this
+04:46 - will be our result array and here we
+04:49 - pass in the length of the array in this
+04:51 - case we only want a single element so
+04:53 - just one and then a specific allocator
+04:55 - in this case we want to use it inside of
+04:57 - the job so we just use the allocator
+04:59 - temp job and then here we need to make
+05:03 - sure to pass our native array into our
+05:05 - job instance so again it might seem
+05:08 - weird to create an array in order to
+05:10 - hold a single value but this is the way
+05:12 - that you work with memory shared between
+05:14 - the job and the main thread so we create
+05:17 - a native array we pass it into our job
+05:20 - the job then executes and puts a result
+05:22 - on the first position on our array and
+05:24 - then after the job completes let's
+05:26 - simply read our result from the result
+05:28 - array on index 0 and finally when
+05:31 - dealing with native array since these
+05:33 - are unmanaged memory locations you need
+05:35 - to make sure you always dispose of them
+05:37 - so always call the array that disposed
+05:39 - after you're done with ok
+05:41 - so let's see and we should now be able
+05:43 - to see a result to print 3 and he
+05:45 - appears our console here's our log and
+05:47 - it doesn't need say 3 so we are now
+05:49 - correctly grabbing the result of a job
+05:51 - from our main thread so again this is
+05:53 - pretty simple stuff it just requires you
+05:55 - to understand how the job system work
+05:57 - always remember that when you create an
+06:00 - instance if you use a normal field the
+06:02 - job won't simply get a copy of that data
+06:04 - in order to be able to share that
+06:06 - between a job and the rest of your
+06:08 - program you need to be able to use a
+06:10 - native connection also you have several
+06:12 - that you don't have just the array you
+06:14 - also have for example the native list
+06:16 - which works very much like a list then
+06:19 - you have the native hash map and multi
+06:21 - hash map and so on any of those native
+06:23 - collections are how you share memory
+06:25 - essentially between a job and back in
+06:27 - your main thread so if you want some
+06:30 - sort of output for
+06:31 - job passing and native array in order to
+06:33 - get that output even if that native rate
+06:35 - only has one position and that's it hope
+06:38 - you found this video useful if you liked
+06:40 - the video subscribe the channel for more
+06:41 - intuitive towards post any questions you
+06:43 - have in the comments and I'll do my best
+06:44 - answer alright see you next time
+06:49 - [Music]
+
+Cleaned transcript:
+
+in this video we're going to learn how we can do some work and get the output from the unity job system we're going to make a job scheduled it wait for it to complete and then grab the result from the main thread let's begin okay so this is going to be a pretty simple video getting the output is easy when you know how but can be tough to understand that first e2 how the job system works so hopefully this video won't show up in search and help people who have the same question that I had let's start with what seems like the illogical way and then we're going to test to see if it works so here I am in an empty scene and let's start off by making a simple testing script so testing job output let's drag it onto a new game object and just drag the script okay so here let's start off with a very simple job so we need to make a struct for our simple job which implements a job if you're completely new to jobs then first check out the video on getting started it covers how jobs work and how to use them check the link in the description now in here we have our job struct so let's make the simplest job possible all we're going to do is just add two numbers so here we have a field for an INT for our a value another int for the b value and then another end for our result and on our execute all we're going to do is set the result to be a plus B okay so we have a very simple math job calculating a plus B now let's go up here into our start in order to create and test our job so first we have our simple job instance we create a new simple job then we pass in the a and let's put it at one for the beam let's put at 2 and then we won't calculate the result so we have our job instance we call simple job schedule and then we simply wait for the job to complete okay so this is our very simple death setup will create our job instance we give it a value of 1 to the a 2 to the beam we schedule the job we wait for it complete then after the job happens in theory we should have our result variable to contain 1 plus 2 so it should contain 3 and let's just do a debug log to see if that is the case so we love the simple job result okay so let's see if our console doesn't need say 3 and here we are in the console and right away you can see the result is showing 0 which is obviously incorrect so it's here that you might start to ask yourself ok so how exactly do I get output from a job the issue that we have here has to do with how the job system works now in order for the job system to protect you from all the issues that are caused by writing multithreaded code the job system works in a very specific way the way that the job is run is it gets a copy of the data instead of a reference so up here when you create our new simple job struct the job system gets our instance which contains a copy of our data so in this case contains an a of 1 B of 2 and a result of 0 so when we schedule our job the job system works on a copy of these values instead of a reference so down here when the job triggers its execute method and modifies the result to be a plus B it's only modifying the value inside of this copy so the original object that we create them down here it still has a result equals 0 so we need some way for the job to get a reference of data instead of just a copy now the way we do that using our job system is with a native collection which is inside using unity collections the most basic native collection is the native array this is just like a normal array but the job system treats it in a very specific way so here on our simple job instead of having a result to be just an int which would receive a copy we're going to have a result into a native array of pins by passing a native array despite being a struct we're actually passing a reference to a certain position in memory now in here is the part that might seem weird but it's actually the correct way to do it in this case all we want is a single result but as you saw by just passing in an int we're only getting a copy so not a reference as we want so in this case we need to pass in our result which won't be a native array simply with a size of 1 so here we store on result index 0 we store our result and now in here we need to create the array and pass it into our job so we created a native array in order to hold int this will be our result array and here we pass in the length of the array in this case we only want a single element so just one and then a specific allocator in this case we want to use it inside of the job so we just use the allocator temp job and then here we need to make sure to pass our native array into our job instance so again it might seem weird to create an array in order to hold a single value but this is the way that you work with memory shared between the job and the main thread so we create a native array we pass it into our job the job then executes and puts a result on the first position on our array and then after the job completes let's simply read our result from the result array on index 0 and finally when dealing with native array since these are unmanaged memory locations you need to make sure you always dispose of them so always call the array that disposed after you're done with ok so let's see and we should now be able to see a result to print 3 and he appears our console here's our log and it doesn't need say 3 so we are now correctly grabbing the result of a job from our main thread so again this is pretty simple stuff it just requires you to understand how the job system work always remember that when you create an instance if you use a normal field the job won't simply get a copy of that data in order to be able to share that between a job and the rest of your program you need to be able to use a native connection also you have several that you don't have just the array you also have for example the native list which works very much like a list then you have the native hash map and multi hash map and so on any of those native collections are how you share memory essentially between a job and back in your main thread so if you want some sort of output for job passing and native array in order to get that output even if that native rate only has one position and that's it hope you found this video useful if you liked the video subscribe the channel for more intuitive towards post any questions you have in the comments and I'll do my best answer alright see you next time

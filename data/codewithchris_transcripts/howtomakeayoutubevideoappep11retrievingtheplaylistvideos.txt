@@ -1,0 +1,430 @@
+00:00 - [Music]
+00:02 - hey coders what's up I hope you guys are
+00:04 - having a brilliant day it's Chris here
+00:08 - with another episode of how to build a
+00:10 - YouTube app in the previous lesson we
+00:12 - had created a pod file for our YouTube
+00:14 - app and added this Library alamoo fire
+00:18 - so that we can do networking with it we
+00:21 - also looked at the YouTube data API and
+00:24 - signed up for our API key now I got an
+00:27 - email from a viewer his name is Fabian
+00:30 - who had some experience with the YouTube
+00:32 - API and he mentioned that having the
+00:35 - type of API key as iOS May interfere or
+00:39 - may cause some problems and he
+00:41 - recommended to use uh web type key so
+00:44 - that's a good thing to know thank you
+00:45 - Fabian I'm going to continue to use this
+00:48 - key for now but if we run into any
+00:50 - issues then we know that one of the
+00:52 - things we should check is maybe creating
+00:54 - a new API key but this time choosing web
+00:57 - okay so that's just a good thing to keep
+00:59 - in mind in this lesson we're going to
+01:02 - actually make our first call to the
+01:04 - YouTube API to retrieve videos uh using
+01:07 - Alamo fire so let's take a look at our
+01:10 - current xcode project and see how things
+01:13 - are structured and to take a look at
+01:16 - what needs to be changed now we open the
+01:19 - XC workspace file because we have
+01:22 - installed Coco pods and here in the
+01:25 - YouTube app let's take a look we have a
+01:27 - view controller let's go to the
+01:29 - storyboard first actually and if I
+01:31 - double click to zoom out we can see that
+01:34 - we have a view controller that displays
+01:36 - the list of videos and we have a detail
+01:38 - view controller that shows the video
+01:40 - details when someone taps or selects on
+01:43 - a video on the main view controller how
+01:45 - are we making this work well in the view
+01:48 - controller viewed load it's creating an
+01:50 - instance of video model and then calling
+01:53 - the get videos method which is going to
+01:56 - return a list of hard-coded videos
+01:58 - currently okay so let's take a look at
+02:00 - this get videos method one quick way to
+02:02 - jump to that method of that class is to
+02:04 - rightclick that method and go jump to
+02:06 - definition and that's going to bring us
+02:08 - right into the video model. Swift class
+02:11 - and taking us to the method that we want
+02:13 - to look at so in this method we create
+02:15 - an array of video objects right now it's
+02:18 - empty and then we create all of these
+02:20 - video objects with hardcoded uh property
+02:23 - data and then we're appending it to the
+02:25 - array and at the bottom of the method
+02:27 - we're returning that array of videos
+02:30 - all right and you can see here that this
+02:33 - method returns an array of videos so one
+02:35 - thing I'm going to do here is I'm going
+02:37 - to create a new method I'm going to say
+02:40 - get feed
+02:42 - videos okay and the return method is
+02:46 - nothing right now and instead of getting
+02:48 - the view controller to call this method
+02:50 - I'm just going to get it to call this
+02:52 - new method and in here we're going to
+02:55 - fetch the videos dynamically
+03:00 - through the YouTube data API now why
+03:04 - doesn't this method return an array of
+03:07 - videos the reason is because when the
+03:09 - viewcontroller.swift calls this method
+03:12 - and it goes out to fetch the videos we
+03:15 - don't want the view controller to wait
+03:16 - for that to happen because while the
+03:18 - view controller is waiting for the
+03:20 - videos to download and get returned from
+03:22 - this method the user interface is
+03:24 - actually going to be frozen so the user
+03:26 - can't interact with it so it's going to
+03:28 - look like a broken or Frozen app and we
+03:30 - don't want that to happen the technical
+03:32 - term for this is called synchronous
+03:34 - downloading in the execution of your app
+03:37 - there's a main thread worker that is
+03:39 - responsible for executing your app
+03:41 - responding to the user interaction uh
+03:44 - updating the user interface and stuff
+03:46 - like that if we have that main thread
+03:48 - worker go off and fetch the video items
+03:52 - through the internet then it's not going
+03:54 - to be around to update the user
+03:55 - interface or respond to user interaction
+03:58 - and then the user is going to stay out
+03:59 - of a Frozen app until the main thread
+04:01 - worker comes back with the videos and
+04:03 - that's called synchronous downloading
+04:05 - now it might be okay if what it's going
+04:07 - off to fetch is very very small so it's
+04:10 - going to be in and out very quickly
+04:13 - however a better way of doing it is to
+04:15 - do it asynchronously which means that
+04:17 - instead of the main worker thread going
+04:19 - off to fetch the videos we're going to
+04:21 - create another background thread to go
+04:23 - do it so the main worker thread can
+04:25 - continue to respond to user events and
+04:27 - update the user interface and when the
+04:29 - background worker or the background
+04:31 - thread has fetched the videos then it's
+04:33 - going to uh let the main thread worker
+04:36 - know uh and pass that data over to the
+04:38 - main thread worker to update that table
+04:40 - view that we've got in the main view
+04:42 - controller and that's why this method
+04:44 - doesn't return anything right away
+04:46 - because the main thread worker when it
+04:48 - executes this method we're going to kick
+04:50 - off a background worker to go fetch the
+04:52 - data and then the main thread worker is
+04:55 - going to continue on its merry way and
+04:57 - then later when the background worker
+04:59 - has done downloaded the videos it's
+05:00 - going to call back or tell us that the
+05:03 - videos are ready and then the main
+05:04 - thread worker will pick up the data and
+05:07 - update the UI with it so luckily when we
+05:09 - use Alamo fire to make a request it's
+05:12 - asynchronous so we don't really have to
+05:14 - do anything there so let's look at the
+05:17 - GitHub page and look at how we make a
+05:19 - request so first of all we have to make
+05:22 - sure we import Alm fire at the top so in
+05:25 - our EXC project at the top here let's
+05:28 - write import Alam fire I believe it's
+05:31 - lowercase like that and then basically
+05:35 - we write Alam fire. request and we here
+05:38 - we specify the type of request we're
+05:40 - going to be able to see what type it is
+05:42 - from the API reference here um we're
+05:46 - going to specify the URL more than that
+05:49 - we're going to want to be able to
+05:50 - specify some parameters so we're
+05:52 - actually going to use this request
+05:54 - method here where we specify the request
+05:56 - type a URL and a bunch of par parameters
+05:59 - in the form of a dictionary okay so
+06:01 - let's just try writing this in our X
+06:03 - code project in the get feed videos
+06:05 - we're going to say Elmo
+06:09 - fire. request uh and it's not really
+06:12 - detecting it right now so actually let
+06:15 - me clean the project and let me build
+06:20 - it okay build succeeded let's try that
+06:24 - again there we go request and there's a
+06:27 - couple of them this is the one we want
+06:28 - to use right here here um so method uh
+06:31 - the URL parameters and so on now let's
+06:34 - jump to the YouTube data API the API
+06:38 - call we want to make is playlist items
+06:41 - because we have a playlist and we want
+06:44 - to list all of the items in the playlist
+06:46 - so I'm going to click this list option
+06:49 - here or List method returns a collection
+06:52 - of playlist items that match the API
+06:54 - request parameters okay so here we can
+06:56 - see the request type is get and this is
+06:59 - the URL to hit and then here is a
+07:02 - description of the parameters that we
+07:04 - can specify so first of all let's put
+07:07 - these two things into our request the
+07:10 - URL all right so it's a string so I'm
+07:14 - just put the string like that going back
+07:16 - to here it's a get type and if you look
+07:19 - at the usage information we just have to
+07:22 - write doget to specify that uh request
+07:26 - type so here let's do that okay so
+07:29 - parameters what sort of parameters do we
+07:31 - need to put in let's go back to this
+07:33 - page here uh there's one called part and
+07:36 - this one's actually required so what
+07:38 - does part do specifies a comma separated
+07:41 - list of one or more playlist item
+07:43 - resource properties that the API
+07:46 - response will include and let's see for
+07:49 - example in a playlist item resource the
+07:52 - snippet property contains numerous
+07:54 - Fields including title description
+07:56 - position and resource ID if if you set
+08:00 - part equals snippet then the API
+08:02 - response will contain all those
+08:03 - properties and so here's a couple of
+08:06 - different part strings that you can put
+08:08 - in we are actually going to specify the
+08:10 - snippet for the part because I want the
+08:12 - title and description and that sort of
+08:14 - stuff so I'm going to go back to xcode
+08:16 - right now and I'm going to create a new
+08:18 - dictionary where the key is part and the
+08:20 - value is snippet okay so that's not the
+08:23 - only parameter we're going to have so
+08:25 - I'm going to write comma so we can
+08:27 - specify another key value pair let's go
+08:29 - back I'm also going to want to specify
+08:31 - the playlist ID so it specifies the
+08:34 - unique ID of the playlist for which you
+08:36 - want to retrieve the playlist items okay
+08:39 - so this is going to be the key playlist
+08:41 - ID uh that's right here I'm going to
+08:43 - create a new key Co in and the value I
+08:47 - need to specify some sort of playlist ID
+08:49 - in there if I go to my YouTube channel
+08:52 - and you can find the playlist ID like
+08:54 - this if I for example if I click under
+08:56 - playlists and I choose any one one of
+08:59 - these ones let's say you can see here
+09:02 - that this is the playlist ID if I watch
+09:05 - a video as part of the playlist again
+09:07 - that playlist ID is right up here like
+09:11 - that so I'm going to go back actually uh
+09:15 - to my channel and under uploads which is
+09:19 - my most recent uploads if I choose play
+09:22 - all I'm actually going to see the
+09:25 - playlist ID here under list equals and
+09:29 - then there's some sort of ID like that
+09:31 - I'm going to grab that copy it and I'm
+09:34 - going to use that here so that's the
+09:36 - playlist ID that I want to fetch okay
+09:39 - let's go back for a second what else do
+09:42 - we have to do Max results uh couple here
+09:46 - that we don't really need okay there's
+09:49 - one other parameter that we need to
+09:51 - specify if you read the overview of the
+09:54 - data API you can see right here every
+09:56 - request must specify an API key
+09:59 - with the key parameter okay so that's
+10:02 - what we're missing uh we're going to
+10:03 - specify another key value pair here
+10:06 - where the key is key and the value is
+10:09 - the API key now the API key is right
+10:14 - here so I'm going to copy
+10:17 - that and you know what instead of
+10:20 - pasting it in there I'm going to create
+10:21 - a couple of constants up here because we
+10:24 - may need these uh for other requests so
+10:27 - I'm going to say let API key equal
+10:29 - equals that as a string uh let
+10:32 - [Music]
+10:34 - uploads playlist ID
+10:38 - equals I copy this and put it in there
+10:43 - there's an extra quote and then I'm just
+10:45 - going to
+10:47 - specify
+10:49 - that and specify that okay and now for
+10:53 - the encoding parameter encoding uh what
+10:57 - sorts of parameters are these let's see
+11:00 - parameter encoding dot uh and it's going
+11:03 - to be URL so the reason I know that is
+11:06 - because if we go back to playlist items
+11:09 - under list um these are query parameters
+11:13 - and query parameters if you're familiar
+11:15 - with web development are basically
+11:19 - parameters like this where you have
+11:21 - question mark and then something like V
+11:23 - equals or uh list equals something like
+11:27 - that instead up there you would have
+11:29 - part equals you know one of these values
+11:32 - uh playlist equals whatever the playlist
+11:34 - ID is and so that's what is called a URL
+11:38 - query string parameter so the parameter
+11:41 - en coding is URL so you might not have
+11:43 - known that for headers we don't have to
+11:45 - specify anything we're going to pass in
+11:47 - nil okay so we have our request here and
+11:49 - it's going to go out and hit the YouTube
+11:52 - data API with this call and all of these
+11:55 - parameters now how do we get the
+11:57 - response if we go back to the Alamo fire
+12:00 - under usage under response handling you
+12:04 - can see the call being made the request
+12:06 - being made and then responsejson and as
+12:09 - part of the response object that gets
+12:12 - returned uh we have request which
+12:14 - represents the original URL request
+12:16 - response data but result is what we're
+12:19 - interested in because it's the Json
+12:22 - result it's basically the result of that
+12:24 - request converted from Json into either
+12:28 - an array or dictionary that we can use
+12:31 - and then here there's some optional
+12:33 - binding to get the response. result.
+12:37 - value out as a Json object if we go back
+12:40 - to here we can see an example of the
+12:44 - response and if you're familiar with
+12:46 - Json um this is going to be a dictionary
+12:50 - with all of these key value pairs right
+12:52 - and there's one key called items and its
+12:55 - value it's an array of all of the videos
+12:57 - that we need so let's let me demonstrate
+13:00 - by following this responsejson and then
+13:03 - opening up the response Handler and
+13:05 - doing that so do response Json this one
+13:09 - right here double click to open up this
+13:12 - block of code and it has one parameter
+13:14 - called response so I'm just going to
+13:16 - call this response and here's the code
+13:19 - in here so we're going to follow this
+13:21 - code right here with the optional
+13:24 - binding I'm just going to copy that and
+13:26 - paste it in there so what are we doing
+13:28 - here it's going to make this call right
+13:31 - it's going to grab the response it's
+13:32 - going to convert that Json response
+13:35 - there's one parameter in the block of
+13:37 - code and then when it's done it's going
+13:39 - to execute this code in here and we can
+13:42 - get a reference to the response data
+13:45 - through this response parameter here
+13:47 - we're we're just testing that the
+13:49 - response. result. value which is
+13:53 - essentially this stuff right here um
+13:56 - we're testing if it actually is a value
+13:59 - okay so let us do something like um Json
+14:05 - Json is going to be this dictionary here
+14:08 - but we only want
+14:09 - items right so we're going to say if let
+14:12 - Json that's okay and for video in
+14:19 - Json items right because that Json is
+14:24 - this whole dictionary and items is the
+14:27 - key and it's going to to return an array
+14:30 - okay so we're going to say in Json as NS
+14:33 - array okay so we're going to Loop
+14:35 - through all of the videos inside the
+14:38 - items key and let's print that let's
+14:40 - print video okay and the last thing we
+14:43 - have to do is actually call this method
+14:45 - now if we go back to
+14:46 - viewcontroller.swift uh right now it's
+14:49 - creating a new video model and then it's
+14:52 - calling the get videos which is going to
+14:54 - return all of those hardcoded videos
+14:56 - right away and it gets assigned to sell
+14:58 - s.v videos just going to comment out
+15:00 - this line and in here we're going to
+15:03 - write fire off request to get
+15:07 - videos self do not self do but
+15:10 - model. get feed videos so this is going
+15:14 - to call the method we were just working
+15:16 - on here and it's going to make this
+15:19 - request it's going to look for that
+15:22 - playlist ID um using our API key and
+15:25 - it's going to return the list of video
+15:27 - items with the snpp property let's give
+15:30 - that a run and see what we get that's a
+15:31 - lot of
+15:34 - coding okay so we do have something in
+15:36 - our console window because of this print
+15:39 - so let's see what we have if we scroll
+15:41 - all the way to the top so keep in mind
+15:43 - that for each video in the items array
+15:47 - we are printing out that video and by
+15:51 - looking at the console I can see that
+15:53 - each video is a dictionary um it's got a
+15:56 - key called eag with a value of this it's
+15:59 - got another key called ID with this
+16:02 - value uh and so on and so forth but I'm
+16:04 - interested in this one this key snippet
+16:07 - has a value which is a dictionary and
+16:10 - inside that dictionary there's um some
+16:12 - Channel information which I don't care
+16:14 - about and it's all this text right here
+16:16 - but it's got a resource ID key which I
+16:20 - want the video ID of all right the
+16:22 - resource ID key is going to return a
+16:24 - dictionary and inside that dictionary
+16:26 - there's a video ID key and finally the
+16:29 - value of that video ID key is the video
+16:31 - ID I need and actually if we scroll up a
+16:34 - little bit um this description right
+16:36 - here description this is actually the
+16:39 - video description even though yeah this
+16:42 - this right here is the video
+16:46 - description so we're probably going to
+16:48 - be able to use
+16:50 - that and then there's also this title
+16:54 - key here which is the video title which
+16:57 - we're going to need that
+16:59 - and it's also got the thumbnail URLs for
+17:01 - each video so we're going to be able to
+17:03 - do that now the trick is how are we
+17:05 - going to get all of this data out of
+17:07 - this dictionary and that's what we're
+17:09 - going to go through next lesson so in
+17:11 - this video we successfully hit the
+17:13 - YouTube data API to retrieve all of the
+17:15 - video data for a particular playlist now
+17:19 - what we have to do is just Loop through
+17:21 - all of those video uh Json objects and
+17:25 - create all of these little videos like
+17:27 - we hard coded here but instead of using
+17:30 - this hardcoded data we're going to take
+17:33 - out all the information from from here
+17:36 - you know from The Returned Json response
+17:38 - we're going to take out all of this
+17:39 - information and create these video
+17:42 - objects based off of that information so
+17:44 - we're going to do that inside of this
+17:45 - Loop right so I'm going just write a
+17:47 - to-do here create video objects off of
+17:52 - the
+17:53 - Json response and then we're going to be
+17:57 - able to pass that data back to the main
+17:59 - worker thread to update the view so for
+18:01 - those of you who have never worked with
+18:03 - networking downloading feeds hitting
+18:05 - apis and stuff like that let me tell you
+18:07 - that it does get easier and as soon as
+18:09 - you get the hang of it you're going to
+18:11 - be able to build more complex apps and
+18:14 - apps that work with data on remote
+18:16 - databases and stuff like that so thanks
+18:18 - for watching I hope you guys enjoyed the
+18:19 - video and I look forward to seeing you
+18:21 - guys in the next one don't forget to
+18:23 - subscribe to the channel share the video
+18:25 - and like it all right bye for now
+18:31 - [Music]

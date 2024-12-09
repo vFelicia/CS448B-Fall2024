@@ -1,0 +1,622 @@
+With timestamps:
+
+00:00 - in this video i'm going to show you how
+00:02 - to monitor
+00:03 - a third-party application like mongodb
+00:06 - or mysql or any other service in
+00:09 - kubernetes
+00:10 - using prometheus so our setup is going
+00:13 - to look
+00:14 - like this we're gonna have a mini cube
+00:16 - local cluster
+00:18 - and in the first part of this video
+00:20 - series i have already
+00:22 - deployed a prometheus operator using a
+00:24 - helm chart
+00:25 - so if you want to know how the
+00:27 - deployment works how to install the helm
+00:29 - chart and what are the components that
+00:31 - get
+00:31 - created when the chart is installed then
+00:34 - you can check out that part
+00:36 - first and set up prometheus operator
+00:39 - in your cluster and then you can
+00:41 - continue with this video
+00:43 - after that in the cluster with
+00:44 - prometheus running
+00:46 - we're gonna deploy a mongodb application
+00:49 - and we're gonna
+00:50 - expose the data of mongodb
+00:54 - or metrics of the mongodb application
+00:56 - using mongodb
+00:58 - exporter and once the metrics is exposed
+01:02 - through a mongodb exporter we're gonna
+01:05 - allow
+01:05 - prometheus to scrape this data or this
+01:08 - metrics
+01:09 - and we're gonna do that using another
+01:11 - component which is called service
+01:13 - monitor
+01:14 - so along the process i will explain all
+01:17 - of these concepts
+01:18 - in detail i will explain what exporter
+01:20 - is what service monitor is
+01:21 - so that you also understand the concept
+01:24 - and then see
+01:25 - how to use that in practice right away
+01:27 - and finally once we've configured all of
+01:30 - these and prometheus
+01:31 - start scraping the mongodb application
+01:34 - through the mongodb
+01:35 - exporter we're gonna see the new
+01:37 - prometheus target
+01:39 - in prometheus ui and also we're gonna
+01:41 - see the scraped
+01:43 - data visualized in grafana ui
+01:46 - so with that let's get right in so to
+01:49 - get the maximum out of this video
+01:51 - i do recommend to follow along the
+01:54 - tutorial
+01:55 - as i walk you through all the deployment
+01:57 - steps and configuration steps
+01:59 - and a prerequisite for that is to have a
+02:01 - mini cube cluster
+02:03 - installed so with that let's get right
+02:06 - in
+02:10 - for starting minicube cluster basically
+02:12 - you can execute this command
+02:14 - which starts the cluster with more
+02:16 - resources in the default because we are
+02:18 - going to use
+02:19 - a little bit more resources because
+02:21 - prometheus operator actually creates a
+02:22 - lot of components
+02:24 - so it may need more resources i'm going
+02:26 - to put the commands for starting your
+02:27 - mini cube cluster
+02:28 - and installing prometheus operator in a
+02:32 - git repository
+02:33 - for you to just copy it from there and
+02:35 - once you have everything set up
+02:36 - we can go ahead and deploy our mongodb
+02:39 - application
+02:40 - so this is my cluster i only have
+02:43 - prometheus
+02:44 - pods running on it so i have a
+02:46 - prometheus helm chart
+02:48 - this is the version of the chart and
+02:50 - this is the version of prometheus
+02:52 - operator application
+02:53 - and here we can see all the pods
+02:57 - of prometheus we have grafana alert
+03:00 - manager prometheus operator and the
+03:02 - prometheus application itself
+03:04 - and we also have all the services
+03:08 - the chart installed so the first thing
+03:10 - we're going to do now
+03:11 - is expose prometheus ui so that we can
+03:14 - see
+03:15 - actually what endpoints are currently
+03:18 - being
+03:19 - scraped and this is all out of the
+03:20 - default i haven't configured anything
+03:23 - yet so in order to expose
+03:26 - prometheus ui we're going to use cubectl
+03:30 - port forward command so this will
+03:34 - basically
+03:35 - allow me to access the application that
+03:39 - is running
+03:39 - inside minicube virtualbox to access it
+03:43 - on my localhost
+03:44 - through a browser so i'm going to do
+03:45 - cube ctl port forward
+03:47 - service this is the prometheus
+03:50 - application
+03:52 - and then i'm going to need the port that
+03:55 - it's running at
+03:56 - and this command will expose prometheus
+04:00 - ui
+04:00 - at localhost port 1990 i can actually
+04:04 - copy this
+04:05 - and type it here and here you see
+04:07 - prometheus ui
+04:09 - and on the status targets
+04:12 - i can actually see all the targets that
+04:15 - are being scraped
+04:16 - out of the box so if i close all this i
+04:18 - have a list of
+04:20 - all the end points so prometheus is
+04:22 - monitoring itself the operator is
+04:23 - getting
+04:24 - scraped etc so what we're gonna do
+04:27 - in our setup is we're gonna deploy a
+04:29 - mongodb
+04:30 - application and we're gonna add mongodb
+04:33 - to the list of targets so that its
+04:36 - metrics
+04:37 - will also get scraped and as i said this
+04:40 - is all
+04:41 - out of the box i haven't configured
+04:42 - anything and the way
+04:44 - this works is actually through a
+04:47 - component
+04:48 - called service monitor and before we
+04:50 - move on to the service monitor i want to
+04:52 - thank octado
+04:54 - who made this video possible octatocloud
+04:56 - gives developers
+04:57 - instant access to manage kubernetes
+05:00 - namespaces
+05:01 - that means you can focus on developing
+05:03 - your application
+05:04 - while they manage the infrastructure in
+05:06 - the background if you want to try
+05:09 - cloud check out the special offer in the
+05:11 - video description below
+05:15 - so if i go back to my cluster
+05:19 - and i do cube ctl get service monitor
+05:24 - i see a whole list of service monitors
+05:26 - that the operator chart
+05:28 - actually created and these are exactly
+05:30 - the
+05:31 - service monitors that generate these
+05:34 - targets list here so these are exactly
+05:37 - the same components
+05:38 - service monitor is a custom component we
+05:40 - can also
+05:41 - see one of the service monitor
+05:43 - components here let's
+05:45 - actually take grafana
+05:49 - and see its ymo file and here you see
+05:52 - it's a kind service monitor
+05:54 - and you have this configuration file
+05:56 - with labels and the specification
+05:58 - so you have the endpoint etc you don't
+06:01 - have to understand all the attributes
+06:02 - here
+06:02 - there is one thing that is important in
+06:04 - this service monitor
+06:06 - and this is the label called release
+06:09 - prometheus now why is that important
+06:11 - because
+06:12 - this label allows prometheus
+06:16 - to find service monitors in the cluster
+06:19 - and register them so that it can start
+06:22 - scraping the application or endpoint
+06:26 - which is right here
+06:27 - of the application that service monitor
+06:30 - is pointing to so here you see it's
+06:32 - pointing to grafana
+06:34 - at metrics endpoint
+06:37 - and this attribute basically allows
+06:40 - service monitor itself to be discovered
+06:42 - by prometheus
+06:43 - and this logic of how prometheus
+06:46 - actually discovers service monitors
+06:48 - using this attribute is configured in
+06:50 - prometheus itself so i'm going to show
+06:52 - you that as well
+06:53 - so in order to see the configuration we
+06:55 - have to
+06:57 - check it in the crd
+07:01 - so these are all the crds that
+07:02 - prometheus has created
+07:04 - and these are basically custom
+07:06 - components
+07:08 - for prometheus so this one
+07:11 - right here so we're gonna check its
+07:13 - configuration file
+07:17 - like this and in this configuration file
+07:20 - here we have the specification all the
+07:22 - different configurations and if you
+07:23 - scroll all the way
+07:24 - down this line here is interesting for
+07:27 - us
+07:28 - it says service monitor selector match
+07:31 - labels
+07:32 - release prometheus so basically this
+07:34 - says
+07:35 - match all the service monitors that have
+07:37 - a label
+07:38 - release prometheus so this means if you
+07:41 - create a service monitor
+07:43 - component which doesn't have this label
+07:45 - it will not be discovered by
+07:47 - prometheus cool so now we understand how
+07:50 - these
+07:51 - targets got actually created or target
+07:53 - endpoints using the service monitor
+07:56 - now as a next step we're going to deploy
+07:58 - mongodb
+07:59 - and we're going to configure everything
+08:02 - so that mongodb
+08:03 - becomes one of the targets for
+08:06 - prometheus to collect
+08:07 - its metrics so let's do that
+08:10 - so first we're going to create a mongodb
+08:12 - deployment and a service
+08:14 - so pretty straightforward i have this uh
+08:17 - configuration
+08:18 - file already created here so it's
+08:20 - basically
+08:21 - a simple deployment mongodb image
+08:24 - and port defined here and we're creating
+08:28 - a service for it
+08:29 - pretty straightforward i'm also going to
+08:30 - provide the yaml files that i use
+08:32 - in this video in the repository so you
+08:34 - can use them
+08:35 - from there so i'm going to apply this in
+08:38 - the cluster
+08:45 - without exporter and
+08:48 - our deployment and
+08:52 - service got created so i have mongodb
+08:54 - pod getting created here
+08:56 - cool so now we have mongodb pod running
+08:59 - and this is probably
+09:00 - the typical scenario where you have an
+09:02 - application
+09:03 - deployed in your cluster and at some
+09:05 - point you decide
+09:06 - that you want to monitor it using
+09:08 - prometheus so the way to do that
+09:10 - is using a component called exporter
+09:17 - so each application like mongodb mysql
+09:21 - already kibana whatever application you
+09:24 - have
+09:25 - is going to have its own exporter right
+09:28 - so export is basically a translator
+09:31 - between
+09:32 - the applications data or application
+09:35 - metrics
+09:36 - to metrics or data that prometheus will
+09:39 - understand
+09:40 - so it's basically sitting between the
+09:42 - application and prometheus
+09:44 - getting the data from the application
+09:46 - transforming it into data or metrics
+09:48 - that prometheus
+09:50 - will be able to collect an exporter
+09:53 - itself will expose the slash metrics
+09:55 - endpoint so that prometheus will be able
+09:58 - to scrape it from there
+10:00 - right so it does two things it collects
+10:02 - the matrix data from
+10:04 - the application and converts it to data
+10:06 - understandable by prometheus
+10:08 - and the second thing is it exposes these
+10:11 - metrics
+10:12 - at a slash metrics endpoint for
+10:15 - prometheus to be able to scrape them so
+10:17 - this is the role of
+10:18 - exporter an exporter can be a separate
+10:21 - deployment
+10:22 - in the cluster independent of the
+10:24 - application which is a good thing
+10:26 - because when you decide to monitor your
+10:28 - application
+10:28 - later you don't have to change the
+10:31 - deployment configuration file or service
+10:33 - or
+10:34 - anything you don't have to touch the
+10:35 - application you just create an exporter
+10:37 - if you don't want to monitor it then you
+10:39 - just delete the exporter
+10:41 - and that's it so now the question is how
+10:44 - do you find an exporter
+10:45 - how do you know their exporters
+10:47 - available and how do you
+10:49 - install it so let's go back to the
+10:51 - browser and here i'm gonna
+10:52 - type prometheus exporters
+10:56 - and on official prometheus page you can
+10:58 - actually
+10:59 - see the list of all the exporters
+11:01 - available for different databases
+11:04 - hardware related stuff messaging systems
+11:07 - so basically for a lot of different
+11:09 - applications there are already
+11:11 - exporters that you can use instead of
+11:14 - having to create them
+11:15 - right and here if you notice in the
+11:18 - prometheus operator that we
+11:20 - installed there is a node exporter that
+11:22 - gets deployed out of the box
+11:24 - so this is one of the exporters and as
+11:26 - the name says it is
+11:28 - translating the metrics of the node of
+11:31 - the cluster node in this case minicube
+11:33 - into data that prometheus will
+11:36 - understand
+11:36 - and exposes that matrix data at slash
+11:39 - metrics
+11:40 - endpoint for prometheus to scrape it
+11:44 - so here let's actually look for mongodb
+11:48 - there are some of them which have
+11:50 - official next to it
+11:51 - are from prometheus itself so if i click
+11:54 - on that
+11:56 - actually end up in a repository of
+11:58 - mongodb
+11:59 - exporter these exporters are also
+12:02 - available as
+12:03 - docker images so you can also search
+12:05 - them on docker hub actually
+12:07 - so if i write here mongodb
+12:12 - exporter then i will find
+12:16 - a list of a lot of mongodb exporters
+12:19 - which are managed by different
+12:20 - communities and you should probably go
+12:23 - with the one that
+12:24 - has been recently updated so for example
+12:27 - this one right here so you can actually
+12:29 - find if there are any available
+12:31 - like this now there are three things or
+12:33 - three components that you need to have
+12:36 - when you deploy an exporter so first of
+12:39 - all it
+12:39 - will be the application itself in docker
+12:42 - image
+12:42 - that the exporter application that will
+12:45 - expose the metrics endpoint
+12:47 - then you would of course need a service
+12:50 - so that
+12:50 - prometheus can connect to the exporter
+12:53 - so we're going to need a service for
+12:54 - that
+12:55 - and with that you would have an exporter
+12:57 - running in your cluster
+12:58 - ready to be scraped however as i
+13:01 - mentioned
+13:02 - prometheus must know that there is a new
+13:05 - application
+13:06 - ready to be scraped so we have to tell
+13:08 - prometheus
+13:10 - hey there's a new endpoint that you need
+13:11 - to scrape here and we do that
+13:13 - as i mentioned using this component
+13:15 - which is called service
+13:17 - monitor right so we are gonna need that
+13:20 - component as well so we're gonna need to
+13:22 - create a service monitor
+13:23 - for our mongodb exporter application
+13:27 - now we could of course go and create all
+13:30 - those three
+13:31 - component configuration files ourselves
+13:34 - so we can create a deployment
+13:36 - service and the service monitor and put
+13:38 - together all these attributes
+13:40 - or my preferred way of doing it we can
+13:43 - search for a helm chart that already has
+13:47 - all these configuration files ready and
+13:50 - configured so that you can basically
+13:52 - just install them with one command
+13:54 - so let's go back and check for mongodb
+14:00 - exporter helm chart or chart
+14:07 - and this is the first one in the search
+14:09 - here it says deprecated this is
+14:11 - something that happens often with helm
+14:14 - charts
+14:15 - they get deprecated they're moved a lot
+14:17 - of them have been moved to
+14:18 - prometheus community health chairs so
+14:20 - they're managed by
+14:21 - the community so always watch out for
+14:24 - the deprecated
+14:25 - so that you don't install something that
+14:27 - is not maintained anymore
+14:29 - so we're going to follow that link and
+14:31 - this is basically
+14:32 - the list of all the charts managed by
+14:34 - prometheus community
+14:35 - and here we have the list and here is
+14:39 - our mongodb exporter you have
+14:40 - one for mysql postgres etc so let's go
+14:44 - inside
+14:45 - and this is our chart and that's how
+14:48 - we're gonna
+14:48 - install the exporter in our cluster now
+14:52 - there are two things that we need to
+14:53 - configure
+14:54 - for this chart before we install it
+14:57 - right
+14:57 - remember if you have watched my helm
+14:59 - chart and explanation videos
+15:01 - you know that helm charts are basically
+15:03 - bundle of all the configuration files
+15:05 - you need to deploy that complete
+15:07 - application
+15:08 - in this case the deployment service and
+15:10 - service monitor
+15:12 - with default values but if you want to
+15:14 - overwrite some value if you want to
+15:16 - configure something
+15:17 - then you have a possibility to do that
+15:19 - using parameters
+15:21 - or chart parameters for that specific
+15:24 - chart so how do you know which
+15:25 - parameters you can
+15:27 - override or what are the names of these
+15:29 - parameters you can find them either in
+15:31 - the documentation
+15:32 - sometimes they have a list of those
+15:33 - parameters this one doesn't
+15:35 - but we can also do that using helm show
+15:38 - values
+15:39 - that will basically show you the list of
+15:41 - all the parameters that this chart
+15:44 - accepts so first let's actually add the
+15:46 - repository
+15:47 - let's clear this has been edited
+15:52 - and now i can do hell show
+15:56 - values and we need a chart name
+16:00 - so helm show values chart name
+16:03 - will actually show me all the parameters
+16:05 - that i can configure
+16:07 - and this is actually a yaml file and i
+16:09 - can actually save them
+16:10 - into values.yml and open it
+16:14 - in the editor so these are all the
+16:16 - default values
+16:17 - and you can override any one of those so
+16:20 - there are two things that we need to
+16:21 - override
+16:22 - and let's actually get rid of all of
+16:24 - this till here
+16:27 - and here you see service monitor
+16:29 - configuration
+16:30 - and we're gonna need to override this
+16:32 - additional
+16:34 - labels attribute right so these are the
+16:37 - two parameters that we need to
+16:39 - override for our chart the first one is
+16:42 - pretty obvious
+16:43 - we need to tell mongodb exporter how to
+16:46 - connect to mongodb right so we need to
+16:48 - give it a service endpoint
+16:50 - so that it can connect to the
+16:52 - independently running mongodb
+16:54 - so the endpoint is going to be
+16:58 - mongodb protocol and
+17:02 - mongodb service
+17:06 - that's the endpoint and
+17:09 - the port right so
+17:12 - at this uri mongodb is accessible
+17:16 - now the second parameter service monitor
+17:18 - additional labels
+17:19 - remember i showed you this release
+17:21 - prometheus label that all the service
+17:23 - monitors in the cluster have
+17:25 - right this release prometheus basically
+17:27 - is a label that allows prometheus
+17:30 - to discover or to automatically
+17:33 - find a new service monitor in the
+17:36 - cluster
+17:37 - and this chart by default doesn't add
+17:39 - that
+17:40 - release prometheus label to service
+17:42 - monitor which
+17:43 - kind of makes sense because that label
+17:45 - can be different
+17:47 - so we have a possibility to add that
+17:49 - label to the service monitor component
+17:52 - that the chart will create so let's add
+17:55 - that
+17:55 - label right here so additional labels
+17:58 - and
+17:59 - i'm gonna say release prometheus
+18:03 - so now we have all the parameters we
+18:05 - need for this chart
+18:07 - so let's go and install it i'm gonna
+18:08 - copy the chart name again
+18:13 - let's clear this helm install
+18:16 - let's call it mongodb
+18:20 - exporter and the chart name
+18:23 - and of course we want to pass those
+18:25 - parameters
+18:26 - so i'm going to do minus f values
+18:29 - dot yemo so the chart will take the
+18:32 - values file
+18:34 - as an attribute and it will apply all
+18:36 - these parameters that we set here
+18:38 - so i'm gonna install it now
+18:43 - and let's check we have
+18:47 - mongodb exporter and this is the chart
+18:50 - version so it's 2.8.1
+18:55 - and our pods or our pod
+18:58 - must be running already so this is the
+19:00 - part of the exporter
+19:02 - let's also check that the service was
+19:05 - created
+19:06 - here we have exporter service which
+19:09 - exposes
+19:11 - the metrics port and let's also check
+19:15 - that the service monitor was created
+19:17 - cube ctl get
+19:18 - service monitor
+19:23 - and here is our service monitor
+19:28 - let's actually check that the label is
+19:30 - there
+19:32 - and here you see release prometheus
+19:35 - cool everything looks good so the first
+19:38 - thing that we can do
+19:39 - is check the endpoint of the exporter
+19:43 - at slash metrics so let's see what data
+19:46 - it's collecting
+19:47 - so let's print out the services again
+19:51 - so this is the service and let's do
+19:55 - port forward on that as well
+20:00 - service and this is the
+20:03 - service port
+20:10 - and let's check it here we have the
+20:12 - metrics endpoint
+20:14 - and at slash metrics we see all these
+20:16 - data
+20:17 - being collected from mongodb
+20:21 - awesome so the exporter is exposing the
+20:24 - metrics
+20:26 - for prometheus and since we have the
+20:28 - service monitor
+20:29 - also created with that release
+20:32 - prometheus label
+20:34 - prometheus must already have discovered
+20:37 - our new
+20:38 - service monitor in the cluster and it
+20:40 - should already be scraping that
+20:43 - metrics endpoint of the mongodb exporter
+20:46 - so if i go back to the prometheus ui
+20:49 - and if i refresh this see we have
+20:53 - the mongodb exporter endpoint which was
+20:56 - automatically added to the targets
+20:59 - without
+21:00 - me having to change the configuration
+21:03 - file of prometheus and we have the state
+21:06 - which is
+21:06 - up and configuration file which is much
+21:10 - more convenient than having to go
+21:12 - and change the configuration file reload
+21:14 - or restart the applications
+21:16 - etc so what we can also do now is
+21:19 - check those metrics data in grafana ui
+21:22 - because that's usually the reason why
+21:25 - we're collecting the metrics
+21:26 - so that we can visualize them so let's
+21:29 - go back to
+21:30 - the command line and i'm actually going
+21:32 - to expose grafana deployment
+21:35 - so i'm going to do cube ctl port forward
+21:42 - deployment
+21:44 - deployment and it's called prometheus
+21:47 - grafana
+21:49 - and its port is three thousand
+22:01 - and it is secured by default credentials
+22:03 - you have admin
+22:06 - and prom operator is the default
+22:11 - password it says in the documentation
+22:14 - i'm going to put all this information as
+22:15 - well in
+22:16 - git repository and we're logged in so if
+22:19 - i go
+22:20 - for example to manage and if i go to
+22:22 - pods
+22:23 - here i can see in the default namespace
+22:27 - i have mongodb deployment
+22:30 - in the drop down so i can see some of
+22:34 - its metrics that has been
+22:35 - collected and of course you can do some
+22:37 - other visualization in grafana
+22:40 - from this matrix so this is basically
+22:43 - how you can configure
+22:44 - metric scraping for any application
+22:47 - in your kubernetes cluster so that it
+22:50 - can be monitored by prometheus
+22:52 - you can apply the same concept for any
+22:54 - other application like mysql
+22:56 - or some messaging services etc so i hope
+22:59 - you learned a lot
+23:00 - thank you for watching and see you in
+23:02 - the next video
+
+Cleaned transcript:
+
+in this video i'm going to show you how to monitor a thirdparty application like mongodb or mysql or any other service in kubernetes using prometheus so our setup is going to look like this we're gonna have a mini cube local cluster and in the first part of this video series i have already deployed a prometheus operator using a helm chart so if you want to know how the deployment works how to install the helm chart and what are the components that get created when the chart is installed then you can check out that part first and set up prometheus operator in your cluster and then you can continue with this video after that in the cluster with prometheus running we're gonna deploy a mongodb application and we're gonna expose the data of mongodb or metrics of the mongodb application using mongodb exporter and once the metrics is exposed through a mongodb exporter we're gonna allow prometheus to scrape this data or this metrics and we're gonna do that using another component which is called service monitor so along the process i will explain all of these concepts in detail i will explain what exporter is what service monitor is so that you also understand the concept and then see how to use that in practice right away and finally once we've configured all of these and prometheus start scraping the mongodb application through the mongodb exporter we're gonna see the new prometheus target in prometheus ui and also we're gonna see the scraped data visualized in grafana ui so with that let's get right in so to get the maximum out of this video i do recommend to follow along the tutorial as i walk you through all the deployment steps and configuration steps and a prerequisite for that is to have a mini cube cluster installed so with that let's get right in for starting minicube cluster basically you can execute this command which starts the cluster with more resources in the default because we are going to use a little bit more resources because prometheus operator actually creates a lot of components so it may need more resources i'm going to put the commands for starting your mini cube cluster and installing prometheus operator in a git repository for you to just copy it from there and once you have everything set up we can go ahead and deploy our mongodb application so this is my cluster i only have prometheus pods running on it so i have a prometheus helm chart this is the version of the chart and this is the version of prometheus operator application and here we can see all the pods of prometheus we have grafana alert manager prometheus operator and the prometheus application itself and we also have all the services the chart installed so the first thing we're going to do now is expose prometheus ui so that we can see actually what endpoints are currently being scraped and this is all out of the default i haven't configured anything yet so in order to expose prometheus ui we're going to use cubectl port forward command so this will basically allow me to access the application that is running inside minicube virtualbox to access it on my localhost through a browser so i'm going to do cube ctl port forward service this is the prometheus application and then i'm going to need the port that it's running at and this command will expose prometheus ui at localhost port 1990 i can actually copy this and type it here and here you see prometheus ui and on the status targets i can actually see all the targets that are being scraped out of the box so if i close all this i have a list of all the end points so prometheus is monitoring itself the operator is getting scraped etc so what we're gonna do in our setup is we're gonna deploy a mongodb application and we're gonna add mongodb to the list of targets so that its metrics will also get scraped and as i said this is all out of the box i haven't configured anything and the way this works is actually through a component called service monitor and before we move on to the service monitor i want to thank octado who made this video possible octatocloud gives developers instant access to manage kubernetes namespaces that means you can focus on developing your application while they manage the infrastructure in the background if you want to try cloud check out the special offer in the video description below so if i go back to my cluster and i do cube ctl get service monitor i see a whole list of service monitors that the operator chart actually created and these are exactly the service monitors that generate these targets list here so these are exactly the same components service monitor is a custom component we can also see one of the service monitor components here let's actually take grafana and see its ymo file and here you see it's a kind service monitor and you have this configuration file with labels and the specification so you have the endpoint etc you don't have to understand all the attributes here there is one thing that is important in this service monitor and this is the label called release prometheus now why is that important because this label allows prometheus to find service monitors in the cluster and register them so that it can start scraping the application or endpoint which is right here of the application that service monitor is pointing to so here you see it's pointing to grafana at metrics endpoint and this attribute basically allows service monitor itself to be discovered by prometheus and this logic of how prometheus actually discovers service monitors using this attribute is configured in prometheus itself so i'm going to show you that as well so in order to see the configuration we have to check it in the crd so these are all the crds that prometheus has created and these are basically custom components for prometheus so this one right here so we're gonna check its configuration file like this and in this configuration file here we have the specification all the different configurations and if you scroll all the way down this line here is interesting for us it says service monitor selector match labels release prometheus so basically this says match all the service monitors that have a label release prometheus so this means if you create a service monitor component which doesn't have this label it will not be discovered by prometheus cool so now we understand how these targets got actually created or target endpoints using the service monitor now as a next step we're going to deploy mongodb and we're going to configure everything so that mongodb becomes one of the targets for prometheus to collect its metrics so let's do that so first we're going to create a mongodb deployment and a service so pretty straightforward i have this uh configuration file already created here so it's basically a simple deployment mongodb image and port defined here and we're creating a service for it pretty straightforward i'm also going to provide the yaml files that i use in this video in the repository so you can use them from there so i'm going to apply this in the cluster without exporter and our deployment and service got created so i have mongodb pod getting created here cool so now we have mongodb pod running and this is probably the typical scenario where you have an application deployed in your cluster and at some point you decide that you want to monitor it using prometheus so the way to do that is using a component called exporter so each application like mongodb mysql already kibana whatever application you have is going to have its own exporter right so export is basically a translator between the applications data or application metrics to metrics or data that prometheus will understand so it's basically sitting between the application and prometheus getting the data from the application transforming it into data or metrics that prometheus will be able to collect an exporter itself will expose the slash metrics endpoint so that prometheus will be able to scrape it from there right so it does two things it collects the matrix data from the application and converts it to data understandable by prometheus and the second thing is it exposes these metrics at a slash metrics endpoint for prometheus to be able to scrape them so this is the role of exporter an exporter can be a separate deployment in the cluster independent of the application which is a good thing because when you decide to monitor your application later you don't have to change the deployment configuration file or service or anything you don't have to touch the application you just create an exporter if you don't want to monitor it then you just delete the exporter and that's it so now the question is how do you find an exporter how do you know their exporters available and how do you install it so let's go back to the browser and here i'm gonna type prometheus exporters and on official prometheus page you can actually see the list of all the exporters available for different databases hardware related stuff messaging systems so basically for a lot of different applications there are already exporters that you can use instead of having to create them right and here if you notice in the prometheus operator that we installed there is a node exporter that gets deployed out of the box so this is one of the exporters and as the name says it is translating the metrics of the node of the cluster node in this case minicube into data that prometheus will understand and exposes that matrix data at slash metrics endpoint for prometheus to scrape it so here let's actually look for mongodb there are some of them which have official next to it are from prometheus itself so if i click on that actually end up in a repository of mongodb exporter these exporters are also available as docker images so you can also search them on docker hub actually so if i write here mongodb exporter then i will find a list of a lot of mongodb exporters which are managed by different communities and you should probably go with the one that has been recently updated so for example this one right here so you can actually find if there are any available like this now there are three things or three components that you need to have when you deploy an exporter so first of all it will be the application itself in docker image that the exporter application that will expose the metrics endpoint then you would of course need a service so that prometheus can connect to the exporter so we're going to need a service for that and with that you would have an exporter running in your cluster ready to be scraped however as i mentioned prometheus must know that there is a new application ready to be scraped so we have to tell prometheus hey there's a new endpoint that you need to scrape here and we do that as i mentioned using this component which is called service monitor right so we are gonna need that component as well so we're gonna need to create a service monitor for our mongodb exporter application now we could of course go and create all those three component configuration files ourselves so we can create a deployment service and the service monitor and put together all these attributes or my preferred way of doing it we can search for a helm chart that already has all these configuration files ready and configured so that you can basically just install them with one command so let's go back and check for mongodb exporter helm chart or chart and this is the first one in the search here it says deprecated this is something that happens often with helm charts they get deprecated they're moved a lot of them have been moved to prometheus community health chairs so they're managed by the community so always watch out for the deprecated so that you don't install something that is not maintained anymore so we're going to follow that link and this is basically the list of all the charts managed by prometheus community and here we have the list and here is our mongodb exporter you have one for mysql postgres etc so let's go inside and this is our chart and that's how we're gonna install the exporter in our cluster now there are two things that we need to configure for this chart before we install it right remember if you have watched my helm chart and explanation videos you know that helm charts are basically bundle of all the configuration files you need to deploy that complete application in this case the deployment service and service monitor with default values but if you want to overwrite some value if you want to configure something then you have a possibility to do that using parameters or chart parameters for that specific chart so how do you know which parameters you can override or what are the names of these parameters you can find them either in the documentation sometimes they have a list of those parameters this one doesn't but we can also do that using helm show values that will basically show you the list of all the parameters that this chart accepts so first let's actually add the repository let's clear this has been edited and now i can do hell show values and we need a chart name so helm show values chart name will actually show me all the parameters that i can configure and this is actually a yaml file and i can actually save them into values.yml and open it in the editor so these are all the default values and you can override any one of those so there are two things that we need to override and let's actually get rid of all of this till here and here you see service monitor configuration and we're gonna need to override this additional labels attribute right so these are the two parameters that we need to override for our chart the first one is pretty obvious we need to tell mongodb exporter how to connect to mongodb right so we need to give it a service endpoint so that it can connect to the independently running mongodb so the endpoint is going to be mongodb protocol and mongodb service that's the endpoint and the port right so at this uri mongodb is accessible now the second parameter service monitor additional labels remember i showed you this release prometheus label that all the service monitors in the cluster have right this release prometheus basically is a label that allows prometheus to discover or to automatically find a new service monitor in the cluster and this chart by default doesn't add that release prometheus label to service monitor which kind of makes sense because that label can be different so we have a possibility to add that label to the service monitor component that the chart will create so let's add that label right here so additional labels and i'm gonna say release prometheus so now we have all the parameters we need for this chart so let's go and install it i'm gonna copy the chart name again let's clear this helm install let's call it mongodb exporter and the chart name and of course we want to pass those parameters so i'm going to do minus f values dot yemo so the chart will take the values file as an attribute and it will apply all these parameters that we set here so i'm gonna install it now and let's check we have mongodb exporter and this is the chart version so it's 2.8.1 and our pods or our pod must be running already so this is the part of the exporter let's also check that the service was created here we have exporter service which exposes the metrics port and let's also check that the service monitor was created cube ctl get service monitor and here is our service monitor let's actually check that the label is there and here you see release prometheus cool everything looks good so the first thing that we can do is check the endpoint of the exporter at slash metrics so let's see what data it's collecting so let's print out the services again so this is the service and let's do port forward on that as well service and this is the service port and let's check it here we have the metrics endpoint and at slash metrics we see all these data being collected from mongodb awesome so the exporter is exposing the metrics for prometheus and since we have the service monitor also created with that release prometheus label prometheus must already have discovered our new service monitor in the cluster and it should already be scraping that metrics endpoint of the mongodb exporter so if i go back to the prometheus ui and if i refresh this see we have the mongodb exporter endpoint which was automatically added to the targets without me having to change the configuration file of prometheus and we have the state which is up and configuration file which is much more convenient than having to go and change the configuration file reload or restart the applications etc so what we can also do now is check those metrics data in grafana ui because that's usually the reason why we're collecting the metrics so that we can visualize them so let's go back to the command line and i'm actually going to expose grafana deployment so i'm going to do cube ctl port forward deployment deployment and it's called prometheus grafana and its port is three thousand and it is secured by default credentials you have admin and prom operator is the default password it says in the documentation i'm going to put all this information as well in git repository and we're logged in so if i go for example to manage and if i go to pods here i can see in the default namespace i have mongodb deployment in the drop down so i can see some of its metrics that has been collected and of course you can do some other visualization in grafana from this matrix so this is basically how you can configure metric scraping for any application in your kubernetes cluster so that it can be monitored by prometheus you can apply the same concept for any other application like mysql or some messaging services etc so i hope you learned a lot thank you for watching and see you in the next video

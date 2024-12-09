@@ -1,0 +1,2440 @@
+00:00 - welcome free code campers to a practical
+00:02 - introduction to natural language
+00:03 - processing with tensorflow 2. i am your
+00:05 - host dr phil tabor in 2012 i got my phd
+00:09 - in experimental condensed matter physics
+00:10 - and went to work for intel corporation
+00:12 - as a back-end dry edge process engineer
+00:15 - i left there in 2015 to pursue my own
+00:17 - interests and have been studying
+00:18 - artificial intelligence and deep
+00:19 - learning ever since
+00:20 - if you're unfamiliar with natural
+00:22 - language processing it is the
+00:23 - application of deep neural networks to
+00:25 - text processing it allows us to do
+00:27 - things such as text generation you may
+00:28 - have heard the hubbub in recent months
+00:30 - over the open ai gpt 2
+00:34 - algorithm that allowed them to produce
+00:35 - fake news it also allows us to do things
+00:37 - like sentiment classification as well as
+00:39 - something more mathematical which is
+00:41 - representing strings of characters words
+00:43 - as mathematical constructs that allow us
+00:45 - to determine relationships between those
+00:47 - words but more on that in the videos
+00:50 - it would be most helpful if you have
+00:51 - some background in deep learning if you
+00:53 - know something about deep neural
+00:54 - networks but it's not really required
+00:56 - we're going to walk through everything
+00:57 - in the tutorial so you'll be able to go
+00:59 - from start to finish
+01:01 - without any prior knowledge although of
+01:02 - course it would be helpful
+01:05 - if you'd like to see more deep learning
+01:06 - reinforcement learning and natural
+01:08 - language processing content check me out
+01:10 - here on youtube at machine learning with
+01:11 - phil i hope to see you there and i
+01:13 - really hope you enjoy the video let's
+01:14 - get to it
+01:16 - in this tutorial you are gonna learn how
+01:18 - to do word embeddings with tensorflow
+01:19 - 2.0 if you don't know what that means
+01:21 - don't worry i'm gonna explain what it is
+01:23 - and why it's important as we go along
+01:25 - let's get started
+01:33 - before we begin with our imports a
+01:35 - couple of housekeeping items first of
+01:37 - all i am basically working through the
+01:38 - tensorflow tutorial from their website
+01:40 - so i'm going to link that in the
+01:41 - description so i'm not claiming this
+01:43 - code is my own although i do some
+01:45 - cleaning up at the end to kind of make
+01:46 - it my own but in general it's not really
+01:48 - my code
+01:50 - so we start with our imports as usual
+01:52 - we need i o to handle dumping the word
+01:55 - embeddings to a file so that we can
+01:57 - visualize later
+01:58 - we'll need matplotlibe
+02:01 - to handle plotting we will need
+02:03 - tensorflow as tf and just a word so this
+02:07 - is tensorflow 2.1.0
+02:09 - rsc1 release candidate 1. so this is as
+02:12 - far as i'm aware of the latest build so
+02:14 - tensorflow 2.0 throws some really weird
+02:16 - warnings and 2.1 seems to deal with that
+02:19 - so i've upgraded so if you're running
+02:20 - tensorflow 2.0 and you get funny errors
+02:23 - uh sorry funny warnings but you still
+02:25 - get functional code and learning that is
+02:27 - why you want to update to the newest
+02:29 - version of tensorflow
+02:34 - of course we need kiros to handle pretty
+02:35 - much everything
+02:40 - we also need the layers
+02:44 - for our embedding and dense layers and
+02:46 - we're also going to use the tensorflow
+02:48 - data sets so i'm not going to have you
+02:50 - download your own data set we're going
+02:51 - to use the imdb movie data set for this
+02:55 - particular tutorial
+03:00 - so of course that is an additional
+03:02 - dependency for this tutorial
+03:04 - so
+03:05 - now that we've handled our imports let's
+03:07 - talk a little bit about what
+03:09 - word embeddings are so
+03:11 - how can you represent a word for a
+03:12 - machine and more importantly instead of
+03:14 - a string of characters how can you
+03:15 - represent
+03:16 - a collection of words a bag of words if
+03:18 - you will so you have a number of options
+03:21 - one way is to take the entire set of all
+03:23 - the words that you have in your say
+03:26 - movie reviews you know you just take all
+03:27 - the words and find all the unique words
+03:30 - and that becomes your dictionary and you
+03:32 - can represent that as a one-hot encoding
+03:35 - so if you have let's say ten thousand
+03:36 - words then you would have a vector for
+03:39 - each word with ten thousand elements
+03:41 - which are predominantly zeros except for
+03:43 - the one corresponding to whichever word
+03:44 - it is the problem with this encoding is
+03:47 - that while it does work it is incredibly
+03:49 - inefficient and it because it is sparse
+03:51 - you know the majority of the data is
+03:53 - zero and the only one important bit in
+03:55 - the whole thing so not very efficient
+03:58 - and
+03:58 - another option is to do integer encoding
+04:01 - so you can just rank order the numbers
+04:02 - uh sorry the words you could do it in
+04:04 - alphabetical order the order doesn't
+04:06 - really matter you can just assign a
+04:08 - number to each unique word and then
+04:10 - every time that word appears in a review
+04:12 - you would have that integer in an array
+04:15 - so you end up with a set of variable
+04:16 - length arrays where the length of the
+04:18 - array corresponds to the number of words
+04:20 - in the review and the members of the
+04:21 - array correspond to the words that
+04:23 - appear within that review
+04:25 - now this works this is far more
+04:27 - efficient
+04:28 - but it's still not quite
+04:30 - ideal right so it doesn't tell you
+04:33 - anything about the relationships between
+04:34 - the words so if you think of the word
+04:36 - let's say king
+04:38 - it has a number of connotations right a
+04:39 - king is a man for one so there is some
+04:41 - relationship between a king and a man
+04:43 - a king has power right he has control
+04:45 - over a domain a kingdom so there is also
+04:48 - the connotation of owning land and
+04:49 - having control over that land uh king
+04:51 - may also have a queen so it has some
+04:53 - sort of relationship to a queen as well
+04:55 - i may have a prince a princess you know
+04:56 - all these kinds of different
+04:57 - relationships between words that are not
+04:59 - incorporated into the uh
+05:02 - integer encoding of our dictionary the
+05:05 - reason is that the integer encoding of
+05:06 - our dictionary forms a basis in some
+05:09 - higher dimensional space but all those
+05:11 - vectors are orthogonal so if you take
+05:13 - their dot product they are essentially
+05:15 - at right angles to each other in a
+05:17 - hybrid dimensional space and so their
+05:19 - dot product is zero so there's no
+05:20 - projection of one vector one word onto
+05:23 - another there's no overlap in the
+05:25 - meaning between the words
+05:27 - at least in this higher dimensional
+05:29 - space now word embeddings fix this
+05:31 - problem by keeping the integer encoding
+05:34 - but then doing a transformation to a
+05:36 - totally different space so
+05:38 - we introduce a new space
+05:40 - of a vector of some arbitrary length
+05:43 - it's a hyper parameter of your model
+05:44 - much like the number of neurons in a
+05:46 - dense layer as a hyper parameter of your
+05:47 - model the length of the embedding layer
+05:49 - is a hyperparameter and we'll just say
+05:51 - it's eight so the word king then has
+05:53 - eight floating point elements that
+05:55 - describe its relationship to all the
+05:58 - other vectors in that space
+06:00 - and so what that allows you to do is to
+06:02 - take dot products between two arbitrary
+06:04 - words in your dictionary and you get
+06:06 - non-zero components and so that what
+06:09 - that means in practical terms is that
+06:11 - you get a
+06:13 - sort of semantic relationship between
+06:14 - words that emerges as a consequence of
+06:16 - training your model so the way it works
+06:18 - in practice is we're going to have a
+06:20 - whole bunch of reviews from the imdb
+06:22 - data set and they will have some
+06:24 - classification as a good or bad review
+06:26 - so for instance you know uh
+06:28 - for the star wars last jedi movie i
+06:30 - don't think it's in the in there but you
+06:32 - know my review would be that it was
+06:33 - terrible awful no good totally ruined
+06:35 - luke luke's character
+06:37 - and so you would see
+06:39 - and i'm not alone in that so if you uh
+06:41 - did a huge number of reviews
+06:43 - for the last jedi you would see a strong
+06:46 - correlation of words such as horrible
+06:48 - bad wooden characters mary sue things
+06:51 - like that and so the model would then
+06:55 - take those words run them through the
+06:57 - embedding layer and try to come up with
+06:59 - a prediction for whether or not that is
+07:00 - a good or bad review and match it up to
+07:02 - the training label and then do back
+07:04 - propagation to vary those weights in
+07:06 - that embedding layer so let's say eight
+07:08 - elements
+07:09 - and by training over the data set
+07:11 - multiple times you can refine these
+07:13 - weights such that you are able to
+07:15 - predict whether or not a review is
+07:16 - positive or negative about a particular
+07:18 - movie but also it shows you the
+07:20 - relationship between the words because
+07:21 - the model learns the correlations
+07:22 - between words within reviews that give
+07:24 - it either a positive or negative context
+07:27 - so that is word embeddings in a nutshell
+07:30 - and we're going to go ahead and get
+07:31 - started coding that so the first thing
+07:33 - we're going to have is
+07:35 - a
+07:36 - an embedding layer
+07:39 - and this is just going to be for
+07:40 - illustration purposes
+07:41 - and that'll be layers dot embedding
+07:44 - and let's say there's a thousand and
+07:47 - five elements so we'll say result equals
+07:49 - embedding
+07:51 - layer
+07:52 - tf constant
+07:54 - one two
+07:56 - three
+07:57 - so then let's print the result
+07:59 - uh dot numpy
+08:02 - okay so let's head to the terminal and
+08:03 - execute this and see precisely what we
+08:05 - get actually let's do this to print
+08:07 - result dot
+08:08 - numpy.shape
+08:12 - i think that should work let's see
+08:15 - what we get in the terminal and let's
+08:16 - head to the terminal now
+08:18 - all right let's give it a try
+08:26 - okay so what's important here is you see
+08:30 - that you get an array of three elements
+08:34 - right because we did the tf constant of
+08:36 - one two and three and you see we have
+08:38 - five elements because we have broken the
+08:40 - integers into some components in that
+08:44 - five
+08:45 - element space
+08:46 - okay so and it has shape three by five
+08:48 - which you would expect because you're
+08:49 - passing on three elements and each of
+08:51 - these three elements these three
+08:52 - integers correspond to a word
+08:54 - of an embedding layer of five elements
+08:57 - okay that's relatively clear let's go
+08:59 - back to the
+09:00 - code editor and see what else we can
+09:02 - build with this
+09:04 - okay so let's go ahead and just kind of
+09:07 - comment out all this stuff because we
+09:09 - don't need it anymore so now let's get
+09:11 - to the business of actually loading our
+09:12 - data set and doing interesting things
+09:14 - with it so
+09:15 - we want to use the data set load
+09:18 - function so we'll say train
+09:20 - data test data
+09:23 - and some info
+09:25 - tfts.load
+09:26 - imdb reviews express
+09:29 - subwords 8 okay
+09:32 - and then we will define a split
+09:35 - and that is tfds.split.train
+09:39 - tfts.split.test
+09:42 - and we will have a couple other
+09:44 - parameters with info equals true
+09:48 - that incorporates information about the
+09:50 - um about the data sets and as supervised
+09:56 - equals true so as supervised tells the
+09:59 - data set loader that we want to get back
+10:02 - information in the form of data and
+10:04 - label as a tuple so we have the labels
+10:06 - for training of our data
+10:09 - so now we're going to need an encoder
+10:13 - so we'll say info.features
+10:16 - text dot encoder
+10:19 - and so let's just um find out what words
+10:22 - we have in our dictionary from this
+10:23 - we'll say print
+10:25 - encoder sub words
+10:27 - first 20 elements
+10:30 - save that and head back to the terminal
+10:31 - and print it out and see what we can see
+10:35 - so let's run that again
+10:42 - and you it's hard to see let me
+10:45 - move my face over for a moment and you
+10:48 - can see that we get a list of words the
+10:51 - underscore so the underscore corresponds
+10:53 - to space
+10:55 - you get commas periods a underscore and
+10:57 - underscore of so you have a whole bunch
+10:59 - of words with underscores that indicate
+11:01 - that they are spaces okay so this is
+11:04 - kind of the makings of a dictionary so
+11:07 - let's head back to the
+11:09 - code editor and continue building on
+11:11 - this
+11:12 - so we no longer need that print
+11:14 - statement
+11:16 - now the next problem we have to deal
+11:17 - with is the fact that these reviews are
+11:19 - all different lengths right so
+11:21 - we don't have an identical length for
+11:23 - each of the reviews and so when we load
+11:25 - up elements
+11:27 - into a matrix let's say they're going to
+11:29 - have different lengths and that is kind
+11:30 - of problematic so the way we deal with
+11:32 - that is by adding padding so we find the
+11:34 - length of the
+11:35 - longest review and then for every review
+11:38 - that is short in that we append a bunch
+11:39 - of zeros to the end uh in our bag of
+11:42 - words so a list of words you know the
+11:43 - list of integers we will append a bunch
+11:45 - of zeros at the end so zero isn't a word
+11:48 - uh it doesn't correspond to anything and
+11:49 - the word start with one the
+11:52 - rank ordinal numbers start with one and
+11:54 - so we insert a zero because it doesn't
+11:56 - correspond to anything it won't hurt the
+11:58 - training of our model so we need
+12:00 - something called padded shapes
+12:03 - and that has this shape so batch size
+12:06 - and an empty list an empty tuple there
+12:08 - so now that we have our padded shapes
+12:11 - we're ready to go ahead and get our
+12:12 - training and test batches so let's do
+12:14 - that
+12:21 - and since we're a good data scientist we
+12:22 - want to do a shuffle
+12:26 - we're going to use a batch size of 10
+12:31 - and a padded shapes
+12:33 - specified by what we just defined let's
+12:36 - clean that up and let's
+12:39 - copy because the train the test batches
+12:42 - are pretty much identical except it's
+12:44 - testdata.shuffle
+12:46 - and it's the same size so we don't have
+12:48 - to do any changes there
+12:50 - scroll down so you can see okay so that
+12:54 - gives us our data so what we need next
+12:56 - after the data is an actual model so
+12:58 - let's go ahead and define a model
+13:01 - so in
+13:02 - as is typical for keras
+13:04 - it is a sequential model and that takes
+13:06 - a list of layers
+13:10 - so the first layer is an embedding layer
+13:13 - and that takes
+13:14 - encoder.vocab size now this is you know
+13:17 - given to us
+13:18 - up here by the encoder object
+13:21 - that's given by the information from our
+13:25 - data set
+13:26 - and we have some vocabulary size so
+13:28 - there's ten thousand words vocabulary
+13:29 - size is vocab size it's just the size of
+13:32 - our dictionary and we want to define an
+13:35 - embedding dim
+13:38 - so that's the number of
+13:41 - dimensions for our embedding layer so
+13:43 - we'll call it something like 16 to start
+13:46 - so let's add another layer
+13:50 - global
+13:52 - gobble global
+13:55 - average pooling
+13:57 - 1d
+13:58 - and then we'll need a
+14:00 - finally a dense layer
+14:02 - one output
+14:03 - activation equals sigmoid so
+14:06 - if this seems mysterious what this is
+14:09 - is the probability that a mapping of
+14:13 - sorry this layer is the probability that
+14:15 - the review is positive so it's a sigmoid
+14:19 - go ahead and get rid of that and now we
+14:21 - want to compile our model
+14:26 - with the atom optimizer a
+14:29 - binary
+14:30 - cross entropy loss
+14:34 - with
+14:36 - accuracy metrics
+14:38 - not meterics metrics
+14:42 - equals
+14:44 - accuracy
+14:46 - okay that's our model
+14:48 - and that is all we need for that so now
+14:52 - we are ready to think about training it
+14:54 - so let's go ahead and do that next
+14:57 - so what we want to do is train and dump
+15:00 - the
+15:01 - history of our training in an object
+15:02 - called that we're going to call history
+15:05 - model.fit
+15:06 - we're going to pass train batches
+15:09 - 10 epochs
+15:10 - and we're going to need validation data
+15:13 - and that'll be test batches
+15:16 - and we'll use something like
+15:18 - 20 validation steps
+15:21 - okay so let's
+15:22 - scroll down a little bit so you can see
+15:24 - it first of all
+15:25 - and
+15:26 - then we're going to think about
+15:28 - once it's done let's go ahead and plot
+15:30 - it so let's may as well do that now so
+15:32 - let's handle that
+15:33 - so
+15:34 - we want to convert our history to a
+15:36 - dictionary
+15:38 - and that's history.history
+15:42 - and we want to get the accuracy
+15:46 - by taking the accuracy key and we want
+15:49 - the validation accuracy
+15:53 - uh using correct syntax of course
+15:57 - val accuracy
+15:59 - for validation accuracy
+16:01 - and the number of epochs is just range
+16:04 - one two line of accuracy
+16:07 - plus one
+16:10 - so then we want to do a plot
+16:12 - big size nice and large twelve by nine
+16:17 - uh we want to plot
+16:19 - the epochs
+16:21 - versus the accuracy
+16:23 - b0 label equals
+16:25 - training accuracy
+16:28 - we want to plot the
+16:30 - validation accuracy
+16:32 - using just a blue line not blue o's or
+16:36 - dots blue dot sorry and label equals
+16:38 - validation
+16:40 - accuracy
+16:42 - uh
+16:44 - plot.x label
+16:46 - epochs
+16:49 - plot dot y label
+16:52 - accuracy
+16:54 - and let's go ahead and add a title while
+16:56 - we're at it
+17:01 - trading and validation accuracy
+17:04 - scroll down a little bit
+17:06 - we will include a legend
+17:11 - having an extraordinarily difficult time
+17:13 - typing tonight location equals lower
+17:17 - right
+17:18 - and a y limit of zero point five and one
+17:22 - that should be a tuple excuse me
+17:26 - and plot dot show all right so let's go
+17:29 - ahead and head to the terminal and run
+17:30 - this and see what the plot looks like
+17:32 - and we are back let me move
+17:35 - my ugly mug over so we can see a little
+17:38 - bit more and let us run the software and
+17:41 - see what we get
+17:43 - okay so it has started training and it
+17:46 - takes around 10 to 11 seconds per epoch
+17:48 - so i'm just going to sit here and
+17:50 - twiddle my thumbs for a minute and fast
+17:51 - forward the video while we wait
+17:55 - so of course once it finished running i
+17:57 - realize i have a typo and that is
+18:01 - typical so in line 46 it is p it is i
+18:05 - spelled out plot instead of plt but
+18:07 - that's all right let's take a look at
+18:09 - the data we get in the terminal anyway
+18:11 - so you can see that the validation
+18:14 - accuracy is around 92.5
+18:16 - pretty good and the
+18:18 - training accuracy is around 93.82 so a
+18:20 - little bit of overtraining and i've run
+18:22 - this a bunch of times
+18:24 - and you tend to get a little bit more
+18:25 - over training i'm kind of surprised that
+18:26 - this final
+18:28 - now that i'm running over youtube it is
+18:30 - actually a little bit less overtraining
+18:32 - uh but either way
+18:34 - there are some evidence over training
+18:35 - but a 90 accuracy for such a simple
+18:37 - model isn't entirely hateful so i'm
+18:40 - going to go ahead and head back and
+18:41 - correct that typo and then run it again
+18:44 - and then show you the plot
+18:46 - so it is here in line 46
+18:49 - right there and just make sure that
+18:51 - nothing else looks wonky
+18:54 - and i believe it is all good there
+18:56 - looking at my cheat sheet uh everything
+18:58 - looks fine okay let's go back to the
+19:00 - terminal and try it again
+19:03 - all right once more
+19:10 - all right so it has finished and you can
+19:12 - see that this time the validation
+19:14 - accuracy was around 89.5 percent whereas
+19:17 - the training accuracy was 93.85 so it is
+19:20 - a little bit over trainee in this
+19:22 - particular run and there is significant
+19:24 - run to run variation as you might expect
+19:27 - so let's take a look at the plot
+19:30 - all right so i've stuck my ugly mug
+19:32 - right here in the middle so you can see
+19:34 - that the training accuracy goes up over
+19:37 - time as we would expect and the
+19:39 - validation accuracy generally does that
+19:40 - but kind of tops out about halfway
+19:43 - through the number of epochs so this is
+19:45 - clearly working and this is actually
+19:47 - pretty cool with such a simple model we
+19:49 - can get some decent uh review or
+19:51 - sentiment as it were classification but
+19:53 - we can do one more neat thing and that
+19:55 - is to actually visualize the
+19:57 - relationships between the words that are
+19:58 - embedding learns so let's head back to
+20:01 - the code editor and then let's write
+20:03 - some code to tackle that task
+20:06 - okay so
+20:08 - before we do that you know i want to
+20:10 - clean up the code first let's go ahead
+20:12 - and do that so
+20:14 - i will leave in all that commented stuff
+20:16 - but let's define a few functions
+20:18 - we'll need a function to get our data
+20:22 - we'll need a function to get our model
+20:27 - and we'll need a function to plot data
+20:32 - and we'll need a function to get our
+20:34 - embeddings we'll say retrieve
+20:38 - embeddings
+20:41 - and i'll fill in the parameters for
+20:42 - those as we go along so
+20:45 - let's take this stuff from our
+20:48 - get our
+20:50 - data
+20:52 - cut that
+20:55 - paste it
+20:57 - and of course use proper indentation
+20:59 - because python is a little bit
+21:02 - particular about that
+21:04 - okay make sure everything lines up
+21:06 - nicely
+21:07 - and then of course we have to return the
+21:10 - stuff that we are interested in so we
+21:11 - want to return
+21:12 - train data
+21:14 - test data and in fact that's not
+21:16 - actually what we want to do i take it
+21:17 - back let's come down here
+21:20 - and
+21:21 - uh we want our uh sorry
+21:26 - we don't actually want to return our
+21:27 - data we want to turn our batches so
+21:29 - return
+21:30 - train batches test batches
+21:34 - and we'll also need our encoder for the
+21:36 - visualizing the relationship
+21:38 - relationships between words
+21:40 - so let's return that now
+21:42 - okay now uh let's handle the
+21:47 - function for the get model next so let's
+21:49 - come down here
+21:51 - and
+21:52 - grab this
+21:55 - actually let's yeah grab all of it
+21:58 - and
+22:01 - come here
+22:03 - and
+22:04 - do that and let's make embedding dim a
+22:07 - parameter of our model
+22:10 - and you notice in our model we need the
+22:12 - encoder so we also have to pass in the
+22:14 - encoder
+22:16 - as well as an embedding dim and then at
+22:19 - the bottom of the function we want to
+22:20 - return that model pretty straightforward
+22:23 - so then let's handle the plot data next
+22:27 - so we have
+22:29 - all of this
+22:32 - grab that
+22:36 - and
+22:37 - indent here
+22:38 - so we're going to need a history
+22:41 - and
+22:42 - uh
+22:44 - that looks like all we need because we
+22:47 - define epochs accuracy and validation
+22:50 - accuracy
+22:51 - okay so it looks like all we need in the
+22:53 - plot data function
+22:55 - so then we have to write our retrieve
+22:57 - embeddings function but first let's
+22:58 - handle
+22:59 - all the other stuff we'll say train
+23:01 - batches
+23:03 - test batches and encoder equals get
+23:07 - data in fact let's rename that to get
+23:09 - batch data to be more specific
+23:12 - this is kind of being pedantic but you
+23:14 - always want to be
+23:15 - as
+23:17 - descriptive as possible with your naming
+23:19 - conventions so that way people can read
+23:21 - the code and know precisely what it does
+23:23 - without having to you know make any
+23:25 - guesses so if i just say get data
+23:27 - it isn't necessarily clear that i'm
+23:28 - getting batches out of that data you
+23:30 - know i could just be getting single
+23:31 - instances it could return a generator
+23:34 - it is a little bit ambiguous so
+23:36 - changing the function name to get batch
+23:38 - data is the appropriate thing to do
+23:41 - so then we'll say model equals get model
+23:44 - and we pass it the encoder
+23:46 - and then the
+23:48 - history will work as intended
+23:51 - and then we call our function to plot
+23:52 - the history
+23:57 - and that should work as intended as well
+23:59 - and now we are ready to tackle the
+24:01 - retrieve embeddings function so that is
+24:04 - relatively straightforward so what we
+24:06 - want to do is we want to pass in the
+24:07 - model and the encoder
+24:10 - and we don't want to pass
+24:12 - what we want to do is we want to
+24:15 - the purpose of this function is to
+24:18 - take our encoder and dump it to a tsv
+24:21 - file that we can load into a visualizer
+24:24 - in the browser to visualize the
+24:26 - principle component analysis of our word
+24:30 - encodings
+24:31 - so we need files to write to and we need
+24:34 - to enumerate over the sub words in our
+24:37 - encoder and write the metadata as well
+24:40 - as the vectors
+24:42 - for our
+24:43 - encodings
+24:44 - so outvectors
+24:47 - io.open
+24:49 - vex
+24:50 - dot tsv
+24:52 - and in write mode and encoding of utf-8
+24:56 - we need out
+24:58 - metadata and that's similar meta.tsv
+25:03 - write encoding equals
+25:05 - utf-8 very similar
+25:07 - now we need to iterate over our
+25:10 - encoder sub words and get the vectors
+25:14 - out of that to dump to our vector file
+25:16 - as well as the metadata
+25:27 - weight sub num plus one
+25:29 - and so we have the plus one here because
+25:31 - remember that uh we
+25:33 - start from one because zero is for our
+25:36 - uh
+25:37 - padding right zero doesn't correspond to
+25:39 - a word so the words start from one and
+25:41 - go on
+25:47 - so we want to write the word plus a new
+25:50 - line
+25:51 - and for the vectors
+25:54 - i'm going to write a tab delimited
+25:58 - string
+26:01 - x in vector
+26:03 - and plus a new line character at the end
+26:06 - and then we want to close our files
+26:14 - okay so then we just scroll down and
+26:16 - call our function
+26:18 - retrieve
+26:20 - embeddings
+26:22 - model and encoder
+26:25 - okay so assuming i haven't made any
+26:27 - typos this should actually work so i'm
+26:29 - going to go ahead and head back to the
+26:30 - terminal and try it again
+26:34 - all right moment of truth
+26:41 - so it is training so i didn't make any
+26:43 - mistakes up until that point uh one
+26:45 - second we'll see if it actually makes it
+26:47 - through the plot
+26:49 - oh but really quick so if you run this
+26:51 - with tensorflow 2 let me move my face
+26:55 - out of the way if you run this with
+26:56 - tensorflow 2 you will get this out of
+26:59 - range end of sequence error and if you
+27:02 - do google if you do a google search for
+27:04 - that you will see
+27:05 - a thread about it in the github and
+27:08 - basically someone says that it is fixed
+27:11 - in 2.1.0.rc1
+27:13 - the version of tensorflow which i am
+27:15 - running however i still get the warning
+27:18 - on the first run in version
+27:21 - 2.0.0 i get the warning on every epoch
+27:24 - so it kind of clutters up the terminal
+27:26 - output but it still runs nonetheless and
+27:29 - gets comparable accuracy so it doesn't
+27:30 - seem to affect the model performance but
+27:33 - it you know makes for an ugly youtube
+27:34 - video and gives me an easy feeling so
+27:37 - i went ahead and updated to the latest
+27:39 - release candidate 2.1.0
+27:41 - and you can see that it works relatively
+27:43 - well so one second and we'll see the
+27:45 - plot again
+27:49 - and of course i made a mistake again
+27:52 - it's plot history not uh it's plot data
+27:54 - not plot history let's fix that
+27:57 - all right uh
+28:00 - plot let's change this to plot history
+28:02 - because that is more precise
+28:05 - and we will try it again let's do it
+28:17 - all right so it has finished and you can
+28:19 - see that the story is much the same a
+28:21 - little bit of overtraining on the
+28:23 - training data let's take a look at the
+28:24 - plot
+28:25 - and the plot is totally consistent with
+28:27 - what we got the last time you know an
+28:28 - increasing training accuracy and a
+28:31 - leveling off of validation accuracy so
+28:33 - let's go ahead
+28:34 - and check out how these word embeddings
+28:36 - look in the browser
+28:39 - but first
+28:40 - of course i made a mistake so weights
+28:44 - are not defined and that is because i
+28:46 - didn't define them so let's go back to
+28:48 - the code editor and do that
+28:51 - all right so what we want to do is this
+28:54 - weights equal model dot layers subzero
+28:57 - dot get weights
+28:59 - so this will give us the actual weights
+29:01 - from our model which is the uh the
+29:04 - zeroth layer is the embedding layer and
+29:06 - we want to get the weights and the
+29:07 - zeroth element of that so
+29:09 - i'm going to go ahead and head back the
+29:11 - terminal and i'm going to actually get
+29:13 - rid of the plot here
+29:14 - because we know that works and i'm sick
+29:16 - of seeing it so we will just do the
+29:20 - model fitting and retrieve the embedding
+29:22 - so let's do that now
+29:24 - it's one of the downsides of doing code
+29:26 - live is i make all kinds of silly
+29:29 - mistakes while talking and typing but
+29:32 - that's life
+29:33 - see in a minute
+29:35 - all right so that finished running let's
+29:38 - head to the browser and take a look at
+29:40 - what it looks like
+29:41 - okay so
+29:43 - can i zoom in i can a little bit
+29:46 - so
+29:47 - let's take a look at this so to get this
+29:49 - you go to
+29:50 - load over here on the left side you
+29:52 - can't really see my cursor but you go to
+29:54 - load on the left side
+29:56 - load your
+29:57 - vector and metadata files
+30:00 - and then you want to click on this
+30:02 - 3d labels mode here and let's take a
+30:04 - look at this so
+30:06 - you see right here on the left side
+30:07 - annexed seated and ottoman so these
+30:10 - would make sense to be you know pretty
+30:12 - close together because they you know
+30:14 - kind of would you would expect those
+30:16 - three words to be together right annexed
+30:17 - and seated if you annex something
+30:19 - someone else has to seed it it makes
+30:20 - sense
+30:21 - let's kind of move around a little bit
+30:25 - see what else we can find
+30:29 - okay so this looks like a good one we
+30:31 - see
+30:32 - waterways navigable humid rainfall
+30:35 - petroleum earthquake so you can see
+30:37 - there are some pretty good
+30:39 - relationships here between the words
+30:41 - that all makes sense uh if you scroll
+30:44 - over here what's interesting is you see
+30:46 - estonia
+30:47 - herzegovina slovakia sorry for
+30:49 - mispronouncing that cyprus you see a
+30:51 - bunch of country names so it seems to
+30:53 - learn the names
+30:55 - and it seems to learn that there are
+30:56 - relationships between different
+30:57 - geographic regions in this case
+30:59 - countries
+31:00 - there we see seated and annexed on
+31:03 - ottoman again
+31:04 - and you can even see concord in here
+31:06 - next to annexed and seated
+31:08 - deposed arc bishop bishop assassinated
+31:12 - oh you can't see that let me move my
+31:13 - face
+31:19 - there just moved me over so now you can
+31:21 - see surrendered
+31:22 - conquered spain right spain was
+31:24 - conquered for a time by the moors
+31:27 - archbishop deposed surrendered
+31:29 - assassinated invaded you can see all
+31:31 - kinds of cool stuff here so this is what
+31:33 - it looks like i've seen other words like
+31:35 - beautiful wonderful together
+31:38 - other stuff so if you play around with
+31:40 - this you'll see
+31:41 - all sorts of
+31:43 - uh interesting relationships between
+31:45 - words and this is just the
+31:47 - visual representation of what the word
+31:51 - embeddings look like in a
+31:53 - reduced dimensional representation of
+31:55 - its higher dimensional space
+31:58 - so i hope that has been helpful i
+31:59 - thought this was a really cool project
+32:01 - just a few dozen lines of code and you
+32:03 - get uh to something that is actually a
+32:04 - really neat uh kind of a neat result
+32:07 - where you have um a higher dimensional
+32:09 - space that gives you mathematic
+32:11 - relationships between words and it does
+32:13 - a pretty good job of learning the
+32:14 - relationships between those words now
+32:16 - what's interesting is i wonder how well
+32:18 - this could be generalized to other stuff
+32:19 - so if we feed it you know say
+32:22 - twitter
+32:24 - twitter tweets could we get the
+32:26 - sentiment out of that i'm not entirely
+32:27 - sure that's something we would have to
+32:28 - play around with uh it seems like he
+32:30 - would be able to so long as there is
+32:32 - significant overlap in the dictionaries
+32:34 - between the words that we have for the
+32:36 - imdb reviews and the dictionary of words
+32:39 - from the twitter feeds that we scrape
+32:41 - but that would be an interesting
+32:42 - application of this to kind of find
+32:43 - toxic twitter comments uh and the like
+32:46 - but i hope this was helpful just a
+32:48 - reminder my new course is on sale for
+32:50 - 9.99 for the next five days there will
+32:54 - be one more sale last several days of
+32:56 - the year but there will be a gap several
+32:58 - days in between
+32:59 - this channel totally supported by ad
+33:02 - revenue as well as my course sales so if
+33:03 - you want to support the cause go ahead
+33:05 - and click the link in the pinned comment
+33:07 - slash description and if not hey go
+33:09 - ahead and share this because that is
+33:10 - totally free and i like that just as
+33:13 - well
+33:14 - leave a comment down below hit the
+33:16 - subscribe button if you haven't already
+33:17 - hit the bell icon to get notified when i
+33:19 - release new content and i will see you
+33:22 - in the next video
+33:25 - in this tutorial you are going to learn
+33:27 - how to do sentiment classification with
+33:29 - tensorflow 2.0 let's get started
+33:38 - before we begin a couple of notes first
+33:40 - of all it would be very helpful if you
+33:42 - have already seen my previous video on
+33:44 - doing word embeddings in tensorflow 2.0
+33:47 - because we're going to be borrowing
+33:48 - heavily from the concepts i presented in
+33:50 - that video
+33:51 - if not it's not a huge deal
+33:53 - i'll show you everything we need to do
+33:54 - as we go along it's just it'll make more
+33:56 - sense with that sort of background
+33:58 - second point is that i am working
+34:00 - through the official tensorflow
+34:01 - tutorials this isn't my code i did have
+34:04 - to fix a couple of bugs in the code so i
+34:06 - guess that makes it mine to some extent
+34:08 - but unless i did not write this so i'm
+34:10 - just presenting it for your consumption
+34:12 - in video format all that said let's go
+34:14 - ahead and get to coding our sentiment
+34:15 - analysis software
+34:18 - so as usual we begin with our imports
+34:25 - we will need the tensorflow datasets to
+34:27 - handle the
+34:28 - data from the imdb library
+34:34 - of course you need tensorflow to handle
+34:36 - tensorflow type operations
+34:38 - so the first thing we want to do is to
+34:40 - load our data set and get our training
+34:42 - and testing data from that as well as
+34:44 - our encoder which i explained in the
+34:46 - previous video so let's start there
+34:49 - data set and info
+34:51 - is load of the imdb reviews
+34:55 - uh help if i spelled it correctly
+34:58 - subwords 8k
+35:00 - now just a word these are the reviews uh
+35:04 - a bunch of reviews from the imdb data
+35:07 - set
+35:08 - so you have a review with an associated
+35:11 - classification of either positive or
+35:13 - negative
+35:15 - with info equals true
+35:18 - as supervised equals true
+35:22 - let's
+35:23 - tab that over
+35:26 - next we will need our training and
+35:27 - testing data sets
+35:33 - set equals
+35:36 - data set subtrain and data set sub
+35:41 - test
+35:42 - and finally we need our encoder
+35:49 - dot encoder good grief i can type cannot
+35:52 - type tonight at all so
+35:54 - if you don't know what an encoder is the
+35:56 - basic idea is that it is a
+36:00 - sort of reduced dimensional
+36:01 - representation of a set of words so you
+36:03 - take a word and it
+36:06 - associates that with an n-dimensional
+36:07 - vector
+36:09 - that has components that will be
+36:13 - non-perpendicular to other words in your
+36:15 - dictionary so what that means is that
+36:16 - you can express words in terms of each
+36:18 - other whereas if you set each word in
+36:20 - your dictionary to be a basis vector
+36:21 - they're orthogonal and so there's no
+36:23 - relationship between something like king
+36:24 - and queen for instance
+36:27 - whereas
+36:28 - with the auto encoder representation
+36:30 - uh
+36:31 - whereas with the sorry the word
+36:34 - embedding representation it is the
+36:37 - it has a non-zero component of one
+36:39 - vector along another so you have some
+36:41 - relationship between words that allows
+36:42 - you to parse meaning of your
+36:45 - string of text
+36:47 - and i give a better explanation in my
+36:48 - previous video so check that out
+36:51 - for your own education
+36:53 - so we're gonna need a couple of global
+36:55 - variables above our size
+36:59 - 10 000 a batch size for training
+37:02 - and some padded shapes and this is for
+37:05 - padding so when you have a string of
+37:08 - words the string of words uh could be
+37:11 - different lengths so you have to pad to
+37:13 - the length of the longest
+37:15 - review basically
+37:17 - and that is batch size by empty
+37:23 - so the next thing we'll need is our
+37:25 - actual data set we're going to shuffle
+37:27 - it because we're a good data scientist
+37:42 - and we're going to want to get a padded
+37:44 - batch from that
+37:47 - in the shape defined with the variable
+37:50 - above
+37:51 - and the test data set is very similar
+37:55 - good grief so i
+37:57 - i'm using
+37:58 - vim
+37:59 - for my new text editor part of my new
+38:01 - year's resolution
+38:03 - and um
+38:05 - let's yank that and it is a little bit
+38:07 - tricky if you've never used it before
+38:09 - i'm still getting used to it
+38:11 - there we go as you can see then we have
+38:14 - to go back into insert mode
+38:16 - test data set
+38:18 - test data set
+38:20 - dot padded batch
+38:25 - and padded shapes all right that is good
+38:28 - uh next thing we need is our model so
+38:31 - the model is going to be a sequential
+38:33 - keras model with a bi-directional layer
+38:36 - as well as a couple of dense layers
+38:39 - we're using a binary cross entropy loss
+38:41 - with an atom optimizer learning rate of
+38:43 - 10 by 1 by 10 to the minus 4.
+38:50 - and then we will say tf keras dot layers
+38:54 - embedding
+38:56 - encoder.vocab
+38:59 - size 64.
+39:04 - tf keras
+39:07 - layers
+39:08 - bi-directional
+39:11 - tf keras.layers.l
+39:14 - 64.
+39:17 - two parentheses
+39:21 - dense
+39:22 - and that is 64.
+39:24 - with
+39:25 - a
+39:26 - rally value activation
+39:30 - if i could ever learn to type properly
+39:33 - that would be very helpful
+39:37 - another dense layer with an output and
+39:39 - this output
+39:41 - is going to get a sigmoid
+39:43 - activation
+39:44 - and what this represents is the
+39:47 - probability of the review being either
+39:49 - positive or negative so
+39:53 - the final output of the model is going
+39:54 - to be a floating point number between
+39:56 - zero and one and it will be the
+39:58 - probability of it being a positive
+39:59 - review and we're going to pass in a
+40:01 - couple of dummy uh reviews uh just some
+40:04 - kind of softball kind of stuff to see
+40:06 - how well it does but before that we have
+40:08 - to compile our model
+40:11 - and
+40:12 - with a binary
+40:14 - cross entropy loss
+40:19 - optimizer equals tf keras
+40:23 - optimizers
+40:26 - atom the learning rate 1 by 10 to the
+40:28 - minus 4
+40:30 - and we want metrics
+40:32 - accuracy
+40:36 - and then we want the uh history
+40:38 - which is just the model fit and this is
+40:40 - really for uh plotting purposes but i'm
+40:42 - not gonna do any plotting you get the
+40:44 - idea that the you know the accuracy goes
+40:46 - up over the time and
+40:48 - and the uh loss goes down over time so
+40:50 - no real need to plot that
+40:53 - train
+40:54 - data set
+40:56 - we're just gonna do three epochs you can
+40:58 - do more but for the purpose of the video
+40:59 - i'm just gonna do three
+41:01 - actually let's do five
+41:03 - because i'll do five for the next model
+41:05 - we're going to do
+41:08 - validation data equals test data set
+41:12 - and validation steps
+41:14 - 30.
+41:19 - so next we need to
+41:21 - consider a couple of functions
+41:23 - so
+41:24 - one of them is to pad the
+41:27 - uh the vectors that we pass in to
+41:29 - whatever size and the second is to
+41:31 - actually generate a prediction so let's
+41:33 - define those functions
+41:42 - and just to be clear this is for the
+41:44 - sample text we're going to pass in
+41:45 - because remember the reviews all are all
+41:48 - of varying lengths and so we have to uh
+41:51 - for purposes of the
+41:53 - i guess you can say continuity of inputs
+41:54 - to your model and not a really technical
+41:56 - phrase but so that way you pass in the
+41:58 - same length of vector to you know your
+42:00 - model for the training we have to deal
+42:02 - with the problem of the same problem
+42:04 - with the
+42:06 - sample text that we're going to pass in
+42:07 - because we don't have an automated
+42:08 - tensorflow function to handle it for us
+42:14 - and we're going to pad it with zeros
+42:15 - because those don't have any meaning in
+42:16 - our dictionary
+42:25 - and we want to return the vector after
+42:27 - extending it so if you're not familiar
+42:29 - with this idiom in python uh you can
+42:32 - multiply a quantity like say a string by
+42:35 - a number to
+42:36 - basically multiply that string so if you
+42:38 - had
+42:39 - the letter a multiplied by 10 it would
+42:42 - give you 10 a's and you can do that with
+42:44 - you know list elements as well pretty
+42:46 - cool stuff a neat little feature of
+42:48 - python a little known i think
+42:50 - but that's what we're doing here so
+42:51 - we're going to uh
+42:53 - going to pad the zeros to the size of
+42:55 - whatever
+42:57 - whatever size we want minus whatever the
+42:59 - length of our vector is and extend that
+43:02 - vector with those zeros
+43:04 - next we need a sample predict function
+43:08 - and the reason we can't just do
+43:10 - model.predict is because we have the
+43:13 - the issue of dealing with the padding
+43:20 - text
+43:22 - equals
+43:24 - encoder.encode and remember the encoder
+43:27 - is what goes from the
+43:29 - uh
+43:30 - string representation to the higher
+43:32 - dimensional representation that allows
+43:33 - you to make correlations between words
+43:37 - so if you want to pad it then
+43:42 - pad to size
+43:46 - encoded
+43:47 - sample
+43:49 - thread
+43:50 - text
+43:51 - 64. that's our
+43:53 - batch size or our max length sorry
+43:56 - and then encoded sample thread text is
+44:00 - tf cast
+44:07 - flip 32
+44:08 - and predictions model dot predict
+44:12 - if that expand dimensions
+44:14 - encoded sample thread text
+44:18 - zero batch dimension
+44:20 - return predictions
+44:23 - all right so
+44:25 - now we have a model that we have trained
+44:28 - once you run the code of course uh now
+44:30 - let's come up with a couple of dummy
+44:32 - simple very basic uh reviews to see how
+44:35 - it scores them so we'll say sample text
+44:38 - equals
+44:40 - uh this movie was awesome
+44:43 - the acting was incredible
+44:47 - uh highly
+44:51 - recommend
+44:57 - then
+44:58 - we're going to spell sample text
+45:00 - correctly of course
+45:01 - and then we're going to come up with our
+45:02 - predictions equal sample
+45:05 - predict
+45:06 - sample text
+45:08 - pad equals
+45:11 - true and we're going to multiply that by
+45:12 - 100 so we get it as a percentage and can
+45:16 - i i can't quite scroll down that is a
+45:19 - feature not a bug i am sure
+45:21 - uh you can write in whatever positive
+45:24 - review you want so then we'll say
+45:27 - print
+45:28 - uh
+45:29 - probability
+45:30 - this is a positive review
+45:35 - predictions
+45:37 - and i haven't done this before so when i
+45:39 - coded this up the first time
+45:41 - i have it
+45:43 - executing twice once with pad equals
+45:45 - false once with pad equals true to see
+45:47 - the
+45:48 - delta in the predictions
+45:50 - and surprise surprise is more accurate
+45:52 - when you
+45:54 - give it a padded
+45:56 - review
+45:57 - but in this case i'm going to change it
+45:59 - up on the fly and do a different set of
+46:01 - sample text
+46:02 - and give it a negative review and see
+46:04 - how it does
+46:05 - this movie was so so i don't know what
+46:08 - this is going to do that's kind of a you
+46:10 - know vernacular i don't know if that was
+46:11 - in the database so we'll see
+46:13 - the acting
+46:15 - was mediocre
+46:17 - kind of recommend
+46:21 - and predictions
+46:23 - sample predict
+46:25 - sample text pad equals true
+46:28 - times 100
+46:30 - and we can
+46:31 - um
+46:35 - yank the line
+46:38 - and paste it all right
+46:42 - okay so we're going to go ahead and save
+46:44 - this and go back to the terminal and
+46:45 - execute it and see how it does and then
+46:47 - we're going to come back and write a
+46:49 - slightly more complicated model to see
+46:51 - how well that does to see if you know
+46:52 - adding complexity to the model improves
+46:54 - the accuracy of our predictions
+46:56 - so let us write quit and if you've never
+46:58 - used vim
+46:59 - uh you have to press colon wq
+47:02 - sorry when you're not in insert mode uh
+47:05 - right quit to get out
+47:08 - and then we're gonna go to the terminal
+47:09 - and see how well it does
+47:12 - all right so here we are in the terminal
+47:15 - let's give it a shot and see how many
+47:16 - typos i made
+47:24 - ooh
+47:25 - interesting so it says check that the
+47:27 - data set name is spelled correctly that
+47:29 - probably means i misspelled the name of
+47:32 - the data set
+47:34 - all right let me scroll up a little bit
+47:37 - uh
+47:39 - it's
+47:39 - [Music]
+47:41 - imdb reviews
+47:45 - okay i am oh right there data set
+47:49 - yeah you can't yeah right there okay so
+47:51 - i misspelled the name of the data set
+47:53 - not a problem vimtf
+47:56 - sentiment
+47:58 - let us
+48:02 - go up to
+48:04 - here i am
+48:07 - db
+48:10 - right quit
+48:12 - and give it another shot
+48:18 - i misspelled dense okay can you see that
+48:21 - no not quite uh it says here
+48:26 - let me move myself over
+48:28 - has no attribute dense
+48:31 - so let's fix that
+48:34 - that's in line 24
+48:39 - line 24
+48:43 - insert an s
+48:46 - quit and try again
+48:52 - there now it is training for five epochs
+48:55 - i am going to let this ride and show you
+48:57 - the results when it is done
+49:00 - really quick you can see that it gives
+49:02 - this funny error
+49:04 - let me
+49:05 - go ahead and move my face out of the way
+49:07 - now this i keep seeing in the tensorflow
+49:11 - 2 stuff so
+49:12 - uh as far as i can tell this is related
+49:14 - to the version of tensorflow this isn't
+49:16 - something i'm doing or you're doing
+49:18 - there is an open issue on github and
+49:21 - previously
+49:22 - it would run that error every time i
+49:25 - trained with every epoch however after
+49:27 - updating do i think tensorflow 2.1 it
+49:30 - only does it after the first one so i
+49:31 - guess you gain a little bit there
+49:33 - uh but it is definitely
+49:35 - but it's definitely an issue with
+49:36 - tensorflow so i'm not too worried about
+49:38 - that
+49:40 - so let's go ahead on this train
+49:43 - all right so it has finished running and
+49:45 - i have teleported to the top right so
+49:47 - you can see the accuracy
+49:49 - and you can see accuracy starts out low
+49:50 - and ends up around 93.9 not too shabby
+49:54 - for just five epochs on a very simple
+49:56 - model
+49:57 - likewise the loss starts relatively high
+49:59 - and goes relatively low
+50:01 - what's most interesting is that we do
+50:03 - get a 79.8 percent probability that our
+50:06 - first review was positive which it is so
+50:08 - an 80 probability of it being correct is
+50:11 - pretty good
+50:12 - and then an only 41.93 percent
+50:15 - probability the second being positive
+50:16 - now this was a bit of a lukewarm review
+50:19 - i said it was so so so a 40 probability
+50:22 - of it being positive is pretty
+50:24 - reasonable in my estimation so now let's
+50:26 - see if we can make a more complex model
+50:29 - and get better results so let's go back
+50:30 - to the code and type that up
+50:35 - so here we are let's scroll
+50:38 - down
+50:39 - and say let's make our new model so
+50:41 - model
+50:42 - you have to make sure you're in insert
+50:44 - mode of course model equals tf keras
+50:48 - sequential
+50:50 - tf keras
+50:52 - layers of course you need an embedding
+50:54 - layer to start
+50:56 - encoder.vocab size 64. let's move
+51:00 - my mug
+51:03 - like so
+51:05 - and
+51:06 - add our next layer
+51:08 - which is keras layers bi-directional
+51:16 - lstm 64 return
+51:19 - true
+51:20 - and i am
+51:23 - way too far over
+51:27 - 88 that is still
+51:29 - well we're just going to have to live
+51:30 - with it
+51:32 - it's just going to be bad code not up to
+51:34 - the pep 8 standards but whatever sumi
+51:39 - bi-directional
+51:43 - lstm
+51:44 - 32
+51:48 - keras layers
+51:50 - dot
+51:52 - dense
+51:54 - and 64 with a volume activation
+51:59 - and to prevent overfitting
+52:01 - we are going to add in a little bit of
+52:02 - drop out just 0.5 so 50 percent
+52:07 - and add our final
+52:09 - classification layer
+52:11 - with a sigmoid activation
+52:18 - model
+52:20 - do i have let me double check here
+52:23 - looks like i forgot
+52:28 - a
+52:29 - parenthesis there we go
+52:32 - [Music]
+52:34 - good grief
+52:39 - delete that line
+52:42 - and make our new model
+52:44 - model lock compile
+52:47 - loss equals binary cross entropy
+52:52 - optimizer
+52:53 - equals
+52:57 - atom
+52:58 - same learning rate we don't want to
+52:59 - change too many things at once that
+53:00 - wouldn't be scientific
+53:03 - accuracy
+53:06 - history equals model.fit train data
+53:12 - set
+53:13 - data
+53:14 - set not cert
+53:16 - epochs equal 5
+53:19 - validation data set equals test data set
+53:26 - 30 validation steps and we're just going
+53:28 - to scroll up here
+53:31 - and
+53:33 - uh copy
+53:34 - whoop copy all of this
+53:37 - visual
+53:40 - yank and come down and
+53:44 - paste
+53:46 - all right so
+53:54 - ah
+53:55 - what's
+53:56 - so i'm detecting a problem here so i
+53:58 - need to modify my sample predict problem
+54:00 - uh my sample predict
+54:02 - so let's go ahead and pass in a model
+54:08 - uh call it model underscore
+54:11 - just to be
+54:12 - safe because i'm declaring
+54:14 - one model and then another
+54:17 - i want to make sure these scoping issues
+54:19 - are not going to bite me in the rear end
+54:26 - i need
+54:29 - model
+54:30 - equals model
+54:32 - and let's do likewise here
+54:38 - model eagles model and we'll come up
+54:41 - here and modify it here as well
+54:44 - just to be pedantic
+54:49 - and i'm very tired so this is probably
+54:52 - unnecessary but we want to make sure we
+54:53 - aren't getting any funny scoping issues
+54:56 - so that the model is doing precisely
+54:57 - what we would expect
+54:59 - so let's go ahead and write quit
+55:03 - and try running it oh actually i take it
+55:05 - back
+55:06 - i want to go ahead and
+55:10 - get rid of the
+55:12 - fitting for this
+55:14 - because we've already run it
+55:16 - we can leave it
+55:19 - actually you know what
+55:21 - now that i'm thinking about it let's
+55:23 - just do this
+55:28 - and then we will
+55:30 - comment this out
+55:38 - all right
+55:39 - and then we don't even need the the
+55:41 - model equals model there but i'm going
+55:43 - to leave it
+55:46 - all right let's try it again
+55:48 - let's see what we get so remember we had
+55:50 - a
+55:51 - uh
+55:52 - 80
+55:53 - and 41 or 42 probability of it being
+55:56 - positive so let's see what we get with
+55:57 - the new model
+56:05 - validation data set
+56:08 - so i must have mistyped something so
+56:10 - let's take a look
+56:13 - here
+56:17 - right there
+56:19 - because it is validation data not
+56:21 - validation data set
+56:23 - all right
+56:26 - try it again
+56:32 - all right it is training i will let this
+56:33 - run and show you the results when it
+56:35 - finishes
+56:37 - so of course after running it i realized
+56:39 - i made a mistake in the
+56:42 - uh and the declaration of the sample
+56:46 - predict function typical typical
+56:48 - unexpected keyword argument
+56:50 - so let's come here and you know let's
+56:52 - just get rid of it
+56:54 - oh because it's model underscore
+56:56 - um yeah let's get rid of it
+57:00 - because we no longer need it
+57:03 - and get rid of this
+57:06 - typical typical
+57:15 - all right
+57:17 - this is one of the situations in which a
+57:20 - jupiter notebook would be helpful but
+57:22 - whatever i will stick to them and the
+57:24 - terminal and pi files because i'm old
+57:27 - all right let's try this again and i'll
+57:29 - just go ahead and edit all this out and
+57:31 - we will uh meet up when it finishes
+57:38 - i've done it again
+57:41 - oh
+57:44 - it's not my day folks not my day
+57:48 - and let us
+57:49 - find that there
+57:53 - delete
+57:58 - once again
+58:05 - all right so i finally fixed all the
+58:07 - errors it is done training and we have
+58:10 - our results so probability this is a
+58:12 - positive review 86 percent a pretty good
+58:15 - improvement over 80
+58:16 - what's even better is that the
+58:19 - uh probability of the second review
+58:21 - which was lukewarm so so being positive
+58:24 - has fallen from 41 or 42 down to 20 22
+58:28 - almost cut in half so pretty good
+58:30 - improvement with a
+58:31 - they you know somewhat more complicated
+58:33 - model and at the expense of slightly
+58:35 - longer training so you know 87 seconds
+58:37 - as opposed to 47 seconds so i know
+58:40 - sometimes six minutes as opposed to
+58:41 - three not too bad so anyway so what
+58:44 - we've done here is loaded a series of
+58:46 - imdb reviews used it to train a
+58:49 - model to do sentiment prediction by
+58:51 - looking at correlations between the
+58:53 - words and the labels for either positive
+58:55 - or negative sentiment and then asking
+58:57 - the model to predict what the sentiment
+58:59 - of a
+59:01 - obviously positive and somewhat lukewarm
+59:03 - review was
+59:04 - and we get pretty good results in a very
+59:06 - short amount of time that is the power
+59:08 - of tensorflow 2.0 so i thank you for
+59:11 - watching any questions comments leave
+59:12 - them down below i try to answer all of
+59:14 - them less so now that i have more
+59:16 - subscribers more views it gets a little
+59:18 - bit more overwhelming but i will do my
+59:20 - best speaking of which hit the subscribe
+59:22 - button hit the notification bell because
+59:24 - i know only 14 of you are getting my
+59:26 - notifications and look forward to seeing
+59:28 - you in the next video
+59:32 - where he sees your head my lovely we
+59:34 - sleep her with my hate
+59:36 - or for me think that we give his cruel
+59:38 - he cries said your honors ear i shall
+59:41 - gromas
+59:42 - no i haven't just had a stroke don't
+59:45 - call 9-1-1 i've just written a basic
+59:48 - artificial intelligence to generate
+59:50 - shakespearean text
+59:51 - now we get to finally address the
+59:52 - question which is better writing
+59:54 - shakespearean sonnets a billion monkey
+59:56 - hours or a poorly trained ai let's get
+59:59 - started
+60:06 - all right first before we begin with our
+60:08 - imports a couple of administrative notes
+60:10 - the first of which is that this is an
+60:13 - official tensorflow tutorial i have not
+60:15 - written this code myself and in fact it
+60:17 - is quite well written as it is the first
+60:18 - tutorial i haven't had to make any
+60:20 - corrections or adjustments to so i will
+60:22 - leave a link in the description
+60:24 - for those that want to go into this in
+60:26 - more detail
+60:27 - on their own time
+60:29 - so feel free to check that out when you
+60:30 - have a moment available let's get
+60:32 - started with our imports
+60:36 - the first thing you want to import is os
+60:38 - that will handle some operation os level
+60:42 - type stuff
+60:43 - we want tensorflow as tf of course and
+60:46 - we want numpy as np now notably we are
+60:49 - not importing the tensorflow data set
+60:52 - imports because this is not using an
+60:54 - official tensorflow data set rather it
+60:56 - is using the
+60:58 - data due to i believe andre carpathi
+61:00 - gets a credit for this but it is
+61:02 - basically a text representation of a
+61:04 - shakespearean sonnet which one i don't
+61:06 - know doesn't state in the
+61:08 - tutorial and i am not well read enough
+61:10 - to be able to identify it based on the
+61:12 - first several characters i suppose if i
+61:14 - printed out enough of the terminal i
+61:15 - could figure it out based on who's in it
+61:17 - but i don't know and it's not really all
+61:19 - that important but what is important is
+61:22 - that we have to download it using the
+61:24 - built-in tensorflow keras utils
+61:28 - and of course they have their own
+61:29 - function to get a file
+61:32 - and it's just a simple text file called
+61:33 - shakespeare.txt
+61:36 - and that lives at https
+61:40 - storage googleapis.com
+61:45 - [Music]
+61:48 - shakespeare.txt
+61:52 - okay and so let's get an idea for what
+61:55 - we're working with here so let's open it
+61:56 - up
+62:00 - in uh read binary mode
+62:03 - with an encoding of
+62:06 - utf-8
+62:09 - and let's go ahead and print out the
+62:11 - length of the
+62:13 - text so we'll say length of text
+62:16 - blank characters
+62:18 - dot format when
+62:21 - text
+62:22 - and let's go ahead and print
+62:24 - the first 250 characters to get an idea
+62:28 - of what we are working with
+62:31 - all right
+62:32 - let's head to the terminal and test this
+62:34 - out
+62:36 - say python tf text gen
+62:40 - dot pi
+62:44 - object has no attribute decode so i have
+62:47 - messed something up most likely a
+62:50 - parenthesis somewhere text equals open
+62:54 - path to file.read that's right i forgot
+62:56 - the read method
+62:59 - insert read
+63:02 - dot d code
+63:04 - there we go let's try that
+63:10 - perfect so now we see that we do indeed
+63:13 - have some text and it has uh one million
+63:16 - one hundred fifteen thousand three
+63:18 - hundred ninety four characters so a
+63:19 - fairly lengthy work uh you know several
+63:22 - hundred thousand words at least
+63:23 - and you see it begins with first is it
+63:25 - uh first citizen this is important
+63:27 - because we're gonna refer back to this
+63:28 - text a few different times in the
+63:30 - tutorial so just keep in mind that the
+63:32 - first word is first very very simple and
+63:34 - hey if you know what uh play or sonnet
+63:37 - this is leave a comment down below
+63:39 - because you're you know more
+63:40 - well-cultured more well-read than i am
+63:42 - i would be interested to know
+63:44 - but let's proceed with the tutorial
+63:45 - let's head back to
+63:47 - our file
+63:49 - and the first thing we want to do is
+63:51 - comment these out because we don't want
+63:52 - to print that to the terminal every
+63:53 - single time we run the code
+63:56 - but the first thing we have to handle is
+63:58 - vectorizing our text now if you have
+64:00 - seen my other two tutorials on natural
+64:03 - language processing and tensorflow you
+64:05 - know that we have to go from a text
+64:06 - based representation to an integer
+64:08 - representation or in some cases yeah
+64:10 - totally energy representation not
+64:12 - floating point uh in order to pass this
+64:15 - data into the deep neural network so
+64:17 - let's go ahead and start with that so we
+64:20 - say
+64:21 - our vocabulary is going to be sorted a
+64:24 - set of the text so we're just going to
+64:26 - sort it and make a set of unique stuff
+64:29 - so we'll say print or unique words
+64:31 - rather
+64:32 - blank unique
+64:34 - characters
+64:36 - format
+64:39 - len of vocab
+64:41 - so we now important thing to keep in
+64:44 - mind is that we are starting with merely
+64:46 - characters we are not starting with any
+64:48 - conception of a word so the model is
+64:51 - going to go from knowing nothing about
+64:52 - language at all to understanding the
+64:54 - concept of words as well as line breaks
+64:57 - and a little bit about grammar you kind
+64:58 - of saw from the
+65:00 - introduction that it's not so great
+65:02 - probably better than the monkeys typing
+65:03 - away but it is you know starting from
+65:05 - complete scratch into something that
+65:07 - kind of approximates language processing
+65:11 - so we have sorted our vocabulary now we
+65:13 - have to go from the character space to
+65:16 - the integer representation so we'll say
+65:17 - care to idx where care is just you know
+65:20 - character that's going to be dictionary
+65:23 - of unique characters and their integer
+65:26 - idx their integer encoding
+65:28 - for idx unique
+65:31 - and enumerate
+65:32 - vocab
+65:35 - closing bracket
+65:37 - and we need the idx 2 care which is the
+65:39 - inverse operation
+65:41 - numpy array of vocab
+65:45 - uh then we have something called text as
+65:48 - int
+65:48 - and that's a numpy array
+65:50 - of a list comprehension of care to idx
+65:54 - of care for care in text so we're just
+65:57 - going to take all the characters in the
+65:58 - text look up their
+66:01 - idx representation and stick it into a
+66:03 - vector numpy array in this case
+66:07 - so
+66:07 - now let's go ahead and print this stuff
+66:09 - out to see what we're dealing with to
+66:10 - see what our vocabulary looks like
+66:13 - and we'll make something pretty looking
+66:14 - we'll say 4 care blank and zip care to
+66:18 - idx
+66:19 - range 20. we're only going to look at
+66:21 - the first 20 elements we don't need to
+66:23 - print out the whole dictionary
+66:25 - print
+66:28 - 4s
+66:30 - colon
+66:32 - 3d
+66:34 - dot format representation of the
+66:36 - character
+66:39 - here to idx care
+66:42 - and then at the end we'll print a
+66:45 - new line
+66:48 - um
+66:50 - actually let's do this too so we'll say
+66:52 - print
+66:53 - blank
+66:55 - characters map to int
+66:58 - you know how many characters will be
+66:59 - mapped to int
+67:01 - format
+67:02 - representation of text
+67:05 - just the first 13
+67:09 - uh text
+67:10 - as int
+67:13 - 13.
+67:16 - tab that over
+67:18 - and write this and run it so unexpected
+67:21 - end of file while parsing okay
+67:24 - so
+67:26 - what that means is
+67:28 - i have forgotten a
+67:32 - parenthesis which is here perfect
+67:36 - now we can write quit
+67:39 - now let's give it a shot
+67:41 - okay so
+67:43 - you can see we have 65 unique characters
+67:45 - so we have a dictionary of 65 characters
+67:48 - and
+67:49 - new line maps to zero space maps to one
+67:52 - so basically it's the sort has placed
+67:55 - all of the
+67:56 - characters the non
+67:58 - non-alphanumeric characters at the
+68:00 - beginning and we even have some numbers
+68:03 - in there uh curiously the number three
+68:05 - maps to nine but whatever
+68:07 - and then you see we have the capital
+68:09 - letters and the lowercase letters will
+68:10 - follow later
+68:12 - and so our first sentence is first
+68:14 - citizen first 13 characters rather and
+68:16 - that maps to this following vector here
+68:19 - so we have gone from this string to this
+68:22 - vector representation so
+68:24 - that is all well and good but that is
+68:26 - just the first step in the process so
+68:28 - the next step is handling what we call
+68:30 - the prediction problem so
+68:32 - the real goal here is to feed the model
+68:34 - some string of text and then it outputs
+68:36 - the most likely characters it thinks
+68:38 - will follow based on what it reads in
+68:40 - the shakespearean work and so we want to
+68:43 - chunk up our data into sequences of
+68:45 - length 100
+68:46 - and then go ahead and use that to create
+68:48 - a data set and then from there we can
+68:50 - create batches of data in other words
+68:52 - chunks of sentences or chunks of
+68:54 - whatever sequence length characters we
+68:55 - want let's go ahead and go back to our
+68:58 - vim editor and start there
+69:01 - and so
+69:02 - the first thing is we want to go ahead
+69:04 - and comment all this out because we
+69:06 - don't want to print everything every
+69:07 - single time
+69:09 - and then handle the problem of the
+69:10 - sequence length so we'll say sequence
+69:12 - length
+69:13 - equals 100 characters something
+69:15 - manageable you want something too small
+69:16 - something too large
+69:18 - so number of examples uh per epoch
+69:21 - equals line of text
+69:23 - divided by
+69:24 - sequence a length
+69:26 - plus one where does a plus one come from
+69:29 - it comes from the fact that we're going
+69:30 - to be feeding it a character and trying
+69:31 - to predict the rest of the characters in
+69:33 - the sequence so you have the plus one
+69:34 - there
+69:35 - next we have a care data set
+69:38 - tf data data set of course it's
+69:41 - tensorflow it has to deal with its own
+69:43 - data sets it doesn't handle text files
+69:45 - too well
+69:46 - so we're going to go
+69:47 - data set
+69:49 - from
+69:50 - tensor
+69:52 - slices
+69:53 - text
+69:54 - as
+69:55 - int
+69:57 - let's go ahead and print out
+69:59 - uh what we have here for i in care
+70:03 - dataset
+70:04 - dot take
+70:06 - the first five elements and so this is
+70:08 - just a sequence of individual characters
+70:10 - so we should get the first five
+70:12 - characters out
+70:14 - print
+70:15 - uh idx two care
+70:17 - i dot numpy
+70:21 - let's go ahead and go to the terminal
+70:22 - and run this
+70:24 - write quit
+70:26 - and run it once more
+70:29 - and you see we get the word first as one
+70:32 - would expect that is the if we scroll up
+70:35 - that
+70:36 - is the
+70:37 - uh first five characters first and then
+70:41 - citizen okay so that seems to work so
+70:43 - now let's handle batching the data so
+70:45 - let's go back to our vim editor
+70:48 - get rid of this print statement by
+70:50 - inserting a couple of comments and worry
+70:54 - about dealing with a batch so sequence
+70:57 - says
+70:58 - equals care data set
+71:01 - dot batch
+71:02 - sequence length
+71:04 - plus one drop remainder
+71:06 - equals true
+71:08 - so we'll just get rid of the characters
+71:09 - at the end
+71:11 - for item
+71:13 - can i scroll down at all does it let me
+71:14 - do that no it does not one of the
+71:16 - downsides of vim is an editor so for
+71:19 - item in sequence
+71:21 - is take five the first five sequences of
+71:24 - 100 characters
+71:25 - print
+71:26 - representation
+71:28 - blank dot join idx2 care
+71:32 - item.numpy
+71:35 - and a whole bunch of parentheses
+71:38 - and let's go ahead
+71:40 - and
+71:41 - um
+71:42 - go back to the terminal and see how this
+71:44 - runs
+71:45 - so let's run it
+71:50 - and you see
+71:51 - i really should put a
+71:53 - new line in there at the beginning we
+71:54 - can see first citizen before we proceed
+71:56 - any further hear me speak
+71:58 - blah blah blah so we get a bunch of uh
+72:01 - character sequences including the new
+72:03 - line characters
+72:04 - so that is pretty helpful
+72:06 - so uh one thing to note is that these
+72:09 - new lines
+72:10 - are what give the uh the deep neural
+72:13 - network a sense of where line breaks
+72:15 - occur so it knows that after some
+72:17 - sequence of characters they should
+72:18 - expect a line break because that
+72:20 - formulates you know the kind of metered
+72:23 - speaking that you find in shakespeare so
+72:25 - that's well and good let's go ahead and
+72:27 - handle the
+72:28 - next problem of splitting our data into
+72:31 - chunks of target and input text remember
+72:34 - we have to start with one character and
+72:36 - predict the next set of characters so
+72:38 - let's handle that
+72:42 - but of course to begin we want to
+72:45 - comment that out
+72:46 - and in fact
+72:48 - we do we need this now let's leave it in
+72:50 - there it's not going to hurt anything so
+72:52 - we'll say
+72:53 - we're going to define a function called
+72:54 - split
+72:56 - input target and that takes a chunk of
+72:59 - data as input
+73:01 - and it says input text equals chunk
+73:06 - everything
+73:07 - up to -1
+73:09 - target
+73:10 - text equals chunk
+73:12 - 1 onward
+73:14 - return input
+73:16 - text
+73:17 - target text so we're going to get an
+73:18 - input sequence as well as a target
+73:23 - so we want to double set uh we want to
+73:25 - double check this
+73:27 - by saying data set
+73:29 - equal sequences
+73:31 - dot map i'm going to map this function
+73:33 - onto our sequences
+73:35 - split
+73:36 - input target
+73:38 - let's add in a new line for clarity
+73:41 - and say you know what let's do this
+73:43 - there we go so we'll say we're going to
+73:46 - print the first examples of the input
+73:48 - and target values say for input
+73:51 - example
+73:52 - target example
+73:54 - and data set dot take just the first
+73:57 - thing
+73:58 - print
+73:59 - input data
+74:01 - uh representation blank dot join idx2
+74:05 - care
+74:06 - input example dot numpy
+74:11 - whole bunch of parentheses print
+74:14 - target data
+74:16 - representation blank dot join
+74:19 - idx to care
+74:21 - target example.numpy
+74:27 - all right let's head to the terminal
+74:29 - and
+74:30 - try this
+74:37 - okay so you see our input data is this
+74:40 - for a citizen before we proceed any
+74:42 - further
+74:43 - and it ends with you and then the target
+74:45 - data is erst citizen so given this input
+74:49 - what is the target
+74:51 - so we have basically
+74:53 - shifted the data one character to the
+74:56 - right for our target with respect to our
+74:59 - input and that's a task given one
+75:00 - character predict the next likely
+75:02 - sequence of characters
+75:04 - so to make that more clear
+75:06 - let's go ahead and kind of step through
+75:08 - that one character at a time so let's
+75:11 - come down here
+75:13 - and of course the first thing we want to
+75:15 - do is get rid of these print statements
+75:19 - and then say for i
+75:21 - input idx target idx and enumerate
+75:26 - input example
+75:29 - first five
+75:31 - target
+75:33 - example i forgot a zip statement five
+75:39 - how many
+75:40 - that's the enumerate
+75:42 - that gets a colon i forgot my zip here
+75:46 - and enumerate
+75:48 - um zip
+75:51 - add an extra parenthesis
+75:53 - and then we want to add a print
+75:56 - statement we'll say print
+75:59 - step
+76:01 - 4d
+76:04 - dot format i
+76:07 - print
+76:08 - blank input
+76:13 - some string
+76:15 - dot format input idx
+76:18 - representation of idx 2 care
+76:22 - input idx
+76:26 - print
+76:28 - expected output
+76:35 - uh
+76:36 - yes
+76:37 - dot
+76:38 - dot format
+76:39 - target idx
+76:41 - comma representation idx 2 care
+76:45 - target idx
+76:50 - all right now let's head to the terminal
+76:53 - and run this
+76:56 - and we should get something that
+76:58 - makes perfect sense name input example
+77:00 - is not defined
+77:02 - okay so input example
+77:05 - uh
+77:07 - oh of course i got rid of this
+77:11 - all right
+77:20 - all right so here you can see the output
+77:22 - so step zero uh the input is an integer
+77:24 - 18 that maps to the character f and the
+77:26 - expected output is i so it knows that it
+77:30 - should expect uh the next character
+77:32 - which is the um
+77:35 - next character in the sequence now keep
+77:36 - in mind this isn't trained with an rnn
+77:37 - yet this is just stepping through the
+77:39 - data to kind of show you that given one
+77:40 - character what should it expect next so
+77:43 - that's all well and good
+77:45 - the next thing we have to handle is
+77:47 - creating training batches and then uh
+77:49 - training our model building and training
+77:51 - the model so let's head back to the
+77:54 - text editor and handle that
+77:59 - so let's go ahead and
+78:01 - comment all this out
+78:05 - and handle the conception of
+78:08 - a
+78:09 - batch so we'll say
+78:15 - let's handle the
+78:16 - batch size
+78:18 - next so we'll say batch
+78:21 - size equals 64
+78:24 - and buffer size just how many characters
+78:26 - you want to load ten thousand
+78:28 - data set equals data set dot shuffle
+78:32 - buffer size
+78:33 - dot batch
+78:35 - batch size
+78:38 - drop remainder he goes true
+78:43 - uh then we want to say vocab signs
+78:46 - equals line of vocab we're gonna start
+78:48 - building our model next so embedding
+78:50 - dimension
+78:52 - 256
+78:54 - rnn
+78:56 - units
+78:57 - 1024
+78:59 - so we will use a function to
+79:02 - go ahead and build our model we'll say
+79:04 - def build model
+79:07 - vocab size embedding dim
+79:10 - rnn units batch size
+79:15 - model tf keras sequential
+79:20 - tf keras layers and embedding layer of
+79:23 - course we have to go
+79:24 - with an embedding layer at the beginning
+79:26 - because if you recall from the first
+79:27 - video
+79:28 - we have to go from this integer
+79:30 - representation to a reduced dimensional
+79:32 - representation
+79:33 - a word embedding that allows the model
+79:35 - to find relationships between words
+79:37 - because this integer basis all of these
+79:39 - vectors are orthogonal to one another
+79:41 - there's no overlap of characters
+79:43 - however in the word embedding the
+79:46 - higher dimensional space or reduced
+79:47 - dimensional space allows you to have
+79:49 - some overlap of relationship between
+79:52 - characters so those vectors are
+79:53 - non-orthogonal they are to some extent
+79:55 - co-linear so
+79:57 - just a bit of math speak for you but
+79:59 - that is what is going on there
+80:00 - vocab
+80:02 - size embedding dim
+80:07 - batch input
+80:08 - shape equals batch
+80:10 - size by none so i can take something
+80:12 - arbitrary
+80:14 - and
+80:15 - and that
+80:23 - [Music]
+80:31 - recurrent initializer initializer
+80:35 - uh yeah i think i spelled that right
+80:38 - glow rot uniform
+80:42 - is that right yep okay so now we have
+80:45 - another layer let's tab that over
+80:48 - say tf keras.layers.dense
+80:51 - and it'll output something of vocab size
+80:54 - so now let's end that and return
+80:57 - our model
+80:59 - so now that we have a model the next
+81:01 - thing we want to do is build and
+81:04 - compile that model so we'll say model
+81:07 - it goes build model
+81:09 - vocab size equals one of vocab
+81:13 - um
+81:14 - you know this is one i guess one
+81:17 - kind of thing i don't like about the
+81:18 - tutorial
+81:19 - embedding them there's a little bit of
+81:21 - that little bit right there but whatever
+81:23 - betting
+81:24 - dim
+81:25 - and we need rnn units equals rnn units
+81:32 - batch size equals batch
+81:34 - size
+81:36 - so that will make
+81:38 - our model
+81:39 - and uh
+81:42 - let's go ahead and see what type of
+81:44 - predictions that model outputs without
+81:46 - training so we'll say
+81:48 - for input example batch
+81:52 - target example
+81:53 - batch and data set dot take one now keep
+81:57 - in mind this is going to be
+81:59 - quite rough because there is no you know
+82:02 - there's no training yet so it's going to
+82:04 - be garbage but let's just see what we
+82:05 - get so we say example batch predictions
+82:09 - equals model input example
+82:12 - batch
+82:14 - print
+82:15 - example
+82:16 - let's print the shape
+82:18 - example batch
+82:20 - predictions.shape
+82:23 - and that should be batch
+82:25 - size sequence length
+82:28 - and vocab
+82:29 - size
+82:34 - and you know what while we're at it
+82:35 - let's just print out a model summary so
+82:36 - you can see what's going on
+82:38 - and see what is what so let's head to
+82:41 - the terminal
+82:43 - try this again see how many typos i made
+82:46 - batch inputs shape is probably a batch
+82:49 - input shape
+82:50 - online
+82:52 - 77
+82:54 - right here
+82:56 - uh
+82:57 - batch size
+82:59 - batch size what have i done
+83:02 - something stupid and no doubt
+83:07 - oh it's probably here
+83:09 - um
+83:10 - batch inputs
+83:12 - shape
+83:14 - there we go
+83:17 - try it again
+83:27 - okay so you can see that it it has
+83:30 - output to something batch size by 100
+83:31 - characters by vocab size makes sense
+83:34 - here is the model
+83:36 - 4 million or so parameters they're all
+83:39 - trainable
+83:40 - and you can see that the majority of
+83:42 - those are in the gated recurrent unit so
+83:44 - let's go back to the text editor and
+83:49 - start thinking about
+83:51 - start thinking about training the model
+83:54 - so
+83:56 - we come here let's go ahead and
+83:59 - get rid of this print statement we don't
+84:01 - need it we can get rid of the model
+84:03 - summary as well
+84:04 - and think about
+84:06 - training our model the first thing we
+84:08 - need to train the model is a loss
+84:10 - function
+84:11 - so we'll pass in labels and logits
+84:15 - and return
+84:16 - tf keras losses
+84:19 - sparse
+84:20 - categorical cross entropy
+84:24 - labels logits from logits equals true
+84:28 - and then since we are good python
+84:29 - programmers we will
+84:31 - format this a little bit better
+84:37 - like that
+84:38 - and
+84:39 - we can go ahead and start training our
+84:41 - model so we will say
+84:43 - so we will say model
+84:45 - dot compile
+84:47 - and
+84:48 - optimizer equals atom
+84:53 - loss equals loss
+84:55 - and say check point directory equals
+84:59 - dot
+85:00 - slash training checkpoints
+85:05 - check
+85:06 - point prefix
+85:08 - use os path
+85:10 - join checkpoint der
+85:13 - check
+85:15 - yeah checkpoint
+85:17 - underscore epoch so epoc is a variable
+85:20 - it's going to get passed in by
+85:21 - tensorflow or keras in this case and so
+85:24 - it'll know whatever you know epoch we're
+85:26 - on it'll save
+85:28 - a checkpoint with that name
+85:31 - checkpoint callback you have to define
+85:34 - callbacks uh tf.keras.callbacks.model
+85:39 - checkpoint
+85:41 - file path equals checkpoint
+85:44 - prefix
+85:45 - save weights
+85:47 - only equals
+85:49 - true
+85:50 - and so we'll train for in this case
+85:53 - i don't know something like uh
+85:55 - for reference i trained it for 100 box
+85:57 - to generate the text you saw at the
+85:58 - beginning of the
+86:00 - tutorial but it doesn't really matter
+86:03 - all that much so we'll say 25 epochs
+86:05 - because it's not the most sophisticated
+86:07 - model in the world
+86:09 - so we'll say
+86:11 - history equals model.fit
+86:14 - data set
+86:15 - epochs equals epochs
+86:18 - callbacks equals checkpoint
+86:21 - callback
+86:24 - all right let's head to the terminal
+86:27 - and run this
+86:33 - it says expected string bytes not a
+86:36 - tuple
+86:37 - okay so as path join
+86:41 - um
+86:42 - that i probably made some kind of silly
+86:45 - mistake
+86:47 - says checkpoint der
+86:50 - that is a string
+86:54 - checkpoint underscore epoch is
+86:57 - fine
+86:58 - that's interesting
+87:00 - now what was that error
+87:03 - that is online ninety one
+87:18 - oh i understand so i have a
+87:21 - comma there at the end so it's an
+87:22 - implied tuple
+87:24 - okay let's try this again
+87:27 - scratching my head trying to figure that
+87:28 - one out
+87:30 - all right so now it is training so i'm
+87:33 - gonna go ahead and uh let this run and
+87:36 - i'll be back when it is finished
+87:40 - okay so it has finished training and you
+87:42 - can see that the loss uh went down by a
+87:44 - factor of you know three or four about
+87:46 - three or so from two point
+87:48 - seven all the way down to point seven
+87:50 - seven
+87:51 - so it did pretty well in terms of
+87:52 - training now this is 25 epochs we don't
+87:55 - have to rerun the training because we
+87:56 - did the model checkpointing so the next
+87:58 - and final order of business is to write
+88:00 - the function to generate the predictive
+88:02 - text you know the output of the model uh
+88:04 - so that way we can kind of get some sort
+88:06 - of idea of what sort of shakespearean
+88:08 - prose this artificial intelligence can
+88:10 - generate let's go ahead and head to our
+88:14 - file so the first thing we have to think
+88:16 - about is how are we going to handle
+88:19 - loading our model and that will require
+88:21 - that we
+88:22 - don't do the build model up here so we
+88:26 - can just get rid of that and we
+88:28 - certainly don't want to compile or train
+88:31 - the model again we want to load it from
+88:33 - a checkpoint so what we'll do is say
+88:35 - model it goes build model
+88:38 - vocab size
+88:40 - embedding dim rnn units
+88:43 - and batch size equals what batch size
+88:45 - equals one that's right because when we
+88:47 - pass in a set of input text we don't
+88:49 - want to get out you know a huge batch of
+88:51 - output text we just want a single
+88:53 - sequence of output text
+88:55 - then we see model.load weights
+88:58 - tf.train
+89:00 - latest checkpoint checkpoint dir so this
+89:03 - will scan the directory and get our
+89:05 - lotus checkpoint latest checkpoint
+89:07 - now we want to build the model by saying
+89:09 - tf tensor shape
+89:13 - one by none so batch size of one and an
+89:15 - arbitrary length of characters
+89:19 - so then we'll say model dot summary
+89:24 - and we can scroll down a little bit
+89:27 - for readability
+89:29 - uh so that'll print out the new model to
+89:31 - the terminal so the next thing we have
+89:33 - to handle is the uh
+89:36 - prediction of the prediction problem and
+89:38 - generating text so let's say
+89:41 - um
+89:42 - define generate
+89:44 - text
+89:45 - model and start string so we need to
+89:47 - pass in the model we want to use to
+89:50 - generate the text as well as a starting
+89:52 - string a prompt for the ai if you will
+89:55 - i'm generate
+89:57 - equals 1000 that's the number of
+89:59 - characters we want to generate
+90:01 - uh input eval equals care to idx
+90:06 - s4s and start
+90:09 - string we have to go to the
+90:12 - character representation of sorry the
+90:14 - integer representation of our characters
+90:16 - and we have to expand that
+90:21 - along the batch dimension
+90:24 - we need an empty list to keep track of
+90:26 - our generated text
+90:28 - and a temperature so
+90:30 - the temperature kind of handles the so
+90:32 - the temperature kind of handles the
+90:34 - uh surprising factor of the text so
+90:37 - it'll take the text and scale up by some
+90:39 - number in this case a temperature one
+90:41 - means just whatever the model outputs so
+90:44 - uh a lot a smaller number means more
+90:47 - more reasonable more predictable text
+90:49 - and large number gives you uh some kind
+90:51 - of crazy wacky type of stuff
+90:54 - so let us
+90:56 - reset states
+90:58 - on our model
+90:59 - and say
+91:01 - or i
+91:02 - let's scroll down
+91:05 - i in range
+91:07 - num generates
+91:10 - predictions equals model input eval
+91:14 - predictions equals tf squeeze along the
+91:17 - batch dimension
+91:20 - zero
+91:21 - predictions equals predictions divided
+91:24 - by temperature
+91:26 - and predicted
+91:28 - id
+91:29 - which is the um
+91:31 - the prediction of the id of the word
+91:34 - returned by the model
+91:35 - tf random
+91:37 - categorical
+91:39 - predictions num samples equals one
+91:42 - minus one zero dot num
+91:45 - pi
+91:49 - then we say input eval
+91:53 - equals tf.expand
+91:55 - dimms
+91:56 - predicted id
+91:59 - 0
+92:00 - text generated dot append
+92:03 - idx 2 care predicted
+92:06 - id
+92:07 - so if you're not familiar with this
+92:09 - the
+92:10 - random categorical as a probability
+92:12 - distribution when you have a set of
+92:14 - discrete categories
+92:15 - and it will predict them oh i forgot a
+92:18 - one here that will uh break
+92:20 - so it will uh
+92:23 - pre it will generate predictions
+92:25 - according to the distribution defined by
+92:27 - this variable
+92:28 - predictions
+92:31 - so then we want to return
+92:33 - start string
+92:35 - and that may be familiar to you if you
+92:37 - watch some of my other reinforcement
+92:38 - learning tutorials the actual critic
+92:40 - methods in particular use the
+92:43 - categorical distribution
+92:45 - plus
+92:46 - mpstring.join
+92:49 - text
+92:50 - generated
+92:53 - so then you want to say print
+92:55 - generate text
+92:57 - model start string equals
+93:00 - romeo colon give it a space as well
+93:04 - all right now moment of truth let's see
+93:06 - how well our model does write that go to
+93:08 - the terminal
+93:10 - and try it again
+93:18 - so you see it loads the model pretty
+93:19 - well and we have our text that is quite
+93:21 - quick
+93:22 - so king richard iii says i will practice
+93:25 - on his son you are beheads for me you
+93:27 - henry
+93:29 - brutus replies and welcome general and
+93:31 - music the while
+93:33 - tyrell
+93:34 - you know i'm wondering if these aren't
+93:36 - the collected works of shakespeare
+93:37 - actually now that i'm reading this
+93:39 - uh looking at all of the names that's
+93:40 - kind of brutus and king richard that
+93:42 - sounds like it's uh from a couple of
+93:43 - different plays caesar and whatever king
+93:45 - richard appears in i don't know again
+93:47 - i'm an uncultured swine uh you let me
+93:49 - know
+93:50 - but you can see that what's really
+93:52 - fascinating here is that this model
+93:54 - started out with
+93:55 - no information about the english
+93:56 - language whatsoever it knew nothing at
+93:58 - all about english we didn't tell it that
+94:00 - there are words
+94:01 - we didn't tell there are sentences we
+94:03 - didn't tell it that
+94:04 - you should add in breaks or periods or
+94:07 - any other type of punctuation it knows
+94:08 - nothing at all
+94:10 - and within
+94:11 - i don't know two and a half minutes of
+94:13 - training it generates a model that can
+94:16 - string together characters and words in
+94:18 - a way that almost kind of makes sense
+94:20 - now uh you know bernadine says i am a
+94:23 - roman and by tenot and me now that is
+94:26 - mostly gibberish but i am a roman
+94:28 - certainly makes sense
+94:30 - uh
+94:31 - you know but warwick i have poison that
+94:33 - you have heard you know that is kind of
+94:35 - something
+94:36 - uh to add my own important process of
+94:39 - that hung in point okay that's kind of
+94:40 - silly
+94:42 - uh is is pointing that my soul i love
+94:44 - him well so it strings together words in
+94:46 - a way that almost makes sense now
+94:48 - returning back to the question of which
+94:49 - is better a billion monkey hours of
+94:51 - typing or this ai my money is solidly on
+94:54 - the ai you know these aren't put
+94:56 - together randomly these are put together
+94:58 - probabilistically and they kind of sort
+95:00 - of make sense and you can see how more
+95:02 - sophisticated models like the
+95:04 - open ai text generator could be somewhat
+95:07 - more sophisticated using transformer
+95:09 - networks and how they can be better at
+95:10 - actually creating text that even makes
+95:13 - even more sense although what's
+95:14 - interesting is that it's not a you know
+95:16 - a significant quote-unquote quantum leap
+95:18 - i hate that phrase but it's not a
+95:19 - quantum leap over what we've done here
+95:21 - in just a few minutes on our own gpu in
+95:23 - our own rooms that is quite cool and uh
+95:26 - that is something uh that never ceases
+95:28 - to amaze me
+95:29 - so i hope you found this tutorial
+95:31 - enjoyable if you have make sure to hit
+95:32 - the subscribe and the bell icon because
+95:34 - i know only 14 of you get my
+95:36 - notifications
+95:38 - and look forward to seeing you all in
+95:40 - the next video

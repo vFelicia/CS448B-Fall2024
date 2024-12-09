@@ -1,0 +1,245 @@
+00:00 - hello and welcome in this lesson we're going 
+to implement the delete account option on the  
+00:04 - settings screen of the chat app now this is 
+especially important these days because the  
+00:08 - Apple App Store now requires all developers to 
+add this option to their app to allow users to  
+00:13 - delete their account now how you actually handle 
+it in the back end is up to you um however I have  
+00:20 - a funny story a little bit of a segue that has to 
+do with apple that I promise you pertains to our  
+00:25 - implementation of this today so the story goes 
+I had a personal Apple developer account that I  
+00:32 - submitted my tax information to and it's actually 
+the code with Chris tax information and code with  
+00:38 - Chris is an actual business a registered business 
+I mean but as the team grew I decided to change  
+00:45 - to a corporate developer account because it has 
+teams and you can have multiple people access the  
+00:52 - account and things like that so I created another 
+developer account that was a corporate one and I  
+00:58 - deleted the personal one however when I tried to 
+add the code with Chris tax information on this  
+01:02 - corporate developer account it said that it was 
+duplicate and I couldn't it wouldn't let me add  
+01:07 - it and so when I contacted the support I found 
+out that even though I had deleted my personal  
+01:12 - developer account it actually wasn't deleted 
+it was only deactivated and it wasn't active  
+01:17 - um and you know as far as I was concerned it was 
+deleted but really on the back end information the  
+01:24 - data was still there so I contacted what they had 
+to do for me actually was they had to reactivate  
+01:30 - that personal account I had to go in delete my tax 
+information or change it from there and then they  
+01:36 - then they like deactivated it again but now I was 
+able to add that tax information on the corporate  
+01:42 - developer account so um I guess what I'm trying to 
+say is that I'm going to take a similar approach  
+01:49 - here because what I don't want so I thought 
+about several different ways I could do this  
+01:56 - for for this delete account option so if someone 
+Taps on this button I could for example run some  
+02:02 - operations like write some code in the app to just 
+run through the database and delete things now  
+02:10 - um although I think that would work I I it doesn't 
+seem right to me to allow someone from the app  
+02:15 - just to delete things off the database like that 
+um I can't tell you exactly what can go wrong  
+02:21 - but just if there's an error in your logic for 
+example as you're coding it or potentially you  
+02:28 - are allowing a hacker to you know have a route 
+to delete things off your database I don't know  
+02:35 - exactly how that would work but it doesn't 
+feel right to me another method I thought  
+02:40 - was perhaps I could allow someone to click on 
+this button and it would send a support request  
+02:48 - to you or your support team or whoever to then 
+go and manually delete those things maybe they  
+02:54 - can run some scripts that you have written that 
+would automatically go through the day basically  
+02:58 - all the information for that account and I 
+think that would work in the short term but  
+03:02 - if your app grows and you know you get a lot of 
+users that could become unscalable so the last  
+03:09 - option and I thought of it because of this apple 
+story was that probably the easiest thing to do  
+03:17 - um which is a compromise between those two things 
+that we just talked about is when someone Taps on  
+03:22 - this button it sets a flag or it flips some sort 
+of switch or flag on the user account to sort of  
+03:29 - deactivate that account and throughout the app 
+we can make sure that we check if the account is  
+03:37 - deactivated we don't show them um you know in 
+the chat we don't show their chat messages we  
+03:44 - don't show their name you know things like that so 
+that's the way that I'm going forward with this so  
+03:51 - the first thing we have to do I guess is to add a 
+flag on these three users and then we're going to  
+04:00 - also modify the user model and then we are going 
+to add a database service method that will go and  
+04:12 - then flip the switch on your own account so 
+that database service method that flips the  
+04:18 - switch is going to be called when the 
+user Taps on this delete Account button  
+04:22 - in the settings View that's the settings view 
+model we have the settings view right here  
+04:29 - and then when they do tap on that delete Account 
+button and that switch gets flipped we need to  
+04:34 - log them out because they're still logged 
+into the current session even though we just  
+04:38 - deleted their information or sort of deactivated 
+their account um we need to log them out of this  
+04:46 - session and then present the onboarding screen 
+again and then finally because at that point  
+04:53 - this lesson would be pretty long in the following 
+lesson we are then going to go through the code  
+05:00 - um and make sure that if the account is 
+inactive we are not going to display their data  
+05:07 - okay so let's get into this so first of all 
+let's go into our firestore database and add  
+05:12 - that flag so we're going to add let's start with 
+this person and I'll call it is active and we're  
+05:18 - going to change this to a Bool so by default it 
+should be true let's add it to this person as well  
+05:25 - making sure that it's consistently spelled the 
+same way or else we're going to have a problem
+05:36 - all right okay looks good then we are 
+going to go back into our project and  
+05:43 - in the user model we're going to add that here
+05:47 - making sure again it's spelled exactly the 
+same way we'll default it to true uh and then  
+05:55 - we are going to the database Service uh where is 
+that down here and we are going to create a new  
+06:02 - section so we have the chat methods down here 
+right below or right before this closing brace
+06:12 - um let's call it account methods
+06:17 - I'm going to call it deactivate account and it 
+doesn't really accept any parameters except that  
+06:25 - we you know after the switch is flipped 
+we probably want to provide a callback  
+06:32 - um you know allow the ability to pass in a 
+completion method so that the UI can update  
+06:39 - when the switch is flipped so let's go ahead and 
+do that I'm going to call this parameter sorry
+06:52 - yeah it should look like this
+06:56 - okay
+06:59 - okay so we have to make sure that user is 
+logged in get a reference to the database
+07:12 - from the
+07:16 - on the command Okay so make this sure 
+the user logged in guard uh let's see  
+07:23 - oh the viewmodel dot is user logged in foreign
+07:37 - and then this would be let DB equals
+07:43 - firestore Dot
+07:47 - firestore and then here we are going to say DB 
+dot collection the path is going to be users  
+07:57 - right and then the user ID and what we're 
+going to change here is I'm planning to  
+08:02 - change the first name to deleted last name 
+to user flip this switch and we are going to  
+08:09 - we're going to leave the phone number for 
+now but we can always change that because  
+08:14 - um I think without this phone number it's going to 
+mess a lot of things up so we're going to leave it  
+08:19 - for now we're not going to get rid of that just 
+yet but I think eventually we'll want to for the  
+08:24 - sake of complete you know completeness uh let's 
+say document and we're gonna say authviewmodel dot  
+08:35 - author review model dot get user ID 
+get logged in user ID that's right  
+08:41 - and then we are going to want to set data and 
+we're going to use this one where we can pass  
+08:49 - in a dictionary of data we are going to say merge 
+is true so that it doesn't replace the existing  
+08:56 - data with our dictionary instead it merges this 
+essentially is an update rather than a replace  
+09:05 - and then we're going to have the completion right 
+here so let's go ahead and do that so set data  
+09:10 - this is going to be our new data and then merge 
+is going to be true in completion I'm going to  
+09:16 - double click so we have this part here okay so you 
+get one parameter which is error so you're going  
+09:26 - to want to check if there's any errors with the 
+transaction check for errors in it if there are  
+09:32 - no errors then you're going to want to call back 
+this completion method so if error is nil that's  
+09:42 - good because that means there's no error then 
+you're just going to call the completion method  
+09:47 - okay so let's clean this up a little bit 
+because it's getting a little hard to see
+09:55 - okay so the data that we want to set remember 
+it's key value pairs right so first is active  
+10:03 - we are going to set that to false and then 
+we've also got first name that I wanted to set  
+10:09 - to deleted and then last name set to user
+10:19 - yeah these three fields
+10:27 - yeah okay well we'll just leave the photo for now 
+again we can get rid of that later okay so I think  
+10:33 - this is good now where will this method be called 
+from so if we go back to hmm the settings View uh  
+10:45 - if we scroll down to this button delete account 
+right this is the button that's right over here  
+10:54 - now it's true that we could essentially call 
+the database service from here and then in  
+11:01 - that completion method once that switch has been 
+flipped we can log the user out and then show the  
+11:07 - onboarding screen however I think the the sort of 
+pattern that we've used throughout is basically  
+11:16 - we're not calling the database service from the 
+views we are doing it through the view models  
+11:23 - so we are going to instead from here we're going 
+to call a method in the settings view model that's  
+11:30 - sort of like the the data layer for this View and 
+then the settings view model instead is going to  
+11:36 - call the database service so why don't we create 
+that function here for that method let's say
+11:48 - deactivate account now again this one has to 
+have a parameter for the completion method  
+11:57 - because the settings view needs to know when 
+it can you know change the UI when the deed  
+12:04 - is done and then it's time to change the UI so 
+escaping will do the same sort of thing here
+12:15 - you know this does seem a little unnecessary 
+because we're essentially just adding this  
+12:20 - middle layer um just adding this extra step 
+it's like playing telephone right settings View  
+12:26 - telling settings view models settings um all 
+selling database service and then database  
+12:30 - service calling back to settings view 
+model which calls back to settings view  
+12:35 - um so yeah you don't have to do it this way and 
+I think that I'll probably chat with the team  
+12:41 - and see what everyone's opinion is about this it 
+does add an extra step to follow right hopefully  
+12:51 - the good thing about doing this is that we sort 
+of separate the concerns between the view the  
+12:57 - view model and the data the different layers 
+here but perhaps you know you could argue that  
+13:03 - we are making things more complicated than 
+they need to be okay so um here we're gonna  
+13:13 - call the database service we need to create 
+an instance of this so let's do it up here
+13:27 - okay so we're gonna go daily service dot 
+deactivate account so when it is complete
+13:43 - um let's say deactivation is complete we're 
+going to call the completion method here so  
+13:54 - this now now that we have this method deactivate 
+account in the settings view we can call it
+14:09 - um okay let's just call it
+14:14 - because we do have a reference to settings 
+view model here and then we can say deactivate  
+14:19 - account and then say deactivated so log 
+the user out log out and show onboarding  
+14:31 - uh auth viewmodel.log out and 
+then is onboarding equal true  
+14:39 - so this should basically be it why 
+don't we give this a try foreign
+14:48 - missing anything here no I think I 
+think this is it okay so let's run  
+14:52 - this we're going to keep an eye on our database
+14:57 - okay so this is I'm logged 
+in here Chris true ching
+15:08 - yeah there we go deleted user false  
+15:13 - all right thanks for watching 
+I'll see you in the next lesson

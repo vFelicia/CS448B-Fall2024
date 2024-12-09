@@ -1,0 +1,303 @@
+With timestamps:
+
+00:00 - Hi.
+My name is Steward Lynch,
+00:01 - and this is the third of six videos
+in the iOS concurrency series.
+00:06 - At the end of the second video we had
+00:08 - a working application,
+but the user experience was not optimal.
+00:12 - In this video.
+00:13 - We're going to improve the user
+experience by doing two things.
+00:16 - Whenever our app is fetching and Loading
+data, we want to present a spinning
+00:20 - progress view on top of our view
+to indicate that the data is Loading.
+00:26 - If an error does occur,
+then we want to know about it.
+00:28 - So instead of printing the error
+00:30 - to the console or doing nothing at all,
+we want to present an alert to our users
+00:35 - with that error information and ask them
+to contact us with that information.
+00:41 - Now, if you're just jumping into the start
+00:42 - of this series,
+you can download the completed code
+00:45 - from the second video in this series
+from the link in the description below.
+00:51 - Sometimes our users might be on a slow
+00:53 - connection,
+so fetching data from a network call might
+00:56 - take some time to be
+retrieved and decoded.
+00:59 - Your user shouldn't be sitting
+there wondering what's going on.
+01:02 - You should give them some visual clue
+that something is happening and Swift UI
+01:07 - gives us a nice spinner called a progress
+view that we can use for this.
+01:11 - So in order to present the progress view,
+01:14 - we'll need to have some sort
+of a published property in our view model
+01:18 - that we can toggle so in the users list
+ViewModel, create a published property
+01:24 - that you can call is Loading
+and set it equal to false.
+01:29 - That makes it a boolean property.
+01:32 - Then as soon as we start to fetch that
+data, we'll toggle it making it now true.
+01:40 - Now a defer block is used for executing
+code just before transferring program
+01:45 - control outside of the scope
+that the statement appears in.
+01:49 - This means that when the function has
+01:51 - completed so inside of our API service
+class, we can create a defer block
+01:57 - and the code inside there will be executed
+after the data is retrieved and processed.
+02:03 - So what do we want to do when that's done?
+02:05 - Well, we want to toggle that is
+Loading again to set it back to false.
+02:11 - Now, since that's on a background thread
+and we are using a published property,
+02:17 - we'll need to make sure that we get it
+back onto the main thread and we'll do
+02:21 - that again within a dispatchq
+main async block.
+02:30 - So to display the progress view while it's
+02:32 - Loading, well, we can return
+to the user's list view,
+02:37 - and here we can create an overlay
+02:40 - on the list view using the overlay
+function and the content will be
+02:45 - a progress view,
+but we only want to display the progress
+02:49 - view if the view model is
+Loading has been set to true.
+02:56 - If we test this now we'll first need
+02:58 - to set our four preview
+to False to get a real test.
+03:03 - Now I'm on a fast network and I can't
+really notice that progress view.
+03:07 - The data loads really quickly.
+03:13 - Even when I try dark mode,
+it's not obvious.
+03:15 - I really can't see it,
+so we can simulate a slow connection here
+03:20 - by surrounding our API service call
+within a dispatchq main async afterblock,
+03:29 - and we can set a delay of, say 1 second.
+03:33 - So let's test once more.
+03:38 - Now we can see it.
+03:43 - So let's repeat this then
+for the post list view model.
+03:46 - When we're fetching the posts,
+03:49 - first we'll need a published property
+03:51 - called is Loading
+and set it initially to false.
+03:58 - Then we toggle it.
+04:00 - When we start to fetch our posts,
+04:05 - and then for our defer block,
+we can just copy it from our users list
+04:09 - view model here and use it
+inside the getJSON function.
+04:18 - Similarly, we can reuse the code that we
+04:20 - created for the users list view overlay
+here because we use the same property
+04:25 - names for the view model
+and the is Loading property.
+04:30 - So let's make sure that we
+commit our source code.
+04:32 - Now it looks like some of my assets
+weren't committed from the last commit.
+04:37 - That question Mark is an indication,
+04:39 - and I'm not sure what went wrong here,
+but let's select them and make sure
+04:42 - that the commit now works
+to commit those to our repository.
+04:58 - Now we've structured our app so that it
+doesn't crash when fetching and decoding
+05:01 - data, it either prints out that decoding
+error or it just does nothing.
+05:08 - There's no indication that anything goes
+05:10 - wrong, and the user has no idea why
+they're not going to get the data.
+05:16 - For example, let's go to our users list
+model and add another property,
+05:21 - one that's going
+to invalidate the decoding.
+05:23 - For example, that test B string it'll be
+05:27 - invalidated because there is no key value
+pair in the JSON to correspond to this.
+05:33 - So when we run this, we'll see that case
+decoding error is printed on the console.
+05:39 - That's just the case
+name for our API error.
+05:42 - That's not any help to our users,
+and it's not really much help to me.
+05:48 - We want to present something more
+descriptive for each of these user cases,
+05:53 - but before I do that, let's take away
+that delay in our fetch request.
+05:58 - We just did that for testing.
+06:02 - Now, if the error was an actual NS error,
+like what happens in our data task or
+06:06 - in the decoding routine, we can pass
+along the localized description.
+06:11 - That's part of that error along to the API
+06:15 - error, and we can do that by using
+an enums associated value.
+06:21 - Now I have a whole video
+on associated values for enum.
+06:24 - If you're unfamiliar with that concept,
+I recommend that you take a look at it.
+06:32 - And now that we have an associated value,
+we've got some errors,
+06:35 - so we have to provide that associated
+value, which is the localized description.
+06:41 - In the cases of our error here.
+06:46 - And in the case of this error, we can
+safely unwrap it because it's not nil.
+06:53 - In the second case,
+the catch block will generate an unwrapped
+06:57 - error with its own localized
+description too, so we can use it here.
+07:03 - But what about these other cases?
+07:06 - Well, we can provide our own localized
+description for each of these cases.
+07:11 - We've got our own error.
+07:12 - We can create our own description,
+and the way that you do that is to make
+07:16 - sure that your API error conforms
+to the localized error protocol,
+07:22 - and this now provides us with a new
+property called error description,
+07:27 - and it's an optional string,
+and we can make that into a computed
+07:32 - property and switch on self and then allow
+Xcode again to generate the cases for us.
+07:42 - Now for the three without an associated
+07:45 - value, we can return our own
+custom localized string.
+07:51 - We use Nslocalized string,
+and this accepts a string and a comment.
+07:57 - Now the string is what you want to have as
+07:59 - the localized error, and the comment
+is there for your translator.
+08:03 - Should you actually be localizing
+your app to other languages?
+08:07 - And this would be another
+video series entirely?
+08:09 - I think so.
+08:11 - Since we're not,
+we can just enter a string that makes
+08:14 - sense like this one and leave
+the comment as an empty string.
+08:20 - We can then copy and paste this
+into the remaining two cases,
+08:25 - and we can adjust the string as
+needed to represent the error
+08:40 - for the two that have an associated value.
+08:42 - Already we'll simply return that string,
+08:45 - which is the associated value that we
+passed in when we created the error
+08:49 - and that's the error's actual
+localized description.
+08:53 - So now our API error has a localized
+description for all five cases.
+09:00 - Well, now we can use those strings as part
+of a message in an alert that we can
+09:04 - present to the users
+whenever an error occurs.
+09:09 - So let's return to the user's list
+view model and prepare for that.
+09:15 - To present an alert.
+09:16 - In our view, we'll need to provide not
+09:18 - only the boolean property to trigger
+the alert, but also the message
+09:22 - corresponding to the error that we
+can put in the alerts message.
+09:27 - So we'll create a new published property
+09:29 - first called Show Alert,
+and we'll set it initially to false.
+09:36 - We'll also need to have an optional string
+property that we can set with our error
+09:40 - message when we have an error, and this
+too has to be a published property.
+09:49 - Now, whenever we have an error,
+we can set Show Alert to True
+09:54 - and assign our localized error and further
+information as the alert error message.
+10:01 - We need to do this on the main thread
+10:03 - because we are changing a published
+property that will affect the UI.
+10:06 - So inside a dispatchq main async block
+10:17 - in users list view,
+10:18 - then we can attach an alert to our list
+using the new iOS 15 alert type that will
+10:24 - have a localized string as the title
+bound to a boolean.
+10:29 - Four is presented with actions
+for buttons and a view for our message.
+10:35 - The title will just be application error
+10:40 - is presented is going to be bound to our
+View models show alert published property,
+10:46 - and the action is that button that has
+a label of okay, but no action.
+10:53 - And when it's tapped Swift,
+I will take care of dismissing the alert.
+10:59 - Then for the message.
+11:00 - If it's no longer optional,
+we can use the Viewmodel's error string as
+11:06 - the string for the text
+view in our message.
+11:22 - If we test this now,
+we see that our error is displayed.
+11:26 - Great.
+11:28 - Now, before we forget,
+let's fix that user model to remove
+11:31 - that extra property because
+we've done a great job here.
+11:34 - We're not going to get any errors,
+11:36 - but just in case you do,
+your users are going to see it.
+11:42 - Now, let's do the same thing for the post
+list view model and post list view.
+11:47 - We can simply copy the code from the two
+11:50 - files that we've already done
+because they'll be identical.
+11:54 - First the two published properties,
+12:00 - then the failure code
+to trigger the alert,
+12:06 - and then for the View itself,
+we can copy the whole alert again.
+12:11 - Because we use the same variable names.
+12:14 - The code will just work
+12:31 - well before we forget, let's update our
+source control by issuing a new commit.
+12:37 - It looks like I missed one of those assets
+12:39 - the last time, so let's
+make sure I do it here.
+12:43 - Now, all five of our files are updated,
+12:46 - and that's important because in the next
+video in this series,
+12:49 - we're going to branch off of this main
+branch that we've been working on so
+12:54 - that we can take a look at the new
+concurrency model introduced in iOS 15.
+13:00 - We still need this branch, though,
+13:01 - because we'll be checking out again later,
+though, and we'll branch off in another
+13:06 - direction when we change
+our deployment target.
+13:09 - So make sure you subscribe
+to the code with Chrischannel.
+13:12 - If you haven't already and ring that Bell
+to get notification of all new videos.
+13:18 - Thanks for watching
+and we'll see you next week.
+
+Cleaned transcript:
+
+Hi. My name is Steward Lynch, and this is the third of six videos in the iOS concurrency series. At the end of the second video we had a working application, but the user experience was not optimal. In this video. We're going to improve the user experience by doing two things. Whenever our app is fetching and Loading data, we want to present a spinning progress view on top of our view to indicate that the data is Loading. If an error does occur, then we want to know about it. So instead of printing the error to the console or doing nothing at all, we want to present an alert to our users with that error information and ask them to contact us with that information. Now, if you're just jumping into the start of this series, you can download the completed code from the second video in this series from the link in the description below. Sometimes our users might be on a slow connection, so fetching data from a network call might take some time to be retrieved and decoded. Your user shouldn't be sitting there wondering what's going on. You should give them some visual clue that something is happening and Swift UI gives us a nice spinner called a progress view that we can use for this. So in order to present the progress view, we'll need to have some sort of a published property in our view model that we can toggle so in the users list ViewModel, create a published property that you can call is Loading and set it equal to false. That makes it a boolean property. Then as soon as we start to fetch that data, we'll toggle it making it now true. Now a defer block is used for executing code just before transferring program control outside of the scope that the statement appears in. This means that when the function has completed so inside of our API service class, we can create a defer block and the code inside there will be executed after the data is retrieved and processed. So what do we want to do when that's done? Well, we want to toggle that is Loading again to set it back to false. Now, since that's on a background thread and we are using a published property, we'll need to make sure that we get it back onto the main thread and we'll do that again within a dispatchq main async block. So to display the progress view while it's Loading, well, we can return to the user's list view, and here we can create an overlay on the list view using the overlay function and the content will be a progress view, but we only want to display the progress view if the view model is Loading has been set to true. If we test this now we'll first need to set our four preview to False to get a real test. Now I'm on a fast network and I can't really notice that progress view. The data loads really quickly. Even when I try dark mode, it's not obvious. I really can't see it, so we can simulate a slow connection here by surrounding our API service call within a dispatchq main async afterblock, and we can set a delay of, say 1 second. So let's test once more. Now we can see it. So let's repeat this then for the post list view model. When we're fetching the posts, first we'll need a published property called is Loading and set it initially to false. Then we toggle it. When we start to fetch our posts, and then for our defer block, we can just copy it from our users list view model here and use it inside the getJSON function. Similarly, we can reuse the code that we created for the users list view overlay here because we use the same property names for the view model and the is Loading property. So let's make sure that we commit our source code. Now it looks like some of my assets weren't committed from the last commit. That question Mark is an indication, and I'm not sure what went wrong here, but let's select them and make sure that the commit now works to commit those to our repository. Now we've structured our app so that it doesn't crash when fetching and decoding data, it either prints out that decoding error or it just does nothing. There's no indication that anything goes wrong, and the user has no idea why they're not going to get the data. For example, let's go to our users list model and add another property, one that's going to invalidate the decoding. For example, that test B string it'll be invalidated because there is no key value pair in the JSON to correspond to this. So when we run this, we'll see that case decoding error is printed on the console. That's just the case name for our API error. That's not any help to our users, and it's not really much help to me. We want to present something more descriptive for each of these user cases, but before I do that, let's take away that delay in our fetch request. We just did that for testing. Now, if the error was an actual NS error, like what happens in our data task or in the decoding routine, we can pass along the localized description. That's part of that error along to the API error, and we can do that by using an enums associated value. Now I have a whole video on associated values for enum. If you're unfamiliar with that concept, I recommend that you take a look at it. And now that we have an associated value, we've got some errors, so we have to provide that associated value, which is the localized description. In the cases of our error here. And in the case of this error, we can safely unwrap it because it's not nil. In the second case, the catch block will generate an unwrapped error with its own localized description too, so we can use it here. But what about these other cases? Well, we can provide our own localized description for each of these cases. We've got our own error. We can create our own description, and the way that you do that is to make sure that your API error conforms to the localized error protocol, and this now provides us with a new property called error description, and it's an optional string, and we can make that into a computed property and switch on self and then allow Xcode again to generate the cases for us. Now for the three without an associated value, we can return our own custom localized string. We use Nslocalized string, and this accepts a string and a comment. Now the string is what you want to have as the localized error, and the comment is there for your translator. Should you actually be localizing your app to other languages? And this would be another video series entirely? I think so. Since we're not, we can just enter a string that makes sense like this one and leave the comment as an empty string. We can then copy and paste this into the remaining two cases, and we can adjust the string as needed to represent the error for the two that have an associated value. Already we'll simply return that string, which is the associated value that we passed in when we created the error and that's the error's actual localized description. So now our API error has a localized description for all five cases. Well, now we can use those strings as part of a message in an alert that we can present to the users whenever an error occurs. So let's return to the user's list view model and prepare for that. To present an alert. In our view, we'll need to provide not only the boolean property to trigger the alert, but also the message corresponding to the error that we can put in the alerts message. So we'll create a new published property first called Show Alert, and we'll set it initially to false. We'll also need to have an optional string property that we can set with our error message when we have an error, and this too has to be a published property. Now, whenever we have an error, we can set Show Alert to True and assign our localized error and further information as the alert error message. We need to do this on the main thread because we are changing a published property that will affect the UI. So inside a dispatchq main async block in users list view, then we can attach an alert to our list using the new iOS 15 alert type that will have a localized string as the title bound to a boolean. Four is presented with actions for buttons and a view for our message. The title will just be application error is presented is going to be bound to our View models show alert published property, and the action is that button that has a label of okay, but no action. And when it's tapped Swift, I will take care of dismissing the alert. Then for the message. If it's no longer optional, we can use the Viewmodel's error string as the string for the text view in our message. If we test this now, we see that our error is displayed. Great. Now, before we forget, let's fix that user model to remove that extra property because we've done a great job here. We're not going to get any errors, but just in case you do, your users are going to see it. Now, let's do the same thing for the post list view model and post list view. We can simply copy the code from the two files that we've already done because they'll be identical. First the two published properties, then the failure code to trigger the alert, and then for the View itself, we can copy the whole alert again. Because we use the same variable names. The code will just work well before we forget, let's update our source control by issuing a new commit. It looks like I missed one of those assets the last time, so let's make sure I do it here. Now, all five of our files are updated, and that's important because in the next video in this series, we're going to branch off of this main branch that we've been working on so that we can take a look at the new concurrency model introduced in iOS 15. We still need this branch, though, because we'll be checking out again later, though, and we'll branch off in another direction when we change our deployment target. So make sure you subscribe to the code with Chrischannel. If you haven't already and ring that Bell to get notification of all new videos. Thanks for watching and we'll see you next week.

@@ -1,0 +1,454 @@
+00:05 - so a question i started getting asked a
+00:07 - lot when i started talking about how to
+00:08 - do
+00:09 - a 3d car was how do you make an
+00:13 - ai car that drives around the track and
+00:15 - this car you're looking at right now
+00:17 - i'm not touching it it's driving on its
+00:19 - own and it's
+00:21 - not very smart this was actually
+00:23 - something i made to try and make the
+00:25 - the dumbest possible car that could make
+00:28 - it around a track
+00:29 - and to do that i used an algorithm
+00:32 - called
+00:32 - context-based steering and that's what
+00:35 - we're going to look at today
+00:37 - how to do this and this works perfectly
+00:38 - well in 2d and in 3d
+00:41 - and it also works for all sorts of
+00:42 - things besides just cars going around
+00:44 - race tracks alright so let's look at how
+00:47 - this works
+00:48 - for this demo we're going to use a
+00:50 - generic agent
+00:52 - object which is a kinematic body 2d with
+00:54 - a sprite and a coaching shape
+00:57 - and i'm keeping it generic so you can
+00:59 - see how this algorithm works
+01:01 - and that it doesn't really matter what
+01:03 - type of object you're attaching it to
+01:05 - it can work for a car driving around a
+01:07 - track it could work for
+01:08 - a guard patrolling a dungeon number of
+01:12 - different kinds of game objects could
+01:13 - use this process
+01:16 - and at the base of the algorithm what we
+01:17 - have is
+01:19 - a number of rays and the
+01:22 - agent is going to choose a direction it
+01:24 - wants to go in
+01:26 - maybe towards a target maybe towards a
+01:28 - player maybe towards a goal
+01:30 - and then it's also going to have some of
+01:33 - these directions represent danger
+01:35 - maybe obstacles that needs to avoid
+01:38 - other things that it wants to flee away
+01:40 - from
+01:41 - whatever and that's how it develops its
+01:44 - context
+01:45 - of its environment and how it's going to
+01:46 - decide how to steer
+01:49 - so in the agent we're going to have two
+01:51 - arrays one called interest
+01:53 - and one called danger that are going to
+01:55 - represent the
+01:57 - magnitude of those vectors in
+02:00 - each direction and so if the interest is
+02:04 - high in a particular direction
+02:05 - it wants to go that way if the danger is
+02:07 - high in a particular direction
+02:09 - it does not want to go that way and
+02:12 - combining these two together
+02:13 - will be how we determine the final
+02:15 - direction to go in
+02:17 - now of course if the interest equally
+02:18 - points in all directions it's kind of
+02:20 - boring it can't figure out where to go
+02:21 - it wants to go everywhere
+02:22 - so we're going to want to have some sort
+02:25 - of way of deciding which way
+02:27 - that the object wants to go
+02:31 - so for example we might have this
+02:32 - situation where the agent
+02:34 - mostly wants to go forward so the
+02:36 - longest vector is pointing directly
+02:37 - forward
+02:38 - but it's also okay with going a bit to
+02:40 - the left or a bit to the right
+02:42 - but generally it wants to go forward
+02:46 - so in that situation the interest array
+02:48 - would look like this
+02:49 - the first index is the forward direction
+02:52 - and we go around
+02:53 - clockwise but what if an obstacle
+02:55 - appears
+02:56 - so now we have this upward pointing ray
+03:00 - is detecting an obstacle and so we don't
+03:02 - want to go that way
+03:04 - so in that case our interest array would
+03:06 - stay the same
+03:07 - but our danger array now has some
+03:09 - information in it
+03:11 - and our arrays now look like this
+03:14 - so now we know what our interest is the
+03:17 - direction we want to go
+03:18 - and we know what the danger is the
+03:19 - directions we shouldn't go
+03:21 - and to combine these two we just go
+03:24 - through the danger array and anywhere we
+03:26 - have danger
+03:27 - we eliminate the interest in the
+03:30 - matching box
+03:33 - and our resulting direction would be the
+03:36 - sum of these two
+03:37 - which is going to make the agent turn to
+03:41 - the right and move to go around the
+03:43 - obstacle
+03:44 - so to summarize we have four steps first
+03:47 - we find
+03:49 - interest which is the directions the
+03:50 - object wants to go
+03:52 - second we find those directions that
+03:55 - have any
+03:56 - danger those are directions we don't
+03:58 - want to go
+04:00 - step three is we eliminate any interest
+04:02 - directions
+04:03 - where there was danger and finally in
+04:06 - step four
+04:06 - we sum up the remaining interest
+04:09 - directions and that tells us what
+04:11 - the final direction to move in should be
+04:14 - so let's look at the code for our agent
+04:18 - to begin with we have our variables
+04:20 - these export variables are going to be
+04:21 - the ones
+04:22 - where you can configure the behavior
+04:25 - how fast we go how fast we turn this is
+04:28 - going to be the
+04:29 - kind of determine the turning radius
+04:32 - look ahead is how far
+04:33 - ahead are those rays going to project
+04:36 - how far away can we see an
+04:38 - obstacle before we reach it and then
+04:41 - i've also got a variable here for the
+04:42 - number of rays now the example we used
+04:45 - before was using eight rays but of
+04:48 - course you can use any number
+04:50 - and there are reasons you might want to
+04:52 - use more
+04:53 - there are reasons you might want not to
+04:55 - use too many and we'll talk about what
+04:57 - some of those are
+04:58 - towards the end of this tutorial
+05:01 - but eight is good enough for us to start
+05:03 - with and see how it works
+05:05 - and then for our context array we're
+05:07 - going to have our
+05:09 - directions that the rays point in and
+05:12 - this is an array i've had
+05:14 - curly brackets there for some reason for
+05:16 - something before and then we have our
+05:18 - interest array and our danger array like
+05:19 - we saw in the
+05:22 - example and then finally we have the
+05:24 - chosen direction that's going to be our
+05:26 - result
+05:27 - at the end once we've added up the
+05:30 - interest
+05:31 - removed the danger and found the
+05:32 - resulting direction
+05:34 - and then velocity and acceleration are
+05:36 - going to be our movement properties
+05:40 - so if we scroll down to our ready we're
+05:41 - going to take our three arrays and
+05:42 - resize them to the given
+05:44 - size and then we're going to populate
+05:46 - the ray directions one
+05:47 - with the actual vectors pointing in all
+05:49 - those directions starting with
+05:50 - vector2.right which points to the right
+05:53 - which is forward for our character
+05:55 - and just going around the circle
+05:57 - dividing by
+05:58 - however many rays there are
+06:03 - okay now in physics process what we're
+06:05 - going to do is we're going to populate
+06:06 - the context arrays
+06:08 - we're going to have functions that do
+06:09 - each of those things find our
+06:11 - interest array find our danger array and
+06:14 - use those to choose the direction
+06:16 - so we'll get to those in a minute and
+06:18 - then we have our standard movement code
+06:21 - which just takes the desired velocity
+06:24 - the place
+06:25 - we want to go and we
+06:28 - interpolate it with the current velocity
+06:30 - using our steer force so that we will
+06:31 - gradually turn towards the direction we
+06:33 - want to go
+06:34 - and we're using movement collide to move
+06:37 - now the first of the arrays we want to
+06:39 - set is interest
+06:41 - and there's a lot of different ways you
+06:43 - could do this depending on what your
+06:45 - game's
+06:45 - setup is so for this demo we're assuming
+06:49 - that the this agent lives in a world
+06:53 - that has a path drawn on it
+06:56 - it has something that the agent's going
+06:59 - to need to follow like a racetrack
+07:01 - right it's going to want to follow and
+07:02 - it's going to go around the track in the
+07:03 - proper direction
+07:05 - right we don't want our ai agents
+07:06 - driving backwards around the
+07:08 - around the track so so we're going to
+07:10 - assume that our
+07:12 - owner if we have an owner the owner has
+07:15 - a method called get
+07:16 - path direction it's going to tell us
+07:18 - what direction we want to go in
+07:21 - and this way we can stick our agent in
+07:23 - any kind of world
+07:24 - and let the world tell it what the
+07:26 - preferred direction is
+07:28 - this will be the part that you'll do
+07:29 - differently depending on your game's
+07:31 - setup so we ask our owner
+07:34 - what's the direction to go in if you're
+07:36 - in the position i'm in
+07:38 - all right and it's going to tell us
+07:40 - based on the
+07:41 - the racetrack which direction we should
+07:43 - be going in then we take each
+07:45 - of the ray directions each of our arrays
+07:48 - and we do a dot product with that path
+07:51 - direction
+07:52 - and that dot product is going to get
+07:54 - give us a result between 0 and 1.
+07:57 - how big we want well actually between
+07:59 - negative one and one
+08:00 - but the negative values will be the ones
+08:02 - that pointing in the opposite direction
+08:04 - that we wanna go so we're gonna zero
+08:06 - those out and we're just gonna take
+08:08 - either zero or the value we get
+08:11 - and then i also have this here just in
+08:14 - case
+08:15 - which is for just for some of the demos
+08:17 - that i did to set the default
+08:19 - interest let me put this back to zero
+08:22 - here which was to just go forward
+08:24 - like in the diagram okay if you don't
+08:27 - need this obviously
+08:28 - you would leave this part out of your
+08:30 - code
+08:32 - right and we'll do an example here in a
+08:34 - minute so you can see what that looks
+08:35 - like
+08:36 - okay but the next function here is the
+08:39 - set danger function
+08:40 - and this is where we're going to take
+08:42 - each of our rays
+08:44 - in our ray directions array and we're
+08:46 - going to cast a ray in that direction
+08:48 - to see if we hit something right we use
+08:52 - the look ahead distance for how far
+08:55 - we project forward and then
+08:58 - we're going to set the danger to 1 if we
+09:01 - hit something
+09:02 - or 0 if we don't so there's something
+09:05 - there or there isn't something there
+09:08 - and then finally we can choose
+09:09 - directions and we just loop through
+09:12 - num rays and if there's something in
+09:14 - danger we set the interest to zero there
+09:18 - and we get our chosen direction by just
+09:20 - summing up
+09:21 - all of the directions where there's
+09:24 - interest
+09:27 - and then normalizing it and now we have
+09:28 - a direction that we want to move in
+09:32 - so here's our example again and i've
+09:34 - increased the number of rays to 16
+09:36 - just so we can see a little more
+09:37 - information here and so if you imagine
+09:39 - that
+09:40 - to the left is the direction that our
+09:42 - world told us
+09:44 - that the racetrack is going that's the
+09:46 - direction we want to go
+09:48 - so we took our forward direction and we
+09:50 - did the dot product
+09:52 - with each of the rays
+09:55 - and so you can see that they're getting
+09:57 - shorter as we go
+09:58 - perpendicular arrays dot product is zero
+10:01 - so we got zero
+10:02 - and any of the rays that were pointing
+10:04 - backwards the dot product would have
+10:05 - been negative
+10:06 - so we zeroed those out so this these
+10:09 - green
+10:10 - arrows represent the total direction
+10:12 - that we want to go
+10:13 - and since there's no danger none of them
+10:15 - are getting eliminated
+10:17 - summing them all up results in a vector
+10:19 - pointing
+10:20 - forward but if we add some obstacles
+10:23 - here and
+10:24 - we see the danger coming in as the
+10:26 - danger
+10:27 - changes you can see our resulting
+10:30 - direction is going to be
+10:32 - changed as well if we really want to
+10:36 - block it let's see we're going to turn
+10:38 - hard to the right now because
+10:40 - there is a lot of danger on the left
+10:42 - hand side
+10:45 - so let's see it in action we've got
+10:48 - a path 2d that i've drawn here to be
+10:52 - a track that we're going to follow and
+10:54 - then i've put some
+10:56 - static bodies around to give it
+11:00 - some obstacles to keep it on the path
+11:01 - right so we can't we can't turn in this
+11:03 - way we can't turn out that way
+11:05 - and i've put a whole bunch of agents in
+11:07 - here and
+11:08 - all i did to change them was
+11:12 - i randomized their speed a little bit so
+11:14 - that some of them will be faster and
+11:15 - some of them will be slower
+11:17 - if we look at the code real quick this
+11:19 - get path direction
+11:21 - is what all the agents are going to call
+11:23 - to say hey what direction do i need to
+11:25 - be going
+11:26 - so we're going to find the closest
+11:28 - offset along the curve to the position
+11:31 - that was given so the closest point on
+11:32 - the curve
+11:33 - to where the agent is we're going to
+11:36 - take our pathfollow 2d node
+11:38 - which is a child of the path 2d we're
+11:40 - going to set this offset to that
+11:41 - position
+11:42 - so now we have that node has moved to
+11:44 - that position and we just take its
+11:46 - transform.x
+11:47 - which is its forward direction and
+11:49 - that's what we return
+11:50 - so if you're a path follow on the path
+11:53 - that's
+11:54 - what forward is at that point in the
+11:55 - path and that's the direction we want
+11:57 - the agents to move in
+11:58 - as well
+12:02 - so let's look what it looks like when we
+12:04 - run this okay so see
+12:06 - you can see them trying to follow the
+12:07 - track here's a really fast one
+12:10 - right as soon as he finds a way around
+12:12 - he's going to
+12:13 - skip past some of these guys there we go
+12:17 - and so you can see with some simple code
+12:20 - we've got some
+12:21 - pretty good path following behavior and
+12:23 - if i turn on debug here you can see
+12:26 - you can see how those interest and
+12:29 - danger
+12:31 - vectors are changing as they move around
+12:33 - if they get too close to one wall
+12:34 - they're going to want to
+12:36 - steer away from it too far and they'll
+12:38 - want to steer back away
+12:40 - again and for the most part they're
+12:42 - going to want to try and go forward
+12:43 - along
+12:44 - the path and that's it this is a pretty
+12:47 - flexible
+12:48 - and easily adaptable algorithm that you
+12:52 - can apply to
+12:53 - a lot of different types of objects the
+12:55 - main things you're going to want to
+12:57 - think about when you're configuring this
+12:59 - are the
+13:01 - look ahead how far ahead does an
+13:04 - obstacle get seen
+13:06 - and a lot of that's going to have to do
+13:07 - with how fast you're moving
+13:10 - but also the number of rays now the more
+13:13 - rays you have
+13:14 - the more the finer detail you're going
+13:17 - to
+13:18 - to have in detecting smaller objects for
+13:21 - example
+13:22 - but obviously the more performance hit
+13:24 - there's going to be because you have
+13:26 - more and more rays you're having to cast
+13:28 - every frame
+13:29 - to detect movement in practice
+13:33 - i have found that eight is
+13:36 - maybe a little too low for some cases
+13:40 - although it works perfectly fine in
+13:42 - others
+13:42 - and 16 is probably good enough for most
+13:46 - uses
+13:47 - you can go higher and have you know 32
+13:50 - or 64
+13:51 - and obviously it doesn't even have to be
+13:52 - a power of two
+13:54 - but the more that there are the more um
+13:57 - the more you're going to have to
+13:59 - figuring out those trade-offs of
+14:01 - is it going to be worth it am i getting
+14:04 - it any better
+14:05 - behavior and you can try it you increase
+14:07 - it to 32 and you see that
+14:08 - they drive around just the same then
+14:10 - maybe 32 wasn't necessary
+14:12 - now as always if you take a look at the
+14:14 - written version of rongorecipes.com
+14:17 - you can see some more detail of how the
+14:19 - implementation works
+14:21 - and some suggestions down here at the
+14:22 - bottom for some other
+14:24 - improvements or additions you could make
+14:26 - that might
+14:28 - give you some different behavior based
+14:30 - on what your needs are
+14:31 - and i'd love to hear your feedback on
+14:33 - there as well okay hopefully you found
+14:35 - this algorithm interesting and useful
+14:37 - and can apply it to your own games not
+14:40 - just racing games like this one
+14:42 - but any other kind of ai
+14:45 - that you need some kind of steering
+14:47 - behavior on
+14:48 - let me know in the comments below if you
+14:50 - tried it out and got it working in your
+14:52 - game i'd love to see
+14:53 - what you got it to do as well thanks for
+14:56 - watching and i'll see you in
+14:58 - the next video
+15:03 - you can find this recipe and lots more
+15:05 - on the godot recipes
+15:06 - website at godot recipes dot com
+15:09 - here you can find a wide variety of
+15:12 - recipes
+15:12 - for creating the game system you need
+15:15 - some help on how to get started with
+15:17 - godot in the basics section
+15:19 - and lots more i recommend you go over
+15:20 - there and explore and
+15:22 - let me know if there's something you're
+15:24 - looking for that you'd like me to add
+15:26 - as i'm always adding more recipes over
+15:28 - time
+15:29 - thanks for watching and i'll see you in
+15:31 - a future video

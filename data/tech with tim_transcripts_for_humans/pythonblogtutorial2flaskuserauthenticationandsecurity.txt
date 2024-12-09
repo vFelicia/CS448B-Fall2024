@@ -1,0 +1,1676 @@
+With timestamps:
+
+00:00 - hello everybody and welcome to part two
+00:01 - of this flask blog tutorial series
+00:04 - in this video i'm going to be showing
+00:06 - you how we can do all of the security
+00:07 - and authentication for our application
+00:10 - so how to sign users in sign them out
+00:12 - create new accounts all of that fun
+00:14 - stuff
+00:14 - now in the previous video we created our
+00:16 - sign up and login
+00:18 - page so what i'm going to start by
+00:20 - showing us how to do here is actually
+00:21 - get the information from these forms so
+00:24 - from you know the login
+00:25 - and from the sign up then of course
+00:28 - we're going to need to actually create
+00:30 - users
+00:30 - store them in some sort of database
+00:32 - we're going to have to hash their
+00:34 - password
+00:34 - we're then going to have to validate
+00:36 - things like if their username or email
+00:38 - is already taken when they try to sign
+00:39 - up and create an account
+00:40 - this will take a good amount of time but
+00:42 - once this is done this is a lot of this
+00:43 - the tough and difficult stuff finished
+00:46 - then we just need to go and actually
+00:47 - build the blog functionality of the app
+00:49 - so let's go ahead and get started
+00:59 - so i want to start by just showing you
+01:00 - what happens now if i fill something
+01:02 - ends i'm going to go with tim
+01:03 - gmail oops i don't want that in all
+01:04 - capitals tim
+01:06 - gmail.com maybe the username is tim and
+01:09 - the password can be one
+01:11 - two three four one two three four
+01:14 - okay so when i press sign up right now
+01:16 - notice we get method not allowed
+01:18 - now the reason we get method not allowed
+01:20 - is because if we go to
+01:21 - our sign up page here we have a form and
+01:24 - this method is post
+01:26 - this means when we press this button
+01:29 - right here
+01:29 - we're going to take all of this form
+01:31 - data and we're going to submit this
+01:33 - in a post request to the slash
+01:36 - sign up url now right now if we go to
+01:39 - auth.pi
+01:40 - we have not explicitly defined that we
+01:43 - are allowed to send a post request to
+01:45 - this url
+01:46 - so by default the only method that is
+01:49 - allowed http method i'm going to
+01:51 - describe what this is in a second
+01:52 - for all of our routes is a get request
+01:55 - so the most basic and most common
+01:57 - http request is a get request what that
+01:59 - means
+02:00 - is you are asking for information from
+02:02 - the server so get
+02:03 - means get to give me something right
+02:05 - you're asking for something and in most
+02:06 - cases
+02:07 - what a get request is is you're asking
+02:09 - for the html of the web page to actually
+02:11 - make it up right
+02:12 - so when i just go here and i hit enter
+02:14 - and i go to sign up
+02:15 - i just sent a get request to my server
+02:18 - asking for the html that makes up the
+02:20 - sign up page
+02:21 - and you can see that if you go to the
+02:23 - flask app that's running
+02:24 - it says get sign up and notice we had
+02:26 - post sign up
+02:27 - then we had 405 which stands for method
+02:29 - not allowed so these are status codes
+02:31 - 200 stands for ok
+02:33 - 405 stands for method not allowed and
+02:34 - method was not allowed on sign up
+02:36 - because we have not explicitly defined
+02:38 - it can accept a post request there's a
+02:40 - few other requests as well you have a
+02:41 - put request a delete request update
+02:43 - request
+02:44 - there's a bunch of other ones i won't go
+02:45 - through all of them but just understand
+02:47 - that the different types of requests
+02:49 - are used for different things
+02:50 - theoretically you can return
+02:52 - anything from any type of request but
+02:55 - post
+02:55 - is usually the type of request you use
+02:57 - when you are creating something or
+02:59 - sending data to the server
+03:01 - now there's sometimes some exceptions
+03:03 - but a lot of times when you are creating
+03:05 - something new
+03:06 - in the database so like creating a new
+03:08 - user you're going to send a post request
+03:10 - to our url
+03:11 - that url will listen for that post
+03:13 - request and then it will look for all of
+03:15 - the data related to what it's going to
+03:16 - be creating in the database
+03:18 - so anyways the whole point of this is to
+03:20 - say we need to go into our auth.root
+03:22 - here let me make this full screen
+03:24 - and i need to say method is equal to
+03:26 - sorry methods is equal to and then a
+03:28 - list
+03:29 - and inside of here i'm going to say get
+03:31 - and post so this is saying okay the
+03:32 - methods that are allowed for this url
+03:35 - are get and post by default it's just
+03:37 - get
+03:38 - okay so i'm going to take this and i'm
+03:39 - going to put this on login as well
+03:42 - and for logout that's fine we can just
+03:44 - leave that as a get request
+03:46 - okay so now if i go back here and i
+03:48 - refresh
+03:49 - and i press sign up i don't get there
+03:51 - right so it is actually sending a post
+03:52 - request if i go here
+03:54 - we can see we're getting a bunch of post
+03:57 - requests sent to this url
+03:59 - and it's refreshing the page after the
+04:00 - post request comes in nice
+04:02 - so now how do i actually get the data
+04:04 - that's being sent from the form
+04:06 - well we need to import something from
+04:07 - flask this is called request
+04:09 - so this is a variable that will store
+04:12 - all of the
+04:13 - context related to a specific request so
+04:16 - you use this everywhere inside of all of
+04:18 - these functions use the same request
+04:19 - variable
+04:20 - and the way that you actually get data
+04:22 - that's inside of a form is you do the
+04:23 - fault
+04:24 - say data is equal to request dot form
+04:28 - then dot get and the name of the item in
+04:32 - the form that you want the data from
+04:34 - so in this case if i go to sign up
+04:36 - notice how i said we have to have these
+04:37 - names here right email
+04:39 - username password1 password2 so the way
+04:42 - i
+04:42 - access these pieces of information is i
+04:44 - say request.form.get
+04:46 - and then i put in the name of what i'm
+04:48 - looking for so in this case i want
+04:49 - the username right so we could say
+04:52 - rather than data
+04:53 - just username and just very simply here
+04:56 - i'll start by printing out the username
+04:59 - just to see if this works now the reason
+05:01 - you do dot get is because if this does
+05:03 - not exist if username does not exist
+05:05 - this will return none so rather than
+05:07 - crashing your program which happens
+05:08 - sometimes if you did this in a different
+05:10 - way
+05:10 - it will simply return none to you so the
+05:12 - username will be equal to none
+05:14 - if there is uh no username field that's
+05:17 - sent to the post request
+05:18 - okay so let's go here and let's refresh
+05:22 - uh oops actually let me just hit enter
+05:25 - now let's enter a username
+05:26 - let's enter tim let's press sign up
+05:29 - notice here prints out tim
+05:30 - because it's printing the username so
+05:32 - now let's do this
+05:34 - this line right here for all of the
+05:35 - different things that we want so we want
+05:37 - the email we want the
+05:41 - oops the password1 uh
+05:44 - what am i doing here okay and then we
+05:47 - want the password to so let's fix that
+05:51 - okay and password two nice
+05:54 - now obviously we need to change these so
+05:55 - this is gonna say email
+05:57 - this will say password1
+06:02 - not password backtick and then password
+06:05 - two
+06:06 - nice okay so we have just sent all this
+06:08 - data uh or we've just received all this
+06:10 - data now inside of sign up now we can do
+06:12 - the same thing inside of login
+06:14 - but inside of login all we're gonna need
+06:15 - is the email and the password so let's
+06:17 - just put this in here while we're at it
+06:18 - so we'll say
+06:20 - email and then rather than password1
+06:22 - this just give me password
+06:23 - like that nice there we go so now we're
+06:26 - actually getting all of this data
+06:28 - from these different uh these urls or
+06:30 - these endpoints or the backend whatever
+06:32 - you want to call
+06:33 - okay that's great but we can't actually
+06:35 - do anything with this data yet
+06:37 - until we create a database and have some
+06:39 - place to store it or to check if it is
+06:41 - valid so that's what we're going to do
+06:42 - now
+06:43 - so i'm going to go to init dot pi i'm
+06:45 - going to start setting up my database
+06:46 - now this is a little bit complicated but
+06:48 - it's not crazy
+06:49 - what i'm going to do is create a
+06:50 - variable i'm going to say db
+06:52 - is equal to and this is going to be sql
+06:54 - alchemy like that
+06:56 - uh yeah i think that's all i need to do
+06:58 - next in all capitals i'm going to say db
+07:00 - underscore name is equal to database
+07:03 - dot db so i'm just defining the name of
+07:06 - my database
+07:07 - and then what i'm going to do is
+07:08 - configure my database inside of my
+07:11 - create app
+07:11 - function so i'm going to say app dot
+07:13 - config and i'm going to say
+07:16 - sql underscore alchemy
+07:19 - uh am i ever spelling that right yes
+07:20 - okay not scl
+07:23 - sql alchemy underscore database
+07:26 - underscore uri this is an i not now make
+07:29 - sure that's an i
+07:31 - then you're going to say equals and we
+07:32 - are going to put the path
+07:34 - to our database now for this application
+07:37 - we're going to use an sqlite3 database
+07:39 - you don't need to know what that means
+07:40 - it's just one of the simplest ones to
+07:42 - use
+07:42 - and we don't need to write any uh like
+07:44 - actual sql or sql
+07:46 - we can literally just use the built-in
+07:48 - flask sql related commands to you know
+07:51 - query our database and find users and
+07:53 - add stuff to it
+07:54 - it's pretty straightforward but here
+07:55 - what we need to do is make an f string
+07:57 - so i'm going to say
+07:58 - f and then i'm going to say this is
+08:00 - sqlite
+08:01 - colon this is going to be two slashes i
+08:04 - think sorry actually three slashes
+08:07 - and then we're gonna say db underscore
+08:08 - name like that
+08:10 - there you go now what we're going to do
+08:13 - after this
+08:13 - is say db dot underscore or sorry a nit
+08:17 - underscore app and we're going to pass
+08:19 - our app which is our flask application
+08:21 - so if you want to know exactly why you
+08:23 - need to do all of this you can reference
+08:24 - the sql alchemy documentation but
+08:26 - essentially we just need to tell flask
+08:28 - where our database actually is and then
+08:30 - we initialize our database
+08:32 - with our flask application nice now
+08:34 - there's a few more things that we need
+08:35 - to do
+08:36 - the next thing we need to do is actually
+08:38 - create the database so what i'm going to
+08:39 - do is make a function here
+08:41 - and call this create database this is
+08:43 - going to take
+08:44 - an app and what this is going to do is
+08:46 - check if the database already exists if
+08:48 - it doesn't it's going to create it so
+08:49 - it's going to say if not
+08:51 - it's going to be path dot exists like
+08:54 - this
+08:55 - and we're going to say website slash
+08:58 - plus
+08:58 - db underscore name okay
+09:02 - and then here we're going to say db oops
+09:05 - db dot create underscore all
+09:09 - app equals app and then i'm just going
+09:11 - to print out
+09:14 - created database exclamation point okay
+09:16 - so let me just explain what this is
+09:17 - doing
+09:18 - so path dot exists pretty
+09:19 - straightforward we're checking if this
+09:21 - path
+09:22 - exists so if website which is the name
+09:23 - of our folder here slash
+09:25 - dbname exists if it doesn't exist then
+09:28 - we're going to create it so we'll say
+09:29 - db.createall
+09:30 - we pass the app to this and it will
+09:32 - actually make the database file for us
+09:34 - and then we print create a database this
+09:37 - is not what you would normally do in
+09:38 - production but since we're just creating
+09:39 - like you know a local application
+09:42 - this isn't going to be the next facebook
+09:43 - or something this is totally fine we can
+09:45 - just do this
+09:46 - okay so now what we're going to do is
+09:48 - we're going to go here and we're going
+09:49 - to
+09:50 - call our create database now it doesn't
+09:52 - really matter where you call it at least
+09:54 - right now it will in one second we need
+09:56 - to pass this story
+09:58 - the app okay now i need to just look at
+10:01 - my cheat sheet here to see what else i
+10:02 - need to do
+10:03 - okay so let me just move this i just
+10:04 - want to keep things a bit organized so
+10:06 - let's put
+10:06 - that right there okay so now we are
+10:09 - creating our database
+10:10 - however right now the database is
+10:13 - completely empty
+10:14 - and that is because we haven't yet
+10:15 - created any models or tables in our
+10:18 - database so what we're going to do is
+10:19 - make a new file inside a website
+10:21 - we're going to call this models.pi all
+10:23 - right so i'm inside of models.pi
+10:25 - as i was saying this we're going to
+10:26 - define all of our database models before
+10:29 - we do that though i need to import a few
+10:30 - things so i'm going to say from dot
+10:32 - import db dot stands for the current
+10:34 - package that we're in so from
+10:36 - website import db which really means
+10:38 - from this init.pi file
+10:40 - import this db variable right here so
+10:42 - we're importing that standing for
+10:43 - database obviously
+10:45 - then we're going to say from this can be
+10:46 - flask underscore login
+10:49 - import user mix in like that
+10:53 - then we're going to say from and this is
+10:55 - going to be sql underscore
+10:57 - alchemy dot sql import
+11:00 - func now i'll tell you why we need that
+11:02 - in a second let me spell alchemy
+11:04 - correctly though
+11:05 - and now what i'm going to do is define
+11:07 - my first database model which is going
+11:08 - to be a user
+11:09 - so what we're going to focus on right
+11:11 - now is the user model
+11:13 - the user database table so i'm going to
+11:15 - code it code out a little bit of it then
+11:16 - i'll stop and explain exactly what i'm
+11:18 - doing so i'm going to say class user
+11:19 - this needs to inherit from db.model
+11:23 - and from the user mixin so db.model
+11:27 - is kind of a base class which is a
+11:29 - database model
+11:30 - now if any of you are familiar with
+11:31 - relational databases you
+11:33 - you might not have heard of model before
+11:35 - you may have heard of table so really a
+11:36 - model is just a table it's like the
+11:39 - model of a table if that makes any sense
+11:41 - now a table has rows and columns every
+11:44 - row
+11:44 - in the table is a new user every column
+11:47 - is information related to each user
+11:49 - so what we need to do right now is
+11:51 - define all of the columns that are going
+11:53 - to be in our user table
+11:54 - then every single time we add a user we
+11:56 - fill in a new row of columns and that is
+11:59 - a user that's as straightforward as it
+12:00 - is the reason we need this user mix-in
+12:02 - thing
+12:03 - is because we're going to be using this
+12:05 - plug-in flask login which allows us to
+12:07 - way
+12:07 - more easily log users in and out and so
+12:10 - you just need to have your main user
+12:12 - class inherit from this so that you can
+12:14 - log users in and out that's pretty much
+12:16 - the best explanation i can give you
+12:18 - okay so what information do we want for
+12:21 - all of our users
+12:22 - well the first thing we need is is an id
+12:24 - so we're going to say id is equal to
+12:26 - db dot column and then we need to define
+12:29 - the type of this column
+12:30 - what date is being stored in this column
+12:32 - well this is simply going to be an
+12:33 - integer so db dot integer
+12:35 - and then what we need to do after this
+12:37 - is state that this is a primary key so
+12:39 - primary key is equal to true
+12:41 - so let me explain what this is on every
+12:43 - single database
+12:44 - model or every single database table you
+12:47 - need to have
+12:47 - one column which is the primary key this
+12:50 - is the key that is unique
+12:52 - and that you will use to look up uh
+12:55 - users in this case or
+12:57 - rows if you're talking more generally in
+12:59 - a database tape
+13:00 - so every table needs at least one
+13:02 - primary key i think you can have
+13:04 - multiple primary keys and like combine
+13:05 - them together
+13:06 - but regardless you need one and that is
+13:08 - almost always an integer
+13:10 - and in this case we're calling it id you
+13:11 - always need an id on
+13:13 - all of your tables so we have our id
+13:16 - all right now this id will actually
+13:18 - automatically be created for us when we
+13:20 - make new users so we don't need to try
+13:21 - to figure out what the last user was
+13:23 - that we inserted what its id was it just
+13:25 - automatically gives it a unique id
+13:27 - okay next what do we need well now this
+13:30 - is up to us we have the id
+13:31 - we've kind of filled in the mandatory
+13:32 - stuff what information do we want
+13:34 - related to user
+13:35 - well we're gonna need a username we're
+13:36 - gonna need an email we're gonna need a
+13:38 - password
+13:38 - and we probably want to know when this
+13:41 - user was created so like time of
+13:43 - creation
+13:44 - let me look and see if there's anything
+13:45 - else um actually i think that's probably
+13:48 - all we need for right now so i'm going
+13:48 - to say email
+13:50 - is equal to db.column in this column is
+13:53 - going to be
+13:55 - db.string and it's going to have a
+13:57 - maximum length of 150 characters
+13:59 - so when you do db.string you need to
+14:02 - define a max length for this string
+14:04 - we'll say the email has a maximum length
+14:06 - of 150. all right
+14:08 - then after this we are going to define
+14:11 - that this must be unique
+14:12 - it's unique equals true this makes make
+14:15 - sure that we cannot have any users that
+14:17 - have duplicate emails
+14:18 - okay we have our email next we need our
+14:20 - username
+14:21 - so this will be the exact same thing
+14:22 - we'll literally just leave it exactly
+14:24 - like this unique equals true
+14:26 - uh and finally we'll say password
+14:30 - is equal to and then this will be same
+14:32 - thing except the password does not need
+14:34 - to be unique
+14:35 - so we'll remove unique equals true okay
+14:38 - so that's actually all we need for the
+14:39 - user right now sorry we're going to do
+14:41 - date created as well so let's do that
+14:43 - date created is equal to and then i'm
+14:46 - trying to remember what this would be
+14:47 - db dot column db
+14:50 - dot date time zone
+14:54 - is equal to true and let me see if
+14:57 - there's anything else we need there
+14:59 - we're going to add a default value so
+15:01 - the default is going to be func
+15:03 - dot now okay that's why i needed to
+15:04 - import func so let me just explain
+15:07 - what this line just did here so say okay
+15:09 - we're going to have a column
+15:10 - this is going to store a date we want to
+15:12 - know the time zone associated with this
+15:14 - date when you say date it also it stirs
+15:15 - the time as well it's date and time
+15:17 - but we also want the time zone and then
+15:19 - the default means okay if we don't pass
+15:22 - something
+15:22 - in here what should by default we fill
+15:25 - this with
+15:26 - well we're going to call funk dot now
+15:29 - what that will do
+15:30 - is uh that will fill this by default
+15:32 - with whatever the current time is so
+15:34 - it's kind of weird why this is called
+15:35 - func but that's why i imported this this
+15:37 - just gives you the current time
+15:38 - so we're going to make that the default
+15:40 - now let me just look at something here
+15:43 - okay i just want to make sure
+15:43 - everything's good looks good to me
+15:46 - all right so we've now created our user
+15:48 - model now we're going to go back to
+15:49 - init.pi
+15:50 - and we're going to import the user
+15:52 - module on line 22 or user
+15:54 - model sorry online 22. so we're going to
+15:57 - say from
+15:58 - dot models import user
+16:02 - the reason we need to do this is if we
+16:04 - don't import the user
+16:06 - when we go to create the database it
+16:08 - won't create the user table
+16:10 - so before we create our database we need
+16:12 - to import all of the models individually
+16:14 - that we want to be created in our
+16:16 - database
+16:17 - so that's why we're doing that we're
+16:18 - importing this making sure this is part
+16:20 - of our flask application now we've
+16:22 - imported it in
+16:23 - and then we create the database so we
+16:25 - make the user table
+16:27 - nice now before we do that or actually
+16:29 - maybe after we do that we'll see i'm
+16:31 - just going to look at my file here yeah
+16:32 - we can do it after we do that
+16:34 - we're going to set up what's known as
+16:35 - our login manager
+16:37 - so here i imported login manager in the
+16:39 - previous video but we haven't yet used
+16:41 - it
+16:41 - so we create our database but now we're
+16:43 - going to set up the login manager so
+16:45 - we're going to say login
+16:46 - underscore manager is equal to login
+16:48 - manager now this is what's going to
+16:50 - allow us
+16:51 - to log users in and out of the website
+16:53 - and make sure every time they come in
+16:54 - they don't have to type in
+16:55 - their username and password and they
+16:57 - have access to certain pages if they're
+16:58 - logged in
+16:59 - but they can't access certain pages if
+17:01 - they're not logged in right
+17:02 - so we're going to say login manager dot
+17:06 - login underscore review is equal to auth
+17:09 - dot view
+17:10 - so essentially what this means is okay
+17:12 - if someone tries to access a page
+17:14 - and they are not logged in where should
+17:16 - we redirect them we should redirect them
+17:18 - to off dot
+17:19 - sorry login that should not be viewed it
+17:22 - should be
+17:23 - off dot login so that means we're going
+17:25 - to go off and we're going to redirect
+17:26 - them to this login page right here
+17:28 - pretty straightforward all right and
+17:30 - then after that we're going to say login
+17:32 - manager dot
+17:33 - and then init underscore app and we're
+17:36 - going to pass our app
+17:38 - nice now the next thing we need to do is
+17:40 - we need to create a
+17:41 - function so that our login manager can
+17:44 - actually find
+17:45 - our user model when it logs something in
+17:48 - seems a little bit strange i'll just cut
+17:49 - it out and i'll describe what it's doing
+17:51 - so log in manager
+17:52 - dot user underscore loader okay this is
+17:55 - a decorator we need to put here
+17:57 - we're going to say define load
+17:59 - underscore user it's going to take an id
+18:01 - and i'm just going to type something out
+18:02 - it's going to seem a little bit
+18:03 - confusing i'll describe in a second so
+18:05 - user.query dot filter underscore by
+18:08 - id equals id okay and we're going to
+18:11 - actually
+18:13 - return this and sorry this is just going
+18:16 - to be user.query.get
+18:18 - i did this wrong int id all right so
+18:21 - what did i just code out here
+18:23 - so what i just coded out is something
+18:25 - that allows me
+18:26 - to access information related to the
+18:29 - user from my database
+18:31 - given the id of a user so log in manager
+18:34 - my understanding i'm not super familiar
+18:36 - with this by the way but my
+18:37 - understanding of it
+18:38 - is it uses a session which i will
+18:40 - describe in a second
+18:41 - to store the id of a user that is logged
+18:44 - in
+18:45 - so if you are logged in like you on your
+18:47 - computer go to this website and you're
+18:48 - logged in
+18:49 - there will be some data stored in your
+18:52 - session which is the id
+18:54 - of your user now whenever you want to
+18:56 - actually access
+18:57 - say the username or the email or the
+18:59 - password of that user
+19:01 - you use that id to do so and so we're
+19:03 - defining how we're going to actually
+19:05 - access the user given the id so what
+19:08 - this is doing
+19:09 - is saying we have this user model we're
+19:12 - going to query it which means try to
+19:13 - find something from it
+19:15 - and we're going to get the user object
+19:18 - that has
+19:18 - an id equal to the id that was passed
+19:21 - here
+19:22 - and the reason why we have this is
+19:23 - because the id will be stored as a
+19:24 - string
+19:25 - we need to convert it to an end because
+19:27 - the column we have here for id
+19:29 - is an integer and it must be an integer
+19:31 - there that's pretty much all it's doing
+19:33 - if this is super confusing don't worry
+19:34 - about it just type it in
+19:36 - and it will work for you okay what is a
+19:38 - session so it's a little bit difficult
+19:40 - to describe
+19:41 - whenever you go to a website your
+19:43 - computer
+19:44 - has a session with that website now that
+19:47 - website will store like some unique
+19:49 - identifier about you visiting the
+19:50 - website
+19:51 - and then it can have some information
+19:53 - stored in your session so maybe the last
+19:54 - page that you were on
+19:56 - maybe if you're logged in or not maybe
+19:58 - uh like what you typed in for your
+20:00 - password last time
+20:01 - random stuff you can store stuff in
+20:03 - session that's why when you go to
+20:04 - facebook for example you don't have to
+20:06 - sign in every single time or maybe it
+20:08 - brings you back to where you were
+20:09 - previously
+20:10 - or if you were like in the middle of
+20:11 - doing something and then you close the
+20:12 - web page and you go back and it's still
+20:14 - there it's because it was stored in the
+20:15 - session
+20:16 - now session is temporary but you can
+20:19 - choose how long it lasts so i think by
+20:20 - default here the session lasts for 30
+20:22 - days
+20:23 - but you can choose how long session data
+20:25 - will last
+20:26 - you can make it infinite but sometimes
+20:29 - you can like mess up a session and it's
+20:31 - kind of hard to describe but
+20:32 - don't treat a session as a database just
+20:34 - think of a session as kind of a
+20:35 - temporary storage
+20:37 - to store information about your client
+20:39 - your computer visiting a website
+20:41 - so that you don't have to constantly log
+20:42 - in sign out sign in whatever
+20:44 - but what that means here is that login
+20:46 - manager uses a session
+20:48 - to determine if you are logged in or not
+20:50 - so when you return to your computer
+20:51 - another day and you go back to this
+20:52 - website
+20:53 - it checks your session and it says okay
+20:55 - are you logged in
+20:56 - yeah you are so let's bring you to this
+20:58 - page rather than telling you you need to
+21:00 - log in again
+21:01 - hopefully that was a decent enough
+21:03 - explanation of what's going on here
+21:04 - then that's our login manager and now
+21:06 - that i'm looking at this i think that's
+21:08 - all we need to do inside of a knit
+21:09 - dot pi we might come back to it in a
+21:11 - minute but for now that is fine
+21:13 - okay so now that we have that what i
+21:16 - want to do is just run this app
+21:18 - and see if this is working so let's run
+21:19 - this python app.pi
+21:22 - no module named fla sql alchemy
+21:25 - okay i know what's wrong here let's go
+21:28 - to models
+21:28 - this needs to be flask underscore
+21:32 - sql alchemy that would be why okay so
+21:34 - let's try this now
+21:36 - run and no module name flask
+21:39 - sql alchemy am i spelling this wrong
+21:43 - all right guys one sec let me see if i
+21:44 - can fix this hair all right so i found
+21:46 - the error it's actually just
+21:48 - sql alchemy no flask this is different
+21:50 - than the one we used previously
+21:51 - so just remove the flask and you should
+21:53 - be good so let's try this
+21:55 - and oops date takes no
+21:58 - arguments okay
+22:02 - let's see what have i done wrong here
+22:05 - date let me look in my cheat sheet
+22:08 - um that would be why this needs to be
+22:11 - date
+22:12 - time okay so make that date time
+22:15 - and now we should be good let's try it
+22:17 - fingers crossed okay we're all good
+22:19 - so now let's go back to our url let's
+22:22 - refresh this okay and everything is
+22:25 - working
+22:26 - we're not going to see anything
+22:27 - different because we haven't really
+22:27 - implemented any new functionality i just
+22:29 - want to make sure the database was
+22:30 - working all right
+22:31 - now i also noticed that it did not
+22:34 - create oh no it said create database
+22:35 - okay perfect so it did create the
+22:37 - database
+22:37 - database for us we might not be seeing
+22:39 - it let me refresh and see if it shows up
+22:42 - but if it said create a database i trust
+22:44 - that it created it i guess just because
+22:45 - we don't have anything in there right
+22:46 - now
+22:47 - so we don't actually see the database
+22:48 - file okay
+22:50 - so that's all good what we're going to
+22:52 - do now is we're actually going to make
+22:54 - it so we create a user account when
+22:56 - someone signs up
+22:58 - and then i will show you how we can like
+22:59 - log into that user account and all that
+23:01 - kind of stuff so we will continue in one
+23:03 - second we need to quickly thank the
+23:04 - sponsor of this video and this series
+23:06 - which is algo
+23:07 - expert algo expert is the best platform
+23:09 - to use when preparing for your software
+23:10 - engineering coding interviews
+23:12 - they have 160 coding interview practice
+23:14 - questions a data structures crash course
+23:16 - mock interviews and a ton of awesome
+23:18 - features to help you land your dream
+23:20 - job get started with algo expert today
+23:22 - by clicking the link in the description
+23:23 - and use the code tech with tim for a
+23:25 - discount on the platform
+23:26 - all right so let's go into our sign up
+23:29 - function here
+23:30 - and let's start handling the logic for
+23:32 - when we want to create a new account
+23:34 - so the first thing we need to do is we
+23:36 - need to determine if we're creating a
+23:37 - new account
+23:38 - or if we're just trying to get the html
+23:40 - for the page because there's two
+23:41 - different methods here right
+23:42 - we could be posting data or we could
+23:44 - just be asking for the html
+23:46 - and if we're just asking for the html
+23:48 - clearly we're not trying to actually
+23:49 - make
+23:50 - a new user we're also not going to have
+23:52 - any form data we're not going to have
+23:53 - email username password anything like
+23:55 - that
+23:55 - and so we need to check what method we
+23:57 - have here so i'm going to say if
+24:01 - request.method is equal to and
+24:04 - then here i'm going to say post excuse
+24:07 - me okay
+24:07 - so inside of here we're going to do an
+24:09 - indent this is where we're going to
+24:11 - handle creating a new user however if
+24:13 - it's not the post method we're just
+24:14 - going to return
+24:15 - the sign up html page okay so we get the
+24:18 - email username and password and password
+24:20 - the first thing we need to
+24:21 - check here is if this user already
+24:23 - exists
+24:24 - so how do we do that well we need to
+24:26 - look in our database and check if the
+24:28 - user exists so i'm going to go up to the
+24:29 - top of my program here
+24:30 - and i'm going to say from dot import db
+24:34 - and i'm going to say from dot models
+24:38 - import user okay so how do we look in
+24:41 - our database to see if a user with this
+24:43 - email exists
+24:44 - what we do is we say user dot query
+24:47 - dot filter underscore by and then we say
+24:50 - email like that is equal to email
+24:55 - dot first okay and i'm just gonna go
+24:57 - here
+24:58 - and say user underscore exists equals
+25:01 - this and instead of user exists we'll go
+25:03 - email exists okay so what this does is
+25:06 - it looks in the user database running
+25:08 - user.query
+25:09 - and we're filtering this database or
+25:11 - this table by
+25:12 - an email so we're looking for an email
+25:14 - equal to the email that this person
+25:15 - typed in
+25:16 - in the sign up form and then we're
+25:18 - getting the first result that occurs
+25:20 - if there's any result it will just be
+25:22 - the first result right because
+25:24 - we only are going to have one entry in
+25:26 - the database
+25:27 - with this email if that email exists in
+25:29 - the database hopefully that makes sense
+25:30 - but there's never going to be two users
+25:32 - that have the same email
+25:33 - and so doing.first here just guarantees
+25:34 - us we get the only user that exists with
+25:36 - this email
+25:37 - if they exist so now what i'm going to
+25:39 - do is i'm going to check
+25:40 - if this here exists right if we actually
+25:43 - got a result
+25:44 - so i'm going to say if email exists and
+25:46 - i think that's literally all i need to
+25:47 - do
+25:48 - so if the email exists that means that
+25:50 - we cannot create account because well
+25:52 - the email already exists
+25:53 - so what i'm going to do is i'm going to
+25:54 - say flash
+25:56 - and what flash will do is actually flash
+25:58 - flash a message on the screen sorry
+26:00 - that says hey this email already exists
+26:03 - now we're going to have to implement
+26:04 - some logic for this to work
+26:06 - first we need to import flash from right
+26:08 - here
+26:09 - and we're just going to put kind of the
+26:11 - message we want to appear so we're going
+26:13 - to say
+26:13 - email is already in use and then we're
+26:17 - going to say the category so the type of
+26:19 - this message
+26:20 - is equal to air so we can flash all
+26:23 - kinds of different messages
+26:25 - we can flash uh error messages warning
+26:27 - messages
+26:28 - like success messages like you posted
+26:30 - something successfully
+26:31 - again we have to implement the logic for
+26:32 - that but for now we're just going to do
+26:33 - flash and i'll show you how this works
+26:35 - in a minute
+26:36 - okay so if the email exists or sorry if
+26:38 - email doesn't exist we want to check if
+26:39 - the username exists so what i'm going to
+26:41 - do here
+26:41 - is say username underscore exists is
+26:44 - equal to
+26:46 - user.query dot filter
+26:49 - underscore by and i'm going to say
+26:51 - username
+26:53 - is equal to username dot first now we're
+26:56 - going to do an lift here and we're going
+26:57 - to check the exact same thing we're
+26:58 - going to say elif
+26:59 - username exists then we'll flash
+27:04 - username is already
+27:07 - in use and then category
+27:10 - is equal to error nice
+27:13 - now let me just do some spacing here
+27:16 - okay now what do we need to check
+27:17 - next well we need to check the password
+27:19 - first so if the email doesn't exist the
+27:20 - username doesn't exist sorry we need to
+27:22 - make sure the password is of correct
+27:23 - length so it's at least x characters and
+27:27 - both of the passwords mass match sorry
+27:29 - so we're going to say l
+27:30 - if password1 does not equal password two
+27:35 - then flash
+27:39 - passwords don't match oops and this is b
+27:43 - escape character don't match
+27:47 - nice and then we'll say category
+27:51 - is equal to error i spelled it correctly
+27:55 - yes it did okay
+27:56 - so if the passwords don't match we flash
+27:58 - that and then lastly
+27:59 - we want to check i guess the length of
+28:02 - the username
+28:03 - and the length of the password so we're
+28:04 - going to say if the len
+28:06 - of the username is less than two then we
+28:10 - will just flash something and say hey
+28:12 - that's no good you know your username is
+28:13 - too short username
+28:15 - is too short okay category
+28:19 - equals error and i suppose we could just
+28:22 - copy this because we'll do this a few
+28:24 - more times
+28:24 - now we're gonna do the same thing as
+28:26 - password so if the passwords match then
+28:27 - we'll check
+28:28 - password one and we'll make sure
+28:31 - it is at least six characters long so
+28:34 - we're gonna check if it's less than six
+28:35 - if it is we'll say password is too short
+28:39 - and then lastly we could verify the
+28:41 - email i guess
+28:42 - um but i don't really want to write any
+28:45 - regex or anything to verify the email so
+28:47 - we're just going to assume that a user
+28:48 - types in a valid email
+28:49 - you could check the email if you want
+28:50 - you could send them like you know an
+28:52 - email to verify that they actually who
+28:55 - are who they are we're not going to do
+28:56 - that in this we're just going to kind of
+28:57 - say your email is your login information
+28:59 - we won't validate it they just they can
+29:01 - type whatever email they want
+29:02 - although they do need to have an email
+29:04 - that has at least let's say
+29:06 - 10 characters in or something so we can
+29:07 - do that we'll say lf
+29:09 - the lan of email is greater than
+29:14 - we can pick whatever we want i'll go
+29:15 - with 10 or sorry l if
+29:18 - len of email is less than 10 then flash
+29:21 - email is invalid
+29:25 - and we'll go category
+29:29 - equals air and now that i think of it
+29:33 - that might be a little bit too short for
+29:35 - the email i'm thinking of emails i've
+29:36 - seen that are like four or five
+29:38 - characters
+29:38 - so you need an at symbol you need a
+29:40 - period and then you're going to need
+29:42 - another period probably
+29:44 - you just need an ad symbol and a period
+29:45 - and then you need two characters at
+29:47 - minimum so let's just go
+29:48 - it has to be at least four characters
+29:50 - okay emails in bell
+29:52 - all right and then finally if all of
+29:54 - this is
+29:55 - good we're going to actually create a
+29:58 - account right so if none of this
+29:59 - happened if we didn't have any error
+30:00 - messages
+30:01 - then we'll create an account so we're
+30:02 - going to say new underscore user is
+30:05 - equal to
+30:06 - and the way we do this is we just use
+30:08 - the class to make a new user so we're
+30:10 - going to say user
+30:11 - we don't need to pass the id because
+30:13 - that will be automatically generated
+30:14 - but we do need to pass those the email
+30:16 - username and password so we're going to
+30:17 - say email
+30:18 - is equal to email username
+30:22 - is equal to username and password
+30:26 - is equal to password1 you could do
+30:27 - password too it doesn't matter because
+30:28 - they're going to be the same
+30:29 - and then there will be a date time that
+30:32 - this user was created
+30:34 - but that will be automatically added as
+30:35 - well we don't need to add that okay so
+30:37 - now that we've created the user
+30:39 - what we need to do is actually add this
+30:41 - to the database we've made the user but
+30:42 - it's not yet in the database the way you
+30:44 - add it to the database is the following
+30:46 - you db dot session dot add
+30:50 - and then you add the variable that
+30:52 - stores your user objects so we're going
+30:53 - to add new user
+30:55 - and then once it's added to the session
+30:57 - we need to commit it so we're going to
+30:58 - say db.session.commit
+31:00 - this actually writes it into the
+31:02 - database for so this adds it to kind of
+31:03 - the staging area
+31:04 - ready to be put in the database this
+31:06 - puts it into the database
+31:08 - so you go now we have created the new
+31:10 - user then what we can do is flash
+31:13 - user created uh yeah that's fine and
+31:17 - then
+31:17 - we're actually going to return a
+31:20 - redirect
+31:20 - for the url underscore four
+31:23 - and this is going to be views dot home
+31:27 - nice so let me just save this and now we
+31:30 - are good to go
+31:30 - so if we get through all this we make
+31:32 - the user we add to the session we commit
+31:34 - it we flash user created we redirect
+31:37 - to the home page now if any of these are
+31:39 - not the case
+31:40 - we flash this message and then we would
+31:43 - just actually return
+31:44 - the template again they'll have to type
+31:46 - in their information again
+31:47 - and then they can try to create account
+31:49 - again okay
+31:50 - so that is good although one last thing
+31:53 - we need to do
+31:54 - is we need to actually log in our user
+31:56 - once they have created an account so we
+31:58 - could tell them to sign in once they've
+31:59 - made the account
+32:00 - but i would prefer to just sign them in
+32:02 - once they actually create the account
+32:04 - so the way we do that is we need to go
+32:06 - here and say from
+32:09 - flask underscore login import and i
+32:12 - believe this is
+32:13 - log in i gotta go look at it here uh
+32:16 - login underscore
+32:17 - use there we go and while we're here
+32:20 - we'll go
+32:21 - log out underscore user and
+32:25 - then this is gonna be login underscore
+32:27 - required
+32:29 - okay so we're going to use these in a
+32:31 - second now i'm actually remembering
+32:33 - that we can't do exactly what i just did
+32:35 - here so notice how i just stored this
+32:37 - password
+32:38 - right in this user model i have not
+32:41 - hashed the password and so that means
+32:42 - i'm actually storing the password in
+32:44 - plain text
+32:45 - now that's bad you don't want to store
+32:46 - our password in plain text so what we're
+32:48 - going to have to do is hash it
+32:49 - i'll explain what that is in a second
+32:50 - but we need to import a module that
+32:52 - could hash the password
+32:53 - so we're going to say from westerberg
+32:56 - how do you how do you say this workberg
+32:59 - i always mess this name up
+33:00 - work zig like that dot
+33:03 - and then security we're going to
+33:06 - import the following this is going to be
+33:09 - generate underscore
+33:11 - password underscore hash and then i need
+33:13 - to look at my cheat sheet
+33:15 - this is going to be check password check
+33:17 - underscore password
+33:18 - underscore hash now i'm almost certain i
+33:20 - spelt this wrong let's
+33:22 - check this work zug dot security okay
+33:26 - that should be good you guys should have
+33:28 - this module you shouldn't need to
+33:29 - install it i believe it comes with flask
+33:31 - login
+33:32 - or just with flask by default okay so we
+33:34 - have
+33:35 - two methods here generate password hash
+33:37 - and check password hash
+33:38 - all right so what is a hash and what is
+33:40 - a hash function i'm going to try to
+33:41 - explain this to you because it's pretty
+33:43 - interesting
+33:44 - so essentially the way that modern day
+33:46 - security works is when you
+33:47 - have a password you take that password
+33:50 - and you never store it in plain
+33:52 - text that means you need to store it in
+33:54 - some other format
+33:55 - but you need some way to determine if
+33:57 - the user's password
+33:58 - is whatever you're storing right is
+34:00 - whatever the hash of that password is
+34:02 - so what you want to do is you want to
+34:04 - take some password you want to kind of
+34:05 - encrypt it and store it in something
+34:07 - that's not the password but you need
+34:09 - some way to go from that password to the
+34:11 - thing that's stored
+34:12 - so you can verify if the password is
+34:14 - correct but you never want to store the
+34:16 - plain text password this is where a hash
+34:18 - function comes in
+34:19 - so a hash function is essentially a
+34:22 - function
+34:22 - where you cannot compute the inverse or
+34:24 - there is no unknown inverse for this
+34:27 - function
+34:27 - now what is an inverse well with most
+34:29 - functions you have
+34:30 - some x so you give some x to it and it
+34:33 - gives you some y
+34:34 - but if you have the y you can figure out
+34:37 - what
+34:37 - x is so for example if i have some
+34:39 - function i can literally do this in
+34:40 - python i can just define this in python
+34:42 - and say define foo i take x
+34:46 - and then what this does is it returns x
+34:47 - plus 2. if we were going to write this
+34:49 - function out in math terms this would be
+34:50 - y is equal to x
+34:52 - plus 2. now the inverse of this function
+34:54 - you write in terms of
+34:55 - x so you would say okay well if i know
+34:58 - what y is can i figure out what
+34:59 - x is yes you can x is equal to y
+35:03 - minus 2. right this is pretty
+35:04 - straightforward you learn this in
+35:06 - elementary school math at least
+35:07 - i'm pretty sure but regardless given
+35:10 - given y
+35:10 - i can figure out what x is i just
+35:12 - subtract 2 from y and that tells me what
+35:14 - x is
+35:15 - so that's fine for regular functions but
+35:16 - with a hash function there is no way to
+35:19 - do that
+35:19 - that means given some x you're always
+35:22 - going to get the same y
+35:23 - but given some y you have no idea how to
+35:25 - get back to x and so what we do here
+35:28 - is we utilize the hash function to store
+35:30 - a password so i say
+35:32 - x goes to hash function hash function
+35:35 - goes to a hash
+35:37 - but from hash trying to get to
+35:40 - x that's impossible there's no way for
+35:42 - me to get to x given this hash at least
+35:44 - not that we know of um that it's kind of
+35:46 - an interesting thing
+35:48 - quick little shortcut here if you guys
+35:49 - are watching an hour long video you
+35:50 - probably don't mind
+35:51 - a quick 50 and 20 second pause to
+35:53 - explain something
+35:54 - currently our modern day encryption we
+35:57 - assume
+35:58 - that there is no way to go from this
+35:59 - hash back to x that this is what's known
+36:01 - as a one-way function one in which we
+36:03 - cannot compute the inverse
+36:04 - but we actually cannot prove
+36:06 - mathematically that there's no inverse
+36:08 - so there may be an inverse there may be
+36:10 - a way to go from a hashed password to
+36:12 - the original plain text password we just
+36:14 - don't know of it so that's a little bit
+36:15 - of a scary thought because
+36:16 - our modern day encryption relies on an
+36:18 - assumption that there is no
+36:21 - inverse but there could be an inverse we
+36:22 - just don't know how to find the inverse
+36:24 - right now
+36:24 - anyways i thought that was interesting
+36:26 - so i figured i'd share that with you but
+36:27 - regardless
+36:28 - x goes to hash function goes to hash
+36:30 - hash is always the same
+36:32 - for x any x you pass if it's the exact
+36:34 - same you always get the same hash
+36:36 - however from the hash you cannot get
+36:37 - back to x
+36:38 - so when someone types in their password
+36:40 - what you do
+36:42 - is you hash it and then that gives you
+36:44 - the hash
+36:45 - and then you compare this hash with the
+36:46 - hash that you've stored so i'm going to
+36:48 - store the hash password and whenever
+36:50 - someone types in their plain text
+36:51 - password
+36:52 - i'm going to hash it i'm going to check
+36:54 - if that's the same as my hashed password
+36:56 - that means these passwords do actually
+36:58 - match but if you type in a different
+37:00 - password you get a completely different
+37:01 - hash
+37:02 - you will never have like two passwords
+37:04 - that correspond to the same hash
+37:06 - hopefully that was a decent explanation
+37:08 - uh but that is how password hashing
+37:10 - works
+37:10 - so we're gonna do that so we're gonna go
+37:12 - here and rather than storing the
+37:13 - password we're gonna hash it so we're
+37:15 - gonna say
+37:16 - generate password hash so generate
+37:19 - underscore
+37:19 - password underscore hash the password is
+37:22 - going to be password one and then we
+37:23 - need to choose the method for hashing
+37:26 - so the method is going to be uh
+37:29 - and this is going to be sha256
+37:33 - like that now you don't know what this
+37:35 - means this is just a basic encryption
+37:36 - method sha 256
+37:38 - okay so that's what we're going to use
+37:41 - and i think
+37:42 - for now that is good perfect so we've
+37:44 - now generated the password hash we
+37:46 - should be able to actually create a user
+37:48 - account
+37:49 - now while we're here let's just code out
+37:51 - the logic for login
+37:52 - and then we'll actually see if any of
+37:54 - this works because once we create the
+37:55 - account we'll try to log in
+37:56 - so same thing here for login we need to
+37:58 - check if the request.method is a post
+38:00 - request so we're going to say if
+38:02 - request.method equals equals post
+38:06 - then what we want to do here is a few
+38:08 - basic checks so we need to get the email
+38:10 - and the password
+38:12 - so we're going to get that and we're
+38:13 - going to check if
+38:15 - a user with this email exists we're
+38:16 - going to say user is equal to user
+38:19 - dot query the filter underscore by
+38:22 - and we're going to say email equals
+38:24 - email.first
+38:26 - okay we're going to say if user so if
+38:28 - actually sorry if not user
+38:31 - actually no we will do if user we'll say
+38:33 - if user so if this user actually does
+38:35 - exist
+38:36 - then we want to check if the password
+38:38 - they typed in is equal to the password
+38:40 - that we're storing
+38:41 - in our user model so we just got the
+38:43 - user if the user exists we're going to
+38:45 - take this password
+38:46 - we're going to hash it and we're going
+38:48 - to check if it is the same as the hash
+38:50 - password we're storing in the user model
+38:52 - so we're going to say if check password
+38:54 - hash
+38:55 - we're going to say user dot password so
+38:58 - that is the hashed password that we're
+38:59 - passing first
+39:00 - and then we're going to pass the
+39:02 - password let me make sure that's all we
+39:03 - need to do
+39:04 - yes it is okay perfect so make sure you
+39:07 - pass the hash password first
+39:08 - and then the plain text password after
+39:10 - that so this is correct this means
+39:12 - user typed in the right password so
+39:14 - we're going to say flash
+39:16 - logged in and then we're going to return
+39:19 - a
+39:20 - redirect url underscore 4
+39:23 - and then this is going to be
+39:27 - views.home okay and before we do that
+39:31 - though we are going to
+39:32 - log in our users we're going to say
+39:33 - login underscore user
+39:35 - this is going to be a user and we're
+39:37 - going to say remember
+39:39 - equals trip okay so this is the method
+39:42 - that we brought in
+39:43 - here this will log in our user with the
+39:45 - login manager so then we're able to
+39:47 - determine
+39:47 - if the person session or if the person
+39:50 - visiting the website
+39:51 - is logged in or not because this will be
+39:52 - storing the fact that this person is
+39:54 - signed in
+39:55 - in the session and it will store what
+39:56 - user this person is signed
+39:58 - in as hopefully that makes sense but
+40:00 - that is what we need to do here now
+40:01 - otherwise
+40:03 - the password is incorrect right so if
+40:04 - this is not the case then the password
+40:07 - is incorrect so we're going to say
+40:08 - flash password
+40:12 - is incorrect and for both of these sorry
+40:15 - we want our
+40:16 - category so this one is actually going
+40:18 - to be category equals
+40:20 - success and this one will be category
+40:22 - equals error
+40:25 - nice and then we want another else here
+40:27 - so if the user doesn't exist then we
+40:29 - want to tell them that the user doesn't
+40:30 - exist we're going to say flash
+40:32 - user or email does not
+40:36 - exist perfect now i believe that's
+40:39 - all we actually need nice yeah that is
+40:42 - all we need for login
+40:43 - and now i'm just going to go back here
+40:45 - to sign up
+40:46 - and i'm going to log in my user after we
+40:48 - create the account so i'm going to say
+40:50 - login
+40:51 - underscore user new underscore user
+40:55 - remember equals true nice
+40:58 - and while we're here we can just do the
+41:00 - log out because it's pretty easy
+41:02 - and say log out underscore user and
+41:05 - we're going to say current underscore
+41:07 - user
+41:07 - i'm going to show you how we get this in
+41:09 - one second okay
+41:11 - so let's actually sorry i don't even
+41:14 - need to do that i can just do
+41:15 - log out user i'm just looking at my
+41:17 - cheat sheet here
+41:18 - all right so now we should have the sign
+41:21 - up and
+41:22 - login logic done i'm just kind of
+41:24 - scrolling through here to see if i've
+41:26 - done anything incorrectly
+41:27 - and i want to import one more thing
+41:31 - which is current user you just saw me
+41:34 - type that
+41:35 - from flask login so this is really cool
+41:38 - flask login
+41:39 - lets you access all of the information
+41:41 - related to the currently logged in user
+41:43 - from the current user variable so now
+41:46 - anywhere
+41:46 - once i've logged in i can access this
+41:49 - current user variable and get the
+41:51 - username
+41:51 - password email of the logged in user
+41:54 - what i'm going to show you now
+41:56 - is something called the login required
+41:58 - decorator
+41:59 - so if you put this actually i think you
+42:02 - need to put it
+42:04 - here it might not matter i think you can
+42:05 - do it in any order but i'm just going to
+42:06 - put it here because that's where i have
+42:07 - it
+42:08 - in my cheat sheet this login required
+42:10 - decorator this is what this is known as
+42:12 - it decorates the top of the function
+42:14 - is something that makes it so that you
+42:16 - can only access this page
+42:18 - if you have been logged in so only if
+42:20 - this function has been called for your
+42:22 - current user session
+42:23 - are you able to actually access this
+42:25 - route right here that's what the login
+42:27 - required
+42:28 - decorator does the reason i'm doing that
+42:29 - on logout is because
+42:31 - you can't like log out unless you're
+42:33 - signed in right unless you've logged in
+42:35 - and so that's why you need the login
+42:37 - required
+42:38 - okay let's run this and let's see if any
+42:41 - of this works that was a lot of code
+42:42 - without testing so let's go here
+42:45 - and we will implement the message
+42:46 - flashing in a minute right now you're
+42:47 - not going to see the message flashing
+42:48 - because we haven't done that
+42:49 - and let's just try to create an account
+42:51 - so i'm going to make an account let's
+42:52 - say tim
+42:53 - gmail.com username tim
+42:57 - six seven password1234567 two three four
+42:58 - five six seven
+43:00 - uh okay and sign up now when i do that
+43:02 - it redirects me to home which means i
+43:04 - successfully created the account
+43:06 - now the way to actually verify if the
+43:07 - account was created is to go back to
+43:08 - login
+43:09 - and to try to log in so i'm gonna go tim
+43:12 - gmail.com
+43:13 - one two three four five six seven and
+43:15 - notice that worked it redirect me
+43:17 - whereas if i try to log in with the
+43:19 - wrong credentials so tim
+43:20 - gmail.com and one two three it doesn't
+43:23 - redirect me it keeps me on the login
+43:25 - page because the account credentials
+43:26 - were not correct
+43:27 - so that is how that works now though we
+43:30 - want to actually see the error message
+43:31 - right because it's kind of hard to
+43:33 - determine if this is working or not when
+43:34 - we can't see these flashed messages that
+43:36 - we have
+43:36 - this is a little bit of code it's in the
+43:38 - html file that we need to write
+43:40 - so let's go to our base.html now the
+43:43 - reason we're going to put this in
+43:44 - base.html is because we want
+43:46 - these messages flashing to work on any
+43:48 - page so we put this in our base
+43:50 - template so as i was saying there's this
+43:52 - thing in flask called message
+43:54 - flashing now when you do flash and then
+43:56 - you do the text and the category
+43:58 - that passes that information to any
+44:00 - templates that are rendered
+44:02 - so what i can actually do here is i can
+44:04 - write
+44:05 - with and i need to go look at my cheat
+44:07 - sheet because i don't have this
+44:08 - memorized
+44:10 - i'm going to say messages equal to
+44:13 - get underscore flashed under sort
+44:16 - messages
+44:16 - like that i'm going to say with
+44:18 - underscore and then
+44:21 - categories is equal to true so what i'm
+44:24 - doing is i'm saying okay
+44:26 - with this variable messages equal to get
+44:29 - flashed messages
+44:30 - and i'm saying yes i would like to know
+44:31 - the categories of all of these messages
+44:33 - i'm going to do the following so i need
+44:35 - to end this
+44:37 - with first i think this is end width let
+44:39 - me just see
+44:41 - if that's how you do it yeah end width
+44:43 - that's correct
+44:45 - okay so inside of here the first thing
+44:47 - i'm going to check is if i have any
+44:48 - messages so this will be a
+44:50 - list of messages so i'm going to say
+44:53 - percent percent if messages like that
+44:57 - and i'm going to say percent percent and
+44:59 - if
+45:01 - okay so if messages what i want to do
+45:04 - is now have a for loop so i'm going to
+45:06 - say percent percent
+45:08 - for message in messages because i can
+45:11 - have
+45:12 - multiple messages flashing on the screen
+45:14 - i'm going to say n4
+45:15 - just bear with me here if you've never
+45:16 - seen this before it probably seems a
+45:18 - little bit complicated
+45:19 - but this is the way that you do it okay
+45:20 - so for message in messages i actually
+45:22 - realized sorry we need to do this first
+45:24 - so for category comma message in
+45:26 - messages
+45:27 - this will give us the category and the
+45:29 - actual text message for each of our
+45:30 - messages this is the proper way to do it
+45:33 - what we're going to do is we're going to
+45:34 - show the message so remember if you want
+45:36 - to access the variable you do it in
+45:37 - double
+45:38 - squiggly brackets like that so for now
+45:40 - we'll just show the message
+45:42 - but i will show you later how we can
+45:44 - actually
+45:46 - style this and make it look nice but
+45:47 - let's just see if this actually works
+45:49 - for now oh
+45:49 - god i hate that it does that um okay i'm
+45:52 - gonna save without formatting
+45:54 - let's just refresh the page here and
+45:56 - let's see if any
+45:57 - message flashing actually works look at
+45:59 - that user created login
+46:01 - password is incorrect nice okay let me
+46:02 - just refresh that was all of the
+46:04 - messages that were not yet shown
+46:06 - just got shown on the screen okay so
+46:08 - let's just try to log in say tim
+46:10 - gmail.com one two three four log in
+46:13 - password is incorrect nice okay let's
+46:15 - try this again tim at gmail
+46:18 - one two three email does not exist so
+46:21 - the message
+46:21 - is actually working it's showing up
+46:23 - right so i just want to prove that to
+46:24 - you
+46:25 - that's how that works this is kind of
+46:26 - the code used to get the messages
+46:28 - now though we want our message to look a
+46:29 - little bit nicer so how are we going to
+46:31 - do that
+46:31 - well we're going to use some bootstrap
+46:33 - so we're going to create a div
+46:35 - this is going to be a class equal to
+46:37 - alert
+46:38 - and this is going to be alert hyphen
+46:40 - danger and then
+46:42 - alert hyphen dismissible
+46:45 - like that let me make sure i spell this
+46:48 - correctly i don't think i did
+46:50 - dismissible and then this is going to be
+46:52 - fade show like that
+46:54 - and the role is going to be alert again
+46:57 - i get all this from the bootstrap
+46:58 - documentation
+46:59 - so now if i do this and i put my message
+47:02 - inside of div
+47:04 - again i hate the formatting there um you
+47:06 - will actually see that this is going to
+47:08 - show up in a nice little kind of like
+47:09 - banner now we're not quite done because
+47:11 - there's some more code that i need to
+47:13 - write here we need to actually put a
+47:16 - button i'm just going to copy this
+47:18 - button inside of this div
+47:20 - because this is an alert that we can
+47:22 - close so we have this button type button
+47:24 - class button close
+47:25 - and it closes the alert um yeah i guess
+47:29 - this is just called an alert
+47:30 - anyways that's what this is here i think
+47:33 - that's good sorry i keep looking at my
+47:35 - other screen there's a lot of so i have
+47:37 - to make sure i'm getting this right
+47:38 - okay perfect so what this is going to do
+47:40 - now is it's going to show us a red kind
+47:42 - of little banner on the screen
+47:44 - which is like you know the the error
+47:47 - message right
+47:48 - so let's save this and let's refresh now
+47:52 - and let's just see what this looks like
+47:53 - so let's refresh
+47:56 - and let's go log in email does not exist
+47:59 - okay is there a reason it's not showing
+48:00 - me that in a correct color
+48:02 - um maybe i type something incorrectly
+48:06 - it should be showing that to me in red
+48:08 - ah it's because i didn't type danger
+48:10 - properly okay so alert danger
+48:12 - all right save without formatting and
+48:14 - let's try now
+48:16 - refresh continue there you go email does
+48:19 - not exist
+48:19 - okay so let's continue you saw that that
+48:21 - was indeed working now the only issue is
+48:23 - that
+48:24 - right now we're only showing the kind of
+48:26 - like error message right i need to also
+48:28 - show one that's green if we have a
+48:30 - successful
+48:31 - message so the way that we're going to
+48:32 - do this is we're going to put an if
+48:33 - statement inside of our for statement
+48:35 - now let's go back to this
+48:36 - okay and let's put an if and we're going
+48:38 - to check the category so we're going to
+48:40 - say if
+48:41 - category is equal equal to and in this
+48:44 - case it is going to be
+48:46 - error then we can do this so we can go
+48:48 - percent percent
+48:51 - and if and then otherwise so actually
+48:54 - we'll just do an else here
+48:55 - so let's say if it's not error so we'll
+48:58 - say else
+48:59 - then we will just show the success
+49:00 - message so we'll do the exact same thing
+49:02 - except instead of danger it's going to
+49:04 - be
+49:06 - success like that so let's save without
+49:08 - formatting
+49:09 - okay hopefully that makes sense but
+49:10 - we're saying if it's an error show the
+49:12 - error message otherwise
+49:13 - show the success okay so let's refresh
+49:17 - now we get our red message let's go here
+49:21 - let's actually successfully sign in so
+49:23 - tim
+49:24 - gmail.com one two three four five six
+49:27 - seven
+49:28 - log in logged in then we can close it by
+49:31 - pressing the x
+49:32 - there you go sign up same thing it
+49:35 - should work for that as well but i won't
+49:36 - show that for right
+49:37 - now so actually at this point in time
+49:41 - this is working this is this is all good
+49:42 - now the last thing we need to do here
+49:45 - is go to views.pi and we need to add the
+49:48 - at
+49:48 - login required decorator to make it so
+49:50 - we can't access the home page
+49:52 - unless we're logged in so we're going to
+49:54 - go from
+49:56 - flask underscore login import
+50:00 - login underscore required
+50:04 - and then current underscore user
+50:07 - and what we'll actually do is we'll say
+50:08 - the name is equal to
+50:10 - currentuser.username
+50:12 - so that we can like greet the user when
+50:13 - they log in okay and then we'll put
+50:15 - the at login required here
+50:18 - and i'll show you that we won't be able
+50:20 - to access this page unless we're logged
+50:21 - in so let's go here and refresh
+50:24 - now right now i think we actually are
+50:26 - logged in because we just logged in
+50:27 - right
+50:27 - so if i go here oh actually says please
+50:30 - log in to access this
+50:32 - page um damn okay how did i get that
+50:36 - i don't even know how i got that to work
+50:38 - because i don't know if i put something
+50:39 - there i think that's like a default
+50:40 - thing that comes from login manager
+50:42 - but it's telling me okay i've got to log
+50:43 - in if i want to access that page so
+50:45 - what i can do now is go tim gmail.com
+50:49 - one two three four five six seven log in
+50:53 - and email does not exist hm why does
+50:56 - email not exist
+50:57 - uh tim gmail.com did i type something
+50:59 - wrong one two three four five
+51:01 - six seven log in okay let's just try to
+51:04 - create a new account i don't know what's
+51:06 - going on here okay let's go tim two
+51:08 - at gmail.com tim
+51:11 - two okay one two three four five six
+51:14 - seven
+51:14 - one two three four five six seven okay
+51:17 - sign up user created and then i access
+51:20 - the home page so that was good we are
+51:21 - logged in
+51:22 - now if i go to login and i go tim2
+51:25 - gmail.com one two three four five six
+51:28 - seven
+51:29 - login logged in nice okay so it all is
+51:32 - working
+51:33 - all right so i think with that i'm going
+51:36 - to end
+51:36 - the video here i don't think there's
+51:38 - anything more i need to show you i
+51:39 - understand this maybe
+51:40 - was a little bit confusing but there's
+51:42 - not really a much better way for me to
+51:43 - go through all of this because it is a
+51:44 - lot of code
+51:46 - with that said in the next video we'll
+51:47 - actually start working on the blog part
+51:49 - of this application so
+51:50 - creating a post comments likes all of
+51:52 - that
+51:53 - and i hope you guys have enjoyed the
+51:54 - video up until this point of the series
+51:56 - up until this point
+51:56 - if you guys did make sure to leave a
+51:58 - like subscribe to the channel i will see
+51:59 - you in another
+52:00 - youtube video
+52:09 - you
+
+Cleaned transcript:
+
+hello everybody and welcome to part two of this flask blog tutorial series in this video i'm going to be showing you how we can do all of the security and authentication for our application so how to sign users in sign them out create new accounts all of that fun stuff now in the previous video we created our sign up and login page so what i'm going to start by showing us how to do here is actually get the information from these forms so from you know the login and from the sign up then of course we're going to need to actually create users store them in some sort of database we're going to have to hash their password we're then going to have to validate things like if their username or email is already taken when they try to sign up and create an account this will take a good amount of time but once this is done this is a lot of this the tough and difficult stuff finished then we just need to go and actually build the blog functionality of the app so let's go ahead and get started so i want to start by just showing you what happens now if i fill something ends i'm going to go with tim gmail oops i don't want that in all capitals tim gmail.com maybe the username is tim and the password can be one two three four one two three four okay so when i press sign up right now notice we get method not allowed now the reason we get method not allowed is because if we go to our sign up page here we have a form and this method is post this means when we press this button right here we're going to take all of this form data and we're going to submit this in a post request to the slash sign up url now right now if we go to auth.pi we have not explicitly defined that we are allowed to send a post request to this url so by default the only method that is allowed http method i'm going to describe what this is in a second for all of our routes is a get request so the most basic and most common http request is a get request what that means is you are asking for information from the server so get means get to give me something right you're asking for something and in most cases what a get request is is you're asking for the html of the web page to actually make it up right so when i just go here and i hit enter and i go to sign up i just sent a get request to my server asking for the html that makes up the sign up page and you can see that if you go to the flask app that's running it says get sign up and notice we had post sign up then we had 405 which stands for method not allowed so these are status codes 200 stands for ok 405 stands for method not allowed and method was not allowed on sign up because we have not explicitly defined it can accept a post request there's a few other requests as well you have a put request a delete request update request there's a bunch of other ones i won't go through all of them but just understand that the different types of requests are used for different things theoretically you can return anything from any type of request but post is usually the type of request you use when you are creating something or sending data to the server now there's sometimes some exceptions but a lot of times when you are creating something new in the database so like creating a new user you're going to send a post request to our url that url will listen for that post request and then it will look for all of the data related to what it's going to be creating in the database so anyways the whole point of this is to say we need to go into our auth.root here let me make this full screen and i need to say method is equal to sorry methods is equal to and then a list and inside of here i'm going to say get and post so this is saying okay the methods that are allowed for this url are get and post by default it's just get okay so i'm going to take this and i'm going to put this on login as well and for logout that's fine we can just leave that as a get request okay so now if i go back here and i refresh and i press sign up i don't get there right so it is actually sending a post request if i go here we can see we're getting a bunch of post requests sent to this url and it's refreshing the page after the post request comes in nice so now how do i actually get the data that's being sent from the form well we need to import something from flask this is called request so this is a variable that will store all of the context related to a specific request so you use this everywhere inside of all of these functions use the same request variable and the way that you actually get data that's inside of a form is you do the fault say data is equal to request dot form then dot get and the name of the item in the form that you want the data from so in this case if i go to sign up notice how i said we have to have these names here right email username password1 password2 so the way i access these pieces of information is i say request.form.get and then i put in the name of what i'm looking for so in this case i want the username right so we could say rather than data just username and just very simply here i'll start by printing out the username just to see if this works now the reason you do dot get is because if this does not exist if username does not exist this will return none so rather than crashing your program which happens sometimes if you did this in a different way it will simply return none to you so the username will be equal to none if there is uh no username field that's sent to the post request okay so let's go here and let's refresh uh oops actually let me just hit enter now let's enter a username let's enter tim let's press sign up notice here prints out tim because it's printing the username so now let's do this this line right here for all of the different things that we want so we want the email we want the oops the password1 uh what am i doing here okay and then we want the password to so let's fix that okay and password two nice now obviously we need to change these so this is gonna say email this will say password1 not password backtick and then password two nice okay so we have just sent all this data uh or we've just received all this data now inside of sign up now we can do the same thing inside of login but inside of login all we're gonna need is the email and the password so let's just put this in here while we're at it so we'll say email and then rather than password1 this just give me password like that nice there we go so now we're actually getting all of this data from these different uh these urls or these endpoints or the backend whatever you want to call okay that's great but we can't actually do anything with this data yet until we create a database and have some place to store it or to check if it is valid so that's what we're going to do now so i'm going to go to init dot pi i'm going to start setting up my database now this is a little bit complicated but it's not crazy what i'm going to do is create a variable i'm going to say db is equal to and this is going to be sql alchemy like that uh yeah i think that's all i need to do next in all capitals i'm going to say db underscore name is equal to database dot db so i'm just defining the name of my database and then what i'm going to do is configure my database inside of my create app function so i'm going to say app dot config and i'm going to say sql underscore alchemy uh am i ever spelling that right yes okay not scl sql alchemy underscore database underscore uri this is an i not now make sure that's an i then you're going to say equals and we are going to put the path to our database now for this application we're going to use an sqlite3 database you don't need to know what that means it's just one of the simplest ones to use and we don't need to write any uh like actual sql or sql we can literally just use the builtin flask sql related commands to you know query our database and find users and add stuff to it it's pretty straightforward but here what we need to do is make an f string so i'm going to say f and then i'm going to say this is sqlite colon this is going to be two slashes i think sorry actually three slashes and then we're gonna say db underscore name like that there you go now what we're going to do after this is say db dot underscore or sorry a nit underscore app and we're going to pass our app which is our flask application so if you want to know exactly why you need to do all of this you can reference the sql alchemy documentation but essentially we just need to tell flask where our database actually is and then we initialize our database with our flask application nice now there's a few more things that we need to do the next thing we need to do is actually create the database so what i'm going to do is make a function here and call this create database this is going to take an app and what this is going to do is check if the database already exists if it doesn't it's going to create it so it's going to say if not it's going to be path dot exists like this and we're going to say website slash plus db underscore name okay and then here we're going to say db oops db dot create underscore all app equals app and then i'm just going to print out created database exclamation point okay so let me just explain what this is doing so path dot exists pretty straightforward we're checking if this path exists so if website which is the name of our folder here slash dbname exists if it doesn't exist then we're going to create it so we'll say db.createall we pass the app to this and it will actually make the database file for us and then we print create a database this is not what you would normally do in production but since we're just creating like you know a local application this isn't going to be the next facebook or something this is totally fine we can just do this okay so now what we're going to do is we're going to go here and we're going to call our create database now it doesn't really matter where you call it at least right now it will in one second we need to pass this story the app okay now i need to just look at my cheat sheet here to see what else i need to do okay so let me just move this i just want to keep things a bit organized so let's put that right there okay so now we are creating our database however right now the database is completely empty and that is because we haven't yet created any models or tables in our database so what we're going to do is make a new file inside a website we're going to call this models.pi all right so i'm inside of models.pi as i was saying this we're going to define all of our database models before we do that though i need to import a few things so i'm going to say from dot import db dot stands for the current package that we're in so from website import db which really means from this init.pi file import this db variable right here so we're importing that standing for database obviously then we're going to say from this can be flask underscore login import user mix in like that then we're going to say from and this is going to be sql underscore alchemy dot sql import func now i'll tell you why we need that in a second let me spell alchemy correctly though and now what i'm going to do is define my first database model which is going to be a user so what we're going to focus on right now is the user model the user database table so i'm going to code it code out a little bit of it then i'll stop and explain exactly what i'm doing so i'm going to say class user this needs to inherit from db.model and from the user mixin so db.model is kind of a base class which is a database model now if any of you are familiar with relational databases you you might not have heard of model before you may have heard of table so really a model is just a table it's like the model of a table if that makes any sense now a table has rows and columns every row in the table is a new user every column is information related to each user so what we need to do right now is define all of the columns that are going to be in our user table then every single time we add a user we fill in a new row of columns and that is a user that's as straightforward as it is the reason we need this user mixin thing is because we're going to be using this plugin flask login which allows us to way more easily log users in and out and so you just need to have your main user class inherit from this so that you can log users in and out that's pretty much the best explanation i can give you okay so what information do we want for all of our users well the first thing we need is is an id so we're going to say id is equal to db dot column and then we need to define the type of this column what date is being stored in this column well this is simply going to be an integer so db dot integer and then what we need to do after this is state that this is a primary key so primary key is equal to true so let me explain what this is on every single database model or every single database table you need to have one column which is the primary key this is the key that is unique and that you will use to look up uh users in this case or rows if you're talking more generally in a database tape so every table needs at least one primary key i think you can have multiple primary keys and like combine them together but regardless you need one and that is almost always an integer and in this case we're calling it id you always need an id on all of your tables so we have our id all right now this id will actually automatically be created for us when we make new users so we don't need to try to figure out what the last user was that we inserted what its id was it just automatically gives it a unique id okay next what do we need well now this is up to us we have the id we've kind of filled in the mandatory stuff what information do we want related to user well we're gonna need a username we're gonna need an email we're gonna need a password and we probably want to know when this user was created so like time of creation let me look and see if there's anything else um actually i think that's probably all we need for right now so i'm going to say email is equal to db.column in this column is going to be db.string and it's going to have a maximum length of 150 characters so when you do db.string you need to define a max length for this string we'll say the email has a maximum length of 150. all right then after this we are going to define that this must be unique it's unique equals true this makes make sure that we cannot have any users that have duplicate emails okay we have our email next we need our username so this will be the exact same thing we'll literally just leave it exactly like this unique equals true uh and finally we'll say password is equal to and then this will be same thing except the password does not need to be unique so we'll remove unique equals true okay so that's actually all we need for the user right now sorry we're going to do date created as well so let's do that date created is equal to and then i'm trying to remember what this would be db dot column db dot date time zone is equal to true and let me see if there's anything else we need there we're going to add a default value so the default is going to be func dot now okay that's why i needed to import func so let me just explain what this line just did here so say okay we're going to have a column this is going to store a date we want to know the time zone associated with this date when you say date it also it stirs the time as well it's date and time but we also want the time zone and then the default means okay if we don't pass something in here what should by default we fill this with well we're going to call funk dot now what that will do is uh that will fill this by default with whatever the current time is so it's kind of weird why this is called func but that's why i imported this this just gives you the current time so we're going to make that the default now let me just look at something here okay i just want to make sure everything's good looks good to me all right so we've now created our user model now we're going to go back to init.pi and we're going to import the user module on line 22 or user model sorry online 22. so we're going to say from dot models import user the reason we need to do this is if we don't import the user when we go to create the database it won't create the user table so before we create our database we need to import all of the models individually that we want to be created in our database so that's why we're doing that we're importing this making sure this is part of our flask application now we've imported it in and then we create the database so we make the user table nice now before we do that or actually maybe after we do that we'll see i'm just going to look at my file here yeah we can do it after we do that we're going to set up what's known as our login manager so here i imported login manager in the previous video but we haven't yet used it so we create our database but now we're going to set up the login manager so we're going to say login underscore manager is equal to login manager now this is what's going to allow us to log users in and out of the website and make sure every time they come in they don't have to type in their username and password and they have access to certain pages if they're logged in but they can't access certain pages if they're not logged in right so we're going to say login manager dot login underscore review is equal to auth dot view so essentially what this means is okay if someone tries to access a page and they are not logged in where should we redirect them we should redirect them to off dot sorry login that should not be viewed it should be off dot login so that means we're going to go off and we're going to redirect them to this login page right here pretty straightforward all right and then after that we're going to say login manager dot and then init underscore app and we're going to pass our app nice now the next thing we need to do is we need to create a function so that our login manager can actually find our user model when it logs something in seems a little bit strange i'll just cut it out and i'll describe what it's doing so log in manager dot user underscore loader okay this is a decorator we need to put here we're going to say define load underscore user it's going to take an id and i'm just going to type something out it's going to seem a little bit confusing i'll describe in a second so user.query dot filter underscore by id equals id okay and we're going to actually return this and sorry this is just going to be user.query.get i did this wrong int id all right so what did i just code out here so what i just coded out is something that allows me to access information related to the user from my database given the id of a user so log in manager my understanding i'm not super familiar with this by the way but my understanding of it is it uses a session which i will describe in a second to store the id of a user that is logged in so if you are logged in like you on your computer go to this website and you're logged in there will be some data stored in your session which is the id of your user now whenever you want to actually access say the username or the email or the password of that user you use that id to do so and so we're defining how we're going to actually access the user given the id so what this is doing is saying we have this user model we're going to query it which means try to find something from it and we're going to get the user object that has an id equal to the id that was passed here and the reason why we have this is because the id will be stored as a string we need to convert it to an end because the column we have here for id is an integer and it must be an integer there that's pretty much all it's doing if this is super confusing don't worry about it just type it in and it will work for you okay what is a session so it's a little bit difficult to describe whenever you go to a website your computer has a session with that website now that website will store like some unique identifier about you visiting the website and then it can have some information stored in your session so maybe the last page that you were on maybe if you're logged in or not maybe uh like what you typed in for your password last time random stuff you can store stuff in session that's why when you go to facebook for example you don't have to sign in every single time or maybe it brings you back to where you were previously or if you were like in the middle of doing something and then you close the web page and you go back and it's still there it's because it was stored in the session now session is temporary but you can choose how long it lasts so i think by default here the session lasts for 30 days but you can choose how long session data will last you can make it infinite but sometimes you can like mess up a session and it's kind of hard to describe but don't treat a session as a database just think of a session as kind of a temporary storage to store information about your client your computer visiting a website so that you don't have to constantly log in sign out sign in whatever but what that means here is that login manager uses a session to determine if you are logged in or not so when you return to your computer another day and you go back to this website it checks your session and it says okay are you logged in yeah you are so let's bring you to this page rather than telling you you need to log in again hopefully that was a decent enough explanation of what's going on here then that's our login manager and now that i'm looking at this i think that's all we need to do inside of a knit dot pi we might come back to it in a minute but for now that is fine okay so now that we have that what i want to do is just run this app and see if this is working so let's run this python app.pi no module named fla sql alchemy okay i know what's wrong here let's go to models this needs to be flask underscore sql alchemy that would be why okay so let's try this now run and no module name flask sql alchemy am i spelling this wrong all right guys one sec let me see if i can fix this hair all right so i found the error it's actually just sql alchemy no flask this is different than the one we used previously so just remove the flask and you should be good so let's try this and oops date takes no arguments okay let's see what have i done wrong here date let me look in my cheat sheet um that would be why this needs to be date time okay so make that date time and now we should be good let's try it fingers crossed okay we're all good so now let's go back to our url let's refresh this okay and everything is working we're not going to see anything different because we haven't really implemented any new functionality i just want to make sure the database was working all right now i also noticed that it did not create oh no it said create database okay perfect so it did create the database database for us we might not be seeing it let me refresh and see if it shows up but if it said create a database i trust that it created it i guess just because we don't have anything in there right now so we don't actually see the database file okay so that's all good what we're going to do now is we're actually going to make it so we create a user account when someone signs up and then i will show you how we can like log into that user account and all that kind of stuff so we will continue in one second we need to quickly thank the sponsor of this video and this series which is algo expert algo expert is the best platform to use when preparing for your software engineering coding interviews they have 160 coding interview practice questions a data structures crash course mock interviews and a ton of awesome features to help you land your dream job get started with algo expert today by clicking the link in the description and use the code tech with tim for a discount on the platform all right so let's go into our sign up function here and let's start handling the logic for when we want to create a new account so the first thing we need to do is we need to determine if we're creating a new account or if we're just trying to get the html for the page because there's two different methods here right we could be posting data or we could just be asking for the html and if we're just asking for the html clearly we're not trying to actually make a new user we're also not going to have any form data we're not going to have email username password anything like that and so we need to check what method we have here so i'm going to say if request.method is equal to and then here i'm going to say post excuse me okay so inside of here we're going to do an indent this is where we're going to handle creating a new user however if it's not the post method we're just going to return the sign up html page okay so we get the email username and password and password the first thing we need to check here is if this user already exists so how do we do that well we need to look in our database and check if the user exists so i'm going to go up to the top of my program here and i'm going to say from dot import db and i'm going to say from dot models import user okay so how do we look in our database to see if a user with this email exists what we do is we say user dot query dot filter underscore by and then we say email like that is equal to email dot first okay and i'm just gonna go here and say user underscore exists equals this and instead of user exists we'll go email exists okay so what this does is it looks in the user database running user.query and we're filtering this database or this table by an email so we're looking for an email equal to the email that this person typed in in the sign up form and then we're getting the first result that occurs if there's any result it will just be the first result right because we only are going to have one entry in the database with this email if that email exists in the database hopefully that makes sense but there's never going to be two users that have the same email and so doing.first here just guarantees us we get the only user that exists with this email if they exist so now what i'm going to do is i'm going to check if this here exists right if we actually got a result so i'm going to say if email exists and i think that's literally all i need to do so if the email exists that means that we cannot create account because well the email already exists so what i'm going to do is i'm going to say flash and what flash will do is actually flash flash a message on the screen sorry that says hey this email already exists now we're going to have to implement some logic for this to work first we need to import flash from right here and we're just going to put kind of the message we want to appear so we're going to say email is already in use and then we're going to say the category so the type of this message is equal to air so we can flash all kinds of different messages we can flash uh error messages warning messages like success messages like you posted something successfully again we have to implement the logic for that but for now we're just going to do flash and i'll show you how this works in a minute okay so if the email exists or sorry if email doesn't exist we want to check if the username exists so what i'm going to do here is say username underscore exists is equal to user.query dot filter underscore by and i'm going to say username is equal to username dot first now we're going to do an lift here and we're going to check the exact same thing we're going to say elif username exists then we'll flash username is already in use and then category is equal to error nice now let me just do some spacing here okay now what do we need to check next well we need to check the password first so if the email doesn't exist the username doesn't exist sorry we need to make sure the password is of correct length so it's at least x characters and both of the passwords mass match sorry so we're going to say l if password1 does not equal password two then flash passwords don't match oops and this is b escape character don't match nice and then we'll say category is equal to error i spelled it correctly yes it did okay so if the passwords don't match we flash that and then lastly we want to check i guess the length of the username and the length of the password so we're going to say if the len of the username is less than two then we will just flash something and say hey that's no good you know your username is too short username is too short okay category equals error and i suppose we could just copy this because we'll do this a few more times now we're gonna do the same thing as password so if the passwords match then we'll check password one and we'll make sure it is at least six characters long so we're gonna check if it's less than six if it is we'll say password is too short and then lastly we could verify the email i guess um but i don't really want to write any regex or anything to verify the email so we're just going to assume that a user types in a valid email you could check the email if you want you could send them like you know an email to verify that they actually who are who they are we're not going to do that in this we're just going to kind of say your email is your login information we won't validate it they just they can type whatever email they want although they do need to have an email that has at least let's say 10 characters in or something so we can do that we'll say lf the lan of email is greater than we can pick whatever we want i'll go with 10 or sorry l if len of email is less than 10 then flash email is invalid and we'll go category equals air and now that i think of it that might be a little bit too short for the email i'm thinking of emails i've seen that are like four or five characters so you need an at symbol you need a period and then you're going to need another period probably you just need an ad symbol and a period and then you need two characters at minimum so let's just go it has to be at least four characters okay emails in bell all right and then finally if all of this is good we're going to actually create a account right so if none of this happened if we didn't have any error messages then we'll create an account so we're going to say new underscore user is equal to and the way we do this is we just use the class to make a new user so we're going to say user we don't need to pass the id because that will be automatically generated but we do need to pass those the email username and password so we're going to say email is equal to email username is equal to username and password is equal to password1 you could do password too it doesn't matter because they're going to be the same and then there will be a date time that this user was created but that will be automatically added as well we don't need to add that okay so now that we've created the user what we need to do is actually add this to the database we've made the user but it's not yet in the database the way you add it to the database is the following you db dot session dot add and then you add the variable that stores your user objects so we're going to add new user and then once it's added to the session we need to commit it so we're going to say db.session.commit this actually writes it into the database for so this adds it to kind of the staging area ready to be put in the database this puts it into the database so you go now we have created the new user then what we can do is flash user created uh yeah that's fine and then we're actually going to return a redirect for the url underscore four and this is going to be views dot home nice so let me just save this and now we are good to go so if we get through all this we make the user we add to the session we commit it we flash user created we redirect to the home page now if any of these are not the case we flash this message and then we would just actually return the template again they'll have to type in their information again and then they can try to create account again okay so that is good although one last thing we need to do is we need to actually log in our user once they have created an account so we could tell them to sign in once they've made the account but i would prefer to just sign them in once they actually create the account so the way we do that is we need to go here and say from flask underscore login import and i believe this is log in i gotta go look at it here uh login underscore use there we go and while we're here we'll go log out underscore user and then this is gonna be login underscore required okay so we're going to use these in a second now i'm actually remembering that we can't do exactly what i just did here so notice how i just stored this password right in this user model i have not hashed the password and so that means i'm actually storing the password in plain text now that's bad you don't want to store our password in plain text so what we're going to have to do is hash it i'll explain what that is in a second but we need to import a module that could hash the password so we're going to say from westerberg how do you how do you say this workberg i always mess this name up work zig like that dot and then security we're going to import the following this is going to be generate underscore password underscore hash and then i need to look at my cheat sheet this is going to be check password check underscore password underscore hash now i'm almost certain i spelt this wrong let's check this work zug dot security okay that should be good you guys should have this module you shouldn't need to install it i believe it comes with flask login or just with flask by default okay so we have two methods here generate password hash and check password hash all right so what is a hash and what is a hash function i'm going to try to explain this to you because it's pretty interesting so essentially the way that modern day security works is when you have a password you take that password and you never store it in plain text that means you need to store it in some other format but you need some way to determine if the user's password is whatever you're storing right is whatever the hash of that password is so what you want to do is you want to take some password you want to kind of encrypt it and store it in something that's not the password but you need some way to go from that password to the thing that's stored so you can verify if the password is correct but you never want to store the plain text password this is where a hash function comes in so a hash function is essentially a function where you cannot compute the inverse or there is no unknown inverse for this function now what is an inverse well with most functions you have some x so you give some x to it and it gives you some y but if you have the y you can figure out what x is so for example if i have some function i can literally do this in python i can just define this in python and say define foo i take x and then what this does is it returns x plus 2. if we were going to write this function out in math terms this would be y is equal to x plus 2. now the inverse of this function you write in terms of x so you would say okay well if i know what y is can i figure out what x is yes you can x is equal to y minus 2. right this is pretty straightforward you learn this in elementary school math at least i'm pretty sure but regardless given given y i can figure out what x is i just subtract 2 from y and that tells me what x is so that's fine for regular functions but with a hash function there is no way to do that that means given some x you're always going to get the same y but given some y you have no idea how to get back to x and so what we do here is we utilize the hash function to store a password so i say x goes to hash function hash function goes to a hash but from hash trying to get to x that's impossible there's no way for me to get to x given this hash at least not that we know of um that it's kind of an interesting thing quick little shortcut here if you guys are watching an hour long video you probably don't mind a quick 50 and 20 second pause to explain something currently our modern day encryption we assume that there is no way to go from this hash back to x that this is what's known as a oneway function one in which we cannot compute the inverse but we actually cannot prove mathematically that there's no inverse so there may be an inverse there may be a way to go from a hashed password to the original plain text password we just don't know of it so that's a little bit of a scary thought because our modern day encryption relies on an assumption that there is no inverse but there could be an inverse we just don't know how to find the inverse right now anyways i thought that was interesting so i figured i'd share that with you but regardless x goes to hash function goes to hash hash is always the same for x any x you pass if it's the exact same you always get the same hash however from the hash you cannot get back to x so when someone types in their password what you do is you hash it and then that gives you the hash and then you compare this hash with the hash that you've stored so i'm going to store the hash password and whenever someone types in their plain text password i'm going to hash it i'm going to check if that's the same as my hashed password that means these passwords do actually match but if you type in a different password you get a completely different hash you will never have like two passwords that correspond to the same hash hopefully that was a decent explanation uh but that is how password hashing works so we're gonna do that so we're gonna go here and rather than storing the password we're gonna hash it so we're gonna say generate password hash so generate underscore password underscore hash the password is going to be password one and then we need to choose the method for hashing so the method is going to be uh and this is going to be sha256 like that now you don't know what this means this is just a basic encryption method sha 256 okay so that's what we're going to use and i think for now that is good perfect so we've now generated the password hash we should be able to actually create a user account now while we're here let's just code out the logic for login and then we'll actually see if any of this works because once we create the account we'll try to log in so same thing here for login we need to check if the request.method is a post request so we're going to say if request.method equals equals post then what we want to do here is a few basic checks so we need to get the email and the password so we're going to get that and we're going to check if a user with this email exists we're going to say user is equal to user dot query the filter underscore by and we're going to say email equals email.first okay we're going to say if user so if actually sorry if not user actually no we will do if user we'll say if user so if this user actually does exist then we want to check if the password they typed in is equal to the password that we're storing in our user model so we just got the user if the user exists we're going to take this password we're going to hash it and we're going to check if it is the same as the hash password we're storing in the user model so we're going to say if check password hash we're going to say user dot password so that is the hashed password that we're passing first and then we're going to pass the password let me make sure that's all we need to do yes it is okay perfect so make sure you pass the hash password first and then the plain text password after that so this is correct this means user typed in the right password so we're going to say flash logged in and then we're going to return a redirect url underscore 4 and then this is going to be views.home okay and before we do that though we are going to log in our users we're going to say login underscore user this is going to be a user and we're going to say remember equals trip okay so this is the method that we brought in here this will log in our user with the login manager so then we're able to determine if the person session or if the person visiting the website is logged in or not because this will be storing the fact that this person is signed in in the session and it will store what user this person is signed in as hopefully that makes sense but that is what we need to do here now otherwise the password is incorrect right so if this is not the case then the password is incorrect so we're going to say flash password is incorrect and for both of these sorry we want our category so this one is actually going to be category equals success and this one will be category equals error nice and then we want another else here so if the user doesn't exist then we want to tell them that the user doesn't exist we're going to say flash user or email does not exist perfect now i believe that's all we actually need nice yeah that is all we need for login and now i'm just going to go back here to sign up and i'm going to log in my user after we create the account so i'm going to say login underscore user new underscore user remember equals true nice and while we're here we can just do the log out because it's pretty easy and say log out underscore user and we're going to say current underscore user i'm going to show you how we get this in one second okay so let's actually sorry i don't even need to do that i can just do log out user i'm just looking at my cheat sheet here all right so now we should have the sign up and login logic done i'm just kind of scrolling through here to see if i've done anything incorrectly and i want to import one more thing which is current user you just saw me type that from flask login so this is really cool flask login lets you access all of the information related to the currently logged in user from the current user variable so now anywhere once i've logged in i can access this current user variable and get the username password email of the logged in user what i'm going to show you now is something called the login required decorator so if you put this actually i think you need to put it here it might not matter i think you can do it in any order but i'm just going to put it here because that's where i have it in my cheat sheet this login required decorator this is what this is known as it decorates the top of the function is something that makes it so that you can only access this page if you have been logged in so only if this function has been called for your current user session are you able to actually access this route right here that's what the login required decorator does the reason i'm doing that on logout is because you can't like log out unless you're signed in right unless you've logged in and so that's why you need the login required okay let's run this and let's see if any of this works that was a lot of code without testing so let's go here and we will implement the message flashing in a minute right now you're not going to see the message flashing because we haven't done that and let's just try to create an account so i'm going to make an account let's say tim gmail.com username tim six seven password1234567 two three four five six seven uh okay and sign up now when i do that it redirects me to home which means i successfully created the account now the way to actually verify if the account was created is to go back to login and to try to log in so i'm gonna go tim gmail.com one two three four five six seven and notice that worked it redirect me whereas if i try to log in with the wrong credentials so tim gmail.com and one two three it doesn't redirect me it keeps me on the login page because the account credentials were not correct so that is how that works now though we want to actually see the error message right because it's kind of hard to determine if this is working or not when we can't see these flashed messages that we have this is a little bit of code it's in the html file that we need to write so let's go to our base.html now the reason we're going to put this in base.html is because we want these messages flashing to work on any page so we put this in our base template so as i was saying there's this thing in flask called message flashing now when you do flash and then you do the text and the category that passes that information to any templates that are rendered so what i can actually do here is i can write with and i need to go look at my cheat sheet because i don't have this memorized i'm going to say messages equal to get underscore flashed under sort messages like that i'm going to say with underscore and then categories is equal to true so what i'm doing is i'm saying okay with this variable messages equal to get flashed messages and i'm saying yes i would like to know the categories of all of these messages i'm going to do the following so i need to end this with first i think this is end width let me just see if that's how you do it yeah end width that's correct okay so inside of here the first thing i'm going to check is if i have any messages so this will be a list of messages so i'm going to say percent percent if messages like that and i'm going to say percent percent and if okay so if messages what i want to do is now have a for loop so i'm going to say percent percent for message in messages because i can have multiple messages flashing on the screen i'm going to say n4 just bear with me here if you've never seen this before it probably seems a little bit complicated but this is the way that you do it okay so for message in messages i actually realized sorry we need to do this first so for category comma message in messages this will give us the category and the actual text message for each of our messages this is the proper way to do it what we're going to do is we're going to show the message so remember if you want to access the variable you do it in double squiggly brackets like that so for now we'll just show the message but i will show you later how we can actually style this and make it look nice but let's just see if this actually works for now oh god i hate that it does that um okay i'm gonna save without formatting let's just refresh the page here and let's see if any message flashing actually works look at that user created login password is incorrect nice okay let me just refresh that was all of the messages that were not yet shown just got shown on the screen okay so let's just try to log in say tim gmail.com one two three four log in password is incorrect nice okay let's try this again tim at gmail one two three email does not exist so the message is actually working it's showing up right so i just want to prove that to you that's how that works this is kind of the code used to get the messages now though we want our message to look a little bit nicer so how are we going to do that well we're going to use some bootstrap so we're going to create a div this is going to be a class equal to alert and this is going to be alert hyphen danger and then alert hyphen dismissible like that let me make sure i spell this correctly i don't think i did dismissible and then this is going to be fade show like that and the role is going to be alert again i get all this from the bootstrap documentation so now if i do this and i put my message inside of div again i hate the formatting there um you will actually see that this is going to show up in a nice little kind of like banner now we're not quite done because there's some more code that i need to write here we need to actually put a button i'm just going to copy this button inside of this div because this is an alert that we can close so we have this button type button class button close and it closes the alert um yeah i guess this is just called an alert anyways that's what this is here i think that's good sorry i keep looking at my other screen there's a lot of so i have to make sure i'm getting this right okay perfect so what this is going to do now is it's going to show us a red kind of little banner on the screen which is like you know the the error message right so let's save this and let's refresh now and let's just see what this looks like so let's refresh and let's go log in email does not exist okay is there a reason it's not showing me that in a correct color um maybe i type something incorrectly it should be showing that to me in red ah it's because i didn't type danger properly okay so alert danger all right save without formatting and let's try now refresh continue there you go email does not exist okay so let's continue you saw that that was indeed working now the only issue is that right now we're only showing the kind of like error message right i need to also show one that's green if we have a successful message so the way that we're going to do this is we're going to put an if statement inside of our for statement now let's go back to this okay and let's put an if and we're going to check the category so we're going to say if category is equal equal to and in this case it is going to be error then we can do this so we can go percent percent and if and then otherwise so actually we'll just do an else here so let's say if it's not error so we'll say else then we will just show the success message so we'll do the exact same thing except instead of danger it's going to be success like that so let's save without formatting okay hopefully that makes sense but we're saying if it's an error show the error message otherwise show the success okay so let's refresh now we get our red message let's go here let's actually successfully sign in so tim gmail.com one two three four five six seven log in logged in then we can close it by pressing the x there you go sign up same thing it should work for that as well but i won't show that for right now so actually at this point in time this is working this is this is all good now the last thing we need to do here is go to views.pi and we need to add the at login required decorator to make it so we can't access the home page unless we're logged in so we're going to go from flask underscore login import login underscore required and then current underscore user and what we'll actually do is we'll say the name is equal to currentuser.username so that we can like greet the user when they log in okay and then we'll put the at login required here and i'll show you that we won't be able to access this page unless we're logged in so let's go here and refresh now right now i think we actually are logged in because we just logged in right so if i go here oh actually says please log in to access this page um damn okay how did i get that i don't even know how i got that to work because i don't know if i put something there i think that's like a default thing that comes from login manager but it's telling me okay i've got to log in if i want to access that page so what i can do now is go tim gmail.com one two three four five six seven log in and email does not exist hm why does email not exist uh tim gmail.com did i type something wrong one two three four five six seven log in okay let's just try to create a new account i don't know what's going on here okay let's go tim two at gmail.com tim two okay one two three four five six seven one two three four five six seven okay sign up user created and then i access the home page so that was good we are logged in now if i go to login and i go tim2 gmail.com one two three four five six seven login logged in nice okay so it all is working all right so i think with that i'm going to end the video here i don't think there's anything more i need to show you i understand this maybe was a little bit confusing but there's not really a much better way for me to go through all of this because it is a lot of code with that said in the next video we'll actually start working on the blog part of this application so creating a post comments likes all of that and i hope you guys have enjoyed the video up until this point of the series up until this point if you guys did make sure to leave a like subscribe to the channel i will see you in another youtube video you

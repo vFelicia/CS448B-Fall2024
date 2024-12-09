@@ -1,0 +1,622 @@
+With timestamps:
+
+00:00 - [Music]
+00:17 - well thanks for coming everybody uh
+00:20 - i'm excited to be here i uh
+00:22 - recently got excited about something i
+00:24 - was doing that was uh uh i got really
+00:26 - excited about pwas so i started to look
+00:28 - into it and uh put this presentation
+00:30 - together on web workers
+00:32 - service workers and pwas
+00:34 - um
+00:36 - who am i uh i'm a full stack developer
+00:39 - i'm a freelancer uh i was a digital
+00:41 - nomad for a while
+00:43 - scuba guy
+00:44 - was my office on the caribbean that's
+00:46 - cool
+00:48 - um that's my email you can find the code
+00:50 - for this there's not a whole lot of code
+00:51 - for this but there's a little bit code
+00:52 - for this on the github there
+00:56 - and if you're into it so uh what am i
+00:58 - doing i am a poverty abolitionist
+01:01 - the uh world used to be flat we used to
+01:04 - buy and sell people
+01:05 - we used to make kids work in factories
+01:08 - uh i believe it's time we should abolish
+01:10 - poverty if you're interested in that
+01:11 - come talk to me about it it's really my
+01:12 - jam
+01:15 - um
+01:16 - if if you guys are into it um this
+01:19 - hacktivism for economic justice get in
+01:21 - touch with me through that
+01:23 - i'm
+01:24 - looking to find people who are
+01:25 - interested in helping out projects
+01:26 - around this so
+01:28 - but tonight's uh i'm really excited to
+01:29 - be here with you guys pdx node we're
+01:31 - going to talk about web workers service
+01:33 - workers and pwas
+01:36 - um
+01:37 - so i'm sure you all know
+01:39 - regular web pages
+01:40 - uh
+01:42 - they're just regular it's just your html
+01:44 - and your css
+01:45 - if you do um
+01:47 - control escape oh i can't do it in full
+01:49 - screen but you do control escape you can
+01:51 - see all the processes that are going on
+01:53 - in chrome
+01:56 - and what's interesting is that the web
+01:58 - page and it's really actually really
+02:00 - cool about the javascript engine right
+02:01 - it runs in the event loop and what that
+02:03 - means is the code is actually pretty
+02:05 - easy to think about but you also get
+02:07 - kind of the simulation of multiple
+02:08 - processes and stuff right you can do
+02:10 - async stuff
+02:14 - but it's you really get limited access
+02:15 - to cpu disk and memory and you end up
+02:18 - with the event loop just being one
+02:20 - process per tab
+02:22 - are you guys all familiar with the event
+02:23 - loop is that
+02:24 - yeah okay
+02:30 - yeah okay got it so uh
+02:32 - what's the event loop the event loop
+02:35 - is like a while loop
+02:37 - and it's like while there's stuff to do
+02:40 - and then it does stuff
+02:41 - and when it gets to certain places in
+02:43 - stuff it'll actually go back to the top
+02:45 - of the event loop and look for other
+02:46 - events so you wind up with kind of this
+02:48 - cue of all these events happening and
+02:50 - then it processes each event as it comes
+02:52 - up to the top of the queue
+02:54 - sometimes in the processing of an event
+02:56 - it'll get to a place where it can
+02:57 - actually put down a pause and go do
+02:58 - another one
+03:00 - which is why
+03:01 - you'll actually see in the code later i
+03:03 - wrote myself a bug that took me about an
+03:05 - hour to figure out because i wrote wild
+03:07 - true
+03:08 - wild true is not friendly for the event
+03:10 - loop
+03:11 - um
+03:12 - but that's that's really the gist of it
+03:14 - if if you're familiar with um
+03:17 - uh
+03:18 - computers and you have like multiple
+03:20 - processors and you have multiple uh cpus
+03:23 - like this computer has eight uh
+03:24 - processors or yeah eight processors more
+03:27 - or less available
+03:28 - um with regular web pages you can really
+03:31 - only have your stuff run on one
+03:32 - processor and so if you're
+03:35 - if you want to do something that like
+03:36 - takes if you want to use all eight
+03:38 - processors from your web page you can do
+03:40 - that now
+03:42 - and you can do that with something
+03:43 - called
+03:44 - webworkers uh if if you're
+03:47 - if you've ever seen this like page
+03:49 - unresponsive
+03:51 - um
+03:51 - this is because the event loop got stuck
+03:55 - right
+03:56 - and and so that's this is kind of the
+03:58 - symptom of what we're going to try to
+03:59 - solve so we don't have this problem
+04:04 - so web workers they have two basic
+04:06 - things you can create another process
+04:08 - and you can pass messages between the
+04:10 - processes
+04:12 - so you don't get shared memory or
+04:13 - anything like that
+04:15 - um
+04:16 - i think there are
+04:18 - some rules around uh
+04:20 - uh local storage uh you get you can get
+04:24 - access data that way too
+04:27 - so
+04:28 - here's an example
+04:30 - of a script tag on a regular web page
+04:33 - um
+04:35 - so you can see here we're going to
+04:36 - create this new worker and this
+04:38 - worker.js is a file i'm going to show
+04:39 - you here in a minute
+04:41 - um
+04:43 - what we're doing here in this piece of
+04:45 - code is we're listening for an event
+04:46 - which is a message event
+04:49 - when that message event happens
+04:52 - we're gonna we're gonna append uh
+04:55 - some text
+04:56 - to this to this result uh id i'm gonna
+04:59 - show you guys this in an
+05:00 - example but if you can just imagine
+05:02 - there's a
+05:03 - an element with the id result we're
+05:05 - gonna actually add to its inner html the
+05:07 - data from the event which is uh which
+05:09 - was passed to us as a message
+05:12 - and a new one
+05:15 - now here in this
+05:17 - this bit here so this is gonna this is
+05:19 - gonna be what the web worker sends us
+05:21 - right so i'm i'm
+05:23 - we are now a web page called index.html
+05:27 - so when we create webworker it actually
+05:28 - goes uploads to this js file
+05:31 - and now we're going to listen for these
+05:32 - message events from
+05:35 - in this in this
+05:37 - process that's happening on index.html
+05:39 - right
+05:40 - now this one what we're going to do here
+05:42 - is we're going to set a timeout
+05:45 - and we're going to post a message
+05:47 - to the web worker
+05:49 - so we can communicate to the web worker
+05:50 - through messages and the web worker can
+05:52 - communicate to us through messages right
+05:55 - and so this is how we can get
+05:56 - like useful stuff in and out of the web
+05:58 - worker the web worker doesn't really
+06:00 - have any like data or context available
+06:02 - to it so we really have to send it
+06:04 - through through messages
+06:07 - is that does that make sense anybody
+06:09 - anybody have questions about that
+06:10 - yeah what can you pass it as a message
+06:12 - does it have to be like some
+06:14 - bit simple types like strings
+06:17 - maybe an object with those yeah but not
+06:19 - like a dom element uh you can't you
+06:22 - can't uh you could pass in a copy of a
+06:24 - dominant uh you could pass it a copy of
+06:27 - dom info but the
+06:28 - web worker doesn't have any access to
+06:30 - the dom so you can't use like jquery
+06:33 - with it
+06:34 - yeah
+06:36 - in the web worker you can load in other
+06:38 - scripts so you can load in low dash and
+06:40 - other libraries like that
+06:43 - but the data that you've had
+06:45 - the data you pass back and forth has to
+06:46 - be has to be like basically
+06:49 - i think i think you can do um
+06:51 - a javascript object
+06:54 - all right yeah i mean it gets like
+06:56 - stringified yes or the equivalent of
+06:59 - that whether exactly does that it just
+07:00 - sort of gets a value type out of it
+07:04 - exactly yeah you can't you can't pass a
+07:05 - reference
+07:07 - right
+07:10 - okay
+07:11 - so here's our worker.js
+07:17 - and so we
+07:18 - are going to listen for messages from
+07:20 - the main page with a string
+07:23 - as we wait for these outline messages so
+07:26 - when we get into this we we find self
+07:29 - right and that's us
+07:30 - now we're going to add this event list
+07:32 - and this is just like we did on the
+07:33 - previous page
+07:35 - right
+07:36 - and so now we're going to say okay
+07:37 - worker got a message
+07:39 - this is uh a horrible fibonacci number
+07:42 - generator it's it's made it's designed
+07:45 - to be uh very poor performance
+07:48 - but um
+07:50 - it's designed like that to show the
+07:51 - really the value of the web worker right
+07:54 - and then here
+07:56 - uh we are going to
+08:00 - so this loop here
+08:03 - uh this is this is where that wild uh
+08:05 - wild trio did work
+08:07 - so here we set an interval and then
+08:08 - every 200 milliseconds we calculate
+08:10 - fibonacci number and then we send it
+08:13 - back to the index web page
+08:17 - so
+08:20 - right so this is a lot this is a lot of
+08:22 - the comments that we actually just
+08:23 - talked about questions so yes you can do
+08:25 - multiple processes right like we had
+08:26 - those two scripts so now we had two
+08:28 - event loops running so we could get two
+08:29 - cpus going
+08:31 - uh we can use this in about 94 of
+08:33 - browsers
+08:35 - like i said no dom access
+08:37 - and
+08:39 - in terms of like practical applications
+08:41 - one of these is the crypto miner malware
+08:43 - like that makes a great web worker right
+08:45 - because you can just spin up all these
+08:47 - uh
+08:48 - cpus that are not being used for any
+08:49 - user
+08:51 - and then another one my sister pointed
+08:53 - this one out to me which is pdfjs which
+08:55 - is a library that will process pdfs on
+08:58 - the uh
+08:59 - on the browser
+09:01 - and i think it does it through web
+09:02 - workers that's pokemon coverage i
+09:03 - thought that was a pretty cool
+09:04 - application
+09:07 - all right so
+09:09 - you guys remember the code we just
+09:10 - looked at so here's here's that code uh
+09:13 - in
+09:14 - action
+09:15 - so we're gonna we're gonna go there
+09:17 - and now we're gonna look at this and
+09:19 - sorry it's so small but you can see that
+09:21 - we're running we're getting our
+09:22 - fibonacci numbers oh yeah
+09:25 - and and now
+09:33 - okay so if you go to that github uh
+09:35 - you'll see there's a couple i added
+09:36 - these like sidebars so we could do
+09:38 - import scripts we can also do exit uh
+09:40 - html requests so you gotta read the
+09:42 - readme
+09:43 - and this is this is text from what you
+09:44 - mean
+09:46 - here you can see where the page actually
+09:48 - sends the message and the worker got the
+09:50 - message abolished poverty
+09:52 - uh
+09:55 - okay we ran this twice
+09:57 - and then when we got that message we
+09:59 - changed from by pretty things to abolish
+10:01 - poverty so that's it so
+10:03 - this is an example of our web worker i
+10:04 - think our web worker is still
+10:06 - uh
+10:07 - oh it's still going down so
+10:10 - um
+10:14 - if if you guys can see my cpus you know
+10:17 - so we have 104 on cpu so we're still
+10:21 - we're using like 100 of a cpu in this
+10:23 - page but it's still responsive
+10:26 - and if if we didn't have the web worker
+10:28 - going we'd probably get that
+10:29 - unresponsive page
+10:31 - like facebook page right
+10:33 - so so that's really the value of um
+10:36 - web workers
+10:37 - uh do you guys have any questions about
+10:39 - that about what happened here
+10:41 - yeah
+10:44 - yeah
+10:45 - yeah
+10:46 - let's see there
+10:51 - um
+10:54 - now this is so i'm a little uh
+10:57 - i'm a little improv
+10:58 - improv here
+11:01 - i think we got it
+11:06 - yeah yeah no it's it's jamming it's like
+11:09 - i'm the worst fibonacci thing ever
+11:20 - i don't know i wonder if that will
+11:21 - happen let me try let's try that that
+11:22 - sounds fun
+11:25 - okay
+11:32 - all right
+11:34 - right and so it did break point because
+11:36 - uh you can see my cpu went down
+11:41 - x is 3.
+11:43 - nice
+11:47 - service workers
+11:49 - now service workers
+11:51 - are web workers
+11:54 - service workers have a k i use of about
+11:57 - 74 and that's going to change
+11:59 - uh in the next version of edge safari
+12:02 - and ios safari so it's going to jump up
+12:04 - to be pretty pretty mainstream
+12:07 - um
+12:10 - service workers give you like all that
+12:12 - web worker stuff
+12:14 - plus
+12:15 - you get a javascript prior proxy to edit
+12:18 - responses of your page network request
+12:20 - so we're going to talk about that
+12:23 - and you get an installation lifecycle so
+12:24 - it's almost like an app
+12:26 - and you get push notifications and other
+12:28 - other app-like stuff
+12:30 - google is really excited about pwas
+12:32 - google's really really excited about
+12:33 - this
+12:35 - um
+12:36 - so how how many of all y'all uh
+12:40 - know what a proxy is and they're like we
+12:42 - should skip okay
+12:44 - okay so what is a proxy a proxy is
+12:47 - basically an intermediary for requests
+12:50 - from clients seeking resources to other
+12:52 - servers so
+12:54 - when my laptop wants to go out and talk
+12:56 - to slides.com to get this presentation
+12:59 - it's on the it's on the wi-fi so the
+13:02 - first proxy that it hits is the wi-fi
+13:05 - right
+13:06 - then that wi-fi
+13:08 - access point is going to hit the
+13:09 - upstream router and that's another proxy
+13:12 - and so it's just proxies all the way up
+13:14 - it's like turtles all the way down
+13:15 - proxies all the way up
+13:17 - um
+13:21 - and so this so this
+13:23 - like this is almost like uh this is like
+13:25 - something that never happens right when
+13:26 - is the last time you plug directly into
+13:28 - a web server except on your la on your
+13:30 - if you're developing on your own
+13:32 - computer
+13:33 - right if you're using the internet
+13:34 - you're getting a proxy in the middle
+13:36 - and uh you know they can do all kinds of
+13:38 - stuff there's all kinds of stuff going
+13:39 - on here um
+13:42 - that et cetera et cetera
+13:45 - yeah
+13:46 - butterflies right it's great
+13:48 - christmas hearts
+13:51 - um
+13:59 - [Laughter]
+14:04 - um
+14:05 - so we can also get a caching proxy and
+14:07 - if you've ever uh
+14:11 - like
+14:12 - you know if you've ever
+14:14 - are you guys familiar with the caching
+14:15 - proxy
+14:16 - right so like a uh
+14:19 - like a cdn like cloud front is a caching
+14:22 - proxy right like i've got my
+14:24 - my website in a bucket an s3 bucket and
+14:26 - i put cloud front in front of it and
+14:28 - then when the clients want the the data
+14:30 - cloudfront only gets it when it knows
+14:32 - it's out of date
+14:33 - right so that's a really good that's a
+14:34 - caching proxy
+14:37 - okay so
+14:38 - if you wanted to do an offline web app
+14:41 - with a service worker you could make
+14:43 - something called a pwa
+14:45 - and so then your service worker becomes
+14:47 - the proxy
+14:48 - right it has a proxy a javascript proxy
+14:50 - to edit responses to your page's network
+14:52 - request
+14:54 - this all happens in the browser
+14:57 - and it has
+14:58 - if you have a cache it and so then if
+15:00 - you don't have access to the internet
+15:02 - you can still make network work requests
+15:04 - based on the cache data
+15:07 - that's my attempt to explain that how to
+15:09 - do
+15:10 - all right cool all right guess thumbs up
+15:12 - i win
+15:14 - um
+15:16 - service workers also have an
+15:19 - installation lifecycle
+15:22 - um and so i'm
+15:24 - gonna go over this just briefly to make
+15:26 - you aware of it because it's kind of
+15:27 - weird so it's like a new thing for web
+15:29 - pages uh and there's tons of there's
+15:31 - tons of documentation on it google is
+15:32 - really hot for this
+15:34 - basically you can register
+15:36 - uh your service worker like this right
+15:39 - so you just get the urls options and as
+15:41 - promised
+15:42 - uh and then the browser will will
+15:44 - download your service worker about every
+15:46 - 24 hours
+15:48 - and these scripts will if they're
+15:49 - updated they'll wait to become
+15:51 - activated so we'll see this we'll see
+15:53 - this might happen a little bit
+15:55 - but then the service worker really just
+15:56 - listens for events
+15:58 - uh
+15:59 - and then
+16:00 - whenever there's a fetch event so
+16:02 - network requests will go through we'll
+16:03 - create a vehicle event and we can
+16:05 - respond
+16:06 - this stuff
+16:11 - all right
+16:13 - this is i think i already i think i
+16:15 - already jabbered on this
+16:16 - but yeah it's really kind of like a
+16:18 - native app it's kind of cool
+16:19 - in fact i think i think
+16:21 - chrome and android are going to make
+16:25 - api events to put it on your phones like
+16:28 - desktop right so you can get an icon
+16:30 - with it
+16:32 - this service workers
+16:37 - has some really good examples on it if
+16:38 - you want to see some really cool
+16:39 - examples i'll show this basic one
+16:45 - and
+16:46 - all right let's get into this
+16:50 - all right that's not helping all right
+16:54 - okay so so this bit here
+16:57 - is the demo
+16:59 - right and it's it's really just this one
+17:00 - we're going to show icon
+17:02 - and so really we're just going to look
+17:03 - at kind of the code that's going on in
+17:05 - this this bit here
+17:09 - so
+17:10 - um so here's where we here's where we
+17:12 - register our service worker right
+17:14 - and then this bit of code is basically
+17:17 - the ui code for what's going on here
+17:22 - now in the service worker
+17:28 - we're going to we're going to have these
+17:29 - named caches
+17:31 - and you can you can update the caches as
+17:33 - you go
+17:34 - so these are pre cache urls so we can
+17:36 - pre cache
+17:38 - uh
+17:39 - basically resources that we need for our
+17:40 - application
+17:42 - um
+17:43 - you guys remember app cache
+17:45 - or was it application cache
+17:47 - yeah
+17:48 - like i think i think it's most famous
+17:50 - blog post was application cat shocks or
+17:52 - something like that
+17:54 - so
+17:56 - so this uh this is kind of like this was
+17:58 - somebody was like all right let's do
+17:59 - something better so we came up with this
+18:01 - so here we can we can basically um
+18:04 - pre-cache this index.html and all of our
+18:06 - stuff we need for the app
+18:09 - so then we listen for the install event
+18:12 - and
+18:13 - and
+18:14 - when
+18:15 - install happens we basically uh
+18:18 - wait and then we're going to go to our
+18:19 - caches and we're going to open this
+18:20 - precache cache
+18:22 - and then we're going to cache a bunch of
+18:23 - stuff
+18:25 - and then this skip waiting will activate
+18:27 - any service workers that are waiting to
+18:29 - be activated do you guys remember that
+18:30 - bit
+18:32 - all right i hope you do
+18:34 - uh
+18:35 - that's what it does
+18:37 - the service workers if you if you update
+18:39 - the service worker it'll
+18:42 - wait until it's it's activated before it
+18:44 - starts running
+18:46 - all right so then this bit of code here
+18:48 - is really just cleaning up the old
+18:49 - caches if we if we made a new cache
+18:52 - it's not that awesome but then here's
+18:54 - the really interesting part
+18:56 - where we talk about the proxy right
+18:59 - so all of this
+19:01 - all this stuff is just a regular service
+19:02 - worker right we were adding listeners
+19:03 - and event and all that kind of stuff
+19:06 - then we get down here and we get this
+19:07 - fetch event so this fetch event is when
+19:08 - we get an uh network request
+19:13 - and i think this is a google page so you
+19:14 - can see here they're very concerned
+19:16 - about google analytics
+19:18 - uh and so what we're saying is if if the
+19:21 - request
+19:22 - starts with our
+19:24 - uh our location
+19:27 - then we go to our caches and we try to
+19:28 - find a match for the request
+19:30 - and then we just send the response right
+19:33 - sort of cache response and response
+19:35 - if not then we uh
+19:38 - uh open the runtime cache right you
+19:40 - remember the runtime cache
+19:44 - and then with that cache
+19:46 - we run fetch to get the request and then
+19:49 - we add the response we put the response
+19:51 - into uh the cache and then we return the
+19:53 - response right
+19:55 - so
+19:57 - i mean that's pretty um
+19:59 - that's pretty much the gist of it
+20:01 - and
+20:02 - and with
+20:03 - this between the precache urls
+20:06 - and this bit here we have everything we
+20:08 - need to make an offline web app
+20:11 - right you can cache all your images all
+20:12 - your resources all your styling your
+20:14 - markup your javascript
+20:17 - and then anything you need a runtime
+20:20 - you can do here so
+20:22 - [Music]
+20:23 - when we got to
+20:25 - [Music]
+20:27 - this part here when we get to this fetch
+20:31 - if
+20:32 - if fetch actually returns an error
+20:34 - because the network's down we could just
+20:35 - return a default image
+20:37 - right so we could we could also start to
+20:39 - edit our
+20:40 - responses right like we could change
+20:43 - everything that's in the response right
+20:45 - we could make a pirate speak if we
+20:46 - wanted our
+20:48 - yeah exactly
+20:51 - um so there's there's a lot of stuff you
+20:52 - can do inside this proxy uh it doesn't
+20:55 - have to just do this
+20:57 - um so
+20:59 - uh it turns out it turns out like pwas
+21:02 - are hot and people are into it and uh i
+21:04 - i wouldn't actually
+21:07 - i mean like i got into it because i
+21:09 - wanted to learn it for this talk and
+21:10 - also i just want to learn it but um you
+21:12 - really don't need to know
+21:14 - uh about much about pwas to actually
+21:17 - build an offline app like this
+21:21 - like if you guys are into vgas here's
+21:22 - here's how to get you know here's how to
+21:24 - get one
+21:25 - and it's you just get your regular app
+21:27 - and it's it's got it
+21:28 - no no no it's good it's good i was super
+21:30 - into this um
+21:32 - yeah i'm just like still a poverty
+21:34 - abolitionist and uh thank you
+21:36 - and that's my jam what were you guys
+21:37 - saying
+21:40 - thank you
+21:44 - [Applause]
+21:48 - [Music]
+22:00 - you
+
+Cleaned transcript:
+
+well thanks for coming everybody uh i'm excited to be here i uh recently got excited about something i was doing that was uh uh i got really excited about pwas so i started to look into it and uh put this presentation together on web workers service workers and pwas um who am i uh i'm a full stack developer i'm a freelancer uh i was a digital nomad for a while scuba guy was my office on the caribbean that's cool um that's my email you can find the code for this there's not a whole lot of code for this but there's a little bit code for this on the github there and if you're into it so uh what am i doing i am a poverty abolitionist the uh world used to be flat we used to buy and sell people we used to make kids work in factories uh i believe it's time we should abolish poverty if you're interested in that come talk to me about it it's really my jam um if if you guys are into it um this hacktivism for economic justice get in touch with me through that i'm looking to find people who are interested in helping out projects around this so but tonight's uh i'm really excited to be here with you guys pdx node we're going to talk about web workers service workers and pwas um so i'm sure you all know regular web pages uh they're just regular it's just your html and your css if you do um control escape oh i can't do it in full screen but you do control escape you can see all the processes that are going on in chrome and what's interesting is that the web page and it's really actually really cool about the javascript engine right it runs in the event loop and what that means is the code is actually pretty easy to think about but you also get kind of the simulation of multiple processes and stuff right you can do async stuff but it's you really get limited access to cpu disk and memory and you end up with the event loop just being one process per tab are you guys all familiar with the event loop is that yeah okay yeah okay got it so uh what's the event loop the event loop is like a while loop and it's like while there's stuff to do and then it does stuff and when it gets to certain places in stuff it'll actually go back to the top of the event loop and look for other events so you wind up with kind of this cue of all these events happening and then it processes each event as it comes up to the top of the queue sometimes in the processing of an event it'll get to a place where it can actually put down a pause and go do another one which is why you'll actually see in the code later i wrote myself a bug that took me about an hour to figure out because i wrote wild true wild true is not friendly for the event loop um but that's that's really the gist of it if if you're familiar with um uh computers and you have like multiple processors and you have multiple uh cpus like this computer has eight uh processors or yeah eight processors more or less available um with regular web pages you can really only have your stuff run on one processor and so if you're if you want to do something that like takes if you want to use all eight processors from your web page you can do that now and you can do that with something called webworkers uh if if you're if you've ever seen this like page unresponsive um this is because the event loop got stuck right and and so that's this is kind of the symptom of what we're going to try to solve so we don't have this problem so web workers they have two basic things you can create another process and you can pass messages between the processes so you don't get shared memory or anything like that um i think there are some rules around uh uh local storage uh you get you can get access data that way too so here's an example of a script tag on a regular web page um so you can see here we're going to create this new worker and this worker.js is a file i'm going to show you here in a minute um what we're doing here in this piece of code is we're listening for an event which is a message event when that message event happens we're gonna we're gonna append uh some text to this to this result uh id i'm gonna show you guys this in an example but if you can just imagine there's a an element with the id result we're gonna actually add to its inner html the data from the event which is uh which was passed to us as a message and a new one now here in this this bit here so this is gonna this is gonna be what the web worker sends us right so i'm i'm we are now a web page called index.html so when we create webworker it actually goes uploads to this js file and now we're going to listen for these message events from in this in this process that's happening on index.html right now this one what we're going to do here is we're going to set a timeout and we're going to post a message to the web worker so we can communicate to the web worker through messages and the web worker can communicate to us through messages right and so this is how we can get like useful stuff in and out of the web worker the web worker doesn't really have any like data or context available to it so we really have to send it through through messages is that does that make sense anybody anybody have questions about that yeah what can you pass it as a message does it have to be like some bit simple types like strings maybe an object with those yeah but not like a dom element uh you can't you can't uh you could pass in a copy of a dominant uh you could pass it a copy of dom info but the web worker doesn't have any access to the dom so you can't use like jquery with it yeah in the web worker you can load in other scripts so you can load in low dash and other libraries like that but the data that you've had the data you pass back and forth has to be has to be like basically i think i think you can do um a javascript object all right yeah i mean it gets like stringified yes or the equivalent of that whether exactly does that it just sort of gets a value type out of it exactly yeah you can't you can't pass a reference right okay so here's our worker.js and so we are going to listen for messages from the main page with a string as we wait for these outline messages so when we get into this we we find self right and that's us now we're going to add this event list and this is just like we did on the previous page right and so now we're going to say okay worker got a message this is uh a horrible fibonacci number generator it's it's made it's designed to be uh very poor performance but um it's designed like that to show the really the value of the web worker right and then here uh we are going to so this loop here uh this is this is where that wild uh wild trio did work so here we set an interval and then every 200 milliseconds we calculate fibonacci number and then we send it back to the index web page so right so this is a lot this is a lot of the comments that we actually just talked about questions so yes you can do multiple processes right like we had those two scripts so now we had two event loops running so we could get two cpus going uh we can use this in about 94 of browsers like i said no dom access and in terms of like practical applications one of these is the crypto miner malware like that makes a great web worker right because you can just spin up all these uh cpus that are not being used for any user and then another one my sister pointed this one out to me which is pdfjs which is a library that will process pdfs on the uh on the browser and i think it does it through web workers that's pokemon coverage i thought that was a pretty cool application all right so you guys remember the code we just looked at so here's here's that code uh in action so we're gonna we're gonna go there and now we're gonna look at this and sorry it's so small but you can see that we're running we're getting our fibonacci numbers oh yeah and and now okay so if you go to that github uh you'll see there's a couple i added these like sidebars so we could do import scripts we can also do exit uh html requests so you gotta read the readme and this is this is text from what you mean here you can see where the page actually sends the message and the worker got the message abolished poverty uh okay we ran this twice and then when we got that message we changed from by pretty things to abolish poverty so that's it so this is an example of our web worker i think our web worker is still uh oh it's still going down so um if if you guys can see my cpus you know so we have 104 on cpu so we're still we're using like 100 of a cpu in this page but it's still responsive and if if we didn't have the web worker going we'd probably get that unresponsive page like facebook page right so so that's really the value of um web workers uh do you guys have any questions about that about what happened here yeah yeah yeah let's see there um now this is so i'm a little uh i'm a little improv improv here i think we got it yeah yeah no it's it's jamming it's like i'm the worst fibonacci thing ever i don't know i wonder if that will happen let me try let's try that that sounds fun okay all right right and so it did break point because uh you can see my cpu went down x is 3. nice service workers now service workers are web workers service workers have a k i use of about 74 and that's going to change uh in the next version of edge safari and ios safari so it's going to jump up to be pretty pretty mainstream um service workers give you like all that web worker stuff plus you get a javascript prior proxy to edit responses of your page network request so we're going to talk about that and you get an installation lifecycle so it's almost like an app and you get push notifications and other other applike stuff google is really excited about pwas google's really really excited about this um so how how many of all y'all uh know what a proxy is and they're like we should skip okay okay so what is a proxy a proxy is basically an intermediary for requests from clients seeking resources to other servers so when my laptop wants to go out and talk to slides.com to get this presentation it's on the it's on the wifi so the first proxy that it hits is the wifi right then that wifi access point is going to hit the upstream router and that's another proxy and so it's just proxies all the way up it's like turtles all the way down proxies all the way up um and so this so this like this is almost like uh this is like something that never happens right when is the last time you plug directly into a web server except on your la on your if you're developing on your own computer right if you're using the internet you're getting a proxy in the middle and uh you know they can do all kinds of stuff there's all kinds of stuff going on here um that et cetera et cetera yeah butterflies right it's great christmas hearts um [Laughter] um so we can also get a caching proxy and if you've ever uh like you know if you've ever are you guys familiar with the caching proxy right so like a uh like a cdn like cloud front is a caching proxy right like i've got my my website in a bucket an s3 bucket and i put cloud front in front of it and then when the clients want the the data cloudfront only gets it when it knows it's out of date right so that's a really good that's a caching proxy okay so if you wanted to do an offline web app with a service worker you could make something called a pwa and so then your service worker becomes the proxy right it has a proxy a javascript proxy to edit responses to your page's network request this all happens in the browser and it has if you have a cache it and so then if you don't have access to the internet you can still make network work requests based on the cache data that's my attempt to explain that how to do all right cool all right guess thumbs up i win um service workers also have an installation lifecycle um and so i'm gonna go over this just briefly to make you aware of it because it's kind of weird so it's like a new thing for web pages uh and there's tons of there's tons of documentation on it google is really hot for this basically you can register uh your service worker like this right so you just get the urls options and as promised uh and then the browser will will download your service worker about every 24 hours and these scripts will if they're updated they'll wait to become activated so we'll see this we'll see this might happen a little bit but then the service worker really just listens for events uh and then whenever there's a fetch event so network requests will go through we'll create a vehicle event and we can respond this stuff all right this is i think i already i think i already jabbered on this but yeah it's really kind of like a native app it's kind of cool in fact i think i think chrome and android are going to make api events to put it on your phones like desktop right so you can get an icon with it this service workers has some really good examples on it if you want to see some really cool examples i'll show this basic one and all right let's get into this all right that's not helping all right okay so so this bit here is the demo right and it's it's really just this one we're going to show icon and so really we're just going to look at kind of the code that's going on in this this bit here so um so here's where we here's where we register our service worker right and then this bit of code is basically the ui code for what's going on here now in the service worker we're going to we're going to have these named caches and you can you can update the caches as you go so these are pre cache urls so we can pre cache uh basically resources that we need for our application um you guys remember app cache or was it application cache yeah like i think i think it's most famous blog post was application cat shocks or something like that so so this uh this is kind of like this was somebody was like all right let's do something better so we came up with this so here we can we can basically um precache this index.html and all of our stuff we need for the app so then we listen for the install event and and when install happens we basically uh wait and then we're going to go to our caches and we're going to open this precache cache and then we're going to cache a bunch of stuff and then this skip waiting will activate any service workers that are waiting to be activated do you guys remember that bit all right i hope you do uh that's what it does the service workers if you if you update the service worker it'll wait until it's it's activated before it starts running all right so then this bit of code here is really just cleaning up the old caches if we if we made a new cache it's not that awesome but then here's the really interesting part where we talk about the proxy right so all of this all this stuff is just a regular service worker right we were adding listeners and event and all that kind of stuff then we get down here and we get this fetch event so this fetch event is when we get an uh network request and i think this is a google page so you can see here they're very concerned about google analytics uh and so what we're saying is if if the request starts with our uh our location then we go to our caches and we try to find a match for the request and then we just send the response right sort of cache response and response if not then we uh uh open the runtime cache right you remember the runtime cache and then with that cache we run fetch to get the request and then we add the response we put the response into uh the cache and then we return the response right so i mean that's pretty um that's pretty much the gist of it and and with this between the precache urls and this bit here we have everything we need to make an offline web app right you can cache all your images all your resources all your styling your markup your javascript and then anything you need a runtime you can do here so when we got to this part here when we get to this fetch if if fetch actually returns an error because the network's down we could just return a default image right so we could we could also start to edit our responses right like we could change everything that's in the response right we could make a pirate speak if we wanted our yeah exactly um so there's there's a lot of stuff you can do inside this proxy uh it doesn't have to just do this um so uh it turns out it turns out like pwas are hot and people are into it and uh i i wouldn't actually i mean like i got into it because i wanted to learn it for this talk and also i just want to learn it but um you really don't need to know uh about much about pwas to actually build an offline app like this like if you guys are into vgas here's here's how to get you know here's how to get one and it's you just get your regular app and it's it's got it no no no it's good it's good i was super into this um yeah i'm just like still a poverty abolitionist and uh thank you and that's my jam what were you guys saying thank you you

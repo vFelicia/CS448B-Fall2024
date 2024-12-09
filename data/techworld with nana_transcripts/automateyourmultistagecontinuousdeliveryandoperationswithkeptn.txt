@@ -1,0 +1,627 @@
+00:00 - in this video you will get a detailed
+00:02 - overview of the new and powerful
+00:04 - automation tool called captain which is
+00:07 - actually an open source cncf project
+00:10 - captain is an sre and devops tool so if
+00:13 - you don't know what sre is make sure to
+00:16 - watch my recent video on sre because it
+00:18 - will make it way easier to understand
+00:21 - captain first we'll understand the
+00:23 - problem captain tries to solve in the
+00:25 - release process and then see in detail
+00:28 - how captain works by looking at the
+00:30 - three main use cases of captain of
+00:33 - automated delivery automated operations
+00:35 - and automated monitoring we will look at
+00:38 - captain's architecture and visualize how
+00:41 - a more efficient and automated release
+00:43 - process can look like with captain and
+00:46 - at this point i want to thank dinah
+00:48 - trace for sponsoring this video so let's
+00:51 - get started
+00:55 - let's say we have the following release
+00:57 - process we have an e-commerce
+00:59 - application and we develop a really cool
+01:02 - new feature and we want our application
+01:04 - users to use that feature so we start
+01:07 - the release process we commit the code
+01:10 - changes which triggers jenkins build
+01:13 - jenkins runs the tests builds a new
+01:16 - docker image and pushes to docker
+01:18 - registry and then deploys to a
+01:21 - kubernetes cluster
+01:22 - development environment
+01:24 - well that's pretty cool but our goal
+01:26 - isn't to deploy to development the goal
+01:29 - is to deliver the change all the way to
+01:32 - the end users because they should see
+01:34 - the new cool feature so we want the code
+01:37 - changes to be deployed to production but
+01:40 - before that happens we need to test the
+01:42 - changes extensively to really make sure
+01:45 - that our new feature doesn't break the
+01:48 - whole application in production because
+01:50 - then users will see nothing and we don't
+01:52 - want that obviously so our release will
+01:54 - go through the stages
+01:56 - like first we run automated tests for
+01:59 - example functional tests on the
+02:01 - development environment to make sure the
+02:03 - new feature edition didn't break
+02:05 - anything in the application now in many
+02:08 - cases engineers can't hundred percent
+02:10 - rely on automated tests only so manual
+02:14 - tests are done in addition to really
+02:16 - make sure everything works as expected
+02:19 - now we're ready for the next stage
+02:21 - like staging
+02:22 - testing pre-prod or hardening or
+02:25 - whatever you may call it so we deploy
+02:27 - the feature to this next stage let's say
+02:30 - in our case we call it staging
+02:33 - on
+02:34 - dev environment we ran functional tests
+02:36 - to make sure everything functions
+02:38 - properly here we can focus on
+02:40 - performance of the application and run
+02:43 - performance tests like how does
+02:45 - application handle high load of traffic
+02:47 - or how fast it responds to user requests
+02:50 - and so on again automated tests may not
+02:53 - be enough so quality engineers may do
+02:55 - extensive manual evaluation to check
+02:58 - application performance look at the test
+03:01 - results and compare to the previous
+03:04 - builds also go through checklists and
+03:06 - some predefined release criteria to make
+03:09 - sure that application meets all these
+03:11 - criteria and only after that if
+03:14 - everything is fine and the test results
+03:17 - are good the feature will get a green
+03:19 - light for deployment to production now
+03:22 - even after such extensive testing there
+03:24 - is always a little bit of risk that
+03:27 - something will go wrong in the actual
+03:30 - real environment in production
+03:32 - especially in a very complex huge
+03:35 - application with lots of dependencies so
+03:37 - we don't just throw the new application
+03:39 - to the production environment like
+03:41 - deploy a new version remove the old one
+03:44 - and switch all the traffic to it
+03:45 - immediately
+03:46 - no instead there are deployment
+03:49 - strategies to do this more safely like
+03:52 - blue green or canary deployment where we
+03:54 - basically deploy the new version and
+03:56 - show it to some users to test that
+03:59 - everything is fine run it for a couple
+04:01 - of hours maybe even days observe and
+04:04 - monitor it closely and be ready to roll
+04:07 - back the new release anytime if
+04:09 - something goes wrong and eventually if
+04:11 - everything works fine without any issues
+04:14 - we switch 100
+04:16 - of the traffic to the new version and
+04:18 - then we can get rid of the old version
+04:21 - so as you see this whole process
+04:23 - involves a lot of manual work of
+04:25 - monitoring testing and evaluating on
+04:28 - multiple stages and as you may imagine
+04:31 - this may take days and weeks for a
+04:34 - completed feature to finally get to
+04:36 - production safely so a lot of human work
+04:39 - is involved here but what's also
+04:41 - important to mention is how many tools
+04:44 - and technologies are involved in this
+04:46 - whole process
+04:47 - as a central piece of this whole release
+04:50 - process you have a ci cd tool like
+04:52 - jenkins that needs to integrate with
+04:55 - various other tools like packaging tools
+04:58 - different testing tools docker registry
+05:01 - deployment tools for kubernetes like
+05:03 - helm and so on so you have this complex
+05:06 - pipeline that has lots of integrations
+05:09 - and each integration
+05:11 - that needs to be managed upgraded and so
+05:14 - on plus you may even have a lot of
+05:17 - custom logic for doing various things
+05:20 - that none of the plugins or services
+05:22 - help you with
+05:23 - and usually in a company you don't have
+05:25 - just one such pipeline you have a
+05:28 - separate pipeline for each and every
+05:30 - application or project team and these
+05:33 - pipelines may be only slightly different
+05:36 - from each other like one team may need a
+05:38 - higher version of helm and they need a
+05:41 - different docker registry
+05:42 - than the rest of the teams etc so
+05:45 - in this case it's hard to consolidate
+05:48 - and reuse the pipelines so all the teams
+05:51 - have to configure and maintain their own
+05:54 - pipelines so what do we need to make
+05:56 - this whole process faster and make the
+05:59 - pipelines much more manageable well
+06:02 - first of all we need automated
+06:03 - evaluation between the stages instead of
+06:06 - manual checks
+06:07 - automation makes things faster so we
+06:10 - want to replace the slow human work with
+06:13 - fast automated process
+06:16 - and second we want to be able to create
+06:18 - reusable pipelines which make it much
+06:21 - easier to integrate and plug in
+06:24 - different tools and replace those tools
+06:26 - for different teams if they want to
+06:28 - and that's exactly what captain does and
+06:31 - helps you with
+06:33 - so how does captain help you solve all
+06:35 - these challenges
+06:39 - first of all captain lets you define a
+06:42 - high level workflow for your release
+06:45 - like how do you want to deploy your
+06:46 - application changes
+06:48 - like what stages what test and
+06:51 - deployment strategy for each stage and
+06:54 - the evaluation between the stages and it
+06:56 - lets you define this workflow easily in
+06:59 - a declarative way with yaml in a
+07:02 - shipyard.yaml file now note that there
+07:05 - is no mention of the tooling here so who
+07:08 - is doing the deployment or who is
+07:10 - executing all these tasks like running
+07:13 - the tests or actually deploying to a
+07:15 - specific stage and so on so shipyard
+07:18 - defines what needs to be done but where
+07:20 - do we define how all this should be
+07:22 - executed well those tasks are executed
+07:25 - by different tools for example helm will
+07:29 - do the deployment to kubernetes jmeter
+07:31 - and selenium will run the tests and so
+07:34 - on but how does captain talk to these
+07:36 - services how do they know that they
+07:38 - should execute a specific task
+07:41 - well captain uses events to communicate
+07:44 - with various tools to send them tasks to
+07:47 - execute so for example when it's time to
+07:50 - execute a deploy task
+07:52 - captain will trigger an event saying
+07:54 - deploy this service with version
+07:57 - 1.2 to development environment with
+08:01 - direct deployment strategy now on the
+08:03 - other side you have this tools
+08:05 - configured that can execute the tasks
+08:08 - but how do these tools know how to
+08:10 - handle the event so for example if you
+08:12 - use helm for deployment how does helm
+08:15 - know to listen for this specific event
+08:17 - and then execute deploy task well that's
+08:20 - done through captain services which are
+08:23 - basically small applications written for
+08:25 - each tool that can translate the captain
+08:28 - event into an api call to that specific
+08:31 - tool so captain's health service will
+08:34 - subscribe to execute deploy event read
+08:37 - the event payload when captain sends it
+08:39 - and then translate that event into a
+08:42 - helm task and tell helm to deploy the
+08:45 - application with the provided
+08:47 - information and there are captain
+08:49 - services for various tools that you may
+08:52 - need in your pipeline
+08:54 - but what if you're using a tool for
+08:56 - which there is no captain service or if
+08:59 - you're using a custom tool well captain
+09:02 - actually offers a more generic way to
+09:04 - integrate with different tools using web
+09:07 - hooks or kubernetes jobs so you have all
+09:10 - this flexibility as well
+09:13 - so as you see the workflow definition
+09:15 - and the tooling is separated that's on
+09:18 - purpose to separate concerns
+09:20 - so captain basically gives you a tool to
+09:23 - orchestrate other tools using events
+09:27 - this means instead of a code integration
+09:29 - like with jenkins it works based on
+09:32 - events and this makes
+09:34 - tool integration with captain very
+09:36 - flexible and because you have separated
+09:39 - the release workflow and the tooling you
+09:42 - can replace any tool without changing
+09:44 - anything in your workflow if you want to
+09:47 - use a new tool just set it up subscribe
+09:49 - it to the relevant event and that's it
+09:52 - if you want to stop using a tool
+09:54 - unsubscribe it from the events and done
+09:57 - another big advantage of captain's event
+10:00 - driven approach is that you have a more
+10:02 - efficient workflow execution for example
+10:05 - when you start a jenkins build that runs
+10:08 - five hour tests you will have jenkins
+10:10 - agent blocked for five hours until the
+10:14 - test execution is finished
+10:16 - so other builds will have to wait for it
+10:19 - with an event-driven workflow you don't
+10:21 - have to wait for the tasks to finish
+10:24 - you make asynchronous calls instead of
+10:27 - pulling the tool to see if it's done the
+10:29 - tool itself responds back with an event
+10:32 - saying i'm done i've completed my task
+10:34 - so whether the task takes 10 minutes or
+10:37 - five hours it doesn't matter because
+10:39 - nothing gets blocked
+10:43 - okay so captain helps you create more
+10:46 - flexible pipelines that are easier to
+10:48 - manage
+10:49 - and easier to integrate with different
+10:52 - tools but that's not the main advantage
+10:54 - of captain i mentioned that it helps
+10:56 - automate the evaluation steps between
+10:59 - the stages and that's the cool part so
+11:02 - captain replaces the human quality gates
+11:05 - that do checks and evaluations
+11:08 - based on tests to decide whether the
+11:10 - change can pass the gate to the next
+11:13 - stage and use these automated quality
+11:17 - gates instead
+11:18 - so in the workflow we would have
+11:20 - deployment
+11:21 - tests and evaluation and we saw that
+11:24 - different tools can do deployment and
+11:26 - test but which tool does the evaluation
+11:30 - well captain actually comes packaged
+11:33 - with a service called lighthouse service
+11:36 - which does the evaluation so you get
+11:38 - this functionality out of the box with
+11:40 - captain you don't have to install and
+11:42 - configure these services which is pretty
+11:44 - cool so how does that work how does
+11:47 - captain automate this extensive
+11:50 - application evaluation process
+11:52 - to understand that first of all let's
+11:54 - see what goes into the evaluation
+11:56 - process itself
+11:58 - let's say we ran performance tests for
+12:00 - three hours which generated traffic for
+12:03 - the application basically simulating the
+12:05 - actual usage of the application and its
+12:08 - features like in a real prod environment
+12:11 - now the application performance can be
+12:14 - evaluated based on these test results
+12:17 - like how quickly the application handled
+12:19 - requests how many errors application
+12:22 - produced was the application overloaded
+12:24 - at some point like did we have spikes in
+12:27 - the cpu and ram usage etc and there are
+12:30 - monitoring services like prometheus
+12:33 - dynatrace etc that collect such metrics
+12:36 - so while tests are running at the same
+12:38 - time a monitoring service like
+12:41 - prometheus collected metrics for the
+12:43 - application during these three hours so
+12:47 - these metrics must be evaluated to see
+12:50 - how application performed but what's
+12:52 - also important
+12:54 - they must be compared with the previous
+12:56 - releases so basically we want to know
+12:59 - did the application get slower compared
+13:01 - to the previous releases
+13:03 - did it have more errors or did the
+13:05 - application performance actually get
+13:07 - better so we need a history of
+13:09 - evaluations
+13:11 - so as you see for
+13:12 - a proper evaluation we need these two
+13:15 - things
+13:16 - metrics from the monitoring tool like
+13:18 - prometheus and we have to decide what
+13:21 - metrics do we want to evaluate
+13:23 - and these metrics are called slis
+13:27 - or service level indicators
+13:29 - because they indicate how a service is
+13:31 - performing and we define this list of
+13:34 - metrics for captain in a file called
+13:37 - sli.yaml
+13:39 - again declaratively in a yaml format and
+13:43 - the lighthouse service that you get with
+13:45 - captain then fetches this metrics from
+13:48 - the monitoring tool and as i mentioned
+13:51 - this could be performance metrics of how
+13:53 - the application is performing but also
+13:55 - it could be security metrics like what
+13:57 - security vulnerabilities were identified
+14:00 - in the application
+14:01 - as a second step
+14:03 - once we have the metrics or sli's
+14:06 - we want to now evaluate them
+14:08 - are they high low good or bad
+14:11 - so how do we define what's good or bad
+14:14 - we define these with what's called
+14:17 - service level objectives or slos for
+14:21 - example we define that a response rate
+14:23 - below 100 milliseconds is good so the
+14:26 - objective is to have a response rate
+14:29 - below 100 milliseconds so that's one
+14:32 - type of evaluation of taking the metrics
+14:35 - and comparing it with absolute values
+14:38 - but with slos we can also evaluate the
+14:41 - comparison with the previous releases so
+14:44 - for example does the application respond
+14:46 - faster or slower
+14:49 - than in the previous three releases for
+14:51 - example so we can define that also as an
+14:54 - slo in captain and for each slo
+14:57 - evaluation captain calculates a score
+15:00 - and we can define all these in an
+15:03 - slo.yaml file now as i said based on
+15:06 - that evaluation we decide whether the
+15:08 - release can go to the next stage through
+15:11 - the quality gate or not so the
+15:13 - evaluation result must be a simple yes
+15:16 - or no or pass or no pass so what does
+15:19 - captain give us as a result of
+15:21 - evaluation it gives us a score a total
+15:24 - score of all the slo evaluations
+15:27 - and based on that score we can define in
+15:30 - the slo dot yaml file
+15:33 - whether it's a pass or not
+15:36 - for example if we get a total score of
+15:38 - 90 or more the release can pass through
+15:42 - the gate
+15:43 - now two points i want to mention here
+15:44 - about captain workflows and how it works
+15:47 - first of all as you see everything is
+15:49 - defined declaratively the shipyard
+15:52 - workflow the slos the slis so all the
+15:55 - configuration of captain is declarative
+15:58 - the second is that it follows github's
+16:01 - practices which means all the logic and
+16:04 - definitions
+16:06 - and configuration are stored in git
+16:08 - repositories and every change that
+16:11 - captain makes is updated in these
+16:13 - repositories and stored as a single
+16:16 - source of truth so basically captain
+16:19 - forces you to use some of the best
+16:22 - practices in the devops and sre field
+16:25 - when you use it
+16:26 - now that we know what captain actually
+16:28 - does
+16:28 - let's see how an example release
+16:30 - workflow will look like with captain
+16:34 - so we commit and push our new cool
+16:36 - feature this triggers a jenkins build
+16:39 - which builds and pushes a docker image
+16:41 - to the docker registry now captain comes
+16:44 - in to take over orchestrating the
+16:47 - deployment all the way to the production
+16:49 - so jenkins sends an event to captain to
+16:52 - start the release process
+16:54 - captain starts the release workflow
+16:56 - defined in
+16:57 - shipyard.yaml file
+16:59 - so captain triggers the event for the
+17:01 - first task like deploy to development
+17:03 - with a direct deployment strategy
+17:06 - for this service
+17:08 - with image version 1.2
+17:11 - so all this information will be in the
+17:13 - event a helm service that is listening
+17:16 - for that event will say i can do that
+17:18 - and deploys the new version to the
+17:21 - development environment once helm
+17:23 - completes the deployment it sends back
+17:26 - an event to captain saying i'm done here
+17:29 - are the results of the deployment or the
+17:31 - status of the deployment
+17:33 - so captain now triggers the event for
+17:35 - the next task defined in the workflow
+17:38 - like run functional tests on the dev
+17:41 - environment and in this case let's say
+17:43 - two services
+17:44 - jmeter and litmus service are both
+17:48 - listening for this event so they both
+17:50 - start executing the tests and once done
+17:53 - both send events back to captain
+17:56 - saying
+17:57 - the task is completed now if any of the
+18:00 - tests have failed captain will abort the
+18:03 - release
+18:04 - because it means there is some issue in
+18:06 - the changes if not it continues with the
+18:09 - workflow so as a next step captain
+18:12 - triggers an event start evaluation for
+18:15 - this as i mentioned captain has its own
+18:17 - service so you get this functionality
+18:20 - out of the box
+18:21 - so captains evaluation services will
+18:24 - fetch the metrics or slis calculate the
+18:28 - slos and the total score and send back
+18:31 - an event to captain
+18:32 - with that final score and if the score
+18:35 - failed captain will abort the release
+18:38 - process if it passed then the next task
+18:41 - will be executed to deploy changes to
+18:43 - the staging environment using a blue
+18:46 - green deployment strategy and so on so
+18:49 - this workflow continues all the way
+18:52 - production if everything along the way
+18:54 - all the tests and the evaluation
+18:57 - processes
+18:58 - are successful and if not captain can
+19:01 - abort the release process at any stage
+19:04 - or task
+19:05 - so we have a completely automated
+19:08 - multi-stage release process
+19:11 - another interesting question regarding
+19:13 - captain is where does captain actually
+19:15 - run the control plane of captain which
+19:18 - basically orchestrates all these tools
+19:22 - triggers the events etc runs on
+19:24 - kubernetes so you deploy it inside the
+19:27 - kubernetes cluster using a helm chart or
+19:31 - captain cli that will again use the helm
+19:33 - chart in the background and the
+19:35 - execution plane or services that execute
+19:39 - tasks based on captain events can run
+19:42 - both inside the kubernetes cluster or
+19:45 - outside the cluster
+19:47 - like jenkins or selenium service for
+19:49 - example and you can even have multiple
+19:52 - execution planes connected to the same
+19:55 - control plane of captain in order to
+19:57 - manage multiple environments like dev
+19:59 - staging and prod or even multiple cloud
+20:02 - environments
+20:06 - now we have deployed our cool new
+20:08 - feature all the way to the production
+20:10 - using captain is this the end of the
+20:12 - release cycle
+20:14 - no because as i said no matter how much
+20:17 - you test and evaluate there's always a
+20:20 - slight possibility that in actual real
+20:23 - environment
+20:24 - things will be slightly different and
+20:27 - then we get a problem in production
+20:30 - let's say we released our new feature
+20:32 - which is part of the shopping cart
+20:34 - service to production just in time for a
+20:37 - holiday where you expect lots of sales
+20:40 - the application runs for seven hours and
+20:43 - we have shifted 100 of traffic to the
+20:46 - new version
+20:47 - and by midnight something breaks in the
+20:50 - shopping cart service so people can't
+20:52 - buy stuff they can't add anything to
+20:54 - shopping cart super bad situation
+20:56 - because you're losing a lot of sales on
+20:59 - a holiday well normally you would have
+21:01 - some kind of monitoring and alerting
+21:04 - configured in your cluster that gets
+21:06 - triggered automatically and sends
+21:09 - notification to the team members that
+21:11 - there is an issue in the cluster for
+21:13 - example the alert manager is configured
+21:16 - to alert when response duration
+21:19 - increases considerably
+21:21 - or a certain service is not responding
+21:23 - at all that means a support gets a call
+21:26 - at midnight to investigate and fix the
+21:29 - issue with the new feature and if they
+21:32 - can't fix the issue to eventually roll
+21:34 - back to the previous working version or
+21:37 - remove the feature flag and deactivate
+21:39 - the new feature
+21:40 - so what are the challenges here well
+21:43 - obviously again we have the human
+21:45 - element which means the support
+21:46 - engineers getting calls at night to fix
+21:49 - major issues in production
+21:51 - and the effort in fixing these problems
+21:55 - and that's another use case of captain
+21:58 - to help you with what's called automated
+22:01 - operations so captain can be used to
+22:03 - automate this process as well so how
+22:06 - does that look like
+22:08 - with captain you can define what's
+22:09 - called a remediation sequence for
+22:12 - production issues so you create a yaml
+22:14 - file with steps to fix the issue so how
+22:18 - does the workflow for this look like
+22:21 - alert manager detects an issue and sends
+22:24 - an alert that shopping cart service
+22:26 - isn't working like it's super slow or
+22:28 - it's not responding at all
+22:30 - so captain receives this alert as an
+22:33 - event again everything is event based
+22:36 - with captain and based on that alert
+22:38 - event captain starts executing a
+22:40 - remediation sequence
+22:42 - which you defined to fix the issue
+22:45 - automatically for example the first
+22:47 - remedy step in the sequence is to scale
+22:50 - up the pots because maybe the current
+22:52 - number of pots cannot handle the traffic
+22:55 - so we distribute the traffic a bit
+22:58 - among more pots
+23:00 - this means captain will send an event
+23:02 - scale up pods for this shopping cart
+23:05 - service the same way as we saw before
+23:08 - a helm service is listening for this
+23:10 - event and will say i can do that and
+23:13 - scale pods by changing the replica
+23:15 - account when it's done report back to
+23:17 - captain now this is an interesting part
+23:20 - because we don't know yet that this
+23:23 - remedy step actually fixed the problem
+23:25 - right so we need to check and observe to
+23:29 - see whether the issue was actually fixed
+23:32 - so captain does that for us by waiting
+23:34 - for the change to take effect and then
+23:37 - it will evaluate the slos to see whether
+23:41 - the metrics have improved so the same
+23:44 - evaluation process as in the quality
+23:46 - gate is used here and based on the
+23:48 - evaluation score
+23:50 - captain will know whether the problem
+23:52 - was fixed or not
+23:54 - if yes everything's cool problem fixed
+23:57 - we can configure captain to send a fixed
+23:59 - notification to the team
+24:01 - if not captain will look at the next
+24:04 - remedy step and execute that for example
+24:07 - the next step could be to remove the
+24:09 - feature flag and again
+24:11 - captain will do the evaluation to see if
+24:14 - this action fixed the issue if the
+24:16 - remedy sequence didn't fix the issue it
+24:19 - can then escalate it to the team and
+24:21 - then someone can intervene manually but
+24:24 - as you can imagine you could cover
+24:27 - already a lot of error fixing scenarios
+24:30 - with this automated remediation steps
+24:33 - without needing a human intervention
+24:35 - which is obviously a huge improvement of
+24:38 - operations
+24:40 - and finally we saw that throughout the
+24:42 - whole release process of not only
+24:45 - automatic deployment but also
+24:47 - after deployment operations in
+24:49 - production monitoring and alerting is a
+24:52 - central core point of this whole thing
+24:56 - because without the metrics we can't do
+24:58 - the automatic evaluations or
+25:00 - remediations so configuring monitoring
+25:03 - and alerting for your applications
+25:06 - is an important component for this whole
+25:08 - process and captain actually also helps
+25:11 - you with that you can use captain to
+25:13 - automatically configure
+25:15 - monitoring and alerting tools for you
+25:18 - for example based on the sli.yaml files
+25:21 - that you have defined for your services
+25:24 - it will know which metrics you want to
+25:26 - track so we can configure
+25:28 - the scraping endpoints to collect these
+25:32 - metrics data from the monitoring tool
+25:34 - the same way based on the
+25:37 - slo.yaml files it will know what the
+25:40 - accepted values for these metrics are so
+25:43 - it can automatically configure alert
+25:45 - rules for when the values are off
+25:49 - or not within the accepted range
+25:52 - i hope you learned a lot in this video
+25:54 - not only about captain but also about
+25:57 - new concepts around sre in general
+26:00 - definitely let me know in the comments
+26:02 - what you think about captain and also if
+26:04 - you want to learn more about captain
+26:06 - they actually have few tutorials with
+26:08 - different workflows to play around on
+26:10 - their website or you can even check out
+26:12 - their slack channel if you want to join
+26:14 - the captain community and with that
+26:17 - thank you for watching and see you in
+26:18 - the next video

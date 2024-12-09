@@ -1,0 +1,164 @@
+00:00 - so in this video we're gonna set up
+00:02 - Jenkins from scratch in a docker
+00:05 - container then we're gonna create a
+00:07 - multi branch pipeline and connected with
+00:09 - a git repository during this step I will
+00:12 - also explain how to create different
+00:14 - types of credentials in Jenkins and
+00:17 - finally I will show you the basics of a
+00:19 - Jenkins file to configure this multi
+00:22 - branch pipeline
+00:28 - so step one is to run Jenkins in a
+00:31 - docker container so to use that we need
+00:33 - to find an official image for Jenkins on
+00:38 - docker hub so let's go and as you see
+00:43 - here Jenkins
+00:45 - results in an official image and some
+00:49 - other images and if you click here you
+00:51 - see that this image the official image
+00:54 - has been deprecated and the last version
+00:57 - is 2.6 T which is very old Jenkins
+01:02 - version and instead of it we're gonna
+01:05 - use this image here so that would be
+01:08 - actually this one because this one is
+01:12 - now officially maintained by the Jenkins
+01:14 - community and also if you see the text
+01:17 - the latest image actually has Jenkins
+01:22 - version of to point 219 which for most
+01:27 - of the plugins it's important to have a
+01:29 - higher Jenkins version otherwise they
+01:32 - can't be installed so we're going to
+01:33 - take this image and this name of the
+01:37 - image so on my command line I'm gonna
+01:40 - execute docker run using this image
+01:43 - right so I'm gonna dock run and the
+01:48 - image however before I run this I need
+01:50 - to add some options like I need to
+01:54 - expose the port so that I can access it
+01:56 - from my browser etc so let's actually go
+01:59 - back and see the documentation of how to
+02:01 - run this so all the explanation is here
+02:05 - so these are some of the options that
+02:07 - we're gonna use and actually let's go
+02:11 - and do it so first one is I'm gonna
+02:13 - expose the ports and the first part I'm
+02:16 - gonna expose is port 8080 the Jenkins
+02:19 - application inside container will run it
+02:21 - port 8080 because Jenkins runs on Tomcat
+02:25 - which by default starts at this port and
+02:28 - I'm gonna bind it to my hosts port 8080
+02:30 - another port we can expose is 50,000
+02:34 - which is basically a port where drink is
+02:36 - master and slave communicate so this
+02:39 - will enable my Jenkins to
+02:41 - find slaves in case I had some so the
+02:45 - ports are open now another thing I'm
+02:47 - gonna do is I'm gonna run it in detach
+02:49 - mode and I'm also gonna bind volumes to
+02:53 - it so to do that I'm gonna use minus B
+02:56 - and I'm gonna use a named volume which
+03:00 - I'm gonna call Jenkins home meaning I
+03:07 - don't have to have this as a folder it's
+03:10 - gonna be automatically created I'm just
+03:11 - giving it a name which can be whatever
+03:13 - you want and I'm gonna bind it to
+03:16 - directory inside Jenkins container drink
+03:20 - its image under slash bar slash Junkins
+03:24 - hope this director is real and it's
+03:28 - inside of docker container and this will
+03:30 - create automatically create a volume now
+03:34 - you have to be careful here because if
+03:36 - you were to use a host volume here which
+03:40 - basically means that you take an already
+03:42 - existing directory on your laptop
+03:45 - machine and binding it to the Jenkins
+03:48 - container you might get some permission
+03:51 - issues meaning the Jenkins user might
+03:53 - not be able to write to that folder and
+03:55 - that could be a problem you can actually
+03:58 - check out my video which I made about
+04:00 - docker volumes where you can learn in
+04:02 - more detail how this works and the
+04:05 - reason why we need to create a volume
+04:07 - for Jenkins is to have data persistency
+04:10 - for Jenkins so when we remove the
+04:13 - container and restarted recreated the
+04:17 - data will still be there and the reason
+04:19 - why we need to persist this data is
+04:21 - because all the Jenkins builds all the
+04:23 - configuration and all the Jenkins
+04:25 - plugins and also Jenkins users will be
+04:28 - stored there so without this data you
+04:31 - will basically have to reinitialize the
+04:32 - whole Jenkins so important part here and
+04:36 - we're gonna use the latest take of
+04:40 - Jenkins and these are all the options we
+04:44 - need so I'm gonna correct this one here
+04:47 - look at here and I'm gonna run this
+04:54 - and it's pulling the image from the
+04:57 - docker hub it's gonna start in just
+04:59 - couple of seconds so the image has been
+05:01 - pulled and the docker container must be
+05:03 - running already
+05:04 - so if I do docker PS I see my Jenkins
+05:08 - container running and we actually need
+05:11 - its locks so I'm gonna do docker locks
+05:15 - with the container ID and I'm gonna see
+05:19 - that Jenkins started and its initial
+05:24 - setup is needed and this is the password
+05:26 - I'm gonna need to initialize it so I'm
+05:29 - gonna copy that and if I go to localhost
+05:34 - 8080 I will paste that password and it
+05:39 - should start
+05:40 - initializing so I'm going to go with the
+05:43 - suggested plugins and this is gonna take
+05:48 - some time to install all the plugins so
+05:52 - depends on what technologies your
+05:55 - application uses or what source
+05:57 - management tools etc he will need
+06:01 - different plugins for Jenkins and I'm
+06:04 - just gonna go with the community one
+06:07 - suggested ones and later of course in
+06:12 - Jenkins you can manage these plugins you
+06:14 - can delete them you can add new ones etc
+06:16 - this is just the base so now that it's
+06:19 - done I'm gonna create the first admin
+06:21 - user let's go at Jenkins user some
+06:25 - password really interesting I'm gonna
+06:32 - just mine and I'm gonna leave it
+06:35 - localhost Jenkins is ready and this is
+06:41 - view I get so if I go to new item
+06:44 - because I installed all these plugins I
+06:48 - see different types of Jenkins projects
+06:50 - I can create but default usually have
+06:53 - the freestyle project freestyle project
+06:55 - is used for simple single tasks like if
+06:58 - you want to just run tests for example
+07:00 - whereas with pipeline you can configure
+07:03 - the whole delivery flow like test build
+07:06 - package
+07:07 - deploy your application etc pipeline is
+07:10 - a more recent addition so before that
+07:12 - they would just chain multiple freestyle
+07:15 - projects to get a pipeline like project
+07:18 - the pipeline project type is just for a
+07:20 - single branch but in this video we're
+07:23 - going to create a multi branch pipeline
+07:25 - which will apply to multiple branches of
+07:28 - the same repository and if I go to
+07:34 - manage Jenkins that's where you as an
+07:38 - admin user have all the tools to
+07:40 - configure Jenkins and under manage
+07:43 - plugins you can actually add or delete
+07:46 - or manage or update the plugins that you
+07:50 - have so in available I have all the
+07:53 - plugins that I could install in addition
+07:56 - to my Jenkins and install I have all the
+07:59 - ones that I have actually selected at
+08:02 - the beginning you can remove them again
+08:06 - or you can add new plugins in the next
+08:09 - section of this video I'm gonna show you
+08:11 - how to create a multi branch pipeline
+08:15 - and how to connect it to your kid
+08:17 - repository and how to build your project
+08:20 - using that pipeline

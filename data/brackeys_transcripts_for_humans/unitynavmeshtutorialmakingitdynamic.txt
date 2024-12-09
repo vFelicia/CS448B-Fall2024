@@ -1,0 +1,129 @@
+With timestamps:
+
+00:00 - In the previous video we learned how to set up simple pathfinding in Unity. In this video we'll go over
+00:04 - how we can make our NavMesh
+00:06 - dynamic, so that it will update to changes in game. We will use the
+00:10 - Obstacle Component to easily make moving objects part of our NavMesh.
+00:14 - We'll also have a look at generating a NavMesh at runtime in the case that you don't know the layout of your level beforehand.
+00:20 - Also this video is sponsored by Unity. So let's jump right into it!
+00:24 - So here's an even more stripped-down scene than the previous video.
+00:27 - All we have is a ground plane and a player. The player has a NavMesh Component that we set up in the previous video,
+00:34 - and we also have a NavMesh object in here with a NavMesh surface,
+00:38 - which we can go ahead and hit bake on, and we can see right away that it bakes a NavMesh on our ground.
+00:44 - As always you can use the link in the description if you want to get the example scenes as well as the NavMesh Components.
+00:50 - The Scene that I'm using here is Example02. So before we start diving into
+00:55 - obstacles and changing the NavMesh in real time,
+00:57 - there's another feature that I want to show you. It's called volume
+01:01 - modifiers. If we go ahead and right click on our NavMesh and hit Create Empty, we now add a Component here,
+01:08 - and I'm gonna search for "NavMesh Modifier",
+01:10 - and I'm gonna select the NavMesh Modifier Volume.
+01:13 - A volume modifier is basically a way for us to mark a certain part of our NavMesh with a specific area type.
+01:20 - This way we don't have to link it to a particular object,
+01:23 - but we can just say that anything within this bounding box will have some kind of area type.
+01:28 - We can easily edit the volume by clicking this Edit Volume button, and now we can drag on the sides here,
+01:34 - (I'm holding down alt to scale uniformly) and we also select
+01:37 - what area type we want to override with. If we go ahead and select "Not Walkable", and go back to the NavMesh and hit
+01:44 - "Bake", right away
+01:45 - we are going to see a hole in our NavMesh.
+01:47 - So that's just a really cool feature that I wanted to show you. But so far,
+01:51 - we've been hitting "Bake" every time we want to change the NavMesh.
+01:55 - What if we have moving elements in our scene that we want to affect pathfinding?
+01:59 - For this we use obstacles. So let's rebake our scene here,
+02:03 - and let's go and create one of these obstacles. We'll right-click in the Hierarchy. Go to "3D Object" and select a cube.
+02:09 - Let's reset the transform on this cube.
+02:12 - Let's move it up by one on the y-axis and let's change the scale to two by one by two.
+02:17 - I've also prepared a material that we can use under 
+"Materials",
+02:21 - and I'm gonna drag this in. I'm then gonna rename our cube to
+02:25 - "Obstacle" and as expected if we select our NavMesh,
+02:29 - it's going to completely ignore our obstacle. To change this,
+02:33 - we'll go and select our obstacle, hit "Add Component" and this time we want to add the "NavMesh Obstacle Component".
+02:39 - If we open this up we have a few different settings. The first one is the shape.
+02:44 - Here we can select between a box and a capsule. In our case we're using a box.
+02:49 - We then change the center and size of our obstacle,
+02:53 - but I'm just gonna leave all those as is. And now if we go and select our NavMesh,
+02:57 - we can see that for some reason it's still not reacting to our obstacle.
+03:02 - That's because of a very important setting under our obstacle called "Carve". The reason for this setting is that we have kind of two
+03:09 - obstacle modes. This is because we can use obstacles in two ways. If we leave Carve unchecked,
+03:15 - we'll just rely on what we referred to as "obstacle avoidance".
+03:19 - This is something that our Agent Component
+03:21 - does and we actually have some settings for it right here. Obstacle avoidance is when our agent will do its best to avoid obstacles
+03:29 - that are nearby, but it won't actually include it in pathfinding. So whenever it's creating a path,
+03:36 - it won't take our obstacles into consideration.
+03:38 - Only once it gets close to one will it kind of try and stay away. The second way is using
+03:43 - Carve. If we check this, our
+03:45 - obstacle will actually go ahead and
+03:47 - cut out a piece of our NavMesh. And so our agent will plan its route around our obstacle from the very beginning.
+03:55 - To show you the difference between these two methods,
+03:56 - I've gone ahead and created a bunch of
+03:59 - obstacles. Each one of these have a script that will animate them back and forth as well as
+04:05 - a NavMesh Obstacle Component.
+04:06 - Currently Carve is set to false. If we go ahead and play we can see that the obstacles start moving. If we select our NavMesh,
+04:14 - and hold down control and select our Player, and go to the top right of our game view to make sure Gizmos is enabled,
+04:21 - we can actually see that when we click around, the path that our Player is
+04:25 - calculating is visible. And because the obstacles aren't set to Carve, we can see that our agent won't
+04:31 - actually calculate a path to try and avoid them.
+04:34 - It will only kind of try and move out the way once it gets close. If we select our Player, we actually have some settings
+04:40 - under the NavMesh Agent
+04:41 - that configures this behavior. If your game is relying a lot on moving obstacles,
+04:45 - I suggest to play around with these settings.
+04:47 - Here, we can adjust the radius and height of the agent, as well as the quality of the obstacle avoidance.
+04:52 - We can see that by increasing the radius, our agent will now take a greater path around the obstacles.
+04:59 - But of course there is another way. Let's select all the obstacles and enable Carve.
+05:04 - We'll also make sure to
+05:05 - disable Carve Only Stationary.
+05:07 - If this is enabled the obstacle won't carve out a piece of the Mesh if it's moving. And since our obstacles are moving all
+05:13 - the time, we definitely want to disable this. If you then again select the player and the NavMesh
+05:18 - and hit play, we can clearly see that our obstacles are now
+05:22 - changing the Mesh, and, if we press on some point on the map, that our path actually gets calculated around these obstacles.
+05:29 - Pretty cool! So that's how we can add obstacles to our game.
+05:32 - But since we are editing the NavMesh at runtime this isn't very performant.
+05:37 - It's fine to use for a few objects, but we want to Bake as much as possible beforehand. However, sometimes
+05:43 - we don't know the full layout of our level before the game starts.
+05:46 - This is often the case if your procedurally generating a level. Luckily,
+05:50 - we can easily generate a NavMesh at runtime using this same system.
+05:54 - So if we go and open up
+05:56 - Example03, this scene is even simpler. All we have in here is a ground, a NavMesh surface,
+06:02 - and then I've gone ahead and created this Level
+06:04 - Generator script. What this will do is, if we hit play, it's going to generate a random level and place our Player
+06:10 - somewhere in this level, but of course our player is unable to move because our agent is not placed on a NavMesh.
+06:17 - So we want to make sure that our NavMesh surface is updated after a level is generated. To do that
+06:23 - I'll open up my Level Generator script. As you can see I have a bunch of code in here,
+06:27 - but mainly what I'm doing is in the Start method.
+06:30 - I'm calling a function called "GenerateLevel". This function is down here
+06:34 - and it's basically just gonna loop over a grid and
+06:37 - determine whether or not we want to spawn a wall for each point on the grid.
+06:41 - And we also make sure to spawn in the Player.
+06:42 - But that's not really important. The main thing that we want to do, is make sure that we also update our NavMesh
+06:48 - after our level has generated. So under this piece of code is where we want to update our NavMesh. To do this,
+06:56 - we first need a reference to our NavMesh Surface. (And remember whenever we're dealing with NavMesh through script,
+07:02 - we want to go to the top and make sure that we're "using UnityEngine.AI")
+07:07 - Then we can go and add a variable, which is gonna reference our NavMesh Surface.
+07:12 - So we'll create a public NavMesh Surface, and we'll call it "surface",
+07:17 - then we can go to the point where we want to update our NavMesh, and all we need to do here is write
+07:23 - "surface.BuildNavMesh();".
+07:26 - And that's it!
+07:27 - This is the only function that we need to call in order for the surface to go ahead and rebuild. If we save this go
+07:34 - into Unity and make sure to drag in our NavMesh Surface in the "New Surface" field,
+07:39 - we then go to our NavMesh and just hit Bake right now. So now it's just an empty NavMesh.
+07:45 - And if we then hit play, we can see that the NavMesh perfectly fits our level.
+07:49 - And we can now start moving around our agent in this procedurally generated maze.
+07:55 - Super cool! And we can regenerate this as many times as we want. And one of the coolest things about this is that it's only
+08:02 - going to cost us right when the level is generated.
+08:05 - We aren't spending processing power each frame on trying to fit the nav mesh to the level,
+08:09 - we only do it once. So that's pretty cool.
+08:12 - That's pretty much it for this video.
+08:13 - In the next one will be covering how to create links between NavMeshes and will also implement an
+08:18 - animated character to replace our temporary cylinder. Make sure to subscribe to get notified once it's out. On that,
+08:24 - thanks for watching, and I will see you in the next video!
+08:27 - Thanks of the awesome patreon supporters who donated in February, and a special thanks to InCodeWeTrust,
+08:31 - Patrick McGinley, Diego Gayk, Frank, Tristin Daum, Duy Nguyen, Beffio,
+08:36 - InfinityPBR, Yorai Omer, Hans Hoftun, Cyborgmummy, Derrick Heemskerk Faisal Marafie,
+08:40 - Beard or Die, DoubleTap45, James P, JDeLaay025,
+08:44 - SupermanTheGr8, John Beauregard, Dennis Sullivan, Jason Lotito, Alex Rakitsky, Bjørn Furuknap,
+08:49 - Svetlin Svilenov, Jin, Sascha Hopstein, Sune T Jacobsen, Gregory Pierce, James Rodgers, Robert Bund,
+08:55 - Youdaman, Rob Fearn, and Erasmus. YOU GUYS ROCK!!
+
+Cleaned transcript:
+
+In the previous video we learned how to set up simple pathfinding in Unity. In this video we'll go over how we can make our NavMesh dynamic, so that it will update to changes in game. We will use the Obstacle Component to easily make moving objects part of our NavMesh. We'll also have a look at generating a NavMesh at runtime in the case that you don't know the layout of your level beforehand. Also this video is sponsored by Unity. So let's jump right into it! So here's an even more strippeddown scene than the previous video. All we have is a ground plane and a player. The player has a NavMesh Component that we set up in the previous video, and we also have a NavMesh object in here with a NavMesh surface, which we can go ahead and hit bake on, and we can see right away that it bakes a NavMesh on our ground. As always you can use the link in the description if you want to get the example scenes as well as the NavMesh Components. The Scene that I'm using here is Example02. So before we start diving into obstacles and changing the NavMesh in real time, there's another feature that I want to show you. It's called volume modifiers. If we go ahead and right click on our NavMesh and hit Create Empty, we now add a Component here, and I'm gonna search for "NavMesh Modifier", and I'm gonna select the NavMesh Modifier Volume. A volume modifier is basically a way for us to mark a certain part of our NavMesh with a specific area type. This way we don't have to link it to a particular object, but we can just say that anything within this bounding box will have some kind of area type. We can easily edit the volume by clicking this Edit Volume button, and now we can drag on the sides here, (I'm holding down alt to scale uniformly) and we also select what area type we want to override with. If we go ahead and select "Not Walkable", and go back to the NavMesh and hit "Bake", right away we are going to see a hole in our NavMesh. So that's just a really cool feature that I wanted to show you. But so far, we've been hitting "Bake" every time we want to change the NavMesh. What if we have moving elements in our scene that we want to affect pathfinding? For this we use obstacles. So let's rebake our scene here, and let's go and create one of these obstacles. We'll rightclick in the Hierarchy. Go to "3D Object" and select a cube. Let's reset the transform on this cube. Let's move it up by one on the yaxis and let's change the scale to two by one by two. I've also prepared a material that we can use under "Materials", and I'm gonna drag this in. I'm then gonna rename our cube to "Obstacle" and as expected if we select our NavMesh, it's going to completely ignore our obstacle. To change this, we'll go and select our obstacle, hit "Add Component" and this time we want to add the "NavMesh Obstacle Component". If we open this up we have a few different settings. The first one is the shape. Here we can select between a box and a capsule. In our case we're using a box. We then change the center and size of our obstacle, but I'm just gonna leave all those as is. And now if we go and select our NavMesh, we can see that for some reason it's still not reacting to our obstacle. That's because of a very important setting under our obstacle called "Carve". The reason for this setting is that we have kind of two obstacle modes. This is because we can use obstacles in two ways. If we leave Carve unchecked, we'll just rely on what we referred to as "obstacle avoidance". This is something that our Agent Component does and we actually have some settings for it right here. Obstacle avoidance is when our agent will do its best to avoid obstacles that are nearby, but it won't actually include it in pathfinding. So whenever it's creating a path, it won't take our obstacles into consideration. Only once it gets close to one will it kind of try and stay away. The second way is using Carve. If we check this, our obstacle will actually go ahead and cut out a piece of our NavMesh. And so our agent will plan its route around our obstacle from the very beginning. To show you the difference between these two methods, I've gone ahead and created a bunch of obstacles. Each one of these have a script that will animate them back and forth as well as a NavMesh Obstacle Component. Currently Carve is set to false. If we go ahead and play we can see that the obstacles start moving. If we select our NavMesh, and hold down control and select our Player, and go to the top right of our game view to make sure Gizmos is enabled, we can actually see that when we click around, the path that our Player is calculating is visible. And because the obstacles aren't set to Carve, we can see that our agent won't actually calculate a path to try and avoid them. It will only kind of try and move out the way once it gets close. If we select our Player, we actually have some settings under the NavMesh Agent that configures this behavior. If your game is relying a lot on moving obstacles, I suggest to play around with these settings. Here, we can adjust the radius and height of the agent, as well as the quality of the obstacle avoidance. We can see that by increasing the radius, our agent will now take a greater path around the obstacles. But of course there is another way. Let's select all the obstacles and enable Carve. We'll also make sure to disable Carve Only Stationary. If this is enabled the obstacle won't carve out a piece of the Mesh if it's moving. And since our obstacles are moving all the time, we definitely want to disable this. If you then again select the player and the NavMesh and hit play, we can clearly see that our obstacles are now changing the Mesh, and, if we press on some point on the map, that our path actually gets calculated around these obstacles. Pretty cool! So that's how we can add obstacles to our game. But since we are editing the NavMesh at runtime this isn't very performant. It's fine to use for a few objects, but we want to Bake as much as possible beforehand. However, sometimes we don't know the full layout of our level before the game starts. This is often the case if your procedurally generating a level. Luckily, we can easily generate a NavMesh at runtime using this same system. So if we go and open up Example03, this scene is even simpler. All we have in here is a ground, a NavMesh surface, and then I've gone ahead and created this Level Generator script. What this will do is, if we hit play, it's going to generate a random level and place our Player somewhere in this level, but of course our player is unable to move because our agent is not placed on a NavMesh. So we want to make sure that our NavMesh surface is updated after a level is generated. To do that I'll open up my Level Generator script. As you can see I have a bunch of code in here, but mainly what I'm doing is in the Start method. I'm calling a function called "GenerateLevel". This function is down here and it's basically just gonna loop over a grid and determine whether or not we want to spawn a wall for each point on the grid. And we also make sure to spawn in the Player. But that's not really important. The main thing that we want to do, is make sure that we also update our NavMesh after our level has generated. So under this piece of code is where we want to update our NavMesh. To do this, we first need a reference to our NavMesh Surface. (And remember whenever we're dealing with NavMesh through script, we want to go to the top and make sure that we're "using UnityEngine.AI") Then we can go and add a variable, which is gonna reference our NavMesh Surface. So we'll create a public NavMesh Surface, and we'll call it "surface", then we can go to the point where we want to update our NavMesh, and all we need to do here is write "surface.BuildNavMesh();". And that's it! This is the only function that we need to call in order for the surface to go ahead and rebuild. If we save this go into Unity and make sure to drag in our NavMesh Surface in the "New Surface" field, we then go to our NavMesh and just hit Bake right now. So now it's just an empty NavMesh. And if we then hit play, we can see that the NavMesh perfectly fits our level. And we can now start moving around our agent in this procedurally generated maze. Super cool! And we can regenerate this as many times as we want. And one of the coolest things about this is that it's only going to cost us right when the level is generated. We aren't spending processing power each frame on trying to fit the nav mesh to the level, we only do it once. So that's pretty cool. That's pretty much it for this video. In the next one will be covering how to create links between NavMeshes and will also implement an animated character to replace our temporary cylinder. Make sure to subscribe to get notified once it's out. On that, thanks for watching, and I will see you in the next video! Thanks of the awesome patreon supporters who donated in February, and a special thanks to InCodeWeTrust, Patrick McGinley, Diego Gayk, Frank, Tristin Daum, Duy Nguyen, Beffio, InfinityPBR, Yorai Omer, Hans Hoftun, Cyborgmummy, Derrick Heemskerk Faisal Marafie, Beard or Die, DoubleTap45, James P, JDeLaay025, SupermanTheGr8, John Beauregard, Dennis Sullivan, Jason Lotito, Alex Rakitsky, Bjørn Furuknap, Svetlin Svilenov, Jin, Sascha Hopstein, Sune T Jacobsen, Gregory Pierce, James Rodgers, Robert Bund, Youdaman, Rob Fearn, and Erasmus. YOU GUYS ROCK!!

@@ -1,0 +1,720 @@
+00:00 - in this video we're going to talk about
+00:01 - a super important topic which is
+00:03 - security in kubernetes and what are some
+00:06 - of the best practices for securing your
+00:08 - kubernetes cluster
+00:10 - the big challenge that we see in terms
+00:12 - of granite security is that it's already
+00:14 - so challenging to set up a kubernetes
+00:16 - cluster and to configure it to deploy
+00:18 - the applications in it that security
+00:21 - often becomes the afterthought adding on
+00:24 - top of that already complex
+00:26 - configuration
+00:27 - however we can't deny the importance of
+00:30 - security especially when the systems are
+00:32 - so complex so first of all let's talk
+00:34 - about security in cloud in general we
+00:37 - have a trend that more and more
+00:39 - workloads are moving to the cloud and
+00:41 - often there is a misconception that
+00:43 - cloud is secure by default so people
+00:46 - think that because the application is on
+00:48 - cloud it is protected but it's important
+00:51 - to understand that you have to secure
+00:53 - and manage the infrastructure and your
+00:55 - applications on the cloud just the way
+00:58 - you manage them on premise the
+01:00 - difference is that on cloud you simply
+01:03 - have different tools and technologies to
+01:06 - configure that security and often many
+01:09 - organizations aren't aware of those
+01:11 - tools or aren't using the tools that are
+01:14 - available for
+01:16 - making your cloud environment secure
+01:19 - so with all these things combined cloud
+01:21 - applications actually become
+01:23 - a very attractive target to a lot of
+01:26 - hackers
+01:27 - and this growing number of cloud native
+01:29 - applications
+01:31 - mostly use kubernetes as a platform and
+01:34 - that's where the relevance of knowing
+01:35 - how to secure kubernetes clusters comes
+01:38 - into play so the question is how secure
+01:41 - is kubernetes by default so if i don't
+01:44 - do anything explicitly and take the
+01:46 - defaults what is my security status so
+01:49 - what are we starting from and what are
+01:52 - the vulnerabilities or security gaps
+01:54 - that we have in kubernetes and what are
+01:57 - the security best practices to protect
+01:59 - and close those gaps in kubernetes to
+02:02 - secure our systems
+02:04 - the common number one issue is when
+02:06 - someone gets access
+02:08 - from kubernetes platform to the
+02:10 - underlying operating system
+02:12 - in which case an attacker can do a lot
+02:14 - of damage to the whole system and this
+02:17 - can happen because of various
+02:18 - misconfigurations and we're going to
+02:20 - talk about those and how to protect your
+02:22 - kubernetes so that this doesn't happen
+02:25 - in this video when we talk about
+02:27 - security it's also important to
+02:28 - understand that security is a
+02:31 - combination of multiple things on
+02:33 - multiple levels so it's not just one or
+02:35 - two things that you do that basically
+02:38 - just secure everything in case of
+02:40 - kubernetes we have the underlying
+02:43 - infrastructure then the kubernetes
+02:45 - platform that is running on that
+02:46 - infrastructure and the applications
+02:49 - running inside kubernetes platform so
+02:51 - all these levels need to be secured
+02:53 - individually which is quite a
+02:55 - challenging job
+02:57 - and one of the main challenges of
+02:58 - security in general is that the
+03:00 - attackers have an advantage because they
+03:03 - just need to find one security weak link
+03:05 - in the system to attack
+03:08 - while a defender has to defend every
+03:11 - single point maybe multiple times
+03:14 - to prevent that from happening in many
+03:16 - cases we would need to defend each point
+03:19 - with multiple different mechanisms so
+03:22 - while coding best practice is not to
+03:24 - repeat logic security best practice
+03:26 - generally is actually to be redundant
+03:30 - so use many security mechanisms in place
+03:33 - to protect
+03:34 - every attack point so this way an
+03:36 - attacker will have to do multiple things
+03:38 - in order to get into your system or
+03:41 - access your valuable resources and
+03:44 - basically do some damage to your whole
+03:46 - environment now before we dive in the 10
+03:48 - security best practices i want to say a
+03:50 - huge thanks to castin for sponsoring and
+03:53 - making this video possible they have an
+03:56 - amazing tool called k10 which is the
+03:59 - kubernetes backup and restore solution
+04:01 - it is a kubernetes native application
+04:03 - and has a lot of really good features
+04:06 - for backup and restore use cases and
+04:09 - apart from backup and restore being an
+04:11 - important part of
+04:13 - security mechanism itself and we're
+04:15 - going to talk about that in this video
+04:17 - k10 actually has a big focus on all the
+04:19 - security aspects in kubernetes so it
+04:22 - integrates with various tools and is
+04:24 - basically engineered to make it easy for
+04:27 - kubernetes administrators to secure the
+04:29 - k10 service itself in the cluster so
+04:32 - with that let's dive in our 10 security
+04:36 - best practices for kubernetes
+04:42 - first of all what is the main purpose of
+04:44 - kubernetes it is to run applications
+04:46 - inside right so we have built an
+04:49 - application and we need to deploy it in
+04:50 - kubernetes as a container and securing
+04:53 - workloads in kubernetes starts before
+04:55 - they even get deployed there when we
+04:57 - build a container image which will
+04:59 - eventually run in the cluster so
+05:01 - building a secure image in the cicd
+05:04 - pipeline is the first step so what
+05:07 - security issues do we have here
+05:09 - images are built in layers and each
+05:12 - layer contains a command or a tool
+05:14 - configuration etc so they're things that
+05:17 - basically go into building the image
+05:20 - we install different tools maybe we
+05:22 - create some users and so on
+05:25 - so we need to be thinking about
+05:26 - everything that goes inside that image
+05:28 - and what is the security impact of that
+05:31 - first of all
+05:32 - code from untrusted registries
+05:34 - we may be using a code or a library in
+05:38 - our application
+05:39 - which comes from an untrusted source so
+05:42 - we have an untrusted code that may
+05:44 - include some virus or backdoors that
+05:47 - could unintentionally grant access to an
+05:50 - attacker we may also be using some
+05:52 - packages for an operating system in our
+05:55 - docker image so these dependencies and
+05:58 - tools may also have some vulnerabilities
+06:00 - or the base image that we're using to
+06:02 - build our own application image may have
+06:04 - some vulnerabilities
+06:06 - so this means we need to be careful what
+06:08 - goes inside the image what libraries and
+06:10 - dependencies and tools we're using when
+06:13 - putting together our application image
+06:16 - generally when we're building images
+06:18 - developers should eliminate any
+06:19 - unnecessary packages libraries
+06:22 - and dependencies that application
+06:25 - doesn't necessarily need
+06:26 - or it may need in a build time but not
+06:29 - necessarily in runtime and also they
+06:32 - should choose leaner and smaller base
+06:34 - images
+06:36 - with less tools inside to build the
+06:38 - application image because mostly you
+06:40 - don't need so many tools to run your
+06:42 - applications if we do build an
+06:44 - application image with some
+06:46 - vulnerabilities and it gets deployed to
+06:48 - the cluster that may introduce serious
+06:51 - security issues for example an attacker
+06:55 - may use a vulnerability in an image
+06:57 - to break out of the container and get
+07:00 - access to the host
+07:02 - or the kubernetes worker node and from
+07:04 - the host they can access all the other
+07:07 - containers running on that host
+07:09 - so they will be able to do much more
+07:11 - damage if they
+07:13 - manage to break out of the container
+07:15 - they can read data in the host volumes
+07:18 - they can read the file system and so on
+07:21 - they could also read the configuration
+07:23 - of cubelet that is running on that host
+07:26 - including cubelet's authentication token
+07:28 - and the certificates that it uses to
+07:30 - talk to the kubernetes api server and
+07:33 - that will give an attacker a chance to
+07:36 - further damage the cluster and escalate
+07:38 - privileges
+07:40 - so a lot of serious security issues may
+07:42 - arise if you have vulnerabilities in
+07:44 - your image that will allow an attacker
+07:47 - to access the underlying host from a
+07:49 - container for example so how do we
+07:52 - prevent any such vulnerabilities and
+07:54 - issues from slipping in to the image
+07:57 - when we're building that well we should
+07:59 - do what's called image scanning so the
+08:02 - first security best practice is to do
+08:04 - image scanning and make sure to build
+08:06 - secure images and there are a lot of
+08:08 - tools out there that can help you in
+08:10 - that for example you have systick and
+08:12 - sneak etc that basically have a database
+08:15 - of vulnerabilities that get updated
+08:17 - regularly and they will basically do the
+08:19 - scanning of your image against those
+08:21 - known vulnerabilities so you need to
+08:24 - make sure you're constantly scanning for
+08:26 - vulnerabilities so how do you do image
+08:29 - scanning exactly using the image
+08:31 - scanning tools that i mentioned you can
+08:33 - scan the images in the ci cd pipeline
+08:35 - for example before pushing the image to
+08:38 - the repository so once the image is
+08:41 - built you can run a command of that
+08:43 - image scanning tool that checks the
+08:45 - image for any insecure tools or packages
+08:48 - for dependencies with any
+08:49 - vulnerabilities as well as it also
+08:52 - checks for an insecure configuration and
+08:55 - any hard-coded secrets for example so
+08:58 - once the image is built and it basically
+09:00 - passes that vulnerability scan or
+09:03 - security scan it can be pushed to a
+09:05 - repository however it could happen that
+09:08 - a vulnerability gets discovered after an
+09:10 - image was scanned and pushed to the
+09:12 - repository as i said tools like sneak
+09:15 - for example they have a database of
+09:17 - vulnerabilities that gets updated
+09:19 - constantly when new ones get discovered
+09:22 - so a lot of image registries like docker
+09:25 - hub and so on actually have a feature
+09:29 - for scanning images in the repository
+09:32 - itself which means it's also important
+09:34 - to scan images
+09:36 - regularly that have already been pushed
+09:38 - to a registry to make sure there are no
+09:41 - vulnerabilities that appeared after the
+09:44 - image was built another security best
+09:47 - practice is to avoid using root user in
+09:49 - your containers and running your
+09:51 - containers with privileges if you have a
+09:54 - vulnerability in an image and it's
+09:56 - running with a root user the attacker
+09:58 - can much more easily use that to break
+10:02 - out from the container and access the
+10:03 - host or the kubernetes worker node so
+10:06 - when building your image you should
+10:08 - create a service user and run the
+10:10 - application with that user instead of
+10:13 - using the root user but note that even
+10:15 - if you build the image like that you
+10:18 - could actually override that in the pod
+10:20 - configuration itself so you might have
+10:22 - an image that runs with a service user
+10:24 - but you can actually configure or
+10:26 - misconfigure a pod to allow it to run
+10:29 - with root or run it as a privileged
+10:32 - container or even allow access to the
+10:34 - host network which is not a good thing
+10:37 - and if this kind of misconfiguration
+10:39 - slips into the cluster your pod now
+10:41 - becomes very insecure
+10:44 - so avoid running privileged containers
+10:46 - to make it harder to break out from it
+10:49 - because this way the attacker will have
+10:51 - to first get access to the root user
+10:54 - inside the container and then they will
+10:56 - be able to break out and access the host
+11:00 - now once our application is deployed and
+11:02 - running in kubernetes we have a number
+11:04 - of things to secure inside the cluster
+11:06 - itself
+11:11 - first of all who can access the cluster
+11:13 - which human or application users
+11:16 - once inside the cluster what can these
+11:18 - actors do what are their privileges this
+11:21 - becomes more relevant if an attacker
+11:24 - steals an identity of one of these
+11:26 - authorized parties because the question
+11:29 - is what can an attacker do in the
+11:30 - cluster what permissions do they have
+11:33 - therefore we need to manage users
+11:36 - roles and their permissions in
+11:38 - kubernetes and we need to keep these
+11:40 - permissions as restricted as possible if
+11:44 - someone in the team needs access to
+11:45 - troubleshoot or debug
+11:47 - pods in myapp namespace then they should
+11:50 - be given read-only permission to
+11:53 - kubernetes resources in that namespace
+11:55 - only so how do we manage users and their
+11:58 - permissions in kubernetes for that we
+12:00 - have rbac or role-based access control
+12:05 - and these are kubernetes resources that
+12:07 - allows you to create roles in kubernetes
+12:10 - with certain permissions for example a
+12:12 - role that allows viewing creating and
+12:15 - updating deployments
+12:17 - services config maps in a namespace
+12:20 - called database
+12:22 - so there will be one role right so what
+12:24 - can you do with which resources in which
+12:27 - namespace
+12:28 - or you may have a role that allows only
+12:30 - viewing and listing pods in a my app
+12:33 - namespace
+12:35 - now the roles need to be attached to
+12:38 - actual users like a team member sarah
+12:41 - who is deploying and managing database
+12:43 - services in a cluster can get the first
+12:46 - role associated to her user and a junior
+12:49 - developer tom can be granted the view
+12:51 - only role to be able to see what pods
+12:54 - are running in a my app namespace
+12:56 - in kubernetes there is actually no
+12:59 - resource for user so you can directly
+13:02 - create user components in kubernetes
+13:06 - instead the users are indirectly created
+13:09 - by either importing a list of
+13:12 - users into your cluster or for example
+13:15 - by generating a client certificate for
+13:18 - the kubernetes api server
+13:20 - for a specific user so in our example
+13:23 - client certificates will be generated
+13:25 - for both sarah and tom for the
+13:27 - kubernetes cluster and the user for that
+13:30 - certificate will be registered as a user
+13:33 - in kubernetes and once you have that
+13:35 - user sarah user tom both with their own
+13:38 - client certificates associated to the
+13:41 - cluster you can then attach those roles
+13:45 - with the respective users now you also
+13:48 - have a kubernetes administrator that
+13:50 - needs to be able to create and update
+13:52 - resources in multiple namespaces or
+13:55 - maybe the whole cluster and for that we
+13:57 - actually have cluster roles which are
+14:00 - the same as rows but they apply to the
+14:02 - whole cluster instead of a specific
+14:04 - namespace so for example kubernetes
+14:06 - administrators kate and mark can both
+14:09 - get cluster rows associated to their
+14:12 - users that allow them to create
+14:15 - view and delete a list of different
+14:17 - resources in all the namespaces in the
+14:20 - cluster as i mentioned you also have
+14:22 - non-human users for example if you're
+14:25 - deploying to kubernetes cluster from a
+14:27 - jenkins pipeline or running a
+14:29 - third-party service like istio for
+14:32 - example that needs access to kubernetes
+14:33 - resources and needs to talk to
+14:36 - kubernetes api server you need to give
+14:38 - those tools access to the cluster as
+14:41 - well and for non-human users there is
+14:44 - actually a kubernetes resource dedicated
+14:46 - for that called service account so the
+14:49 - way it works is that every pod in
+14:51 - kubernetes gets a service account which
+14:54 - they can use to talk to kubernetes and
+14:57 - service account just like human users
+15:00 - has roles associated to it with some
+15:02 - permissions and while users have clan
+15:05 - certificate to authenticate with api
+15:07 - server the service account uses token to
+15:10 - authenticate so it's important to know
+15:13 - exactly and limit the permissions a
+15:15 - service account has because if an
+15:17 - attacker got access to a pod they can
+15:20 - use the service account token of that
+15:22 - pod to send requests to the api server
+15:26 - and create change and delete resources
+15:29 - if they have permission to do it so as a
+15:31 - security best practice you need to use
+15:34 - rbac to manage access permissions in
+15:36 - your cluster and know exactly who has
+15:38 - access to what and also use the least
+15:41 - privilege approach
+15:46 - now using rbac will manage the
+15:48 - permissions of external users and what
+15:50 - they can do inside your kubernetes
+15:53 - cluster but what about inside the
+15:55 - cluster itself the communication between
+15:57 - the services by default in kubernetes
+16:00 - each pod can talk to any other pod
+16:03 - inside the cluster this means if an
+16:06 - attacker gets access to one port they
+16:08 - can access any other application pod
+16:11 - now in reality not every pod needs to
+16:13 - talk to all others so we can actually
+16:16 - limit the communication between them and
+16:18 - create network rules in the kubernetes
+16:22 - network layer that determines exactly
+16:25 - which pods can talk to which other pods
+16:28 - and also which parts they can receive
+16:30 - traffic from and you can do that with a
+16:32 - current this resource called network
+16:35 - policies
+16:36 - so using network policies you can define
+16:38 - a rule that for example a front-end
+16:41 - service can only talk to the back-end
+16:43 - service but it cannot talk to database
+16:46 - or an authentication service that
+16:49 - are running in the cluster and you can
+16:51 - define the database pod can only receive
+16:53 - traffic from backend pod and so on so
+16:57 - for maximum security you can apply the
+16:59 - least access allowed rules here
+17:02 - so you define each and every
+17:04 - communication rule between all the parts
+17:07 - so now if an attacker gets access to one
+17:10 - of the parts they won't be able to talk
+17:12 - to all others that may be running
+17:15 - sensitive applications and holding some
+17:17 - sensitive data and also know that
+17:19 - network policy resource itself is
+17:22 - actually implemented by a kubernetes
+17:24 - network plug-in like calico or weave etc
+17:27 - that you deploy in the cluster
+17:30 - now network policies configure
+17:32 - communication rules on a network level
+17:35 - but if we want to define these rules on
+17:37 - a service level or an application level
+17:40 - which is a more logical level so to say
+17:43 - we can use a service mesh like istio for
+17:46 - that so istio uses proxies in each
+17:49 - application pod that will control the
+17:52 - traffic coming into the application as
+17:54 - well as traffic going out of the
+17:56 - application so you can configure
+17:59 - communication rules between the services
+18:02 - on a logical level that will then be
+18:05 - controlled or checked by the proxies
+18:07 - that istio uses so using network
+18:10 - policies or service mesh
+18:12 - to define stricter communication rules
+18:15 - between the pods is another security
+18:17 - best practice
+18:22 - another part of pod communication is
+18:24 - that by default
+18:25 - the communication between pods in
+18:28 - kubernetes is unencrypted so if an
+18:30 - attacker manages to get inside the
+18:32 - cluster they will be able to see all the
+18:34 - internal communication between the pods
+18:36 - in plain text because none of it is
+18:39 - encrypted with service mesh like istio
+18:41 - in addition to defining the
+18:43 - service communication rules you can also
+18:46 - enable mutual tls between the services
+18:49 - so all the communication between them
+18:51 - will be encrypted and that means if an
+18:53 - attacker sees the traffic inside the
+18:55 - cluster they won't be able to read it so
+18:58 - encrypting cluster internal
+18:59 - communication is another good security
+19:02 - practice that will give you an
+19:04 - additional layer of security another
+19:07 - thing which is not secure in kubernetes
+19:09 - by default is the secrets you probably
+19:12 - already know that for sensitive data
+19:14 - like credentials secret tokens private
+19:17 - keys etc we have a secret resource in
+19:20 - kubernetes however by default secrets
+19:23 - are stored unencrypted they are
+19:26 - basically for encoded so anyone who has
+19:29 - permission to view the secrets can
+19:31 - simply decode the contents of a secret
+19:34 - and see them in plain text so again if
+19:37 - an attacker gets in a cluster with an
+19:39 - access to the secrets they will be able
+19:42 - to read all the sensitive content so how
+19:45 - can we secure secrets in kubernetes well
+19:47 - there are several ways the kubernetes
+19:50 - own solution is to enable
+19:52 - and configure encryption using the
+19:55 - encryption configuration resource
+19:57 - however this still has an issue because
+20:00 - you still have to manage the encryption
+20:02 - key itself and store it somewhere
+20:04 - securely so some third-party tools can
+20:07 - be used for this like aws kms which is
+20:10 - key management service for example can
+20:13 - be used to manage the encryption keys or
+20:15 - a service like volt from hashicorp can
+20:18 - be used to securely store the secrets
+20:21 - themselves and vault would actually take
+20:24 - over storing and managing the secret
+20:26 - data so securing and encrypting secrets
+20:30 - is important and another security best
+20:33 - practice
+20:37 - now secrets and all other kubernetes
+20:39 - configuration data are actually stored
+20:41 - in a key value store in kubernetes
+20:44 - called etcd
+20:46 - so kubernetes uses this lcd store to
+20:48 - keep track of and update its
+20:50 - configuration and all the resources like
+20:53 - services deployments pods etc and every
+20:56 - single update gets saved into the cd
+20:59 - store and the same way any change
+21:01 - directly to that city will lead to
+21:03 - changes in the cluster this means if an
+21:06 - attacker can get access to that cd they
+21:09 - can bypass the api server and make
+21:12 - changes directly to that city store
+21:15 - which will then result in kubernetes
+21:17 - resources being updated and this would
+21:20 - be actually an equivalent of having
+21:22 - unlimited access to the whole cluster
+21:24 - where they can do anything they want
+21:27 - destroy update resources get access to
+21:30 - the data and so on so another good
+21:32 - security practice is to secure your etcd
+21:35 - store there are a lot of ways to do that
+21:37 - there are a lot of alternatives of how
+21:39 - an lcd can be run for your kubernetes
+21:42 - cluster whether inside the cluster
+21:44 - itself or outside managed separately but
+21:47 - generally speaking it's a good practice
+21:49 - to put your hcd behind a firewall and
+21:52 - allow only the api server to access it
+21:55 - with proper authentication in addition
+21:58 - to that the whole etsy data can be
+21:59 - encrypted so even if the attacker gets
+22:02 - access to it they won't be able to read
+22:04 - it
+22:08 - now etcd stores the cluster
+22:10 - configuration data so these are all the
+22:12 - kubernetes manifests that define the
+22:15 - kubernetes resources like deployment
+22:17 - services pods etc but we also have the
+22:20 - application data like data stored by
+22:22 - database services and the biggest
+22:24 - security damages for any company are
+22:27 - related to data especially the personal
+22:29 - data stealing data like credit card
+22:31 - information of your users or medical
+22:34 - records or leaking of any private data
+22:36 - is the worst scenario for any company
+22:39 - when an attack happens but in addition
+22:42 - to that you also have risks of attackers
+22:45 - wiping out your data or corrupting it so
+22:47 - you basically lose all your application
+22:49 - data this means you can't recover your
+22:52 - application after the attack because all
+22:54 - the data is gone so one thing that
+22:56 - attackers commonly do is taking your
+22:59 - data and requesting a ransom for it so
+23:02 - you have to pay them to get your data
+23:03 - back and you have to be protected for
+23:06 - all these scenarios and that's the next
+23:08 - security best practice to have a proper
+23:11 - automated backup and restore system in
+23:13 - place for your cluster that regularly
+23:16 - backs up your data and stores them
+23:19 - safely so that you can use it to restore
+23:22 - your cluster when a disaster happens and
+23:25 - castings k-10 is actually a kubernetes
+23:28 - native
+23:29 - tool
+23:30 - that you can use to configure this
+23:33 - automated backup and restore and since
+23:36 - as i mentioned k10 is so focused on
+23:38 - security they have all the mechanisms in
+23:41 - place to both transfer the data as well
+23:44 - as store that backup data securely and
+23:47 - encrypting it throughout
+23:49 - now in addition to attackers corrupting
+23:51 - or stealing your data the attacks may be
+23:54 - so advanced that they will try to get
+23:57 - the backups as well so they will corrupt
+24:00 - the database data plus all the backups
+24:02 - that you have for the data this means
+24:05 - again you are not able to recover your
+24:07 - application and maybe have to pay ransom
+24:10 - to get back the data so you need to
+24:12 - protect those backups as well
+24:15 - and what k10 offers as a solution is
+24:17 - that you have immutable backups which
+24:20 - means they can't be manipulated or
+24:22 - corrupted and a big advantage of k10 is
+24:25 - also that you can backup all the
+24:27 - kubernetes related data with it so not
+24:30 - only the application data in kubernetes
+24:31 - but also the data outside kubernetes
+24:34 - plus the etsy store data and this is
+24:36 - great because you have one tool and one
+24:39 - automated mechanism for all your
+24:41 - relevant backups for your cluster if you
+24:44 - want to know exactly how k10's backup
+24:46 - and restore mechanism works i actually
+24:48 - have a separate video on that so you can
+24:50 - check out the link here or in the video
+24:52 - description
+24:57 - now let's say as a kubernetes
+24:58 - administrator you know and apply all
+25:01 - these security practices and try to
+25:03 - protect your data and your cluster by
+25:06 - configuring everything properly
+25:08 - but kubernetes cluster is usually used
+25:10 - by developer teams who deploy their
+25:12 - applications and services in it so you
+25:15 - may be doing everything right but how
+25:17 - can you make sure that all these
+25:19 - developers also apply these security
+25:21 - practices when deploying their
+25:23 - applications maybe their pod
+25:24 - configurations are super insecure
+25:26 - because they don't have enough knowledge
+25:28 - about security configuration best
+25:30 - practices and you can't just manually
+25:33 - check everything they deploy to the
+25:35 - cluster so how can you deal with such a
+25:38 - scenario well for that there are what's
+25:40 - called security policies in kubernetes
+25:44 - with security policies you can define
+25:46 - some rules such as
+25:48 - pods that run privileged containers or
+25:51 - container with root user cannot be
+25:53 - deployed or that a network policy needs
+25:56 - to be defined for every pod and so on
+25:59 - security policy resources in kubernetes
+26:02 - are implemented by third-party tools
+26:04 - like open policy agent or caverno and
+26:08 - usually the way it works with these
+26:09 - tools is that you create this security
+26:11 - policy definition in kubernetes with all
+26:13 - the rules and security policies hook
+26:16 - into the kubernetes admissions
+26:19 - controller component
+26:21 - which decides whether the deployment can
+26:24 - go through based on the policies that
+26:27 - you defined so it's like a gatekeeper
+26:30 - that validates deployments against the
+26:32 - policies defined by you and this way you
+26:35 - can have automated validations for
+26:38 - various security configurations so
+26:40 - creating security policies to automate
+26:43 - validation for security configuration is
+26:47 - another security best practice
+26:50 - now let's say we apply all the security
+26:53 - practices but you cannot always 100
+26:55 - percent protect everything right as i
+26:58 - said in the beginning an attacker just
+27:00 - needs to find one weak spot to succeed
+27:03 - in the attack and do some damage so you
+27:06 - may still get an attack that messes up
+27:08 - your cluster and here it's important to
+27:10 - have a proper strategy and mechanism for
+27:14 - disaster recovery so what do you want to
+27:16 - do in an attack scenario well you want
+27:18 - to restore your cluster with the backup
+27:21 - data and get it up and running within a
+27:23 - short time and make your application
+27:25 - available to your users again with
+27:28 - minimal effect on user experience so the
+27:31 - last security best practice is to have a
+27:33 - mechanism
+27:34 - when an attack actually happens
+27:36 - and for that you need a tool that allows
+27:38 - you to recover the cluster in the same
+27:41 - state with the latest backup so again
+27:44 - tool like k10 has a feature to take the
+27:48 - last backup and let you do the disaster
+27:50 - recovery in an automated way an
+27:52 - important emphasis here is on the
+27:54 - automated recovery because in such a
+27:57 - scenario when your system is under
+27:59 - attack you don't want to be manually
+28:01 - recovering your cluster under time
+28:04 - pressure instead you want to have a tool
+28:06 - that automatically does that for you and
+28:08 - ideally you actually test your k10
+28:11 - recovery so you know exactly how it will
+28:14 - work and what results it will give you
+28:17 - when you run it in case of a disaster so
+28:19 - executing an automated well-tested
+28:22 - recovery plan can minimize the effect of
+28:25 - the attack and get your application up
+28:27 - and running very fast and note that k10
+28:31 - also allows you to recover your cluster
+28:33 - to any environment
+28:35 - so it doesn't have to be exactly the
+28:37 - same environment with the exact same
+28:39 - kubernetes version as you had instead
+28:42 - you actually have a freedom to choose to
+28:44 - recover your system in a completely
+28:46 - different environment using maybe a
+28:48 - different storage class etc so you're
+28:51 - not tied to a specific type of
+28:54 - underlying storage infrastructure or
+28:57 - even a specific governance distribution
+28:59 - now i could talk for hours about
+29:01 - security practices in kubernetes and
+29:03 - going into detail because there are a
+29:06 - lot of topics around it which we will
+29:09 - actually be covering in our upcoming
+29:11 - devsecops course if you're interested
+29:14 - generally in security in devops then you
+29:16 - can sign up for the waiting list and be
+29:18 - notified when we release the course
+29:21 - well i hope the security practices that
+29:23 - i explained in this video were already
+29:25 - super helpful please comment and share
+29:28 - your experiences with security in
+29:30 - kubernetes and which security practice
+29:33 - that i haven't mentioned here is also
+29:36 - very important and with that thank you
+29:38 - for watching and see you in the next
+29:39 - video

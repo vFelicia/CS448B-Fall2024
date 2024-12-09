@@ -1,0 +1,649 @@
+With timestamps:
+
+00:00 - in this video we're going to create a
+00:01 - quadrant system in unity ECS a quadrant
+00:04 - system helps us group nearby units into
+00:06 - quadrants that allows for massive
+00:08 - performance for any algorithm that
+00:10 - requires finding the neighbors since we
+00:11 - don't need to cycle through every single
+00:13 - entity but rather only the ones nearby
+00:14 - let's begin
+00:19 - [Music]
+00:23 - hello and welcome I'm your code monkey
+00:25 - and this channel is all about helping
+00:27 - you learn how to make your own games
+00:28 - with nf2 torrents made by a professional
+00:30 - indie game developer so if you find the
+00:32 - video helpful consider subscribing so
+00:34 - for here we have the final system that
+00:36 - we're going to create I've turned on
+00:39 - debug line so we can visually see each
+00:41 - quadrant as you can see when I press the
+00:43 - mouse over the world is clearly split
+00:45 - into separate quadrants there are units
+00:47 - and targets being spawned all over a
+00:49 - very massive area and all of those units
+00:52 - are searching for their closest target
+00:53 - now without using the equipment system
+00:56 - where we have 10,000 units independent
+00:58 - we looking for 10,000 targets you can
+01:01 - see that we are taking 56 milliseconds
+01:03 - per frame
+01:03 - however with enabling the equipment
+01:06 - system which ensures that the units only
+01:08 - look for targets nearby by enabling we
+01:11 - go down from 56 all the way down to 14
+01:13 - milliseconds so essentially a unit on
+01:16 - way over here will never even search for
+01:17 - a target all the way in here so you can
+01:20 - see the massive performance benefits of
+01:22 - using such a system especially when you
+01:23 - have on a lot of Units spread out over a
+01:25 - very large area now in here I am
+01:28 - demonstrating a fine target algorithm as
+01:30 - a way to view the benefits of a quadrant
+01:32 - system but it can really be applied to
+01:33 - any sort of problem the way the system
+01:36 - works is by first placing the units and
+01:38 - targets into their quadrant based on
+01:39 - their position then for each unit we
+01:42 - search the nearby quadrants for targets
+01:44 - and only those in the nearby quadrants
+01:46 - so this unit in here will search the
+01:49 - nearby quadrants but will never test the
+01:50 - position of the target all the way over
+01:52 - here so that's exactly what we want
+01:54 - since if the target is too far ignoring
+01:56 - it only makes sense for performance then
+01:59 - when the unit finds a college target it
+02:00 - simply has a component which moves it
+02:02 - towards the target and destroys it and
+02:04 - as you can see all the units in this
+02:06 - massive world they're all looking for
+02:08 - targets moving and destroying and in
+02:10 - here with 10,000 units looking for
+02:12 - 10,000 targets we are getting some very
+02:14 - good performance alright so this circle
+02:16 - let's get to it so here is our starting
+02:19 - scene now this starting scene here is
+02:21 - the scene from the find causes target
+02:23 - video that we did previously so if you
+02:25 - haven't already go check out that video
+02:27 - again I'm only using the fine target as
+02:30 - an example algorithm this is just one of
+02:32 - the possible use cases for the quadrant
+02:34 - system it can be used to some of many
+02:36 - other Pro
+02:36 - that require knowing nearby entities
+02:38 - like for example obstacle avoidance
+02:40 - essentially we have units and targets
+02:43 - being spawned and the units are looking
+02:45 - for the targets however right now they
+02:47 - are currently looking for every single
+02:49 - target regardless of how far it is so
+02:51 - this unit down here is cycling through
+02:53 - all of the targets all the way up here
+02:54 - this is obviously very inefficient we
+02:57 - should only meet our cycles as much as
+02:59 - possible and only cycle through targets
+03:01 - that are actual potential targets so
+03:03 - let's see the code for how all of this
+03:05 - is set up here is our main script again
+03:08 - the starting point here is from the fine
+03:10 - target video so you can see that to see
+03:12 - how we got here from scratch we have
+03:14 - essentially two archetypes want to spawn
+03:17 - a unit and want to spawn a target they
+03:19 - are differentiated by these two tag
+03:22 - components which you can see down here
+03:23 - they are placed randomly and then we
+03:27 - spawn a bunch on the start and a bunch
+03:28 - every so often then we have the fine
+03:31 - turret system this one has a bunch of
+03:33 - jobs to cycle through each target and
+03:35 - find it closest when he does find the
+03:37 - closest target he adds the hands target
+03:40 - component with the target entity this
+03:42 - component only holds the target entity
+03:44 - and then we have this system right here
+03:47 - which runs on entities that have a
+03:49 - target and simply moves them towards the
+03:51 - target alright so this is our basic set
+03:53 - up now let's begin writing the code for
+03:56 - our quadrant system so in here let's
+03:58 - start off by making a new C sharp script
+04:00 - for our quadrant system now in here get
+04:04 - rid of this and instead of a mono
+04:06 - behavior this will be a component system
+04:12 - now in here we're going to have a bunch
+04:15 - of jobs to place our entities into their
+04:17 - respective quadrant
+04:18 - but first let's think of how we're
+04:19 - actually going to store a quadrant we
+04:22 - need some way to have multiple values
+04:23 - for a single quadrant so for that we can
+04:26 - use a negative multi hash map this
+04:30 - collection lets us have multiple values
+04:32 - per single key so that's great now all
+04:34 - we need is a way to get a key for each
+04:36 - quadrant
+04:37 - now there are many ways to count like
+04:38 - keys to put positions in various buckets
+04:40 - let's pick one that returns just a
+04:43 - simple int so our multi hash map won't
+04:46 - be composed of keys based on an in
+04:49 - and it will home entities so let's make
+04:55 - a function to calculate the quadrant you
+04:58 - need to make this a private static it
+05:00 - won't return an int and let's call it
+05:02 - get position hash map key in here will
+05:07 - receive a full three for the position
+05:09 - and we want to return the hash map key
+05:12 - related to this position so in here
+05:14 - we're just going to use some simple math
+05:16 - in order to create some very simple
+05:18 - squares all right so here we have a
+05:30 - simple function essentially we are
+05:32 - flooring the X and the y based on a
+05:35 - certain quadrant cell size and for the Y
+05:38 - we are simply multiplying by a certain
+05:40 - value so for example an entity on 0 0
+05:43 - will have a key of 0 however an entity
+05:47 - on 60 0 will have a key of 1 so this
+05:49 - function will essentially convert our
+05:51 - position into a nice hash map key now in
+05:54 - order to visually see this let's make a
+05:56 - nice debug function to draw each
+05:57 - quadrant
+06:17 - okay so here it is
+06:19 - now all we're doing is essentially just
+06:21 - drawing four lines in order to draw a
+06:23 - square for our quadrant so we complete
+06:26 - the lower left vector which is doing the
+06:28 - exact same math as up here we just do a
+06:30 - floor on the X and the y and then you
+06:32 - draw a line from your lower left into
+06:34 - the on lower right then on the upper
+06:36 - left and so on and so on
+06:38 - so now let's test this down here on our
+06:40 - update let's draw it on the mouse
+06:43 - position so a debug drop quadrant now in
+06:48 - here let's draw it on the mouse position
+06:50 - so for that I'm going to use a function
+06:52 - from the code monkey utilities that you
+06:54 - can grab for free from unity code monkey
+06:56 - calm so using code monkey dot utils and
+07:00 - then simply use the you tells class to
+07:03 - get the monitor on position okay so just
+07:05 - like that we should be able to see all
+07:07 - of our quadrants okay so here we are now
+07:09 - first of all since we're using the debug
+07:11 - drawn line we need to go up here in
+07:13 - order to enable gizmos and now in here
+07:15 - on this scene we are using a very small
+07:17 - camera size so let's modify our quadrant
+07:19 - size in here instead of setting the
+07:22 - quadrant son size at 50 and let's just
+07:23 - put in that five so here you can already
+07:26 - see the quadrants being drawn let's zoom
+07:28 - out a bit and there it is okay so this
+07:30 - is one quadrant as you can see and as I
+07:32 - reach the edge there's another quadrant
+07:34 - and in there another another and down
+07:36 - here you can see the values that aren't
+07:37 - automatically completed so this one has
+07:39 - the quadrant hash key of 0 this one a
+07:42 - hash key of one and two and this one is
+07:45 - 0 and above it is a thousand done - a
+07:47 - thousand so essentially we have a nice
+07:49 - unique hash key for each position in our
+07:52 - map so just like that we have separated
+07:54 - our entire world into various quadrants
+07:56 - now what we need to do is actually put
+07:59 - these objects into the quadrant that
+08:01 - they've done so for example this unit
+08:02 - here would be on this quadrant now this
+08:04 - one now this one and so on so in order
+08:06 - to place our entities into quadrants
+08:08 - let's start off by making this very
+08:09 - simple and using simple single thread
+08:12 - code which will later convert into jobs
+08:14 - so in here and let's simply cycle
+08:16 - through all entities and grab their
+08:18 - position
+08:24 - so with translation we can get the
+08:27 - position hashmap team and we pass in the
+08:30 - translation value so we calculate the
+08:36 - hashmap key based on the position of
+08:37 - this entity and now we simply add it to
+08:40 - the hashmap so before let's instantiate
+08:42 - our hash map so we create a new one now
+08:45 - in here we need a capacity in this case
+08:48 - we're going to fill it up with all of
+08:49 - our entities so let's calculate how many
+08:51 - entities we have so we calculate the in
+08:58 - length and then we create it using a
+09:01 - locator that temp job and in here we
+09:03 - simply go into our hash map in order to
+09:05 - add passing our hash map King and let's
+09:08 - store the entity and that's it we now
+09:14 - have our entities being correctly placed
+09:16 - into their specific quadrant now to make
+09:18 - sure that this is working correctly
+09:19 - let's make a function to count how many
+09:21 - entities are in a single quadrant so
+09:24 - let's make a private static int call it
+09:29 - gift entity count and hash map now in
+09:33 - here we'll receive our native multi hash
+09:35 - map then we also receive an int for our
+09:40 - hash map key so we want to return how
+09:43 - many entities are inside this key now in
+09:46 - order to get the values from the multi
+09:48 - hash map we need to use the multi hash
+09:51 - map duct try get first value so this one
+09:55 - receives a keys or hash map key then we
+09:58 - need to pass in a variable which will be
+09:59 - the out parameter for our entity so it
+10:05 - has out entity into that variable then
+10:07 - we also need a native multi hash map
+10:09 - iterator
+10:15 - and just like that now this returns a
+10:20 - boolean if we have a first value inside
+10:22 - this hashmap team so if we do have the
+10:26 - first value let's test if there are more
+10:28 - values so in here let's do a cycle a
+10:31 - do-while so we're going to do something
+10:34 - while we still have values so in order
+10:36 - to test we do a try and get the next
+10:38 - value and here we pass in the same out
+10:41 - for our entity and it reference to the
+10:43 - same native multi hashmap iterate so
+10:46 - this cycle won't keep running for as
+10:48 - long as there's entities inside the same
+10:50 - hashmap key so here we can just simply
+10:54 - define it for our count start off at
+10:56 - zero and here increases and out here we
+10:59 - return alright so we have a nice simple
+11:02 - function cycling through all the values
+11:04 - inside our hash map and returns the
+11:06 - correct total so this is how you iterate
+11:08 - through a native multi hash map
+11:10 - essentially you try to get the first
+11:12 - value and then keep getting the next
+11:13 - value until there are no more all right
+11:15 - so let's test this out down here let's
+11:18 - still draw our quadrant and then let's
+11:20 - do a debug log of our account then we
+11:25 - get the position hash map key of the
+11:26 - current Mouse world position so we
+11:33 - should be able to see in the log how
+11:34 - many entities are stored in the quadrant
+11:36 - right beneath the mouse then here since
+11:38 - we're dealing with a native multi hash
+11:40 - trap we need to make sure to dispose of
+11:42 - it in the end
+11:43 - ok so let's test ok so here we are and
+11:46 - let's see if it is correct we can
+11:48 - already see the current quadrant being
+11:50 - highlighted so this one and then this
+11:52 - one so now let's go to the left and here
+11:54 - on the wall we are seeing two and indeed
+11:56 - we have one and two entities now I see
+11:59 - this quadrant down here and we have four
+12:01 - and yep one two three four and in here
+12:03 - we have one two three and yep exactly
+12:06 - correct all right awesome so we have
+12:08 - successfully created the quadrant system
+12:10 - to place our entities into various
+12:12 - buckets now that we have this code work
+12:14 - let's improve upon it so the first thing
+12:16 - is obviously convert this into a job so
+12:19 - let's go up here in r2
+12:21 - a struct let's call it the set quadrant
+12:24 - data hash map job so we're going to set
+12:28 - the data for each pattern and it's going
+12:30 - to be an eye job for each with entity
+12:33 - and we also want the translation now in
+12:39 - here we need to receive the native multi
+12:41 - hash map and since in this job we are
+12:46 - going to be assigning values into our
+12:48 - hash map we need to pass in the dot
+12:50 - concurrent in order to be able to
+12:52 - concurrently write to the same hash map
+12:53 - now on execute we're going to do the
+12:56 - same thing we were doing down here
+12:58 - we currently the hash map key based on a
+13:01 - translation and then we simply add it
+13:03 - into that key this entity so that's it
+13:06 - as you can see very simple and finally
+13:08 - we can just very easily add the first
+13:10 - component in order to make this even
+13:12 - faster so now down here instead of doing
+13:14 - our for each let's create our job all we
+13:19 - need to do is pass in our quadrant multi
+13:21 - hash map make sure you write two
+13:24 - concurrent and in here we can schedule
+13:27 - our job alright so that's pretty much it
+13:36 - our code should still be working exactly
+13:38 - the same as previously however right now
+13:40 - we are benefiting from multi-threaded
+13:41 - code
+13:42 - yt and if there is everything still
+13:44 - works normal this quadrant has need two
+13:46 - entities this one only one and yep
+13:48 - everything is written correct let's see
+13:50 - just how quickly this cheiron's
+13:52 - so let's disable our debug and spawn on
+13:55 - what more units okay so here we have a
+13:58 - thousand units and a thousand Terry it's
+13:59 - being spawned and if we check out the
+14:02 - stats you can see that all of them are
+14:03 - being placed in the correct buckets into
+14:05 - their native multi hash map and as you
+14:07 - can see the whole thing is only taking
+14:08 - one millisecond so thanks using jobs
+14:11 - this system is insanely fast ok so now
+14:14 - right now we are only storing the entity
+14:17 - that works but if we need more info from
+14:19 - that entity we're going to have to do an
+14:21 - expensive column going into the entity
+14:23 - manager in order to get the component
+14:25 - data and so on so we should really find
+14:27 - a way to store more than just the entity
+14:29 - into our quadrants so here in our
+14:31 - quadrant system instead of having
+14:33 - a native multi hashmap of entities let's
+14:36 - go up here in order to define a very
+14:38 - simple struct let's make a struct and
+14:41 - call it pardon that I mean here let's
+14:44 - start off by simply our entity and now
+14:48 - we modify all of our function columns in
+14:50 - order to work with a multi hash map of
+14:52 - quadrant data so in here when adding we
+14:54 - need to create a new quadrant data in
+14:56 - this case we just constantly entry
+14:58 - alright so we now have our native multi
+15:00 - hash map working with a specific struct
+15:03 - so we can go up here and add as many
+15:05 - balances we need in order to work with
+15:07 - our coordinate system so for example
+15:08 - let's add a whole 3 for the position so
+15:12 - down here when we add it let's also add
+15:14 - the position which is a translation that
+15:17 - though so just like that we have made
+15:24 - our code more robust by making it work
+15:26 - with a specific struct inside of the
+15:27 - entity so this way we can clearly define
+15:30 - what that we're going to need for our
+15:32 - quadrant system so let's run the code
+15:34 - just make sure everything still works
+15:35 - any of everything is still working and
+15:38 - it's still working insanely fast now
+15:40 - another improvement we can do is to only
+15:43 - play certain entities into our quadrants
+15:45 - so right now we're running this query
+15:48 - which is simply searching for entities
+15:50 - with translation so any entity we create
+15:53 - as long as it has a translation it's
+15:54 - being added into the quadrant system
+15:56 - that can be quite wasteful if you have
+15:58 - bunch of entities that are not intended
+16:00 - to be used by the equipment system like
+16:02 - for example if you have entities for a
+16:03 - particle system so let's make a very
+16:05 - simple component to define which
+16:07 - entities should be placed so we can go
+16:09 - up here in order to simply make a struct
+16:11 - for a component let's call it private
+16:13 - entity so we're only going to work with
+16:18 - entities that have this component now an
+16:20 - empty component works perfectly fine
+16:22 - however we can also set more information
+16:24 - in here so for example we can store a
+16:27 - type
+16:31 - so here we're defining two types a unit
+16:34 - and a target and we're storing that on
+16:36 - our quadrant entity so let's go to when
+16:39 - we are in Senshi ating our archetypes in
+16:43 - here we also add the type of quadrant
+16:46 - entity in order to make sure it gets
+16:47 - added into our quadrant system then we
+16:54 - set the component data just like that so
+17:01 - we add our component in order to be used
+17:02 - by the quantity system and we passing
+17:04 - the information that is needed and now
+17:06 - in here on our quadrant data we can also
+17:08 - store a quadrant entity so all we're
+17:14 - doing is adding all the information
+17:15 - we're going to need in order to be
+17:17 - stored for each entry into our quadrant
+17:19 - system so down here when we add our key
+17:22 - let's this as well okay so now our set
+17:30 - data job now receives a quadrant entity
+17:33 - which we're going to use in order to add
+17:34 - to the hashmap key now down here our
+17:37 - antiquary is no longer just a
+17:39 - translation but translation and the type
+17:41 - of quadrant entity alright so that
+17:45 - should do it
+17:46 - so we can now add this component to any
+17:48 - entities that we want to be used by this
+17:49 - quadrant system and we have a lot more
+17:52 - information being stored for each entry
+17:54 - into each quadrant let's see and yep
+17:57 - everything's still working perfectly
+17:58 - fine and it's still pretty fast so again
+18:01 - everything still works but we can now
+18:02 - easily define which entities should be
+18:04 - placed in quadrants and which should be
+18:06 - ignored
+18:06 - now another improvement we can make is
+18:09 - regarding the native multi hash map
+18:11 - field so right now we're creating and
+18:13 - disposing of it on every frame now this
+18:16 - works but obviously means we no longer
+18:17 - have our quadrants once the system is
+18:19 - done meaning if we want to use this
+18:21 - quadrant system by another script we
+18:23 - would have to add all of the related
+18:25 - code in here so for example our finite
+18:28 - area code would have to be placed right
+18:29 - here instead of being in its own
+18:31 - specific class so instead of doing that
+18:33 - let's make this a permanent
+18:36 - of multi hashmap so we can simply do it
+18:39 - over right on the uncreate now we're
+18:43 - going to create a native multi hash map
+18:45 - and we're going to define it as a static
+18:48 - variable so we have our static quadrant
+18:54 - hash map so that can be used by other
+18:56 - scripts down here we instantiate it very
+18:59 - much in the same way except for the
+19:01 - allocator we used persistent then let's
+19:06 - also override the on destroy in order to
+19:12 - make sure we dispose of it and now we no
+19:16 - longer need to do this in here okay so
+19:21 - let's run the code and see and just like
+19:23 - that we have an error right away this
+19:25 - tells us that our hash map is full
+19:27 - that's because the hash map cannot grow
+19:29 - dynamically inside a jar so we need to
+19:31 - make sure we give it the correct
+19:32 - capacity before running our jobs so in
+19:35 - here we need to expand it to fit so we
+19:38 - check if the entity query contantly the
+19:41 - link if that is bigger than the quadrant
+19:44 - capacity then let's expand it in order
+19:48 - to expand we just set the capacity to be
+19:51 - the new link and that's it just like
+19:57 - that our quadrant multi hash map will
+19:59 - now expand to fit whatever it needs and
+20:01 - since this is persistent we need to make
+20:03 - sure to clear it so before we do this
+20:05 - let's clear the current catchment all
+20:09 - right so let's try again any of here it
+20:11 - is in our code is working fine no errors
+20:13 - and everything still works okay awesome
+20:15 - so everything still works the same
+20:17 - except now we have our hash map which is
+20:19 - accessible from other systems so now
+20:21 - let's finally apply this to our fine
+20:23 - target code here is the fine target
+20:25 - system again this system was made in a
+20:28 - previous video so check that out to see
+20:29 - how it works so in here we are
+20:32 - essentially going through every single
+20:33 - target we have the fine target job which
+20:37 - in here cycles through every single
+20:38 - target and sees how far away it is now
+20:42 - let's do this by cycling through the
+20:43 - targets only in a single quadrant so
+20:46 - let's make a private stroke
+20:48 - fine target quadrant system why let's
+20:53 - copy-paste this target as our starting
+20:55 - point now in here we no longer receive
+20:59 - an array of targets or rather we're
+21:01 - going to receive our negative multi hash
+21:03 - map in here we calculate the hash map
+21:11 - key based on our translation then we
+21:19 - send on through the entities in that
+21:20 - hash map key so here we are cycling
+21:37 - through all the values inside this hash
+21:40 - map key so it's in here that we need to
+21:42 - find the target so use the families that
+21:51 - we stored in our quadrant and so we
+21:53 - store the entity and the position and
+21:55 - that's it so we have a very nice job
+21:58 - looking for targets but only looking
+22:01 - those that are in the same quadrant one
+22:04 - thing we also added in our quadrant data
+22:06 - was the quadrant entity so in this case
+22:10 - we only want targets that are of
+22:11 - different quadrant entity type so
+22:20 - essentially we're going to only search
+22:22 - for targets that have a different type
+22:23 - in them from this one so type gnomes are
+22:25 - the unit or the target so the units will
+22:27 - look for targets and if we want it we
+22:29 - could also make the targets look for
+22:31 - units all right so now let's replace our
+22:33 - job down here for the multi hash map we
+22:40 - can send the one that we have our
+22:41 - reference on our quadrant system
+22:52 - all right that should do it
+22:54 - let's test and we should now have units
+22:57 - looking for targets only in their
+22:58 - quadrant so let's see and yep they are
+23:01 - correctly finding their targets and
+23:03 - moving towards it and these right here
+23:07 - are static meaning they no longer have
+23:09 - targets inside their quadrant system so
+23:11 - you can see that they are only searching
+23:13 - for targets inside of their quadrant all
+23:16 - right so obviously it worked but you can
+23:19 - already see the issue right now the
+23:21 - turning range is limited by the quadrant
+23:24 - sighs so this target right here is
+23:26 - outside of the quadrant so these two
+23:27 - will not find it so this is a problem
+23:29 - with a lot of different solutions
+23:31 - depending on how fast or accurate you
+23:33 - want your targeting to be now in this
+23:35 - case we can simply increase the quadrant
+23:37 - size by a little bit and make sure our
+23:39 - unit search for nearby quadrants as well
+23:41 - so here let's put this code into a
+23:43 - function so we can easily check the
+23:44 - nearby quadrants
+24:02 - all right so here we have put our fine
+24:05 - target code into a separate function
+24:06 - you'll receive a hashmap key so we can
+24:09 - easily check the neighbors and let's
+24:10 - just make sure that this is still
+24:11 - working the same and you've okay
+24:13 - everything's still working the same look
+24:15 - at these two looking for targets and
+24:16 - they don't search for those and say are
+24:18 - far and yep exactly
+24:19 - okay everything's still working so now
+24:21 - in here we can easily check for all of
+24:23 - the neighbor problems so first we check
+24:26 - the one on the hashmap e so that's the
+24:28 - one that he's in then we check the one
+24:29 - to the right which is plus one on the
+24:32 - index then we check on the left so it
+24:35 - has a hashmap key of minus one then we
+24:37 - check above so it's Fosdick button
+24:40 - system that quadrant Y multiplier that's
+24:44 - the one above and the minus will be the
+24:46 - one below again this is all based on how
+24:49 - we calculated our hash map King now for
+24:51 - the corners so here we are searching for
+24:58 - all the targets in the neighboring
+25:01 - quadrants and here in our quadrant
+25:03 - system let's also increase the sound
+25:04 - size by a little bit okay let's test and
+25:09 - okay here we are and all our units are
+25:12 - searching for targets and as you can see
+25:14 - they are searching for nearby quadrants
+25:15 - look at that one so for example that one
+25:18 - finishes those three targets another
+25:20 - getting searched for the ones on the
+25:22 - quadrant next to it all right so our
+25:24 - units are now looking for targets on
+25:25 - more than just their quadrant so the
+25:27 - targeting is now a lot more accurate and
+25:30 - as you can see our frame rate is still
+25:31 - pretty much the same only taking one
+25:33 - milliseconds so now let's see exactly
+25:35 - just how fast this is let's make sure
+25:37 - they keep on looking for targets so
+25:39 - let's stop adding the component in the
+25:42 - end so our add component job let's not
+25:45 - add a component that way they're gonna
+25:47 - constantly keep looking for targets and
+25:50 - let's modify the code noir to enable to
+25:51 - test both methods so here we have 10,000
+25:54 - units being spawned over a massive area
+25:56 - along with 10,000 targets
+25:58 - and as you can see it is taking 70
+26:00 - milliseconds in order to find the causes
+26:02 - so every single one of those 10,000
+26:04 - units is cycling through every single
+26:06 - one of those 10,000 targets so obviously
+26:08 - that is very wasteful since a unit
+26:10 - here doesn't care about a target on the
+26:12 - way over here so now let's enable the
+26:13 - quadrant system and there you go we went
+26:16 - down from 6e all the way down to 15
+26:18 - milliseconds so right now this unit down
+26:20 - here doesn't care and doesn't even try
+26:22 - to search for this target over here so
+26:24 - the units are only searching for targets
+26:27 - in their quadrant and the ones nearby
+26:28 - now again the fine target is just one
+26:31 - possible use for the quadrant system the
+26:33 - whole point is placing entities into
+26:35 - smaller separate buckets that way you
+26:37 - have much faster searching for whatever
+26:39 - it is you want to do that relates to
+26:41 - entity positions for example you can
+26:43 - make a unit avoidance algorithm just
+26:46 - search for the closest entity in the
+26:47 - quadrant and see if it is close enough
+26:48 - and if so stop moving the possibilities
+26:51 - are endless and this is a great system
+26:53 - to apply to many different problems as
+26:55 - always you can download the project
+26:56 - files in utilities from Unity code
+26:58 - monkey comm if you liked the video
+26:59 - subscribe channel for more ent tutorials
+27:01 - post any questions you have in the
+27:03 - comments and I'll do my best interval
+27:04 - alright see you next time
+27:07 - [Music]
+
+Cleaned transcript:
+
+in this video we're going to create a quadrant system in unity ECS a quadrant system helps us group nearby units into quadrants that allows for massive performance for any algorithm that requires finding the neighbors since we don't need to cycle through every single entity but rather only the ones nearby let's begin hello and welcome I'm your code monkey and this channel is all about helping you learn how to make your own games with nf2 torrents made by a professional indie game developer so if you find the video helpful consider subscribing so for here we have the final system that we're going to create I've turned on debug line so we can visually see each quadrant as you can see when I press the mouse over the world is clearly split into separate quadrants there are units and targets being spawned all over a very massive area and all of those units are searching for their closest target now without using the equipment system where we have 10,000 units independent we looking for 10,000 targets you can see that we are taking 56 milliseconds per frame however with enabling the equipment system which ensures that the units only look for targets nearby by enabling we go down from 56 all the way down to 14 milliseconds so essentially a unit on way over here will never even search for a target all the way in here so you can see the massive performance benefits of using such a system especially when you have on a lot of Units spread out over a very large area now in here I am demonstrating a fine target algorithm as a way to view the benefits of a quadrant system but it can really be applied to any sort of problem the way the system works is by first placing the units and targets into their quadrant based on their position then for each unit we search the nearby quadrants for targets and only those in the nearby quadrants so this unit in here will search the nearby quadrants but will never test the position of the target all the way over here so that's exactly what we want since if the target is too far ignoring it only makes sense for performance then when the unit finds a college target it simply has a component which moves it towards the target and destroys it and as you can see all the units in this massive world they're all looking for targets moving and destroying and in here with 10,000 units looking for 10,000 targets we are getting some very good performance alright so this circle let's get to it so here is our starting scene now this starting scene here is the scene from the find causes target video that we did previously so if you haven't already go check out that video again I'm only using the fine target as an example algorithm this is just one of the possible use cases for the quadrant system it can be used to some of many other Pro that require knowing nearby entities like for example obstacle avoidance essentially we have units and targets being spawned and the units are looking for the targets however right now they are currently looking for every single target regardless of how far it is so this unit down here is cycling through all of the targets all the way up here this is obviously very inefficient we should only meet our cycles as much as possible and only cycle through targets that are actual potential targets so let's see the code for how all of this is set up here is our main script again the starting point here is from the fine target video so you can see that to see how we got here from scratch we have essentially two archetypes want to spawn a unit and want to spawn a target they are differentiated by these two tag components which you can see down here they are placed randomly and then we spawn a bunch on the start and a bunch every so often then we have the fine turret system this one has a bunch of jobs to cycle through each target and find it closest when he does find the closest target he adds the hands target component with the target entity this component only holds the target entity and then we have this system right here which runs on entities that have a target and simply moves them towards the target alright so this is our basic set up now let's begin writing the code for our quadrant system so in here let's start off by making a new C sharp script for our quadrant system now in here get rid of this and instead of a mono behavior this will be a component system now in here we're going to have a bunch of jobs to place our entities into their respective quadrant but first let's think of how we're actually going to store a quadrant we need some way to have multiple values for a single quadrant so for that we can use a negative multi hash map this collection lets us have multiple values per single key so that's great now all we need is a way to get a key for each quadrant now there are many ways to count like keys to put positions in various buckets let's pick one that returns just a simple int so our multi hash map won't be composed of keys based on an in and it will home entities so let's make a function to calculate the quadrant you need to make this a private static it won't return an int and let's call it get position hash map key in here will receive a full three for the position and we want to return the hash map key related to this position so in here we're just going to use some simple math in order to create some very simple squares all right so here we have a simple function essentially we are flooring the X and the y based on a certain quadrant cell size and for the Y we are simply multiplying by a certain value so for example an entity on 0 0 will have a key of 0 however an entity on 60 0 will have a key of 1 so this function will essentially convert our position into a nice hash map key now in order to visually see this let's make a nice debug function to draw each quadrant okay so here it is now all we're doing is essentially just drawing four lines in order to draw a square for our quadrant so we complete the lower left vector which is doing the exact same math as up here we just do a floor on the X and the y and then you draw a line from your lower left into the on lower right then on the upper left and so on and so on so now let's test this down here on our update let's draw it on the mouse position so a debug drop quadrant now in here let's draw it on the mouse position so for that I'm going to use a function from the code monkey utilities that you can grab for free from unity code monkey calm so using code monkey dot utils and then simply use the you tells class to get the monitor on position okay so just like that we should be able to see all of our quadrants okay so here we are now first of all since we're using the debug drawn line we need to go up here in order to enable gizmos and now in here on this scene we are using a very small camera size so let's modify our quadrant size in here instead of setting the quadrant son size at 50 and let's just put in that five so here you can already see the quadrants being drawn let's zoom out a bit and there it is okay so this is one quadrant as you can see and as I reach the edge there's another quadrant and in there another another and down here you can see the values that aren't automatically completed so this one has the quadrant hash key of 0 this one a hash key of one and two and this one is 0 and above it is a thousand done a thousand so essentially we have a nice unique hash key for each position in our map so just like that we have separated our entire world into various quadrants now what we need to do is actually put these objects into the quadrant that they've done so for example this unit here would be on this quadrant now this one now this one and so on so in order to place our entities into quadrants let's start off by making this very simple and using simple single thread code which will later convert into jobs so in here and let's simply cycle through all entities and grab their position so with translation we can get the position hashmap team and we pass in the translation value so we calculate the hashmap key based on the position of this entity and now we simply add it to the hashmap so before let's instantiate our hash map so we create a new one now in here we need a capacity in this case we're going to fill it up with all of our entities so let's calculate how many entities we have so we calculate the in length and then we create it using a locator that temp job and in here we simply go into our hash map in order to add passing our hash map King and let's store the entity and that's it we now have our entities being correctly placed into their specific quadrant now to make sure that this is working correctly let's make a function to count how many entities are in a single quadrant so let's make a private static int call it gift entity count and hash map now in here we'll receive our native multi hash map then we also receive an int for our hash map key so we want to return how many entities are inside this key now in order to get the values from the multi hash map we need to use the multi hash map duct try get first value so this one receives a keys or hash map key then we need to pass in a variable which will be the out parameter for our entity so it has out entity into that variable then we also need a native multi hash map iterator and just like that now this returns a boolean if we have a first value inside this hashmap team so if we do have the first value let's test if there are more values so in here let's do a cycle a dowhile so we're going to do something while we still have values so in order to test we do a try and get the next value and here we pass in the same out for our entity and it reference to the same native multi hashmap iterate so this cycle won't keep running for as long as there's entities inside the same hashmap key so here we can just simply define it for our count start off at zero and here increases and out here we return alright so we have a nice simple function cycling through all the values inside our hash map and returns the correct total so this is how you iterate through a native multi hash map essentially you try to get the first value and then keep getting the next value until there are no more all right so let's test this out down here let's still draw our quadrant and then let's do a debug log of our account then we get the position hash map key of the current Mouse world position so we should be able to see in the log how many entities are stored in the quadrant right beneath the mouse then here since we're dealing with a native multi hash trap we need to make sure to dispose of it in the end ok so let's test ok so here we are and let's see if it is correct we can already see the current quadrant being highlighted so this one and then this one so now let's go to the left and here on the wall we are seeing two and indeed we have one and two entities now I see this quadrant down here and we have four and yep one two three four and in here we have one two three and yep exactly correct all right awesome so we have successfully created the quadrant system to place our entities into various buckets now that we have this code work let's improve upon it so the first thing is obviously convert this into a job so let's go up here in r2 a struct let's call it the set quadrant data hash map job so we're going to set the data for each pattern and it's going to be an eye job for each with entity and we also want the translation now in here we need to receive the native multi hash map and since in this job we are going to be assigning values into our hash map we need to pass in the dot concurrent in order to be able to concurrently write to the same hash map now on execute we're going to do the same thing we were doing down here we currently the hash map key based on a translation and then we simply add it into that key this entity so that's it as you can see very simple and finally we can just very easily add the first component in order to make this even faster so now down here instead of doing our for each let's create our job all we need to do is pass in our quadrant multi hash map make sure you write two concurrent and in here we can schedule our job alright so that's pretty much it our code should still be working exactly the same as previously however right now we are benefiting from multithreaded code yt and if there is everything still works normal this quadrant has need two entities this one only one and yep everything is written correct let's see just how quickly this cheiron's so let's disable our debug and spawn on what more units okay so here we have a thousand units and a thousand Terry it's being spawned and if we check out the stats you can see that all of them are being placed in the correct buckets into their native multi hash map and as you can see the whole thing is only taking one millisecond so thanks using jobs this system is insanely fast ok so now right now we are only storing the entity that works but if we need more info from that entity we're going to have to do an expensive column going into the entity manager in order to get the component data and so on so we should really find a way to store more than just the entity into our quadrants so here in our quadrant system instead of having a native multi hashmap of entities let's go up here in order to define a very simple struct let's make a struct and call it pardon that I mean here let's start off by simply our entity and now we modify all of our function columns in order to work with a multi hash map of quadrant data so in here when adding we need to create a new quadrant data in this case we just constantly entry alright so we now have our native multi hash map working with a specific struct so we can go up here and add as many balances we need in order to work with our coordinate system so for example let's add a whole 3 for the position so down here when we add it let's also add the position which is a translation that though so just like that we have made our code more robust by making it work with a specific struct inside of the entity so this way we can clearly define what that we're going to need for our quadrant system so let's run the code just make sure everything still works any of everything is still working and it's still working insanely fast now another improvement we can do is to only play certain entities into our quadrants so right now we're running this query which is simply searching for entities with translation so any entity we create as long as it has a translation it's being added into the quadrant system that can be quite wasteful if you have bunch of entities that are not intended to be used by the equipment system like for example if you have entities for a particle system so let's make a very simple component to define which entities should be placed so we can go up here in order to simply make a struct for a component let's call it private entity so we're only going to work with entities that have this component now an empty component works perfectly fine however we can also set more information in here so for example we can store a type so here we're defining two types a unit and a target and we're storing that on our quadrant entity so let's go to when we are in Senshi ating our archetypes in here we also add the type of quadrant entity in order to make sure it gets added into our quadrant system then we set the component data just like that so we add our component in order to be used by the quantity system and we passing the information that is needed and now in here on our quadrant data we can also store a quadrant entity so all we're doing is adding all the information we're going to need in order to be stored for each entry into our quadrant system so down here when we add our key let's this as well okay so now our set data job now receives a quadrant entity which we're going to use in order to add to the hashmap key now down here our antiquary is no longer just a translation but translation and the type of quadrant entity alright so that should do it so we can now add this component to any entities that we want to be used by this quadrant system and we have a lot more information being stored for each entry into each quadrant let's see and yep everything's still working perfectly fine and it's still pretty fast so again everything still works but we can now easily define which entities should be placed in quadrants and which should be ignored now another improvement we can make is regarding the native multi hash map field so right now we're creating and disposing of it on every frame now this works but obviously means we no longer have our quadrants once the system is done meaning if we want to use this quadrant system by another script we would have to add all of the related code in here so for example our finite area code would have to be placed right here instead of being in its own specific class so instead of doing that let's make this a permanent of multi hashmap so we can simply do it over right on the uncreate now we're going to create a native multi hash map and we're going to define it as a static variable so we have our static quadrant hash map so that can be used by other scripts down here we instantiate it very much in the same way except for the allocator we used persistent then let's also override the on destroy in order to make sure we dispose of it and now we no longer need to do this in here okay so let's run the code and see and just like that we have an error right away this tells us that our hash map is full that's because the hash map cannot grow dynamically inside a jar so we need to make sure we give it the correct capacity before running our jobs so in here we need to expand it to fit so we check if the entity query contantly the link if that is bigger than the quadrant capacity then let's expand it in order to expand we just set the capacity to be the new link and that's it just like that our quadrant multi hash map will now expand to fit whatever it needs and since this is persistent we need to make sure to clear it so before we do this let's clear the current catchment all right so let's try again any of here it is in our code is working fine no errors and everything still works okay awesome so everything still works the same except now we have our hash map which is accessible from other systems so now let's finally apply this to our fine target code here is the fine target system again this system was made in a previous video so check that out to see how it works so in here we are essentially going through every single target we have the fine target job which in here cycles through every single target and sees how far away it is now let's do this by cycling through the targets only in a single quadrant so let's make a private stroke fine target quadrant system why let's copypaste this target as our starting point now in here we no longer receive an array of targets or rather we're going to receive our negative multi hash map in here we calculate the hash map key based on our translation then we send on through the entities in that hash map key so here we are cycling through all the values inside this hash map key so it's in here that we need to find the target so use the families that we stored in our quadrant and so we store the entity and the position and that's it so we have a very nice job looking for targets but only looking those that are in the same quadrant one thing we also added in our quadrant data was the quadrant entity so in this case we only want targets that are of different quadrant entity type so essentially we're going to only search for targets that have a different type in them from this one so type gnomes are the unit or the target so the units will look for targets and if we want it we could also make the targets look for units all right so now let's replace our job down here for the multi hash map we can send the one that we have our reference on our quadrant system all right that should do it let's test and we should now have units looking for targets only in their quadrant so let's see and yep they are correctly finding their targets and moving towards it and these right here are static meaning they no longer have targets inside their quadrant system so you can see that they are only searching for targets inside of their quadrant all right so obviously it worked but you can already see the issue right now the turning range is limited by the quadrant sighs so this target right here is outside of the quadrant so these two will not find it so this is a problem with a lot of different solutions depending on how fast or accurate you want your targeting to be now in this case we can simply increase the quadrant size by a little bit and make sure our unit search for nearby quadrants as well so here let's put this code into a function so we can easily check the nearby quadrants all right so here we have put our fine target code into a separate function you'll receive a hashmap key so we can easily check the neighbors and let's just make sure that this is still working the same and you've okay everything's still working the same look at these two looking for targets and they don't search for those and say are far and yep exactly okay everything's still working so now in here we can easily check for all of the neighbor problems so first we check the one on the hashmap e so that's the one that he's in then we check the one to the right which is plus one on the index then we check on the left so it has a hashmap key of minus one then we check above so it's Fosdick button system that quadrant Y multiplier that's the one above and the minus will be the one below again this is all based on how we calculated our hash map King now for the corners so here we are searching for all the targets in the neighboring quadrants and here in our quadrant system let's also increase the sound size by a little bit okay let's test and okay here we are and all our units are searching for targets and as you can see they are searching for nearby quadrants look at that one so for example that one finishes those three targets another getting searched for the ones on the quadrant next to it all right so our units are now looking for targets on more than just their quadrant so the targeting is now a lot more accurate and as you can see our frame rate is still pretty much the same only taking one milliseconds so now let's see exactly just how fast this is let's make sure they keep on looking for targets so let's stop adding the component in the end so our add component job let's not add a component that way they're gonna constantly keep looking for targets and let's modify the code noir to enable to test both methods so here we have 10,000 units being spawned over a massive area along with 10,000 targets and as you can see it is taking 70 milliseconds in order to find the causes so every single one of those 10,000 units is cycling through every single one of those 10,000 targets so obviously that is very wasteful since a unit here doesn't care about a target on the way over here so now let's enable the quadrant system and there you go we went down from 6e all the way down to 15 milliseconds so right now this unit down here doesn't care and doesn't even try to search for this target over here so the units are only searching for targets in their quadrant and the ones nearby now again the fine target is just one possible use for the quadrant system the whole point is placing entities into smaller separate buckets that way you have much faster searching for whatever it is you want to do that relates to entity positions for example you can make a unit avoidance algorithm just search for the closest entity in the quadrant and see if it is close enough and if so stop moving the possibilities are endless and this is a great system to apply to many different problems as always you can download the project files in utilities from Unity code monkey comm if you liked the video subscribe channel for more ent tutorials post any questions you have in the comments and I'll do my best interval alright see you next time

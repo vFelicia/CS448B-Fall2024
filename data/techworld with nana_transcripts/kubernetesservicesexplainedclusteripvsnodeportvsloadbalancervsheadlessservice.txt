@@ -1,0 +1,696 @@
+00:00 - in this video i will give you a complete
+00:02 - overview of kubernetes services
+00:05 - first i'll explain shortly what service
+00:07 - component is in kubernetes
+00:09 - and when we need it and then we'll go
+00:11 - through the different service types
+00:13 - cluster ip service headless service node
+00:16 - port
+00:17 - and load balancer services i will
+00:19 - explain the differences between them
+00:21 - and when to use which one so by the end
+00:24 - of the video you will have a great
+00:26 - understanding of kubernetes services and
+00:28 - will be able to use
+00:30 - them in practice so let's get started
+00:33 - so what is the service in kubernetes and
+00:35 - why do we need it
+00:37 - in a kubernetes cluster each pod gets
+00:39 - its own
+00:40 - internal ip address but the pods in
+00:43 - kubernetes
+00:44 - are ephemeral meaning that they come and
+00:46 - go very frequently
+00:48 - and when the pod restarts or when old
+00:51 - one dies and the new one gets
+00:52 - started in its place it gets a new ip
+00:55 - address
+00:56 - so it doesn't make sense to use pod ip
+00:58 - addresses
+00:59 - directly because then you would have to
+01:01 - adjust that every time
+01:03 - the pod gets recreated with the service
+01:05 - however you have a solution
+01:07 - of a stable or static ip address that
+01:10 - stays
+01:10 - even when the pod dies so basically in
+01:13 - front of each pod
+01:14 - we set a service which represents a
+01:17 - persistent
+01:18 - stable ip address access that pod
+01:21 - a service also provides load balancing
+01:23 - because when you have pod replicas
+01:25 - for example three replicas of your micro
+01:28 - service application
+01:29 - or three replicas of mysql application
+01:32 - the service will basically get each
+01:35 - request
+01:36 - targeted to that mysql or your
+01:39 - microservice
+01:39 - application and then forward it to one
+01:42 - of those
+01:43 - pods so clients can call a single
+01:46 - stable ip address instead of calling
+01:49 - each pod
+01:49 - individually so services are a good
+01:52 - abstraction for
+01:53 - loose coupling for communication within
+01:55 - the cluster
+01:56 - so within the cluster components or pods
+01:59 - inside the cluster
+02:00 - but also from external services like if
+02:03 - you have
+02:03 - browser requests coming to the cluster
+02:06 - or if you're talking to an external
+02:07 - database for example
+02:10 - there are several types of services in
+02:13 - kubernetes
+02:14 - the first and the most common one that
+02:16 - you probably
+02:17 - will use most of the time is the cluster
+02:20 - ip type
+02:21 - this is the default type of a service
+02:23 - meaning when you create
+02:24 - a service and not specify a type
+02:27 - it will automatically take cluster ip as
+02:29 - a type so let's see how
+02:31 - cluster ip works and where it's used
+02:34 - in kubernetes setup imagine we have
+02:38 - a micro service application deployed in
+02:40 - the cluster
+02:41 - so we have a pod with microservice
+02:44 - container
+02:45 - running inside that pod and beside that
+02:48 - microservice container we have
+02:50 - a sidecar container that collects the
+02:53 - logs of the microservice and then sends
+02:55 - that to
+02:56 - some destination database so these two
+02:58 - containers are running in the pod
+03:00 - and let's say your microservice
+03:02 - container is running at pod
+03:04 - 3000 and your logging container
+03:07 - let's say is running on port 9000
+03:11 - this means that those two ports will be
+03:13 - now open
+03:14 - and accessible inside the pod and pod
+03:18 - will also get an ip address
+03:20 - from a range that is assigned to a node
+03:24 - so the way it works is that if you have
+03:27 - for example three worker nodes in your
+03:30 - kubernetes cluster
+03:31 - each worker node will get a range of ip
+03:34 - addresses
+03:35 - which are internal in the cluster so for
+03:38 - example the pod 1 will get ip addresses
+03:41 - from a range of 10.2.1
+03:45 - onwards the second worker node will get
+03:48 - this ip range
+03:49 - and the third worker node will get this
+03:51 - one so let's say this port starts on
+03:53 - node
+03:53 - 2 so it get an ip address
+03:56 - that looks like this if you want to see
+03:59 - the ip addresses
+04:00 - of your pods in the cluster you can
+04:03 - actually
+04:04 - check them using kubectl get pod output
+04:07 - wide command where you will get some
+04:09 - extra information about the pods
+04:11 - including its ip address and here you
+04:13 - will see the ip address that it got
+04:15 - assigned
+04:16 - and as i mentioned these are from the ip
+04:19 - address range
+04:20 - that each worker node in the cluster
+04:22 - will get so this is from the first
+04:24 - worker node
+04:25 - and these are from the second worker
+04:27 - node
+04:28 - so now we can access those containers
+04:30 - inside the pod at this ip address
+04:32 - at these ports if we set the replica
+04:35 - count to two
+04:36 - we're gonna have another pod which is
+04:38 - identical to the first one
+04:40 - which will open the same ports and it
+04:42 - will get a different ip address
+04:44 - let's say if it starts on worker node 1
+04:47 - you will get an ip address that looks
+04:49 - something like this
+04:51 - now let's say this micro service is
+04:53 - accessible through a browser
+04:55 - so we have ingress configured and
+04:58 - the requests coming in from the browser
+05:00 - to the micro service
+05:02 - will be handled by ingress how does this
+05:05 - incoming request
+05:07 - get forwarded from ingress all the way
+05:09 - to the pod
+05:10 - and that happens through a service a
+05:13 - cluster ip
+05:14 - or so-called internal service a service
+05:17 - in kubernetes is a component just like a
+05:20 - pod but it's not a process
+05:22 - it's just an abstraction layer that
+05:24 - basically represents an ip address
+05:26 - so service will get an ip address that
+05:29 - it is accessible
+05:30 - at and service will also be accessible
+05:33 - at a certain
+05:34 - port let's say we define that port to be
+05:36 - 3200
+05:38 - so ingress will talk to the service or
+05:41 - hand over the request
+05:42 - to the service at this ip address at
+05:45 - this
+05:46 - port so this is how service is
+05:49 - accessible within the cluster so the way
+05:52 - it works is that
+05:53 - we define ingress rules that forward the
+05:56 - request
+05:57 - based on the request address
+06:00 - to certain services and we define the
+06:03 - service by its
+06:04 - name and the dns resolution
+06:07 - then maps that service name to an ip
+06:10 - address that the service
+06:11 - actually got assigned so this is how
+06:14 - ingress
+06:15 - knows how to talk to the service if you
+06:18 - don't know how ingress works i have a
+06:20 - separate video
+06:21 - where i explain ingress all its concepts
+06:23 - and how to
+06:24 - use that so you can check out that video
+06:27 - to learn
+06:28 - more on ingress itself so once the
+06:31 - request gets
+06:32 - handed over to the service at this
+06:34 - address
+06:35 - then service will know to forward that
+06:37 - request to
+06:38 - one of those pods that are registered as
+06:42 - the service endpoints now here are two
+06:44 - questions
+06:45 - how does service know which pods it is
+06:48 - managing or
+06:49 - which parts to forward the request to
+06:52 - and the second one is how does service
+06:54 - know which
+06:54 - port to forward that request
+06:57 - to on that specific pod the first one is
+07:01 - defined by selectors a service
+07:04 - identifies
+07:05 - its member pods or its endpoint parts
+07:08 - using selector attribute so in the
+07:11 - service specification
+07:13 - in the yaml file from which we create
+07:15 - the service we specify the selector
+07:18 - attribute
+07:18 - that has a key value pairs defined as a
+07:21 - list
+07:22 - now these key value pairs are basically
+07:24 - labels
+07:25 - that pots should have to match that
+07:28 - selector
+07:29 - so in the pod configuration file we
+07:32 - assign the parts certain labels in the
+07:34 - metadata section
+07:35 - and these labels can be arbitrary name
+07:38 - so we can say
+07:39 - my app for example and give it some
+07:41 - other labels
+07:42 - this is basically something that we
+07:44 - define ourselves we can give it any name
+07:46 - that we want
+07:46 - these are just key value pairs that
+07:49 - identify a set of pots
+07:51 - and in the survey cml file then we
+07:53 - define a selector
+07:54 - to match any part that has all of these
+07:57 - labels
+07:58 - this means if we have a deployment
+07:59 - component that creates three replicas of
+08:02 - parts
+08:03 - with label called app my app
+08:06 - and type microservice for example
+08:10 - and in the service selector attribute we
+08:12 - define those two labels
+08:14 - then service will match all of those
+08:17 - three
+08:17 - pod replicas and it will register all
+08:20 - three parts as its
+08:21 - endpoints and as i said it should match
+08:24 - all the selectors not just one
+08:26 - so this is how service will know which
+08:28 - parts
+08:29 - belong to it meaning where to forward
+08:32 - that
+08:33 - request to the second question was if a
+08:36 - pod has
+08:37 - multiple ports open where two different
+08:39 - applications are listening inside the
+08:41 - pod
+08:42 - how does service know which port to
+08:45 - forward the request to
+08:46 - and this is defined in the target port
+08:49 - attribute
+08:50 - so this target port attribute so let's
+08:53 - say target port
+08:54 - in our example is three thousand what
+08:57 - this means is that when we create the
+08:59 - service
+09:00 - it will find all the parts that match
+09:02 - this selector
+09:04 - so these pods will become endpoints of
+09:07 - the service
+09:08 - and when the service gets a request it
+09:10 - will pick one of those
+09:11 - pod replicas randomly because it's a
+09:13 - load balancer
+09:15 - and it will send the request it received
+09:18 - to that specific pod on a port
+09:22 - defined by target port attribute
+09:25 - in this case three thousand also note
+09:28 - that
+09:28 - when you create a service kubernetes
+09:31 - creates an
+09:31 - endpoints object that has the same name
+09:34 - as
+09:35 - the service itself and kubernetes will
+09:37 - use this endpoints object to keep track
+09:40 - of which pods are members of the service
+09:44 - or as i said which pods are the end
+09:46 - points
+09:47 - of the service and since this is dynamic
+09:50 - because whenever you create a new pod
+09:51 - replica or a pod dies
+09:53 - the end points get updated so this
+09:56 - object will basically track that
+09:58 - and note here that the service port
+10:00 - itself is arbitrary so you can define it
+10:03 - yourself
+10:04 - whereas the target port is not arbitrary
+10:06 - it has to match
+10:08 - the port where container the application
+10:11 - container inside the pod
+10:13 - is listening at now let's say our micro
+10:16 - service application
+10:18 - got its requests from the browser
+10:21 - through ingress
+10:21 - and internal cluster ip service and now
+10:25 - it needs to communicate with the
+10:26 - database
+10:27 - to handle that request for example and
+10:30 - in our example let's assume that the
+10:33 - microservice application uses mongodb
+10:35 - database
+10:36 - so we have two replicas of mongodb in
+10:39 - the cluster
+10:40 - which also have their own service
+10:43 - endpoint
+10:44 - so mongodb service is also of cluster ip
+10:48 - and it has its own ip address so now the
+10:51 - microservice application inside the pod
+10:54 - can talk to the mongodb database also
+10:57 - using the service endpoint so the
+10:59 - request will come from one of the parts
+11:02 - that gets the request
+11:03 - from the service to the mongodb service
+11:07 - at this ip address and the port that
+11:10 - service has
+11:11 - open and the service will again select
+11:15 - one of those pod
+11:16 - replicas and forward that request
+11:19 - to the selected pod at
+11:22 - the port the target port defined here
+11:25 - and this is the port where mongodb
+11:27 - application inside the pod
+11:29 - is listening at now let's assume that
+11:32 - inside that mongodb pod there is another
+11:36 - container running that selects the
+11:37 - monitoring metrics for prometheus for
+11:40 - example
+11:41 - and that will be a mongodb exporter and
+11:43 - that container
+11:44 - let's say is running at port 9216
+11:48 - and this is where the application is
+11:50 - accessible at
+11:51 - and in the cluster we have a prometheus
+11:53 - application
+11:54 - that scrapes the metrics endpoint from
+11:58 - this mongodb exporter container from
+12:01 - this endpoint now that means that
+12:04 - service
+12:04 - has to handle two different endpoint
+12:08 - requests
+12:09 - which also means that service has two of
+12:12 - its own
+12:13 - ports open for handling these two
+12:16 - different
+12:16 - requests one from the clients that want
+12:20 - to talk to the mongodb database
+12:21 - and one from the clients like prometheus
+12:24 - that want to talk to the mongodb
+12:25 - exporter application and this is an
+12:28 - example
+12:28 - of a multi-port service and note here
+12:32 - that
+12:33 - when you have multiple ports defined in
+12:35 - a service
+12:36 - you have to name those ports if it's
+12:39 - just one port then you can
+12:40 - leave it so to say anonymous you don't
+12:43 - have to use the name attribute it's
+12:44 - optional
+12:45 - but if you have multiple ports defined
+12:48 - then you have to name
+12:49 - each one of those so these were examples
+12:52 - of cluster
+12:52 - ip service type now let's see another
+12:55 - service type which is called
+12:57 - headless service so let's see what
+12:59 - headless service type is
+13:01 - as we saw each request to the service is
+13:04 - forwarded to
+13:05 - one of the pod replicas that
+13:08 - are registered as service endpoints but
+13:11 - imagine if a client wants to communicate
+13:14 - with one of the parts
+13:16 - directly and selectively or what if the
+13:19 - endpoint
+13:20 - parts need to communicate with each
+13:22 - other directly
+13:24 - without going through the service
+13:26 - obviously in this case it wouldn't make
+13:27 - sense to
+13:28 - talk to the service endpoint which will
+13:30 - randomly select
+13:31 - one of the parts because we want the
+13:33 - communication
+13:35 - with specific parts now what would be
+13:38 - such
+13:38 - a use case a use case where this is
+13:41 - necessary
+13:41 - is when we're deploying stateful
+13:43 - applications in kubernetes
+13:45 - stateful applications like databases
+13:47 - mysql mongodb
+13:49 - elasticsearch and so on in such
+13:52 - applications the pod replicas
+13:54 - aren't identical but rather each one has
+13:57 - its individual
+13:59 - state and characteristic for example if
+14:01 - we're deploying a mysql application
+14:04 - you would have a master instance of
+14:06 - mysql and worker instances
+14:08 - of mysql application and master is the
+14:11 - only pod allowed to
+14:13 - write to the database and the worker
+14:15 - parts must connect to the master
+14:18 - to synchronize their data after
+14:20 - masterpod
+14:21 - has made changes to the database so they
+14:24 - get the up-to-date data as well
+14:26 - and when new worker pod starts it must
+14:29 - connect directly to the most
+14:31 - recent worker node to clone the data
+14:34 - from
+14:35 - and also get up to date with the data
+14:37 - state
+14:38 - so that's the most common use case where
+14:40 - you need
+14:41 - direct communication with individual
+14:43 - pots
+14:45 - so as you see deploying and managing
+14:47 - stateful applications like databases and
+14:49 - kubernetes
+14:50 - is pretty complex and that's why we need
+14:52 - special type of components for them in
+14:54 - kubernetes
+14:55 - however their alternatives were working
+14:57 - with sql databases
+14:59 - in kubernetes much easier like
+15:02 - cockroachdb
+15:03 - our sponsor for this video cockroachdb
+15:06 - is a cloud native
+15:07 - distributed sql database suited
+15:09 - perfectly to kubernetes
+15:11 - cockroachdb handles the messy details of
+15:14 - keeping your data replicated in a
+15:16 - consistent way
+15:17 - even with all sorts of failures when you
+15:20 - run
+15:20 - cockroachdb on kubernetes you'll have a
+15:23 - great combination of cockroachdbs
+15:25 - built-in replication
+15:27 - and survivability model and kubernetes
+15:30 - process management
+15:31 - and this will help you create highly
+15:33 - available stateful applications in
+15:35 - kubernetes
+15:36 - so going back to our example of how
+15:38 - client can know pod's ip addresses
+15:41 - for such case for a client to connect to
+15:44 - all pods
+15:45 - individually it needs to figure out the
+15:47 - ip address of each individual pod
+15:50 - one option to achieve this would be to
+15:52 - make an api call to kubernetes api
+15:55 - server and it will return the list of
+15:58 - pods
+15:58 - and their ip addresses but this will
+16:01 - make your
+16:02 - application too tied to the kubernetes
+16:05 - specific api
+16:06 - and also this will be inefficient
+16:08 - because you will have to get the whole
+16:10 - list of pods and their ip addresses
+16:12 - every time you want to connect to one of
+16:14 - the pods
+16:15 - but as an alternative solution
+16:17 - kubernetes allows clients
+16:19 - to discover pod ip addresses through dns
+16:23 - lookups and usually the way it works is
+16:25 - that when a client performs
+16:27 - a dns lookup for a service the dns
+16:29 - server returns a single ip address which
+16:32 - belongs to the service
+16:34 - and this will be the services cluster ip
+16:36 - address
+16:37 - which we saw previously however if you
+16:39 - tell kubernetes
+16:40 - that you don't need a cluster ip address
+16:42 - of the service
+16:44 - by setting the cluster ip field to none
+16:47 - when creating a service then the dns
+16:49 - server will return the pod ip addresses
+16:52 - instead
+16:52 - of the services ip address and now the
+16:55 - client can
+16:56 - do a simple dns lookup to get the ip
+17:00 - address
+17:01 - of the pods that are members of that
+17:04 - service
+17:04 - and the client can use that ip address
+17:06 - to connect to
+17:08 - the specific part it wants to talk to or
+17:11 - all of the parts
+17:12 - so the way we define a headless service
+17:15 - in a
+17:15 - service configuration file is basically
+17:18 - setting the cluster ip
+17:20 - to none so when we create these service
+17:22 - from this
+17:23 - configuration file kubernetes will not
+17:25 - assign the service a cluster ip address
+17:28 - and we can see that in the output when i
+17:31 - list my
+17:32 - services so i have a cluster ip service
+17:35 - that i created for the microservice and
+17:38 - a headless
+17:38 - service and note here that when we
+17:40 - deploy stateful applications
+17:42 - in the cluster like mongodb for example
+17:45 - we
+17:46 - have the normal service the cluster ip
+17:49 - service
+17:50 - that basically handles the communication
+17:53 - to mongodb and maybe other container
+17:56 - inside the pod
+17:57 - and in addition to that service we have
+17:59 - a headless service
+18:00 - so we always have these two services
+18:03 - alongside each other
+18:04 - so this can do the usual load balancing
+18:06 - stuff
+18:07 - for this kind of use case and
+18:11 - for use cases where client needs to
+18:13 - communicate with
+18:14 - one of those parts directly like a
+18:16 - master node directly to
+18:18 - perform the right commands or the pods
+18:21 - to talk to each other
+18:22 - for data synchronization the headless
+18:25 - service will be used for that
+18:28 - when we define a service configuration
+18:31 - we can
+18:31 - specify a type of the service and the
+18:34 - type attribute
+18:36 - can have three different values it could
+18:38 - be cluster ip which is a default
+18:40 - that's why we don't have to specify that
+18:42 - we have a node port and load balancer
+18:45 - so type node port basically creates a
+18:48 - service that is accessible
+18:50 - on a static port on each worker node
+18:53 - in the cluster now to compare that to
+18:55 - our previous example
+18:57 - the cluster ip service is only
+18:59 - accessible
+19:00 - within the cluster itself so no external
+19:03 - traffic can
+19:04 - directly address the cluster ip service
+19:08 - the node port service however makes the
+19:11 - external traffic accessible on static
+19:15 - or fixed port on each worker node
+19:18 - so in this case instead of ingress the
+19:20 - browser request will come directly
+19:22 - to the worker node at the port that
+19:25 - the service specification defines
+19:28 - and the port that node port service type
+19:31 - exposes
+19:32 - is defined in the node port attribute
+19:35 - and here note that the note port value
+19:39 - has a predefined range between thirty
+19:41 - thousand
+19:42 - and thirty two thousand seven hundred
+19:44 - sixty seven
+19:45 - so you can have one of the values
+19:49 - from that range as a node port value
+19:52 - anything outside that range won't be
+19:53 - accepted so
+19:55 - this means that the node port service is
+19:58 - accessible for the external traffic like
+20:00 - browser request for example at ip
+20:02 - address of the worker node
+20:04 - and the node port defined here however
+20:07 - just like in cluster ip we have a port
+20:10 - of the service so when we create the
+20:12 - node port service a cluster ip service
+20:14 - to which the node port service will
+20:16 - route
+20:17 - is automatically created and here as you
+20:20 - see
+20:20 - if i list the services the note port
+20:23 - will have a cluster ip address
+20:26 - and for each ip address it will also
+20:28 - have the ports
+20:29 - open where the service is accessible at
+20:33 - and also note that service spends all
+20:35 - the worker nodes
+20:37 - so if you have three pod replicas
+20:40 - on three different nodes basically the
+20:42 - service will be able to handle that
+20:44 - request
+20:45 - coming on any of the worker nodes and
+20:48 - then forward it to one of those
+20:50 - pod replicas now that type of service
+20:53 - exposure is not very efficient and also
+20:55 - not secure because you're basically
+20:57 - opening the ports
+20:58 - to directly talk to the services on each
+21:01 - worker
+21:02 - node so the external clients basically
+21:05 - have access to the worker nodes directly
+21:07 - so if we gave all the services
+21:10 - this node port service type then we
+21:13 - would have a bunch of
+21:14 - ports open on the worker nodes clients
+21:17 - from outside can directly talk to
+21:19 - so it's not very efficient and secure
+21:21 - way to handle that and as a better
+21:23 - alternative there is a load balancer
+21:25 - service type
+21:26 - and the way it works with load balancer
+21:28 - service type is that the service becomes
+21:31 - accessible externally through a cloud
+21:34 - provider's load balancer functionality
+21:36 - so each cloud provider has its own
+21:38 - native load balancer implementation
+21:41 - and that is created and used whenever we
+21:44 - create a load balancer service type
+21:46 - google cloud platform aws azure linode
+21:50 - openstack and so on all of them offer
+21:52 - this functionality
+21:53 - so whenever we create a load balancer
+21:57 - node port and cluster ip services are
+22:00 - created automatically by kubernetes
+22:02 - to which the external load balancer of
+22:05 - the cloud platform
+22:06 - will route the traffic to and this is an
+22:09 - example of how did we define
+22:11 - load balancer service configuration so
+22:14 - instead of node port type we have a load
+22:16 - balancer
+22:17 - and the same way we have the port of the
+22:20 - service
+22:20 - which belongs to the cluster ip and we
+22:23 - have the node
+22:24 - port which is the port that opens on the
+22:28 - worker node
+22:29 - but it's not directly accessible
+22:30 - externally but only through the load
+22:33 - balancer itself
+22:34 - so the entry point becomes a load
+22:36 - balancer first and it can then
+22:38 - direct the traffic to node port
+22:41 - on the worker node and the cluster ip
+22:44 - the internal service
+22:46 - so that's how the flow would work with
+22:48 - the load balancer service
+22:50 - so in other words the load balancer
+22:52 - service type is an extension of the node
+22:54 - port type
+22:55 - which itself is an extension of the
+22:58 - cluster ip type
+22:59 - and again if i create a load balancer
+23:02 - service type
+23:03 - and list all the services you can see
+23:05 - the differences
+23:06 - in the display as well where for each
+23:09 - service type
+23:10 - you see the ip addresses you see the
+23:13 - type
+23:13 - and you see the ports that the service
+23:15 - has opened
+23:17 - and i should mention here that in a real
+23:20 - kubernetes setup example you would
+23:22 - probably not use node port for external
+23:24 - connection
+23:25 - you would maybe use it to test some
+23:27 - surveys very quickly
+23:29 - but not for production use cases so for
+23:31 - example if you have a
+23:33 - application that is accessible through
+23:34 - browser you will either configure
+23:37 - ingress for each such request so you
+23:39 - would have internal services the cluster
+23:41 - ip services that
+23:42 - ingress will route to or you would have
+23:45 - a load balancer that uses the cloud
+23:47 - platform's
+23:48 - native load balancer implementation
+23:51 - so that was an overview of kubernetes
+23:54 - service types
+23:55 - the differences between them and when to
+23:58 - use
+23:58 - which i hope you guys got a lot of
+24:01 - information out of this video let me
+24:02 - know in the comments if you have any
+24:04 - questions
+24:04 - what is your feedback for the video or
+24:06 - what other topics you want me to cover
+24:08 - next thank you for watching and see you
+24:11 - in the next video

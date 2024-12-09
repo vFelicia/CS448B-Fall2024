@@ -1,0 +1,550 @@
+With timestamps:
+
+00:00 - in this video we're going to look at
+00:01 - blob assets in unity dots
+00:03 - we're going to learn what they are how
+00:05 - to create and how to use them
+00:07 - this is what unity uses internally to
+00:09 - handle dots animation data
+00:10 - physics shape data and more let's begin
+00:16 - [Music]
+00:20 - hello and welcome i'm your code monkey
+00:22 - and this channel is all about helping
+00:24 - you
+00:24 - learn how to make your own games with
+00:26 - in-app tutorials made by a professional
+00:27 - indie game developer
+00:28 - so if you find the video helpful
+00:30 - consider subscribing okay so
+00:32 - blob assets are a very interesting
+00:34 - feature of unity dots
+00:35 - first of all if you're not familiar with
+00:37 - unity dots then check the links in the
+00:38 - description
+00:39 - blob assets are essentially containers
+00:41 - of immutable data that can be accessed
+00:44 - through a reference so this is a way
+00:46 - that you can store a reference to some
+00:47 - data that you can then
+00:49 - access from all of your entities and
+00:51 - because they are immutable that means
+00:52 - you can safely read from plot assets
+00:54 - from multiple threads at the same time
+00:56 - which means
+00:57 - it's insanely performant this can be
+00:59 - useful for any type of data that doesn't
+01:01 - change in your game
+01:02 - so for example animations scriptable
+01:04 - objects fixed world settings
+01:06 - unit stats pathfinding maps and so on
+01:08 - you store whatever data you want in a
+01:10 - blob assets and read from it
+01:12 - concurrently from multiple jobs
+01:14 - the way you create and use blob assets
+01:16 - is first you construct a blob asset
+01:19 - normally during the game object
+01:20 - conversion system you define all of the
+01:23 - data that will go inside the bob asset
+01:25 - and set it
+01:26 - when defining the data you define the
+01:28 - struct that holds your data
+01:30 - then you have several containers for it
+01:32 - first you have the blob array which is a
+01:34 - normal array holding several instances
+01:36 - of your data
+01:37 - then you have a blob pointer which is a
+01:39 - simple pointer to a single instance of
+01:42 - your data
+01:42 - and then you have a blob string which
+01:44 - holds a simple string
+01:46 - with the ballast asset constructed then
+01:48 - you have the blob asset reference which
+01:50 - is how you store the reference to your
+01:51 - blob asset inside an entity component
+01:54 - and then you can access that blob asset
+01:56 - from anywhere like inside a job
+01:58 - read that data and do whatever you want
+02:00 - in a future video we're going to look at
+02:02 - how we can use bob assets in making a
+02:04 - custom dots animation system
+02:06 - this video is made possible thanks to
+02:07 - these awesome supporters
+02:09 - go to patreon.com unitycodemonkey to get
+02:11 - some perks and help keep the videos free
+02:13 - for everyone
+02:14 - okay so let's look at an example to try
+02:16 - it out as i said one key aspect of blob
+02:19 - assets is how they are meant for
+02:21 - immutable data
+02:22 - meaning data that doesn't change so for
+02:24 - a simple example let's look at how we
+02:26 - can define some positions in our world
+02:28 - and have our entities follow them as
+02:30 - waypoints so first let's make a script
+02:32 - where we're going to define the plov
+02:34 - asset data
+02:36 - so we create a new c-sharp script let's
+02:38 - call this the waypoints blob asset
+02:43 - now inside let's first define a very
+02:46 - simple struct
+02:47 - so a public struct and let's come with
+02:49 - our waypoint
+02:51 - and inside all we're going to have is a
+02:53 - public for 3 for our position
+02:58 - and yep that's it it's that simple so
+03:00 - this type will represent a single
+03:02 - waypoint
+03:02 - and we're going to have several
+03:03 - waypoints in our blob asset
+03:05 - so now down here let's define another
+03:08 - public struct
+03:08 - call this the waypoint blob asset
+03:12 - this will be the actual blob asset type
+03:15 - and inside we want to have an array of
+03:17 - waypoints
+03:18 - so for that we use the type lavarray
+03:24 - we're going to make an array of type
+03:26 - waypoint
+03:28 - so we have our type waypoint blob asset
+03:31 - which holds
+03:32 - an array of our waypoints which
+03:34 - themselves each of them holds a float3
+03:36 - for the position
+03:37 - so this is the very simple structure of
+03:39 - our blob asset
+03:41 - now it's actually constructed so back in
+03:44 - the editor and let's create a new
+03:45 - c-sharp script
+03:46 - call this the waypoint blob asset
+03:49 - constructor
+03:51 - okay so now this one will be a game
+03:54 - object conversion system
+04:00 - i covered the game object conversion
+04:01 - system a bit in the dots prefabs video
+04:04 - essentially this system will run during
+04:06 - the game object conversion
+04:08 - and the function that you need to
+04:10 - implement is called on update but it's
+04:11 - really just going to run once during the
+04:13 - conversion
+04:14 - now in here we can construct our blob
+04:16 - asset so the first thing we need
+04:18 - is use a blob builder
+04:21 - which takes an allocator so let's make
+04:23 - it temp
+04:29 - and now this object needs to be disposed
+04:32 - so one way we can do this
+04:33 - is with a using code block
+04:37 - there we go using our blob builder and
+04:39 - now to begin building our blob asset the
+04:42 - first thing we need
+04:42 - is to use our blob builder in order to
+04:45 - construct a root
+04:47 - and we pass in our blob asset type which
+04:49 - is our waypoint blob
+04:50 - asset
+04:53 - this function returns a waypoint log
+04:56 - asset so we store it
+05:00 - and now here there is one very very very
+05:02 - important thing which is you must use
+05:04 - the ref keyword
+05:06 - both on the function and on the
+05:07 - declaration of the variable itself
+05:10 - if you forget to add the refs then
+05:12 - essentially you'll be working with a
+05:13 - copy which is not what we want
+05:15 - so always make sure to remember to add
+05:17 - your refs so here we have our waypoint
+05:20 - blob asset
+05:21 - and inside our blob asset we have our po
+05:23 - of array this will be a fixed length
+05:25 - array so we need to allocate some memory
+05:27 - for it
+05:28 - and we do that is we use the blob
+05:30 - builder in order to use
+05:32 - allocate then we pass in the reference
+05:35 - to our array so we pass in a ref to the
+05:37 - waypoint blob asset
+05:39 - and we use our waypoint array and then
+05:42 - the length of our array
+05:44 - so in this case just for a very
+05:45 - simplified example let's just add three
+05:47 - waypoints
+05:49 - now this as you can see returns a blob
+05:51 - on the right
+05:56 - now using this array we can fill it up
+05:58 - with our data
+06:00 - so all we do is really just access it on
+06:02 - the index so just for testing let's make
+06:04 - our three wave points
+06:15 - okay so here we have a simple example of
+06:17 - a waypoint triangle
+06:18 - now here we're adding our waypoints
+06:20 - directly through code but it's only to
+06:22 - keep this example simple
+06:24 - in a more real use case you would create
+06:25 - a custom authoring component and set up
+06:27 - your data like you do with components in
+06:29 - the gameobject conversion system
+06:31 - i will show an example of that later in
+06:32 - the video so with this we have set up
+06:35 - our blob asset we constructed our route
+06:38 - we allocated space for our array and we
+06:40 - filled it up the array with our data
+06:42 - so with all that set up then we take our
+06:45 - blob builder and actually create the
+06:46 - final blob asset reference
+06:48 - so we use the blob builder in order to
+06:51 - create the blob asset reference
+06:55 - and we pass in our allocator and make it
+07:00 - persistent
+07:08 - all right so here we have our reference
+07:10 - now here let's test out this code to
+07:12 - make sure the blob asset reference was
+07:14 - created correctly
+07:15 - so we just do a debug log
+07:18 - let's go into the waypoint blob asset
+07:21 - reference
+07:23 - then we access the value that will give
+07:26 - us the waypoint blob asset
+07:28 - and then let's access the waypoint array
+07:30 - and do analog on the
+07:32 - length so if everything is correct the
+07:34 - console should say three
+07:36 - and if there's our console indeed saying
+07:37 - three now let's test printing the
+07:40 - waypoint array and let's access the
+07:42 - position one
+07:44 - and print out the position and if
+07:46 - there's our log with our waypoint
+07:48 - position
+07:48 - so we have our blob asset correctly
+07:50 - being constructed and turned into a
+07:52 - reference
+07:52 - awesome so you can see how it's actually
+07:55 - quite simple to create a blob asset
+07:58 - you use a blob builder in order to build
+07:59 - it you start off by constructing the
+08:02 - route
+08:03 - then you set up all your data so in this
+08:05 - case we have a blog array so we allocate
+08:07 - memory for that array
+08:09 - then we fill up that array with our data
+08:11 - and then finally we construct our blob
+08:13 - asset reference that we can then use
+08:15 - so now that we have this let's see how
+08:17 - we can actually use our blob asset
+08:19 - reference
+08:20 - we want our entity to follow the
+08:21 - waypoints so back in the editor
+08:24 - let's make another script let's call
+08:26 - this our waypoint
+08:27 - follow now inside this is going to be a
+08:32 - normal component data
+08:37 - so we have our basic component and now
+08:39 - for the fields
+08:41 - we're going to have a blob asset
+08:43 - reference
+08:45 - and we pass in our waypoint asset type
+08:51 - and then let's also have an int for our
+08:53 - waypoint index to fall
+08:57 - so we're going to move our entity
+08:58 - towards the waypoint on this index
+09:00 - then when we get there we increment the
+09:02 - index to go to the next one and so on
+09:04 - and so on
+09:05 - and now we actually need to set this
+09:06 - field on our entity
+09:08 - so for that we have plenty of methods we
+09:10 - could for example in here construct an
+09:12 - entity and create a component to hold
+09:14 - our
+09:15 - waypoint asset reference then we would
+09:17 - have our moving entities actually grab
+09:19 - it from that component
+09:21 - that would be a good approach if we were
+09:23 - going to have more entities being
+09:24 - spawned
+09:25 - but in this case here we're just testing
+09:26 - with a single entity that is already
+09:28 - converted on start
+09:30 - so we can simply set it directly in here
+09:32 - after we construct our
+09:34 - asset reference let's first store the
+09:36 - reference out here so outside of our
+09:38 - using statement we get that and we
+09:40 - assign it in here okay and now
+09:43 - afterwards
+09:44 - let's set that component on our entity
+09:47 - so here in the editor i have my player
+09:49 - object as you can see very simple just
+09:51 - has a convert to empty script
+09:52 - a basic mesh with a material and then it
+09:55 - has the tag player
+09:57 - the player tag is in here as you can see
+09:58 - just an empty tag component
+10:00 - so this is how we can identify the
+10:02 - player so here after we have constructed
+10:04 - our blob asset reference let's get the
+10:06 - player entity
+10:08 - and now while researching this part
+10:10 - really tripped me up
+10:11 - inside of the game object conversion
+10:13 - system you have two entity managers
+10:15 - you have the normal entity manager
+10:18 - except this one refers to the entity
+10:20 - manager inside of the entity conversion
+10:22 - world
+10:23 - whereas in this case we want to access
+10:25 - the entity which by now has already been
+10:27 - converted
+10:28 - so there's another entity manager in the
+10:30 - game object inversion system which is
+10:31 - the destination
+10:32 - entity manager so this really tripped me
+10:35 - up because i was looking for the player
+10:36 - on the normal entity manager except the
+10:38 - player had already been converted so he
+10:40 - did not exist inside of that world
+10:42 - so when working with the game object
+10:44 - convergence system keep in mind that you
+10:45 - have
+10:46 - access to two different entity managers
+10:48 - all right so using this one we can now
+10:50 - locate our
+10:51 - player so we create an entity query
+10:55 - pass in the type of our tag player
+11:02 - so we have our player empty query then
+11:04 - we grab the player entity
+11:07 - by going into the player empty query
+11:11 - and since we only have one then we can
+11:13 - use the get singleton
+11:14 - entity okay so just like this we have
+11:18 - our player entity
+11:19 - and now we can just set our waypoint
+11:21 - follow component
+11:22 - so again using the destination entity
+11:24 - manager we call
+11:26 - our set component data we call our add
+11:29 - component data
+11:31 - onto the player entity and we pass in
+11:35 - the waypoint follow component
+11:38 - now here we can pass in the waypoint
+11:40 - mobasic reference as the one that we
+11:41 - created
+11:42 - up here
+11:46 - and yep just like that so up here we
+11:49 - construct the waypoint as the preference
+11:51 - and then we set that reference inside of
+11:53 - a component that is held by the entity
+11:55 - player
+11:56 - now finally we just need to do one last
+11:58 - thing to make sure that this actually
+11:59 - works
+12:00 - which is since we're setting the
+12:02 - component directly on the player entity
+12:04 - we need to make sure that the player
+12:05 - gets converted
+12:06 - before this system runs so in order to
+12:09 - do that we can
+12:10 - set this system to run after the normal
+12:12 - conversion group
+12:13 - so we go up here and add the attribute
+12:15 - update in group
+12:17 - and pass in the type of and the game
+12:20 - object after conversion group
+12:24 - so this will make sure that this system
+12:26 - only runs after the game object
+12:27 - conversion
+12:28 - again this is just one possible approach
+12:31 - we could also have the blob asset
+12:33 - reference be created before the player
+12:34 - entity
+12:35 - and have the player itself go look for
+12:37 - the blob assets in order to set the
+12:38 - component
+12:39 - all right so now over here we have our
+12:41 - blob asset reference
+12:43 - and it's referenced inside a component
+12:45 - that is held by the player entity
+12:47 - so now we can make a system that will
+12:49 - read through the blob asset and actually
+12:50 - move our player entity
+12:52 - so back in the editor let's create a new
+12:54 - script
+12:56 - call this the waypoint file system
+13:00 - now in here this will be a very basic
+13:02 - follow system
+13:12 - so here on our system we just do one
+13:14 - entities
+13:15 - do a four each and we're going to make
+13:18 - the four each
+13:18 - only run on entities with our tag player
+13:21 - component
+13:23 - then in our for each let's make sure
+13:25 - that we grab the waypoint follow
+13:27 - component
+13:31 - and now in here we have access to the
+13:33 - blob asset reference
+13:40 - so we go into the waypoint follow
+13:41 - component in order to get the bomb asset
+13:43 - reference and get the value
+13:45 - so with this we have our plot asset
+13:48 - and now we can access the evolve asset
+13:50 - we're going to access the waypoint array
+13:53 - then access it on the waypoint follow
+13:55 - index
+13:57 - and then we get the position and just
+13:59 - like this we have a full 3
+14:01 - for our waypoint position
+14:04 - and yep there it is very simple so now
+14:06 - we just do some basic movement code in
+14:08 - order to move towards this position
+14:25 - all right there it is so first we
+14:28 - calculate the direction towards our
+14:29 - waypoint
+14:30 - then we move towards that direction
+14:33 - afterwards we test the distance between
+14:35 - the current position and the wave point
+14:36 - position
+14:37 - if it's close enough then we have
+14:39 - reached our waypoint so we simply
+14:41 - increase the wave point index
+14:42 - and do a remainder of the length of the
+14:44 - array so it keeps looping over and over
+14:47 - all right now we can finally test and
+14:49 - run our code
+14:50 - and yep there's the entity moving from
+14:52 - waypoint to waypoint awesome
+14:54 - so you can see that it's going to
+14:55 - position zero zero then over here five 0
+14:57 - and 2.5 2.5 so there you go constantly
+14:59 - going over and over
+15:01 - so what we have here are of the
+15:03 - waypoints set up in a blob asset
+15:05 - then the entity is accessing that blob
+15:07 - asset and following the various
+15:08 - waypoints
+15:10 - the main benefit is you can have
+15:11 - whatever that you want inside of bob
+15:13 - assets and since they are immutable you
+15:15 - can access them from multiple threads
+15:17 - without any safety issues
+15:19 - this is how for example you would have
+15:21 - animation data inside of a blob asset
+15:23 - and multiple entities reading from it in
+15:25 - order to update their animations
+15:27 - now let's look at a more complete
+15:28 - example okay here i have another scene
+15:31 - with a bunch more things
+15:33 - as you can see there's a bunch of
+15:34 - entities being spawned and they're all
+15:36 - following the various waypoints
+15:38 - so here we're not directly setting the
+15:39 - blob asset reference on just a single
+15:41 - entity
+15:42 - each one is grabbing its own reference
+15:44 - the reference to the blob asset is
+15:46 - stored in a simple static field which
+15:47 - again is another method you can use
+15:49 - so when they get spawned they grab the
+15:51 - applied acid and then they go through
+15:52 - their logic
+15:54 - here i also made the blob asset using a
+15:56 - custom authoring component and the
+15:57 - conversion workflow
+15:59 - so here in my scene you can see that i
+16:00 - have my waypoint blob asset then i have
+16:03 - three game
+16:03 - objects to use as our positions so
+16:06 - there's the blob acid authoring
+16:07 - component
+16:08 - which contains an array of transforms
+16:10 - and then just have a bunch of gizmos in
+16:12 - order to easily move around so let's say
+16:13 - move it in there and there
+16:16 - here is the authoring component
+16:18 - essentially what matters is that we have
+16:19 - a public array of our transforms
+16:21 - and then we declare our reference
+16:22 - prefabs over here is the conversion
+16:25 - system
+16:26 - as you can see it's the same thing we
+16:27 - were doing previously we construct our
+16:29 - root
+16:30 - then we use a get entity query in order
+16:32 - to grab our asset authoring component
+16:35 - then we allocate our space for our array
+16:38 - and we simply fill it up with our
+16:39 - positions then over here i also have an
+16:42 - example for how you'd use the plot
+16:43 - pointer
+16:45 - as well as the blob string one thing
+16:47 - about the string though is apparently
+16:49 - you cannot use it inside a using
+16:50 - statement
+16:51 - so in order to locate the string you
+16:53 - would have to take this out
+16:58 - and you would have to manually create
+17:00 - the blob builder and then dispose of it
+17:01 - in the end
+17:02 - so just a weird quirk you cannot use it
+17:04 - in a using block but it works exactly on
+17:06 - the same
+17:07 - then the entity spawner system is in
+17:09 - here it just counts a simple countdown
+17:12 - timer
+17:13 - it instantiates an entity prefab which i
+17:15 - covered in a previous video so check it
+17:17 - out if you want to learn more about this
+17:19 - and then we simply add the component
+17:20 - data and in here we're passing in the
+17:22 - blob asset reference
+17:24 - by using a static field in our
+17:25 - constructor so here is a constructor
+17:28 - with a static field so again
+17:29 - different method then as you can see
+17:31 - they follow the waypoint positions
+17:34 - and since i'm using this nice authoring
+17:36 - component i could for example
+17:37 - add a bunch more so just make a new game
+17:40 - object
+17:40 - in here add it onto my simple list and
+17:44 - then just position this object and let's
+17:45 - say put it in there
+17:46 - and now if we run and yep they go they
+17:49 - go into that position
+17:51 - and onto that one and now into our new
+17:53 - waypoint position so there you go now we
+17:54 - have four positions
+17:56 - so here it is a nice working demo
+17:57 - showcasing how plug assets work
+18:00 - blob assets are what unity uses
+18:01 - internally in order to handle physics
+18:03 - shape collision data
+18:04 - their dots animation data curves and so
+18:06 - on essentially any type of immutable
+18:09 - data that you have
+18:10 - you can store in a blob asset in order
+18:12 - to access it super fast from multiple
+18:14 - threads without any safety issues stay
+18:16 - tuned for an upcoming video where i will
+18:18 - be using plug assets in order to make a
+18:20 - custom animation system
+18:21 - very much like the one i use in normal
+18:23 - game objects
+18:24 - this video is made possible thanks to
+18:26 - these awesome supporters go to
+18:28 - patreon.com
+18:29 - unitycodemonkey to get some perks and
+18:31 - help keep the videos free for everyone
+18:33 - as always you can download the project
+18:34 - files and utilities from
+18:35 - unitycodemonkey.com
+18:37 - subscribe to the channel for more unity
+18:38 - tutorials post any questions you have in
+18:40 - the comments and i'll see you next time
+
+Cleaned transcript:
+
+in this video we're going to look at blob assets in unity dots we're going to learn what they are how to create and how to use them this is what unity uses internally to handle dots animation data physics shape data and more let's begin hello and welcome i'm your code monkey and this channel is all about helping you learn how to make your own games with inapp tutorials made by a professional indie game developer so if you find the video helpful consider subscribing okay so blob assets are a very interesting feature of unity dots first of all if you're not familiar with unity dots then check the links in the description blob assets are essentially containers of immutable data that can be accessed through a reference so this is a way that you can store a reference to some data that you can then access from all of your entities and because they are immutable that means you can safely read from plot assets from multiple threads at the same time which means it's insanely performant this can be useful for any type of data that doesn't change in your game so for example animations scriptable objects fixed world settings unit stats pathfinding maps and so on you store whatever data you want in a blob assets and read from it concurrently from multiple jobs the way you create and use blob assets is first you construct a blob asset normally during the game object conversion system you define all of the data that will go inside the bob asset and set it when defining the data you define the struct that holds your data then you have several containers for it first you have the blob array which is a normal array holding several instances of your data then you have a blob pointer which is a simple pointer to a single instance of your data and then you have a blob string which holds a simple string with the ballast asset constructed then you have the blob asset reference which is how you store the reference to your blob asset inside an entity component and then you can access that blob asset from anywhere like inside a job read that data and do whatever you want in a future video we're going to look at how we can use bob assets in making a custom dots animation system this video is made possible thanks to these awesome supporters go to patreon.com unitycodemonkey to get some perks and help keep the videos free for everyone okay so let's look at an example to try it out as i said one key aspect of blob assets is how they are meant for immutable data meaning data that doesn't change so for a simple example let's look at how we can define some positions in our world and have our entities follow them as waypoints so first let's make a script where we're going to define the plov asset data so we create a new csharp script let's call this the waypoints blob asset now inside let's first define a very simple struct so a public struct and let's come with our waypoint and inside all we're going to have is a public for 3 for our position and yep that's it it's that simple so this type will represent a single waypoint and we're going to have several waypoints in our blob asset so now down here let's define another public struct call this the waypoint blob asset this will be the actual blob asset type and inside we want to have an array of waypoints so for that we use the type lavarray we're going to make an array of type waypoint so we have our type waypoint blob asset which holds an array of our waypoints which themselves each of them holds a float3 for the position so this is the very simple structure of our blob asset now it's actually constructed so back in the editor and let's create a new csharp script call this the waypoint blob asset constructor okay so now this one will be a game object conversion system i covered the game object conversion system a bit in the dots prefabs video essentially this system will run during the game object conversion and the function that you need to implement is called on update but it's really just going to run once during the conversion now in here we can construct our blob asset so the first thing we need is use a blob builder which takes an allocator so let's make it temp and now this object needs to be disposed so one way we can do this is with a using code block there we go using our blob builder and now to begin building our blob asset the first thing we need is to use our blob builder in order to construct a root and we pass in our blob asset type which is our waypoint blob asset this function returns a waypoint log asset so we store it and now here there is one very very very important thing which is you must use the ref keyword both on the function and on the declaration of the variable itself if you forget to add the refs then essentially you'll be working with a copy which is not what we want so always make sure to remember to add your refs so here we have our waypoint blob asset and inside our blob asset we have our po of array this will be a fixed length array so we need to allocate some memory for it and we do that is we use the blob builder in order to use allocate then we pass in the reference to our array so we pass in a ref to the waypoint blob asset and we use our waypoint array and then the length of our array so in this case just for a very simplified example let's just add three waypoints now this as you can see returns a blob on the right now using this array we can fill it up with our data so all we do is really just access it on the index so just for testing let's make our three wave points okay so here we have a simple example of a waypoint triangle now here we're adding our waypoints directly through code but it's only to keep this example simple in a more real use case you would create a custom authoring component and set up your data like you do with components in the gameobject conversion system i will show an example of that later in the video so with this we have set up our blob asset we constructed our route we allocated space for our array and we filled it up the array with our data so with all that set up then we take our blob builder and actually create the final blob asset reference so we use the blob builder in order to create the blob asset reference and we pass in our allocator and make it persistent all right so here we have our reference now here let's test out this code to make sure the blob asset reference was created correctly so we just do a debug log let's go into the waypoint blob asset reference then we access the value that will give us the waypoint blob asset and then let's access the waypoint array and do analog on the length so if everything is correct the console should say three and if there's our console indeed saying three now let's test printing the waypoint array and let's access the position one and print out the position and if there's our log with our waypoint position so we have our blob asset correctly being constructed and turned into a reference awesome so you can see how it's actually quite simple to create a blob asset you use a blob builder in order to build it you start off by constructing the route then you set up all your data so in this case we have a blog array so we allocate memory for that array then we fill up that array with our data and then finally we construct our blob asset reference that we can then use so now that we have this let's see how we can actually use our blob asset reference we want our entity to follow the waypoints so back in the editor let's make another script let's call this our waypoint follow now inside this is going to be a normal component data so we have our basic component and now for the fields we're going to have a blob asset reference and we pass in our waypoint asset type and then let's also have an int for our waypoint index to fall so we're going to move our entity towards the waypoint on this index then when we get there we increment the index to go to the next one and so on and so on and now we actually need to set this field on our entity so for that we have plenty of methods we could for example in here construct an entity and create a component to hold our waypoint asset reference then we would have our moving entities actually grab it from that component that would be a good approach if we were going to have more entities being spawned but in this case here we're just testing with a single entity that is already converted on start so we can simply set it directly in here after we construct our asset reference let's first store the reference out here so outside of our using statement we get that and we assign it in here okay and now afterwards let's set that component on our entity so here in the editor i have my player object as you can see very simple just has a convert to empty script a basic mesh with a material and then it has the tag player the player tag is in here as you can see just an empty tag component so this is how we can identify the player so here after we have constructed our blob asset reference let's get the player entity and now while researching this part really tripped me up inside of the game object conversion system you have two entity managers you have the normal entity manager except this one refers to the entity manager inside of the entity conversion world whereas in this case we want to access the entity which by now has already been converted so there's another entity manager in the game object inversion system which is the destination entity manager so this really tripped me up because i was looking for the player on the normal entity manager except the player had already been converted so he did not exist inside of that world so when working with the game object convergence system keep in mind that you have access to two different entity managers all right so using this one we can now locate our player so we create an entity query pass in the type of our tag player so we have our player empty query then we grab the player entity by going into the player empty query and since we only have one then we can use the get singleton entity okay so just like this we have our player entity and now we can just set our waypoint follow component so again using the destination entity manager we call our set component data we call our add component data onto the player entity and we pass in the waypoint follow component now here we can pass in the waypoint mobasic reference as the one that we created up here and yep just like that so up here we construct the waypoint as the preference and then we set that reference inside of a component that is held by the entity player now finally we just need to do one last thing to make sure that this actually works which is since we're setting the component directly on the player entity we need to make sure that the player gets converted before this system runs so in order to do that we can set this system to run after the normal conversion group so we go up here and add the attribute update in group and pass in the type of and the game object after conversion group so this will make sure that this system only runs after the game object conversion again this is just one possible approach we could also have the blob asset reference be created before the player entity and have the player itself go look for the blob assets in order to set the component all right so now over here we have our blob asset reference and it's referenced inside a component that is held by the player entity so now we can make a system that will read through the blob asset and actually move our player entity so back in the editor let's create a new script call this the waypoint file system now in here this will be a very basic follow system so here on our system we just do one entities do a four each and we're going to make the four each only run on entities with our tag player component then in our for each let's make sure that we grab the waypoint follow component and now in here we have access to the blob asset reference so we go into the waypoint follow component in order to get the bomb asset reference and get the value so with this we have our plot asset and now we can access the evolve asset we're going to access the waypoint array then access it on the waypoint follow index and then we get the position and just like this we have a full 3 for our waypoint position and yep there it is very simple so now we just do some basic movement code in order to move towards this position all right there it is so first we calculate the direction towards our waypoint then we move towards that direction afterwards we test the distance between the current position and the wave point position if it's close enough then we have reached our waypoint so we simply increase the wave point index and do a remainder of the length of the array so it keeps looping over and over all right now we can finally test and run our code and yep there's the entity moving from waypoint to waypoint awesome so you can see that it's going to position zero zero then over here five 0 and 2.5 2.5 so there you go constantly going over and over so what we have here are of the waypoints set up in a blob asset then the entity is accessing that blob asset and following the various waypoints the main benefit is you can have whatever that you want inside of bob assets and since they are immutable you can access them from multiple threads without any safety issues this is how for example you would have animation data inside of a blob asset and multiple entities reading from it in order to update their animations now let's look at a more complete example okay here i have another scene with a bunch more things as you can see there's a bunch of entities being spawned and they're all following the various waypoints so here we're not directly setting the blob asset reference on just a single entity each one is grabbing its own reference the reference to the blob asset is stored in a simple static field which again is another method you can use so when they get spawned they grab the applied acid and then they go through their logic here i also made the blob asset using a custom authoring component and the conversion workflow so here in my scene you can see that i have my waypoint blob asset then i have three game objects to use as our positions so there's the blob acid authoring component which contains an array of transforms and then just have a bunch of gizmos in order to easily move around so let's say move it in there and there here is the authoring component essentially what matters is that we have a public array of our transforms and then we declare our reference prefabs over here is the conversion system as you can see it's the same thing we were doing previously we construct our root then we use a get entity query in order to grab our asset authoring component then we allocate our space for our array and we simply fill it up with our positions then over here i also have an example for how you'd use the plot pointer as well as the blob string one thing about the string though is apparently you cannot use it inside a using statement so in order to locate the string you would have to take this out and you would have to manually create the blob builder and then dispose of it in the end so just a weird quirk you cannot use it in a using block but it works exactly on the same then the entity spawner system is in here it just counts a simple countdown timer it instantiates an entity prefab which i covered in a previous video so check it out if you want to learn more about this and then we simply add the component data and in here we're passing in the blob asset reference by using a static field in our constructor so here is a constructor with a static field so again different method then as you can see they follow the waypoint positions and since i'm using this nice authoring component i could for example add a bunch more so just make a new game object in here add it onto my simple list and then just position this object and let's say put it in there and now if we run and yep they go they go into that position and onto that one and now into our new waypoint position so there you go now we have four positions so here it is a nice working demo showcasing how plug assets work blob assets are what unity uses internally in order to handle physics shape collision data their dots animation data curves and so on essentially any type of immutable data that you have you can store in a blob asset in order to access it super fast from multiple threads without any safety issues stay tuned for an upcoming video where i will be using plug assets in order to make a custom animation system very much like the one i use in normal game objects this video is made possible thanks to these awesome supporters go to patreon.com unitycodemonkey to get some perks and help keep the videos free for everyone as always you can download the project files and utilities from unitycodemonkey.com subscribe to the channel for more unity tutorials post any questions you have in the comments and i'll see you next time

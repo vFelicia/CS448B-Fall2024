@@ -1,0 +1,338 @@
+With timestamps:
+
+00:00 - learn about a combined-based project architecture 
+that lets you place AR entities from a swift UI  
+00:06 - view hey code crew this is flow in the last 
+lesson you learned about the foundations of  
+00:12 - configurations anchors and entities which were 
+needed to tell a arcade where you want to place  
+00:18 - which kind of 3D object in this lesson I will tell 
+you about a combined based architecture that I've  
+00:25 - started using myself just to make it easy to 
+tell arcade what to do in a swift UI based app  
+00:31 - for that we will use the combined framework 
+as I already told you we will set up an enum  
+00:36 - for all of our different AR actions we 
+will create an AR manager class that is  
+00:42 - super super simple so don't worry too much 
+about it I will tell you a bit about how  
+00:46 - combined Works itself and then we will 
+make sure that everything works together  
+00:52 - so to get started I'm gonna press command n 
+and create a new Swift file called AR action
+01:03 - now this file only contains a single enum which is 
+used for all of the different actions that we want  
+01:09 - to take so for example to play the 3D object or to 
+remove a 3D object maybe to change something about  
+01:16 - the scene whatever it may be every single thing 
+that we want to be able to do in our AR scene  
+01:21 - will have its own case in this enum so let's 
+get started by changing the import to Swift UI  
+01:29 - as we will need that in just a second and 
+then I will create an enum called AR action  
+01:35 - for the sake of this video we will Implement two 
+different actions the first one is place a block  
+01:44 - with a certain color and this is why 
+we needed the Swift UI import because  
+01:47 - we will use this with UI color and the 
+second case will be remove all anchors  
+01:55 - so these are the two actions that we will 
+Implement in this video and then you can  
+01:59 - expand on this as much as you'd like next up let 
+me move that AR action into our feature targets  
+02:05 - group in the Navigator here and then let's also 
+create another new file that is called AR manager
+02:17 - now you don't necessarily need this file exactly 
+you can also store all of these variables  
+02:23 - somewhere else I just think as a separation of 
+concerns aspect it's best to have an AR manager  
+02:29 - and you will understand what it will do in just 
+a second so let's change this import to combine  
+02:35 - because we will actually need that now so first 
+of all let's create a class called AR manager we  
+02:43 - only ever want there to be one AR manager in our 
+entire app so we will use the Singleton pattern  
+02:48 - the signaling pattern means that there is only one 
+instance of an object or of a class or a struct  
+02:54 - so we will say it's a static let shared so we can 
+then say armanager.share to access the Singleton  
+03:04 - and this is just an instance of AR manager now 
+this by itself is not really a Singleton because  
+03:10 - yeah a programmer could still just create another 
+Al manager like this so to prevent that from  
+03:16 - happening we will make the init private and now 
+only AR manager itself can call the initializer  
+03:23 - pretty nifty little pattern here 
+okay before we get more into the  
+03:30 - AR manager let me tell you about its 
+purpose and how combine Works itself  
+03:35 - so the purpose of AR manager is to forward all of 
+the actions from a swift UI view to our custom AR  
+03:42 - View there is no super easy direct way to do this 
+and that's why we are adding this AR manager here  
+03:49 - one of the there are probably tons of different 
+options that you could take you could go for  
+03:53 - the delegate pattern as you probably know it 
+from UI kit what I will show you here is using  
+03:58 - combined streams combined is a framework that's 
+built into xcode and that's available to every  
+04:04 - single developer I think as of iOS 13 actually and 
+combine allows you to send data from one part of  
+04:11 - your app to another part of your app basically 
+you can also use it for other other things but  
+04:16 - that's the aspect that we will use and if you've 
+ever written a view model in Swift UI and use  
+04:21 - the add published property wrapper you have even 
+used combine already without even knowing about  
+04:25 - it because the ad published property wrapper 
+is a so-called combined publisher there is a  
+04:31 - ton more to learn about combine about Publishers 
+and subscribers and I encourage you to look into  
+04:36 - combine but in this video I will just show you 
+what we use and explain why we use it and how it  
+04:41 - works so maybe really quick before we continue 
+I already told you that there are Publishers  
+04:47 - and subscribers in combine and these are two very 
+important Concepts a publisher sends a value and a  
+04:54 - subscriber receives a value super simple so in our 
+case you could say the Swift UI view sends a value  
+05:00 - for example a place block and then our custom area 
+view receives that value and then actually places  
+05:07 - a block in our AR View so enough Chit Chat and 
+enough Theory let's continue implementing this  
+05:14 - so in order to build this we will create a 
+variable and I will call it action stream  
+05:21 - and this will be of type pass through subject 
+that's a super simple combined publisher that  
+05:28 - just takes a value and passes it through its 
+stream and then someone else can subscribe  
+05:33 - to it and use that value so let's create that 
+pass through subject and combine all of these  
+05:39 - Publishers always have two generic types one type 
+is the actual value that you want to pass through  
+05:45 - so in our case an AR action and then the other 
+type is what kind of error could be thrown in  
+05:50 - this pipeline so we will use the AR action as our 
+primary type and for the arrow we will actually  
+05:57 - use a special type called Never this tells combine 
+that this operation can never fail and the sender  
+06:04 - or the subscriber will always receive an AR 
+action which is the enum that we just created  
+06:11 - a second ago okay so that's already all of the 
+architectural setup that we needed we now have  
+06:16 - our AR action enum with our two actions that we 
+want to implement placing a block and removing all  
+06:22 - anchors and then we also created our AR manager 
+which just holds this combined pipeline so we can  
+06:28 - pass values from our view to our AR view so let's 
+continue in our content view in our Swift UI land  
+06:36 - as I called it in one of the earlier lessons and 
+let's introduce some colors as a state variable  
+06:43 - so I'm using an xcode shortcut here but you can 
+also just type out at State private VAR private  
+06:49 - is not even needed but it's just a good practice 
+I will call this variable colors and it will be an  
+06:54 - array of type color and this will basically just 
+be a picker where the user can select which color  
+07:00 - the block should have that they want to place 
+down so let's make this an array and let's fill  
+07:06 - it with some colors so let's say green let's say 
+red and let's also say blue that should be good  
+07:13 - for now so now we have three different colors 
+that the user can choose from how can I choose  
+07:17 - from it let's look into that next right now our 
+content view body is just our AR view basically I  
+07:24 - mean we have our representable here and then we 
+also have our custom AR view but really that's  
+07:30 - just an air view okay now we want to add some 
+buttons here so I'll just create an overlay  
+07:38 - and I will give this an alignment of 
+bottom so the buttons are nicely at  
+07:44 - the bottom of the screen where the user's thumb 
+is located so they can easily tap the buttons  
+07:49 - and then right now we only have three different 
+colors so uh that's not really needed what I'm  
+07:55 - going to do next but if you want to expand on 
+this in the future I will just add a scroll view  
+08:00 - here that Scrolls on the horizontal axis in here 
+I'll also add an H stack okay and now we want one  
+08:10 - button to send the remove all anchors action 
+and we want one button to place a block of a  
+08:17 - certain color for each of these colors so let's 
+start with the remove action so let's create a  
+08:24 - button we will fill out the action in a second for 
+label I will just use a as a symbol called trash  
+08:33 - we will make the image resizable so we can 
+scale it up and down and we can and I will  
+08:38 - also make it scale to fit so it keeps its own 
+aspect ratio and doesn't get stretched out  
+08:44 - then I'll also make sure that this 
+has a fixed frame of 40 by 40 points  
+08:50 - let's also add some padding and let's also add a 
+background with a regular material so we have a  
+08:58 - nice blur effect that always looks nice in AR 
+apps okay so this is already our trash button  
+09:07 - next let's fill in the action this is also super 
+simple because we have our nice combined setup  
+09:14 - so we will now access our action stream here 
+and send a value through that or actually an  
+09:20 - action through that to do it let's grab our 
+armanager DOT shares our Singleton instance  
+09:27 - in here let's grab our action stream 
+and then we can just say send a value  
+09:33 - in this case since our AR action is an enum we 
+can just press Dot and have autocomplete for all  
+09:39 - of the different options this is the remove 
+all anchors button so we will Center remove  
+09:44 - all anchors action super simple next up let's copy 
+this button and we will need that in just a second  
+09:53 - now we will create a for each over all of the 
+colors that we have in our state variable up here  
+10:02 - color is not identifiable by default so we will 
+need to provide self as an ID now we can grab the  
+10:07 - color in and now let's paste the button that we 
+just copied and instead of our image here that's  
+10:15 - scale to fit we can just use the color that we 
+got from our forage since color can be used as  
+10:20 - a swift UI view by itself and by itself this 
+will actually just be a square or a rectangle  
+10:28 - and I also forgot to add a corner radius here 
+so let's add a 16 point Corner radius and let's  
+10:34 - also copy that down to our color and then of 
+course instead of sending the remove all anchors  
+10:40 - action we of course want to send the place 
+Block action with our color that we got here  
+10:48 - okay now our UI should already look 
+pretty good or at least okay I will  
+10:54 - actually also add some more padding to 
+the edge stack so it looks a bit nicer  
+11:00 - we will have a look at how the app actually 
+looks and works at the end of this lesson  
+11:06 - next up let's go into our custom AR view 
+where things get actually very interesting  
+11:11 - so first let me collapse all of these examples 
+that we added in the last lesson and I will keep  
+11:17 - the place Blue Block function open because 
+we will need that in a second since we are  
+11:22 - now using combine we of course also need to 
+import it so let's say import combine up here
+11:30 - and then let's create a function to subscribe 
+to our action stream so let's call it subscribe  
+11:37 - to action stream in this function we will 
+once again grab the action stream so our  
+11:44 - AR manager.shared.action stream and with 
+combined stuff you often have multiple  
+11:52 - arguments chained to each other or multiple 
+functions so I like to do each in their own row  
+12:00 - so right now we're not doing anything we're just 
+grabbing the action stream and what we want to do  
+12:05 - is subscribe to it so we can receive the values 
+that get passed through it in our case that  
+12:10 - means that our Custom Air View gets informed 
+whenever our content view sends an AR action  
+12:17 - so for that we can just use the sync call 
+here we will receive an AR action in here  
+12:23 - and then we can add code to handle these actions 
+in just a second there is one very important  
+12:30 - Concept in combine and that's and that is to keep 
+a strong reference to all of your subscriptions  
+12:37 - now I won't go into detail why this is needed 
+but just keep in mind that you always need to  
+12:43 - store your sync calls or your subscriptions in 
+a certain variable now in our case I will create  
+12:51 - a private VAR I always call it cancelables 
+because that's the type that it will hold  
+12:58 - and this will be a set of the type any cancelable 
+and in the beginning this will be empty now this  
+13:05 - is just a little cold snippet that you will need 
+every single time that you use combine in your app  
+13:11 - and then down here in our store function we 
+will just say store in our cancelable set  
+13:18 - this will make sure that the subscription 
+is kept alive even when the function is done  
+13:24 - basically okay so next up we have our action 
+here now let's write some code to actually  
+13:30 - handle these actions so let's write a 
+switch statement on the action and if  
+13:37 - you remember we should have two cases one to 
+place block and we want to remove all anchors  
+13:44 - so let's first implement the place block 
+function or replace Block action let's also  
+13:50 - grab the color in here and then let's also 
+Implement remove all anchors function okay  
+14:00 - to place blocks we will change up our place 
+Blue Block function a bit let's remove that  
+14:06 - blue part from the name because we will make 
+it more generic so we can place a block of  
+14:10 - any color really and then we will just pass 
+in the color as a parameter just like this  
+14:19 - and then if you notice we created our material 
+in the last lesson and we passed a UI color
+14:27 - but in the parameter we actually get a 
+swift UI color so we will need to create  
+14:31 - a UI color right here from our Swift UI color 
+super simple stuff okay now that place block  
+14:39 - function is already done and now we can call 
+it in our subscription up here so we can say  
+14:47 - Place block of color the color that we just got in 
+here now there's one more important concept since  
+14:55 - this is a closure that can be executed at any time 
+really we will have to make sure that we don't  
+15:00 - create a retained cycle I won't go into detail 
+about that but that's what leads to memory leaks  
+15:05 - and ultimately to your app crashing or slowing 
+down the user's phone so instead what we will  
+15:10 - do is just capture a weak instance of self and 
+then we can say self optionally dot Place block  
+15:19 - now let's also quickly implement or remove 
+all anchors functions as I said these are  
+15:24 - just examples you probably will do something very 
+different in your own apps just examples to show  
+15:29 - you what's possible so in here we will say self 
+dot scene remember we have this property because  
+15:36 - our Custom Air View inherits from AR view from 
+AR kit and then the scene has an anchors property  
+15:44 - and we will just say remove all anchors okay now 
+I'll subscribe to action stream function is done  
+15:52 - next up we need to of course call this function so 
+we'll just put that in our initializer place Blue  
+15:59 - Block is not there anymore so we'll get rid of 
+that and instead call subscribe to action stream  
+16:05 - okay so now we have implemented everything that's 
+needed to send an action from a swift UI view to  
+16:11 - our AR view let's quickly go over everything that 
+we've done so you have a better understanding  
+16:18 - first we modeled all of the actions that we 
+want to have we called this enum AR action  
+16:24 - and it got two cases uh either to place a 
+block of a certain color or to remove all  
+16:30 - anchors from the scene these are just examples 
+that we chose next we created an AR manager  
+16:36 - which is a Singleton so there's only a single 
+shared instance and nobody can create another  
+16:41 - instance and then in this air manager we have 
+our action stream which uses the pass through  
+16:48 - subject of combine to handle air actions that are 
+sent from our Swift UI view to our custom AR View  
+16:55 - next in our Swift UI view we added a few buttons 
+one to remove all anchors from the scene and one  
+17:04 - button for each of our colors that we added 
+to place a block of that color in the scene  
+17:09 - and then lastly we have our custom error View 
+and in here we created the cancelables variable  
+17:15 - and we created the subscribe to action stream 
+function which takes our armanager.shared DOT  
+17:23 - actionstream and whenever a new value is sent 
+to that stream disclosure here will run and if  
+17:30 - that action is Place block we will call Our 
+Place block function with that color and if  
+17:35 - the action is remove all anchors we will 
+take our scene its anchors and remove all  
+17:41 - of them in this lesson you'll learn to use 
+combine together with AR kit and Swift UI  
+17:47 - you learned how to let Swift UI views 
+tell a arcade what to do and at which time
+
+Cleaned transcript:
+
+learn about a combinedbased project architecture that lets you place AR entities from a swift UI view hey code crew this is flow in the last lesson you learned about the foundations of configurations anchors and entities which were needed to tell a arcade where you want to place which kind of 3D object in this lesson I will tell you about a combined based architecture that I've started using myself just to make it easy to tell arcade what to do in a swift UI based app for that we will use the combined framework as I already told you we will set up an enum for all of our different AR actions we will create an AR manager class that is super super simple so don't worry too much about it I will tell you a bit about how combined Works itself and then we will make sure that everything works together so to get started I'm gonna press command n and create a new Swift file called AR action now this file only contains a single enum which is used for all of the different actions that we want to take so for example to play the 3D object or to remove a 3D object maybe to change something about the scene whatever it may be every single thing that we want to be able to do in our AR scene will have its own case in this enum so let's get started by changing the import to Swift UI as we will need that in just a second and then I will create an enum called AR action for the sake of this video we will Implement two different actions the first one is place a block with a certain color and this is why we needed the Swift UI import because we will use this with UI color and the second case will be remove all anchors so these are the two actions that we will Implement in this video and then you can expand on this as much as you'd like next up let me move that AR action into our feature targets group in the Navigator here and then let's also create another new file that is called AR manager now you don't necessarily need this file exactly you can also store all of these variables somewhere else I just think as a separation of concerns aspect it's best to have an AR manager and you will understand what it will do in just a second so let's change this import to combine because we will actually need that now so first of all let's create a class called AR manager we only ever want there to be one AR manager in our entire app so we will use the Singleton pattern the signaling pattern means that there is only one instance of an object or of a class or a struct so we will say it's a static let shared so we can then say armanager.share to access the Singleton and this is just an instance of AR manager now this by itself is not really a Singleton because yeah a programmer could still just create another Al manager like this so to prevent that from happening we will make the init private and now only AR manager itself can call the initializer pretty nifty little pattern here okay before we get more into the AR manager let me tell you about its purpose and how combine Works itself so the purpose of AR manager is to forward all of the actions from a swift UI view to our custom AR View there is no super easy direct way to do this and that's why we are adding this AR manager here one of the there are probably tons of different options that you could take you could go for the delegate pattern as you probably know it from UI kit what I will show you here is using combined streams combined is a framework that's built into xcode and that's available to every single developer I think as of iOS 13 actually and combine allows you to send data from one part of your app to another part of your app basically you can also use it for other other things but that's the aspect that we will use and if you've ever written a view model in Swift UI and use the add published property wrapper you have even used combine already without even knowing about it because the ad published property wrapper is a socalled combined publisher there is a ton more to learn about combine about Publishers and subscribers and I encourage you to look into combine but in this video I will just show you what we use and explain why we use it and how it works so maybe really quick before we continue I already told you that there are Publishers and subscribers in combine and these are two very important Concepts a publisher sends a value and a subscriber receives a value super simple so in our case you could say the Swift UI view sends a value for example a place block and then our custom area view receives that value and then actually places a block in our AR View so enough Chit Chat and enough Theory let's continue implementing this so in order to build this we will create a variable and I will call it action stream and this will be of type pass through subject that's a super simple combined publisher that just takes a value and passes it through its stream and then someone else can subscribe to it and use that value so let's create that pass through subject and combine all of these Publishers always have two generic types one type is the actual value that you want to pass through so in our case an AR action and then the other type is what kind of error could be thrown in this pipeline so we will use the AR action as our primary type and for the arrow we will actually use a special type called Never this tells combine that this operation can never fail and the sender or the subscriber will always receive an AR action which is the enum that we just created a second ago okay so that's already all of the architectural setup that we needed we now have our AR action enum with our two actions that we want to implement placing a block and removing all anchors and then we also created our AR manager which just holds this combined pipeline so we can pass values from our view to our AR view so let's continue in our content view in our Swift UI land as I called it in one of the earlier lessons and let's introduce some colors as a state variable so I'm using an xcode shortcut here but you can also just type out at State private VAR private is not even needed but it's just a good practice I will call this variable colors and it will be an array of type color and this will basically just be a picker where the user can select which color the block should have that they want to place down so let's make this an array and let's fill it with some colors so let's say green let's say red and let's also say blue that should be good for now so now we have three different colors that the user can choose from how can I choose from it let's look into that next right now our content view body is just our AR view basically I mean we have our representable here and then we also have our custom AR view but really that's just an air view okay now we want to add some buttons here so I'll just create an overlay and I will give this an alignment of bottom so the buttons are nicely at the bottom of the screen where the user's thumb is located so they can easily tap the buttons and then right now we only have three different colors so uh that's not really needed what I'm going to do next but if you want to expand on this in the future I will just add a scroll view here that Scrolls on the horizontal axis in here I'll also add an H stack okay and now we want one button to send the remove all anchors action and we want one button to place a block of a certain color for each of these colors so let's start with the remove action so let's create a button we will fill out the action in a second for label I will just use a as a symbol called trash we will make the image resizable so we can scale it up and down and we can and I will also make it scale to fit so it keeps its own aspect ratio and doesn't get stretched out then I'll also make sure that this has a fixed frame of 40 by 40 points let's also add some padding and let's also add a background with a regular material so we have a nice blur effect that always looks nice in AR apps okay so this is already our trash button next let's fill in the action this is also super simple because we have our nice combined setup so we will now access our action stream here and send a value through that or actually an action through that to do it let's grab our armanager DOT shares our Singleton instance in here let's grab our action stream and then we can just say send a value in this case since our AR action is an enum we can just press Dot and have autocomplete for all of the different options this is the remove all anchors button so we will Center remove all anchors action super simple next up let's copy this button and we will need that in just a second now we will create a for each over all of the colors that we have in our state variable up here color is not identifiable by default so we will need to provide self as an ID now we can grab the color in and now let's paste the button that we just copied and instead of our image here that's scale to fit we can just use the color that we got from our forage since color can be used as a swift UI view by itself and by itself this will actually just be a square or a rectangle and I also forgot to add a corner radius here so let's add a 16 point Corner radius and let's also copy that down to our color and then of course instead of sending the remove all anchors action we of course want to send the place Block action with our color that we got here okay now our UI should already look pretty good or at least okay I will actually also add some more padding to the edge stack so it looks a bit nicer we will have a look at how the app actually looks and works at the end of this lesson next up let's go into our custom AR view where things get actually very interesting so first let me collapse all of these examples that we added in the last lesson and I will keep the place Blue Block function open because we will need that in a second since we are now using combine we of course also need to import it so let's say import combine up here and then let's create a function to subscribe to our action stream so let's call it subscribe to action stream in this function we will once again grab the action stream so our AR manager.shared.action stream and with combined stuff you often have multiple arguments chained to each other or multiple functions so I like to do each in their own row so right now we're not doing anything we're just grabbing the action stream and what we want to do is subscribe to it so we can receive the values that get passed through it in our case that means that our Custom Air View gets informed whenever our content view sends an AR action so for that we can just use the sync call here we will receive an AR action in here and then we can add code to handle these actions in just a second there is one very important Concept in combine and that's and that is to keep a strong reference to all of your subscriptions now I won't go into detail why this is needed but just keep in mind that you always need to store your sync calls or your subscriptions in a certain variable now in our case I will create a private VAR I always call it cancelables because that's the type that it will hold and this will be a set of the type any cancelable and in the beginning this will be empty now this is just a little cold snippet that you will need every single time that you use combine in your app and then down here in our store function we will just say store in our cancelable set this will make sure that the subscription is kept alive even when the function is done basically okay so next up we have our action here now let's write some code to actually handle these actions so let's write a switch statement on the action and if you remember we should have two cases one to place block and we want to remove all anchors so let's first implement the place block function or replace Block action let's also grab the color in here and then let's also Implement remove all anchors function okay to place blocks we will change up our place Blue Block function a bit let's remove that blue part from the name because we will make it more generic so we can place a block of any color really and then we will just pass in the color as a parameter just like this and then if you notice we created our material in the last lesson and we passed a UI color but in the parameter we actually get a swift UI color so we will need to create a UI color right here from our Swift UI color super simple stuff okay now that place block function is already done and now we can call it in our subscription up here so we can say Place block of color the color that we just got in here now there's one more important concept since this is a closure that can be executed at any time really we will have to make sure that we don't create a retained cycle I won't go into detail about that but that's what leads to memory leaks and ultimately to your app crashing or slowing down the user's phone so instead what we will do is just capture a weak instance of self and then we can say self optionally dot Place block now let's also quickly implement or remove all anchors functions as I said these are just examples you probably will do something very different in your own apps just examples to show you what's possible so in here we will say self dot scene remember we have this property because our Custom Air View inherits from AR view from AR kit and then the scene has an anchors property and we will just say remove all anchors okay now I'll subscribe to action stream function is done next up we need to of course call this function so we'll just put that in our initializer place Blue Block is not there anymore so we'll get rid of that and instead call subscribe to action stream okay so now we have implemented everything that's needed to send an action from a swift UI view to our AR view let's quickly go over everything that we've done so you have a better understanding first we modeled all of the actions that we want to have we called this enum AR action and it got two cases uh either to place a block of a certain color or to remove all anchors from the scene these are just examples that we chose next we created an AR manager which is a Singleton so there's only a single shared instance and nobody can create another instance and then in this air manager we have our action stream which uses the pass through subject of combine to handle air actions that are sent from our Swift UI view to our custom AR View next in our Swift UI view we added a few buttons one to remove all anchors from the scene and one button for each of our colors that we added to place a block of that color in the scene and then lastly we have our custom error View and in here we created the cancelables variable and we created the subscribe to action stream function which takes our armanager.shared DOT actionstream and whenever a new value is sent to that stream disclosure here will run and if that action is Place block we will call Our Place block function with that color and if the action is remove all anchors we will take our scene its anchors and remove all of them in this lesson you'll learn to use combine together with AR kit and Swift UI you learned how to let Swift UI views tell a arcade what to do and at which time

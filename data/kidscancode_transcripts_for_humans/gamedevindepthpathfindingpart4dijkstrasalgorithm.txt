@@ -1,0 +1,410 @@
+With timestamps:
+
+00:00 - welcome back to another of our in-depth
+00:02 - videos on pathfinding in this video
+00:06 - we're gonna be talking about something
+00:08 - called Dijkstra's algorithm which is yet
+00:12 - another optimization and improvement on
+00:14 - the path finding algorithms we've looked
+00:16 - at before in our last video we talked
+00:21 - about how doing diagonal movement on the
+00:24 - grid resulted in some weird paths for
+00:27 - our path finding algorithm right our
+00:29 - algorithm is supposed to be finding the
+00:30 - shortest path which would be a straight
+00:32 - line between the X and the home but it
+00:36 - came up with this weird diagonal path
+00:37 - and it turns out that our algorithm is
+00:41 - doing what it thinks is right and it is
+00:43 - finding the fastest path or the shortest
+00:45 - path the amount shortest amount of
+00:47 - movement and that's because diagonal
+00:49 - movement isn't the same as orthogonal
+00:52 - movement up and down left and right and
+00:54 - the reason for that has to do with a
+00:56 - little bit of trigonometry so to review
+00:59 - that real quick when you move on a grid
+01:03 - horizontally or vertically if this is
+01:06 - this is a distance of one in a diagonal
+01:10 - movement by a Pythagorean theorem is a
+01:13 - movement of distance of a square root of
+01:15 - 2 which is around 1.4 so moving from
+01:19 - here to here if you move if you take
+01:23 - this step in the same amount of time as
+01:24 - you take this step then you're moving
+01:26 - you know around 40% faster when you go
+01:29 - diagonal so it's quicker to get
+01:31 - somewhere moving diagonally than it is
+01:33 - moving horizontally and vertically and
+01:35 - we need a way to compensate for that and
+01:39 - make the cost of movement when you move
+01:43 - diagonally higher than the cost of
+01:46 - moving horizontally and vertically and
+01:48 - so we need to introduce the concept of a
+01:51 - movement cost to our grid so what that's
+01:55 - going to allow us to do is not only say
+01:56 - that moving this much takes is a cost of
+02:01 - 1 but moving this much is a cost of 1.4
+02:04 - but we can also make areas of our map
+02:07 - that cost more to move through like
+02:10 - imagine this was a map that
+02:12 - had a forested area or or a swamp right
+02:17 - moving through the swamp will cost you
+02:20 - more than moving through the open grassy
+02:22 - field and that will allow us to
+02:26 - calculate paths that are not the
+02:29 - shortest geometric distance but the
+02:32 - shortest distance based on how much it
+02:35 - costs to move right if you're if your
+02:38 - character can only move ten squares in a
+02:40 - turn then you know ten squares running
+02:43 - along grass is gonna give you a lot
+02:45 - farther than the swamp where each each
+02:48 - square costs you five to move so you can
+02:50 - only move two squares in a turn all
+02:53 - right you can see what that means as we
+02:54 - start implementing it so the first thing
+02:57 - we're going to need is we're going to
+03:00 - need some more information in our grid
+03:04 - so our grid is not just going to be the
+03:09 - the map the squares where the walls are
+03:11 - but we also need to introduce the
+03:13 - concept of costs so what we're going to
+03:15 - do is we're going to take the square
+03:17 - grid class and we're just going to
+03:21 - extend it to the concept of a weighted
+03:24 - grid so we'll call this weighted grid
+03:30 - grid and this is a this is just a square
+03:34 - grid class and we're gonna extend it
+03:40 - okay and so what this is gonna do is
+03:43 - when we when we initialize it and give
+03:46 - it a width and height just like we do
+03:48 - right we will just call the super class
+03:53 - which is the super class is whatever
+03:56 - class this is a child upright square
+04:00 - grid so we'll call the super init with
+04:05 - the width and the height and all that's
+04:08 - gonna do is go ahead and run this code
+04:12 - so it'll go ahead and build the
+04:13 - connections and the walls and the set
+04:15 - the width and height and we don't have
+04:16 - to repeat that code in our weighted grid
+04:20 - okay and then we're just going to add to
+04:22 - this
+04:25 - that there is going to be a dictionary
+04:27 - called waits and waits is just going to
+04:29 - be a dictionary that's going to have you
+04:32 - know inside it it's going to have keys
+04:34 - that are like the grid location and then
+04:39 - the value will be some cost right the
+04:43 - weight the cost it costs to move into
+04:47 - that square right so each square will
+04:49 - have a will have one of those so we'll
+04:51 - have a set of weights and then we need
+04:53 - to be able to return to be able to query
+04:57 - that and ask what's the cost to move
+04:59 - into this square so what we'll do is
+05:05 - alright when you ask for the cost you
+05:07 - say what square you're standing on and
+05:09 - what square you want to move to okay and
+05:12 - we have two ways of calculating cost
+05:15 - right we want to be able to look at the
+05:18 - tile and see is it a swamp tile or a
+05:21 - forest tile and cost more to move into
+05:22 - right which is gonna be contained in
+05:24 - this dictionary that data but we also
+05:27 - want to account for the orthogonal
+05:31 - versus diagonal right so if we're moving
+05:34 - horizontal we're gonna get one cost for
+05:36 - a moving diagonal gonna get another cost
+05:38 - and that's gonna be added to whatever
+05:40 - the terrain cost of the tile will be so
+05:45 - first we just need to see if we're
+05:46 - moving for moving diagonally okay so if
+05:55 - the one we're moving to - from
+05:58 - [Music]
+06:02 - so it's we're just so if the distance is
+06:05 - one that's a function my parentheses if
+06:10 - if that's a if it's a distance of one
+06:12 - then we know we're moving horizontally
+06:14 - or vertically right so what we're gonna
+06:18 - give back is whatever in the self dot
+06:23 - weight we're gonna check the two node
+06:29 - right and return zero if that isn't in
+06:33 - the weights list right so if we're
+06:34 - moving into a square that isn't doesn't
+06:36 - have a way to sign to it the default
+06:38 - weight will just be zero and then we're
+06:40 - gonna add the cost for moving
+06:45 - horizontally or vertically right
+06:47 - otherwise what we're going to return
+06:51 - duplicate that and move it down
+06:53 - otherwise what we're gonna return is the
+06:56 - cost plus the cost of moving diagonally
+06:59 - right so if we move straight we had one
+07:01 - if we move diagonally we had one point
+07:03 - four but then we're getting you know
+07:05 - fractions and things and so it's very
+07:07 - common practice when working with these
+07:09 - kind of algorithms to just make these
+07:10 - whole numbers and call the orthogonal
+07:14 - cost ten and the diagnosis still the
+07:19 - same but then we're dealing with nice
+07:20 - integers for everything okay so now we
+07:26 - know what the cost is to move and we are
+07:31 - done with our we've we're done with what
+07:33 - we needed to add to our grid to account
+07:36 - for movement costs so now when we start
+07:41 - running our search we'll be able to when
+07:43 - we look at the neighbors of any of any
+07:45 - square we'll be able to get the cost of
+07:48 - that movement but then we want to
+07:51 - prioritize by that cost right we want to
+07:55 - try the lower-cost movements first right
+08:00 - we want to give them priority that means
+08:02 - that when we're doing our search and
+08:04 - we're adding nodes to the frontier we
+08:08 - want them to be sorted by that priority
+08:11 - so that we take them off in that same
+08:14 - already order and so to do that we need
+08:19 - to use something called a heap queue
+08:22 - okay and we can import that it's another
+08:28 - useful thing in the Python standard
+08:31 - library and all a heap queue is is it's
+08:34 - it's like a list except that each item
+08:37 - in the list has a priority assigned to
+08:39 - it and it automatically orders them I
+08:42 - should say it's not like a list it's
+08:44 - like a queue it's like the queue we
+08:46 - worked with before where when you push
+08:49 - items onto one end and you pop them off
+08:50 - the other end but what the heap queue
+08:53 - does is each item is assigned a priority
+08:56 - and it automatically in an optimized way
+09:00 - keeps them ordered by that priority so
+09:02 - that whichever one you pull off the end
+09:04 - is gonna be the one with the highest
+09:06 - priority and whenever you push one on it
+09:09 - gets put wherever it needs to be in that
+09:11 - priority list so so we can use that but
+09:15 - the the heap do can do lots of other
+09:17 - things that we don't need to deal with
+09:18 - so what we're going to do is we're gonna
+09:21 - make a we're gonna make a class to make
+09:26 - it easy to work with the part the heap
+09:28 - queue okay so we'll call this a priority
+09:31 - a priority queue okay and okay all this
+09:41 - party queue is gonna have in it is a
+09:42 - list of nodes okay and so we have two
+09:49 - operations that we're gonna want to be
+09:51 - able to do to this cute we're gonna want
+09:52 - to be able to put things on it and we're
+09:54 - gonna want to be able to get the highest
+09:56 - priority item off of it so we'll define
+10:00 - both of those operations
+10:02 - we'll call it put when we want to put
+10:04 - something on and we just give it some
+10:07 - node and some costs right that's gonna
+10:11 - be our priority and the command to have
+10:17 - the key heap queue add it is heap push
+10:20 - and you just tell it what heap we're
+10:23 - using well that's the nodes list and
+10:25 - what are we pushing we're pushing the
+10:28 - cost and the node okay so each time you
+10:33 - add something to the heap queue you give
+10:37 - it a tuple of the cost the priority
+10:41 - which is the priority in our case and
+10:43 - the node that you want to add and again
+10:46 - every time you push one of these on it's
+10:48 - going to take this cost and order them
+10:51 - by that in ascending order so that the
+10:54 - highest priority is the lowest cost
+10:57 - all right so cost of 0 is going to be
+11:01 - preferred over a cost of 10 and then we
+11:05 - need to be able to get whatever the next
+11:08 - one is in the list and that's just heap
+11:12 - q heap up and if you what keep is self
+11:20 - dot nodes and that's just gonna give you
+11:22 - whichever the highest priority one is
+11:24 - next one on the queue it's gonna pull it
+11:26 - off and it's gonna give us back this so
+11:31 - we want to actually get I only care
+11:34 - about what note is the next and the
+11:36 - priority I don't care about the cost I
+11:37 - just used that to sort them and we're
+11:40 - gonna return that so now we are able to
+11:44 - get it off and then I'm gonna add one
+11:45 - more method on here called empty which
+11:51 - just lets us check because it's a true
+11:54 - or false whether the queue is empty or
+11:57 - not that way we know we're when we're
+11:59 - done with our search right we only go
+12:00 - until the frontier is empty and the
+12:02 - frontier is empty there's no more
+12:03 - searching to do so we're just gonna
+12:05 - return however long that is and compare
+12:10 - it with 0 if it's equal to 0 then we're
+12:12 - gonna return true if it's not then we're
+12:14 - gonna return false and that's our
+12:16 - priority queue
+12:17 - we're ready to start talking about our
+12:19 - algorithm and when you do a search
+12:22 - through a grid using weights the go-to
+12:26 - algorithm for that is called Dijkstra's
+12:29 - algorithm named after the computer
+12:33 - scientist who
+12:34 - first formulated it you know and you can
+12:38 - look here on Wikipedia there's a great
+12:40 - article about it with all sorts of
+12:42 - detail and a little overview of in
+12:46 - pseudocode of what the what the
+12:48 - algorithm is and you know that's what
+12:50 - we're gonna that's what we're gonna
+12:51 - implement it's gonna look very similar
+12:53 - to what we've done before with just the
+12:55 - addition of using those costs to
+12:58 - prioritize what order we look at
+13:01 - everything okay so now we can start
+13:04 - implementing our algorithm it's going to
+13:06 - go right here in this Dykstra search
+13:09 - function I've created and so what I'm
+13:12 - gonna do to spare you watching me type
+13:14 - it all as I'm going to paste it in here
+13:15 - and just go over what's different from
+13:17 - what we've done before okay so again we
+13:20 - have a frontier this time it's going to
+13:22 - be the priority queue object and we're
+13:27 - gonna put the start node on it with a
+13:29 - cost of zero because obviously it costs
+13:31 - zero to move to the square you're
+13:33 - already on and then we're gonna keep
+13:36 - tracking the path just like we've done
+13:38 - before that's gonna be that dictionary
+13:41 - full of unit vectors pointing in the
+13:44 - direction that you're supposed to move
+13:46 - in so we can build our a little list of
+13:47 - our little image of arrows to show the
+13:51 - path on the on the screen and then the
+13:54 - cost is going to keep track of what the
+13:56 - cost is to move to each square as we
+13:59 - look at them okay and so again we're
+14:02 - gonna just loop through as long as the
+14:04 - frontier isn't empty and just keep
+14:05 - getting the next one on the list to look
+14:07 - at and this is because it's a priority
+14:10 - queue the next one we get is always
+14:12 - going to be the one with the lowest cost
+14:14 - that's on the frontier so we'll always
+14:17 - be looking at the lowest cost first and
+14:19 - if we find our goal we're gonna stop
+14:23 - right if you want to like we did in the
+14:26 - first video make explore the whole map
+14:29 - and get all the paths from everywhere
+14:31 - you could leave this part out but we're
+14:33 - gonna do the early exit thing and and
+14:35 - stop if we find our goal and then we
+14:39 - just start looking through the neighbors
+14:41 - right we get the list of neighbors and
+14:44 - then we're going to calculate the cost
+14:46 - the cost is whatever the cost
+14:48 - is so far right that we've got so far
+14:51 - plus whatever the cost is to move to the
+14:54 - next square right using our cost
+14:56 - function that we built into our weighted
+14:58 - grid right that's gonna return the the
+15:00 - ten if you're moving horizontally or
+15:03 - vertically and the 14 if you're moving
+15:05 - diagonally right if it's not in the cost
+15:09 - this was not in that cost dictionary
+15:11 - then we haven't looked at it yet
+15:13 - but we're also going to check and see if
+15:16 - it's if it is already in the dictionary
+15:17 - but we found a lower cost right
+15:21 - depending on what direction you come
+15:23 - from it might cost less to move into the
+15:26 - square then it did the first time we
+15:28 - looked at it from a different neighbor
+15:30 - alright so we want to make sure we're
+15:31 - using the lowest one so if we find that
+15:34 - we haven't looked at it before or we
+15:36 - found a lower cost then we're going to
+15:38 - update those values and put it and put
+15:42 - that neighbor into the frontier with
+15:44 - that with that priority and then the
+15:51 - last thing we do is add that direction
+15:54 - vector in there okay and that's all we
+15:56 - need to do so very similar to the
+16:00 - breadth-first search just the addition
+16:03 - of these costs so now I just made sure
+16:05 - that my graph is a weighted grid and I'm
+16:08 - calling that function on it and when we
+16:10 - run this you'll see we are going to get
+16:12 - much nicer paths we will use diagonal
+16:16 - wind diagonal makes sense right and
+16:19 - we'll go through bolts but we'll also
+16:22 - get very nice smooth paths through our
+16:25 - map right that look very nice and are
+16:31 - going to be the shortest paths
+16:36 - okay so our diagonal movement is working
+16:39 - really well let's look at what happens
+16:42 - if our weighted grid has some terrain in
+16:45 - it right we've given some values to some
+16:47 - tiles some weights to move into them so
+16:50 - that they cost more to move through and
+16:52 - so our costs are gonna vary not just be
+16:56 - the diagonal and horizontal so what
+16:59 - we're gonna do is I'm gonna go down here
+17:01 - and I'm going to remove the walls for
+17:03 - the moment that's I'm just gonna comment
+17:05 - this out so we don't have the walls and
+17:07 - I'm going to add in a list of tiles that
+17:13 - I'm calling terrain and I'm going to
+17:15 - stick those all in the weights
+17:18 - dictionary with a value of 15 so it's
+17:22 - gonna any of these tiles are gonna cost
+17:24 - instead of zero to move into they're
+17:26 - gonna cost 15 right and so zero plus the
+17:31 - horizontal or diagonal movement cost
+17:33 - they're going to cost 15 Plus that okay
+17:36 - and I've also updated the draw
+17:39 - I've also updated the draw function so
+17:42 - that will see them drawn in a Foresti
+17:46 - color and so what that's going to do is
+17:49 - that's going to look like this okay so
+17:52 - if I put my start here you can see the
+17:57 - shortest path is now avoiding going
+18:00 - through those forest tiles because they
+18:03 - cost more right if you're inside it well
+18:06 - we got to go through them so it's going
+18:08 - to find a place where it can go through
+18:10 - the least number of those forest tiles
+18:15 - but if you're on the upset side of the
+18:17 - forest it's quicker to go around than it
+18:20 - is to go through because of the movement
+18:23 - cost right and depending on what you
+18:25 - make that movement cost you can make it
+18:27 - even more painful to walk through and
+18:31 - more something to avoid okay and that's
+18:34 - it that is our Dijkstra search all
+18:37 - working the way we want it and now the
+18:43 - next question becomes how do I avoid
+18:46 - having to search the whole
+18:49 - Matt right because if it's a big map
+18:51 - it's a lot of tiles to look at and I'm
+18:54 - exploring all this stuff over here when
+18:57 - I really don't need to right and so the
+19:02 - next step is going to be to give a
+19:05 - little bit of intelligence to this
+19:06 - search by prioritizing not just the
+19:10 - movement caused by prioritizing the
+19:12 - direction thanks for watching I hope you
+19:15 - enjoyed it and learned a little bit more
+19:16 - about path finding and I'll see you in
+19:18 - the next video
+19:19 - when we start talking about optimizing
+19:22 - our search
+19:31 - you
+
+Cleaned transcript:
+
+welcome back to another of our indepth videos on pathfinding in this video we're gonna be talking about something called Dijkstra's algorithm which is yet another optimization and improvement on the path finding algorithms we've looked at before in our last video we talked about how doing diagonal movement on the grid resulted in some weird paths for our path finding algorithm right our algorithm is supposed to be finding the shortest path which would be a straight line between the X and the home but it came up with this weird diagonal path and it turns out that our algorithm is doing what it thinks is right and it is finding the fastest path or the shortest path the amount shortest amount of movement and that's because diagonal movement isn't the same as orthogonal movement up and down left and right and the reason for that has to do with a little bit of trigonometry so to review that real quick when you move on a grid horizontally or vertically if this is this is a distance of one in a diagonal movement by a Pythagorean theorem is a movement of distance of a square root of 2 which is around 1.4 so moving from here to here if you move if you take this step in the same amount of time as you take this step then you're moving you know around 40% faster when you go diagonal so it's quicker to get somewhere moving diagonally than it is moving horizontally and vertically and we need a way to compensate for that and make the cost of movement when you move diagonally higher than the cost of moving horizontally and vertically and so we need to introduce the concept of a movement cost to our grid so what that's going to allow us to do is not only say that moving this much takes is a cost of 1 but moving this much is a cost of 1.4 but we can also make areas of our map that cost more to move through like imagine this was a map that had a forested area or or a swamp right moving through the swamp will cost you more than moving through the open grassy field and that will allow us to calculate paths that are not the shortest geometric distance but the shortest distance based on how much it costs to move right if you're if your character can only move ten squares in a turn then you know ten squares running along grass is gonna give you a lot farther than the swamp where each each square costs you five to move so you can only move two squares in a turn all right you can see what that means as we start implementing it so the first thing we're going to need is we're going to need some more information in our grid so our grid is not just going to be the the map the squares where the walls are but we also need to introduce the concept of costs so what we're going to do is we're going to take the square grid class and we're just going to extend it to the concept of a weighted grid so we'll call this weighted grid grid and this is a this is just a square grid class and we're gonna extend it okay and so what this is gonna do is when we when we initialize it and give it a width and height just like we do right we will just call the super class which is the super class is whatever class this is a child upright square grid so we'll call the super init with the width and the height and all that's gonna do is go ahead and run this code so it'll go ahead and build the connections and the walls and the set the width and height and we don't have to repeat that code in our weighted grid okay and then we're just going to add to this that there is going to be a dictionary called waits and waits is just going to be a dictionary that's going to have you know inside it it's going to have keys that are like the grid location and then the value will be some cost right the weight the cost it costs to move into that square right so each square will have a will have one of those so we'll have a set of weights and then we need to be able to return to be able to query that and ask what's the cost to move into this square so what we'll do is alright when you ask for the cost you say what square you're standing on and what square you want to move to okay and we have two ways of calculating cost right we want to be able to look at the tile and see is it a swamp tile or a forest tile and cost more to move into right which is gonna be contained in this dictionary that data but we also want to account for the orthogonal versus diagonal right so if we're moving horizontal we're gonna get one cost for a moving diagonal gonna get another cost and that's gonna be added to whatever the terrain cost of the tile will be so first we just need to see if we're moving for moving diagonally okay so if the one we're moving to from so it's we're just so if the distance is one that's a function my parentheses if if that's a if it's a distance of one then we know we're moving horizontally or vertically right so what we're gonna give back is whatever in the self dot weight we're gonna check the two node right and return zero if that isn't in the weights list right so if we're moving into a square that isn't doesn't have a way to sign to it the default weight will just be zero and then we're gonna add the cost for moving horizontally or vertically right otherwise what we're going to return duplicate that and move it down otherwise what we're gonna return is the cost plus the cost of moving diagonally right so if we move straight we had one if we move diagonally we had one point four but then we're getting you know fractions and things and so it's very common practice when working with these kind of algorithms to just make these whole numbers and call the orthogonal cost ten and the diagnosis still the same but then we're dealing with nice integers for everything okay so now we know what the cost is to move and we are done with our we've we're done with what we needed to add to our grid to account for movement costs so now when we start running our search we'll be able to when we look at the neighbors of any of any square we'll be able to get the cost of that movement but then we want to prioritize by that cost right we want to try the lowercost movements first right we want to give them priority that means that when we're doing our search and we're adding nodes to the frontier we want them to be sorted by that priority so that we take them off in that same already order and so to do that we need to use something called a heap queue okay and we can import that it's another useful thing in the Python standard library and all a heap queue is is it's it's like a list except that each item in the list has a priority assigned to it and it automatically orders them I should say it's not like a list it's like a queue it's like the queue we worked with before where when you push items onto one end and you pop them off the other end but what the heap queue does is each item is assigned a priority and it automatically in an optimized way keeps them ordered by that priority so that whichever one you pull off the end is gonna be the one with the highest priority and whenever you push one on it gets put wherever it needs to be in that priority list so so we can use that but the the heap do can do lots of other things that we don't need to deal with so what we're going to do is we're gonna make a we're gonna make a class to make it easy to work with the part the heap queue okay so we'll call this a priority a priority queue okay and okay all this party queue is gonna have in it is a list of nodes okay and so we have two operations that we're gonna want to be able to do to this cute we're gonna want to be able to put things on it and we're gonna want to be able to get the highest priority item off of it so we'll define both of those operations we'll call it put when we want to put something on and we just give it some node and some costs right that's gonna be our priority and the command to have the key heap queue add it is heap push and you just tell it what heap we're using well that's the nodes list and what are we pushing we're pushing the cost and the node okay so each time you add something to the heap queue you give it a tuple of the cost the priority which is the priority in our case and the node that you want to add and again every time you push one of these on it's going to take this cost and order them by that in ascending order so that the highest priority is the lowest cost all right so cost of 0 is going to be preferred over a cost of 10 and then we need to be able to get whatever the next one is in the list and that's just heap q heap up and if you what keep is self dot nodes and that's just gonna give you whichever the highest priority one is next one on the queue it's gonna pull it off and it's gonna give us back this so we want to actually get I only care about what note is the next and the priority I don't care about the cost I just used that to sort them and we're gonna return that so now we are able to get it off and then I'm gonna add one more method on here called empty which just lets us check because it's a true or false whether the queue is empty or not that way we know we're when we're done with our search right we only go until the frontier is empty and the frontier is empty there's no more searching to do so we're just gonna return however long that is and compare it with 0 if it's equal to 0 then we're gonna return true if it's not then we're gonna return false and that's our priority queue we're ready to start talking about our algorithm and when you do a search through a grid using weights the goto algorithm for that is called Dijkstra's algorithm named after the computer scientist who first formulated it you know and you can look here on Wikipedia there's a great article about it with all sorts of detail and a little overview of in pseudocode of what the what the algorithm is and you know that's what we're gonna that's what we're gonna implement it's gonna look very similar to what we've done before with just the addition of using those costs to prioritize what order we look at everything okay so now we can start implementing our algorithm it's going to go right here in this Dykstra search function I've created and so what I'm gonna do to spare you watching me type it all as I'm going to paste it in here and just go over what's different from what we've done before okay so again we have a frontier this time it's going to be the priority queue object and we're gonna put the start node on it with a cost of zero because obviously it costs zero to move to the square you're already on and then we're gonna keep tracking the path just like we've done before that's gonna be that dictionary full of unit vectors pointing in the direction that you're supposed to move in so we can build our a little list of our little image of arrows to show the path on the on the screen and then the cost is going to keep track of what the cost is to move to each square as we look at them okay and so again we're gonna just loop through as long as the frontier isn't empty and just keep getting the next one on the list to look at and this is because it's a priority queue the next one we get is always going to be the one with the lowest cost that's on the frontier so we'll always be looking at the lowest cost first and if we find our goal we're gonna stop right if you want to like we did in the first video make explore the whole map and get all the paths from everywhere you could leave this part out but we're gonna do the early exit thing and and stop if we find our goal and then we just start looking through the neighbors right we get the list of neighbors and then we're going to calculate the cost the cost is whatever the cost is so far right that we've got so far plus whatever the cost is to move to the next square right using our cost function that we built into our weighted grid right that's gonna return the the ten if you're moving horizontally or vertically and the 14 if you're moving diagonally right if it's not in the cost this was not in that cost dictionary then we haven't looked at it yet but we're also going to check and see if it's if it is already in the dictionary but we found a lower cost right depending on what direction you come from it might cost less to move into the square then it did the first time we looked at it from a different neighbor alright so we want to make sure we're using the lowest one so if we find that we haven't looked at it before or we found a lower cost then we're going to update those values and put it and put that neighbor into the frontier with that with that priority and then the last thing we do is add that direction vector in there okay and that's all we need to do so very similar to the breadthfirst search just the addition of these costs so now I just made sure that my graph is a weighted grid and I'm calling that function on it and when we run this you'll see we are going to get much nicer paths we will use diagonal wind diagonal makes sense right and we'll go through bolts but we'll also get very nice smooth paths through our map right that look very nice and are going to be the shortest paths okay so our diagonal movement is working really well let's look at what happens if our weighted grid has some terrain in it right we've given some values to some tiles some weights to move into them so that they cost more to move through and so our costs are gonna vary not just be the diagonal and horizontal so what we're gonna do is I'm gonna go down here and I'm going to remove the walls for the moment that's I'm just gonna comment this out so we don't have the walls and I'm going to add in a list of tiles that I'm calling terrain and I'm going to stick those all in the weights dictionary with a value of 15 so it's gonna any of these tiles are gonna cost instead of zero to move into they're gonna cost 15 right and so zero plus the horizontal or diagonal movement cost they're going to cost 15 Plus that okay and I've also updated the draw I've also updated the draw function so that will see them drawn in a Foresti color and so what that's going to do is that's going to look like this okay so if I put my start here you can see the shortest path is now avoiding going through those forest tiles because they cost more right if you're inside it well we got to go through them so it's going to find a place where it can go through the least number of those forest tiles but if you're on the upset side of the forest it's quicker to go around than it is to go through because of the movement cost right and depending on what you make that movement cost you can make it even more painful to walk through and more something to avoid okay and that's it that is our Dijkstra search all working the way we want it and now the next question becomes how do I avoid having to search the whole Matt right because if it's a big map it's a lot of tiles to look at and I'm exploring all this stuff over here when I really don't need to right and so the next step is going to be to give a little bit of intelligence to this search by prioritizing not just the movement caused by prioritizing the direction thanks for watching I hope you enjoyed it and learned a little bit more about path finding and I'll see you in the next video when we start talking about optimizing our search you

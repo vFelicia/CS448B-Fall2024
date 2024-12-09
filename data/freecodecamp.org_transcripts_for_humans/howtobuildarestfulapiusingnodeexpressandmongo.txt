@@ -1,0 +1,2631 @@
+With timestamps:
+
+00:01 - hello and welcome to this workshop on
+00:04 - building a rest api
+00:06 - with node express
+00:08 - and
+00:10 - well let's begin with the agenda for
+00:12 - today
+00:14 - we're going to start with touching upon
+00:16 - some of the concepts related to this
+00:19 - topic
+00:20 - followed by
+00:21 - the installation of the environment
+00:25 - and
+00:26 - we will start with setting up the
+00:28 - application before we dive into the crux
+00:31 - of this
+00:32 - workshop which is to set up a
+00:34 - express web server
+00:36 - and then we're going to connect it to
+00:39 - mongodb via mongoose
+00:42 - and i have a bit of a stretch here if we
+00:44 - have time i want to show you how to
+00:46 - deploy this application
+00:49 - using a service called now.sh
+00:54 - so let's start with concepts around http
+00:59 - rest
+01:00 - and apis
+01:03 - so
+01:04 - what is http
+01:07 - it stands for hypertext transfer
+01:10 - protocol
+01:12 - now hypertext is basically text that can
+01:15 - link to other text
+01:18 - hence the word hypertext
+01:20 - transfer protocol because that's been
+01:21 - transferred
+01:23 - it's an application
+01:25 - layer protocol
+01:27 - it's built on top of the tcp ip protocol
+01:32 - what that means is it's using tcp ip for
+01:35 - communicating
+01:36 - but then there's application layer logic
+01:39 - on top
+01:41 - it pretty much defines
+01:43 - all the rules for transferring resources
+01:46 - between a client and a server
+01:49 - now
+01:50 - every http request
+01:53 - is executed independently
+01:56 - so on the server side it does not have
+01:58 - knowledge of any of the requests that
+02:01 - came before it
+02:04 - and that's what makes http stateless
+02:09 - but
+02:10 - here's an interesting thing
+02:12 - it's built on top of tcp ip
+02:15 - which is not stateless
+02:18 - so how does that work
+02:20 - basically
+02:22 - when you send an http request
+02:25 - it's issuing a connection via tcp ip
+02:29 - to the other
+02:31 - side it could be a server or the client
+02:33 - and
+02:34 - the tcp connection stays connected
+02:38 - http will send what it needs to and then
+02:40 - it's going to disconnect hence it's
+02:42 - known as stateless
+02:46 - one of the cool things about http
+02:48 - is that you can transfer anything in the
+02:52 - body
+02:52 - as long as the http headers
+02:55 - define
+02:56 - what is being transferred
+02:58 - so for instance if you have
+03:00 - an image
+03:01 - versus html file versus a javascript
+03:04 - file
+03:06 - embedded in your body
+03:08 - then you need to specify the content
+03:10 - type in the header and that's how the
+03:12 - receiving end knows what to do with it
+03:17 - now
+03:19 - let's talk about rest
+03:20 - it stands for
+03:22 - representational state transfer
+03:25 - it's actually an architectural pattern
+03:28 - with design guidelines
+03:31 - http
+03:33 - is usually the underlying protocol when
+03:35 - you're implementing rest
+03:37 - but
+03:38 - rest can be implemented on other
+03:40 - protocols
+03:42 - it hasn't been used as much though
+03:46 - what
+03:48 - http
+03:49 - provides us
+03:50 - is basically a set of methods that need
+03:53 - to be used explicitly by the rest
+03:57 - pattern
+03:59 - every restful resource
+04:01 - has a unique id
+04:03 - which makes it
+04:05 - interesting because you can reference
+04:07 - different things
+04:08 - over the internet via specific url
+04:15 - now
+04:16 - client state is not persisted between
+04:19 - requests
+04:20 - so
+04:23 - that's what rest
+04:25 - basically states that we should be doing
+04:28 - however that state can be passed along
+04:31 - to the server
+04:32 - via some attributes that help the server
+04:36 - decide how to process that request
+04:40 - rest also states that
+04:43 - the application should define a caching
+04:45 - policy for responses
+04:48 - what that means is
+04:50 - it allows the client to
+04:52 - make a decision on the received content
+04:56 - and they can decide to either keep it in
+04:58 - their cache and serve it from there for
+05:00 - subsequent requests
+05:02 - so that it improves the application
+05:04 - performance
+05:07 - it also dictates that there should be
+05:09 - separation of concerns between the
+05:11 - clients and servers
+05:12 - what that means is
+05:14 - the client does not care about
+05:17 - what is
+05:18 - the memory usage on the server
+05:20 - or what the setup is of the hardware and
+05:23 - things like that and vice versa
+05:26 - that's also a layered system
+05:28 - so the client doesn't really know if
+05:30 - it's talking directly to the host server
+05:32 - or if there are other
+05:34 - intermediate servers
+05:36 - such as proxy servers or edge cache
+05:38 - servers and things like that
+05:43 - now
+05:44 - let's talk about what an api is
+05:47 - it stands for an application programming
+05:50 - interface
+05:51 - basically you have functions that are
+05:54 - defined on the server side
+05:56 - and the api
+05:57 - tells you what is supported
+05:59 - from the server
+06:01 - and where the request should be made so
+06:03 - essentially it's going to tell you what
+06:05 - the
+06:06 - the pattern of the urls are that you're
+06:08 - going to
+06:10 - call in use to call into the server
+06:13 - pretty much it's telling you what the
+06:15 - format of the request and response is
+06:21 - now there's no standard way of writing
+06:24 - apis
+06:25 - and that's what makes it somewhat
+06:27 - powerful
+06:28 - but at the same time it's a bit
+06:32 - scary because
+06:34 - you know every system will vary so much
+06:37 - and so
+06:38 - that's where rest comes in
+06:41 - it provides us with guidelines on how
+06:43 - these apis should be constructed
+06:47 - you're going to hear about something
+06:49 - called a crud operation
+06:51 - over and over when you're using rest and
+06:54 - all that stands for
+06:55 - is it's an acronym for creating
+06:59 - reading
+07:00 - updating and deleting records
+07:04 - so
+07:04 - essentially when you're making a call
+07:06 - over an api
+07:08 - you're performing one of those four
+07:10 - operations
+07:14 - anyway
+07:15 - let's get started with the installation
+07:17 - i had a note about this in the
+07:20 - workshop description so hopefully you
+07:22 - are all set up with this but i quickly
+07:24 - want to touch upon
+07:26 - what this entails
+07:28 - so we need an ide where we're going to
+07:30 - write code
+07:32 - you need node.js installed
+07:34 - usually npm is part of the node.js
+07:37 - installation
+07:38 - so you should be good there
+07:40 - we're going to use an instance of a
+07:42 -  database
+07:44 - in the cloud
+07:45 - via mlab.com
+07:48 - and then one of the things i mentioned
+07:50 - forgot to mention
+07:51 - was that we need a rest client i'll get
+07:53 - into the details there something like
+07:55 - insomnia or
+07:57 - postman
+07:59 - and then finally robo3t
+08:01 - which allows us to look at the data in
+08:07 - so as for the ide you have three
+08:09 - different options
+08:10 - vs code atom and webstorm that i would
+08:14 - recommend but there are a ton of ideas
+08:16 - out there
+08:17 - you want to find something that's going
+08:19 - to help you
+08:20 - with the language and the framework that
+08:21 - you're working with
+08:23 - and all three of these are very powerful
+08:26 - and customizable
+08:28 - as far as node.js is concerned you can
+08:31 - get any latest version of node.js
+08:33 - and we should be good
+08:35 - that should have the latest package
+08:37 - manager
+08:38 - there is a subtle difference so if you
+08:40 - have version 5 you don't need to use the
+08:42 - save command because it automatically
+08:44 - saves everything in the package when we
+08:45 - install any of the packages
+08:49 - and then
+08:50 - as far as
+08:52 - coding today we're going to use the
+08:54 - natively supported es6 and 7
+08:58 - that's available
+08:59 - in node
+09:01 - that way we don't have to set up babel
+09:03 - or any other transpilers
+09:06 - if you
+09:07 - can go to
+09:09 - node.green you'll notice that it lists
+09:12 - out all the features
+09:14 - that are supported
+09:16 - by node
+09:17 - and this gives you a good idea of which
+09:19 - version supports
+09:21 - what feature in es6 and
+09:34 - 7. sorry we're trying to figure out the
+09:37 - video
+09:39 - here and some reason it's not running
+09:43 - just give me a moment here um
+09:52 - i'm not sure what's going on there
+09:54 - leanna
+09:56 - anyway let's continue for now
+09:59 - so mongodb
+10:01 - can be installed locally or
+10:05 - you can get an instance via the mlab
+10:07 - cloud
+10:08 - and at the same time if you are a fan of
+10:10 - docker you can use docker to deploy it
+10:12 - somewhere or or install it locally as
+10:14 - well
+10:15 - we're going to use mlab for
+10:19 - this workshop
+10:20 - because it allows us to easily deploy
+10:22 - the application
+10:24 - and not worry about a installation
+10:26 - during deployment
+10:30 - as far as the rest line goes we're gonna
+10:32 - use it to test the api that we build
+10:36 - and
+10:37 - i prefer insomnia because it's pretty
+10:39 - lightweight
+10:40 - but
+10:42 - postman is also very powerful
+10:45 - now i got a question here about if i
+10:48 - have any experience with webstorm and
+10:50 - what do i think of it
+10:53 - so i've used several ides over the years
+10:56 - years actually 20 some years and i
+11:00 - really love webstorm
+11:02 - because it
+11:03 - allows you to do things that most of the
+11:05 - other ids require you to configure it
+11:08 - from scratch like vs code for instance
+11:10 - there's one subtle aspect of vs code
+11:12 - that i dislike
+11:14 - compared to webstorm and that is
+11:17 - you cannot get multiple
+11:20 - console windows in a tabular
+11:23 - view
+11:24 - they have sort of a drop down and so you
+11:26 - can quickly switch between those windows
+11:28 - and i'm sure there's a plug-in out there
+11:30 - but i haven't found that
+11:32 - yet
+11:34 - as far as sorry there's another question
+11:36 - here
+11:37 - which says things like mlab seem way
+11:40 - more popular in node world
+11:42 - do you have any thoughts over why this
+11:45 - is the case compared to other ecosystems
+11:49 - i believe is an integral component
+11:53 - of most node
+11:54 - applications mainly because you're
+11:56 - coding in javascript
+11:58 - all the way from the browser to the back
+12:01 - end
+12:02 - and it lends itself very well to
+12:05 - as well because you're storing
+12:06 - javascript objects or json and then that
+12:11 - what that means is you don't have to go
+12:12 - through conversions
+12:14 - uh for your data compared to other
+12:16 - databases
+12:17 - now
+12:20 - using m-lab specifically they have a
+12:22 - very good interface and they provide you
+12:25 - with a free
+12:27 - starter database that you can uh
+12:30 - get everything up and running within a
+12:31 - minute literally
+12:33 - so
+12:34 - it's naturally the preferred option
+12:35 - because it saves you a lot of time from
+12:37 - having to configure it
+12:41 - getting back to this
+12:43 - if you guys can download insomnia or
+12:45 - postman you should be able to follow
+12:47 - along
+12:48 - with testing the api
+12:51 - now as far as
+12:53 - getting started we need to
+12:56 - set up the application first so that we
+12:58 - can start to code the apis
+13:01 - so we're going to start with creating a
+13:03 - project folder
+13:05 - and then you will open up your ide
+13:08 - either
+13:08 - whatever it is you're using
+13:10 - in that project folder and then we'll
+13:12 - start to construct other subfolders and
+13:14 - files there
+13:17 - so
+13:19 - what i'm going to do is
+13:20 - i have a slide outlining what we're
+13:23 - going to accomplish
+13:25 - and so i will keep switching between the
+13:27 - slide and webstorm
+13:29 - as we complete these tasks
+13:31 - so in this case we are
+13:34 - initializing our node
+13:36 - and then creating a very very basic
+13:38 - hello world script actually and we're
+13:41 - going to set up some startup scripts
+13:42 - that allow us to
+13:44 - run our application and then we'll build
+13:46 - from there
+13:52 - so
+13:53 - here is my
+13:54 - webstorm
+13:56 - instance i have a
+13:58 - folder that's created here
+13:59 - what i'm going to do is in the
+14:03 - console at the bottom here
+14:06 - i'm not sure if i can increase the font
+14:08 - in the console but i will in the code
+14:11 - what i'm going to type
+14:13 - is npm
+14:15 - init
+14:16 - and i just want to make sure i'm in the
+14:18 - correct folder here i am okay so i will
+14:20 - type an npm init
+14:22 - and then i will provide an option
+14:25 - optional parameter called
+14:27 - dash y
+14:29 - which stands for simply don't ask me any
+14:31 - questions just generate the
+14:34 - the package.json file this is what npm
+14:37 - minute will do is it'll create a
+14:38 - package.json file under your folder
+14:41 - and it has a few
+14:43 - attributes there that define what this
+14:45 - project is going to contain
+14:47 - especially if you were turning it into a
+14:49 - package that you wanted other people to
+14:51 - consume that's where some of these
+14:53 - attributes come into the picture
+14:56 - so in addition it also allows you to set
+14:58 - up some scripts that you can run as npm
+15:02 - commands
+15:03 - and we'll get to that in a bit
+15:07 - so
+15:08 - let's start out by creating
+15:10 - a folder under a root and call it
+15:14 - src which stands for source
+15:18 - now under the source folder we're going
+15:20 - to create another file
+15:22 - a javascript file
+15:25 - and we're going to call it index
+15:28 - dot js
+15:29 - usually in webstorm and i think most
+15:31 - ides if you leave out the extension
+15:34 - it'll automatically create it
+15:39 - and
+15:40 - let us
+15:41 - simply type in
+15:43 - a console.log statement here
+15:47 - and we will call it hello world
+15:50 - i'm going to save this file
+15:52 - and then go down to the console
+15:55 - and
+15:56 - i can run it
+15:57 - by typing in node
+16:00 - and then pointing to the file so it's
+16:01 - under the source folder
+16:04 - slash
+16:05 - index.js
+16:09 - and there you go
+16:11 - you will see print hello world so pretty
+16:13 - much it has
+16:14 - executed this file that we created
+16:17 - very simple
+16:20 - now let's make this a little
+16:22 - more
+16:23 - uh
+16:25 - let's add a helpful command to to our
+16:27 - package.json
+16:29 - so that we don't have to keep pointing
+16:30 - to the file and typing in node
+16:33 - uh source index so what i'm going to do
+16:36 - is modify the scripts section of
+16:38 - package.json
+16:40 - i'm going to add a command called start
+16:44 - and
+16:46 - what we're going to put in there is the
+16:48 - exact same command that we typed at the
+16:50 - bottom of the window here
+16:53 - and this runs relative to the project
+16:55 - root
+16:59 - i'm going to save that
+17:01 - i will clear my console and i'm going to
+17:03 - run
+17:04 - npm
+17:06 - start
+17:10 - notice that it tried to run it ran our
+17:12 - command here and then you'll see the
+17:14 - output at the bottom
+17:16 - so start and test are two commands that
+17:20 - you can run
+17:21 - via an npm
+17:24 - without an intermediate keyword called
+17:26 - run so normally most of the commands
+17:28 - require you to type in npm run and then
+17:31 - the name of the command
+17:32 - so npm run start works as well
+17:35 - except for node made it a little easier
+17:38 - sorry npm made it a little easier by
+17:40 - allowing us to just do npm start
+17:44 - very well i'm going to switch back to
+17:46 - our
+17:47 - presentation window here
+17:50 - all right so hopefully everyone's caught
+17:52 - on to that
+17:55 - next
+17:56 - let's get started with express
+17:59 - express is an npm package
+18:03 - and it is basically a lightweight web
+18:06 - server
+18:07 - what that means is it's taken all the
+18:10 - node.js
+18:12 - http
+18:13 - classes and added a layer on top of it
+18:17 - so that it can communicate
+18:19 - or so that it allows you to communicate
+18:22 - via restful endpoints
+18:25 - let's start out by installing the
+18:28 - express dependency
+18:29 - and then we're going to reference the
+18:31 - library and create a very basic express
+18:34 - application
+18:37 - so going back to the console here
+18:41 - i'm going to type in npm
+18:44 - install
+18:45 - express
+18:47 - and if you're using npm version 5 and
+18:49 - above
+18:51 - it automatically saves it to your
+18:53 - package.json so look in my package.json
+18:56 - here and you'll notice that there's a
+18:58 - dependencies section that showed up
+19:00 - and what this means is that when the
+19:02 - project is running
+19:03 - it's going to have express available to
+19:06 - it
+19:09 - next we're going to switch over to the
+19:11 - index.js
+19:13 - and
+19:14 - you can get rid of the console log
+19:17 - here
+19:19 - let's start out by referencing the
+19:21 - express library so we're going to type
+19:23 - in let
+19:24 - express
+19:26 - equals to
+19:27 - require express
+19:31 - next we want to create an application
+19:35 - so we're going to call it app
+19:37 - equals
+19:38 - express
+19:40 - and you can open and close
+19:44 - brackets and that creates an express
+19:46 - application
+19:48 - so
+19:50 - one of the things we want to do now is
+19:53 - have this
+19:55 - express application serve some content
+19:58 - so let's start out by
+20:02 - serving some static files
+20:05 - so i'm going to create a folder under
+20:08 - under the root
+20:10 - and i will call it public
+20:14 - this is where we're going to store
+20:17 - static resources like html files
+20:21 - your images javascript css
+20:24 - and things like that
+20:27 - so let's create an html file here
+20:30 - i'm going to call it index.html
+20:37 - let's give it a title
+20:41 - and then in the body
+20:44 - we'll put in some text
+20:49 - save the file and go back to index.js
+20:54 - so
+20:55 - the way you can serve static content in
+20:57 - express is via a function called
+21:01 - express dot static
+21:04 - so
+21:05 - i'm going to
+21:07 - tell express
+21:08 - to
+21:10 - use this specific
+21:13 - static file handler this is also known
+21:16 - as a middleware and it's built into
+21:19 - express
+21:21 - so what i can do here is express
+21:24 - dot static
+21:26 - and then i will pass in
+21:28 - the name of the folder that i want to
+21:32 - serve content from and that's public
+21:34 - this is relative to the root of the
+21:36 - project
+21:38 - and finally
+21:40 - we want express
+21:41 - to
+21:42 - listen to
+21:45 - to
+21:47 - a port on the machine
+21:50 - so we're going to
+21:52 - do something like this
+21:54 - actually let's create a variable here
+21:57 - and i'll tell you in a moment why so
+21:59 - let's call it constant port
+22:01 - and
+22:02 - we can read this port value from
+22:05 - the the environment variable it's
+22:07 - something that's defined on the command
+22:09 - line before you start the project
+22:12 - and or if that's missing we can
+22:14 - substitute 3000 for it
+22:16 - so i'm going to do process dot env which
+22:19 - is environment dot port
+22:22 - and then if that does not exist
+22:24 - we're going to default to 3000
+22:27 - so i will substitute this 3000 here with
+22:29 - the value port
+22:31 - and then
+22:33 - let's simply
+22:34 - output
+22:37 - a message that says
+22:39 - server
+22:40 - i'm going to use
+22:42 - these backticks here
+22:44 - so i can introduce a variable in there
+22:47 - and let's call the server has started
+22:50 - on
+22:52 - the port that it's actually running on
+22:54 - so that way we know where the server is
+22:56 - running oops i missed the end there
+23:00 - all right so we're going to go back
+23:02 - and
+23:03 - run the server here again
+23:05 - by calling node i'm sorry oh we have the
+23:09 - script commands we're going to do npm
+23:10 - start
+23:13 - and there you go you see that a message
+23:15 - that says server has started and notice
+23:17 - that the program is still running
+23:20 - that's because the the server is running
+23:22 - and it's not going to
+23:24 - release control until we stop it and the
+23:26 - way to stop it is to push control c
+23:31 - anyway let's switch over
+23:33 - to a browser window
+23:36 - and what i'm going to do is
+23:44 - try to oops sorry
+23:49 - that's 3000
+23:53 - and so there you go
+23:55 - you'll see the message that
+23:57 - we typed into the html file
+24:00 - so this is very simple
+24:02 - it allows you to actually put any file
+24:04 - in the public folder and you can serve
+24:06 - it through
+24:08 - through a url here so essentially what
+24:10 - this is doing is defaulting to
+24:12 - index.html the file that we created so
+24:15 - if i type this path it still loads the
+24:17 - same content
+24:21 - alright so
+24:23 - now i'm going to switch back to
+24:27 - our
+24:30 - slides here
+24:31 - and so we've
+24:32 - accomplished these things here let's
+24:34 - move on to the next which is actually i
+24:37 - had a slide here for serving static
+24:38 - content so where essentially we created
+24:40 - a public folder under root and html file
+24:44 - and we configured express to serve that
+24:46 - static content
+24:49 - now let's get on to something more
+24:51 - interesting
+24:52 - we're going to create our first api
+24:55 - endpoint
+24:56 - and
+24:57 - api endpoints are usually
+25:01 - set up with http verbs
+25:04 - so
+25:05 - you may have heard about something
+25:07 - called a get request
+25:09 - and what that's essentially doing is
+25:11 - making a call to the server
+25:13 - as with the get keyword
+25:15 - and the server is responding with some
+25:18 - content
+25:19 - we'll also talk about a couple of
+25:21 - other attributes
+25:23 - in that request
+25:26 - called request parameters and query
+25:28 - parameters
+25:30 - so let's head over to webstorm again
+25:33 - and
+25:34 - what i'm going to do is create a folder
+25:36 - under source
+25:38 - called routes
+25:42 - and then let's create a file
+25:45 - called
+25:46 - person.js
+25:52 - we're going to
+25:54 - create
+25:55 - what's called a route in express
+25:58 - they're basically you can consider them
+26:00 - as mini applications and there are
+26:03 - advantages to it and i will talk about
+26:05 - it in a bit
+26:06 - so
+26:07 - essentially
+26:09 - we want to start out by referencing
+26:11 - express here
+26:16 - followed by
+26:19 - a router from that express
+26:23 - instance
+26:26 - and then towards the bottom of the file
+26:28 - we're going to
+26:30 - export that
+26:31 - router
+26:34 - what that allows us to do
+26:36 - is now
+26:37 - imported in the index.js file
+26:43 - now let's go ahead and add
+26:47 - sorry the the route we were talking
+26:49 - about earlier
+26:53 - and i'm going to call it person
+26:55 - so we're making a call to get a person
+26:59 - object here
+27:02 - and usually
+27:04 - a route has a callback method that gets
+27:08 - called when you when you make that
+27:10 - request so in this case
+27:13 - it's going to have two parameters a
+27:15 - request and response
+27:17 - and then we're going to do something
+27:19 - with it
+27:21 - so
+27:22 - let's do something very simple here
+27:24 - express makes things easier for us
+27:27 - some of these things you see here are
+27:28 - things we would have to code normally
+27:30 - and and in this case it allows us to do
+27:33 - something very simple like send a
+27:35 - message here so let's call this you have
+27:38 - requested a person
+27:41 - essentially
+27:42 - this is a route that we've created that
+27:44 - can be accessed via localhost colon 3000
+27:48 - slash person
+27:50 - and that's what it's going to respond
+27:51 - with now before we go back to the
+27:53 - browser and try this
+27:54 - we want to go into the index file
+27:58 - and then reference that
+28:00 - file that we just created so let's
+28:04 - call it person route
+28:07 - equals require
+28:10 - oops
+28:12 - and we're going to go into the routes
+28:14 - folder slash person
+28:17 - you don't need to specify the js
+28:19 - extension
+28:21 - and then
+28:22 - finally we're going to tell express
+28:25 - to
+28:28 - register this route oops
+28:31 - person route
+28:34 - all right
+28:36 - now
+28:37 - notice that we have to go down here now
+28:39 - and and stop the server and restart it
+28:43 - because it's not going to pick up the
+28:45 - changes that we just made automatically
+28:48 - anyway so i just restarted the server
+28:51 - here we're going to go to
+28:55 - the browser again
+28:57 - and
+29:02 - call that route we just created
+29:07 - so localhost 3000 slash person
+29:10 - and there you go
+29:12 - that's
+29:12 - how simple it is to create an api
+29:15 - endpoint
+29:17 - of course this is a very basic version
+29:18 - of that
+29:20 - now before we continue i want to do a
+29:23 - couple of things here i want to show you
+29:25 - how to use this tool called insomnia or
+29:28 - you may have installed something called
+29:29 - postman
+29:31 - so
+29:32 - essentially this allows us to test the
+29:34 - apis that we are creating
+29:37 - so
+29:38 - let's go ahead and create
+29:40 - a request here i'm going to call it
+29:43 - get
+29:44 - person
+29:45 - and it's a get request you can change
+29:48 - this later on so
+29:50 - if you get the wrong thing there it's
+29:51 - okay you can go up here
+29:53 - and change it
+29:55 - to a different kind of request
+29:57 - one of the things i forgot to mention
+29:59 - was that
+30:01 - crud operations map to four requests you
+30:04 - have the create which happens on a post
+30:07 - the read which happens on a get
+30:10 - the update happens on put
+30:13 - and delete happens on delete
+30:17 - so
+30:19 - we have a question here when would
+30:21 - changes be picked up automatically and
+30:24 - when do you need to restart the server
+30:27 - coming from rails world wondering about
+30:29 - how things are different
+30:31 - so
+30:33 - we need to set up
+30:36 - a a command and a reference library that
+30:39 - will monitor our project for changes
+30:42 - so we'll do this right after
+30:45 - the the
+30:46 - insomnia
+30:48 - piece we're looking at but
+30:51 - the
+30:52 - the changes are picked up based off the
+30:54 - files that are monitored any sort of a
+30:56 - change in that file once it's saved will
+30:58 - restart the server
+31:02 - is insomnia better than postmen
+31:04 - so
+31:05 - i i started out using postman and i
+31:08 - haven't touched it in a while so i don't
+31:10 - recall exactly but
+31:11 - from what i remember post insomnia was a
+31:14 - lot easier to work with it was much more
+31:18 - intuitive
+31:19 - in many ways compared to postman i think
+31:22 - postman might have improved they do have
+31:24 - a lot of advanced features too
+31:26 - that i don't think insomnia does but for
+31:29 - our purposes here the insomnia works
+31:31 - just fine
+31:32 - this is actually what i use
+31:34 - on a daily basis i haven't gone back to
+31:36 - postman in a few years now
+31:39 - so we wanted to talk about uh accessing
+31:43 - the person route so what i'm gonna do is
+31:46 - put in the url for our
+31:49 - server
+31:50 - and then
+31:52 - in this case we're going to call person
+31:54 - and then i can either enter or click
+31:55 - send here
+31:56 - and there you go this allows us to
+32:00 - define all the different routes that
+32:01 - we've created
+32:03 - and
+32:04 - test them out over here
+32:06 - one of the things that postman lets you
+32:08 - do is generate test cases
+32:11 - from these routes and and they have
+32:13 - additional tooling there so i would
+32:15 - definitely encourage everyone to check
+32:17 - out both these tools
+32:19 - i think postman is definitely valuable
+32:21 - sometimes i find it a bit too bloated
+32:23 - but
+32:25 - they're they're both very similar
+32:27 - so in this case
+32:28 - i think what uh rest api
+32:31 - i'm sorry what get person
+32:33 - we
+32:34 - allows us to do here in insomnia is also
+32:38 - generate some code that we can then test
+32:40 - out through
+32:41 - node or any other project so i'm going
+32:43 - to click on that real quick
+32:44 - and then notice that it has a bunch of
+32:46 - languages here
+32:48 - and so essentially you can pick
+32:49 - something so let's say we were doing
+32:51 - this in node.js
+32:52 - then
+32:53 - i have the option of choosing which type
+32:57 - of library that it's using to make that
+32:59 - request and i generally would choose
+33:01 - request
+33:03 - because it's the shortest piece of code
+33:05 - here
+33:06 - and it's essentially sending some
+33:08 - attributes here
+33:09 - and then making that request to the
+33:11 - endpoint and i can copy this and then
+33:13 - paste it in my
+33:14 - test file and then sort of go on from
+33:16 - there
+33:19 - all right
+33:20 - so
+33:21 - that's that let's go back to webstorm
+33:25 - and
+33:26 - we're going to now talk about
+33:28 - setting up a script that allows us to
+33:30 - monitor for changes so we don't have to
+33:34 - restart the server
+33:35 - so the first thing we will do
+33:37 - is let's stop the server here we're
+33:39 - going to install something called
+33:42 - nodemon
+33:43 - now there is an alias for install i
+33:45 - could just use i instead of install
+33:48 - and nodemon is what i want to install
+33:51 - now prior to
+33:52 - npm5 you had to specify things like
+33:56 - save
+33:57 - which would save it as a dependency in
+33:59 - packet json
+34:02 - however in this case
+34:05 - because we're using the latest node
+34:06 - version npm version we don't need to do
+34:08 - that
+34:10 - but nodemon is something we're going to
+34:12 - run during development only so we would
+34:15 - specify
+34:17 - either save
+34:18 - dev
+34:19 - or there's a shortcut for or a short for
+34:22 - it which is
+34:23 - dash d
+34:24 - they both do the same thing
+34:28 - so what that's going to do is create a
+34:30 - dev dependencies section here in
+34:32 - package.json
+34:34 - and
+34:35 - those dependencies are
+34:37 - only available during
+34:39 - development time so basically if you
+34:42 - were to deploy this through a ci system
+34:45 - like
+34:46 - circle ci
+34:47 - it's going to do npm install when it
+34:50 - downloads the project and all that is
+34:52 - going to do
+34:54 - is install dev dependencies
+35:01 - all right so we have nodemon created
+35:03 - here
+35:06 - um what we're going to do is
+35:09 - learn how to use it actually let's just
+35:11 - put it in a
+35:13 - let's create a command here
+35:15 - so we're going to call it start
+35:17 - watch
+35:21 - and
+35:22 - all we have to do is nodemon
+35:25 - and point it to
+35:27 - a specific
+35:30 - folder
+35:32 - here
+35:34 - actually we can just do the file in this
+35:36 - case
+35:37 - and so we can run it with npm
+35:40 - run remember we need run this time
+35:42 - because it's not the start or test
+35:44 - command
+35:48 - and then that's going to monitor this
+35:49 - specific file for changes
+35:54 - you can also specify folders to be
+35:56 - monitored and things like that and it's
+35:58 - going to internally run the startup file
+36:02 - and monitor a set of folders
+36:04 - these are things you can look up in the
+36:05 - documentation as you get acquainted with
+36:08 - these uh
+36:10 - various libraries
+36:12 - all right so let's go back to
+36:16 - the
+36:18 - slides again
+36:20 - sorry this requires me to switch things
+36:22 - around a bit
+36:23 - so we we talked about a get request next
+36:26 - let's focus on a couple other
+36:28 - attributes that can be passed through
+36:31 - so i'm going to go back to webstorm here
+36:34 - into the person.js file so we're going
+36:36 - to create a couple more routes
+36:40 - around person itself so what i'm going
+36:42 - to do is copy and paste this
+36:45 - down here
+36:47 - and
+36:49 - one of the things that
+36:51 - we want to be able to do is
+36:54 - let's say
+36:55 - pass in
+36:57 - an additional
+37:00 - sort of subroute that
+37:03 - can be mapped to a variable so let's
+37:05 - call it name
+37:07 - and we need to specify a colon before it
+37:10 - so express knows that it needs to
+37:13 - map that to a variable
+37:15 - and this
+37:16 - these variables here are available
+37:19 - through the request object
+37:21 - in a property called params
+37:24 - so let's just
+37:25 - print that out here
+37:27 - i'm going to put a comma there we can do
+37:29 - request dot params
+37:32 - dot name
+37:35 - i'm going to
+37:36 - oops sorry i thought this was
+37:38 - console.log
+37:39 - i'm going to change this to
+37:41 - a template so i'm going to do the
+37:43 - backticks that allows me to treat this
+37:45 - as a variable
+37:47 - in my
+37:48 - state uh string here and i will close it
+37:52 - with the back deck so that basically is
+37:53 - the same as doing
+37:55 - uh you have requested a person plus
+37:58 - uh space plus this
+38:02 - all right so let's save this and notice
+38:04 - that our server automatically restarted
+38:07 - so we're going to go to
+38:09 - insomnia
+38:12 - and i'm going to
+38:16 - create another
+38:18 - route here i'm going to duplicate this
+38:20 - by right clicking and picking duplicate
+38:23 - and then let's call this
+38:25 - get person by name
+38:29 - and all i have to do in the route here
+38:31 - now when as i switch between these it's
+38:33 - choosing the right so it's showing you
+38:36 - the output for whatever stored there so
+38:38 - when i
+38:40 - when i make uh changes to get person by
+38:42 - name it's not going to affect person
+38:44 - so i can go ahead and do that here
+38:46 - and let's call it uh
+38:48 - let's give it a name here and then i'm
+38:50 - going to click send
+38:53 - and so it's simply responding back
+38:56 - with the parameter that we passed in
+39:00 - all right
+39:02 - the other thing we can do
+39:04 - is so
+39:06 - this here is
+39:09 - a
+39:11 - params object or property
+39:14 - on the request object
+39:17 - what i also want to do is
+39:20 - allow us to pass in
+39:22 - a query string
+39:28 - which is a
+39:30 - query string is basically a query
+39:32 - property
+39:34 - on the request object
+39:38 - all right
+39:39 - so the way to accomplish that is simply
+39:42 - by checking the query
+39:44 - object here so let's let's say we look
+39:47 - for
+39:48 - request dot
+39:50 - query
+39:52 - dot
+39:54 - let's call it name as well
+39:57 - so that's what we're going to pass in
+39:58 - then we will do something there else
+40:01 - we're going to
+40:04 - handle it like we were originally
+40:08 - so in this case i'm going to copy this
+40:12 - thing over here again from line 16
+40:15 - to line 7
+40:16 - and i'm going to replace params with
+40:19 - query
+40:21 - that's the only difference really so
+40:23 - what this allows me to do is basically
+40:25 - pass call something like uh
+40:29 - localhost 3000
+40:32 - slash person
+40:33 - with
+40:34 - what's called a query string so anything
+40:36 - after the question mark
+40:38 - is basically a part of the query string
+40:41 - and
+40:43 - it's a key value
+40:45 - pair so i could essentially
+40:47 - add additional
+40:49 - key values here by
+40:50 - adding an ampersand so let's say name
+40:54 - uh
+40:55 - in age equals
+40:57 - 20.
+40:58 - so this you know
+41:00 - we're not doing anything interesting
+41:01 - right now we're simply echoing whatever
+41:02 - is passed in
+41:04 - but
+41:05 - this is what that allows and in case of
+41:06 - params this allows us to
+41:10 - do something like this localhost 3000
+41:12 - slash person
+41:15 - slash name
+41:16 - so that's the difference here between
+41:17 - the two this is part of the route
+41:21 - and that is part of
+41:23 - the query string
+41:25 - all right so i'm going to save this
+41:28 - and let's go
+41:29 - back to insomnia
+41:31 - and in the get person piece
+41:33 - i guess we can duplicate this as well
+41:36 - again and then i'll call it
+41:38 - get person
+41:40 - by query string
+41:43 - and so all i have to do here now is
+41:46 - specify the name
+41:49 - and click send
+41:51 - there you go so we have three ways of
+41:53 - accomplishing the same thing
+41:56 - or i'm sorry two ways here
+41:59 - by specifying a parameter so this by
+42:01 - query string
+42:02 - and by
+42:04 - uh params
+42:07 - so i'm going to rename this just to make
+42:09 - it clear
+42:10 - so
+42:11 - there get person by params
+42:14 - all right okay
+42:17 - so
+42:17 - [Music]
+42:20 - hopefully this is clear enough so far
+42:25 - moving on
+42:26 - so we talked about middleware
+42:30 - and
+42:31 - we set up a middleware earlier called
+42:34 - static which is part of express
+42:36 - now middleware are simply functions that
+42:39 - are executed back to back or serially
+42:43 - in the request pipeline
+42:46 - so when a request comes in
+42:48 - there are a bunch of functions
+42:51 - think of it as an array of functions and
+42:53 - they execute from the index 0 all the
+42:55 - way to the end and each one calls when
+42:57 - it's done calls into the next function
+43:01 - it has the ability to
+43:06 - also modify the request and response
+43:09 - objects
+43:10 - and pass in additional details
+43:12 - downstream
+43:14 - or it can also decide to
+43:16 - respond and and not call into other
+43:19 - functions downstream because
+43:21 - maybe uh the incoming request was meant
+43:24 - to be handled by that function
+43:27 - so
+43:28 - i think i covered through all these
+43:30 - things here
+43:31 - and
+43:32 - yeah so let's go ahead and look at
+43:36 - some code
+43:37 - and see how to do that so the easiest
+43:40 - middleware for us to set up
+43:41 - is
+43:42 - to log every request that comes in
+43:46 - so we're going to accomplish that by
+43:47 - going into index.js
+43:50 - and
+43:51 - note that the order in which these
+43:53 - handlers are added
+43:56 - matters because that's how
+43:58 - these middleware functions are
+44:02 - pushed onto the the array and executed
+44:04 - in that same order
+44:06 - so
+44:07 - it's possible that
+44:09 - um
+44:11 - person route
+44:13 - sort of
+44:14 - is the function that is supposed to
+44:16 - serve the request and it ends up ending
+44:18 - the resp
+44:19 - the the chain of uh functions that are
+44:22 - called
+44:23 - so we we want to actually print out the
+44:25 - incoming request as the first thing so
+44:28 - that
+44:29 - we can catch everything that comes in
+44:31 - so we do that by calling app.use
+44:34 - and we're going to
+44:37 - set up a
+44:40 - a function right in place
+44:43 - and
+44:44 - middleware functions take three
+44:46 - parameters you have the request in
+44:48 - response just like the other routes that
+44:50 - we created
+44:51 - but there's also something called next
+44:54 - which is a reference to the next
+44:56 - function in the pipeline
+45:02 - and in this case
+45:04 - let's just console.log
+45:08 - a few things here
+45:09 - i'm going to
+45:11 - use the backticks again
+45:13 - let's uh
+45:16 - put in a variable here and i'm going to
+45:18 - create a new date object
+45:21 - and i'm going to call tostring
+45:23 - on it
+45:26 - which will print a long version of the
+45:28 - date and time i believe
+45:30 - and then we're going to
+45:32 - [Music]
+45:34 - also let's say uh list out the
+45:38 - url that was requested
+45:41 - which is under the original url
+45:43 - attribute of the request object
+45:46 - and we can
+45:49 - in the future we'll modify this after a
+45:51 - few more changes so
+45:54 - i i saved this
+45:56 - and what i'm going to do oh the thing i
+45:58 - forgot here is that we need to call next
+46:01 - after we're done otherwise it's going to
+46:02 - break the chain of functions that are
+46:04 - called
+46:05 - in in that pipeline
+46:07 - and essentially if i wanted to just
+46:09 - respond from here i would do something
+46:11 - like respond.response.com
+46:15 - is one way to sort of respond back
+46:19 - and then not call next
+46:21 - and that will break the pipeline however
+46:23 - if i don't respond to it and i don't
+46:26 - call next then the user is going to be
+46:28 - waiting for that request until it times
+46:31 - out
+46:32 - so we have to make sure that we call
+46:33 - next here and remove the response then
+46:36 - all right
+46:38 - so what's going to happen here is
+46:42 - basically we're gonna see things printed
+46:44 - out here
+46:46 - uh sorry i'm just taking a look at
+46:47 - what's going on here that's probably
+46:48 - from what we had up there
+46:50 - i'm going to clear my console and let's
+46:52 - go ahead and make a request in insomnia
+46:56 - so i'm just going to call the same route
+46:58 - again
+46:59 - and go back to webstorm
+47:01 - and notice that there is a
+47:03 - a line that's been output here
+47:05 - which prints the
+47:07 - the the long form of the date time
+47:10 - and
+47:11 - the the url that was requested
+47:14 - so
+47:15 - there you go i mean this is a very
+47:17 - powerful concept because now you can
+47:19 - inject functions that do things for
+47:23 - every route in the system
+47:25 - and you can choose to ignore it and not
+47:26 - do anything and then just pass
+47:29 - the control along to the next function
+47:30 - in the pipeline
+47:33 - all right so going back to
+47:36 - our
+47:38 - slides here
+47:40 - so
+47:41 - another thing we can do with these
+47:44 - middleware is handle
+47:46 - uh
+47:47 - 404 and 500 errors and other errors and
+47:50 - things like that and so let's let's go
+47:52 - through how that's done
+47:54 - uh we're going to
+47:57 - respond back for 404 let's say with
+48:01 - some content initially a string and then
+48:03 - we can i can also show you how to to
+48:05 - respond with a specific file
+48:09 - all right
+48:11 - so for
+48:13 - a 404 handler all you need to do
+48:16 - is
+48:18 - add a
+48:20 - uh
+48:21 - middleware function towards the end of
+48:24 - the chain so
+48:26 - the express.static is the last thing we
+48:29 - have in our chain at the moment
+48:31 - and so i'm going to add a middleware
+48:33 - function here
+48:34 - that's going to
+48:36 - take the same request response and next
+48:41 - parameters
+48:42 - and essentially what this is
+48:45 - is
+48:46 - is is a handler
+48:48 - for
+48:49 - the 80404
+48:51 - uh not found
+48:54 - or resource not found
+48:58 - and what we're going to do here is
+49:00 - respond with a status code
+49:04 - that says 404
+49:06 - and we're going to send
+49:07 - a message
+49:11 - it says we think you are lost
+49:16 - all right
+49:18 - so let's go ahead and test that
+49:20 - all we have to do
+49:22 - is
+49:23 - let's go to
+49:25 - chrome in this case
+49:28 - and
+49:31 - let's
+49:31 - let's just put in anything any random
+49:35 - string here and hit enter
+49:37 - and there you go
+49:40 - what happened here was basically there
+49:42 - were no middleware functions to
+49:44 - handle that request
+49:48 - sorry i
+49:49 - i missed a question here
+49:54 - the question is anecdotally is using the
+49:57 - id's terminal slower than running
+49:59 - terminal as a separate app
+50:02 - so
+50:04 - i i don't think so it really comes down
+50:06 - to
+50:07 - what you are most comfortable with and
+50:09 - most efficient with i always shoot to
+50:13 - sort of improve my my
+50:15 - sort of agility
+50:17 - and so depends on
+50:19 - you know various factors and in this
+50:21 - case it's easier for me to stay within
+50:22 - the context of the ide so that i see
+50:25 - things that are happening right there
+50:27 - because i could have a build process i
+50:29 - could have a
+50:30 - a test process and then various things
+50:33 - right there and i wouldn't have to
+50:34 - switch between windows but essentially
+50:36 - that's something you could do as well
+50:38 - i do use a separate
+50:40 - terminal window when i'm using
+50:42 - uh
+50:43 - vs code because i don't like the
+50:45 - integrated terminal there
+50:47 - so there is no
+50:49 - sort of right answer here it's really
+50:52 - your preference
+50:53 - i don't think either of them are slow
+50:57 - all right
+50:58 - so
+50:59 - we we
+51:01 - handle 404 now we're going to handle
+51:04 - error 500
+51:06 - and what that means is
+51:10 - we're going to
+51:12 - add another
+51:14 - handler here
+51:16 - so
+51:17 - handler
+51:18 - for
+51:19 - [Music]
+51:20 - error 500 and so we're going to do
+51:23 - app.use now the only difference here is
+51:25 - that this takes an error object so it
+51:27 - has four parameters compared to
+51:30 - the three that we've been using so far
+51:33 - and essentially
+51:35 - we're going to
+51:37 - let's say we're going to
+51:40 - print out the arrow to the console
+51:43 - so there is a property called stack
+51:46 - and then we're going to
+51:49 - let's do something different here we're
+51:51 - going to go to public
+51:53 - the public folder and create a file here
+51:55 - and let's call that file
+51:57 - 500.html
+52:01 - and
+52:05 - so
+52:06 - we'll simply print something went wrong
+52:10 - here
+52:11 - all right i'm going to save that file
+52:13 - close it and then
+52:15 - we want to serve this file
+52:17 - as the response instead of some text
+52:19 - message
+52:21 - so one of the things i need is
+52:24 - to reference
+52:26 - the path
+52:29 - module oops
+52:35 - and then i hope you saw that and then go
+52:37 - down here and we need to
+52:41 - use the send file method that express
+52:44 - provides us and we're going to path.join
+52:47 - a couple of things one is
+52:50 - the root of the folder which is
+52:52 - referenced to withdraw underscore
+52:54 - underscore door name
+52:57 - and
+52:58 - i'm sorry that is where the project is
+53:01 - running from so the main index file is
+53:04 - under source
+53:06 - routes
+53:07 - and so
+53:09 - we're going to go up
+53:13 - to
+53:14 - um i'm sorry it's not source routes it's
+53:16 - on the source so we're going to go up to
+53:18 - public which is one folder above and
+53:21 - then we're going to
+53:23 - um
+53:24 - serve
+53:25 - 500.html i think i got that right
+53:28 - yeah so essentially
+53:30 - indexes here
+53:32 - the dot dot will tell it to go up to the
+53:35 - root and then we're going down to public
+53:37 - in 500 html and we're combining that
+53:40 - path and then express will look at look
+53:43 - up the file
+53:44 - reading the contents and send those out
+53:46 - with setting the right headers and
+53:47 - things like that
+53:49 - all right so i saved that
+53:51 - and now
+53:52 - let's say we
+53:53 - did the only way for us to
+53:56 - to trigger that is through an error so
+53:59 - what i'm going to do
+54:01 - is
+54:02 - let's go back to the routes file and
+54:04 - we're going to create
+54:05 - a route
+54:06 - here
+54:09 - that's going to generate an error for us
+54:11 - so i'm going to call it slash person
+54:13 - slash
+54:15 - error
+54:16 - and we're going to do request response
+54:22 - so in this handler all we're going to do
+54:24 - is throw a new error
+54:32 - so what's that what's going to happen is
+54:34 - anytime we call this endpoint it's going
+54:36 - to trigger some exception and since it's
+54:38 - not handled
+54:40 - it's going to end up in
+54:43 - this part in the 500 error handler
+54:48 - all right so i'm gonna save that and
+54:50 - then
+54:51 - go back to our
+54:54 - browser here and then slash person slash
+54:57 - error
+55:03 - so there you
+55:04 - go um i think that's what i
+55:07 - printed here
+55:11 - uh oh we're not uh
+55:14 - responding with that specific error i
+55:16 - think uh oh i see what's going on here
+55:18 - sorry uh let's let's call this something
+55:21 - else i'm just going to call this slash
+55:22 - error for now because it's uh
+55:25 - conflicting with the other routes here
+55:27 - my apologies
+55:29 - so that saved it i'm going to go back
+55:32 - and we're simply going to type in slash
+55:34 - error
+55:35 - and so there you go there it's going
+55:38 - through the error but it doesn't seem to
+55:39 - find the file we're looking for
+55:42 - uh so
+55:44 - i believe i did something wrong here
+55:50 - all right let's go take a look at what's
+55:51 - going on here so in send file
+55:54 - uh i'm joining their name
+55:57 - dot dot slash
+55:59 - oh i made a mistake here i need dot dot
+56:01 - slash public
+56:03 - slide 500 html so let's retry that
+56:07 - so going back here to the browser i'm
+56:08 - going to refresh that
+56:10 - and there you go it's serving the
+56:12 - content
+56:13 - from that file specifically that we
+56:14 - created
+56:18 - so we created that method so i could
+56:20 - demonstrate
+56:21 - how error 500 would work
+56:23 - because it only gets
+56:25 - triggered when there's an error
+56:28 - all right so back to this
+56:32 - the slides here
+56:33 - and so we've dealt with error pages
+56:36 - now let's make this a little more
+56:37 - interesting
+56:39 - we have
+56:41 - an instance of mongodb
+56:43 - that we created
+56:45 - in m-lab
+56:46 - i'm assuming everyone's created that
+56:50 - if not
+56:52 - you can try that out later
+56:53 - but
+56:54 - do in order to connect to
+56:57 - to mongodb we're going to use something
+56:59 - called mongoose which is
+57:02 - an orm or an odm
+57:04 - it's basically an object data mapper
+57:08 - so it allows us to define a model
+57:11 - in
+57:12 - our application and then store that as
+57:15 - is in the database and that's one of the
+57:18 - advantages of
+57:20 - mongodb because you can store json
+57:23 - documents directly without having to
+57:25 - define
+57:26 - relationships between tables and things
+57:28 - like that so there are pros and cons to
+57:30 - it
+57:31 - but
+57:32 - i've been able to build most
+57:34 - applications without sql databases in
+57:37 - the past few years
+57:39 - mainly because
+57:41 - you're able to scale your application in
+57:43 - many ways it's it may not be the most
+57:45 - efficient database out there but it
+57:47 - certainly simplifies your development
+57:49 - process significantly
+57:52 - anyway so let's get connected mongoose
+57:54 - connected we're going to do something
+57:56 - similar to what we did with
+57:58 - uh express so we're going to install the
+58:01 - dependency and we're going to reference
+58:03 - it
+58:04 - and then we're going to focus on
+58:06 - creating a crowd api
+58:11 - so
+58:12 - essentially
+58:15 - we're going to define a model
+58:18 - uh in mongoose and then we're going to
+58:22 - perform the crud operations on that
+58:24 - model via the
+58:26 - restful endpoints that we create
+58:28 - so let's get back into the code
+58:32 - all right
+58:33 - so i'm going to
+58:35 - so notice when we ran into that error it
+58:38 - also ended up printing
+58:40 - the stack to the console
+58:42 - because if
+58:43 - this
+58:43 - line 24 here
+58:46 - i'm going to stop the server clear the
+58:50 - console i'm going to npm install
+58:52 - mongoose
+59:02 - all right
+59:03 - and what we're going to do is create a
+59:05 - folder
+59:06 - on the source
+59:08 - called
+59:12 - models
+59:14 - and on the models let's go ahead and
+59:16 - create
+59:17 - a model called
+59:19 - let's make it a bit different from
+59:21 - person let's call it customer
+59:23 - so i'm going to create a javascript file
+59:26 - and i will call it
+59:28 - customer.model.js
+59:32 - i usually follow this pattern for naming
+59:34 - conventions
+59:35 - i separate
+59:36 - multiple words with a
+59:39 - period
+59:40 - and i always keep them lowercase that
+59:42 - way it makes it very simple across
+59:44 - larger teams so you don't have to think
+59:46 - about how to name files and stuff like
+59:48 - that
+59:50 - all right
+59:51 - so
+59:53 - [Music]
+59:54 - let's go ahead and
+59:57 - construct this
+59:58 - model here so the first thing we want to
+60:00 - do
+60:01 - is reference mongoose
+60:04 - we already installed it
+60:06 - so that should be available there
+60:08 - and then we're going to
+60:12 - we're going to connect to the database
+60:14 - in this file itself but ideally it's
+60:17 - something that you can
+60:20 - take out of this file and have a
+60:21 - separate database.js file which will
+60:25 - do the connection to the database when
+60:26 - the application starts
+60:29 - but in the uh
+60:30 - essence of time i'm just going to do it
+60:32 - here so
+60:33 - let's
+60:34 - set up some properties for
+60:38 - the the database
+60:39 - so in my case i have this written down
+60:42 - here i'm just going to copy and paste it
+60:44 - essentially i have four attributes here
+60:47 - pointing to my database server
+60:49 - the name of the database the username
+60:51 - and password and this is my instance in
+60:55 - mlab
+60:57 - and so if you go to your
+60:59 - database instance in mlab it should give
+61:01 - you an option to see all these
+61:03 - attributes
+61:05 - and the connection string
+61:06 - so the next thing i want to do
+61:08 - is connect mongoose
+61:12 - to the database and this is something we
+61:14 - want to do only once at the beginning of
+61:16 - the program
+61:18 - so i'm going to use backtakes and
+61:21 - here's the connection string you will
+61:23 - get this from
+61:25 - mlab as well
+61:26 - but it's it's it's fairly
+61:28 - straightforward so
+61:31 - you go start with mongodb colon slash
+61:35 - and then we're going to specify the user
+61:39 - colon password
+61:47 - at
+61:49 - server slash database so that would be
+61:52 - server
+61:53 - slash
+61:56 - oops
+61:58 - database
+62:02 - all right so that should generate
+62:05 - the
+62:06 - uri for connecting to the database
+62:10 - and
+62:12 - finally let's create so mongoose has two
+62:15 - main components to it
+62:17 - the first is a schema
+62:20 - and the second is called a model which
+62:23 - is simply a higher order function that
+62:25 - wraps around the schema really
+62:27 - it provides you with additional methods
+62:29 - that you can use to make
+62:31 - database queries and things like that so
+62:34 - let's define a customer schema next
+62:38 - and the way you do that is by
+62:40 - creating a new instance of
+62:42 - mongoose.schema
+62:47 - and let me sorry uh if you were not able
+62:49 - to read this
+62:50 - there you go
+62:52 - so
+62:52 - within
+62:54 - the the customer schema that we're
+62:56 - defining uh let's create a couple of
+62:58 - attributes there
+62:59 - we're gonna create an attribute called
+63:01 - name and we're going to tell it that the
+63:03 - type is string
+63:05 - and then the next thing is
+63:06 - let's
+63:07 - create something called email let's uh
+63:10 - instead of assigning it directly to
+63:12 - string i'm going to show you a couple
+63:13 - other things you can do here
+63:14 - so we can
+63:16 - also
+63:17 - assign a an object as a value there and
+63:19 - define additional properties on there so
+63:21 - we're going to tell it that the type
+63:23 - here is a string
+63:25 - and then
+63:27 - it's a required property
+63:30 - and that it has to be unique
+63:33 - that way
+63:34 - we don't end up with duplicates
+63:36 - and
+63:37 - this validation is actually done on the
+63:39 - application layer itself so
+63:43 - database is not doing the validation
+63:45 - there that's the advantage of using
+63:48 - mongoose because is chemo-less
+63:51 - and unless you explicitly configure
+63:54 - some rules in mongodb
+63:56 - it does not do any validation
+64:00 - all right so now we have the customer
+64:02 - schema
+64:03 - we're going to
+64:04 - create a model and export it at the same
+64:07 - time so we're going to do module.exports
+64:11 - equals mongoose dot model
+64:15 - and then the first um
+64:18 - attribute is going to be the name of the
+64:20 - model
+64:21 - and then followed by the reference to
+64:24 - the schema object
+64:27 - okay
+64:28 - so let's do a quick recap here
+64:31 - we referenced mongoose i defined some
+64:34 - attributes some variables here that
+64:37 - help us construct the database
+64:39 - connection string
+64:41 - and then we're connecting to the
+64:42 - database
+64:44 - and
+64:45 - we're defining a
+64:47 - customer schema we have two attributes
+64:49 - in there name which is a simple string
+64:53 - and the email attribute has additional
+64:55 - properties on it
+64:57 - which sorry i missed
+65:00 - a d here so it's supposed to be required
+65:03 - so essentially we're telling it that it
+65:05 - needs to be unique and it must be
+65:06 - present and then finally we export it
+65:10 - as a
+65:11 - mongoose model
+65:15 - all right so i'm going to save this and
+65:19 - we're going to create
+65:21 - a route
+65:23 - that's going to expose crowd operations
+65:26 - and we're going to reference this
+65:28 - customer model and then make some
+65:30 - entries in the database and retrieve
+65:32 - those and things like that
+65:33 - so i'm going to go into the routes
+65:35 - folder and then create a javascript file
+65:37 - called
+65:39 - um
+65:40 - let's just call it customer.js
+65:44 - and
+65:45 - i'm going to switch to person quickly
+65:47 - here
+65:49 - essentially this is what we want to do
+65:51 - we're just going to have to type it sort
+65:54 - of all over again but let's do it from
+65:55 - scratch
+65:56 - so
+65:57 - we're going to start out with
+65:59 - referencing
+66:01 - the customer model so let's do like
+66:04 - customer model equals require
+66:07 - and
+66:08 - it's one folder above slash models
+66:12 - slash customer dot model
+66:16 - and then
+66:17 - we also want to
+66:19 - reference express
+66:22 - oops
+66:28 - and then we want to reference create the
+66:29 - router instance from that express
+66:34 - reference
+66:36 - all right
+66:37 - so
+66:38 - let's
+66:40 - let's create a route
+66:42 - that
+66:43 - will allow us to
+66:44 - create a new customer
+66:46 - so here we will create a new customer
+66:50 - and we're going to create
+66:52 - what's called a post
+66:54 - method
+66:56 - and notice that the
+66:58 - the type of uh
+67:02 - operation you're trying to define
+67:04 - the verb itself is available as a method
+67:06 - in
+67:08 - express
+67:11 - so on post we're going to call it slash
+67:13 - customer so what this will allow us to
+67:15 - do is call into localhost
+67:17 - 3000 slash
+67:19 - customer and we're going to make a post
+67:21 - request
+67:22 - to it
+67:23 - and then there's a handler with request
+67:25 - response
+67:28 - that we're going to
+67:31 - deal with here uh so one of the things
+67:33 - we need to do is when we're passing in
+67:35 - the data for creating the customer
+67:37 - object we have
+67:40 - we're going to pass it in the body as a
+67:43 - json object
+67:44 - now
+67:46 - express does not know how to handle that
+67:48 - by default so we need to tell it what to
+67:51 - do with it
+67:52 - so essentially we're going to
+67:54 - go back to index.js
+67:56 - and
+67:58 - there is a
+68:01 - a package we need to install
+68:03 - for it called body parser
+68:06 - and so let's go into the console and
+68:08 - we're going to do
+68:09 - npm install body dash part parser
+68:15 - and what that's going to do is
+68:17 - essentially look at the incoming request
+68:20 - and if it is if the content type of that
+68:23 - request is application slash json
+68:26 - basically that
+68:27 - that means that the the data in the body
+68:30 - is a json string
+68:33 - the in that case the body parser will
+68:36 - will take that string convert it to json
+68:39 - and write
+68:41 - or create a property in the request
+68:43 - object called
+68:44 - body
+68:45 - and then set the value there so
+68:47 - essentially it's doing the work for us
+68:49 - to parse that piece out so let's see how
+68:51 - that works here
+68:52 - so we're going to reference body parser
+69:05 - and
+69:06 - we're going to
+69:08 - let's do this as the first thing coming
+69:10 - in
+69:11 - uh mainly because then we can print
+69:13 - whatever is being sent
+69:16 - in our logger there
+69:18 - all right so we're going to do app.use
+69:21 - and in this case we wanted to use the
+69:23 - json module
+69:25 - so it's essentially
+69:27 - taking in any incoming json string
+69:30 - and
+69:31 - creating an attribute called body so
+69:34 - essentially what that lets us do
+69:37 - is i can also we can also print the body
+69:40 - if any
+69:42 - that's
+69:45 - converted by this body parser all right
+69:48 - so i'm going to save that and then go
+69:50 - back to our customer
+69:52 - js file
+69:54 - so what happens here is that now we have
+69:56 - access to request.body
+69:59 - before adding the body parser that
+70:00 - didn't exist so we would have to look at
+70:03 - the raw data
+70:05 - and then the content type and then you
+70:07 - know if it was json and all that stuff
+70:09 - then we'd have to kind of extract the
+70:10 - right pieces
+70:12 - and and end up constructing that so body
+70:15 - parts has taken care of that for us
+70:17 - that's the power of express
+70:19 - it has so many different kinds of
+70:22 - plugins and middleware
+70:24 - that
+70:25 - most of your application
+70:27 - can be
+70:29 - composed of these middleware
+70:31 - libraries
+70:33 - and you can of course write your own in
+70:35 - certain cases
+70:37 - so
+70:38 - in in this case what we want to do is
+70:41 - let's make sure that
+70:43 - request.body exists so we're going to
+70:46 - first check for that
+70:48 - and
+70:48 - remove that comment
+70:50 - and essentially
+70:51 - oops if it does not exist we want to
+70:54 - return
+70:56 - a
+70:56 - response with
+70:59 - a status code of 400
+71:02 - which means it's a bad request
+71:05 - and
+71:06 - send a
+71:08 - string with that response and let's say
+71:10 - we tell it that request
+71:12 - the body is missing so the
+71:15 - the
+71:17 - recipient the caller sort of knows
+71:19 - what's wrong exactly here now in terms
+71:21 - of the status messages
+71:23 - there's obviously a package out there i
+71:26 - think it's called http status
+71:29 - which has a bunch of these status codes
+71:30 - defined as enumerations so you could
+71:33 - refer to it by the text
+71:36 - name itself instead of the number
+71:38 - and i would recommend using that
+71:40 - in a real world project
+71:43 - now
+71:44 - if the body is present then now we want
+71:46 - to create an instance of the customer
+71:48 - model and save it to the database
+71:52 - so
+71:54 - let's do that here with um
+71:58 - referencing the customer model
+72:02 - and uh request so we're going to pass in
+72:05 - whatever oops was part of the request
+72:08 - body
+72:09 - and construct that model there
+72:12 - essentially
+72:13 - what we're going to pass here is
+72:16 - something like this
+72:19 - let let's say user equal to uh we need a
+72:22 - name
+72:24 - you know so this is first name
+72:26 - last name whatever and then email
+72:29 - you know email gmail.com
+72:32 - the incoming object is going to be
+72:34 - something like this
+72:35 - so that's what we're going to pass
+72:36 - through over here
+72:38 - and we'll get to how to send that as
+72:40 - well in insomnia
+72:42 - all right so the next thing i want to do
+72:44 - is save that model
+72:46 - and essentially
+72:48 - that will
+72:50 - communicate from mongoose to the
+72:53 - driver which is going to then talk to
+72:55 -  database and tell it to take these
+72:59 - details
+73:00 - the the
+73:01 - the request.body object and validate it
+73:05 - via the customer model
+73:07 - and
+73:09 - save it to the database
+73:11 - so we're going to use
+73:14 - promises here to
+73:17 - sort of follow up on this request so
+73:20 - after we save we're going to call then
+73:23 - and then is going to
+73:25 - i believe respond with the document that
+73:27 - it saved
+73:29 - and so what we're going to do is
+73:33 - if we weren't able to save the document
+73:36 - or
+73:37 - it's an array of documents i believe or
+73:39 - if document.length
+73:44 - is zero then we want to respond with an
+73:48 - error
+73:50 - so let's say it's an internal server
+73:52 - error
+73:52 - and we're going to
+73:54 - uh send that document we should be null
+73:56 - in this case or an empty
+73:58 - array and
+74:01 - if that's not the case then we want to
+74:04 - respond with a status code of 201
+74:07 - which stands for
+74:09 - resource was created
+74:11 - now this is sort of optional in a way
+74:13 - you could have responded with 200 as
+74:15 - well
+74:16 - but
+74:17 - that that's where sort of rest sort of
+74:18 - defines the guidelines you know for how
+74:21 - things should be constructed that's up
+74:22 - to you as the programmer as the
+74:24 - developer to
+74:26 - to figure out to design the system and
+74:28 - and figure out what these response codes
+74:30 - will be and then you need to document it
+74:32 - as part of your api that people will use
+74:35 - to access your your uh restful api
+74:39 - so here i'm going to respond back with
+74:41 - the document that we just created
+74:44 - and then finally
+74:45 - we can also
+74:47 - catch any exceptions
+74:49 - and so if there were any errors those
+74:51 - will be
+74:52 - caught here and so we'll sort of do the
+74:54 - same thing as above respond with an
+74:56 - error code there
+74:58 - and then instead of send we're going to
+75:00 - call jason
+75:01 - which is going to
+75:03 - take in the error object and and
+75:06 - transform it and send it over
+75:08 - instead of a specific message this kind
+75:10 - of gives us more details now it's up to
+75:12 - you how you want to respond you know in
+75:14 - your projects and stuff
+75:16 - all right
+75:16 - so
+75:18 - that
+75:19 - should complete the customer creation
+75:21 - process i'm assuming we've done
+75:22 - everything right here let's uh run the
+75:25 - project here
+75:26 - via npm run start watch
+75:29 - all right so it's up and running we're
+75:31 - going to switch over to insomnia
+75:33 - and
+75:36 - we're going to create a new
+75:39 - request i'm going to call it post
+75:42 - customer
+75:44 - and i accidentally set it to get here
+75:46 - but we're going to switch that over to a
+75:47 - post
+75:48 - and then i'm going to
+75:50 - call into our
+75:52 - endpoint here
+75:54 - customer
+75:56 - and
+75:57 - let's see what happens if i click send
+76:01 - so we get an error there
+76:03 - and guess what
+76:05 - we forgot to add this to
+76:08 - the
+76:08 - [Music]
+76:10 - routes here so we need to reference that
+76:14 - i'm going to get rid of the spaces here
+76:16 - so that these are sort of organized
+76:18 - nicely so we're going to reference the
+76:21 - let's do it right by this other route
+76:23 - here we're going to call it customer
+76:24 - route
+76:26 - equals require
+76:27 - dot slash routes slash customer
+76:31 - and then we're going to tell it to use
+76:34 - the rod here as well
+76:36 - so we it's going to register that
+76:39 - and you need to be careful about the
+76:41 - order as well
+76:43 - essentially
+76:45 - you could
+76:47 - mess things up by
+76:49 - having an incorrect order where
+76:50 - something might be returning earlier
+76:52 - than you expected to
+76:54 - anyway so i views i think this
+76:57 - so sometimes uh nodemon will crash and
+77:00 - it may not restart so at that point what
+77:02 - you can do is in your console you can
+77:03 - type in rs which tells it to restart
+77:07 - and
+77:08 - what's happening over here
+77:11 - line 16
+77:13 - it
+77:14 - does not like this because i think i
+77:17 - missed something here in customer gs
+77:20 - yep so we're not um
+77:22 - [Music]
+77:23 - i believe we're not
+77:24 - exporting that router
+77:26 - so that's what we want to do here
+77:28 - so module
+77:30 - dot exports
+77:32 - equals router there you go
+77:35 - now it's going to okay so server started
+77:37 - now so a couple of things we had missed
+77:40 - one was to
+77:41 - export the module and the other was to
+77:43 - actually import it and then tell express
+77:46 - to
+77:47 - to register those routes
+77:50 - so let's go back to insomnia
+77:53 - and
+77:54 - okay so we're going to click send here
+77:55 - again so notice earlier it said we think
+77:58 - you are lost that's because it did not
+78:00 - recognize that route
+78:01 - and it
+78:03 - and the 404 handler the the resource not
+78:06 - found handler kicked in
+78:07 - and you can see here the error code that
+78:09 - was sent back
+78:11 - so let's click send here again
+78:13 - now i get an internal server error and
+78:15 - it's giving us some details here so we
+78:18 - had responded with the entire error
+78:20 - object
+78:21 - we could have simply responded with
+78:22 - let's say the message here
+78:25 - but in our case we were showing the uh
+78:28 - we were returning everything so we know
+78:29 - what's going on here so let's uh change
+78:32 - things around here in this post request
+78:35 - so the body part i'm going to click on
+78:37 - the drop down here
+78:39 - is going to be of
+78:41 - type json
+78:42 - and then in there we're going to pass in
+78:44 - an object which has name
+78:47 - let's call it thomas anderson
+78:50 - and then we have an email
+78:53 - now if i omitted the email it would
+78:55 - still
+78:56 - complain about it too because it's going
+78:58 - to validate on the server side so let's
+79:00 - call it honest.gmail.com
+79:02 - and essentially i can
+79:05 - when i click send here
+79:07 - it says 201 created and it's going to be
+79:10 - responding with what create created
+79:12 - internally it's generating an id for it
+79:14 - as well and it also tracks the version
+79:17 - as you update the object
+79:19 - all right so
+79:20 - that was
+79:21 - it and for creating the the
+79:25 - entry in the database let's verify by
+79:28 - going to robo3t
+79:30 - now assuming you've connected everything
+79:32 - here
+79:33 - we're going to have a collection called
+79:34 - customers
+79:37 - express will i'm sorry mongoose will
+79:40 - pluralize
+79:42 - model names so customer ends up becoming
+79:44 - customers
+79:45 - i'm going to double click this
+79:47 - and that opens a new tab there and there
+79:50 - you go it's going to show you a record
+79:52 - that was created so we had
+79:55 - added these entries in there
+79:57 - when we posted to the route
+79:59 - so there you go that was that simple
+80:02 - i'm sure you may not remember a few
+80:04 - things at this point but that is okay
+80:06 - you know a little bit of practice and
+80:08 - then looking through documentation and
+80:10 - other tutorials will definitely help you
+80:14 - understand this better
+80:16 - so let's go back to the customer route
+80:18 - i'm going to uh
+80:21 - go to the post here and so we were
+80:24 - ensuring that a body was present we
+80:26 - could have also sort uh checked for
+80:29 - other attributes being present so as
+80:31 - part of body we could have checked
+80:33 - something like if
+80:34 - not request.body.email
+80:38 - right and then i could have
+80:40 - done something here and responded
+80:43 - however the customer model is actually
+80:45 - validating some of that for us so if
+80:48 - things were missing here that the
+80:49 - customer model expected like email for
+80:51 - instance
+80:52 - then this catch block would be triggered
+80:54 - and we would still get an error
+80:56 - so that's one of the advantages of using
+80:58 - mongoose
+80:59 - anyway so let's quickly add a couple
+81:01 - other methods here so we're going to
+81:05 - next add the ability to retrieve
+81:08 - uh this data so we're going to create
+81:11 - an endpoint called customer
+81:13 - uh to get the customer we're going to
+81:15 - have the same format here again request
+81:17 - response
+81:18 - and one of the things
+81:20 - we're going to do here is
+81:23 - we're expecting
+81:25 - an email so we're going to look up the
+81:27 - customer via email so we're going to
+81:29 - create we're going to actually
+81:32 - use the customer model directly and the
+81:34 - model gives us a few methods on it that
+81:36 - allow us to
+81:38 - search through
+81:39 - a query through the content in this case
+81:41 - so we're going to call a method called
+81:44 - find one
+81:45 - and mongoose has a very rich api
+81:49 - it has a ton of functions that
+81:51 - definitely are way out of scope for for
+81:53 - this workshop but i would encourage you
+81:55 - to look at their documentation
+81:58 - there are also lots of interesting
+81:59 - articles out there that'll highlight
+82:00 - some of those
+82:02 - but anyway in this case we're going to
+82:04 - use find one and find one takes an
+82:07 - object with attributes as the query
+82:09 - parameter
+82:10 - so in this case we're going to pass in
+82:12 - the email which we're expecting via
+82:16 - query.email for instance and then of
+82:19 - course we want to make sure that it
+82:20 - exists up here so we're going to check
+82:22 - for request of query.email
+82:25 - if that's not present
+82:27 - we're going to respond
+82:29 - with oops return
+82:31 - respond with a status code of
+82:34 - 400
+82:36 - resource i'm sorry uh
+82:39 - 400 isn't there
+82:41 - um
+82:42 - and we're going to tell it that it it's
+82:44 - missing url parameters
+82:47 - so let's do send
+82:50 - missing url parameter email
+82:54 - that's required so that's going to exit
+82:56 - out of there if not we should also have
+82:59 - our document available on on the then
+83:04 - method that gets called
+83:08 - and what we can do is respond
+83:10 - to the request with that document
+83:13 - if there is an error we want to handle
+83:15 - that here in the catch block
+83:18 - and essentially
+83:19 - respond back with the status code of 500
+83:25 - with
+83:27 - this error object
+83:30 - and
+83:31 - that should return
+83:32 - the model there i'm going to quickly add
+83:34 - a couple of these other methods since
+83:36 - we're almost out of time here
+83:39 - so the the other is
+83:41 - put that allows us to
+83:44 - update the existing customer
+83:46 - and
+83:46 - all these have a similar
+83:49 - format what i'm going to do is
+83:51 - i will
+83:53 - copy some of these elements here
+83:56 - um
+83:57 - and then just paste it there
+84:00 - essentially
+84:01 - i could uh i could use some of this or
+84:04 - use some of that
+84:05 - so we have request response
+84:08 - and in this body here
+84:10 - uh
+84:11 - we're going to
+84:12 - actually need the email piece as well so
+84:14 - we're going to check
+84:16 - that there is a an email present in the
+84:18 - query
+84:20 - if not
+84:21 - we're going to call a method
+84:24 - on the model
+84:26 - called find one
+84:27 - and update
+84:29 - and essentially it's going to query
+84:31 - based of this
+84:33 - and then it takes another parameter
+84:34 - which is
+84:36 - your
+84:37 - body in this case so let's call
+84:40 - into that that would be request.body
+84:44 - and oops
+84:46 - buddy and then you know you can pass an
+84:48 - options object in this case the options
+84:50 - basically
+84:51 - one of the options we're going to pass
+84:52 - it is to return the newly created or
+84:55 - updated object otherwise it returns the
+84:58 - same
+84:59 - it would return the same request body
+85:00 - that you sent in but since we want to
+85:03 - make sure that the change actually went
+85:04 - through
+85:05 - uh we want to
+85:07 - do that set that attribute i have a typo
+85:10 - here so i'm going to change that to
+85:11 - status
+85:13 - and then
+85:14 - so
+85:15 - this was your post request
+85:17 - this is your get request
+85:20 - and then this is your
+85:23 - update
+85:24 - request so the you and the crud
+85:27 - and uh customer sorry i have a few typos
+85:31 - here
+85:31 - all right so that that that will update
+85:34 - the the existing object via
+85:37 - a match on the email
+85:40 - and then finally we want to be able to
+85:42 - delete
+85:44 - so that would be router.delete
+85:47 - and again
+85:49 - very similar to this i'm just going to
+85:50 - copy paste
+85:52 - that part of the code as well
+85:54 - so essentially you're
+85:57 - calling into customer
+85:58 - we're going to make sure that email
+86:00 - exists
+86:01 - and then
+86:02 - there is a method called find one and
+86:06 - remove
+86:09 - which will take in your email
+86:12 - and then we we don't need the request
+86:13 - body and the new pieces from uh above
+86:16 - that we copied
+86:17 - and everything else here stays the same
+86:19 - again
+86:21 - um
+86:23 - all right
+86:24 - so
+86:25 - i think that that covers
+86:27 - the basic crud operations
+86:29 - and let's go into uh insomnia and test
+86:32 - it
+86:34 - so let's go down let's make sure the
+86:37 - terminal is still okay the project is
+86:39 - still working fine i'm going to switch
+86:41 - over to insomnia
+86:43 - and then
+86:44 - i'm going to duplicate this
+86:46 - and call it put customer
+86:49 - and essentially this method should be
+86:51 - put
+86:52 - and we're expecting a query string
+86:54 - called
+86:55 - email
+86:56 - so we're going to pass an email equals
+86:58 - thomas
+87:00 - gmail.com and then we're going to send
+87:02 - in the body here let's call it
+87:05 - thomas updated anderson
+87:07 - and we're going to click send here
+87:10 - and there you go
+87:12 - it responded with an ok
+87:14 - and if you notice the the object that it
+87:16 - responded with is
+87:18 - the the newly
+87:20 - created
+87:22 - object
+87:24 - and i think i made a mistake earlier
+87:25 - when i mentioned that it responds with
+87:27 - request our body what i meant to say was
+87:29 - a response with the original object that
+87:32 - it it finds
+87:34 - and not the updated object
+87:36 - so let's duplicate this again
+87:39 - and
+87:40 - there is
+87:42 - we want to get customer in this case
+87:45 - and we're going to
+87:47 - call that
+87:48 - get here
+87:49 - and essentially want to get this by
+87:52 - again via email so let's call this
+87:54 - thomas gmail.com
+87:57 - and then we don't need a json body here
+87:58 - so we're going to delete that
+88:01 - and you can leave that as is and then if
+88:02 - we click send here
+88:04 - it's going to retrieve whatever was sent
+88:06 - in
+88:08 - and finally i'm going to duplicate that
+88:09 - again
+88:10 - and call this
+88:12 - delete
+88:13 - customer
+88:16 - and so change that again to delete
+88:19 - and essentially the query string stays
+88:21 - the same i should be able to
+88:24 - hit send
+88:25 - and then it says okay it's responding
+88:28 - with what was deleted let's say if i
+88:30 - were to click send again
+88:33 - it's going to respond with a null
+88:34 - because that object has been deleted
+88:36 - already so let's verify that by going
+88:38 - into robo3t
+88:40 - so
+88:41 - here i can either if you're in windows
+88:44 - you can do control r on a mac it's
+88:45 - command r and if i refresh it you'll
+88:48 - notice that the record has disappeared
+88:50 - now
+88:51 - so
+88:52 - most of those other methods were very
+88:54 - similar
+88:55 - in terms of the
+88:57 - the restful uh setup as well as
+89:00 - uh
+89:01 - you know the attributes that were coming
+89:03 - in and things that we were modifying and
+89:05 - stuff like that so let's do a quick
+89:07 - recap here
+89:08 - we created a
+89:11 - customer model
+89:12 - which is part of the customer model js
+89:14 - file uh you're familiar with this by now
+89:18 - and so we reference that in customer js
+89:20 - that's our route
+89:21 - and essentially we're creating a route
+89:23 - here the first piece is
+89:26 - a
+89:27 - create
+89:28 - operation that's handled via the post
+89:30 - verb
+89:31 - and it's calling into customer
+89:33 - we're expecting a body to be passed in
+89:36 - we added the reference to a body parser
+89:39 - middleware for express which actually
+89:42 - gives us that data that's passed in the
+89:43 - body
+89:44 - attribute
+89:46 - this was just an example here that we
+89:47 - could check for an email to exist on
+89:50 - that body as well
+89:51 - there's obviously a lot of error
+89:52 - handling that you can do to make this
+89:54 - more robust
+89:56 - and essentially the object coming in
+89:58 - will look something like this that we're
+89:59 - simply passing through
+90:01 - to the customer model so we create a new
+90:04 - instance of the customer model with that
+90:06 - incoming json object and we call save on
+90:10 - that model
+90:11 - and then
+90:12 - basically uh there are two uh methods
+90:15 - here on the uh
+90:19 - sorry
+90:20 - uh
+90:21 - this is using promises so promises have
+90:24 - then and catch and so we're handling
+90:27 - uh
+90:28 - you know different error conditions and
+90:29 - then what not here so this is pretty
+90:32 - straightforward here i think the
+90:33 - important piece is how to create that
+90:36 - route
+90:37 - and how to respond
+90:39 - you want to make sure you're passing
+90:40 - back the right error codes and things
+90:41 - like that
+90:43 - or status codes and things like that
+90:46 - get request was very similar
+90:48 - you know you change the verb here the
+90:50 - method name the maps to get
+90:52 - um
+90:53 - similar things here just the method on
+90:55 - your customer model changes
+90:58 - so essentially that was like the the
+91:00 - only big change between all the other
+91:02 - methods
+91:04 - on the route so you have get and on
+91:06 - update you have find one update
+91:09 - and for delete you have find one and
+91:11 - remove
+91:12 - so i think that that about wraps this up
+91:16 - i think that there was a lot of content
+91:18 - that we
+91:19 - crammed into this hour and a half
+91:22 - and
+91:24 - sorry if someone says as a pure database
+91:26 - person your brain hurts i apologize
+91:30 - it's it's
+91:31 - a lot of moving pieces here and if you
+91:33 - don't get it
+91:35 - it's okay don't feel bad it took me a
+91:37 - long time to really
+91:38 - understand this and master it
+91:41 - these things take time just because of
+91:43 - you know changing apis and and
+91:46 - uh also the variety of functions that
+91:48 - they expose
+91:50 - so i want to do something real quick
+91:51 - here before we end
+91:53 - so i'm going to um
+91:55 - clear my console here and now we have
+91:57 - our application here
+91:59 - we have a package.json that defines the
+92:01 - project and and the scripts and things
+92:03 - like that
+92:05 - there is a service called
+92:07 - now.sh
+92:09 - that essentially allows you to
+92:15 - make to deploy your node.js applications
+92:18 - real quick and so i will let you explore
+92:21 - this but
+92:22 - what i'm going to do is simply deploy
+92:24 - this to the cloud now and so what i need
+92:27 - to do is go into my application folder
+92:30 - and i type in now i have the now client
+92:32 - installed
+92:34 - via npm as a global and they have all
+92:36 - the instructions here on on this site
+92:41 - but i simply want to show you how easy
+92:42 - it is for us to get this up and running
+92:44 - in the cloud since i'm using the free
+92:46 - version
+92:46 - it's asking me a question stating that
+92:48 - my application will be public
+92:52 - and
+92:53 - so essentially what it's doing is it's
+92:55 - it's zipping up the application it's
+92:56 - making sure that there's a package json
+92:58 - that exists
+93:00 - it will
+93:02 - um
+93:03 - upload that to the server side and then
+93:05 - it's unzipping it and it is running the
+93:08 - npm
+93:10 - install command which ends up setting up
+93:12 - all the dependencies
+93:14 - that we require for the project
+93:17 - and
+93:20 - here you see it it's done it's giving
+93:21 - you a status about what's going on
+93:24 - so
+93:25 - it um
+93:28 - did a bunch of things here uh it's
+93:30 - telling you which version of node it's
+93:31 - using
+93:32 - there is an actual endpoint that it
+93:34 - created for us and it's copied into the
+93:36 - clipboard it synced all the 10 files
+93:40 - it's initializing its build process
+93:42 - it ran npm install
+93:46 - package.lock.json is
+93:49 - something new with npm5 it allows you to
+93:51 - replicate the exact versions of
+93:54 - libraries that you used
+93:57 - and then
+93:59 - i guess it was waiting to so internally
+94:02 - it's running the npm start command
+94:05 - i think one of the things that i missed
+94:07 - here in package.js and i want to quickly
+94:08 - add is we want to set the
+94:13 - the the process environment
+94:17 - variable
+94:19 - and
+94:20 - essentially in index yes we were doing
+94:22 - this here
+94:24 - for port so we want to make sure we're
+94:25 - setting port and it's as easy as
+94:28 - going in here and setting port
+94:31 - equal to whatever value
+94:34 - that we would need
+94:36 - but anyway i i think this should be
+94:38 - deployed already i think it's copied but
+94:40 - i'm going to make sure i copy it again
+94:42 - and then we're going to go to the
+94:43 - browser and let's put this in there
+94:46 - let's see if that works there you go so
+94:49 - we quickly got our application up and
+94:51 - running
+94:52 - in the cloud and since we were using
+94:54 - mlab you know it's connected to the
+94:56 - database we didn't have to worry about
+94:57 - uploading the database or installing a
+94:59 - database and things like that of course
+95:01 - you would need to
+95:03 - to uh have a config file that then looks
+95:06 - at the type of environment you're
+95:08 - running in development staging test
+95:10 - production and then use the appropriate
+95:12 - values from there to connect to the
+95:14 - appropriate databases
+95:16 - but here you go you can actually
+95:18 - do this very quickly and play with it
+95:20 - once you
+95:22 - have your application up and running
+95:24 - there's a question here
+95:26 - that says do you usually need to use
+95:29 - mongoose to access a mongodb and the
+95:31 - answer is no
+95:33 - you don't
+95:34 - that the new mongodb driver is
+95:36 - definitely
+95:37 - a lot more powerful lately where it
+95:39 - allows you to do validations as well you
+95:41 - can define a lot of those things
+95:43 - several people prefer that approach
+95:45 - i personally have been using mongoose
+95:47 - for a while so i stick with it because
+95:50 - i'm familiar with the api and it
+95:52 - provides
+95:54 - us with a lot of rich methods to
+95:57 - to handle these these uh
+95:59 - interfaces into the database and i can
+96:02 - also abstract my models out and add
+96:04 - specific methods on it to do more
+96:06 - complex
+96:07 - operations and so it sort of provided a
+96:10 - very good plug-in model for that
+96:12 - and so yeah the answer is no you don't
+96:14 - have to use mongoose
+96:17 - but it just simplifies a lot of the
+96:19 - process there
+96:20 - i did write a couple of articles that
+96:22 - might be useful one of them was
+96:24 - introduction to mongoose
+96:27 - i don't know if i can
+96:30 - introduction to mongoose there
+96:32 - this one specifically walks you through
+96:36 - you know how to use mongoose for mongodb
+96:39 - and and
+96:40 - check it out see what do you think of it
+96:42 - there's also another one i have called
+96:46 - building your
+96:47 - uh
+96:48 - how to build your own react boilerplate
+96:51 - this kind of introduces react into the
+96:53 - mix but it also walks you through some
+96:54 - of these basic building blocks for
+96:57 - creating you know express servers and
+96:59 - things like that
+97:01 - the idea was that most people start out
+97:03 - with
+97:04 - using some existing boilerplate like
+97:07 - create react app for instance
+97:09 - but they don't understand the underlying
+97:11 - building blocks and that was the idea
+97:12 - here to break it down into
+97:15 - individual pieces so you understand
+97:17 - what's going on now this one of course
+97:18 - uses uh webpack version three so i do
+97:22 - plan on updating it with version four
+97:23 - which is a lot easier uh in case you're
+97:25 - you're planning on reading this
+97:27 - anyway um i think that about wraps it up
+97:30 - i apologize for going 10 minutes over
+97:32 - here
+97:34 - i think yeah that was it
+97:37 - if you have any additional questions
+97:39 - please feel free to reach out
+97:42 - directly to me or
+97:43 - on dev2
+97:45 - you can follow me on twitter at the
+97:47 - outlander
+97:49 - and i hope this was
+97:52 - worth your time
+97:53 - i
+97:54 - hope you get to play with this further
+97:57 - and and
+97:58 - make sure you explore all the apis look
+98:01 - up the documentation for express for
+98:04 - mongoose
+98:06 - check out now.sh
+98:08 - which will allow you to deploy your
+98:10 - application very quickly compared to you
+98:12 - know aws and even heroku is pretty fast
+98:15 - but now just takes it to a whole new
+98:17 - level where all you type is now and it
+98:18 - gives you this url with your application
+98:21 - and you can map a domain name to it
+98:22 - directly and scale very easily and and i
+98:26 - have used a ton of cloud providers and
+98:28 - and i absolutely love now and would
+98:30 - highly recommend it
+98:33 - alrighty thank you so much i'm going to
+98:36 - pause this session here
+98:40 - and
+98:41 - hope to hear from you soon
+98:44 - bye
+
+Cleaned transcript:
+
+hello and welcome to this workshop on building a rest api with node express and well let's begin with the agenda for today we're going to start with touching upon some of the concepts related to this topic followed by the installation of the environment and we will start with setting up the application before we dive into the crux of this workshop which is to set up a express web server and then we're going to connect it to mongodb via mongoose and i have a bit of a stretch here if we have time i want to show you how to deploy this application using a service called now.sh so let's start with concepts around http rest and apis so what is http it stands for hypertext transfer protocol now hypertext is basically text that can link to other text hence the word hypertext transfer protocol because that's been transferred it's an application layer protocol it's built on top of the tcp ip protocol what that means is it's using tcp ip for communicating but then there's application layer logic on top it pretty much defines all the rules for transferring resources between a client and a server now every http request is executed independently so on the server side it does not have knowledge of any of the requests that came before it and that's what makes http stateless but here's an interesting thing it's built on top of tcp ip which is not stateless so how does that work basically when you send an http request it's issuing a connection via tcp ip to the other side it could be a server or the client and the tcp connection stays connected http will send what it needs to and then it's going to disconnect hence it's known as stateless one of the cool things about http is that you can transfer anything in the body as long as the http headers define what is being transferred so for instance if you have an image versus html file versus a javascript file embedded in your body then you need to specify the content type in the header and that's how the receiving end knows what to do with it now let's talk about rest it stands for representational state transfer it's actually an architectural pattern with design guidelines http is usually the underlying protocol when you're implementing rest but rest can be implemented on other protocols it hasn't been used as much though what http provides us is basically a set of methods that need to be used explicitly by the rest pattern every restful resource has a unique id which makes it interesting because you can reference different things over the internet via specific url now client state is not persisted between requests so that's what rest basically states that we should be doing however that state can be passed along to the server via some attributes that help the server decide how to process that request rest also states that the application should define a caching policy for responses what that means is it allows the client to make a decision on the received content and they can decide to either keep it in their cache and serve it from there for subsequent requests so that it improves the application performance it also dictates that there should be separation of concerns between the clients and servers what that means is the client does not care about what is the memory usage on the server or what the setup is of the hardware and things like that and vice versa that's also a layered system so the client doesn't really know if it's talking directly to the host server or if there are other intermediate servers such as proxy servers or edge cache servers and things like that now let's talk about what an api is it stands for an application programming interface basically you have functions that are defined on the server side and the api tells you what is supported from the server and where the request should be made so essentially it's going to tell you what the the pattern of the urls are that you're going to call in use to call into the server pretty much it's telling you what the format of the request and response is now there's no standard way of writing apis and that's what makes it somewhat powerful but at the same time it's a bit scary because you know every system will vary so much and so that's where rest comes in it provides us with guidelines on how these apis should be constructed you're going to hear about something called a crud operation over and over when you're using rest and all that stands for is it's an acronym for creating reading updating and deleting records so essentially when you're making a call over an api you're performing one of those four operations anyway let's get started with the installation i had a note about this in the workshop description so hopefully you are all set up with this but i quickly want to touch upon what this entails so we need an ide where we're going to write code you need node.js installed usually npm is part of the node.js installation so you should be good there we're going to use an instance of a database in the cloud via mlab.com and then one of the things i mentioned forgot to mention was that we need a rest client i'll get into the details there something like insomnia or postman and then finally robo3t which allows us to look at the data in so as for the ide you have three different options vs code atom and webstorm that i would recommend but there are a ton of ideas out there you want to find something that's going to help you with the language and the framework that you're working with and all three of these are very powerful and customizable as far as node.js is concerned you can get any latest version of node.js and we should be good that should have the latest package manager there is a subtle difference so if you have version 5 you don't need to use the save command because it automatically saves everything in the package when we install any of the packages and then as far as coding today we're going to use the natively supported es6 and 7 that's available in node that way we don't have to set up babel or any other transpilers if you can go to node.green you'll notice that it lists out all the features that are supported by node and this gives you a good idea of which version supports what feature in es6 and 7. sorry we're trying to figure out the video here and some reason it's not running just give me a moment here um i'm not sure what's going on there leanna anyway let's continue for now so mongodb can be installed locally or you can get an instance via the mlab cloud and at the same time if you are a fan of docker you can use docker to deploy it somewhere or or install it locally as well we're going to use mlab for this workshop because it allows us to easily deploy the application and not worry about a installation during deployment as far as the rest line goes we're gonna use it to test the api that we build and i prefer insomnia because it's pretty lightweight but postman is also very powerful now i got a question here about if i have any experience with webstorm and what do i think of it so i've used several ides over the years years actually 20 some years and i really love webstorm because it allows you to do things that most of the other ids require you to configure it from scratch like vs code for instance there's one subtle aspect of vs code that i dislike compared to webstorm and that is you cannot get multiple console windows in a tabular view they have sort of a drop down and so you can quickly switch between those windows and i'm sure there's a plugin out there but i haven't found that yet as far as sorry there's another question here which says things like mlab seem way more popular in node world do you have any thoughts over why this is the case compared to other ecosystems i believe is an integral component of most node applications mainly because you're coding in javascript all the way from the browser to the back end and it lends itself very well to as well because you're storing javascript objects or json and then that what that means is you don't have to go through conversions uh for your data compared to other databases now using mlab specifically they have a very good interface and they provide you with a free starter database that you can uh get everything up and running within a minute literally so it's naturally the preferred option because it saves you a lot of time from having to configure it getting back to this if you guys can download insomnia or postman you should be able to follow along with testing the api now as far as getting started we need to set up the application first so that we can start to code the apis so we're going to start with creating a project folder and then you will open up your ide either whatever it is you're using in that project folder and then we'll start to construct other subfolders and files there so what i'm going to do is i have a slide outlining what we're going to accomplish and so i will keep switching between the slide and webstorm as we complete these tasks so in this case we are initializing our node and then creating a very very basic hello world script actually and we're going to set up some startup scripts that allow us to run our application and then we'll build from there so here is my webstorm instance i have a folder that's created here what i'm going to do is in the console at the bottom here i'm not sure if i can increase the font in the console but i will in the code what i'm going to type is npm init and i just want to make sure i'm in the correct folder here i am okay so i will type an npm init and then i will provide an option optional parameter called dash y which stands for simply don't ask me any questions just generate the the package.json file this is what npm minute will do is it'll create a package.json file under your folder and it has a few attributes there that define what this project is going to contain especially if you were turning it into a package that you wanted other people to consume that's where some of these attributes come into the picture so in addition it also allows you to set up some scripts that you can run as npm commands and we'll get to that in a bit so let's start out by creating a folder under a root and call it src which stands for source now under the source folder we're going to create another file a javascript file and we're going to call it index dot js usually in webstorm and i think most ides if you leave out the extension it'll automatically create it and let us simply type in a console.log statement here and we will call it hello world i'm going to save this file and then go down to the console and i can run it by typing in node and then pointing to the file so it's under the source folder slash index.js and there you go you will see print hello world so pretty much it has executed this file that we created very simple now let's make this a little more uh let's add a helpful command to to our package.json so that we don't have to keep pointing to the file and typing in node uh source index so what i'm going to do is modify the scripts section of package.json i'm going to add a command called start and what we're going to put in there is the exact same command that we typed at the bottom of the window here and this runs relative to the project root i'm going to save that i will clear my console and i'm going to run npm start notice that it tried to run it ran our command here and then you'll see the output at the bottom so start and test are two commands that you can run via an npm without an intermediate keyword called run so normally most of the commands require you to type in npm run and then the name of the command so npm run start works as well except for node made it a little easier sorry npm made it a little easier by allowing us to just do npm start very well i'm going to switch back to our presentation window here all right so hopefully everyone's caught on to that next let's get started with express express is an npm package and it is basically a lightweight web server what that means is it's taken all the node.js http classes and added a layer on top of it so that it can communicate or so that it allows you to communicate via restful endpoints let's start out by installing the express dependency and then we're going to reference the library and create a very basic express application so going back to the console here i'm going to type in npm install express and if you're using npm version 5 and above it automatically saves it to your package.json so look in my package.json here and you'll notice that there's a dependencies section that showed up and what this means is that when the project is running it's going to have express available to it next we're going to switch over to the index.js and you can get rid of the console log here let's start out by referencing the express library so we're going to type in let express equals to require express next we want to create an application so we're going to call it app equals express and you can open and close brackets and that creates an express application so one of the things we want to do now is have this express application serve some content so let's start out by serving some static files so i'm going to create a folder under under the root and i will call it public this is where we're going to store static resources like html files your images javascript css and things like that so let's create an html file here i'm going to call it index.html let's give it a title and then in the body we'll put in some text save the file and go back to index.js so the way you can serve static content in express is via a function called express dot static so i'm going to tell express to use this specific static file handler this is also known as a middleware and it's built into express so what i can do here is express dot static and then i will pass in the name of the folder that i want to serve content from and that's public this is relative to the root of the project and finally we want express to listen to to a port on the machine so we're going to do something like this actually let's create a variable here and i'll tell you in a moment why so let's call it constant port and we can read this port value from the the environment variable it's something that's defined on the command line before you start the project and or if that's missing we can substitute 3000 for it so i'm going to do process dot env which is environment dot port and then if that does not exist we're going to default to 3000 so i will substitute this 3000 here with the value port and then let's simply output a message that says server i'm going to use these backticks here so i can introduce a variable in there and let's call the server has started on the port that it's actually running on so that way we know where the server is running oops i missed the end there all right so we're going to go back and run the server here again by calling node i'm sorry oh we have the script commands we're going to do npm start and there you go you see that a message that says server has started and notice that the program is still running that's because the the server is running and it's not going to release control until we stop it and the way to stop it is to push control c anyway let's switch over to a browser window and what i'm going to do is try to oops sorry that's 3000 and so there you go you'll see the message that we typed into the html file so this is very simple it allows you to actually put any file in the public folder and you can serve it through through a url here so essentially what this is doing is defaulting to index.html the file that we created so if i type this path it still loads the same content alright so now i'm going to switch back to our slides here and so we've accomplished these things here let's move on to the next which is actually i had a slide here for serving static content so where essentially we created a public folder under root and html file and we configured express to serve that static content now let's get on to something more interesting we're going to create our first api endpoint and api endpoints are usually set up with http verbs so you may have heard about something called a get request and what that's essentially doing is making a call to the server as with the get keyword and the server is responding with some content we'll also talk about a couple of other attributes in that request called request parameters and query parameters so let's head over to webstorm again and what i'm going to do is create a folder under source called routes and then let's create a file called person.js we're going to create what's called a route in express they're basically you can consider them as mini applications and there are advantages to it and i will talk about it in a bit so essentially we want to start out by referencing express here followed by a router from that express instance and then towards the bottom of the file we're going to export that router what that allows us to do is now imported in the index.js file now let's go ahead and add sorry the the route we were talking about earlier and i'm going to call it person so we're making a call to get a person object here and usually a route has a callback method that gets called when you when you make that request so in this case it's going to have two parameters a request and response and then we're going to do something with it so let's do something very simple here express makes things easier for us some of these things you see here are things we would have to code normally and and in this case it allows us to do something very simple like send a message here so let's call this you have requested a person essentially this is a route that we've created that can be accessed via localhost colon 3000 slash person and that's what it's going to respond with now before we go back to the browser and try this we want to go into the index file and then reference that file that we just created so let's call it person route equals require oops and we're going to go into the routes folder slash person you don't need to specify the js extension and then finally we're going to tell express to register this route oops person route all right now notice that we have to go down here now and and stop the server and restart it because it's not going to pick up the changes that we just made automatically anyway so i just restarted the server here we're going to go to the browser again and call that route we just created so localhost 3000 slash person and there you go that's how simple it is to create an api endpoint of course this is a very basic version of that now before we continue i want to do a couple of things here i want to show you how to use this tool called insomnia or you may have installed something called postman so essentially this allows us to test the apis that we are creating so let's go ahead and create a request here i'm going to call it get person and it's a get request you can change this later on so if you get the wrong thing there it's okay you can go up here and change it to a different kind of request one of the things i forgot to mention was that crud operations map to four requests you have the create which happens on a post the read which happens on a get the update happens on put and delete happens on delete so we have a question here when would changes be picked up automatically and when do you need to restart the server coming from rails world wondering about how things are different so we need to set up a a command and a reference library that will monitor our project for changes so we'll do this right after the the insomnia piece we're looking at but the the changes are picked up based off the files that are monitored any sort of a change in that file once it's saved will restart the server is insomnia better than postmen so i i started out using postman and i haven't touched it in a while so i don't recall exactly but from what i remember post insomnia was a lot easier to work with it was much more intuitive in many ways compared to postman i think postman might have improved they do have a lot of advanced features too that i don't think insomnia does but for our purposes here the insomnia works just fine this is actually what i use on a daily basis i haven't gone back to postman in a few years now so we wanted to talk about uh accessing the person route so what i'm gonna do is put in the url for our server and then in this case we're going to call person and then i can either enter or click send here and there you go this allows us to define all the different routes that we've created and test them out over here one of the things that postman lets you do is generate test cases from these routes and and they have additional tooling there so i would definitely encourage everyone to check out both these tools i think postman is definitely valuable sometimes i find it a bit too bloated but they're they're both very similar so in this case i think what uh rest api i'm sorry what get person we allows us to do here in insomnia is also generate some code that we can then test out through node or any other project so i'm going to click on that real quick and then notice that it has a bunch of languages here and so essentially you can pick something so let's say we were doing this in node.js then i have the option of choosing which type of library that it's using to make that request and i generally would choose request because it's the shortest piece of code here and it's essentially sending some attributes here and then making that request to the endpoint and i can copy this and then paste it in my test file and then sort of go on from there all right so that's that let's go back to webstorm and we're going to now talk about setting up a script that allows us to monitor for changes so we don't have to restart the server so the first thing we will do is let's stop the server here we're going to install something called nodemon now there is an alias for install i could just use i instead of install and nodemon is what i want to install now prior to npm5 you had to specify things like save which would save it as a dependency in packet json however in this case because we're using the latest node version npm version we don't need to do that but nodemon is something we're going to run during development only so we would specify either save dev or there's a shortcut for or a short for it which is dash d they both do the same thing so what that's going to do is create a dev dependencies section here in package.json and those dependencies are only available during development time so basically if you were to deploy this through a ci system like circle ci it's going to do npm install when it downloads the project and all that is going to do is install dev dependencies all right so we have nodemon created here um what we're going to do is learn how to use it actually let's just put it in a let's create a command here so we're going to call it start watch and all we have to do is nodemon and point it to a specific folder here actually we can just do the file in this case and so we can run it with npm run remember we need run this time because it's not the start or test command and then that's going to monitor this specific file for changes you can also specify folders to be monitored and things like that and it's going to internally run the startup file and monitor a set of folders these are things you can look up in the documentation as you get acquainted with these uh various libraries all right so let's go back to the slides again sorry this requires me to switch things around a bit so we we talked about a get request next let's focus on a couple other attributes that can be passed through so i'm going to go back to webstorm here into the person.js file so we're going to create a couple more routes around person itself so what i'm going to do is copy and paste this down here and one of the things that we want to be able to do is let's say pass in an additional sort of subroute that can be mapped to a variable so let's call it name and we need to specify a colon before it so express knows that it needs to map that to a variable and this these variables here are available through the request object in a property called params so let's just print that out here i'm going to put a comma there we can do request dot params dot name i'm going to oops sorry i thought this was console.log i'm going to change this to a template so i'm going to do the backticks that allows me to treat this as a variable in my state uh string here and i will close it with the back deck so that basically is the same as doing uh you have requested a person plus uh space plus this all right so let's save this and notice that our server automatically restarted so we're going to go to insomnia and i'm going to create another route here i'm going to duplicate this by right clicking and picking duplicate and then let's call this get person by name and all i have to do in the route here now when as i switch between these it's choosing the right so it's showing you the output for whatever stored there so when i when i make uh changes to get person by name it's not going to affect person so i can go ahead and do that here and let's call it uh let's give it a name here and then i'm going to click send and so it's simply responding back with the parameter that we passed in all right the other thing we can do is so this here is a params object or property on the request object what i also want to do is allow us to pass in a query string which is a query string is basically a query property on the request object all right so the way to accomplish that is simply by checking the query object here so let's let's say we look for request dot query dot let's call it name as well so that's what we're going to pass in then we will do something there else we're going to handle it like we were originally so in this case i'm going to copy this thing over here again from line 16 to line 7 and i'm going to replace params with query that's the only difference really so what this allows me to do is basically pass call something like uh localhost 3000 slash person with what's called a query string so anything after the question mark is basically a part of the query string and it's a key value pair so i could essentially add additional key values here by adding an ampersand so let's say name uh in age equals 20. so this you know we're not doing anything interesting right now we're simply echoing whatever is passed in but this is what that allows and in case of params this allows us to do something like this localhost 3000 slash person slash name so that's the difference here between the two this is part of the route and that is part of the query string all right so i'm going to save this and let's go back to insomnia and in the get person piece i guess we can duplicate this as well again and then i'll call it get person by query string and so all i have to do here now is specify the name and click send there you go so we have three ways of accomplishing the same thing or i'm sorry two ways here by specifying a parameter so this by query string and by uh params so i'm going to rename this just to make it clear so there get person by params all right okay so hopefully this is clear enough so far moving on so we talked about middleware and we set up a middleware earlier called static which is part of express now middleware are simply functions that are executed back to back or serially in the request pipeline so when a request comes in there are a bunch of functions think of it as an array of functions and they execute from the index 0 all the way to the end and each one calls when it's done calls into the next function it has the ability to also modify the request and response objects and pass in additional details downstream or it can also decide to respond and and not call into other functions downstream because maybe uh the incoming request was meant to be handled by that function so i think i covered through all these things here and yeah so let's go ahead and look at some code and see how to do that so the easiest middleware for us to set up is to log every request that comes in so we're going to accomplish that by going into index.js and note that the order in which these handlers are added matters because that's how these middleware functions are pushed onto the the array and executed in that same order so it's possible that um person route sort of is the function that is supposed to serve the request and it ends up ending the resp the the chain of uh functions that are called so we we want to actually print out the incoming request as the first thing so that we can catch everything that comes in so we do that by calling app.use and we're going to set up a a function right in place and middleware functions take three parameters you have the request in response just like the other routes that we created but there's also something called next which is a reference to the next function in the pipeline and in this case let's just console.log a few things here i'm going to use the backticks again let's uh put in a variable here and i'm going to create a new date object and i'm going to call tostring on it which will print a long version of the date and time i believe and then we're going to also let's say uh list out the url that was requested which is under the original url attribute of the request object and we can in the future we'll modify this after a few more changes so i i saved this and what i'm going to do oh the thing i forgot here is that we need to call next after we're done otherwise it's going to break the chain of functions that are called in in that pipeline and essentially if i wanted to just respond from here i would do something like respond.response.com is one way to sort of respond back and then not call next and that will break the pipeline however if i don't respond to it and i don't call next then the user is going to be waiting for that request until it times out so we have to make sure that we call next here and remove the response then all right so what's going to happen here is basically we're gonna see things printed out here uh sorry i'm just taking a look at what's going on here that's probably from what we had up there i'm going to clear my console and let's go ahead and make a request in insomnia so i'm just going to call the same route again and go back to webstorm and notice that there is a a line that's been output here which prints the the the long form of the date time and the the url that was requested so there you go i mean this is a very powerful concept because now you can inject functions that do things for every route in the system and you can choose to ignore it and not do anything and then just pass the control along to the next function in the pipeline all right so going back to our slides here so another thing we can do with these middleware is handle uh 404 and 500 errors and other errors and things like that and so let's let's go through how that's done uh we're going to respond back for 404 let's say with some content initially a string and then we can i can also show you how to to respond with a specific file all right so for a 404 handler all you need to do is add a uh middleware function towards the end of the chain so the express.static is the last thing we have in our chain at the moment and so i'm going to add a middleware function here that's going to take the same request response and next parameters and essentially what this is is is is a handler for the 80404 uh not found or resource not found and what we're going to do here is respond with a status code that says 404 and we're going to send a message it says we think you are lost all right so let's go ahead and test that all we have to do is let's go to chrome in this case and let's let's just put in anything any random string here and hit enter and there you go what happened here was basically there were no middleware functions to handle that request sorry i i missed a question here the question is anecdotally is using the id's terminal slower than running terminal as a separate app so i i don't think so it really comes down to what you are most comfortable with and most efficient with i always shoot to sort of improve my my sort of agility and so depends on you know various factors and in this case it's easier for me to stay within the context of the ide so that i see things that are happening right there because i could have a build process i could have a a test process and then various things right there and i wouldn't have to switch between windows but essentially that's something you could do as well i do use a separate terminal window when i'm using uh vs code because i don't like the integrated terminal there so there is no sort of right answer here it's really your preference i don't think either of them are slow all right so we we handle 404 now we're going to handle error 500 and what that means is we're going to add another handler here so handler for error 500 and so we're going to do app.use now the only difference here is that this takes an error object so it has four parameters compared to the three that we've been using so far and essentially we're going to let's say we're going to print out the arrow to the console so there is a property called stack and then we're going to let's do something different here we're going to go to public the public folder and create a file here and let's call that file 500.html and so we'll simply print something went wrong here all right i'm going to save that file close it and then we want to serve this file as the response instead of some text message so one of the things i need is to reference the path module oops and then i hope you saw that and then go down here and we need to use the send file method that express provides us and we're going to path.join a couple of things one is the root of the folder which is referenced to withdraw underscore underscore door name and i'm sorry that is where the project is running from so the main index file is under source routes and so we're going to go up to um i'm sorry it's not source routes it's on the source so we're going to go up to public which is one folder above and then we're going to um serve 500.html i think i got that right yeah so essentially indexes here the dot dot will tell it to go up to the root and then we're going down to public in 500 html and we're combining that path and then express will look at look up the file reading the contents and send those out with setting the right headers and things like that all right so i saved that and now let's say we did the only way for us to to trigger that is through an error so what i'm going to do is let's go back to the routes file and we're going to create a route here that's going to generate an error for us so i'm going to call it slash person slash error and we're going to do request response so in this handler all we're going to do is throw a new error so what's that what's going to happen is anytime we call this endpoint it's going to trigger some exception and since it's not handled it's going to end up in this part in the 500 error handler all right so i'm gonna save that and then go back to our browser here and then slash person slash error so there you go um i think that's what i printed here uh oh we're not uh responding with that specific error i think uh oh i see what's going on here sorry uh let's let's call this something else i'm just going to call this slash error for now because it's uh conflicting with the other routes here my apologies so that saved it i'm going to go back and we're simply going to type in slash error and so there you go there it's going through the error but it doesn't seem to find the file we're looking for uh so i believe i did something wrong here all right let's go take a look at what's going on here so in send file uh i'm joining their name dot dot slash oh i made a mistake here i need dot dot slash public slide 500 html so let's retry that so going back here to the browser i'm going to refresh that and there you go it's serving the content from that file specifically that we created so we created that method so i could demonstrate how error 500 would work because it only gets triggered when there's an error all right so back to this the slides here and so we've dealt with error pages now let's make this a little more interesting we have an instance of mongodb that we created in mlab i'm assuming everyone's created that if not you can try that out later but do in order to connect to to mongodb we're going to use something called mongoose which is an orm or an odm it's basically an object data mapper so it allows us to define a model in our application and then store that as is in the database and that's one of the advantages of mongodb because you can store json documents directly without having to define relationships between tables and things like that so there are pros and cons to it but i've been able to build most applications without sql databases in the past few years mainly because you're able to scale your application in many ways it's it may not be the most efficient database out there but it certainly simplifies your development process significantly anyway so let's get connected mongoose connected we're going to do something similar to what we did with uh express so we're going to install the dependency and we're going to reference it and then we're going to focus on creating a crowd api so essentially we're going to define a model uh in mongoose and then we're going to perform the crud operations on that model via the restful endpoints that we create so let's get back into the code all right so i'm going to so notice when we ran into that error it also ended up printing the stack to the console because if this line 24 here i'm going to stop the server clear the console i'm going to npm install mongoose all right and what we're going to do is create a folder on the source called models and on the models let's go ahead and create a model called let's make it a bit different from person let's call it customer so i'm going to create a javascript file and i will call it customer.model.js i usually follow this pattern for naming conventions i separate multiple words with a period and i always keep them lowercase that way it makes it very simple across larger teams so you don't have to think about how to name files and stuff like that all right so let's go ahead and construct this model here so the first thing we want to do is reference mongoose we already installed it so that should be available there and then we're going to we're going to connect to the database in this file itself but ideally it's something that you can take out of this file and have a separate database.js file which will do the connection to the database when the application starts but in the uh essence of time i'm just going to do it here so let's set up some properties for the the database so in my case i have this written down here i'm just going to copy and paste it essentially i have four attributes here pointing to my database server the name of the database the username and password and this is my instance in mlab and so if you go to your database instance in mlab it should give you an option to see all these attributes and the connection string so the next thing i want to do is connect mongoose to the database and this is something we want to do only once at the beginning of the program so i'm going to use backtakes and here's the connection string you will get this from mlab as well but it's it's it's fairly straightforward so you go start with mongodb colon slash and then we're going to specify the user colon password at server slash database so that would be server slash oops database all right so that should generate the uri for connecting to the database and finally let's create so mongoose has two main components to it the first is a schema and the second is called a model which is simply a higher order function that wraps around the schema really it provides you with additional methods that you can use to make database queries and things like that so let's define a customer schema next and the way you do that is by creating a new instance of mongoose.schema and let me sorry uh if you were not able to read this there you go so within the the customer schema that we're defining uh let's create a couple of attributes there we're gonna create an attribute called name and we're going to tell it that the type is string and then the next thing is let's create something called email let's uh instead of assigning it directly to string i'm going to show you a couple other things you can do here so we can also assign a an object as a value there and define additional properties on there so we're going to tell it that the type here is a string and then it's a required property and that it has to be unique that way we don't end up with duplicates and this validation is actually done on the application layer itself so database is not doing the validation there that's the advantage of using mongoose because is chemoless and unless you explicitly configure some rules in mongodb it does not do any validation all right so now we have the customer schema we're going to create a model and export it at the same time so we're going to do module.exports equals mongoose dot model and then the first um attribute is going to be the name of the model and then followed by the reference to the schema object okay so let's do a quick recap here we referenced mongoose i defined some attributes some variables here that help us construct the database connection string and then we're connecting to the database and we're defining a customer schema we have two attributes in there name which is a simple string and the email attribute has additional properties on it which sorry i missed a d here so it's supposed to be required so essentially we're telling it that it needs to be unique and it must be present and then finally we export it as a mongoose model all right so i'm going to save this and we're going to create a route that's going to expose crowd operations and we're going to reference this customer model and then make some entries in the database and retrieve those and things like that so i'm going to go into the routes folder and then create a javascript file called um let's just call it customer.js and i'm going to switch to person quickly here essentially this is what we want to do we're just going to have to type it sort of all over again but let's do it from scratch so we're going to start out with referencing the customer model so let's do like customer model equals require and it's one folder above slash models slash customer dot model and then we also want to reference express oops and then we want to reference create the router instance from that express reference all right so let's let's create a route that will allow us to create a new customer so here we will create a new customer and we're going to create what's called a post method and notice that the the type of uh operation you're trying to define the verb itself is available as a method in express so on post we're going to call it slash customer so what this will allow us to do is call into localhost 3000 slash customer and we're going to make a post request to it and then there's a handler with request response that we're going to deal with here uh so one of the things we need to do is when we're passing in the data for creating the customer object we have we're going to pass it in the body as a json object now express does not know how to handle that by default so we need to tell it what to do with it so essentially we're going to go back to index.js and there is a a package we need to install for it called body parser and so let's go into the console and we're going to do npm install body dash part parser and what that's going to do is essentially look at the incoming request and if it is if the content type of that request is application slash json basically that that means that the the data in the body is a json string the in that case the body parser will will take that string convert it to json and write or create a property in the request object called body and then set the value there so essentially it's doing the work for us to parse that piece out so let's see how that works here so we're going to reference body parser and we're going to let's do this as the first thing coming in uh mainly because then we can print whatever is being sent in our logger there all right so we're going to do app.use and in this case we wanted to use the json module so it's essentially taking in any incoming json string and creating an attribute called body so essentially what that lets us do is i can also we can also print the body if any that's converted by this body parser all right so i'm going to save that and then go back to our customer js file so what happens here is that now we have access to request.body before adding the body parser that didn't exist so we would have to look at the raw data and then the content type and then you know if it was json and all that stuff then we'd have to kind of extract the right pieces and and end up constructing that so body parts has taken care of that for us that's the power of express it has so many different kinds of plugins and middleware that most of your application can be composed of these middleware libraries and you can of course write your own in certain cases so in in this case what we want to do is let's make sure that request.body exists so we're going to first check for that and remove that comment and essentially oops if it does not exist we want to return a response with a status code of 400 which means it's a bad request and send a string with that response and let's say we tell it that request the body is missing so the the recipient the caller sort of knows what's wrong exactly here now in terms of the status messages there's obviously a package out there i think it's called http status which has a bunch of these status codes defined as enumerations so you could refer to it by the text name itself instead of the number and i would recommend using that in a real world project now if the body is present then now we want to create an instance of the customer model and save it to the database so let's do that here with um referencing the customer model and uh request so we're going to pass in whatever oops was part of the request body and construct that model there essentially what we're going to pass here is something like this let let's say user equal to uh we need a name you know so this is first name last name whatever and then email you know email gmail.com the incoming object is going to be something like this so that's what we're going to pass through over here and we'll get to how to send that as well in insomnia all right so the next thing i want to do is save that model and essentially that will communicate from mongoose to the driver which is going to then talk to database and tell it to take these details the the the request.body object and validate it via the customer model and save it to the database so we're going to use promises here to sort of follow up on this request so after we save we're going to call then and then is going to i believe respond with the document that it saved and so what we're going to do is if we weren't able to save the document or it's an array of documents i believe or if document.length is zero then we want to respond with an error so let's say it's an internal server error and we're going to uh send that document we should be null in this case or an empty array and if that's not the case then we want to respond with a status code of 201 which stands for resource was created now this is sort of optional in a way you could have responded with 200 as well but that that's where sort of rest sort of defines the guidelines you know for how things should be constructed that's up to you as the programmer as the developer to to figure out to design the system and and figure out what these response codes will be and then you need to document it as part of your api that people will use to access your your uh restful api so here i'm going to respond back with the document that we just created and then finally we can also catch any exceptions and so if there were any errors those will be caught here and so we'll sort of do the same thing as above respond with an error code there and then instead of send we're going to call jason which is going to take in the error object and and transform it and send it over instead of a specific message this kind of gives us more details now it's up to you how you want to respond you know in your projects and stuff all right so that should complete the customer creation process i'm assuming we've done everything right here let's uh run the project here via npm run start watch all right so it's up and running we're going to switch over to insomnia and we're going to create a new request i'm going to call it post customer and i accidentally set it to get here but we're going to switch that over to a post and then i'm going to call into our endpoint here customer and let's see what happens if i click send so we get an error there and guess what we forgot to add this to the routes here so we need to reference that i'm going to get rid of the spaces here so that these are sort of organized nicely so we're going to reference the let's do it right by this other route here we're going to call it customer route equals require dot slash routes slash customer and then we're going to tell it to use the rod here as well so we it's going to register that and you need to be careful about the order as well essentially you could mess things up by having an incorrect order where something might be returning earlier than you expected to anyway so i views i think this so sometimes uh nodemon will crash and it may not restart so at that point what you can do is in your console you can type in rs which tells it to restart and what's happening over here line 16 it does not like this because i think i missed something here in customer gs yep so we're not um i believe we're not exporting that router so that's what we want to do here so module dot exports equals router there you go now it's going to okay so server started now so a couple of things we had missed one was to export the module and the other was to actually import it and then tell express to to register those routes so let's go back to insomnia and okay so we're going to click send here again so notice earlier it said we think you are lost that's because it did not recognize that route and it and the 404 handler the the resource not found handler kicked in and you can see here the error code that was sent back so let's click send here again now i get an internal server error and it's giving us some details here so we had responded with the entire error object we could have simply responded with let's say the message here but in our case we were showing the uh we were returning everything so we know what's going on here so let's uh change things around here in this post request so the body part i'm going to click on the drop down here is going to be of type json and then in there we're going to pass in an object which has name let's call it thomas anderson and then we have an email now if i omitted the email it would still complain about it too because it's going to validate on the server side so let's call it honest.gmail.com and essentially i can when i click send here it says 201 created and it's going to be responding with what create created internally it's generating an id for it as well and it also tracks the version as you update the object all right so that was it and for creating the the entry in the database let's verify by going to robo3t now assuming you've connected everything here we're going to have a collection called customers express will i'm sorry mongoose will pluralize model names so customer ends up becoming customers i'm going to double click this and that opens a new tab there and there you go it's going to show you a record that was created so we had added these entries in there when we posted to the route so there you go that was that simple i'm sure you may not remember a few things at this point but that is okay you know a little bit of practice and then looking through documentation and other tutorials will definitely help you understand this better so let's go back to the customer route i'm going to uh go to the post here and so we were ensuring that a body was present we could have also sort uh checked for other attributes being present so as part of body we could have checked something like if not request.body.email right and then i could have done something here and responded however the customer model is actually validating some of that for us so if things were missing here that the customer model expected like email for instance then this catch block would be triggered and we would still get an error so that's one of the advantages of using mongoose anyway so let's quickly add a couple other methods here so we're going to next add the ability to retrieve uh this data so we're going to create an endpoint called customer uh to get the customer we're going to have the same format here again request response and one of the things we're going to do here is we're expecting an email so we're going to look up the customer via email so we're going to create we're going to actually use the customer model directly and the model gives us a few methods on it that allow us to search through a query through the content in this case so we're going to call a method called find one and mongoose has a very rich api it has a ton of functions that definitely are way out of scope for for this workshop but i would encourage you to look at their documentation there are also lots of interesting articles out there that'll highlight some of those but anyway in this case we're going to use find one and find one takes an object with attributes as the query parameter so in this case we're going to pass in the email which we're expecting via query.email for instance and then of course we want to make sure that it exists up here so we're going to check for request of query.email if that's not present we're going to respond with oops return respond with a status code of 400 resource i'm sorry uh 400 isn't there um and we're going to tell it that it it's missing url parameters so let's do send missing url parameter email that's required so that's going to exit out of there if not we should also have our document available on on the then method that gets called and what we can do is respond to the request with that document if there is an error we want to handle that here in the catch block and essentially respond back with the status code of 500 with this error object and that should return the model there i'm going to quickly add a couple of these other methods since we're almost out of time here so the the other is put that allows us to update the existing customer and all these have a similar format what i'm going to do is i will copy some of these elements here um and then just paste it there essentially i could uh i could use some of this or use some of that so we have request response and in this body here uh we're going to actually need the email piece as well so we're going to check that there is a an email present in the query if not we're going to call a method on the model called find one and update and essentially it's going to query based of this and then it takes another parameter which is your body in this case so let's call into that that would be request.body and oops buddy and then you know you can pass an options object in this case the options basically one of the options we're going to pass it is to return the newly created or updated object otherwise it returns the same it would return the same request body that you sent in but since we want to make sure that the change actually went through uh we want to do that set that attribute i have a typo here so i'm going to change that to status and then so this was your post request this is your get request and then this is your update request so the you and the crud and uh customer sorry i have a few typos here all right so that that that will update the the existing object via a match on the email and then finally we want to be able to delete so that would be router.delete and again very similar to this i'm just going to copy paste that part of the code as well so essentially you're calling into customer we're going to make sure that email exists and then there is a method called find one and remove which will take in your email and then we we don't need the request body and the new pieces from uh above that we copied and everything else here stays the same again um all right so i think that that covers the basic crud operations and let's go into uh insomnia and test it so let's go down let's make sure the terminal is still okay the project is still working fine i'm going to switch over to insomnia and then i'm going to duplicate this and call it put customer and essentially this method should be put and we're expecting a query string called email so we're going to pass an email equals thomas gmail.com and then we're going to send in the body here let's call it thomas updated anderson and we're going to click send here and there you go it responded with an ok and if you notice the the object that it responded with is the the newly created object and i think i made a mistake earlier when i mentioned that it responds with request our body what i meant to say was a response with the original object that it it finds and not the updated object so let's duplicate this again and there is we want to get customer in this case and we're going to call that get here and essentially want to get this by again via email so let's call this thomas gmail.com and then we don't need a json body here so we're going to delete that and you can leave that as is and then if we click send here it's going to retrieve whatever was sent in and finally i'm going to duplicate that again and call this delete customer and so change that again to delete and essentially the query string stays the same i should be able to hit send and then it says okay it's responding with what was deleted let's say if i were to click send again it's going to respond with a null because that object has been deleted already so let's verify that by going into robo3t so here i can either if you're in windows you can do control r on a mac it's command r and if i refresh it you'll notice that the record has disappeared now so most of those other methods were very similar in terms of the the restful uh setup as well as uh you know the attributes that were coming in and things that we were modifying and stuff like that so let's do a quick recap here we created a customer model which is part of the customer model js file uh you're familiar with this by now and so we reference that in customer js that's our route and essentially we're creating a route here the first piece is a create operation that's handled via the post verb and it's calling into customer we're expecting a body to be passed in we added the reference to a body parser middleware for express which actually gives us that data that's passed in the body attribute this was just an example here that we could check for an email to exist on that body as well there's obviously a lot of error handling that you can do to make this more robust and essentially the object coming in will look something like this that we're simply passing through to the customer model so we create a new instance of the customer model with that incoming json object and we call save on that model and then basically uh there are two uh methods here on the uh sorry uh this is using promises so promises have then and catch and so we're handling uh you know different error conditions and then what not here so this is pretty straightforward here i think the important piece is how to create that route and how to respond you want to make sure you're passing back the right error codes and things like that or status codes and things like that get request was very similar you know you change the verb here the method name the maps to get um similar things here just the method on your customer model changes so essentially that was like the the only big change between all the other methods on the route so you have get and on update you have find one update and for delete you have find one and remove so i think that that about wraps this up i think that there was a lot of content that we crammed into this hour and a half and sorry if someone says as a pure database person your brain hurts i apologize it's it's a lot of moving pieces here and if you don't get it it's okay don't feel bad it took me a long time to really understand this and master it these things take time just because of you know changing apis and and uh also the variety of functions that they expose so i want to do something real quick here before we end so i'm going to um clear my console here and now we have our application here we have a package.json that defines the project and and the scripts and things like that there is a service called now.sh that essentially allows you to make to deploy your node.js applications real quick and so i will let you explore this but what i'm going to do is simply deploy this to the cloud now and so what i need to do is go into my application folder and i type in now i have the now client installed via npm as a global and they have all the instructions here on on this site but i simply want to show you how easy it is for us to get this up and running in the cloud since i'm using the free version it's asking me a question stating that my application will be public and so essentially what it's doing is it's it's zipping up the application it's making sure that there's a package json that exists it will um upload that to the server side and then it's unzipping it and it is running the npm install command which ends up setting up all the dependencies that we require for the project and here you see it it's done it's giving you a status about what's going on so it um did a bunch of things here uh it's telling you which version of node it's using there is an actual endpoint that it created for us and it's copied into the clipboard it synced all the 10 files it's initializing its build process it ran npm install package.lock.json is something new with npm5 it allows you to replicate the exact versions of libraries that you used and then i guess it was waiting to so internally it's running the npm start command i think one of the things that i missed here in package.js and i want to quickly add is we want to set the the the process environment variable and essentially in index yes we were doing this here for port so we want to make sure we're setting port and it's as easy as going in here and setting port equal to whatever value that we would need but anyway i i think this should be deployed already i think it's copied but i'm going to make sure i copy it again and then we're going to go to the browser and let's put this in there let's see if that works there you go so we quickly got our application up and running in the cloud and since we were using mlab you know it's connected to the database we didn't have to worry about uploading the database or installing a database and things like that of course you would need to to uh have a config file that then looks at the type of environment you're running in development staging test production and then use the appropriate values from there to connect to the appropriate databases but here you go you can actually do this very quickly and play with it once you have your application up and running there's a question here that says do you usually need to use mongoose to access a mongodb and the answer is no you don't that the new mongodb driver is definitely a lot more powerful lately where it allows you to do validations as well you can define a lot of those things several people prefer that approach i personally have been using mongoose for a while so i stick with it because i'm familiar with the api and it provides us with a lot of rich methods to to handle these these uh interfaces into the database and i can also abstract my models out and add specific methods on it to do more complex operations and so it sort of provided a very good plugin model for that and so yeah the answer is no you don't have to use mongoose but it just simplifies a lot of the process there i did write a couple of articles that might be useful one of them was introduction to mongoose i don't know if i can introduction to mongoose there this one specifically walks you through you know how to use mongoose for mongodb and and check it out see what do you think of it there's also another one i have called building your uh how to build your own react boilerplate this kind of introduces react into the mix but it also walks you through some of these basic building blocks for creating you know express servers and things like that the idea was that most people start out with using some existing boilerplate like create react app for instance but they don't understand the underlying building blocks and that was the idea here to break it down into individual pieces so you understand what's going on now this one of course uses uh webpack version three so i do plan on updating it with version four which is a lot easier uh in case you're you're planning on reading this anyway um i think that about wraps it up i apologize for going 10 minutes over here i think yeah that was it if you have any additional questions please feel free to reach out directly to me or on dev2 you can follow me on twitter at the outlander and i hope this was worth your time i hope you get to play with this further and and make sure you explore all the apis look up the documentation for express for mongoose check out now.sh which will allow you to deploy your application very quickly compared to you know aws and even heroku is pretty fast but now just takes it to a whole new level where all you type is now and it gives you this url with your application and you can map a domain name to it directly and scale very easily and and i have used a ton of cloud providers and and i absolutely love now and would highly recommend it alrighty thank you so much i'm going to pause this session here and hope to hear from you soon bye

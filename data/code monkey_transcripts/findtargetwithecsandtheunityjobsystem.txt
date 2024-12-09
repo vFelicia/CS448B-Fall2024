@@ -1,0 +1,556 @@
+00:00 - in this video we're going to write
+00:01 - superfast Java fight code for our units
+00:03 - to find their closest target it won't be
+00:06 - super fast which will enable us to have
+00:08 - thousands of Units looking for targets
+00:09 - all at the same time let's begin
+00:14 - [Music]
+00:18 - hello and welcome I'm your code monkey
+00:21 - and this channel is all about helping
+00:22 - you learn how to make your own games
+00:24 - with nf2 torrents made by a professional
+00:26 - indie game developer so if you find the
+00:28 - video helpful consider subscribing this
+00:30 - video is a continuation of the previous
+00:32 - video where we built units and targets
+00:34 - and created systems for those units to
+00:36 - find and destroy those targets now in
+00:39 - that video with it everything using only
+00:41 - CS and in this video we're going to use
+00:43 - ECS combined with the job system in
+00:45 - order to achieve maximum performance so
+00:48 - if you haven't already check out that
+00:49 - video first to see how the basic setup
+00:51 - is done and how we're looking for the
+00:53 - closest target using normal ECS systems
+00:56 - so let's see the scene in action
+00:58 - here it is and as you can see we have
+01:00 - targets and units and our units are
+01:03 - actively looking for the closest target
+01:05 - they move towards it and they destroy
+01:06 - them okay so let's review the code to
+01:09 - see how all of this works so here is our
+01:12 - basic starting script and in here we
+01:15 - have two functions one to spawn a unit
+01:17 - entity and another one to spawn a target
+01:19 - entity you can see here the entity
+01:22 - archetype they are very similar the only
+01:24 - difference is the tank opponent so this
+01:27 - one has a unit tag and this one has a
+01:28 - target tag those tags are defined down
+01:31 - here as you can see they are just empty
+01:33 - components then we have our fine target
+01:36 - system first we cycle through all the
+01:39 - entities that do not have the half
+01:40 - surrogate component but do have the unit
+01:42 - component so all the units without a
+01:44 - target we cycle through all of them and
+01:46 - then we cycle through all the target
+01:48 - entities we calculate which one is the
+01:51 - closest and if we do find a closest then
+01:54 - we add the component has target using
+01:56 - our closest target entity then finally
+01:59 - we have this system which runs on
+02:00 - entities that do have the have started
+02:02 - component it simply moves them towards
+02:04 - the target and once he gets within a
+02:07 - certain distance we simply destroy our
+02:08 - target entity and remove the historic
+02:10 - component okay
+02:12 - so this whole thing is working perfectly
+02:13 - fine as you saw here we have our units
+02:16 - all of them actively looking for the
+02:17 - closest target move towards it and
+02:19 - destroy okay however right now we're not
+02:22 - taking advantage of all the benefits
+02:23 - that the entire unity dot stack provides
+02:26 - here in our final target system we're
+02:29 - cycling through all the entities one by
+02:31 - one just on the main thread so for each
+02:33 - unit we and this system will get
+02:35 - exponentially hard to run so in order to
+02:38 - make our code multi-threaded all we need
+02:40 - to do is convert this from a component
+02:42 - system into a job component system so
+02:45 - let's go down here to make that let's
+02:48 - call this a fine target job system and
+02:51 - we're going to extend the job component
+02:55 - system so in here we're going to do
+03:01 - pretty much the same logic that we were
+03:03 - doing previously except we're going to
+03:05 - do it inside John so we're going to have
+03:07 - a job cycling through each unit and in
+03:09 - there we're going to search for the
+03:10 - closest target so let's start off by
+03:13 - making our job so we make here a struct
+03:16 - for our find target job and we implement
+03:21 - I job for each with entity and we also
+03:26 - want to grab the translation components
+03:29 - so in order to implement the I job we
+03:31 - need to add the execute function so with
+03:36 - our definition here it means that our
+03:38 - execute method receives an entity the
+03:40 - index for the entity and our translation
+03:43 - component now for translation we don't
+03:46 - want to modify it so in here we can add
+03:48 - the read-only attribute now we want our
+03:52 - job to run only on our units right now
+03:55 - this job would be working on every
+03:57 - single entity that contains a
+03:59 - translation component so in order to
+04:01 - limit where our job runs he can go here
+04:03 - in order to add the attribute
+04:05 - we're going to add the required
+04:06 - component tag type of unit so now the
+04:12 - job will only run on entities that
+04:14 - contain the unit tag and then we also
+04:16 - want to ignore the units that already
+04:18 - have a target so we can use the
+04:19 - attribute exclude component passing the
+04:23 - type of has targets okay so now our job
+04:27 - is clearly defined to works only on
+04:29 - units without a target so here we
+04:32 - essentially have the exact same filters
+04:33 - that we have in here working on the
+04:36 - units with none has target with all unit
+04:38 - and doing it for each that's exactly the
+04:39 - same thing we're doing in here now
+04:41 - inside in order to look for the closest
+04:44 - target
+04:44 - we need to know a list of all of our
+04:46 - targets so that means in here we need a
+04:49 - negative array to hold all of our
+04:51 - targets so an entity for our target
+04:54 - array however in order to identify the
+04:58 - closest target we don't just need the
+05:00 - entity but we also need the position so
+05:02 - we could either have two arrays in here
+05:04 - one for the entity and one for the
+05:05 - position or we can just go up here to
+05:07 - define a simple struct to home both the
+05:09 - entity and the position so here we make
+05:12 - a simple struct
+05:13 - let's call it entity wave position and
+05:17 - in here we're going to have an entity
+05:19 - field and a followed three for the
+05:22 - position all right so now in our job we
+05:25 - receive this instead so essentially
+05:27 - we're receiving an array of entities
+05:29 - with their position we also don't want
+05:31 - to modify this array so we can have the
+05:33 - read-only attribute and since this
+05:36 - native array won't be running inside our
+05:39 - job which is managed by our job system
+05:41 - we want to make sure the array gets is
+05:43 - posed correctly so we can add the
+05:45 - attribute deallocate on job completion
+05:48 - which means the job system will
+05:51 - automatically deallocate this array when
+05:53 - it goes through and completes the job so
+05:55 - here we have all the information that
+05:57 - the job needs we have our targets and
+05:59 - their positions and now inside our job
+06:01 - the logic we're going to do is pretty
+06:03 - much exactly the same thing we were
+06:05 - doing previously so let's copy this code
+06:07 - and see what we need to change so for
+06:12 - the unit position it's the translation
+06:14 - dot Valon
+06:15 - then instead of cycling through the
+06:17 - entities we cycle through our array
+06:26 - so we cycle through all of our target
+06:29 - entities then here if the kosis is known
+06:31 - then this is the first one you found so
+06:33 - we set this one very simple and if not
+06:37 - we check which one is closest so if this
+06:41 - one that position is closer than the
+06:44 - current causes and this one becomes the
+06:46 - new causes so that's pretty much the
+06:50 - exact same logic for looking for the
+06:52 - closest within our target list and then
+06:55 - if we do have the concern identity we
+06:57 - want to add the has started component
+06:58 - however inside a job we cannot use the
+07:01 - static variable for our post update
+07:03 - commands but instead we can pass in a
+07:05 - field that won't contain an entity
+07:07 - command buffer so in here a public
+07:10 - entity command buffer let's call it
+07:13 - empty command buffer a command buffer
+07:17 - essentially holds the commands that
+07:18 - won't be executed that on a later time
+07:20 - and in order to write it concurrently on
+07:22 - our job we need to use the command
+07:25 - before dot concurrent okay so now we can
+07:27 - go in here to call our add component
+07:32 - function takes a job index so we can use
+07:35 - the entity index then our entity and
+07:37 - then our has started in front okay so
+07:39 - here we have our job doing the exactly
+07:41 - the same thing that we were doing
+07:42 - previously on a normal component system
+07:44 - except right now we have our job
+07:45 - component system so with the job defined
+07:47 - that we need to actually create it
+07:49 - schedule it and completely so down here
+07:52 - on the on update function first we need
+07:54 - to create an instance of our job and now
+08:00 - in here we need to pass in our target
+08:02 - array so we need to create it before
+08:04 - that
+08:10 - now here we need to know the size of our
+08:13 - array which means we need to know how
+08:14 - many targets are on the scene so in
+08:16 - order to second through all of our
+08:18 - targets we need to create an entity
+08:19 - query
+08:20 - containing all the target entities so we
+08:23 - create an entity query for the target
+08:26 - query and we get the entity query and
+08:31 - seen here that we pass in our parameters
+08:32 - so in this case we want our targets so
+08:34 - typo target then we also want with the
+08:38 - translation component however we only
+08:40 - want it read only so we can use the
+08:43 - component type that read only of type
+08:46 - translation so we have our target query
+08:51 - which is essentially asking the entity
+08:52 - manager to give us all the entities that
+08:54 - contain a target and a read-only
+08:56 - translation component then we can grab
+08:59 - all the entities that match this query
+09:00 - and put them into a native array of
+09:03 - entities for the target entity array and
+09:07 - it will simply be the target query dot -
+09:11 - entity array
+09:16 - okay so we now have an array containing
+09:18 - all of our target entities now we also
+09:21 - need containing all of our target
+09:23 - translations so for that we use two
+09:29 - components that array with our
+09:32 - translation components and using the
+09:36 - same allocate and now in here on our
+09:39 - target array we can spawn it using the
+09:43 - length of our target entity array okay
+09:45 - so we do a query to get all the entities
+09:48 - with target and translation then we get
+09:51 - an array containing all of those
+09:52 - entities another array containing all
+09:54 - translation of those entities and then
+09:56 - we create a new entity with position
+09:58 - array that we're now going to have to
+10:00 - fill so all we need is this icon through
+10:02 - it and we set the target array on that
+10:08 - index to be a new entity with position
+10:12 - and we're going to pass in the entity as
+10:14 - our target empty array of the same index
+10:17 - and our position as our target
+10:19 - translation array of the same index dot
+10:22 - Val maximally here we have nurse since
+10:25 - this should be a 4 3 for the position so
+10:27 - that it holds the x y&z okay so here we
+10:31 - have correctly filled up on our target
+10:33 - array containing entities with position
+10:35 - which contains the entity and the
+10:36 - position of all of our targets so now we
+10:39 - can simply pass in into our job now in
+10:42 - here since we are working with native
+10:44 - arrays we have to make sure to dispose
+10:46 - of them our target array gets this posed
+10:48 - after the job execute so we don't have
+10:51 - to worry about that one but we do need
+10:52 - to dispose these two so in here that
+10:54 - disposed and do the same thing for the
+10:57 - other one for target translation okay so
+11:00 - we have prepared all the data that the
+11:02 - job needs now the last thing that John
+11:05 - needs is the entity command buffer so
+11:08 - here we need to pass in the command
+11:09 - buffer that runs after the update so
+11:11 - previously we were using up here the
+11:14 - post update commands however this one
+11:16 - only exists on the normal component
+11:18 - system and not on the job component
+11:20 - system so we need to use something
+11:21 - different
+11:22 - so let's override protected overwrite
+11:26 - our on create function
+11:28 - and in here we're going to go into the
+11:30 - world to get or create a system and this
+11:34 - case let's grab the end simulation
+11:36 - entity command buffer system and let's
+11:41 - store this so we have this command
+11:46 - buffer system which runs after the main
+11:48 - simulation so this is perfect to use as
+11:51 - our entity command buffer so we simply
+11:53 - go in here we pass it to the job and
+11:56 - create a command buffer and since we
+11:59 - want to write it concurrently on the job
+12:01 - we need to pass in two concurrent so
+12:05 - just like that our job will now be able
+12:06 - to run our line or to add a component at
+12:09 - the end of the frame and the last thing
+12:11 - we need is to tell the entity command
+12:13 - buffer system to run our commands after
+12:15 - the job has happened so in order to do
+12:18 - that first we schedule our job so find
+12:20 - target job and we call schedule we
+12:23 - schedule this job this returns our job
+12:27 - handle and then we tell the command
+12:32 - buffer system to add the job panel for
+12:35 - producer and repassing the job Himmel
+12:38 - essentially this tells it to execute the
+12:41 - command buffer after the job has been
+12:43 - completed and finally on the job
+12:46 - component system we need to return the
+12:47 - job Hammel from the on update so after
+12:49 - this we just do a return on our job
+12:51 - hammer
+12:52 - alright so this might seem like a lot of
+12:54 - code but it's actually very simple and
+12:56 - you won't see what benefits we get from
+12:58 - writing it this way so first up here we
+13:01 - define our specific job this job won't
+13:04 - run on our unit entities over here will
+13:07 - receive an array containing the entity
+13:09 - and position of all of our targets then
+13:11 - for each unit entity we cycle through
+13:13 - the targets and count like the closest
+13:14 - if we do find the closest we add the
+13:16 - component and down here all we need to
+13:19 - do is prepare the data that the job
+13:21 - won't work on so we grab all of our
+13:22 - targets we grab the entity in the
+13:25 - translation we create our specific
+13:27 - struct we passed the job will let the
+13:30 - job system schedule it to do its thing
+13:31 - and afterwards we have the command
+13:34 - buffer executing all right so let's test
+13:37 - and we should be able to see everything
+13:38 - so the same in order to disable let's
+13:41 - appear and comment out our previous
+13:44 - component system to make sure it doesn't
+13:46 - run okay so let's see any up here we
+13:49 - have our units they are still being
+13:51 - spawned they are still finding it causes
+13:53 - target moving towards it and distraint
+13:54 - okay so our logic is still working the
+13:56 - same now let's see exactly how much
+13:58 - faster this method is compared to the
+14:00 - previous one so in here in order to test
+14:02 - out how much time this is taking let's
+14:04 - stop adding the component so this way
+14:06 - they won't continually search for
+14:07 - targets every single frame and let's
+14:11 - also test out the previous code some
+14:13 - let's instead use the component system
+14:15 - and comment out the junk component
+14:17 - system let's see how long the normal
+14:19 - component system takes and in here
+14:22 - instead of just five targets let's spawn
+14:26 - a thousand units and a thousand of
+14:28 - turrets and we stopped funny okay so we
+14:32 - have a nice test with a thousand units
+14:34 - looking for a thousand targets and it's
+14:36 - currently running on a normal component
+14:38 - system okay so here we have a thousand
+14:40 - units looking through a thousand targets
+14:42 - and as you can see the performance is
+14:44 - pretty bad we have the CPU taking 260
+14:47 - milliseconds and the game is running at
+14:48 - four frames per second
+14:50 - none of them are moving since we're not
+14:51 - actually adding the hosteria components
+14:53 - so when we're testing is really how long
+14:55 - it takes to find a target so again
+14:57 - remember this is a normal component
+14:59 - system so essentially for every single
+15:01 - one of those thousand units it's doing a
+15:04 - cycle on a single thread and for every
+15:06 - single one of those thousand its cycling
+15:08 - through another thousand times for every
+15:10 - single target so you can already see
+15:13 - this is a lot of single threaded
+15:14 - sequential work so we can for example
+15:16 - inspect with the profiler and here's our
+15:20 - profile and as you can see about 250
+15:22 - milliseconds okay so this is the normal
+15:24 - own now let's see the improvement with
+15:26 - our job system so here we count out the
+15:29 - normal component system and now we try
+15:32 - out the job component system okay
+15:34 - let's test and here we are and as you
+15:37 - can see already a massive improvement we
+15:39 - went from 250 milliseconds per frame
+15:41 - down to 70 milliseconds per frame and
+15:44 - from 4 frames per second to 14 frames
+15:47 - per second and here in the profiler you
+15:49 - can see it taking 70 milliseconds and
+15:51 - our jobs are being quite busy now if
+15:54 - you've seen my other video
+15:55 - on ECS and the job system you know burst
+15:57 - can provide an insane boost so let's try
+16:00 - adding it to this job in order to add
+16:02 - first thing we need is to add burst
+16:03 - compile in here which is using unity dot
+16:08 - first okay that's all it takes to add
+16:12 - burst so let's go back okay so here we
+16:15 - are and again using normal component
+16:17 - system we were taking 250 milliseconds
+16:20 - using the java component system we are
+16:22 - taking 70 milliseconds and now lets
+16:24 - enable burst and there you go from 70
+16:28 - down to 2 milliseconds we can open up
+16:30 - the profiler and take a look and there
+16:33 - you go the home simulation taking point
+16:35 - 6 milliseconds and the fine target job
+16:38 - system taking just point 3 milliseconds
+16:40 - so as you can see that's pre insane
+16:42 - performance so let's rename our ad has
+16:45 - target component so here we just go and
+16:48 - put this back so we should now have our
+16:51 - units fine target and destroy them and
+16:53 - as soon as we try we come up with a
+16:56 - bunch of Arabs so all these errors are
+16:59 - essentially saying that we cannot use
+17:00 - burst and use the entity command buffer
+17:03 - at the same time the reason why burst is
+17:06 - so fast is because it works on an
+17:07 - extremely unlimited subset of C sharp
+17:09 - and in that we have a bunch of
+17:11 - limitation so in this case we cannot use
+17:13 - the empty command buffer in order to add
+17:15 - a new historic component so that's
+17:18 - pretty bad but we can work around that
+17:20 - so here on our fine target job
+17:23 - essentially the only thing we cannot use
+17:25 - burst for is this one right here at the
+17:27 - end so that means that we can
+17:29 - essentially split this job into two and
+17:31 - have one job to complete the closest
+17:33 - entity and another job to actually add
+17:36 - the historic component so we will have
+17:39 - one using burst and one not ok so let's
+17:42 - do that let's copy this job let's call
+17:47 - it the fine target burst job and again
+17:50 - in here we cannot use the empty command
+17:52 - so we get rid of this so all we're doing
+17:55 - these cycling through our targets and
+17:56 - finding the closest however then we need
+17:58 - to know which one is closest so on
+18:00 - another job we can actually add it so in
+18:03 - order to store the closest let's also go
+18:05 - up here
+18:05 - to add a public native array of type
+18:08 - entity and this will be the closest
+18:11 - target entity correct so we do all of
+18:17 - our calculations and then we put our
+18:19 - closest on the same index so if what we
+18:24 - call is the starting empty in there so
+18:27 - we have this native ray that we are
+18:28 - using in this job essentially using as
+18:30 - our output so down here when we make our
+18:33 - final target first job for the target
+18:43 - array we use the same one and then
+18:44 - instead of passing in the entity command
+18:46 - buffer we need to pass in an anti array
+18:49 - the size of our units so we need a
+18:51 - native array of entities and just like
+18:56 - up here and let's call it the closest
+18:58 - target entity array now in here we need
+19:03 - to know the length so for the length
+19:08 - let's do the same thing we did in here
+19:09 - we grabbed a entity query except this is
+19:13 - the unit query and we get it with type
+19:16 - of unit and here instead of using the
+19:19 - component type read-only let's use the
+19:21 - exclude of type has target since we only
+19:25 - want the units that do not have a target
+19:28 - then here we know our link in order to
+19:31 - go here completely linked and that's the
+19:33 - size of our array all right so we have
+19:36 - our closest target entity array and we
+19:38 - pass this one into the job so this job
+19:42 - has burst enabled and it locates the
+19:44 - closest target and puts a result on this
+19:47 - array and then we make another job let's
+19:51 - make here a private struct
+19:52 - let's call it the add component job and
+19:55 - to be very similar we also use the I job
+19:58 - for each with entity and let's receive a
+20:00 - translation
+20:04 - and in here we get a entity command
+20:09 - buffer dot concurrent for our entity
+20:12 - command buffer and we're also going to
+20:16 - receive a native array of type entity
+20:20 - for our closest target entity array we
+20:24 - can have the same attributes that we add
+20:26 - in here so this one won't be read-only
+20:28 - and it won't deallocate on the job
+20:30 - completion and here all we do is we test
+20:33 - if the closest target in the array of
+20:36 - this index is not entity no so if this
+20:41 - entity has a closest target then we
+20:43 - simply go into the entity command buffer
+20:44 - in order to add the component using this
+20:49 - index into this entity a new has target
+20:53 - component with a target entity as our
+20:56 - causes target entity and this index and
+21:01 - that's it this is our second job which
+21:03 - is only responsible for adding the
+21:05 - component to the entities that do have
+21:07 - turned and we have our first job which
+21:09 - uses burst and just completely closed so
+21:12 - this way we get the best of both work so
+21:14 - you use burst for maximum performance
+21:15 - and we still have our behavior work now
+21:18 - we need to actually schedule this job so
+21:21 - down here let's make an add component
+21:24 - job for the closest target in the array
+21:31 - we use the one that came out of that job
+21:34 - for the empty command buffer we pass in
+21:37 - the same we were using previously and
+21:41 - now we schedule this job so the add
+21:46 - component job dot schedule
+21:50 - and now in here we schedule it with the
+21:52 - dependency of our first job since first
+21:55 - we want to find it closest and then we
+21:57 - have the component so we run this job
+21:59 - and when this job completes we run the
+22:01 - second job and that's it this way we can
+22:07 - benefit from burst in order to do all
+22:09 - the find closest math and then we have a
+22:11 - separate job to do the part that burst
+22:13 - cannot do so let's test and see if
+22:15 - everything is working and run and yep
+22:18 - here we are and the hall automatically
+22:21 - found the closest move to it and
+22:22 - completely destroyed all of the targets
+22:24 - so again let's check out the performance
+22:26 - difference for all of our different
+22:28 - methods so here in let's just disable
+22:30 - adding the component so we can test
+22:43 - so first let's try out just the
+22:45 - component system so here we have just a
+22:48 - component system looking for targets we
+22:50 - have a thousand units and a thousand
+22:51 - targets taking 270 milliseconds ok now
+22:55 - here we are using the job component
+22:56 - system and we went from 270 down to 70
+23:00 - milliseconds so a massive improvement
+23:01 - and now finally we enable burst and
+23:05 - there we go down from 70 all the way
+23:07 - down to 2 point 5 milliseconds again we
+23:09 - have a thousand units looking through a
+23:11 - thousand targets of that happening every
+23:14 - single frame and yet we have 2.5
+23:16 - milliseconds so you can see the massive
+23:19 - benefit you get when you use the entire
+23:20 - data stack as always you can download
+23:23 - the project files and utilities from in
+23:24 - tucumán comm if you liked the video
+23:27 - subscribe the channel for more unity to
+23:28 - turrets post any questions you have in
+23:30 - the comments and I'll do my best answer
+23:32 - alright see you next time
+23:33 - [Music]

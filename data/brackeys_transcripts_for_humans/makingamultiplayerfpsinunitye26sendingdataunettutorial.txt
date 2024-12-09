@@ -1,0 +1,651 @@
+With timestamps:
+
+00:00 - this video is brought to you by our own
+00:01 - Metta thank you so much for donating if
+00:03 - you want to support breakage yourself
+00:04 - you can go to patreon.com/scishow cheese
+00:06 - thanks for tuning in at brac ease hello
+00:11 - everyone and welcome to this video in
+00:12 - creating a multi-player fist in unity
+00:14 - today we'll be finishing off a user
+00:15 - account slash data synchronization
+00:18 - system and we'll do that by finishing
+00:21 - off the player stats in the last video
+00:24 - we took a look at getting the player
+00:26 - stats from the database on the server
+00:28 - and displaying that on the UI and today
+00:31 - we'll have a look at sending that data
+00:33 - so once we're in the game playing and
+00:35 - killing people and dying then we'll make
+00:38 - sure to update both the kill count and
+00:40 - the death count as we go along so that's
+00:43 - going to be super fun I also want to say
+00:45 - that now that we're done with this kind
+00:46 - of part of this series I have a lot of
+00:48 - other cool stuff to show and we'll
+00:50 - definitely begin by fixing some bucks we
+00:52 - have a small bug when spawning in the
+00:55 - game that is kind of annoying we have
+00:56 - another bug when trying to re host the
+01:00 - game so if you've disconnected and then
+01:02 - try and host a game that will not work
+01:04 - and I also want to do stuff like lock
+01:08 - the cursor and maybe implement some
+01:11 - larger stuff as well so don't worry
+01:14 - there's plenty of stuff to be shown
+01:15 - still so without further ado let's just
+01:18 - jump right into it so you can see that
+01:20 - I'm here in unity and what I want to
+01:22 - begin with is the user account manager I
+01:25 - don't want to change anything I just
+01:27 - want to highlight a single thing and
+01:28 - that is this public board send data
+01:31 - method and this is the very method that
+01:34 - we are going to be using for sending
+01:36 - data to the server it simply takes in
+01:38 - some data as a string but first I want
+01:41 - to put some code around this because one
+01:44 - thing that we could do is just every
+01:46 - time we get a kill or a death we could
+01:48 - send some data to the server but I don't
+01:50 - think that's very efficient and most
+01:52 - games probably wouldn't do this at least
+01:55 - not if they had on the reliability of
+01:58 - our servers so what we'll do instead is
+02:01 - we'll have will have a sync var or
+02:05 - basically two sync VARs keeping track of
+02:07 - the amount of kills we have an amount of
+02:09 - deaths we have in the game that just
+02:11 - sits on the computer
+02:13 - and then on a fixed timer and also when
+02:17 - we leave the game we will then sync that
+02:19 - data to the database on the server so
+02:22 - let's say every 20 seconds it's going to
+02:25 - update our notes no stats or when we
+02:28 - leave the game it's going to update them
+02:30 - as well so that's what we're going to be
+02:32 - doing and I think it's kind of exciting
+02:35 - and what we basically want to start with
+02:38 - is creating these two sync variables so
+02:40 - if we find our scripts folder here and
+02:42 - go under player and then double click
+02:45 - that I think the play is a pretty
+02:48 - irrelevant place to add these so you
+02:50 - could have them sit on a separate
+02:52 - component and we will make a separate
+02:54 - component for syncing these but for now
+02:56 - we'll just have the variables themselves
+02:57 - sit on the player so we'll create a sync
+02:59 - VAR here
+03:00 - and remember sync Y var is just a way of
+03:03 - marking a variable that unit will then
+03:05 - synchronize across all clients so if it
+03:07 - changes on one it will be applied to all
+03:09 - of the other clients as well and this is
+03:11 - going to be a public integer and it's
+03:13 - going to store the amount of kills we
+03:14 - have and we'll also have a sync bar with
+03:17 - on the amount of deaths we have there we
+03:21 - go and also on the player if we scroll
+03:24 - down here is a method called RPC take
+03:27 - damage and this is called every time you
+03:30 - get shot by a player that gives an
+03:32 - amount of damage and that we then
+03:35 - subtract from our current health and if
+03:37 - our current health is below or equal to
+03:39 - zero we die so this is the method that
+03:43 - we are going to be using as the central
+03:46 - point of of changing these variables so
+03:51 - you can see inside of our die method
+03:52 - here right on the is dead would be a
+03:55 - pretty relevant place to change these
+03:58 - because we are dying on the player here
+04:01 - we are setting is that to true and we're
+04:03 - disabling all of these components and
+04:05 - starting the respawn method so let's
+04:08 - just go in here and say deaths plus plus
+04:10 - or plus equals 1 we just want to
+04:12 - increase it by 1 then what we can do is
+04:16 - also maybe increase the kill count of
+04:19 - whoever shot us however we don't
+04:23 - actually in here have any information as
+04:26 - to
+04:27 - who was the one who shot the bullet so
+04:30 - let's actually pass this on to this
+04:32 - function and we'll also have to pass it
+04:34 - into the RPC take damage so let's
+04:37 - retrace our steps a bit to find out kind
+04:40 - of how these methods are called so in
+04:43 - order to do this we want to go in and
+04:45 - find the player shoot script so this is
+04:47 - the script responsible for shooting
+04:49 - bullets and we want to find the place
+04:52 - where we fire and call the shoot method
+04:56 - so we find the shoot method and this is
+04:58 - called on the client and it basically
+05:00 - says that if we hit a player or
+05:03 - something tagged as a player we want to
+05:06 - call command players shot and this is a
+05:09 - command meaning it's called on the
+05:10 - server and this basically takes in a
+05:13 - player ID this is the ID or the name of
+05:16 - the player that we shot with an integer
+05:19 - that is the amount of damage that we
+05:21 - want to apply and then we find the
+05:24 - player component of this player using
+05:26 - the player ID and using get player on
+05:29 - our game manager but we might as well
+05:32 - pass the ID of the player who shot the
+05:35 - bullet in as an argument as well and
+05:38 - then inside of the RPC take damage
+05:40 - method we can use game manager Duquette
+05:43 - player just as we are here to forget the
+05:45 - player component of that player so in
+05:49 - order to do that all we need to do here
+05:51 - is pass in our car name which is
+05:54 - transformed name so we are the one who's
+05:57 - shot so we'll pass in our name here and
+05:59 - we'll allow ourselves to do this and we
+06:02 - call it the source player ID actually
+06:07 - let's just call it the source ID so this
+06:10 - is the name of whoever shot and then
+06:13 - we'll pass this along into the RPC take
+06:16 - damage as well so we'll pass on source
+06:18 - ID into that we go into the player here
+06:21 - and we'll add this as an argument so
+06:23 - we'll go string source ID and then what
+06:27 - we can do down here if our current
+06:29 - health is less than or equal to serial
+06:32 - is that we will go ahead and find this
+06:34 - component using the game manager so we
+06:37 - can say player and this is going to be
+06:39 - our source player
+06:41 - and we'll set that equal to something
+06:44 - like game-manager get player and then
+06:48 - passing in this source ID so we've now
+06:50 - found the player and we've gotten the
+06:53 - actual component that we can use and I
+06:56 - think I actually want to do this inside
+06:58 - of the die method because there's no
+07:00 - reason to pass on an entire player when
+07:03 - you can just pass on a string here so
+07:05 - we'll just put in this source ID here as
+07:07 - well and then down put here as an
+07:11 - argument string source ID and then we
+07:15 - can go if source player it's not equal
+07:20 - to null because of course if the player
+07:22 - wasn't found we won't try and change the
+07:24 - kill account of that player and this
+07:26 - might be a thing that you want to happen
+07:28 - that the player isn't found say if you
+07:30 - take damage from falling
+07:32 - there's no player in here and then
+07:34 - there's no kill account to increase but
+07:36 - you still want to increase the death
+07:37 - count so this might be a legitimate
+07:39 - thing and this is a great thing to wrap
+07:42 - in an if statement just to make sure
+07:44 - that your code doesn't break and then
+07:47 - what we can do in here is we can say
+07:48 - source player dot kill a dot kills plus
+07:53 - plus so we've increased the amount of
+07:55 - kills and that is my cat of course are
+07:58 - stepping on the keyboard I should really
+08:00 - lock the door when doing these tutorials
+08:02 - all right so you can see that we have
+08:04 - now increased on the amount of kills
+08:06 - here and let's remove the insert key
+08:11 - there great so the next thing is to
+08:15 - maybe just test this out so we'll just
+08:17 - make a window spilled and I had I used
+08:19 - this before but let's go ahead and make
+08:21 - a new one just pressing ctrl B or
+08:23 - command B if you're on a Mac here and
+08:26 - all we really want to do is just I we
+08:31 - actually don't even need to start at the
+08:33 - login menu here we can go straight to
+08:35 - the lobby and go in here and hit play
+08:38 - and create a room and I'm just gonna
+08:40 - call this one test and then on the other
+08:42 - client here we do have to login so let's
+08:45 - just do test one two three test one two
+08:48 - three and hit login and we'll wait for
+08:51 - it to login and then we will find the
+08:54 - here and click on it to join it and once
+08:57 - we are in we should be able to now track
+09:01 - these variables so you can see that
+09:03 - we're here in the game and we're here as
+09:05 - well and basically what I want to do is
+09:08 - just go under the main level here and
+09:11 - then find player 1 under the player
+09:14 - script and you can see the amount of
+09:16 - kills and the amount of deaths and for
+09:18 - both players that is currently serum so
+09:20 - if we go ahead and find our other player
+09:22 - here and that is the bug that I was
+09:24 - talking about where we spawned in the
+09:26 - air and it's kind of weird
+09:27 - we will definitely change that if we go
+09:29 - ahead and kill him you can see that the
+09:31 - kills changes to 1 and on the other
+09:33 - player the deaths change this to 1 and
+09:36 - we can go ahead and do this with the
+09:37 - other guy here as well so we can go
+09:40 - ahead and kill our first player here I'm
+09:43 - going to have a look and now the they
+09:46 - are both even in kills and deaths so
+09:50 - that is kinda great so what we can now
+09:53 - do with this is start to sync it on the
+09:56 - network so um one thing I just want to
+09:59 - do is that you'll notice maybe the level
+10:02 - was a bit dark and looked a bit weird
+10:04 - that is because we have to go into our
+10:06 - main level here find our lining here if
+10:08 - you haven't set this to auto you could
+10:11 - go ahead and set it to auto but that
+10:12 - might cause it to be a little weird when
+10:16 - joining the game from the editor because
+10:19 - then the lining might not be calculated
+10:20 - so what I like to do is I want to turn
+10:23 - off auto and then just hit hit build a
+10:25 - single time I'm just going to go ahead
+10:27 - and do that for you and that should make
+10:30 - sure that it works both in the editor
+10:31 - and in the art client that you built and
+10:34 - then you just want to make sure that you
+10:37 - set it back to auto whenever you want to
+10:39 - do any changes to the level of course so
+10:41 - that you can see your changes happening
+10:42 - on the lighting system as well good so
+10:45 - now that that is fixed we can go in and
+10:47 - close this client and let's take a look
+10:49 - at synching so what I thought we would
+10:51 - do here is we would find the player
+10:52 - object and we would create a new
+10:55 - component because I think this is going
+10:56 - to be too much to have all in the player
+10:58 - script and we'll call this one the
+11:00 - player's score and we can just create
+11:03 - this essence c-sharp script and it
+11:05 - create an ADD
+11:06 - let's double click this to open it up in
+11:08 - Visual Studio and what we want to do
+11:11 - here is first off get a reference to our
+11:13 - players so we'll go on board start and
+11:16 - we'll require that component up here
+11:19 - just to make sure that we have a player
+11:21 - component sitting on the object and
+11:24 - we'll then create a private reference so
+11:26 - we'll have a a player here let's just
+11:29 - call that one player and we'll set
+11:31 - player equal to get component of type
+11:35 - player right at the beginning of the
+11:38 - game and then what we can do is we can
+11:40 - create some kind of method for
+11:42 - synchronizing the killer and death count
+11:44 - so we'll create a void on something like
+11:47 - sink sink score and yeah let's just call
+11:53 - this one sink scored and you can see now
+11:56 - that we have access to our the amount of
+11:59 - kills and deaths that we've gotten so
+12:00 - far in the game by simply going player
+12:02 - kills or player deaths however we want
+12:07 - this to be added on to the total amount
+12:12 - of kills and total amount of deaths
+12:13 - because our player stats is of course
+12:16 - the total and we can't just go ahead and
+12:18 - say something like user user account
+12:23 - manager dot us instance dot set data or
+12:28 - sent data and then going in here and
+12:31 - then sending our kills and and deaths
+12:34 - because we want to actually first get
+12:36 - the data so we know how many kills and
+12:39 - death we currently have and then add on
+12:41 - this new amount of kills and deaths so
+12:44 - in order to do this we want to begin by
+12:45 - using of course get data and the way
+12:50 - that we do this is that we add an on
+12:51 - data received and we only want to do
+12:54 - this remember if user account manager
+12:56 - Todd is logged in so if we're not locked
+13:00 - in this wouldn't make much sense much
+13:03 - sense to do so we'll go ahead and call
+13:06 - the get data method and we'll delete
+13:08 - this as well and then we'll add a new
+13:10 - method down here that will be something
+13:12 - like on data received and someone called
+13:16 - out that I spelled received wrong in the
+13:19 - previous video I hope
+13:20 - is right and I will close that off there
+13:23 - and that is the data that we want to be
+13:26 - called and then we put in a string here
+13:28 - with the data so what we can now do here
+13:32 - is that when we decide to sync the score
+13:34 - we request to get the data when we
+13:37 - actually receive the data we will then
+13:40 - process it we'll add on the new the
+13:42 - amount of kills and deaths and we'll
+13:44 - send that total amount back to the
+13:48 - server so the way that we do this is
+13:51 - using of course our translator class so
+13:53 - we have the data translator here and
+13:55 - someone also commented that it would be
+13:57 - a good idea to make this into a just a
+14:01 - normal class not a mono behavior and
+14:03 - then use the constructor to do all of
+14:06 - the parsing of the string and then have
+14:08 - the kills and deaths stored as field
+14:11 - variables and I think that would be a
+14:13 - great way to do it I just thought this
+14:15 - would be a bit clearer to people who
+14:17 - weren't maybe very used to working with
+14:20 - constructors and I thought it would be a
+14:22 - bit much to show in one video this is a
+14:24 - very simple setup but if you want to go
+14:27 - ahead and do that it will definitely be
+14:30 - better because you only have to parse
+14:32 - the string once and things might make a
+14:34 - bit more sense so you are very free to
+14:37 - go ahead and actually do that just
+14:38 - wanted to mention that so we have the
+14:41 - public static in data two kills and data
+14:44 - two deaths so let's go ahead and use
+14:45 - that
+14:45 - so under our player score here we now
+14:48 - have the data here so we'll get an
+14:51 - integer with our kills and we'll set
+14:55 - that equal to our data translator dot
+15:00 - data two kills and we'll pass in the
+15:03 - data here and we'll do the same with
+15:05 - death so int deaths
+15:07 - equals data translator dot data two
+15:11 - deaths and we'll put in the data there
+15:14 - as well and one thing that we maybe do
+15:17 - want to note is that we only want to do
+15:19 - any of this in case we actually have
+15:21 - gotten some kills and some deaths so in
+15:24 - case our score is just zero and nothing
+15:26 - has changed there's really no reason to
+15:28 - sync the score so all the way up here
+15:30 - before doing anything else we can go in
+15:32 - and say if player
+15:34 - daaad our kills is equal to zero and and
+15:39 - player dodd deaths is equal to zero well
+15:43 - then we can just go ahead and hit return
+15:45 - there's really no reason to sync and
+15:47 - update these variables if they haven't
+15:49 - changed at all and I'll have a sip of
+15:51 - water there we go that's better for the
+15:56 - voice and now we can continue so
+15:59 - something has changed we get the data
+16:02 - and we get the amount of kills and
+16:04 - deaths from that data and then we want
+16:08 - to add on our new kills and new deaths
+16:11 - so we'll go int new death count or
+16:15 - something like that or new kill count
+16:16 - new kills we'll just say here is then
+16:19 - equal to player kills so the amount of
+16:22 - kills that we've gotten plus our total
+16:24 - kill count and int new deaths is equal
+16:28 - to player deaths plus our toad death
+16:33 - count there we go and then we can
+16:35 - actually convert this back into some
+16:37 - data because we then want to use of
+16:39 - course user account manager dot instance
+16:42 - dot set that or send data I keep saying
+16:45 - set data and we want to post put in some
+16:48 - data here some new some new data however
+16:52 - however language is so broken today
+16:56 - however we need to convert these two
+16:58 - integers into some data that we can use
+17:01 - we need to embed them into the string as
+17:04 - we've done before so how do we parse
+17:06 - them into a string
+17:08 - well we create of course another helper
+17:11 - method for this so we go into our data
+17:13 - translator here and we create a new
+17:15 - method and this is just going to be a
+17:17 - public static string and it's going to
+17:19 - be called values to data and it's going
+17:25 - to take in an integer with the kills and
+17:27 - an integer with the deaths and then it's
+17:30 - simply going to wrap that into our
+17:32 - string so it's going to format it in a
+17:34 - way so we have our kills symbol first
+17:36 - and then we have the amount of kills
+17:39 - here and then we add the separator the
+17:42 - data separator then we add the death
+17:45 - symbol
+17:47 - and then we add the amount of deaths and
+17:49 - that is all we need to do so it will
+17:52 - just throw that right back so we get it
+17:54 - in a correct format and this is going to
+17:56 - be our new data and it's going to be
+17:58 - equal to them data translator dot values
+18:03 - to data and the values here are going to
+18:06 - be new kills and new deaths cold so that
+18:13 - all seems to be fine and then we can
+18:16 - maybe put in a debug that lock statement
+18:18 - here
+18:19 - just saying something like syncing and
+18:22 - then we'll put in data actually of
+18:25 - course we want to put in new data so we
+18:28 - will just it will just a debug that lock
+18:31 - what our new total kill account and our
+18:34 - new total death count is in the way that
+18:37 - we form chosen to format it here before
+18:40 - sending it off cool
+18:42 - so this should all be working however we
+18:45 - currently don't call sync score anyway
+18:47 - so what we really want to do here is put
+18:51 - it on a timer that is my suggestion
+18:52 - ously at least you can of course if you
+18:55 - have very specific points in your code
+18:58 - where you are going to get a kill or
+19:00 - death or you'll want to change this on
+19:02 - this data just put a sink in there right
+19:05 - away now that might be on level up so I
+19:08 - really think that if you level up it's
+19:10 - something that it's just synchronized
+19:12 - right away
+19:13 - however kills and deaths might come very
+19:15 - quickly you might get two kills very
+19:17 - quickly in a row and then if it starts
+19:19 - to send one piece of data and then you
+19:21 - send the other piece right after things
+19:23 - might start getting a bit weird so
+19:25 - instead we're going to put this on a
+19:26 - fixed timer so the way that we do this
+19:29 - is just using a KO routine so we'll turn
+19:31 - this into an ayah numerator and we'll
+19:34 - call this the sync score our loop just
+19:37 - to be very clear about what this is it's
+19:40 - just a loop that will be that will um
+19:44 - reiterate every time some amount of
+19:48 - seconds has passed so we'll just go
+19:50 - ahead and start the co-routine cold sync
+19:53 - score loop there we go
+19:56 - and the way that you do a loop like this
+19:58 - is simply go while true
+20:00 - and that means always so it's always
+20:02 - going to do this and then you can either
+20:05 - have the code cold or do something
+20:09 - before all of this happens or you can or
+20:15 - you can either have all of this happen
+20:17 - before you wait or you could wait before
+20:20 - this happens so in our case I don't
+20:21 - think it makes much sense to synchronize
+20:24 - our killed and death count right when we
+20:27 - join the game I think it makes more
+20:28 - sense to wait a bit until we've gotten
+20:30 - some kills and therefore we're going to
+20:32 - put in here return yield return new
+20:38 - yield return new wait for seconds and
+20:42 - we're going to put in something like 20
+20:44 - maybe but now right now when we're
+20:46 - testing I'm just going to put in five so
+20:48 - that's fine and of course now we can't
+20:51 - put in return here so this might be
+20:54 - quite kind of annoying so what we'll do
+20:55 - instead is we'll just put it down here
+20:58 - and it's going to make absolutely no
+21:00 - different difference it I mean we are
+21:04 - still getting the data but I don't think
+21:07 - it's it's not very important so I think
+21:09 - this is going to be fine well so we're
+21:11 - just going to skip a frame and that's
+21:13 - going to be weird just put it down here
+21:15 - that's going to be just fine cool so
+21:18 - what we can do now is we can actually
+21:20 - test this however one thing that is kind
+21:22 - of dangerous with the code that we've
+21:24 - written here is that we need to make
+21:26 - sure to reset our kills and deaths so we
+21:30 - have these two local variables that are
+21:32 - just increased and then at some point we
+21:34 - choose to sync them over however when we
+21:36 - do that we of course want to reset them
+21:38 - and start counting again because if we
+21:40 - don't do that we'll have a case where
+21:41 - each 5 seconds it will just add our
+21:44 - kills and deaths on to our score and it
+21:48 - might just go crazy so if you have 5
+21:50 - kills each 5 seconds it's going to add
+21:53 - those 5 kills and that's not something
+21:55 - we want so let's just make sure that we
+21:57 - reset this afterwards and we do that by
+22:00 - maybe going down here and saying player
+22:02 - dart kills equals zero I'm player dot
+22:06 - deaths equals zero as well so I believe
+22:11 - that should work and then the last
+22:13 - thing that you might want to add in here
+22:16 - is that you might want to change this to
+22:17 - something like sync now so we'll just
+22:22 - put that into a separate function and
+22:24 - we'll do then call sync now from here
+22:27 - and then what we can do is we can add a
+22:29 - void on destroy that is called when the
+22:34 - game object is clean from the scene when
+22:36 - it's removed when it's destroyed and we
+22:38 - can just call sync now so whenever we
+22:41 - quit the game or disconnect from the
+22:44 - lobby or something like that
+22:45 - ondestroy is going to be called and we
+22:47 - want to sync the variables right away
+22:49 - just to make sure that we don't leave
+22:51 - leave the game and we we lose our scores
+22:54 - that would be annoying but one thing
+22:57 - that we do have to add in here is an if
+22:59 - and then we want to say that we only
+23:01 - want to do this if player is not equal
+23:04 - to no and the reason why is we want to
+23:08 - disable this on all clients except the
+23:12 - local player and when you disable a
+23:15 - component that doesn't disable on
+23:18 - destroy that will run regardless because
+23:21 - the component has been active at some
+23:23 - point and we don't want that so if we
+23:26 - haven't gotten our player that means
+23:27 - that the component has been disabled and
+23:29 - then we don't want to run this on
+23:31 - destroy method if that makes sense great
+23:34 - if not great let's just continue here
+23:37 - and so what we can then do is we can
+23:40 - find our player and we can go under our
+23:42 - player setup and we can drag our player
+23:46 - score script under the components to
+23:49 - disable and this is important because we
+23:51 - only want to do this locally cool so I
+23:55 - believe that was all kind of scary let's
+23:59 - try and see if that worked all right so
+24:02 - I was just setting up these two test
+24:03 - users that would have serial kills and
+24:05 - serial deaths that we could use to see
+24:07 - whether or not the system was working
+24:09 - and had this sudden realization that I
+24:11 - had been a and had a huge brain
+24:14 - fart and that is when we created the
+24:16 - public integer kills and deaths under
+24:18 - the player object unlike that those a
+24:21 - sync variable and that might magically
+24:26 - make sense because we might want
+24:27 - to sink however if we take a look at
+24:29 - where we are setting them down here
+24:31 - under the RPC tech damage this is an RPC
+24:34 - that means is it it calls it's called on
+24:37 - all clients and so when we die in
+24:39 - increase and decrease the kill and death
+24:41 - count we do that on all clients and then
+24:44 - try and sink it out and that will just
+24:46 - lead to a bunch of problems so instead
+24:48 - of marking those as sync variables we
+24:50 - can just leave them as normal public
+24:52 - integers so make sure to delete those
+24:55 - two tags before continuing or you will
+24:57 - get some weird behavior so you can see
+25:00 - there I've set up tests
+25:01 - one two three four and test one two
+25:03 - three and I'm just going to create a
+25:05 - test room one test one two three here
+25:08 - and you can see that the lighting Park
+25:11 - has now been fixed so that is nice we
+25:13 - can refresh the list here and go on the
+25:15 - test room and we should see that joining
+25:19 - and the lighting working here as well so
+25:21 - you can see that we when we get in the
+25:23 - room what I want to do is I want to
+25:24 - shift over to our unity player here and
+25:28 - he is player one and you can see
+25:30 - currently his kills and deaths are zero
+25:32 - but if we go ahead and shoot this guy we
+25:36 - should see our kills go up by one and
+25:39 - then in a second here we should go see
+25:41 - it go back to serum there we go and down
+25:43 - here it says sinking kills one death
+25:45 - zero and that's because of course these
+25:48 - variables are reset whenever we sync
+25:50 - that information over to the database so
+25:53 - if I now go ahead and kill this guy once
+25:55 - more we should see it going back up to
+25:57 - one and then back down to zero not so
+26:00 - syncing kills two deaths zero and if we
+26:03 - go over to the other player here and try
+26:06 - and kill our unity player when we kill
+26:12 - this guy here and go back to unity we
+26:16 - should see it say kills two deaths one
+26:19 - so we can see that if not it has now
+26:21 - synced that over and if I go and hit
+26:23 - leave room here and go back we should
+26:26 - see player stats here say two one and
+26:29 - it's it's loading there so two kills one
+26:32 - deaths and on the other guy here it says
+26:34 - one kill two deaths so now our player
+26:37 - stats are working so that was pretty
+26:40 - much all I wanted to
+26:41 - show you in this video I know it was
+26:42 - kind of crazy and we're definitely going
+26:44 - to be doing something else for the next
+26:46 - one but I hope you enjoyed it
+26:47 - nonetheless um and also of course the
+26:50 - disclaimer on this is not a very stable
+26:52 - way to do it it is not a very safe way
+26:54 - to do it but it's an easy way and it's a
+26:56 - way that I thought would help you
+26:58 - understand how these sort of things work
+27:00 - again if you want to explore more of
+27:02 - this you can look into database control
+27:04 - Pro or you could look into doing it on
+27:07 - your own with MySQL and then some kind
+27:10 - of hosting provider or making your own
+27:13 - server but yeah I just wanted to show
+27:15 - you how it works and I hope you enjoyed
+27:17 - it and without further ado I will see
+27:19 - you in the next video thank you so much
+27:21 - to all of the awesome patreon supporters
+27:23 - who donated in August and the special
+27:24 - thanks to our and Metta Robert Roach
+27:26 - James Calhoun Mixon P and Andrew K
+
+Cleaned transcript:
+
+this video is brought to you by our own Metta thank you so much for donating if you want to support breakage yourself you can go to patreon.com/scishow cheese thanks for tuning in at brac ease hello everyone and welcome to this video in creating a multiplayer fist in unity today we'll be finishing off a user account slash data synchronization system and we'll do that by finishing off the player stats in the last video we took a look at getting the player stats from the database on the server and displaying that on the UI and today we'll have a look at sending that data so once we're in the game playing and killing people and dying then we'll make sure to update both the kill count and the death count as we go along so that's going to be super fun I also want to say that now that we're done with this kind of part of this series I have a lot of other cool stuff to show and we'll definitely begin by fixing some bucks we have a small bug when spawning in the game that is kind of annoying we have another bug when trying to re host the game so if you've disconnected and then try and host a game that will not work and I also want to do stuff like lock the cursor and maybe implement some larger stuff as well so don't worry there's plenty of stuff to be shown still so without further ado let's just jump right into it so you can see that I'm here in unity and what I want to begin with is the user account manager I don't want to change anything I just want to highlight a single thing and that is this public board send data method and this is the very method that we are going to be using for sending data to the server it simply takes in some data as a string but first I want to put some code around this because one thing that we could do is just every time we get a kill or a death we could send some data to the server but I don't think that's very efficient and most games probably wouldn't do this at least not if they had on the reliability of our servers so what we'll do instead is we'll have will have a sync var or basically two sync VARs keeping track of the amount of kills we have an amount of deaths we have in the game that just sits on the computer and then on a fixed timer and also when we leave the game we will then sync that data to the database on the server so let's say every 20 seconds it's going to update our notes no stats or when we leave the game it's going to update them as well so that's what we're going to be doing and I think it's kind of exciting and what we basically want to start with is creating these two sync variables so if we find our scripts folder here and go under player and then double click that I think the play is a pretty irrelevant place to add these so you could have them sit on a separate component and we will make a separate component for syncing these but for now we'll just have the variables themselves sit on the player so we'll create a sync VAR here and remember sync Y var is just a way of marking a variable that unit will then synchronize across all clients so if it changes on one it will be applied to all of the other clients as well and this is going to be a public integer and it's going to store the amount of kills we have and we'll also have a sync bar with on the amount of deaths we have there we go and also on the player if we scroll down here is a method called RPC take damage and this is called every time you get shot by a player that gives an amount of damage and that we then subtract from our current health and if our current health is below or equal to zero we die so this is the method that we are going to be using as the central point of of changing these variables so you can see inside of our die method here right on the is dead would be a pretty relevant place to change these because we are dying on the player here we are setting is that to true and we're disabling all of these components and starting the respawn method so let's just go in here and say deaths plus plus or plus equals 1 we just want to increase it by 1 then what we can do is also maybe increase the kill count of whoever shot us however we don't actually in here have any information as to who was the one who shot the bullet so let's actually pass this on to this function and we'll also have to pass it into the RPC take damage so let's retrace our steps a bit to find out kind of how these methods are called so in order to do this we want to go in and find the player shoot script so this is the script responsible for shooting bullets and we want to find the place where we fire and call the shoot method so we find the shoot method and this is called on the client and it basically says that if we hit a player or something tagged as a player we want to call command players shot and this is a command meaning it's called on the server and this basically takes in a player ID this is the ID or the name of the player that we shot with an integer that is the amount of damage that we want to apply and then we find the player component of this player using the player ID and using get player on our game manager but we might as well pass the ID of the player who shot the bullet in as an argument as well and then inside of the RPC take damage method we can use game manager Duquette player just as we are here to forget the player component of that player so in order to do that all we need to do here is pass in our car name which is transformed name so we are the one who's shot so we'll pass in our name here and we'll allow ourselves to do this and we call it the source player ID actually let's just call it the source ID so this is the name of whoever shot and then we'll pass this along into the RPC take damage as well so we'll pass on source ID into that we go into the player here and we'll add this as an argument so we'll go string source ID and then what we can do down here if our current health is less than or equal to serial is that we will go ahead and find this component using the game manager so we can say player and this is going to be our source player and we'll set that equal to something like gamemanager get player and then passing in this source ID so we've now found the player and we've gotten the actual component that we can use and I think I actually want to do this inside of the die method because there's no reason to pass on an entire player when you can just pass on a string here so we'll just put in this source ID here as well and then down put here as an argument string source ID and then we can go if source player it's not equal to null because of course if the player wasn't found we won't try and change the kill account of that player and this might be a thing that you want to happen that the player isn't found say if you take damage from falling there's no player in here and then there's no kill account to increase but you still want to increase the death count so this might be a legitimate thing and this is a great thing to wrap in an if statement just to make sure that your code doesn't break and then what we can do in here is we can say source player dot kill a dot kills plus plus so we've increased the amount of kills and that is my cat of course are stepping on the keyboard I should really lock the door when doing these tutorials all right so you can see that we have now increased on the amount of kills here and let's remove the insert key there great so the next thing is to maybe just test this out so we'll just make a window spilled and I had I used this before but let's go ahead and make a new one just pressing ctrl B or command B if you're on a Mac here and all we really want to do is just I we actually don't even need to start at the login menu here we can go straight to the lobby and go in here and hit play and create a room and I'm just gonna call this one test and then on the other client here we do have to login so let's just do test one two three test one two three and hit login and we'll wait for it to login and then we will find the here and click on it to join it and once we are in we should be able to now track these variables so you can see that we're here in the game and we're here as well and basically what I want to do is just go under the main level here and then find player 1 under the player script and you can see the amount of kills and the amount of deaths and for both players that is currently serum so if we go ahead and find our other player here and that is the bug that I was talking about where we spawned in the air and it's kind of weird we will definitely change that if we go ahead and kill him you can see that the kills changes to 1 and on the other player the deaths change this to 1 and we can go ahead and do this with the other guy here as well so we can go ahead and kill our first player here I'm going to have a look and now the they are both even in kills and deaths so that is kinda great so what we can now do with this is start to sync it on the network so um one thing I just want to do is that you'll notice maybe the level was a bit dark and looked a bit weird that is because we have to go into our main level here find our lining here if you haven't set this to auto you could go ahead and set it to auto but that might cause it to be a little weird when joining the game from the editor because then the lining might not be calculated so what I like to do is I want to turn off auto and then just hit hit build a single time I'm just going to go ahead and do that for you and that should make sure that it works both in the editor and in the art client that you built and then you just want to make sure that you set it back to auto whenever you want to do any changes to the level of course so that you can see your changes happening on the lighting system as well good so now that that is fixed we can go in and close this client and let's take a look at synching so what I thought we would do here is we would find the player object and we would create a new component because I think this is going to be too much to have all in the player script and we'll call this one the player's score and we can just create this essence csharp script and it create an ADD let's double click this to open it up in Visual Studio and what we want to do here is first off get a reference to our players so we'll go on board start and we'll require that component up here just to make sure that we have a player component sitting on the object and we'll then create a private reference so we'll have a a player here let's just call that one player and we'll set player equal to get component of type player right at the beginning of the game and then what we can do is we can create some kind of method for synchronizing the killer and death count so we'll create a void on something like sink sink score and yeah let's just call this one sink scored and you can see now that we have access to our the amount of kills and deaths that we've gotten so far in the game by simply going player kills or player deaths however we want this to be added on to the total amount of kills and total amount of deaths because our player stats is of course the total and we can't just go ahead and say something like user user account manager dot us instance dot set data or sent data and then going in here and then sending our kills and and deaths because we want to actually first get the data so we know how many kills and death we currently have and then add on this new amount of kills and deaths so in order to do this we want to begin by using of course get data and the way that we do this is that we add an on data received and we only want to do this remember if user account manager Todd is logged in so if we're not locked in this wouldn't make much sense much sense to do so we'll go ahead and call the get data method and we'll delete this as well and then we'll add a new method down here that will be something like on data received and someone called out that I spelled received wrong in the previous video I hope is right and I will close that off there and that is the data that we want to be called and then we put in a string here with the data so what we can now do here is that when we decide to sync the score we request to get the data when we actually receive the data we will then process it we'll add on the new the amount of kills and deaths and we'll send that total amount back to the server so the way that we do this is using of course our translator class so we have the data translator here and someone also commented that it would be a good idea to make this into a just a normal class not a mono behavior and then use the constructor to do all of the parsing of the string and then have the kills and deaths stored as field variables and I think that would be a great way to do it I just thought this would be a bit clearer to people who weren't maybe very used to working with constructors and I thought it would be a bit much to show in one video this is a very simple setup but if you want to go ahead and do that it will definitely be better because you only have to parse the string once and things might make a bit more sense so you are very free to go ahead and actually do that just wanted to mention that so we have the public static in data two kills and data two deaths so let's go ahead and use that so under our player score here we now have the data here so we'll get an integer with our kills and we'll set that equal to our data translator dot data two kills and we'll pass in the data here and we'll do the same with death so int deaths equals data translator dot data two deaths and we'll put in the data there as well and one thing that we maybe do want to note is that we only want to do any of this in case we actually have gotten some kills and some deaths so in case our score is just zero and nothing has changed there's really no reason to sync the score so all the way up here before doing anything else we can go in and say if player daaad our kills is equal to zero and and player dodd deaths is equal to zero well then we can just go ahead and hit return there's really no reason to sync and update these variables if they haven't changed at all and I'll have a sip of water there we go that's better for the voice and now we can continue so something has changed we get the data and we get the amount of kills and deaths from that data and then we want to add on our new kills and new deaths so we'll go int new death count or something like that or new kill count new kills we'll just say here is then equal to player kills so the amount of kills that we've gotten plus our total kill count and int new deaths is equal to player deaths plus our toad death count there we go and then we can actually convert this back into some data because we then want to use of course user account manager dot instance dot set that or send data I keep saying set data and we want to post put in some data here some new some new data however however language is so broken today however we need to convert these two integers into some data that we can use we need to embed them into the string as we've done before so how do we parse them into a string well we create of course another helper method for this so we go into our data translator here and we create a new method and this is just going to be a public static string and it's going to be called values to data and it's going to take in an integer with the kills and an integer with the deaths and then it's simply going to wrap that into our string so it's going to format it in a way so we have our kills symbol first and then we have the amount of kills here and then we add the separator the data separator then we add the death symbol and then we add the amount of deaths and that is all we need to do so it will just throw that right back so we get it in a correct format and this is going to be our new data and it's going to be equal to them data translator dot values to data and the values here are going to be new kills and new deaths cold so that all seems to be fine and then we can maybe put in a debug that lock statement here just saying something like syncing and then we'll put in data actually of course we want to put in new data so we will just it will just a debug that lock what our new total kill account and our new total death count is in the way that we form chosen to format it here before sending it off cool so this should all be working however we currently don't call sync score anyway so what we really want to do here is put it on a timer that is my suggestion ously at least you can of course if you have very specific points in your code where you are going to get a kill or death or you'll want to change this on this data just put a sink in there right away now that might be on level up so I really think that if you level up it's something that it's just synchronized right away however kills and deaths might come very quickly you might get two kills very quickly in a row and then if it starts to send one piece of data and then you send the other piece right after things might start getting a bit weird so instead we're going to put this on a fixed timer so the way that we do this is just using a KO routine so we'll turn this into an ayah numerator and we'll call this the sync score our loop just to be very clear about what this is it's just a loop that will be that will um reiterate every time some amount of seconds has passed so we'll just go ahead and start the coroutine cold sync score loop there we go and the way that you do a loop like this is simply go while true and that means always so it's always going to do this and then you can either have the code cold or do something before all of this happens or you can or you can either have all of this happen before you wait or you could wait before this happens so in our case I don't think it makes much sense to synchronize our killed and death count right when we join the game I think it makes more sense to wait a bit until we've gotten some kills and therefore we're going to put in here return yield return new yield return new wait for seconds and we're going to put in something like 20 maybe but now right now when we're testing I'm just going to put in five so that's fine and of course now we can't put in return here so this might be quite kind of annoying so what we'll do instead is we'll just put it down here and it's going to make absolutely no different difference it I mean we are still getting the data but I don't think it's it's not very important so I think this is going to be fine well so we're just going to skip a frame and that's going to be weird just put it down here that's going to be just fine cool so what we can do now is we can actually test this however one thing that is kind of dangerous with the code that we've written here is that we need to make sure to reset our kills and deaths so we have these two local variables that are just increased and then at some point we choose to sync them over however when we do that we of course want to reset them and start counting again because if we don't do that we'll have a case where each 5 seconds it will just add our kills and deaths on to our score and it might just go crazy so if you have 5 kills each 5 seconds it's going to add those 5 kills and that's not something we want so let's just make sure that we reset this afterwards and we do that by maybe going down here and saying player dart kills equals zero I'm player dot deaths equals zero as well so I believe that should work and then the last thing that you might want to add in here is that you might want to change this to something like sync now so we'll just put that into a separate function and we'll do then call sync now from here and then what we can do is we can add a void on destroy that is called when the game object is clean from the scene when it's removed when it's destroyed and we can just call sync now so whenever we quit the game or disconnect from the lobby or something like that ondestroy is going to be called and we want to sync the variables right away just to make sure that we don't leave leave the game and we we lose our scores that would be annoying but one thing that we do have to add in here is an if and then we want to say that we only want to do this if player is not equal to no and the reason why is we want to disable this on all clients except the local player and when you disable a component that doesn't disable on destroy that will run regardless because the component has been active at some point and we don't want that so if we haven't gotten our player that means that the component has been disabled and then we don't want to run this on destroy method if that makes sense great if not great let's just continue here and so what we can then do is we can find our player and we can go under our player setup and we can drag our player score script under the components to disable and this is important because we only want to do this locally cool so I believe that was all kind of scary let's try and see if that worked all right so I was just setting up these two test users that would have serial kills and serial deaths that we could use to see whether or not the system was working and had this sudden realization that I had been a and had a huge brain fart and that is when we created the public integer kills and deaths under the player object unlike that those a sync variable and that might magically make sense because we might want to sink however if we take a look at where we are setting them down here under the RPC tech damage this is an RPC that means is it it calls it's called on all clients and so when we die in increase and decrease the kill and death count we do that on all clients and then try and sink it out and that will just lead to a bunch of problems so instead of marking those as sync variables we can just leave them as normal public integers so make sure to delete those two tags before continuing or you will get some weird behavior so you can see there I've set up tests one two three four and test one two three and I'm just going to create a test room one test one two three here and you can see that the lighting Park has now been fixed so that is nice we can refresh the list here and go on the test room and we should see that joining and the lighting working here as well so you can see that we when we get in the room what I want to do is I want to shift over to our unity player here and he is player one and you can see currently his kills and deaths are zero but if we go ahead and shoot this guy we should see our kills go up by one and then in a second here we should go see it go back to serum there we go and down here it says sinking kills one death zero and that's because of course these variables are reset whenever we sync that information over to the database so if I now go ahead and kill this guy once more we should see it going back up to one and then back down to zero not so syncing kills two deaths zero and if we go over to the other player here and try and kill our unity player when we kill this guy here and go back to unity we should see it say kills two deaths one so we can see that if not it has now synced that over and if I go and hit leave room here and go back we should see player stats here say two one and it's it's loading there so two kills one deaths and on the other guy here it says one kill two deaths so now our player stats are working so that was pretty much all I wanted to show you in this video I know it was kind of crazy and we're definitely going to be doing something else for the next one but I hope you enjoyed it nonetheless um and also of course the disclaimer on this is not a very stable way to do it it is not a very safe way to do it but it's an easy way and it's a way that I thought would help you understand how these sort of things work again if you want to explore more of this you can look into database control Pro or you could look into doing it on your own with MySQL and then some kind of hosting provider or making your own server but yeah I just wanted to show you how it works and I hope you enjoyed it and without further ado I will see you in the next video thank you so much to all of the awesome patreon supporters who donated in August and the special thanks to our and Metta Robert Roach James Calhoun Mixon P and Andrew K

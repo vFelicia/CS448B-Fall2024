@@ -1,0 +1,238 @@
+00:00 - welcome back to part 10 of the circle
+00:02 - jump series in this video we're going to
+00:04 - fix some things that we discovered last
+00:07 - week when we started doing some Android
+00:08 - testing and we're also going to add a
+00:10 - high score function all right let's get
+00:12 - started
+00:12 - so first of all I want to thank everyone
+00:15 - who tested the apk out on their phones
+00:19 - from last video we got a lot of good
+00:22 - testing done and so the first thing
+00:24 - we're gonna do this time is we are going
+00:27 - to switch to the GL ES 2 renderer it's a
+00:32 - lot more compatible on more phones and
+00:35 - has less less issues with it we had a
+00:40 - feeling that that was going to be the
+00:41 - case and it turned out to be true but
+00:44 - what that means is we're going to have
+00:46 - to remove this world environment because
+00:50 - the thing we were using it for which was
+00:53 - the glow effect doesn't work in GL ES 2
+00:56 - and so if we want the circles to glow
+01:01 - we're gonna have to do that in a shader
+01:04 - the other issue we found was that this
+01:07 - animation for showing the message is
+01:11 - really performing poorly so whenever you
+01:16 - jump from one ring to another and you
+01:19 - get up a level and that message pops up
+01:22 - it's lagging the game like crazy and it
+01:25 - just turns out that animating the labels
+01:31 - dynamic font causes too much overhead so
+01:36 - this is just not efficient so we are
+01:38 - going to nuke that animation or sorry
+01:41 - that track at least on the animation so
+01:44 - it costs custom font size we're going to
+01:46 - nuke that and now instead we're going to
+01:48 - animate the scale so we're going to take
+01:50 - the scale from 1 well create a key for
+01:56 - that and at the end we will go to 2 and
+02:01 - we'll key that now the problem the only
+02:06 - problem with that is that it's going to
+02:07 - grow kind of asymmetrically because it
+02:10 - grows from the anchor point and we could
+02:13 - would set the pivot offset here manually
+02:17 - but since we are going to be having
+02:21 - different sized screens and we have
+02:22 - everything dynamic we'll set that in
+02:24 - code so in the ready for our HUD we're
+02:29 - going to set the pivot offsets a message
+02:36 - rec pivot offset is going to equal and
+02:39 - we want to just set it to the center
+02:41 - whatever the center of the rectangle is
+02:43 - so we just take the rec size up in size
+02:47 - size and divide by 2 and that will put
+02:51 - it in the right place where it needs to
+02:53 - be when we run and now we should get a
+02:59 - good centered go let's go ahead and jump
+03:04 - a couple times so we see the level up
+03:06 - message there we go so a big thanks to
+03:10 - twiddle on YouTube before suggesting
+03:13 - that solution which worked out really
+03:15 - well so now on to the circle shader that
+03:19 - we need to replicate that glow effect
+03:23 - and while we're at it add a little bit
+03:25 - more flair to it so we're gonna go to
+03:28 - the material on the sprite and right now
+03:33 - we're using this color shader you know
+03:35 - that just lets us set B rings color and
+03:40 - I'm going to make this unique because
+03:46 - we're gonna make a new shader for the
+03:47 - glow that I don't want to use on the
+03:50 - jumper sprite so we're gonna need a
+03:53 - couple more uniforms here first one is
+03:58 - speed because we're gonna animate this
+03:59 - and the nice thing about these uniforms
+04:04 - is you can add a hint range for what you
+04:06 - want the inspector setting to be able to
+04:11 - vary between so we put that there effect
+04:17 - for is not speeds not effect for our
+04:18 - speed is a flip
+04:20 - and that will let us over here range
+04:24 - this from zero to 20 and we'll also do
+04:26 - one called
+04:28 - radius so that we can vary this based on
+04:32 - the size of the circle for when our
+04:38 - circles get smaller and then the last
+04:43 - one for getting my types they're writing
+04:46 - too much GD script and then the last one
+04:48 - here we're going to do is width and is
+04:50 - basically going to be the the size of
+04:52 - the glow effect and that's going to go
+04:56 - from zero to one as well
+04:57 - now on to our fragment shader here where
+05:00 - we're going to start with everything
+05:04 - being centered so we want the center of
+05:06 - our texture here which is a UV of 0.5
+05:12 - 0.5 our time is going to be multiplied
+05:21 - by our speed factor the radius of the
+05:26 - effect is going to be it's going to need
+05:30 - to be scaled I'm doing 0 0 5 times sine
+05:35 - of time and then also the thickness of
+05:42 - the effect is width also using cosine
+05:49 - time and then the distance from the
+05:53 - center load is the distance from the
+06:01 - current location relative to the center
+06:05 - that's how far away it is so now we
+06:08 - still use our color that we're setting
+06:11 - over in the shader parameters but now
+06:14 - we're going to add on to the Alpha some
+06:17 - additional value which is we need a
+06:22 - smooth step the thickness divided by two
+06:26 - point zero comma zero zero and then we
+06:31 - want an the absolute value of
+06:35 - disk fineness rad which is how far away
+06:37 - and so now what that's going to do is
+06:41 - right now nothing changed but if we go
+06:43 - over here and set the radius you can see
+06:46 - where the glow effect is gonna be so
+06:48 - we'll set that to match the size of our
+06:51 - circle and then the width is going to be
+06:54 - how much the glow spreads out and now
+07:00 - the one problem we have now that you'll
+07:02 - notice is that we get this effect now
+07:05 - the reason for that is because our
+07:06 - shader is running on the sprite so it
+07:08 - can only affect the pixels of the
+07:11 - sprites texture so to solve that I've
+07:15 - made a larger texture a larger image
+07:19 - with some extra transparent pixels
+07:21 - around the circle to give it some more
+07:24 - room to draw the glow effect and so that
+07:28 - looks like this gives us some more space
+07:31 - and then the other one is so for now
+07:34 - we're just going to stick to this giving
+07:35 - it this glow effect but we also have
+07:37 - this speed factor which lets us animate
+07:40 - that glow if we want it to pulse and
+07:43 - that's something we can possibly mess
+07:47 - around with later maybe with certain
+07:48 - types of circles haven't quite decided
+07:51 - yet
+07:53 - but if we leave that at zero we just get
+07:55 - a static glow
+07:56 - okay I've saved that shader if you want
+07:59 - to grab it as circle glow got shader and
+08:03 - the other thing we have to do now that
+08:05 - the size of our texture changed so some
+08:10 - of these are gonna be off I'm not going
+08:11 - to go through them all the way but we're
+08:13 - gonna start out with our default radius
+08:14 - being a little bigger and we're going to
+08:17 - adjust the orbit position and the
+08:21 - drawing of the pie effect in the center
+08:27 - just a little bit so that it matches the
+08:30 - new size okay so now we're going to add
+08:33 - one more feature so on the game over
+08:36 - screen I've added two more labels for
+08:40 - the score and the current high score so
+08:43 - that when you lose see what your score
+08:45 - was and what's current best
+08:47 - score is and we're gonna display those
+08:50 - there and then we're also going to need
+08:52 - to save the high score so that between
+08:54 - game sessions that persists so we're
+08:58 - going to need to save some data so over
+09:01 - in our screens when we call game over
+09:03 - we're actually going to pass in the
+09:07 - score and the high score and before we
+09:13 - change to the game over screen we're
+09:15 - going to set those values so the score
+09:17 - box is going to be equal to the game
+09:19 - over screen that scores container just
+09:24 - to make it easier for us to read and
+09:27 - type and then we're gonna set the I'm
+09:31 - gonna say get node score we're gonna set
+09:35 - the text of that to the word score with
+09:41 - whatever score value we passed in and
+09:45 - then the same thing with the best so now
+09:51 - over in Maine when we call game over
+09:54 - because the jumper died we need to pass
+09:56 - in those variables so let's declare them
+09:59 - we have a score and now we also have a
+10:05 - high score which will default to zero as
+10:10 - well and then when the jumper dies we
+10:13 - pass in score and high score but also
+10:19 - when the player died that's when we need
+10:22 - to check if the score is greater than
+10:24 - the high score then we just got a new
+10:26 - high score right and we need to save
+10:30 - that score which we'll talk about how to
+10:32 - do in a second but that means that we
+10:35 - also have to load that high score when
+10:39 - we start a new session so in ready we're
+10:44 - going to need to do that so let's define
+10:47 - where we want to save our score and we
+10:51 - would put that in the settings not Gd
+10:53 - let's just declare
+10:56 - the score file and that's going to be in
+10:59 - user that's the location where you're
+11:02 - supposed to save user data and we'll
+11:06 - just call it high score save and so we
+11:09 - save that in users now over in back to
+11:12 - our main script we can define load in
+11:15 - safe score so loading the score just
+11:20 - means going and pulling that data out so
+11:24 - we get a new file object and if if the
+11:29 - file exists then we'll be able to read
+11:34 - from it so we'll open it for reading and
+11:43 - high score is just going to be get
+11:46 - guitar and then we close the file and
+11:53 - now saving the file is just the opposite
+11:58 - we want to do pretty much the same thing
+12:02 - which is we want to get a new file
+12:05 - object so we can grab that and now we
+12:09 - don't need to test if it exists but we
+12:12 - do want to open it but this time we want
+12:16 - to open it in write mode and then we're
+12:22 - going to use F store var to stick it in
+12:30 - there and then close so now if we try it
+12:35 - out we'll see that if I died right away
+12:40 - alright my score was 1 best is one but
+12:44 - if I go and get a couple of points and
+12:47 - then die now the best is 3 if I quit
+12:52 - that should still be there again the
+12:56 - best history could that'll do it for
+12:59 - this time I think we're getting really
+13:00 - close for making a lot of progress
+13:01 - thanks for watching and I'll see you in
+13:04 - the next video
+13:04 - this tutorial is part of my nugudo
+13:06 - recipes website the goal is to collect
+13:08 - all the best tips and
+13:10 - to help make you a better go developer
+13:12 - if you like this video I hope you'll go
+13:14 - and check out the site and make sure to
+13:16 - hit subscribe so you'll be notified
+13:17 - whenever I release new videos thanks for
+13:19 - watching

@@ -1,0 +1,646 @@
+00:01 - [Music]
+00:04 - hello this here wasn't to another
+00:07 - episode of the MySQL series in this
+00:10 - lesson we're going to start building our
+00:12 - iOS app to connect to or rather to hit
+00:16 - this service that we built in the
+00:18 - previous lesson to grab this JSON data
+00:21 - and then parse it so that we can display
+00:23 - it inside the app alright so we're going
+00:26 - to get started we're going to jump right
+00:27 - into Xcode here and I'm starting a new
+00:30 - project make sure you're looking at i/o
+00:32 - s let's choose single View application
+00:34 - and I'm going to call this MySQL a demo
+00:39 - app and you can copy my settings here
+00:43 - the important one to note really is this
+00:44 - one make sure that you're selecting
+00:45 - Swift devices iPhone and I don't have
+00:49 - any of that checked on I'm just going to
+00:52 - save it on the desktop there and the
+00:55 - first thing we are going to do we're not
+00:57 - even going to touch the storyboard right
+00:59 - now
+00:59 - we'll leave the user interface to the
+01:02 - next lesson but right now I just want to
+01:05 - work on parsing the JSON data that we
+01:09 - download from this service so before we
+01:13 - dive into any code the first thing we
+01:14 - need to do is take a look at this
+01:16 - diagram about how this app is going to
+01:19 - be structured and I don't even really
+01:22 - want to call it an app because it's more
+01:23 - of a like a demo so in the middle there
+01:26 - we have the view controller and that's
+01:28 - the default view controller that comes
+01:30 - with our single view application and we
+01:34 - have a view controller Swift file to
+01:37 - represent that class so this view
+01:39 - controller is going to be displaying a
+01:41 - table view of our locations and we only
+01:44 - have two locations the Apple
+01:46 - headquarters and the Google headquarters
+01:47 - but there's nothing to stop you from
+01:48 - adding more to your database anyways
+01:51 - it's going to be a table view that's
+01:52 - going to show two rows when you tap on
+01:55 - one of those rows you're going to go off
+01:56 - to a map view so we have another detail
+02:01 - view controller or map view controller
+02:02 - just a second view controller which is
+02:05 - going to display the map and the
+02:07 - selected location designated by a pin on
+02:10 - the map now in order to get the data
+02:13 - from our PHP web service we're not going
+02:16 - to have the view controller directly hit
+02:19 - that service and download the data we're
+02:21 - going to have another class and that's
+02:23 - going to be our home model now this
+02:27 - class is going to be in charge of
+02:29 - actually making the call to the web
+02:31 - service downloading the data parsing the
+02:34 - JSON data and then returning to the view
+02:36 - controller a list of locations for to
+02:39 - display in the table view and the last
+02:41 - piece of the puzzle is that we need some
+02:43 - sort of data structure or class to
+02:46 - represent each location so we're going
+02:50 - to create a location class that
+02:51 - represents a single location it's going
+02:54 - to have a name address latitude and
+02:56 - longitude and furthermore the home model
+03:00 - when it parses that data it's going to
+03:02 - be creating those location objects it's
+03:04 - going to create an array of those
+03:07 - objects and it's going to pass that
+03:09 - whole entire right back to the view
+03:10 - controller as you can see in this
+03:12 - diagram here and then furthermore when
+03:14 - the user taps on the table view and
+03:17 - selects the location the view controller
+03:19 - is going to pass the selected location
+03:22 - object to the map view controller and
+03:25 - it's going to take that and read the
+03:27 - latitude and longitude properties and
+03:29 - display it okay with that said let's
+03:32 - dive back into Xcode and let's get
+03:34 - started so the first thing I'm going to
+03:37 - do here is I'm going to create a couple
+03:41 - of different classes let's create our so
+03:44 - under iOS choose cocoa touch class we're
+03:47 - going to create our home model class
+03:48 - first so let's call it home model I'm
+03:51 - going to be a subclass of nsobject and
+03:53 - the language is swift and create that
+03:58 - right there and we're also going to
+04:00 - create our location class but actually
+04:03 - now that I'm thinking about it
+04:05 - it doesn't need to be a class it can
+04:07 - simply be a struct and if you don't know
+04:10 - what it is let me try and think of a
+04:13 - good example for this but technically
+04:15 - speaking the class is a reference type
+04:17 - and struct is a value type now this
+04:21 - probably warns its own video to explain
+04:23 - the difference between the two but if
+04:25 - we're talking about the scenario in
+04:27 - our app here so take for instance we
+04:30 - were talking about how the home model
+04:32 - would create a bunch of location objects
+04:36 - so let's say location was a class the
+04:40 - home model would create a whole bunch of
+04:41 - location objects and it would pass that
+04:45 - array of objects to the view controller
+04:48 - now you can kind of think about this as
+04:50 - sort of a handoff so the home models
+04:53 - handing off the the array of location
+04:57 - objects to the view controllers so even
+05:00 - though the home model has a reference to
+05:02 - the list of location objects and then
+05:04 - once it passes it to the view controller
+05:05 - the view controller also has a reference
+05:08 - to that array of location objects it's
+05:11 - the same set of location objects so if
+05:14 - you change something in one of the
+05:16 - location objects it's going to be
+05:18 - reflected in both the home model and the
+05:21 - view controller because they're both
+05:22 - referencing the same list of location
+05:26 - objects however if location was not a
+05:29 - class instead if it was a struct and
+05:31 - it's a value type when the whole model
+05:34 - passes that array of location struct to
+05:39 - the view controller it's going to get
+05:41 - copied instead so now the home model has
+05:44 - its own list or a copy of locations and
+05:48 - the view controller also has its own
+05:50 - copy so if the view controller modifies
+05:54 - one of the locations in that list of
+05:57 - location structs it's not going to
+06:00 - affect the copy that the home model has
+06:02 - so that's kind of the difference now
+06:05 - which one you use obviously is going to
+06:07 - depend on how it's going to be used in
+06:10 - your application if making copies like
+06:12 - that doesn't matter and it's not going
+06:14 - to matter for us because we're merely
+06:17 - we're merely displaying this data we we
+06:20 - aren't interested in modifying it and
+06:22 - then passing it around between different
+06:25 - view controllers and such the copies are
+06:28 - fine for us so we're going to use
+06:31 - structs which turns out is a more
+06:33 - lightweight way to represent that data
+06:35 - anyways so like I said this probably
+06:37 - warrants
+06:39 - it's own video in itself where I can
+06:41 - demonstrate a live example in code for
+06:44 - you guys but for now I hope that kind of
+06:46 - makes sense so when we create a struct
+06:49 - we don't choose cocoa touch class we're
+06:51 - just going to choose a swift file so I'm
+06:54 - going to call this location and it's
+06:58 - going to create a location dot Swift
+06:59 - here and it's going to be an empty swift
+07:02 - file and instead of the keyword class
+07:06 - we're going to use struct let me use
+07:09 - location you still have that set of
+07:11 - curly brackets and then here we're going
+07:13 - to declare some of those properties so
+07:15 - name I'm going to set it to an empty
+07:17 - string what do we have we have address
+07:21 - we have a latitude and we have longitude
+07:34 - okay so that's pretty much all we need
+07:37 - for that let's jump back into the home
+07:39 - model here because the data is going to
+07:43 - be downloaded asynchronously we're going
+07:46 - to need to have a way to contact the
+07:49 - view controller back when it's finished
+07:52 - downloading okay so we're going to use
+07:56 - delegates and protocols to do that first
+07:58 - let's create this function to get items
+08:03 - the view controller is going to be
+08:06 - calling this function so in this
+08:07 - function we are going to hit the web
+08:10 - service URL download two JSON data parse
+08:20 - it out into location strokes notify the
+08:28 - view controller and pass the data back
+08:33 - so those are kind of the high-level
+08:35 - steps that we're going to take alright
+08:39 - so actually let's not worry about the
+08:41 - protocol and delegate stuff now let's
+08:44 - just focus on this stuff in order like
+08:47 - this it's going to make it a little
+08:49 - easier to understand
+08:50 - so first let's just let's declare our
+08:53 - web service URL so let service URL
+08:57 - equals and this is simply going to be
+09:02 - our iOS quiz comm slash service dot PHP
+09:09 - and then next we are going to use a URL
+09:13 - session class to download the data so
+09:16 - let session actually we need to create a
+09:20 - URL first a URL object there is a URL
+09:25 - class and there is an initializer that
+09:28 - just takes a string this guy right here
+09:30 - so we're going to initialize this URL
+09:32 - with this string right here that and if
+09:39 - you notice let me do that again if you
+09:41 - notice that this initializer returns an
+09:46 - optional URL type so potentially it
+09:49 - could return nil okay so we're going to
+09:52 - need to check against that so if let
+09:55 - your l equals URL so if it comes into
+09:59 - here then that means that the URL object
+10:02 - is not nil the next thing we're going to
+10:04 - do is create a URL session so let's put
+10:08 - that into a constant named session and
+10:11 - the class's URL session use this one
+10:15 - configuration and we can use the default
+10:21 - configuration if you just press dot it's
+10:24 - going to autocomplete is going to show
+10:26 - you the options that you're going to
+10:28 - select from select default and then we
+10:31 - are going to create a task so we are
+10:36 - going to say create a constant that
+10:39 - we're going to assign the task into and
+10:41 - you create the data task off of the
+10:44 - session is created so it a task there's
+10:48 - a couple ones you could create we're
+10:50 - going to create this one with passing in
+10:53 - the URL with a completion handler which
+10:56 - means that after this task has completed
+10:58 - we're going to run that closure and
+11:00 - closure is just a block of code
+11:02 - so the URL is going to be this guy right
+11:05 - here so just put that into there as a
+11:09 - parameter and the completion handler it
+11:11 - has three parameters so data response an
+11:16 - error and notice that these are all
+11:17 - optional parameters meaning that they
+11:21 - all could be nil so I'm just going to
+11:25 - put that as data response and error
+11:28 - first thing to do in this closure is
+11:31 - check the error parameter so if error is
+11:35 - not equal nil sorry if if there is no
+11:41 - error meaning if the error is no then
+11:43 - that means it's exceeded we got some
+11:47 - data back or rather not going to get
+11:51 - data back but it's just succeeded
+11:53 - because the data because we know else
+11:57 - error occurred okay and I like to do
+12:05 - this step before I finish typing the
+12:08 - code for the closure because I often
+12:09 - forget this creating the task like this
+12:12 - is not sufficient enough to start the
+12:16 - task you actually have to manually give
+12:21 - the command task dot resume and that's
+12:25 - going to start running this data task
+12:28 - okay so I like to put that there first
+12:31 - because I often forget it and then I run
+12:34 - the app and nothing happens and I wonder
+12:36 - why nothing happened start the task and
+12:40 - then in here we're going to take that
+12:43 - data and we're going to parse it out
+12:47 - turn it into the location struts now I
+12:51 - don't want to do that in this code right
+12:56 - here as if this closure is already
+12:57 - getting pretty huge so I'm actually
+13:00 - going to take that out and put it into
+13:03 - another function down here and I'm going
+13:06 - to call it parse JSON and it's going to
+13:10 - accept the data right here so
+13:14 - going to force unwrap that because this
+13:16 - is an optional that could be nil and
+13:18 - obviously this is an error right now
+13:21 - because its whole model does not have
+13:23 - any parse JSON function so we're going
+13:26 - to go down here and we're going to treat
+13:28 - it first of all let me write this
+13:29 - comment call the parse JSON function on
+13:34 - the data
+13:36 - okay so let's here's this line because
+13:40 - that's what we're doing here and you got
+13:44 - to be careful when you're writing this
+13:46 - code because this function is getting
+13:47 - pretty long you see that you want to
+13:51 - make sure you declare your function in
+13:53 - the right place so it's got to be after
+13:55 - this function right after this bracket
+13:59 - here but it's got to be within the whole
+14:01 - model class so it's got to be before
+14:03 - this closing brace meaning it's got to
+14:05 - be right here might seem a little
+14:10 - confusing to you but if you've done this
+14:15 - if you just continue working at it and
+14:18 - continue building apps and writing code
+14:20 - then it should be natural to you to
+14:23 - understand that and furthermore as
+14:25 - you're typing out your code make sure
+14:28 - that your brackets kind of line up so
+14:30 - it's easy to read as well so you can see
+14:32 - here that proper indentation goes a long
+14:35 - ways here can draw a straight line down
+14:36 - and I can know that this bracket is for
+14:39 - closing that guy out and if for example
+14:42 - this is same in if I draw a straight
+14:44 - line down I can see that this closing
+14:46 - bracket is too close this is statement
+14:48 - here so that goes a long way to
+14:51 - troubleshooting your code later on okay
+14:54 - so this parse JSON function it's going
+14:57 - to need a parameter right because we are
+14:58 - passing data so I'm just going to call
+15:02 - it data and it's going to be of type
+15:04 - data and it still didn't error out
+15:09 - because if I do it like this it's going
+15:13 - to expect a label so let me show you
+15:17 - what that means see it's going to have
+15:20 - to look like that you see that extra
+15:22 - label there that's because of this guy
+15:25 - right here you don't understand the
+15:27 - difference between labels and arguments
+15:29 - in your functions review the learn Swift
+15:33 - for beginners video functions I forget
+15:35 - exactly which lesson that is it might be
+15:37 - lesson 9 I'm guessing but I'm going to
+15:42 - find out I'm going to link to that
+15:44 - lesson in the description below so that
+15:46 - you can go review that now the way if
+15:48 - you don't want to have a label there you
+15:50 - can actually use the underscore and kind
+15:53 - of tell Xcode that we don't need a label
+16:01 - ok so inside this function here we are
+16:04 - going to me do some line breaks to move
+16:09 - this code up so it's easier to see for
+16:11 - you guys in here we're going to parse
+16:15 - parse the data into location structs so
+16:22 - in this parse JSON function we're
+16:24 - basically going to take the data that's
+16:26 - passed in and we're going to use this
+16:29 - JSON serialization class there is a type
+16:33 - method called JSON object with you pass
+16:39 - it in the data and then you have a
+16:40 - couple of options and it returns any
+16:43 - because it doesn't know you know if your
+16:45 - JSON is an array or a dictionary or
+16:48 - anything like that we know it the JSON
+16:51 - that's returned from our service is an
+16:53 - array of dictionaries we know that but
+16:55 - obviously when they wrote this function
+16:58 - they didn't know what our JSON would
+17:00 - look like so it returns any we're going
+17:02 - to need to cast that to an array and
+17:04 - notice this keyword throws so if during
+17:08 - this operation of converting the data to
+17:10 - this JSON array if there's some sort of
+17:13 - error this function is going to throw an
+17:15 - error so we have to encapsulate this
+17:18 - with a special error block to catch that
+17:22 - error if it so happens to throw one I'll
+17:25 - show you how to do that well let's
+17:28 - select this function here and we're
+17:30 - going to pass in data and for options
+17:33 - we're not going to specify any options
+17:35 - we're just going to specify 2 angle
+17:38 - brackets like that to indicate an empty
+17:40 - right here alright so we're going to
+17:43 - cast this as an array of any and then we
+17:51 - are going to assign the results to a a
+17:55 - constant called JSON array and remember
+18:00 - that throws keyword when there is a
+18:03 - throws keyword like that we need to put
+18:06 - this try keyword in front of it so this
+18:10 - denotes that it's going to try to do
+18:11 - this and it kind of indicates also that
+18:14 - this function may throw an error so the
+18:17 - way we catch the error or the potential
+18:19 - error is by putting this code inside a
+18:22 - do catch block so this is how you do it
+18:25 - use the do keyword you put the statement
+18:30 - inside a pair of curly brackets like
+18:32 - this and then right underneath you put
+18:35 - the catch with its own set of curly
+18:37 - brackets and if it comes into this catch
+18:41 - block that means there was an error
+18:45 - however if there is no error then it's
+18:48 - going to continue doing the code inside
+18:50 - this do block here so if there are no
+18:54 - errors we should have an array of any
+18:56 - inside this JSON array what we're going
+18:59 - to do next is loop through this JSON
+19:01 - array by using a for loop so for each
+19:06 - result maybe we'll say JSON result in
+19:12 - the JSON array we know from this here
+19:20 - that we actually have an array of
+19:23 - dictionaries right so there's one
+19:25 - dictionary comma followed by the second
+19:28 - dictionary right there and inside each
+19:31 - dictionary it's a series of key value
+19:36 - pairs where the key is a string and the
+19:39 - value is of string as well that goes for
+19:42 - all of the key value pairs inside our
+19:44 - dictionary so inside here we're going to
+19:47 - say that
+19:48 - let json dictionary equals json result
+19:53 - as and we're going to cast this so
+19:57 - string string so that is a shorthand
+20:02 - format for a dictionary where all of the
+20:07 - keys are strings and all of the values
+20:09 - are strings as well okay so now we have
+20:12 - this json dictionary ready to be used we
+20:15 - are going to create a new location
+20:17 - object so let lock equals location like
+20:24 - that and there is this handy
+20:27 - initialization method where it's going
+20:29 - to basically set all of the properties
+20:33 - that we have name address latitude and
+20:35 - longitude to whatever we pass in here so
+20:38 - we can do something like this where we
+20:42 - can pass in json dictionary and then we
+20:46 - specify the key which capital n name
+20:51 - right so we can specify that as the key
+20:56 - and because when you retrieve a value
+21:01 - from a dictionary like this if that key
+21:04 - doesn't exist it's going to return nil
+21:07 - or nothing and so this actually returns
+21:11 - an optional value we're going to have to
+21:13 - add an exclamation mark there to force
+21:16 - unwrap that optional to get at the
+21:18 - string now if it so happens that your
+21:20 - dictionary is missing this name key
+21:23 - value pair then this code will probably
+21:27 - break because we are going to be passing
+21:29 - no into this name parameter here so I'm
+21:34 - not afraid to do this right here because
+21:35 - we we can see our code right here the
+21:39 - safer way to do it if if you wanted to
+21:42 - you know be extra careful is probably to
+21:45 - declare the name up here like a lock
+21:49 - name as a constant equals json
+21:52 - dictionary with that and then you try to
+21:57 - cast it as a string and then you would
+22:00 - test if this
+22:02 - was nil or not before assigning it to
+22:04 - your location however that's a lot of
+22:07 - extra code which I'm not going to bother
+22:09 - with now but I just wanted to point it
+22:11 - out to you so the address the key is
+22:17 - address again for some wrap it and the
+22:22 - key here is latitude for some map that
+22:32 - force unwrap that okay so we have this
+22:36 - this location struck down which has all
+22:40 - of its properties set to the values of
+22:43 - this json dictionary and then when it
+22:46 - finishes creating this location we're
+22:48 - going to assign it into an array ready
+22:52 - to be passed back however we need we
+22:54 - need to declare that array to store our
+22:57 - locations
+22:58 - so let's declare that way up here VAR
+23:04 - location array is equal to that I'm
+23:13 - going to have to declare it as an empty
+23:15 - array that is going to be storing this
+23:19 - location struct here and we're going to
+23:24 - now append it oops not contents of just
+23:29 - going to use append new element and
+23:31 - we're going to pass and lock and then
+23:34 - what happens is it's going to loop
+23:36 - through into the next result in the JSON
+23:39 - array and then that's going to do the
+23:41 - same thing creating another location and
+23:43 - adding it to the location alright so
+23:46 - here let me add some comments cast JSON
+23:52 - result as a dictionary create a new
+23:57 - location and set its properties add it
+24:04 - to the array here
+24:08 - loop through each result in the JSON
+24:13 - array and here this is where parse the
+24:19 - data into into a JSON object okay so
+24:26 - after this for loop we're going to have
+24:29 - this lock array
+24:31 - you know filled with those locations so
+24:34 - we need to down here pass the location
+24:40 - array back to delegate in this case the
+24:44 - delegate
+24:45 - well we're intending it to be view
+24:47 - controller right now we haven't written
+24:49 - the code yet but we're going to attend
+24:51 - intend that to be delete controller so
+24:54 - I'm going to leave this as a to do right
+24:56 - now because before we implement that
+24:59 - let's go back to review what we've done
+25:03 - here so in the whole model class we have
+25:06 - this get items function right it is
+25:09 - going to hit this service URL it's going
+25:12 - to download that JSON data here right
+25:17 - and then it's going to pass that data to
+25:19 - our parse JSON function and then it's
+25:21 - going to parse it and at the end of the
+25:23 - day we're going to have this locations
+25:25 - array now from the view controller it's
+25:27 - going to trigger the get items function
+25:30 - to happen all right so let's go ahead
+25:31 - and write that code here in view
+25:33 - controller we're going to declare up
+25:36 - here a new a whole model gonna just
+25:42 - create a new whole model object and
+25:45 - assign it to that and then in the
+25:47 - viewdidload we're going to initiate
+25:49 - calling the items download so let's go
+25:57 - ahead and call that function home model
+25:59 - dot oops not the class home model with
+26:03 - the lowercase H because that's what we
+26:05 - called this property up here dot get
+26:09 - items right so what the view controller
+26:13 - gets initiated it's going to call home
+26:16 - model get items
+26:18 - okay so then that's going to trigger the
+26:21 - whole model to do all of this stuff and
+26:22 - then down here when it gets down here
+26:25 - it needs a way to contact the view
+26:28 - controller back-end and pass that data
+26:30 - back to the view controller this is all
+26:32 - happening in the background as
+26:33 - synchronously so the way we're going to
+26:36 - have the whole model communicate back to
+26:38 - the view controller is by using
+26:40 - protocols and delegates so why don't we
+26:43 - go up here in the whole model and
+26:45 - declare a new protocol so you do this
+26:48 - actually above the cost declaration you
+26:50 - go protocol and you say the common
+26:55 - convention is to call it home model
+26:57 - delegate start some curly braces like
+27:00 - that and we're going to have one
+27:02 - function items downloaded and this is
+27:08 - going to pass back an array of locations
+27:11 - so say locations location it's an array
+27:17 - of locations so we're not going to
+27:20 - implement this function here right we're
+27:22 - just declaring this as a protocol in
+27:24 - other words if the view controller is
+27:29 - going to be is going to conform to this
+27:31 - protocol then it must implement this
+27:34 - function the second step to this pattern
+27:37 - is inside the whole model class we
+27:40 - declare a property var home or for our
+27:44 - delegate this delegate is an instance of
+27:50 - home model delegate and it's optional so
+27:52 - this could be nil so how this works is
+27:57 - the view controller over here first
+28:02 - declares that it conforms to this home
+28:07 - model delegate protocol okay so if it
+28:11 - conforms to this protocol it's going to
+28:14 - have to set itself as the delegate so
+28:18 - view controller is going to assign
+28:20 - itself to the delegate property of the
+28:22 - whole model and because it's it's saying
+28:26 - that it follows this protocol the way
+28:29 - we've declared it here
+28:31 - anybody who follows this protocol must
+28:33 - implement this items downloaded function
+28:36 - so let's go down here and declare that
+28:38 - items downloaded right this is the
+28:45 - protocol function so we're going to
+28:47 - leave it as an empty declaration here
+28:49 - we're going to jump back to the home
+28:50 - model and so now home model merely needs
+28:54 - to check
+28:55 - has anybody assigned itself into my
+28:59 - delegate property if so then let's call
+29:03 - the delegates items downloaded
+29:06 - implementation so down here that's how
+29:12 - we're going to pass the location right
+29:13 - back we're going to say delegate dot
+29:17 - items downloaded and we're going to pass
+29:20 - the location array back to the delegate
+29:23 - all right this is good for now we're
+29:26 - going to go back to the view controller
+29:28 - and in here we're just going to set a
+29:30 - breakpoint right there so what's going
+29:33 - to happen now when the whole model gets
+29:35 - done here it's going to access this
+29:38 - delegate property right and the view
+29:41 - controller has assigned itself to the
+29:43 - whole models delegate property so what
+29:46 - happens is the whole model ends up
+29:48 - calling the view controllers items
+29:50 - downloaded function implementation which
+29:55 - happens to be this guy right here so in
+29:57 - theory we should get back the location
+30:00 - array through this parameter so let's
+30:02 - check that we do let's run our
+30:05 - application now and what should happen
+30:08 - is the whole model get items function is
+30:10 - going to get called it's going to go
+30:11 - download the JSON here exposed by our
+30:15 - service and then we're going to get the
+30:17 - items back here
+30:18 - actually we forgot one thing and it's
+30:22 - telling us right here in the debug
+30:25 - console app Transport Security has
+30:27 - blocked a clear text HTTP resource load
+30:30 - since it is insecure so what it's saying
+30:34 - is that it's blocked access to this HTTP
+30:39 - resource because it's not HTTP
+30:43 - and what we can do about that is in this
+30:46 - info.plist we can add an exception to
+30:49 - allow these arbitrary loads so if you
+30:52 - click this little plus icon it's under
+30:54 - app transport security settings okay so
+31:00 - I'm going to expand that and then press
+31:01 - the plus again to add a key allow
+31:05 - arbitrary loads we're going to change
+31:07 - that to yes and then run the app again
+31:12 - and that's going to allow our app to
+31:14 - reach out to this URL but remember what
+31:16 - I said in a production setting you
+31:19 - should probably get an SSL certificate
+31:21 - and secure that URL and use AHPs instead
+31:26 - but for this demo I'm not going to go
+31:29 - through that so here it's reached our
+31:31 - break point in the view controller for
+31:33 - items downloaded so I can do something
+31:35 - like pio locations and take a look at
+31:38 - that parameter that gets passed into
+31:40 - this delegate function and you can see
+31:43 - here I have two elements inside this
+31:46 - locations array you can see here for
+31:49 - each location its properties are filled
+31:52 - with the appropriate data this is the
+31:54 - data that we exposed through this
+31:57 - service URL so now we're going to go
+32:00 - back and we know this is working that's
+32:06 - it for this lesson
+32:06 - I just wanted to download the JSON
+32:09 - exposed by the service and to parse it
+32:12 - now it's ready to be used to display in
+32:15 - our user interface if you have any
+32:18 - trouble following along with this lesson
+32:19 - go ahead and download the source code
+32:21 - I'm going to provide a link to the
+32:23 - project in the description below the
+32:25 - video alright thanks for watching and
+32:27 - I'll see you in the next one bye for now
+32:31 - you
+32:34 - [Music]

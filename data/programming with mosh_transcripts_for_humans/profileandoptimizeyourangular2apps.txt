@@ -1,0 +1,277 @@
+With timestamps:
+
+00:01 - all right we got to profiling which is
+00:04 - my favorite part of this section so in
+00:06 - this section I'm going to show you a
+00:07 - performance problem I have created in
+00:09 - this application and then I will show
+00:12 - you how we can detect and fix this if
+00:14 - you want to follow the steps I'm doing
+00:16 - you can download this application from
+00:19 - the supplementary materials of this
+00:20 - lecture so when you extract the zip file
+00:23 - you want to npm install and then ng surf
+00:29 - so this is the same application we've
+00:32 - been working with in this section with a
+00:34 - few minor changes we've got this title
+00:36 - here and a new button to change the
+00:39 - title also in the list of movies now we
+00:42 - have 10,000 movies I deliberately added
+00:45 - a lot of objects to pronounce the
+00:47 - performance problem so you can see and
+00:49 - all these ones you see here are
+00:51 - properties of each movie object you will
+00:54 - see that in a second so let's go to app
+00:57 - component previously we initialize the
+01:00 - movie stills right here but I move that
+01:03 - in the constructor in a loop so we
+01:06 - create 10,000 movie objects and push
+01:09 - them into our array but each movie
+01:11 - object used to have only one property
+01:13 - which was title now we have 10
+01:15 - additional properties here so prop 1 to
+01:19 - prop 10 and I just set their value to 1
+01:21 - and if we go to the template for the
+01:25 - movie component you can see I'm
+01:28 - rendering all these additional
+01:29 - properties in a span again I have
+01:32 - deliberately done this to pronounce the
+01:34 - performance problem so let's see what's
+01:37 - going on here when I click this button
+01:38 - change title it's going to take several
+01:41 - seconds until the hello world title is
+01:44 - updated let's have a look look the
+01:48 - button still in the push state it's blue
+01:50 - and we are waiting and waiting and
+01:53 - waiting finally the title is updated so
+01:56 - it was really really slow so when you
+01:59 - have problems like that in your
+02:00 - application the first thing you need to
+02:02 - do is profiling
+02:03 - so we open up Chrome developer tools go
+02:08 - to the profiles tab
+02:10 - make sure the first option is selected
+02:12 - record JavaScript CPU profile and now we
+02:16 - start profiling record now we can get
+02:21 - back here and click our button to update
+02:24 - the title ok it's taking forever just
+02:28 - like before
+02:29 - alright done now back to our profiler
+02:33 - you've stopped profiling now in this
+02:38 - list make sure you have selective
+02:40 - heavy-bottomed off and then sort this
+02:43 - list by total time in a descending order
+02:47 - here we can see the total time spent for
+02:51 - various functions in our application a
+02:53 - lot of what you see here is internals of
+02:55 - angular that we don't really need to
+02:57 - worry about you want to focus on the
+02:59 - parts that are about our implementation
+03:01 - so for example they've got all these
+03:03 - functions like zone tasks that invokes
+03:05 - zone that run tasks and so on these are
+03:08 - internals of angular and zone J's
+03:11 - library but we don't have to worry about
+03:12 - it now if you scroll down
+03:16 - you see this log function with a total
+03:19 - time of 6,000 milliseconds allocated to
+03:22 - it this is our console log so a lot of
+03:25 - times we throw these console logs into
+03:28 - code and we have no idea that they can
+03:30 - have a negative impact on the
+03:32 - performance of our application in this
+03:35 - case if you look at movie components you
+03:38 - can see we're calling console log in ng
+03:41 - do check which is called pretty
+03:43 - frequently so this is very very
+03:46 - dangerous the first thing I'm going to
+03:48 - do is to comment this out now log aside
+03:52 - let's look at other stuff happening here
+03:54 - so once again we go from top of the list
+03:56 - look at every function if it's about the
+03:59 - internals of an angular we ignore it
+04:01 - otherwise you want to take a closer look
+04:03 - at it so you scroll down here
+04:08 - first thing that catches my eye is this
+04:10 - function here underlined vo underline
+04:13 - app component underline how's that
+04:16 - detect changes diagnosis detect changes
+04:19 - here so let me zoom out
+04:21 - okay hopefully you can see now but the
+04:24 - font is a little bit too small so app
+04:26 - component host detect changes and the
+04:29 - total time for this function is about
+04:31 - 8,000 milliseconds so this tells me that
+04:35 - the View for app component has a
+04:37 - performance problem all right let's go
+04:40 - to app start component on HTML what do
+04:45 - we have here we have a binding
+04:47 - expression to render the title and we
+04:49 - have a reference to the movies component
+04:51 - now let's take a look at a template for
+04:54 - the movies component so movies that HTML
+04:57 - again here we have a reference to
+04:59 - another component the movie component so
+05:03 - back in apps that component on HTML
+05:05 - basically we have a subtree here we have
+05:08 - this movies component which includes
+05:11 - 10,000 more component instances and this
+05:15 - is exactly the source of our problem why
+05:18 - do we have to go through all this change
+05:20 - detection when we are only updating the
+05:23 - title of app component we haven't
+05:25 - modified anything about movies but as I
+05:28 - explained before the default change
+05:30 - detection strategy looks at the template
+05:32 - for every component in our component
+05:35 - tree look at all this binding
+05:37 - expressions get all the properties used
+05:39 - there and compare they're all value with
+05:41 - the new value we don't want all this to
+05:43 - happen when you're only changing the
+05:45 - title of the app component so I believe
+05:48 - we can solve this problem by using the
+05:51 - unpretty
+05:52 - under movies component this way if the
+05:55 - input to this component in this case
+05:57 - this movies object is not modified if
+06:00 - you still the same reference angular is
+06:03 - not going to run change detection and
+06:05 - this component and all its children
+06:08 - which includes ten thousand movies so
+06:12 - let's go to the movies component movies
+06:14 - the TF
+06:16 - you can see the change detection is set
+06:18 - to default so whether we had this line
+06:20 - or not it didn't make a difference I'm
+06:23 - going to change this to on push now we
+06:27 - should make sure that the movies objects
+06:29 - that we pass through this component is
+06:31 - an immutable object so change detection
+06:34 - works properly so we go back to app
+06:37 - components
+06:39 - these are movies object which is just a
+06:42 - plain array I'm going to use an
+06:44 - immutable list from immutable library so
+06:47 - instead of pushing this objects directly
+06:49 - into this movies field I'm going to push
+06:52 - them into this temporary array I've
+06:56 - declared here now at the end of this
+06:59 - constructor we can set this movies field
+07:03 - to a list and initialize it with this
+07:06 - movies array you have a compilation
+07:09 - error because the type of this movies is
+07:11 - a plain JavaScript array so I'm going to
+07:14 - remove this I have to clarify something
+07:17 - earlier in this section when you're
+07:20 - working with this click handler we use
+07:22 - the unpressed strategy and the movie
+07:24 - component but in this application that I
+07:27 - have attached to this lecture I have
+07:29 - removed the unpressed rata G on the
+07:31 - movie component so I was assuming that
+07:33 - all components are using the default
+07:35 - change detection strategy in this
+07:38 - application because the source of the
+07:40 - issue is on the change detection of this
+07:43 - movies component I only applied the
+07:45 - unrestrained this component itself that
+07:49 - any of these children not the movie
+07:50 - component that's not really required all
+07:53 - right now with these simple changes
+07:54 - let's test the application again
+07:57 - so I'm going to click this button and
+08:00 - the title is updated immediately see the
+08:03 - difference
+08:04 - previously it took several seconds now
+08:07 - let's go back to Chrome developer tools
+08:09 - I'm going to do another profiling
+08:12 - session so record back here click the
+08:16 - button and stop the profiling session
+08:19 - now
+08:20 - compare the results this time I'm gonna
+08:22 - sort by function
+08:25 - now in this list let's scroll down we
+08:28 - want to look at functions that start
+08:30 - with underlined view so here we have
+08:33 - underlined view underlined add component
+08:36 - we only have two functions that match
+08:38 - this pattern the full name of this
+08:40 - function as you saw earlier is
+08:42 - underlined view underline app component
+08:44 - does detect changes note the total time
+08:48 - spent on this function eight
+08:50 - milliseconds this is after the
+08:52 - optimization now let's go back to our
+08:54 - first profile find the same function and
+08:57 - look at the total time so profile one
+09:00 - once again we're gonna sort by function
+09:03 - scroll down look it's got so many
+09:07 - functions that match the pattern
+09:08 - underline view underline app component
+09:11 - underline view under the movie component
+09:13 - and underline you underline movies
+09:16 - components
+09:18 - so you can see our change detection is
+09:20 - going a lot deeper in our component tree
+09:23 - it's not just at the app component level
+09:25 - now that is like look at the total time
+09:28 - spend unchanged the texture in app
+09:30 - component it's almost eight thousand
+09:33 - milliseconds and we reduce that to how
+09:38 - many milliseconds eight milliseconds so
+09:40 - in your applications if you have
+09:42 - performance problems that are related to
+09:44 - detecting changes this is how you find
+09:47 - and fix them now one last thing before
+09:50 - we finish this lecture in this lecture I
+09:53 - started by looking at the template for
+09:55 - app components I notice that here we are
+09:57 - referencing the movies components then I
+09:59 - had to look at the template for movies
+10:01 - component and see if they're using other
+10:03 - components there you can imagine this
+10:05 - can be tedious and complex in a larger
+10:08 - real world application so let me show
+10:11 - you a tool that helps you visualize your
+10:13 - component tree and this is very useful
+10:15 - when you want to decide where to apply
+10:17 - the unput strategy so in google search
+10:21 - for augury Chrome extension this is a
+10:24 - great tool for debugging angular apps
+10:26 - built by R + L dot IO so simply add this
+10:30 - to your Chrome and once you restart it
+10:32 - you get a new tab in chrome developer
+10:35 - tools so back here when I open up the
+10:39 - chrome developer tools you'll see I have
+10:43 - a new tab
+10:44 - here augury
+10:46 - but here on the left
+10:49 - opponent tree so we've got app component
+10:51 - on the top under that we've got movies
+10:53 - component and 10,000 movie components
+10:58 - hey thank you for watching my youtube
+11:00 - video my name is Muhammad Ronnie and I'm
+11:03 - a full-stack developer applause I'd
+11:05 - author and in getting me instructor with
+11:07 - about 14 courses at the time of
+11:09 - recording this video so I've got lots of
+11:11 - courses on both front end and back end
+11:14 - development including three sharp entity
+11:16 - framework a plasma the MVC angular
+11:19 - architecture unit testing and so on this
+11:22 - video watch is actually part of my
+11:24 - angular course on udemy that you can get
+11:27 - with a discount using the link in the
+11:29 - video description and if you want to see
+11:31 - my other courses simply head over to
+11:33 - programming with mass comm slash courses
+11:36 - you can also subscribe to my youtube
+11:38 - channel to get free videos every week
+11:40 - have a great day and I'll be back show
+11:44 - you
+11:47 - [Music]
+
+Cleaned transcript:
+
+all right we got to profiling which is my favorite part of this section so in this section I'm going to show you a performance problem I have created in this application and then I will show you how we can detect and fix this if you want to follow the steps I'm doing you can download this application from the supplementary materials of this lecture so when you extract the zip file you want to npm install and then ng surf so this is the same application we've been working with in this section with a few minor changes we've got this title here and a new button to change the title also in the list of movies now we have 10,000 movies I deliberately added a lot of objects to pronounce the performance problem so you can see and all these ones you see here are properties of each movie object you will see that in a second so let's go to app component previously we initialize the movie stills right here but I move that in the constructor in a loop so we create 10,000 movie objects and push them into our array but each movie object used to have only one property which was title now we have 10 additional properties here so prop 1 to prop 10 and I just set their value to 1 and if we go to the template for the movie component you can see I'm rendering all these additional properties in a span again I have deliberately done this to pronounce the performance problem so let's see what's going on here when I click this button change title it's going to take several seconds until the hello world title is updated let's have a look look the button still in the push state it's blue and we are waiting and waiting and waiting finally the title is updated so it was really really slow so when you have problems like that in your application the first thing you need to do is profiling so we open up Chrome developer tools go to the profiles tab make sure the first option is selected record JavaScript CPU profile and now we start profiling record now we can get back here and click our button to update the title ok it's taking forever just like before alright done now back to our profiler you've stopped profiling now in this list make sure you have selective heavybottomed off and then sort this list by total time in a descending order here we can see the total time spent for various functions in our application a lot of what you see here is internals of angular that we don't really need to worry about you want to focus on the parts that are about our implementation so for example they've got all these functions like zone tasks that invokes zone that run tasks and so on these are internals of angular and zone J's library but we don't have to worry about it now if you scroll down you see this log function with a total time of 6,000 milliseconds allocated to it this is our console log so a lot of times we throw these console logs into code and we have no idea that they can have a negative impact on the performance of our application in this case if you look at movie components you can see we're calling console log in ng do check which is called pretty frequently so this is very very dangerous the first thing I'm going to do is to comment this out now log aside let's look at other stuff happening here so once again we go from top of the list look at every function if it's about the internals of an angular we ignore it otherwise you want to take a closer look at it so you scroll down here first thing that catches my eye is this function here underlined vo underline app component underline how's that detect changes diagnosis detect changes here so let me zoom out okay hopefully you can see now but the font is a little bit too small so app component host detect changes and the total time for this function is about 8,000 milliseconds so this tells me that the View for app component has a performance problem all right let's go to app start component on HTML what do we have here we have a binding expression to render the title and we have a reference to the movies component now let's take a look at a template for the movies component so movies that HTML again here we have a reference to another component the movie component so back in apps that component on HTML basically we have a subtree here we have this movies component which includes 10,000 more component instances and this is exactly the source of our problem why do we have to go through all this change detection when we are only updating the title of app component we haven't modified anything about movies but as I explained before the default change detection strategy looks at the template for every component in our component tree look at all this binding expressions get all the properties used there and compare they're all value with the new value we don't want all this to happen when you're only changing the title of the app component so I believe we can solve this problem by using the unpretty under movies component this way if the input to this component in this case this movies object is not modified if you still the same reference angular is not going to run change detection and this component and all its children which includes ten thousand movies so let's go to the movies component movies the TF you can see the change detection is set to default so whether we had this line or not it didn't make a difference I'm going to change this to on push now we should make sure that the movies objects that we pass through this component is an immutable object so change detection works properly so we go back to app components these are movies object which is just a plain array I'm going to use an immutable list from immutable library so instead of pushing this objects directly into this movies field I'm going to push them into this temporary array I've declared here now at the end of this constructor we can set this movies field to a list and initialize it with this movies array you have a compilation error because the type of this movies is a plain JavaScript array so I'm going to remove this I have to clarify something earlier in this section when you're working with this click handler we use the unpressed strategy and the movie component but in this application that I have attached to this lecture I have removed the unpressed rata G on the movie component so I was assuming that all components are using the default change detection strategy in this application because the source of the issue is on the change detection of this movies component I only applied the unrestrained this component itself that any of these children not the movie component that's not really required all right now with these simple changes let's test the application again so I'm going to click this button and the title is updated immediately see the difference previously it took several seconds now let's go back to Chrome developer tools I'm going to do another profiling session so record back here click the button and stop the profiling session now compare the results this time I'm gonna sort by function now in this list let's scroll down we want to look at functions that start with underlined view so here we have underlined view underlined add component we only have two functions that match this pattern the full name of this function as you saw earlier is underlined view underline app component does detect changes note the total time spent on this function eight milliseconds this is after the optimization now let's go back to our first profile find the same function and look at the total time so profile one once again we're gonna sort by function scroll down look it's got so many functions that match the pattern underline view underline app component underline view under the movie component and underline you underline movies components so you can see our change detection is going a lot deeper in our component tree it's not just at the app component level now that is like look at the total time spend unchanged the texture in app component it's almost eight thousand milliseconds and we reduce that to how many milliseconds eight milliseconds so in your applications if you have performance problems that are related to detecting changes this is how you find and fix them now one last thing before we finish this lecture in this lecture I started by looking at the template for app components I notice that here we are referencing the movies components then I had to look at the template for movies component and see if they're using other components there you can imagine this can be tedious and complex in a larger real world application so let me show you a tool that helps you visualize your component tree and this is very useful when you want to decide where to apply the unput strategy so in google search for augury Chrome extension this is a great tool for debugging angular apps built by R + L dot IO so simply add this to your Chrome and once you restart it you get a new tab in chrome developer tools so back here when I open up the chrome developer tools you'll see I have a new tab here augury but here on the left opponent tree so we've got app component on the top under that we've got movies component and 10,000 movie components hey thank you for watching my youtube video my name is Muhammad Ronnie and I'm a fullstack developer applause I'd author and in getting me instructor with about 14 courses at the time of recording this video so I've got lots of courses on both front end and back end development including three sharp entity framework a plasma the MVC angular architecture unit testing and so on this video watch is actually part of my angular course on udemy that you can get with a discount using the link in the video description and if you want to see my other courses simply head over to programming with mass comm slash courses you can also subscribe to my youtube channel to get free videos every week have a great day and I'll be back show you

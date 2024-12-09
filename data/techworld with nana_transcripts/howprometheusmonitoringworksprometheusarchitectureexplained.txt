@@ -1,0 +1,523 @@
+00:01 - in this video we're going to talk about
+00:02 - prometheus so first i'm going to explain
+00:04 - to you what prometheus is and what are
+00:06 - different use cases where prometheus is
+00:08 - used and why is it such an important
+00:11 - tool in modern infrastructure we're
+00:13 - going to go through prometheus
+00:15 - architecture so different components
+00:18 - that it contains we're going to see an
+00:20 - example configuration and also some of
+00:22 - these key characteristics why it became
+00:25 - so widely accepted and popular
+00:28 - especially in containerized environments
+00:33 - prometheus was created to monitor highly
+00:36 - dynamic container environments like
+00:39 - kubernetes docker swarm etc however it
+00:42 - can also be used in a traditional
+00:44 - non-container infrastructure where you
+00:47 - have just bare servers with applications
+00:49 - deployed directly on it so over the past
+00:51 - years prometheus has become the
+00:53 - mainstream monitoring tool of choice in
+00:57 - container and micro service world so
+00:59 - let's see why prometheus is so important
+01:02 - in such infrastructure and what are some
+01:04 - of its use cases modern devops is
+01:07 - becoming more and more complex to handle
+01:09 - manually and therefore needs more
+01:11 - automation
+01:12 - so typically you have multiple servers
+01:14 - that run containerized applications and
+01:17 - there are hundreds of different
+01:18 - processes running on that infrastructure
+01:21 - and things are interconnected so
+01:23 - maintaining such setup to run smoothly
+01:26 - and without application down times is
+01:28 - very challenging
+01:30 - imagine having such a complex
+01:32 - infrastructure with loads of servers
+01:34 - distributed over many locations and you
+01:37 - have no insight of what is happening on
+01:40 - hardware level or on application level
+01:42 - like errors response latency hardware
+01:46 - down or overloaded maybe running out of
+01:49 - resources etc
+01:51 - in such complex infrastructure there are
+01:53 - more things that can go wrong
+01:55 - when you have tons of services and
+01:57 - applications deployed any one of them
+02:00 - can crash and cause failure of other
+02:02 - services and only have so many moving
+02:05 - pieces and suddenly application becomes
+02:07 - unavailable to users you must quickly
+02:10 - identify what exactly out of this
+02:13 - hundred different things went wrong and
+02:15 - that could be difficult and
+02:17 - time-consuming when debugging the system
+02:20 - manually so let's take a specific
+02:22 - example
+02:23 - say one specific server ran out of
+02:26 - memory and kicked off a running
+02:28 - container that was responsible for
+02:31 - providing database sync between two
+02:33 - database pods in a kubernetes cluster
+02:36 - that in turn caused those two database
+02:38 - parts to fail that database was used by
+02:41 - an authentication service that also
+02:44 - stopped working because the database
+02:46 - became unavailable
+02:47 - and then application
+02:49 - that depended on that authentication
+02:51 - service couldn't authenticate users in
+02:54 - the ui anymore but from a user
+02:56 - perspective all you see is error in the
+02:58 - ui can't login so how do you know what
+03:01 - actually went wrong when you don't have
+03:04 - any insight of what's going on inside
+03:06 - the cluster you don't see that red line
+03:09 - of the chain of events as displayed here
+03:12 - you just see the error so now you start
+03:14 - working backwards from there to find the
+03:16 - cause and fix it
+03:18 - so you check is the application back and
+03:20 - running does it show an exception is the
+03:23 - authentication service running did it
+03:25 - crash why did it crash in all the way to
+03:27 - the initial container failure but what
+03:30 - will make this searching the problem
+03:32 - process more efficient would be to have
+03:34 - a tool that constantly monitors whether
+03:38 - services are running and alerts the
+03:40 - maintainers as soon as one service
+03:43 - crashes so you know exactly what
+03:45 - happened or even better it identifies
+03:48 - problems before they even occur and
+03:50 - alerts the system administrators
+03:52 - responsible for that infrastructure to
+03:55 - prevent that issue so for example in
+03:57 - this case it would check regularly the
+04:00 - status of memory usage on each server
+04:03 - and when on one of the servers it spikes
+04:05 - over for example 70 percent for over an
+04:08 - hour or keeps increasing notify about
+04:11 - the risk that the memory on that server
+04:14 - might soon run out or let's consider
+04:16 - another scenario where suddenly you stop
+04:18 - seeing logs for your application because
+04:21 - elasticsearch doesn't accept any new
+04:24 - logs because the server ran out of disk
+04:27 - space or elasticsearch reached the
+04:29 - storage limit that was allocated for it
+04:32 - again the monitoring tool would check
+04:34 - continuously the storage space and
+04:36 - compare with the elastic search
+04:38 - consumption of space of storage
+04:41 - and it will see the risk and notify
+04:43 - maintainers of the possible storage
+04:45 - issue and you can tell the monitoring
+04:47 - tool what that critical point is when
+04:50 - the alert should be triggered for
+04:52 - example if you have a very important
+04:53 - application that absolutely can have any
+04:56 - log data loss you may be very strict and
+04:59 - want to take measures as soon as 50 or
+05:01 - 60 percent capacity is reached or maybe
+05:03 - you know adding more storage space will
+05:06 - take long because it's a bureaucratic
+05:08 - process in your organization where you
+05:10 - need approval of some it department and
+05:12 - several other people
+05:14 - then maybe you also want to be notified
+05:17 - earlier about the possible storage issue
+05:19 - so that you have more time to fix it or
+05:22 - a third scenario where application
+05:24 - suddenly becomes too slow because one
+05:26 - service breaks down and starts sending
+05:28 - hundreds of error messages in a loop
+05:30 - across the network that creates high
+05:33 - network traffic and slows down other
+05:35 - services too having a tool that detects
+05:38 - such spikes in network load plus tells
+05:42 - you which service is responsible for
+05:43 - causing it
+05:45 - can give you timely alert to fix the
+05:47 - issue
+05:48 - and such automated monitoring and
+05:50 - alerting is exactly what prometheus
+05:53 - offers as a part of a modern devops
+05:56 - workflow so how does prometheus actually
+06:00 - work or how does it architecture
+06:02 - actually looks like
+06:04 - at its core prometheus has the main
+06:06 - component called prometheus server that
+06:08 - does the actual monitoring work and is
+06:11 - made up of three parts it has a time
+06:14 - series database that stores all the
+06:17 - metrics data like current cpu usage or
+06:20 - number of exceptions in an application
+06:23 - second it has a data retrieval worker
+06:27 - that is responsible for getting or
+06:30 - pulling those metrics from applications
+06:33 - services
+06:35 - servers and other target resources
+06:38 - and
+06:39 - storing them or pushing them into that
+06:41 - database
+06:42 - and third it has a web server or server
+06:45 - api that accepts queries for that stored
+06:49 - data and that web server component or
+06:51 - the server api is used to display the
+06:54 - data in a dashboard or ui either through
+06:57 - prometheus dashboard or some other data
+07:00 - visualization tool like grafana so the
+07:03 - prometheus server monitors a particular
+07:06 - thing and that thing could be anything
+07:08 - it could be an entire linux server or
+07:10 - windows server it could be a standalone
+07:13 - apache server
+07:14 - a single application or service like a
+07:17 - database
+07:18 - and those things that prometheus
+07:20 - monitors are called targets and each
+07:22 - target has units of monitoring for linux
+07:26 - server target it could be a current cpu
+07:29 - status its memory usage disk space usage
+07:33 - etc for an application for example
+07:37 - it could be number of exceptions number
+07:39 - of requests or request duration and that
+07:42 - unit that you would like to monitor for
+07:45 - a specific target is called a metric and
+07:48 - metrics are what gets saved into
+07:50 - prometheus database component prometheus
+07:53 - defines human readable text-based format
+07:56 - for this metrics metrics entries or data
+08:00 - has type and help attributes to increase
+08:03 - its readability so help is basically a
+08:05 - description that just describe what the
+08:07 - metrics is about and type is one of
+08:10 - three metrics types
+08:12 - for metrics about how many times
+08:15 - something happened
+08:16 - like number of exceptions that
+08:18 - application had or number of requests it
+08:20 - has received there is a counter type
+08:23 - metric that can go both up and down
+08:26 - is represented by a gauche example what
+08:30 - is the current value of cpu usage now
+08:34 - or what is the current capacity of disk
+08:37 - space now or what is the number of
+08:40 - concurrent requests at that given moment
+08:42 - and for tracking how long something took
+08:45 - or how big for example the size of a
+08:47 - request was there is a histogram type
+08:51 - so now the interesting question is how
+08:53 - does prometheus actually collect those
+08:55 - metrics from the targets
+08:57 - prometheus pulls metrics data from the
+09:00 - targets from an http endpoint which by
+09:03 - default is host address slash metrics
+09:07 - and for that to work one targets must
+09:10 - expose that slash metrics endpoint and
+09:13 - two data available at slash matrix
+09:16 - endpoint must be in the format that
+09:18 - prometheus understands and we saw that
+09:21 - example metrics before
+09:23 - some servers are already exposing
+09:25 - prometheus endpoints so you don't need
+09:27 - extra work to gather metrics from them
+09:30 - but many services don't have native
+09:33 - prometheus endpoints so extra component
+09:35 - is required to do that
+09:37 - and this component is exporter so
+09:39 - exporter is basically a script or
+09:42 - service that fetches metrics from your
+09:44 - target and converts them in format
+09:47 - prometheus understands and exposes this
+09:49 - converted data at its own slash metrics
+09:52 - endpoint
+09:53 - where prometheus can scrape them and
+09:56 - prometheus has a list of exporters for
+09:59 - different services like mysql
+10:01 - elasticsearch linux server build tools
+10:04 - cloud platforms and so on i will put the
+10:08 - link to prometheus official
+10:10 - documentation and export the list as
+10:12 - well as its repository in the
+10:14 - description so for example if you want
+10:15 - to monitor a linux server you can
+10:18 - download a node exporter tar file from
+10:20 - prometheus repository you can untar and
+10:23 - execute it and it will start converting
+10:26 - the metrics of the server and making
+10:28 - them scrapable at its own slash matrix
+10:31 - endpoint and then you can go and
+10:33 - configure prometheus to scrape that
+10:36 - endpoint
+10:37 - and these exporters are also available
+10:39 - as docker images so for example if you
+10:42 - want to monitor your mysql container in
+10:44 - kubernetes cluster
+10:46 - you can deploy a sidecar container of
+10:48 - mysql exporter that will run inside the
+10:51 - pod with mysql container connect to it
+10:54 - and start translating mysql metrics for
+10:57 - prometheus and making them available at
+11:00 - its own slash metrics endpoint and again
+11:03 - once you add mysql exporter endpoint to
+11:06 - prometheus configuration prometheus will
+11:09 - start collecting those metrics and
+11:11 - saving them in its database what about
+11:13 - monitoring your own applications let's
+11:15 - say you want to see how many requests
+11:18 - your application is getting at different
+11:20 - times or how many exceptions are
+11:22 - occurring how many server resources your
+11:25 - application is using etc for this use
+11:28 - case there are prometheus client
+11:30 - libraries for different languages like
+11:32 - node.js java etc using these libraries
+11:36 - you can expose the slash metrics
+11:38 - scraping endpoint in your application
+11:40 - and provide different metrics that are
+11:42 - relevant for you on that endpoint and
+11:45 - this is a pretty convenient way for the
+11:47 - infrastructure team to tell developers
+11:50 - emit metrics that are relevant to you
+11:52 - and will collect and monitor them in our
+11:55 - infrastructure
+11:56 - and i will also link the list of client
+11:58 - libraries prometheus supports where you
+12:01 - can see the documentation of how to use
+12:03 - them
+12:06 - so i mentioned that prometheus pulls
+12:08 - this data from endpoints and that's
+12:10 - actually an important characteristic of
+12:12 - prometheus let's see why most monitoring
+12:15 - systems like amazon cloud watch or new
+12:18 - relief etc use a push system meaning
+12:22 - applications and servers are responsible
+12:25 - for pushing their metric data to a
+12:27 - centralized collection platform of that
+12:30 - monitoring tool so when you're working
+12:32 - with many microservices and you have
+12:34 - each service pushing their metrics to
+12:37 - the monitoring system it creates a high
+12:39 - load of traffic within your
+12:41 - infrastructure and your monitoring can
+12:43 - actually become your bottleneck so you
+12:45 - have monitoring which is great but you
+12:47 - pay the price of overloading your
+12:49 - infrastructure with constant push
+12:51 - requests from all the services and thus
+12:54 - flooding the network plus you also have
+12:56 - to install daemons on each of these
+12:59 - targets to push the metrics to
+13:01 - monitoring server while prometheus
+13:03 - requires just a scraping endpoint and
+13:06 - this way metrics can also be pulled by
+13:08 - multiple prometheus instances and
+13:10 - another advantage of that is using paul
+13:13 - prometheus can easily detect whether
+13:15 - service is up and running for example
+13:18 - when he doesn't respond on the pull or
+13:19 - when the endpoint isn't available while
+13:22 - with push if the service doesn't push
+13:24 - any data or send its health status it
+13:27 - might have many reasons other than the
+13:29 - service isn't running it could be that
+13:31 - network isn't working the package got
+13:33 - lost on the way
+13:34 - or some other problem so you don't
+13:36 - really have an insight of what happened
+13:39 - but there are limited number of cases
+13:41 - where a target that needs to be
+13:43 - monitored runs only for a short time so
+13:46 - they aren't around long enough to be
+13:48 - scraped example could be a batch job or
+13:52 - scheduled job that say cleans up some
+13:54 - old data or does backups etc for such
+13:58 - jobs prometheus offers push gateway
+14:01 - component so that these services can
+14:04 - push their metrics directly to
+14:05 - prometheus database but obviously using
+14:08 - pushgateway to gather metrics in
+14:10 - prometheus should be an exception
+14:12 - because of the reasons i mentioned
+14:14 - earlier
+14:15 - so how does prometheus know what to
+14:17 - scrape and when
+14:18 - all that is configured in
+14:20 - prometheus.yaml configuration file so
+14:23 - you define which targets prometheus
+14:25 - should scrape and at what interval
+14:28 - prometheus then uses a service discovery
+14:30 - mechanism to find those target endpoints
+14:33 - when you first download and install
+14:35 - prometheus you will see the sample
+14:37 - config file with some default values in
+14:40 - it here is an example we have
+14:42 - global config that defines scrape
+14:45 - interval or how often prometheus will
+14:47 - scrape its targets and you can override
+14:49 - these for individual targets
+14:51 - the rule files block specifies the
+14:54 - location of any rules we want prometheus
+14:56 - server to load and the rules are
+14:58 - basically either for aggregating matrix
+15:01 - values or creating alerts when some
+15:04 - condition is met like cpu usage reached
+15:08 - 80 percent for example so prometheus
+15:10 - uses rules to create new time series
+15:13 - entries and to generate alerts and the
+15:16 - evaluation interval option in global
+15:18 - config defines how often prometheus will
+15:22 - evaluate these rules in the last block
+15:25 - scrape configs controls what resources
+15:28 - prometheus monitors this is where you
+15:30 - define the targets
+15:32 - since prometheus has its own metrics
+15:35 - endpoint to expose its own data it can
+15:37 - monitor its own health so in this
+15:40 - default configuration there is a single
+15:42 - job
+15:43 - called prometheus which scrapes the
+15:46 - metrics exposed by the prometheus server
+15:49 - so it has a single target at localhost
+15:51 - 1990 and prometheus expects metrics to
+15:55 - be available on a target on a path of
+15:59 - slash metrics which is a default path
+16:02 - that is configured for that endpoint
+16:06 - and here you can also define other
+16:07 - endpoints to scrape through jobs so you
+16:10 - can create another job and for example
+16:13 - override the scrape interval from the
+16:15 - global configuration and and define the
+16:18 - target host address
+16:21 - so a couple of important points here so
+16:23 - the first one is how does prometheus
+16:26 - actually trigger the alerts that are
+16:28 - defined by rules and who receives them
+16:31 - prometheus has a component called alert
+16:34 - manager
+16:35 - that is responsible for firing alerts
+16:38 - via
+16:39 - different channels it could be email it
+16:41 - could be a slack channel
+16:43 - or some other notification client so
+16:45 - prometheus server will read the alert
+16:47 - rules and if the condition in the rules
+16:50 - is met an alert gets fired through that
+16:53 - configured channel and the second one is
+16:56 - prometheus data storage
+16:58 - where does prometheus store all this
+17:00 - data that it collects
+17:03 - and then aggregates
+17:04 - and how can other systems access this
+17:06 - data
+17:08 - prometheus stores the metrics data on
+17:10 - disk so it includes a local on disk time
+17:13 - series database but also optionally
+17:16 - integrates with remote storage system
+17:18 - and the data is stored in a custom time
+17:21 - series format and because of that you
+17:23 - can't write prometheus data directly
+17:26 - into a relational database for example
+17:28 - so once you've collected the metrics
+17:30 - prometheus also lets you query the
+17:32 - metrics data on targets through its
+17:35 - server api using promptql query language
+17:41 - you can use prometheus dashboard ui to
+17:43 - ask the prometheus server via promql to
+17:46 - for example show the status of a
+17:48 - particular target right now or you can
+17:51 - use more powerful data visualization
+17:54 - tools like grafana
+17:56 - to display the data which under the hood
+17:59 - also uses promql to get the data out of
+18:02 - prometheus and this is an example of a
+18:04 - promql query which this one here
+18:07 - basically queries all http status codes
+18:09 - except the ones in 400 range and this
+18:12 - one basically does some sub query on
+18:14 - that for a period of 30 minutes and this
+18:17 - is just to give you an example of how is
+18:20 - query language look like but with
+18:22 - grafana instead of writing promptq
+18:24 - queries directly into the prometheus
+18:25 - server um you basically have grafina ui
+18:29 - where you can create dashboards that can
+18:32 - then in the background use prom ql to
+18:35 - query the data that you want to display
+18:38 - now concerning promql the prometheus
+18:41 - configuration in grafana ui i have to
+18:44 - say from my personal experience that
+18:47 - configuring prometheus yml file to
+18:50 - scrape different targets and then
+18:52 - creating all those dashboards
+18:54 - to display meaningful
+18:57 - data out of the script metrics can
+18:59 - actually be pretty complex and it's also
+19:02 - not very well documented
+19:04 - so there is some steep learning curve to
+19:07 - learning how to correctly configure
+19:08 - prometheus and how to then query the
+19:11 - collected metrics data to create
+19:13 - dashboards
+19:14 - so i will make a separate video where i
+19:17 - configure prometheus to monitor
+19:19 - kubernetes services
+19:20 - to show some of the practical examples
+19:23 - and the final point is an important
+19:25 - characteristic of prometheus
+19:28 - that it is designed to be reliable
+19:30 - even when other systems have an outage
+19:33 - so that you can diagnose the problems
+19:35 - and fix them so each prometheus server
+19:37 - is standalone and self-containing
+19:40 - meaning it doesn't depend on network
+19:41 - storage or other remote services it's
+19:44 - meant to work when other parts of the
+19:46 - infrastructure are broken and you don't
+19:49 - need to set up extensive infrastructure
+19:51 - to use it which of course is a great
+19:54 - thing however it also has disadvantage
+19:57 - that prometheus can be difficult to
+19:59 - scale so when you have hundreds of
+20:01 - servers you might want to have multiple
+20:04 - prometheus servers that somewhere
+20:06 - aggregate all this metrics data and
+20:08 - configuring that and scaling prometheus
+20:11 - in that way can actually be very
+20:13 - difficult because of this characteristic
+20:15 - so while using a single node is less
+20:17 - complex and you can get started very
+20:19 - easily it puts a limit on the number of
+20:21 - metrics that can be monitored by
+20:23 - prometheus so to work around that you
+20:25 - either increase the capacity of the
+20:28 - prometheus server so it can store more
+20:30 - metrics data or you limit the number of
+20:33 - metrics that prometheus collects from
+20:36 - the applications to keep it down to only
+20:38 - the relevant ones
+20:40 - and finally in terms of prometheus with
+20:43 - docker and kubernetes as i mentioned
+20:45 - throughout the video with different
+20:47 - examples prometheus is fully compatible
+20:50 - with both and prometheus components are
+20:52 - available as docker images and therefore
+20:55 - can easily be deployed in kubernetes or
+20:58 - other container environments
+21:00 - and it integrates great with kubernetes
+21:02 - infrastructure providing cluster node
+21:05 - resource monitoring out of the box which
+21:07 - means once it's deployed on kubernetes
+21:10 - it starts gathering matrix data on each
+21:13 - kubernetes node server without any extra
+21:15 - configuration and i will make a separate
+21:18 - video on how to deploy and configure
+21:20 - prometheus to monitor your kubernetes
+21:22 - cluster so subscribe to my channel click
+21:25 - that notification bell and you will be
+21:27 - notified when the new video is out

@@ -1,0 +1,470 @@
+With timestamps:
+
+00:00 - in this video I will show you how you
+00:02 - can persist data in kubernetes using
+00:05 - volumes we will cover three components
+00:08 - of kubernetes storage persistent volume
+00:11 - persistent volume claim and storage
+00:13 - class and see what each component does
+00:16 - and how its created and used for data
+00:19 - persistence consider a case where you
+00:22 - have a my sequel database pod which your
+00:24 - application uses data gets added updated
+00:28 - in the database maybe you create a new
+00:30 - database with a new user etc but default
+00:34 - when you restart the pod all those
+00:37 - changes will be gone because kubernetes
+00:39 - doesn't give you data persistence
+00:42 - out-of-the-box that's something that you
+00:45 - have to explicitly configure for each
+00:47 - application that needs saving data
+00:49 - between pod restarts so basically you
+00:53 - need a storage that doesn't depend on
+00:55 - the pod lifecycle so it will still be
+00:58 - there when pod eyes and new one gets
+01:00 - created so the new pod can pick up where
+01:03 - the previous one left off so it will
+01:06 - read the existing data from that storage
+01:08 - to get up-to-date data however you don't
+01:12 - know on which node the new pod restarts
+01:15 - so your storage must also be available
+01:18 - on all nodes not just one specific one
+01:20 - so that when the new pod tries to read
+01:24 - the existing data the up-to-date data is
+01:27 - there on any node in the cluster and
+01:31 - also you need a highly available storage
+01:34 - that will survive even if the whole
+01:37 - cluster crashed so these are the
+01:40 - criteria or the requirements that your
+01:43 - storage for example your database
+01:45 - storage will need to have to be reliable
+01:48 - another use case for persistent storage
+01:51 - which is not for database is a directory
+01:53 - maybe you have an application that
+01:55 - writes and reads files from
+01:57 - pre-configured directory this could be
+02:00 - session files for application or
+02:02 - configuration files etc and you can
+02:05 - configure any of this type of storage
+02:07 - using kubernetes component called
+02:10 - persistent volume think of a persist
+02:13 - in volume as a cluster resource just
+02:16 - like RAM or CPU that is used to store
+02:19 - data persistent volume just like any
+02:23 - other component gets created using
+02:25 - communities Yemma file where you can
+02:27 - specify the kind which is persistent
+02:30 - volume and in the specification section
+02:33 - you have to define different parameters
+02:36 - like how much storage should be created
+02:39 - for the volume but since persistent
+02:42 - volume is just an abstract component it
+02:44 - must take the storage from the actual
+02:47 - physical storage right like local hard
+02:50 - drive from the cluster nodes or your
+02:53 - external NFS servers outside of the
+02:56 - cluster or maybe cloud storage like AWS
+02:59 - block storage or from Google Cloud
+03:02 - Storage etc so the question is where
+03:05 - does this storage back-end come from
+03:07 - local or remote or on cloud who
+03:10 - configures it who makes it available to
+03:12 - the cluster and that's a tricky part of
+03:15 - data persistence in communities because
+03:18 - kubernetes doesn't care about your
+03:20 - actual storage it gives you persistent
+03:23 - volume component as an interface to the
+03:26 - actual storage that you as a maintainer
+03:29 - or administrator have to take care of so
+03:32 - you have to decide what type of storage
+03:35 - your cluster services or applications
+03:38 - would need and create and manage them by
+03:41 - yourself
+03:42 - managing meaning do backups and make
+03:45 - sure they don't get corrupt etc so think
+03:48 - of storage in kubernetes as an external
+03:51 - plug-in to your cluster whether it's a
+03:54 - local storage on actual knows where the
+03:57 - cluster is running or a remote storage
+03:59 - doesn't matter they're all plugins to
+04:02 - the cluster and you can have multiple
+04:04 - storages configured for your cluster
+04:06 - where one application in your cluster
+04:09 - uses local disk storage and other one
+04:12 - uses the NFS server and another one uses
+04:16 - some closed storage or one application
+04:18 - may also use multiple of those storage
+04:22 - types and by creating persistent volumes
+04:26 - you can use this
+04:27 - actual physical storages so in the
+04:29 - persistent volume specification section
+04:31 - you can define which storage back-end
+04:36 - you want to use to create that storage
+04:39 - abstraction or storage resource for
+04:42 - applications so this is an example where
+04:45 - we use NFS storage back-end so basically
+04:48 - we define how much storage we need some
+04:51 - additional parameters so that storage
+04:53 - like should it be read write or read
+04:55 - only etc and the storage back-end with
+04:59 - its parameters and this is another
+05:03 - example where we use Google Cloud as a
+05:06 - storage back-end again with the storage
+05:09 - back-end specified here and capacity and
+05:12 - access modes here now obviously
+05:14 - depending on the storage type on the
+05:17 - storage back-end some of the attributes
+05:19 - in the specification will be different
+05:21 - because they're specific to the storage
+05:24 - type this is another example of a local
+05:27 - storage which is on the node itself
+05:29 - which has additional node affinity
+05:32 - attribute now you don't have to remember
+05:34 - and know all these attributes at once
+05:37 - because you may may not need all of them
+05:40 - and also I will make separate videos
+05:43 - covering some of the most used volumes
+05:46 - and explain them individually with
+05:48 - examples and demos so they are I'm gonna
+05:51 - explain in more detail which attributes
+05:54 - should be used for these specific
+05:56 - volumes and what they actually mean so
+05:58 - subscribe if you haven't already and
+06:01 - stay tuned if you want to learn more
+06:03 - details on specific volumes in the
+06:06 - official kubernetes documentation you
+06:08 - can actually see the complete list of
+06:10 - more than 25 storage backends that
+06:14 - kubernetes supports note here that
+06:16 - persistent volumes are not named spaced
+06:20 - meaning they're accessible to the whole
+06:23 - cluster and unlike other components that
+06:26 - we saw like pods and services they're
+06:28 - not in any namespace they're just
+06:31 - available to the whole cluster to all
+06:33 - the namespaces now it's important to
+06:35 - differentiate here between two
+06:37 - categories of the volumes local and
+06:40 - remote
+06:41 - will create a more detailed course on
+06:42 - volumes as I said before where I will
+06:44 - show you in practice various local and
+06:47 - remote volume types and how to use them
+06:49 - and also which is needed in which
+06:51 - scenarios but here I will mention that
+06:54 - each volume type in these two categories
+06:56 - has its own use case otherwise they
+07:00 - won't exist and we will see some of
+07:02 - these use cases later in this video
+07:04 - however the local volume types violate
+07:08 - the second and third requirements of
+07:10 - data persistence for databases that I
+07:13 - mentioned at the beginning which is one
+07:16 - not being tied to one specific node but
+07:20 - rather to each node equally because you
+07:24 - don't know where the new pod will start
+07:26 - and the second surviving in cluster
+07:29 - crash scenarios because of these reasons
+07:31 - for database persistence you should
+07:34 - almost always use remote storage so who
+07:39 - creates these persistent volumes and
+07:41 - when as I said persistent volumes are
+07:43 - resources like CPU or Ram so they have
+07:47 - to be already there in the cluster when
+07:50 - the part that depends on it or that uses
+07:52 - it is created so a side note here is
+07:56 - that there are two main roles in
+07:58 - kubernetes there is an administrator who
+08:01 - sets up the cluster and maintains it and
+08:03 - also make sure the cluster has enough
+08:06 - resources
+08:07 - these are usually system administrators
+08:09 - or DevOps engineers and a company and
+08:12 - the second role is kubernetes user that
+08:15 - deploys the applications in the cluster
+08:17 - either directly or through CI pipeline
+08:20 - these are developer devops teams who
+08:23 - create their applications and deploy
+08:25 - them so in this case the kubernetes
+08:28 - administrator would be the one to
+08:30 - configure the actual storage meaning to
+08:34 - make sure that the NFS server storage is
+08:37 - there and configured or maybe create and
+08:41 - configure a cloud storage that will be
+08:43 - available for the cluster and second
+08:46 - create persistent volume components from
+08:49 - these storage Bekins based on the
+08:51 - information from developer team of what
+08:54 - of storage their applications would need
+08:57 - and the developers then we'll know that
+08:59 - storage is there and can be used by the
+09:02 - applications but for that developers
+09:05 - have to explicitly configure the
+09:07 - application yellow file to use those
+09:10 - persistent volume components in other
+09:13 - words application has to claim that
+09:16 - volume storage and you do that using
+09:19 - another component of kubernetes called
+09:21 - persistent volume claim persistent valen
+09:25 - claims also PVCs are also created with
+09:28 - yellow configuration here's an example
+09:31 - claim again don't worry about
+09:33 - understanding each and every attribute
+09:35 - that is defined here but on the higher
+09:37 - level the way it works is that PVC
+09:40 - claims a volume with certain storage
+09:44 - size or capacity which is defined in the
+09:47 - persistent volume claim and some
+09:49 - additional characteristics like excess
+09:51 - type should be read only or read rights
+09:54 - or the type etc and whatever persistent
+09:58 - volume matches these criteria or in
+10:01 - other words satisfies this claim will be
+10:04 - used for the application but that's not
+10:07 - all you have to now use that claim in
+10:10 - your pods configuration like this so in
+10:13 - the path specification here you have the
+10:16 - volumes attribute that references the
+10:21 - persistent volume claim with its name so
+10:25 - now the pod and all the containers
+10:27 - inside the pod will have access to that
+10:30 - persistent
+10:31 - volume storage so to go through those
+10:34 - levels of abstraction step by step and
+10:37 - putz excess storage by using the claim
+10:40 - as a volume right so they request the
+10:43 - volume through claim the claim then
+10:46 - we'll go and try to find a volume
+10:49 - persistent volume in the cluster that
+10:51 - satisfies the claim and the volume will
+10:54 - have a storage the actual storage
+10:56 - back-end that it will create that
+11:00 - storage resource from in this way the
+11:03 - pod will now be able to use that actual
+11:06 - storage back-end
+11:07 - note here that claims must exist in the
+11:11 - same namespace as the pod using the
+11:14 - claim while as I mentioned before
+11:16 - persistent volumes are not named spaced
+11:18 - so once the pod finds the matching
+11:22 - persistent volume through the volume
+11:24 - claim through the persistent volume
+11:26 - claim the volume is then mounted into
+11:28 - the pod like this here this is a pod
+11:32 - level and then that volume can be
+11:35 - mounted into the container inside the
+11:37 - pod which is this level right here and
+11:40 - if you have multiple containers here in
+11:43 - a pod you can decide to mount this
+11:46 - volume in all the containers or just
+11:49 - some of those so now the container and
+11:52 - the application inside the container can
+11:54 - read and write to that storage and when
+11:57 - the pod dies a new one gets created it
+12:00 - will have access to the same storage and
+12:02 - see all the changes the previous pod or
+12:05 - the previous containers made again the
+12:08 - attributes here like volumes and volume
+12:10 - and etc and how they're used I will show
+12:12 - you more specifically and explained in a
+12:15 - later demo video now you may be
+12:18 - wondering why so many abstractions for
+12:21 - using volume where admin role has to
+12:24 - create persistent volume and reuse a
+12:25 - role creates a claim on that persistent
+12:28 - volume and that isn't used in pot can I
+12:30 - just use one component and configure
+12:33 - everything there well this actually has
+12:35 - a benefit because as a user meaning a
+12:38 - developer who just wants to deploy their
+12:40 - application in the cluster you don't
+12:42 - care about where the actual storage is
+12:45 - you know you want your database to have
+12:48 - persistence and whether the data will
+12:50 - leave on a cluster FS or EWS EBS or
+12:54 - local storage doesn't matter for you as
+12:58 - long as the data is safely stored or if
+13:00 - you need a directory storage for files
+13:03 - you don't care where the directory
+13:05 - actually leaves as long as it has enough
+13:07 - space and works properly and you sure
+13:10 - don't want to care about setting up
+13:12 - these actual storages yourself
+13:15 - you just want 50 gigabytes storage for
+13:18 - your elastic or 10 gigabyte for your
+13:20 - application
+13:20 - that's it so you make a claim for
+13:23 - storage using PVC and assume that
+13:25 - cluster has storage resources already
+13:29 - there and this makes deploying the
+13:33 - applications easier for developers
+13:35 - because they don't have to take care of
+13:37 - the stuff beyond deploying the
+13:39 - applications now there are two of volume
+13:42 - types that I think needs to be mentioned
+13:44 - separately because they're a bit
+13:46 - different from the rest and these are
+13:48 - config map and secret now if you have
+13:51 - watched my other video on communities
+13:53 - components then you are already familiar
+13:56 - with both both of them are local volumes
+13:59 - but unlike the rest these two aren't
+14:02 - created by a PV and PVC but a rather own
+14:06 - components and managed by kubernetes
+14:08 - itself consider a case where you need a
+14:11 - configuration file for your Prometheus
+14:13 - pod or maybe a message broker service
+14:16 - like mosquito or consider when you need
+14:18 - a certificate file mounted inside your
+14:21 - application in both cases you need a
+14:25 - file available to your pod so how this
+14:28 - works is that you create config map or
+14:31 - secret component and you can mount that
+14:33 - into your pod and into your container
+14:35 - the same way as you would mount
+14:37 - persistent volume claim so instead you
+14:41 - would have a config map or secret here
+14:43 - and I will show you a demo of this in a
+14:46 - video where I cover local volume types
+14:49 - so to quickly summarize what we've
+14:51 - covered so far as we see at its core a
+14:55 - volume is just a directory possibly with
+14:57 - some data in it which is accessible to
+15:00 - the containers in a pod how that
+15:02 - directory is made available or what
+15:04 - storage medium actually backs that and
+15:07 - the contents of that directory are
+15:10 - defined by a specific volume type reuse
+15:14 - so to use a volume a pod specifies what
+15:18 - volumes to provide for the pod in the
+15:21 - specification volumes attribute and
+15:24 - inside the pod and you can decide where
+15:27 - to mount that storage into using volume
+15:31 - mounts attribute inside
+15:33 - container section and this is a path
+15:36 - inside the container where application
+15:40 - can access whatever storage we mounted
+15:43 - into the container and as I said if you
+15:46 - have multiple containers you can decide
+15:48 - which containers should get access to
+15:51 - that storage interesting note for you
+15:54 - is that a pod can actually use multiple
+15:57 - volumes of different types
+15:59 - simultaneously let's say you have an
+16:01 - elasticsearch application or pod running
+16:05 - in your cluster that needs a
+16:08 - configuration file mounted through a
+16:10 - config map needs a certificate let's say
+16:13 - client certificate mounted as a secret
+16:16 - and it needs database storage let's say
+16:19 - which is backed with AWS elastic block
+16:24 - storage so in this case you can
+16:26 - configure all three inside your pot or
+16:30 - deployment so this is the pod
+16:33 - specification that we saw before and
+16:35 - here on the volumes level you will just
+16:37 - list all the volumes that you want to
+16:41 - mount into your pod so let's say you
+16:45 - have a persistent volume claim that and
+16:47 - the background claims persistent volume
+16:49 - from AWS block storage and here you have
+16:52 - the config map and here have a secret
+16:55 - and here in the volume mounts you can
+16:57 - list all those storage mounts using the
+17:01 - names right so you have the persistent
+17:04 - storage then you have the config map and
+17:06 - secret and each one of them is mounted
+17:09 - to a certain path inside the container
+17:12 - now we saw that to persist data and
+17:15 - kubernetes admins need to configure
+17:17 - storage for the cluster create
+17:19 - persistent volumes and developers then
+17:21 - can claim them using PVCs but consider a
+17:25 - cluster with hundreds of applications
+17:27 - where things get deployed daily and
+17:29 - storage is needed for these applications
+17:31 - so developers need to ask admins to
+17:34 - create persistent volumes they need for
+17:36 - applications before deploying them and
+17:39 - admins then may have to manually request
+17:41 - storage from cloud or storage provider
+17:44 - and create hundreds of persistent
+17:47 - volumes for all the applications that
+17:49 - need storage manually and that can be
+17:52 - tedious time-consuming and can get messy
+17:56 - very quickly so to make this process
+17:59 - more efficient there is a third
+18:01 - component of kubernetes persistence
+18:04 - called
+18:05 - storage class storage class basically
+18:08 - creates or provisions persistent volumes
+18:10 - dynamically whenever PVC claims it and
+18:14 - this way creating or provisioning
+18:17 - volumes in a cluster may be automated
+18:19 - storage class also gets created using
+18:23 - yellow configuration file so this is an
+18:25 - example file where we have the kind
+18:28 - storage class storage class creates
+18:31 - persistent volumes dynamically in the
+18:34 - background so remember we define storage
+18:36 - back-end in the persistent volume
+18:39 - component now we have to define it in
+18:41 - the storage class component and we do
+18:44 - that using the provisional attribute
+18:46 - which is the main part of the storage
+18:49 - class configuration because it tells
+18:51 - kubernetes which provisioner to be used
+18:54 - for a specific storage platform or cloud
+18:57 - provider to create the persistent volume
+19:01 - component out of it
+19:02 - so each storage back-end has its own
+19:04 - provisioner that kubernetes offers
+19:06 - internally which are prefixed with
+19:09 - kubernetes dot io like this one here and
+19:12 - these are internal provisioners and for
+19:15 - others or other storage types there are
+19:18 - external provisioners that you have to
+19:21 - then explicitly go and find and use that
+19:25 - in your storage class and in addition to
+19:28 - provision or attribute we configure
+19:31 - parameters of the storage we want to
+19:33 - request for a persistent volume like
+19:36 - this ones here so storage class is
+19:38 - basically another abstraction level that
+19:40 - abstracts the underlying storage
+19:42 - provider as well as parameters for that
+19:45 - storage characteristics for the storage
+19:47 - like what disk type or etc so how does
+19:52 - it work or how do you use storage class
+19:54 - in the pod configuration same as
+19:57 - persistent volume it is requested or
+20:00 - claimed by PVC so in the PVC
+20:03 - configuration here we add additional
+20:06 - attribute that is called storage class
+20:09 - name that references the storage class
+20:13 - to be used to create a persistent volume
+20:16 - that satisfies the claims of this PVC so
+20:22 - now when a part claims storage through
+20:25 - PVC the PVC will request that storage
+20:28 - from storage class which then will
+20:30 - provision or create persistent volume
+20:34 - that meets the needs of that claim using
+20:37 - provisioner from the actual storage
+20:40 - back-end now this should help you
+20:42 - understand the concepts of how data is
+20:45 - persisted in kubernetes is a high-level
+20:48 - overview in the later videos I will go
+20:51 - into more details of using these
+20:53 - persistent components in different
+20:55 - scenarios and more practical demos so if
+20:59 - you don't want to miss the future videos
+21:01 - on this topic then subscribe to my
+21:03 - channel and click the notification bell
+21:05 - so that you will be notified whenever I
+21:07 - release a new video on my channel so
+21:10 - thank you for watching and see you in
+21:12 - the next video
+
+Cleaned transcript:
+
+in this video I will show you how you can persist data in kubernetes using volumes we will cover three components of kubernetes storage persistent volume persistent volume claim and storage class and see what each component does and how its created and used for data persistence consider a case where you have a my sequel database pod which your application uses data gets added updated in the database maybe you create a new database with a new user etc but default when you restart the pod all those changes will be gone because kubernetes doesn't give you data persistence outofthebox that's something that you have to explicitly configure for each application that needs saving data between pod restarts so basically you need a storage that doesn't depend on the pod lifecycle so it will still be there when pod eyes and new one gets created so the new pod can pick up where the previous one left off so it will read the existing data from that storage to get uptodate data however you don't know on which node the new pod restarts so your storage must also be available on all nodes not just one specific one so that when the new pod tries to read the existing data the uptodate data is there on any node in the cluster and also you need a highly available storage that will survive even if the whole cluster crashed so these are the criteria or the requirements that your storage for example your database storage will need to have to be reliable another use case for persistent storage which is not for database is a directory maybe you have an application that writes and reads files from preconfigured directory this could be session files for application or configuration files etc and you can configure any of this type of storage using kubernetes component called persistent volume think of a persist in volume as a cluster resource just like RAM or CPU that is used to store data persistent volume just like any other component gets created using communities Yemma file where you can specify the kind which is persistent volume and in the specification section you have to define different parameters like how much storage should be created for the volume but since persistent volume is just an abstract component it must take the storage from the actual physical storage right like local hard drive from the cluster nodes or your external NFS servers outside of the cluster or maybe cloud storage like AWS block storage or from Google Cloud Storage etc so the question is where does this storage backend come from local or remote or on cloud who configures it who makes it available to the cluster and that's a tricky part of data persistence in communities because kubernetes doesn't care about your actual storage it gives you persistent volume component as an interface to the actual storage that you as a maintainer or administrator have to take care of so you have to decide what type of storage your cluster services or applications would need and create and manage them by yourself managing meaning do backups and make sure they don't get corrupt etc so think of storage in kubernetes as an external plugin to your cluster whether it's a local storage on actual knows where the cluster is running or a remote storage doesn't matter they're all plugins to the cluster and you can have multiple storages configured for your cluster where one application in your cluster uses local disk storage and other one uses the NFS server and another one uses some closed storage or one application may also use multiple of those storage types and by creating persistent volumes you can use this actual physical storages so in the persistent volume specification section you can define which storage backend you want to use to create that storage abstraction or storage resource for applications so this is an example where we use NFS storage backend so basically we define how much storage we need some additional parameters so that storage like should it be read write or read only etc and the storage backend with its parameters and this is another example where we use Google Cloud as a storage backend again with the storage backend specified here and capacity and access modes here now obviously depending on the storage type on the storage backend some of the attributes in the specification will be different because they're specific to the storage type this is another example of a local storage which is on the node itself which has additional node affinity attribute now you don't have to remember and know all these attributes at once because you may may not need all of them and also I will make separate videos covering some of the most used volumes and explain them individually with examples and demos so they are I'm gonna explain in more detail which attributes should be used for these specific volumes and what they actually mean so subscribe if you haven't already and stay tuned if you want to learn more details on specific volumes in the official kubernetes documentation you can actually see the complete list of more than 25 storage backends that kubernetes supports note here that persistent volumes are not named spaced meaning they're accessible to the whole cluster and unlike other components that we saw like pods and services they're not in any namespace they're just available to the whole cluster to all the namespaces now it's important to differentiate here between two categories of the volumes local and remote will create a more detailed course on volumes as I said before where I will show you in practice various local and remote volume types and how to use them and also which is needed in which scenarios but here I will mention that each volume type in these two categories has its own use case otherwise they won't exist and we will see some of these use cases later in this video however the local volume types violate the second and third requirements of data persistence for databases that I mentioned at the beginning which is one not being tied to one specific node but rather to each node equally because you don't know where the new pod will start and the second surviving in cluster crash scenarios because of these reasons for database persistence you should almost always use remote storage so who creates these persistent volumes and when as I said persistent volumes are resources like CPU or Ram so they have to be already there in the cluster when the part that depends on it or that uses it is created so a side note here is that there are two main roles in kubernetes there is an administrator who sets up the cluster and maintains it and also make sure the cluster has enough resources these are usually system administrators or DevOps engineers and a company and the second role is kubernetes user that deploys the applications in the cluster either directly or through CI pipeline these are developer devops teams who create their applications and deploy them so in this case the kubernetes administrator would be the one to configure the actual storage meaning to make sure that the NFS server storage is there and configured or maybe create and configure a cloud storage that will be available for the cluster and second create persistent volume components from these storage Bekins based on the information from developer team of what of storage their applications would need and the developers then we'll know that storage is there and can be used by the applications but for that developers have to explicitly configure the application yellow file to use those persistent volume components in other words application has to claim that volume storage and you do that using another component of kubernetes called persistent volume claim persistent valen claims also PVCs are also created with yellow configuration here's an example claim again don't worry about understanding each and every attribute that is defined here but on the higher level the way it works is that PVC claims a volume with certain storage size or capacity which is defined in the persistent volume claim and some additional characteristics like excess type should be read only or read rights or the type etc and whatever persistent volume matches these criteria or in other words satisfies this claim will be used for the application but that's not all you have to now use that claim in your pods configuration like this so in the path specification here you have the volumes attribute that references the persistent volume claim with its name so now the pod and all the containers inside the pod will have access to that persistent volume storage so to go through those levels of abstraction step by step and putz excess storage by using the claim as a volume right so they request the volume through claim the claim then we'll go and try to find a volume persistent volume in the cluster that satisfies the claim and the volume will have a storage the actual storage backend that it will create that storage resource from in this way the pod will now be able to use that actual storage backend note here that claims must exist in the same namespace as the pod using the claim while as I mentioned before persistent volumes are not named spaced so once the pod finds the matching persistent volume through the volume claim through the persistent volume claim the volume is then mounted into the pod like this here this is a pod level and then that volume can be mounted into the container inside the pod which is this level right here and if you have multiple containers here in a pod you can decide to mount this volume in all the containers or just some of those so now the container and the application inside the container can read and write to that storage and when the pod dies a new one gets created it will have access to the same storage and see all the changes the previous pod or the previous containers made again the attributes here like volumes and volume and etc and how they're used I will show you more specifically and explained in a later demo video now you may be wondering why so many abstractions for using volume where admin role has to create persistent volume and reuse a role creates a claim on that persistent volume and that isn't used in pot can I just use one component and configure everything there well this actually has a benefit because as a user meaning a developer who just wants to deploy their application in the cluster you don't care about where the actual storage is you know you want your database to have persistence and whether the data will leave on a cluster FS or EWS EBS or local storage doesn't matter for you as long as the data is safely stored or if you need a directory storage for files you don't care where the directory actually leaves as long as it has enough space and works properly and you sure don't want to care about setting up these actual storages yourself you just want 50 gigabytes storage for your elastic or 10 gigabyte for your application that's it so you make a claim for storage using PVC and assume that cluster has storage resources already there and this makes deploying the applications easier for developers because they don't have to take care of the stuff beyond deploying the applications now there are two of volume types that I think needs to be mentioned separately because they're a bit different from the rest and these are config map and secret now if you have watched my other video on communities components then you are already familiar with both both of them are local volumes but unlike the rest these two aren't created by a PV and PVC but a rather own components and managed by kubernetes itself consider a case where you need a configuration file for your Prometheus pod or maybe a message broker service like mosquito or consider when you need a certificate file mounted inside your application in both cases you need a file available to your pod so how this works is that you create config map or secret component and you can mount that into your pod and into your container the same way as you would mount persistent volume claim so instead you would have a config map or secret here and I will show you a demo of this in a video where I cover local volume types so to quickly summarize what we've covered so far as we see at its core a volume is just a directory possibly with some data in it which is accessible to the containers in a pod how that directory is made available or what storage medium actually backs that and the contents of that directory are defined by a specific volume type reuse so to use a volume a pod specifies what volumes to provide for the pod in the specification volumes attribute and inside the pod and you can decide where to mount that storage into using volume mounts attribute inside container section and this is a path inside the container where application can access whatever storage we mounted into the container and as I said if you have multiple containers you can decide which containers should get access to that storage interesting note for you is that a pod can actually use multiple volumes of different types simultaneously let's say you have an elasticsearch application or pod running in your cluster that needs a configuration file mounted through a config map needs a certificate let's say client certificate mounted as a secret and it needs database storage let's say which is backed with AWS elastic block storage so in this case you can configure all three inside your pot or deployment so this is the pod specification that we saw before and here on the volumes level you will just list all the volumes that you want to mount into your pod so let's say you have a persistent volume claim that and the background claims persistent volume from AWS block storage and here you have the config map and here have a secret and here in the volume mounts you can list all those storage mounts using the names right so you have the persistent storage then you have the config map and secret and each one of them is mounted to a certain path inside the container now we saw that to persist data and kubernetes admins need to configure storage for the cluster create persistent volumes and developers then can claim them using PVCs but consider a cluster with hundreds of applications where things get deployed daily and storage is needed for these applications so developers need to ask admins to create persistent volumes they need for applications before deploying them and admins then may have to manually request storage from cloud or storage provider and create hundreds of persistent volumes for all the applications that need storage manually and that can be tedious timeconsuming and can get messy very quickly so to make this process more efficient there is a third component of kubernetes persistence called storage class storage class basically creates or provisions persistent volumes dynamically whenever PVC claims it and this way creating or provisioning volumes in a cluster may be automated storage class also gets created using yellow configuration file so this is an example file where we have the kind storage class storage class creates persistent volumes dynamically in the background so remember we define storage backend in the persistent volume component now we have to define it in the storage class component and we do that using the provisional attribute which is the main part of the storage class configuration because it tells kubernetes which provisioner to be used for a specific storage platform or cloud provider to create the persistent volume component out of it so each storage backend has its own provisioner that kubernetes offers internally which are prefixed with kubernetes dot io like this one here and these are internal provisioners and for others or other storage types there are external provisioners that you have to then explicitly go and find and use that in your storage class and in addition to provision or attribute we configure parameters of the storage we want to request for a persistent volume like this ones here so storage class is basically another abstraction level that abstracts the underlying storage provider as well as parameters for that storage characteristics for the storage like what disk type or etc so how does it work or how do you use storage class in the pod configuration same as persistent volume it is requested or claimed by PVC so in the PVC configuration here we add additional attribute that is called storage class name that references the storage class to be used to create a persistent volume that satisfies the claims of this PVC so now when a part claims storage through PVC the PVC will request that storage from storage class which then will provision or create persistent volume that meets the needs of that claim using provisioner from the actual storage backend now this should help you understand the concepts of how data is persisted in kubernetes is a highlevel overview in the later videos I will go into more details of using these persistent components in different scenarios and more practical demos so if you don't want to miss the future videos on this topic then subscribe to my channel and click the notification bell so that you will be notified whenever I release a new video on my channel so thank you for watching and see you in the next video

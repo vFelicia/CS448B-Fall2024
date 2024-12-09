@@ -1,0 +1,889 @@
+With timestamps:
+
+00:02 - [Music]
+00:08 - hello everybody and welcome to another
+00:10 - youtube video
+00:11 - so in today's video i'm going to be
+00:13 - discussing asynchronous programming in
+00:15 - python specifically what i'll be
+00:17 - covering is the async and a weight
+00:19 - keyword co routines futures and tasks
+00:22 - and some basic features or functionality
+00:24 - from the async io
+00:26 - module in python now it's worth noting
+00:28 - that this video is not designed for
+00:30 - beginners you should have some basic
+00:32 - programming knowledge in order to follow
+00:34 - along especially in
+00:35 - python and if you're using any version
+00:38 - of python that's below 3.7
+00:40 - a lot of the stuff i'm showing you here
+00:42 - will not apply so please make sure
+00:44 - using python 3.7 version or above and
+00:47 - with that said
+00:47 - let's dive in after a quick word from
+00:50 - our sponsor before we get started i need
+00:52 - to thank the sponsor of this video which
+00:53 - is alco
+00:54 - expert algo expert is the best platform
+00:57 - to use from preparing for your software
+00:58 - engineering coding interviews
+01:00 - and has the highest quality coding
+01:01 - interview practice questions
+01:03 - with over 140 practice questions
+01:05 - detailed solutions in nine of the most
+01:07 - popular programming languages
+01:09 - a feature-packed browser-based coding
+01:11 - environment extensive test suites and
+01:13 - conceptual overviews and code
+01:15 - walk-throughs for each and every problem
+01:17 - algo expert is the best resource to use
+01:19 - to ace your coding
+01:20 - interviews algo expert also has a data
+01:22 - structures crash course
+01:24 - coding interview assessments and a mock
+01:25 - interviews feature
+01:27 - i can highly recommend algo expert as a
+01:29 - former customer myself
+01:30 - and now an official instructor on the
+01:32 - platform get started using algo expert
+01:34 - today by clicking the link
+01:36 - in the description and using the code
+01:37 - tech with tim for a discount on
+01:39 - the platform so before we get into
+01:42 - asynchronous programming i want to start
+01:43 - by defining what synchronous programming
+01:46 - is
+01:46 - so synchronous programming really just
+01:48 - means that everything that we write is
+01:50 - happening
+01:51 - sequentially so if i define some
+01:53 - statement all right to find some
+01:54 - functions sorry and i call this foo so
+01:56 - define foo
+01:57 - and maybe in here we just do a return
+01:58 - statement then i call foo
+02:00 - and then i say print and i print tim
+02:03 - this print statement is not going to be
+02:05 - run
+02:05 - until this function foo is executed
+02:08 - doesn't matter how long this function
+02:09 - takes
+02:10 - doesn't matter if this function's
+02:11 - actually doing anything or not this
+02:13 - function must finish executing before
+02:15 - this statement is going to be run this
+02:17 - is by definition
+02:18 - synchronous programming we are doing
+02:20 - things sequentially
+02:21 - and i like to think about synchronous
+02:23 - programming as in having a kind of
+02:25 - performance
+02:26 - based on the clock speed of our
+02:28 - processor
+02:29 - so when we're talking about a python
+02:30 - program specifically we have one process
+02:33 - and one thread running our code which is
+02:34 - just standard if you don't know what
+02:35 - that means
+02:36 - don't worry about it that's just your
+02:38 - regular python code running there
+02:40 - well the speed at which this code is
+02:41 - going to run is going to be dictated by
+02:43 - your processor the state of the
+02:44 - processor
+02:45 - and how fast essentially it can actually
+02:47 - run how quickly or how many operations
+02:49 - it can do
+02:50 - per second so if you have a fast
+02:52 - processor your sequential synchronous
+02:53 - code is going to run faster than a
+02:55 - slower
+02:56 - processor however when we go over to
+02:58 - asynchronous programming
+02:59 - things are a little bit different when
+03:01 - we talk about asynchronous programming
+03:03 - we don't necessarily need to do things
+03:05 - sequentially and the reason for that is
+03:07 - the following let's say this function
+03:09 - foo here this function foo actually
+03:11 - waits on something that's not related to
+03:13 - our computer
+03:14 - so it's waiting on say a network
+03:15 - operation waiting on some file to upload
+03:18 - or download or some user to uh input
+03:20 - some information
+03:21 - while that function is waiting other
+03:23 - code is able to be ran so we don't need
+03:25 - to do things sequentially we don't need
+03:27 - to wait for foo to finish running
+03:29 - before we can print tim we can say okay
+03:31 - well foo's waiting for something else to
+03:33 - happen
+03:34 - our processor is free to do some
+03:35 - operations so let's allow us to go run
+03:37 - some other code and then when foo is
+03:38 - done we'll come back to it later on and
+03:40 - we'll kind of check on it or resume the
+03:42 - execution of it
+03:43 - now i understand this is maybe unclear
+03:45 - and vague right now but you'll see the
+03:46 - idea behind this when we actually start
+03:48 - writing our asynchronous code so just
+03:50 - understand that when we're talking about
+03:51 - synchronous vs asynchronous programming
+03:53 - asynchronous programming really means
+03:55 - that we don't need to necessarily wait
+03:57 - for something to be completely done
+03:59 - before we run other parts of code and
+04:01 - this is very beneficial
+04:02 - especially if you're waiting for say a
+04:04 - network operation like you're querying a
+04:06 - database you're waiting for a response
+04:08 - from some server
+04:09 - that's not disallowing your computer
+04:11 - from running you can now
+04:12 - execute other operations then once that
+04:14 - response actually comes in or once that
+04:16 - event you're waiting for happens
+04:18 - you can then handle it and do something
+04:19 - with it so with that said
+04:21 - let's dive in the first thing that i
+04:23 - need to discuss here
+04:24 - is something called co routines and the
+04:26 - await and async
+04:27 - keyword okay so as you can see here i've
+04:30 - imported this module here it's called
+04:32 - async io
+04:33 - now this module is built into python you
+04:35 - don't need to install it
+04:36 - and you can import it right here if
+04:37 - you're using a version of python that's
+04:39 - high enough
+04:39 - again i'm recommending 3.7 and above
+04:43 - now the first thing that we need to do
+04:44 - when we're creating an asynchronous
+04:46 - program
+04:46 - is we need to create what's known as a
+04:48 - co-routine now a co-routine
+04:50 - is simply kind of a wrapped version of a
+04:53 - function
+04:53 - that allows it to run asynchronously
+04:56 - because you have to think about it in
+04:57 - this way when we're writing code
+04:58 - traditionally we're writing synchronous
+05:00 - code
+05:00 - to be able to write asynchronous code we
+05:02 - obviously have to do things a little bit
+05:04 - different we can't use the exact same
+05:06 - code that we used
+05:06 - when we were writing something
+05:07 - synchronously and so to create a code
+05:09 - routine
+05:10 - what you do is you define a function so
+05:12 - i'm going to say define
+05:13 - main and inside of this function you do
+05:15 - whatever you want so i can print
+05:17 - say tim and then maybe i can sleep for a
+05:20 - certain amount of time or whatever i'm
+05:21 - just going to print him for now
+05:22 - and then before this function definition
+05:24 - you put the keyword
+05:25 - async now what this tells python to do
+05:28 - is essentially create a
+05:30 - wrapper around this function so when you
+05:32 - call this function what it's going to do
+05:34 - is actually return to you a coroutine
+05:37 - object and this co-routine object
+05:39 - is just like a function and it can be
+05:41 - executed and to execute a code routine
+05:44 - you need to do what's known as await it
+05:46 - you need to await its execution
+05:48 - now you'll see what i mean in one second
+05:51 - but let me just
+05:52 - show you how we kind of work with code
+05:53 - routines and what a curve routine is
+05:55 - so right now if i call this main
+05:57 - function you would expect that tim's
+05:59 - going to be printed to the screen
+06:00 - so let's go ahead and do that and notice
+06:02 - we get this thing runtime warning
+06:04 - co-routine main was never
+06:05 - awaited now this is telling us that hey
+06:08 - we can't run this function
+06:09 - because what you've done is you haven't
+06:11 - awaited the code routine
+06:12 - and when you call this function well it
+06:15 - actually returns to you a co
+06:16 - routine it doesn't work like a regular
+06:18 - vanilla python function would
+06:20 - now let me show you what i mean here if
+06:22 - i print the call to main
+06:24 - you're going to see up here that
+06:25 - actually gives me what's called a
+06:27 - coroutine object it says well this is a
+06:28 - coroutine object
+06:30 - and it's main at and then whatever this
+06:31 - memory location is
+06:33 - so calling this function doesn't just
+06:34 - execute its code it now gives me this
+06:36 - kind of new function or new
+06:38 - object and this new object is
+06:40 - asynchronous and can be used in the
+06:41 - asynchronous program
+06:43 - so if we want this to actually run what
+06:45 - we need to do
+06:46 - is what's called awaited although you're
+06:48 - going to see what happens when i do this
+06:49 - so when i await main we actually get
+06:51 - this issue and it says there's an await
+06:53 - outside of the function
+06:55 - now this is because to use the await
+06:57 - keyword
+06:58 - it must be inside of an asynchronous
+07:00 - function now we'll talk more about that
+07:02 - later i don't want to get too far ahead
+07:04 - of myself
+07:04 - but essentially what i'm trying to say
+07:06 - here is that when you call a function
+07:07 - that you've defined with async
+07:09 - it doesn't work in the way that you
+07:10 - would kind of imagine and intuitively
+07:12 - see
+07:13 - in regular python instead what this
+07:15 - returns to use that coroutine object
+07:17 - and that coroutine object now needs to
+07:19 - be awaited for it to be able to run
+07:21 - but you're seeing this error right here
+07:22 - i put this a weight keyword which you've
+07:24 - probably seen if you've looked at
+07:25 - asynchronous programming before
+07:27 - and well it's not running our code why
+07:30 - isn't it running our code
+07:31 - the reason it's not running our code is
+07:33 - we haven't created what's known as the
+07:34 - event loop now whenever we create an
+07:36 - asynchronous program
+07:38 - at least in python here we need to
+07:40 - define something called an event loop
+07:41 - where we need to at least start an event
+07:43 - loop
+07:44 - now an events loop is just kind of the
+07:46 - lower level python thing
+07:47 - that's allowing us to actually write
+07:49 - asynchronous code it's handling all of
+07:51 - the super complicated stuff
+07:52 - that actually is behind this simple
+07:54 - async syntax we see right here
+07:56 - and we must start one in whatever thread
+07:58 - we're running this asynchronous stuff in
+08:00 - before our code can run if you're
+08:02 - unfamiliar with reds don't worry about
+08:04 - it just mention that
+08:05 - in case someone uh you know knows what a
+08:06 - thread is and that can be helpful
+08:08 - anyways the whole point of me saying
+08:10 - this is that we need to start our
+08:11 - program so whatever asynchronous part of
+08:13 - our program we want to run
+08:14 - we need to start it with async io dot
+08:16 - run
+08:17 - so we say async.oh async io dot run
+08:20 - sorry
+08:20 - we then give a co routine and this co
+08:23 - routine
+08:23 - is going to be the entry point to our
+08:25 - program again a co routine is any
+08:27 - function that has the async
+08:28 - before it so now when i do this you're
+08:30 - going to see that tim runs no problem
+08:32 - the reason that runs no problem is this
+08:34 - is the code routine we told async io dot
+08:37 - async i o to run it async io created
+08:40 - what's known as an events loop it added
+08:41 - this co routine to the event loop and
+08:43 - then it ran it
+08:44 - that's all you need to understand now
+08:46 - you don't need to know too much about
+08:47 - the event loop
+08:48 - just know that really what this is doing
+08:50 - is creating the event loop
+08:52 - adding this onto it and that's what's
+08:53 - allowing us to actually run this code
+08:56 - so now let me show you how we can
+08:58 - actually use the await keyword
+09:00 - so i'm going to create another function
+09:01 - here i'm going to say async define
+09:03 - and let's just call this let's say foo
+09:06 - now inside of here
+09:07 - what i'm going to do is just print out
+09:08 - some text and actually let's take some
+09:11 - text here and we'll just print out the
+09:13 - text and then i'm going to await
+09:16 - a function i'm going to await something
+09:18 - happening
+09:19 - i'm going to say await and then this is
+09:21 - async io
+09:23 - dot sleep and i'm gonna sleep for one
+09:25 - second
+09:26 - now this await keyword right here this
+09:29 - is what is required to run a co routine
+09:31 - so async io.sleep one
+09:33 - returns to me a co or something like a
+09:36 - car routine i won't get into all of the
+09:37 - details of that
+09:39 - and in order to run a co routine it must
+09:41 - be awaited you can't just
+09:42 - do it like this the reason you can't do
+09:44 - it like that is because you're not
+09:45 - actually executing the car routine it's
+09:47 - just creating the car routine you need
+09:49 - to execute it with the await
+09:50 - keyword so i use a weight and the reason
+09:53 - i'm allowed to use a weight here is
+09:55 - because i'm inside of an
+09:56 - asynchronous function so this await
+09:58 - keyword can only be inside of something
+10:00 - that is defined with async
+10:02 - if you don't have async like you saw
+10:04 - previously when i did say a weight
+10:06 - whatever it just doesn't work because
+10:08 - you're not inside of an asynchronous
+10:09 - part of your code
+10:10 - so you put a weight here that then runs
+10:13 - the co routine which means we are going
+10:14 - to sleep we're going to pause the
+10:15 - execution of this function for one
+10:17 - second so what i'm going to do now is
+10:19 - call this function foo
+10:21 - from inside of my main function and
+10:23 - again notice if i just put foo right
+10:25 - here
+10:26 - we're going to get this error and it's
+10:27 - going to say oh missing one required
+10:29 - okay let's put text in here first but if
+10:32 - i do this it says runtime warning
+10:34 - code routine foo was never awaited so
+10:37 - now if i await this code routine
+10:39 - then this actually works right you see
+10:41 - we get tim we get text and then there
+10:43 - was kind of a little delay and then the
+10:45 - program finished because we were
+10:46 - sleeping
+10:46 - for one second so that is how you
+10:49 - actually run
+10:50 - asynchronous code routines now this
+10:53 - doesn't seem entirely useful right
+10:54 - because
+10:55 - again this is kind of just like another
+10:57 - synchronous program i'm awaiting some
+10:59 - code to happen
+11:00 - once it happens i continue on with my
+11:02 - program let me show you what i mean
+11:04 - if i go down here and now i print
+11:07 - finished what this is doing is i'm
+11:09 - printing tim i'm awaiting
+11:11 - this function to finish running that's
+11:13 - really what this means it means execute
+11:15 - this code routine
+11:16 - and then i'm printing finished so if i
+11:18 - do this we're gonna get tim
+11:20 - text we're gonna wait one second because
+11:22 - we're sleeping we're awaiting this
+11:23 - operation happening here and then we're
+11:25 - printing finished
+11:27 - now remember what i told you though is
+11:28 - that the whole point of asynchronous
+11:30 - programming
+11:30 - is that if this function isn't really
+11:32 - doing anything if it's just waiting for
+11:34 - some operation
+11:35 - ideally we should be able to run
+11:37 - something else right we should be able
+11:38 - to have our code do something else
+11:40 - and that is what i'm going to show you
+11:41 - how we can do right now
+11:43 - so just to backtrack a little bit in
+11:44 - this example right here
+11:46 - we printed tim we awaited something it
+11:48 - ran and then we printed something else
+11:51 - now ideally when this function is
+11:53 - sleeping when it's waiting for something
+11:55 - to happen
+11:56 - we actually want to be able to run this
+11:58 - next line of code
+12:00 - i don't want this line of code right
+12:01 - here to be quote unquote blocked
+12:03 - by this line here i want it to be able
+12:06 - to run
+12:06 - when this isn't doing anything so how do
+12:09 - we get that to work
+12:10 - well this is where we create something
+12:11 - called a task now to create a task
+12:14 - what you do is you remove this away
+12:15 - keyword right here and i just need to
+12:17 - look at my cheat sheet i'm going to say
+12:18 - task is equal to
+12:20 - and then async.io dot create underscore
+12:23 - task
+12:24 - and then you put the function or the
+12:25 - code routine that you want to run
+12:27 - so when i do this when i create this
+12:29 - task really what i'm telling python to
+12:31 - do or i'm telling async.io to do
+12:33 - whatever
+12:34 - is to start executing this as soon as it
+12:36 - possibly can
+12:37 - and then to allow other code to run well
+12:40 - this task is kind of stalling well this
+12:42 - task is not running itself so this task
+12:44 - has a point in time where it's sleeping
+12:46 - for one second no operations are going
+12:48 - on
+12:48 - so while that's happening i should be
+12:50 - able to do something inside of this main
+12:51 - function
+12:52 - now let's just have a look at what
+12:53 - happens when i run this so when i run
+12:55 - this code
+12:56 - i get tim i get finish and then i get
+12:57 - text now it's interesting
+12:59 - right that why this here ran
+13:03 - after this finished print statement i
+13:05 - created this task right which tells
+13:07 - python hey
+13:08 - start running this as soon as you can
+13:09 - but finished this print statement
+13:11 - executed before this i guess text
+13:14 - statement was printed out
+13:16 - the reason for that is that when i
+13:17 - create this task
+13:19 - this main function is still running
+13:22 - although
+13:22 - i'm telling the program hey i want to
+13:24 - run this task here we're still waiting
+13:26 - for this main function to run so the
+13:28 - reason that this is the case is because
+13:30 - when i create this task
+13:32 - i'm telling python hey i want to run
+13:34 - this task but he cannot run this task
+13:37 - until the execution of whatever function
+13:38 - or whatever thing it's currently doing
+13:40 - is done or until whatever it's doing
+13:43 - takes a break and stops
+13:44 - you have to understand with async io
+13:46 - only one thing can happen at the exact
+13:48 - same time it's just when something is
+13:50 - not doing something
+13:51 - execution can be paused and kind of
+13:53 - given back to another function
+13:55 - so if i wanted this task to run or i
+13:58 - wanted to wait for this task to finish
+14:00 - before i run our rand finished what i
+14:02 - would have to do is await it
+14:04 - so i can say await task and what this
+14:07 - now does
+14:07 - is it says all right wait until this
+14:10 - task is finished that's what this line
+14:12 - right here does that's what it says wait
+14:13 - for this to finish
+14:14 - and only once this task is finished move
+14:17 - on to the next line this line of code
+14:19 - here
+14:20 - will block us from moving any further in
+14:21 - the program it's waiting for this task
+14:23 - to be finished
+14:24 - so if i do this we get tim we get text
+14:26 - we wait a little bit and then we get
+14:27 - finished because we awaited
+14:28 - the task but when i removed that again
+14:31 - you saw that we just ran
+14:32 - all of the code immediate right so this
+14:34 - is kind of the benefit of async io
+14:37 - now what's interesting here is that if i
+14:39 - decide to take a delay or i decide to
+14:41 - add some sleep here into this main
+14:43 - function you're going to see how this
+14:44 - task kind of behaves
+14:46 - so if i go now here and i say async
+14:48 - io.sleep and i sleep for let's do two
+14:50 - seconds so we can actually really see
+14:51 - the difference here
+14:52 - you're going to see what happens is that
+14:54 - as soon as we hit this word right here
+14:56 - we hit this line
+14:57 - this task will actually start executing
+14:59 - so let's watch this
+15:00 - we're going to say async io dot sleep
+15:02 - notice we print out text
+15:04 - and then we print out finished so
+15:05 - because i created this task
+15:07 - i'm saying okay i want to run this as
+15:09 - soon as i possibly can now inside of
+15:11 - this function
+15:12 - here which is currently running it sees
+15:14 - in a wait we're awaiting
+15:15 - something happening in this case we're
+15:17 - awaiting uh just asleep which means
+15:19 - we're going to delay the program for two
+15:20 - seconds
+15:21 - so as soon as we see this delay we say
+15:23 - okay we're going to
+15:24 - pause the execution of this function and
+15:26 - we're going to now allow this task that
+15:28 - wants to run
+15:29 - to start running because if this
+15:30 - function is sleeping well there's no
+15:32 - point in having the processor just
+15:33 - sitting there doing nothing
+15:34 - so let's allow our task to run and so
+15:37 - what happens is this task now runs right
+15:40 - but now let's see what happens if i make
+15:41 - this sleep 0.5 seconds
+15:44 - so if i say task equals async io dot
+15:46 - create task
+15:47 - foo text and then i say wait async io
+15:49 - dot sleep
+15:50 - 0.5 and then i print finished and then i
+15:53 - go async.io and let's actually make this
+15:55 - sleep
+15:55 - 10 seconds just take a guess or kind of
+15:58 - you'll see what happens here i'm going
+15:59 - to explain it but let's just look at
+16:00 - this
+16:01 - so say tim text and then finished now
+16:04 - notice right
+16:05 - that really what's happening here is
+16:06 - we're printing tim we have this task
+16:08 - since we're pausing here we're going to
+16:10 - allow this task to start running
+16:12 - and then inside of this task we're
+16:14 - waiting for 10 seconds
+16:15 - so if we had to wait for this task to
+16:17 - completely be finished running before we
+16:19 - went back to this main function
+16:20 - we would have waited 10 seconds but
+16:22 - since we saw this awaiting here
+16:24 - what happened was now this task gives
+16:27 - the executioner kind of gives the
+16:29 - resource back
+16:30 - to our other function and now allows
+16:32 - this function to start running
+16:34 - so as soon as this sleep is done 0.5
+16:36 - seconds we can move on to this next
+16:38 - finished line we don't need to wait the
+16:40 - 10 seconds for this task right here to
+16:43 - be done
+16:43 - that's kind of the basics or that's how
+16:45 - you're taking advantage of async io
+16:48 - when you create these tasks this allows
+16:50 - you to run things
+16:51 - concurrently which means that you don't
+16:53 - need to wait for something to be
+16:54 - completely done
+16:55 - before you can execute something else
+16:57 - okay so i've just cleared the screen and
+16:59 - kind of created a little sample program
+17:01 - here just to walk us through more in
+17:02 - depth how this actually works
+17:04 - so i have two programs or two functions
+17:06 - sorry two co-routines really
+17:07 - i have fetch data and print numbers
+17:10 - inside of fetch data i print start
+17:12 - fetching
+17:13 - i wait two seconds this is to simulate
+17:15 - like we sent a request to a server or
+17:16 - something
+17:17 - and it took maybe two seconds to get a
+17:18 - response we then print done fetching
+17:21 - then we returned some actual data we
+17:22 - returned data and then colon one this is
+17:24 - just
+17:24 - to simulate that we got some json
+17:26 - response or something we then have
+17:28 - uh print numbers inside of print numbers
+17:30 - what we're doing is we're just printing
+17:32 - the numbers from zero to nine
+17:33 - and then we are waiting 0.25 seconds
+17:35 - every single time we print
+17:37 - a number so maybe this could be
+17:39 - something like a request coming to our
+17:41 - website maybe every 0.25 seconds some
+17:43 - request is coming in
+17:45 - and then you know we're fetching data
+17:46 - that takes us two seconds
+17:48 - so what i want to show you here is how
+17:50 - we would run both of these at the same
+17:52 - time and then i'll compare that to kind
+17:54 - of the synchronous version
+17:55 - so i'm going to create two tasks here
+17:57 - i'm going to say task 1 is equal to
+17:59 - async io dot create underscore task
+18:03 - i'm going to create the task of and this
+18:05 - is going to be fetch
+18:06 - data then i'm going to say task 2 is
+18:09 - equal to async.io
+18:11 - dots sorry not sleep create task
+18:15 - and we'll create the task of and this
+18:17 - can be
+18:18 - print underscore numbers now what i want
+18:21 - to do
+18:22 - is i want to actually get the value from
+18:24 - here right from
+18:25 - fetch data so ideally task 1
+18:29 - really should hold this data right
+18:31 - because well if this is returning
+18:32 - something to me and i've created a task
+18:34 - how do i actually get this returned
+18:36 - value well this is where there's
+18:38 - something called a future
+18:39 - so when you create a task and the
+18:41 - co-routine that you've defined
+18:42 - returns a value this creates a future
+18:45 - now a future is like a promise in
+18:47 - javascript if you've seen that before
+18:49 - all this means is that this is kind of a
+18:51 - placeholder for a value that will exist
+18:54 - in the future so right now when i start
+18:56 - running this task
+18:57 - i don't yet have my return statement
+18:58 - right i don't this code routine is not
+19:00 - finished executing
+19:01 - uh it may be paused in the middle i
+19:03 - don't know what's going on with the code
+19:04 - routine all i know is that i don't
+19:06 - immediately have
+19:07 - this data i can't immediately return
+19:09 - this information and so before i can
+19:11 - access this information i need to make
+19:12 - sure that this task is
+19:13 - finished so if you want to actually get
+19:16 - the value returned from a co-routine
+19:18 - you must await that co-routine or await
+19:21 - that task
+19:22 - so in this case what i'm going to say is
+19:24 - a wait
+19:25 - and then task one and specifically i'm
+19:28 - gonna say
+19:29 - value is equal to a weight task one so
+19:32 - what this will do is ensure that task
+19:34 - one is finished
+19:35 - and then assign any return value that it
+19:37 - had
+19:38 - to this variable value so we'll wait
+19:41 - until this task is completely done
+19:43 - that value will then be assigned to the
+19:44 - value variable if you don't do this if
+19:46 - you say value is equal to task 1
+19:48 - and then you print out value i'll show
+19:51 - you what actually
+19:52 - happens here so let's just run this and
+19:53 - let's see what we get
+19:55 - we get start fetching we get zero and
+19:57 - you can see here that the print
+19:58 - statement up here
+19:59 - said task pending name equals task two
+20:02 - fetch data running at some
+20:03 - location so when i printed this out that
+20:05 - was the very first print statement that
+20:07 - we had here
+20:08 - well nothing happened and actually now
+20:10 - that i'm looking at it too
+20:12 - we only printed one number and we didn't
+20:14 - even finish
+20:15 - doing all of the fetching right and the
+20:17 - reason why that's the case is because
+20:19 - our entry function here well after these
+20:21 - two tasks are scheduled
+20:22 - and then we do these two lines it's done
+20:24 - we're done executing this co-routine is
+20:26 - now finished and well
+20:28 - we're done and so we didn't wait for
+20:30 - these things to finish
+20:31 - and since we didn't wait for these tasks
+20:33 - to finish well we didn't get a value
+20:35 - and we didn't print all of these numbers
+20:37 - so if we want these tasks to finish or
+20:39 - we want to say get these values
+20:41 - we must await them so i say value equals
+20:43 - a weight
+20:44 - task 1 and then i print the value now
+20:46 - you're going to see what happens when i
+20:48 - run this code
+20:49 - we're going to print a bunch of values
+20:51 - and then as soon as we get that value
+20:52 - that we're looking for it says done
+20:54 - fetching
+20:54 - we ran that then we got the data and we
+20:56 - printed it out but notice we didn't
+20:58 - finish
+20:58 - printing all the numbers there was one
+21:00 - more number we had to print nine for us
+21:01 - to be finished with print
+21:02 - numbers the reason this was the case is
+21:05 - we waited for task one to finish
+21:07 - so we waited for these two seconds to be
+21:09 - done and then
+21:10 - as soon as they were done we just ended
+21:11 - the program so after this after we get
+21:14 - our value we can print that out that's
+21:15 - fine but we also need to wait
+21:17 - for our other task to finish so we need
+21:19 - to say await
+21:21 - task two and now if we run this code
+21:24 - you're gonna see
+21:24 - that we will print out in the same order
+21:27 - and then we will print out
+21:28 - nine we now have printed out nine
+21:29 - because we now awaited
+21:31 - task two to finish so hopefully this
+21:34 - makes it a little bit more clear gives
+21:35 - you like a decent example
+21:36 - but what's happening here is we start
+21:38 - task one we start task two
+21:41 - and then we see this await statement
+21:43 - when we see this await statement
+21:44 - this tells our program hey we got to
+21:46 - wait for task 1 to finish running before
+21:48 - we can move any further down in the
+21:49 - program
+21:50 - and so we wait for task 1 which is fetch
+21:52 - data to stop running
+21:54 - but in task 1 we delay right we delay
+21:57 - two seconds
+21:58 - so as soon as this task is delayed
+22:01 - this other task that is also a part of
+22:03 - our events loop
+22:04 - then is allowed to start running so it
+22:06 - starts running it delays for 0.25
+22:08 - seconds
+22:09 - when it delays it says okay can i give
+22:11 - execution back to any other tasks
+22:13 - it looks at the other tasks and they're
+22:15 - still delayed and it says
+22:16 - okay no i i can't give it back to them
+22:19 - so it keeps running
+22:20 - so that's why if you look at this time
+22:22 - increment right we only print oh i can't
+22:24 - i mean we can just run this one more
+22:26 - time we're only printing done fetching
+22:29 - at time
+22:29 - eight the reason that's happening at
+22:31 - time eight is because once our delay
+22:33 - gets to about two seconds
+22:34 - this now is done we can give the
+22:36 - execution back to this
+22:38 - function and then we can print out the
+22:39 - value you get our return value all of
+22:41 - that
+22:42 - so hopefully that's like a decent
+22:43 - example and that helps you understand a
+22:44 - little bit about what's happening here
+22:46 - but if we change this delay to 0.5
+22:48 - you're going to see now that we'll print
+22:49 - this much sooner
+22:51 - so let's do this and much sooner or not
+22:53 - in terms of like actual time
+22:54 - but in terms of in relation to the
+22:56 - numbers being printed out
+22:57 - so now notice that as soon as we get to
+22:59 - three we print on fetching
+23:01 - right because now since we're delaying
+23:03 - 0.5 seconds
+23:05 - as soon as we're at about that two
+23:06 - second delay mark and as soon as
+23:08 - this function can start executing again
+23:11 - it starts executing we give the
+23:12 - execution back
+23:13 - and then this function is now done right
+23:15 - so we you know passed this await here
+23:17 - and we now finish or we wait
+23:19 - for task two to finish and then we're
+23:21 - all good and we stop now one last thing
+23:23 - here is important to understand that
+23:24 - these
+23:25 - tasks they subclass something called a
+23:27 - future
+23:28 - now a future really just means that hey
+23:30 - there's a value that's going to be
+23:32 - returned or that could be returned
+23:34 - in the future that's why it's called a
+23:36 - future we may not have that value yet
+23:38 - so we need some kind of substitute so
+23:40 - that we know that a value is coming
+23:43 - and so that's why when i printed out
+23:44 - value before awaiting the task
+23:46 - you saw that it said this task is still
+23:48 - being completed it's not finished yet
+23:50 - and then as soon as it was finished i
+23:51 - was able to actually grab that value so
+23:53 - if you want the value from an
+23:54 - asynchronous function you must await it
+23:57 - and if you create a task you can await
+23:58 - the task to finish which is what we're
+24:00 - doing
+24:00 - right here whereas if i just await task
+24:03 - one so if i say
+24:04 - a way to fetch data now and i don't
+24:06 - create the task
+24:08 - this now is gonna wait for this to fully
+24:10 - finish before task two can start running
+24:12 - so let's run this and see it says start
+24:15 - fetching
+24:15 - we're gonna wait for it to end fetch uh
+24:17 - oops wait what's the issue name task one
+24:19 - not defined
+24:20 - uh oh it's because i didn't okay sorry
+24:22 - let me just remove these two lines here
+24:23 - and run this
+24:25 - okay so start fetching right done
+24:27 - fetching and then it starts running
+24:29 - task number two because we need to wait
+24:31 - it for this before we define this task
+24:33 - whereas if i now define task two
+24:36 - up here and i start running task two and
+24:38 - then i weight fetch data you can see
+24:40 - what happens so it says start fetching
+24:42 - then it will start running task two
+24:43 - finish the fetching and then we're all
+24:45 - good right
+24:46 - and then even down here uh actually
+24:49 - that's all i wanted to show there's
+24:50 - nothing more that i can go through there
+24:51 - okay so i think that's all i wanted to
+24:53 - go through with async io i apologize
+24:55 - if this video is kind of all over the
+24:57 - place hopefully i gave you enough
+24:58 - knowledge to start
+24:59 - understanding async io and actually
+25:01 - using it but understand you can only use
+25:02 - the await keyword inside of asynchronous
+25:05 - functions so inside of an actual code
+25:07 - routine
+25:08 - when you create this async function what
+25:10 - you're really doing is
+25:11 - wrapping another function with an
+25:13 - asynchronous version of it
+25:14 - that version is the co routine to
+25:17 - actually run the code routine you must
+25:18 - await it in some way or add it to
+25:21 - the event loop adding it to the event
+25:23 - loop can be done by creating a task this
+25:25 - allows you to run
+25:26 - different uh co routines what do you
+25:29 - call it concurrently
+25:30 - and to start your asynchronous program
+25:32 - you must create
+25:33 - an event loop that can be created by
+25:35 - using asyncio.run
+25:37 - and passing an entry point co-routine
+25:39 - which in this case
+25:40 - is the main function so hopefully that
+25:43 - was helpful if you guys enjoyed make
+25:44 - sure to leave a like
+25:45 - subscribe to the channel i will see you
+25:46 - in another youtube video
+
+Cleaned transcript:
+
+hello everybody and welcome to another youtube video so in today's video i'm going to be discussing asynchronous programming in python specifically what i'll be covering is the async and a weight keyword co routines futures and tasks and some basic features or functionality from the async io module in python now it's worth noting that this video is not designed for beginners you should have some basic programming knowledge in order to follow along especially in python and if you're using any version of python that's below 3.7 a lot of the stuff i'm showing you here will not apply so please make sure using python 3.7 version or above and with that said let's dive in after a quick word from our sponsor before we get started i need to thank the sponsor of this video which is alco expert algo expert is the best platform to use from preparing for your software engineering coding interviews and has the highest quality coding interview practice questions with over 140 practice questions detailed solutions in nine of the most popular programming languages a featurepacked browserbased coding environment extensive test suites and conceptual overviews and code walkthroughs for each and every problem algo expert is the best resource to use to ace your coding interviews algo expert also has a data structures crash course coding interview assessments and a mock interviews feature i can highly recommend algo expert as a former customer myself and now an official instructor on the platform get started using algo expert today by clicking the link in the description and using the code tech with tim for a discount on the platform so before we get into asynchronous programming i want to start by defining what synchronous programming is so synchronous programming really just means that everything that we write is happening sequentially so if i define some statement all right to find some functions sorry and i call this foo so define foo and maybe in here we just do a return statement then i call foo and then i say print and i print tim this print statement is not going to be run until this function foo is executed doesn't matter how long this function takes doesn't matter if this function's actually doing anything or not this function must finish executing before this statement is going to be run this is by definition synchronous programming we are doing things sequentially and i like to think about synchronous programming as in having a kind of performance based on the clock speed of our processor so when we're talking about a python program specifically we have one process and one thread running our code which is just standard if you don't know what that means don't worry about it that's just your regular python code running there well the speed at which this code is going to run is going to be dictated by your processor the state of the processor and how fast essentially it can actually run how quickly or how many operations it can do per second so if you have a fast processor your sequential synchronous code is going to run faster than a slower processor however when we go over to asynchronous programming things are a little bit different when we talk about asynchronous programming we don't necessarily need to do things sequentially and the reason for that is the following let's say this function foo here this function foo actually waits on something that's not related to our computer so it's waiting on say a network operation waiting on some file to upload or download or some user to uh input some information while that function is waiting other code is able to be ran so we don't need to do things sequentially we don't need to wait for foo to finish running before we can print tim we can say okay well foo's waiting for something else to happen our processor is free to do some operations so let's allow us to go run some other code and then when foo is done we'll come back to it later on and we'll kind of check on it or resume the execution of it now i understand this is maybe unclear and vague right now but you'll see the idea behind this when we actually start writing our asynchronous code so just understand that when we're talking about synchronous vs asynchronous programming asynchronous programming really means that we don't need to necessarily wait for something to be completely done before we run other parts of code and this is very beneficial especially if you're waiting for say a network operation like you're querying a database you're waiting for a response from some server that's not disallowing your computer from running you can now execute other operations then once that response actually comes in or once that event you're waiting for happens you can then handle it and do something with it so with that said let's dive in the first thing that i need to discuss here is something called co routines and the await and async keyword okay so as you can see here i've imported this module here it's called async io now this module is built into python you don't need to install it and you can import it right here if you're using a version of python that's high enough again i'm recommending 3.7 and above now the first thing that we need to do when we're creating an asynchronous program is we need to create what's known as a coroutine now a coroutine is simply kind of a wrapped version of a function that allows it to run asynchronously because you have to think about it in this way when we're writing code traditionally we're writing synchronous code to be able to write asynchronous code we obviously have to do things a little bit different we can't use the exact same code that we used when we were writing something synchronously and so to create a code routine what you do is you define a function so i'm going to say define main and inside of this function you do whatever you want so i can print say tim and then maybe i can sleep for a certain amount of time or whatever i'm just going to print him for now and then before this function definition you put the keyword async now what this tells python to do is essentially create a wrapper around this function so when you call this function what it's going to do is actually return to you a coroutine object and this coroutine object is just like a function and it can be executed and to execute a code routine you need to do what's known as await it you need to await its execution now you'll see what i mean in one second but let me just show you how we kind of work with code routines and what a curve routine is so right now if i call this main function you would expect that tim's going to be printed to the screen so let's go ahead and do that and notice we get this thing runtime warning coroutine main was never awaited now this is telling us that hey we can't run this function because what you've done is you haven't awaited the code routine and when you call this function well it actually returns to you a co routine it doesn't work like a regular vanilla python function would now let me show you what i mean here if i print the call to main you're going to see up here that actually gives me what's called a coroutine object it says well this is a coroutine object and it's main at and then whatever this memory location is so calling this function doesn't just execute its code it now gives me this kind of new function or new object and this new object is asynchronous and can be used in the asynchronous program so if we want this to actually run what we need to do is what's called awaited although you're going to see what happens when i do this so when i await main we actually get this issue and it says there's an await outside of the function now this is because to use the await keyword it must be inside of an asynchronous function now we'll talk more about that later i don't want to get too far ahead of myself but essentially what i'm trying to say here is that when you call a function that you've defined with async it doesn't work in the way that you would kind of imagine and intuitively see in regular python instead what this returns to use that coroutine object and that coroutine object now needs to be awaited for it to be able to run but you're seeing this error right here i put this a weight keyword which you've probably seen if you've looked at asynchronous programming before and well it's not running our code why isn't it running our code the reason it's not running our code is we haven't created what's known as the event loop now whenever we create an asynchronous program at least in python here we need to define something called an event loop where we need to at least start an event loop now an events loop is just kind of the lower level python thing that's allowing us to actually write asynchronous code it's handling all of the super complicated stuff that actually is behind this simple async syntax we see right here and we must start one in whatever thread we're running this asynchronous stuff in before our code can run if you're unfamiliar with reds don't worry about it just mention that in case someone uh you know knows what a thread is and that can be helpful anyways the whole point of me saying this is that we need to start our program so whatever asynchronous part of our program we want to run we need to start it with async io dot run so we say async.oh async io dot run sorry we then give a co routine and this co routine is going to be the entry point to our program again a co routine is any function that has the async before it so now when i do this you're going to see that tim runs no problem the reason that runs no problem is this is the code routine we told async io dot async i o to run it async io created what's known as an events loop it added this co routine to the event loop and then it ran it that's all you need to understand now you don't need to know too much about the event loop just know that really what this is doing is creating the event loop adding this onto it and that's what's allowing us to actually run this code so now let me show you how we can actually use the await keyword so i'm going to create another function here i'm going to say async define and let's just call this let's say foo now inside of here what i'm going to do is just print out some text and actually let's take some text here and we'll just print out the text and then i'm going to await a function i'm going to await something happening i'm going to say await and then this is async io dot sleep and i'm gonna sleep for one second now this await keyword right here this is what is required to run a co routine so async io.sleep one returns to me a co or something like a car routine i won't get into all of the details of that and in order to run a co routine it must be awaited you can't just do it like this the reason you can't do it like that is because you're not actually executing the car routine it's just creating the car routine you need to execute it with the await keyword so i use a weight and the reason i'm allowed to use a weight here is because i'm inside of an asynchronous function so this await keyword can only be inside of something that is defined with async if you don't have async like you saw previously when i did say a weight whatever it just doesn't work because you're not inside of an asynchronous part of your code so you put a weight here that then runs the co routine which means we are going to sleep we're going to pause the execution of this function for one second so what i'm going to do now is call this function foo from inside of my main function and again notice if i just put foo right here we're going to get this error and it's going to say oh missing one required okay let's put text in here first but if i do this it says runtime warning code routine foo was never awaited so now if i await this code routine then this actually works right you see we get tim we get text and then there was kind of a little delay and then the program finished because we were sleeping for one second so that is how you actually run asynchronous code routines now this doesn't seem entirely useful right because again this is kind of just like another synchronous program i'm awaiting some code to happen once it happens i continue on with my program let me show you what i mean if i go down here and now i print finished what this is doing is i'm printing tim i'm awaiting this function to finish running that's really what this means it means execute this code routine and then i'm printing finished so if i do this we're gonna get tim text we're gonna wait one second because we're sleeping we're awaiting this operation happening here and then we're printing finished now remember what i told you though is that the whole point of asynchronous programming is that if this function isn't really doing anything if it's just waiting for some operation ideally we should be able to run something else right we should be able to have our code do something else and that is what i'm going to show you how we can do right now so just to backtrack a little bit in this example right here we printed tim we awaited something it ran and then we printed something else now ideally when this function is sleeping when it's waiting for something to happen we actually want to be able to run this next line of code i don't want this line of code right here to be quote unquote blocked by this line here i want it to be able to run when this isn't doing anything so how do we get that to work well this is where we create something called a task now to create a task what you do is you remove this away keyword right here and i just need to look at my cheat sheet i'm going to say task is equal to and then async.io dot create underscore task and then you put the function or the code routine that you want to run so when i do this when i create this task really what i'm telling python to do or i'm telling async.io to do whatever is to start executing this as soon as it possibly can and then to allow other code to run well this task is kind of stalling well this task is not running itself so this task has a point in time where it's sleeping for one second no operations are going on so while that's happening i should be able to do something inside of this main function now let's just have a look at what happens when i run this so when i run this code i get tim i get finish and then i get text now it's interesting right that why this here ran after this finished print statement i created this task right which tells python hey start running this as soon as you can but finished this print statement executed before this i guess text statement was printed out the reason for that is that when i create this task this main function is still running although i'm telling the program hey i want to run this task here we're still waiting for this main function to run so the reason that this is the case is because when i create this task i'm telling python hey i want to run this task but he cannot run this task until the execution of whatever function or whatever thing it's currently doing is done or until whatever it's doing takes a break and stops you have to understand with async io only one thing can happen at the exact same time it's just when something is not doing something execution can be paused and kind of given back to another function so if i wanted this task to run or i wanted to wait for this task to finish before i run our rand finished what i would have to do is await it so i can say await task and what this now does is it says all right wait until this task is finished that's what this line right here does that's what it says wait for this to finish and only once this task is finished move on to the next line this line of code here will block us from moving any further in the program it's waiting for this task to be finished so if i do this we get tim we get text we wait a little bit and then we get finished because we awaited the task but when i removed that again you saw that we just ran all of the code immediate right so this is kind of the benefit of async io now what's interesting here is that if i decide to take a delay or i decide to add some sleep here into this main function you're going to see how this task kind of behaves so if i go now here and i say async io.sleep and i sleep for let's do two seconds so we can actually really see the difference here you're going to see what happens is that as soon as we hit this word right here we hit this line this task will actually start executing so let's watch this we're going to say async io dot sleep notice we print out text and then we print out finished so because i created this task i'm saying okay i want to run this as soon as i possibly can now inside of this function here which is currently running it sees in a wait we're awaiting something happening in this case we're awaiting uh just asleep which means we're going to delay the program for two seconds so as soon as we see this delay we say okay we're going to pause the execution of this function and we're going to now allow this task that wants to run to start running because if this function is sleeping well there's no point in having the processor just sitting there doing nothing so let's allow our task to run and so what happens is this task now runs right but now let's see what happens if i make this sleep 0.5 seconds so if i say task equals async io dot create task foo text and then i say wait async io dot sleep 0.5 and then i print finished and then i go async.io and let's actually make this sleep 10 seconds just take a guess or kind of you'll see what happens here i'm going to explain it but let's just look at this so say tim text and then finished now notice right that really what's happening here is we're printing tim we have this task since we're pausing here we're going to allow this task to start running and then inside of this task we're waiting for 10 seconds so if we had to wait for this task to completely be finished running before we went back to this main function we would have waited 10 seconds but since we saw this awaiting here what happened was now this task gives the executioner kind of gives the resource back to our other function and now allows this function to start running so as soon as this sleep is done 0.5 seconds we can move on to this next finished line we don't need to wait the 10 seconds for this task right here to be done that's kind of the basics or that's how you're taking advantage of async io when you create these tasks this allows you to run things concurrently which means that you don't need to wait for something to be completely done before you can execute something else okay so i've just cleared the screen and kind of created a little sample program here just to walk us through more in depth how this actually works so i have two programs or two functions sorry two coroutines really i have fetch data and print numbers inside of fetch data i print start fetching i wait two seconds this is to simulate like we sent a request to a server or something and it took maybe two seconds to get a response we then print done fetching then we returned some actual data we returned data and then colon one this is just to simulate that we got some json response or something we then have uh print numbers inside of print numbers what we're doing is we're just printing the numbers from zero to nine and then we are waiting 0.25 seconds every single time we print a number so maybe this could be something like a request coming to our website maybe every 0.25 seconds some request is coming in and then you know we're fetching data that takes us two seconds so what i want to show you here is how we would run both of these at the same time and then i'll compare that to kind of the synchronous version so i'm going to create two tasks here i'm going to say task 1 is equal to async io dot create underscore task i'm going to create the task of and this is going to be fetch data then i'm going to say task 2 is equal to async.io dots sorry not sleep create task and we'll create the task of and this can be print underscore numbers now what i want to do is i want to actually get the value from here right from fetch data so ideally task 1 really should hold this data right because well if this is returning something to me and i've created a task how do i actually get this returned value well this is where there's something called a future so when you create a task and the coroutine that you've defined returns a value this creates a future now a future is like a promise in javascript if you've seen that before all this means is that this is kind of a placeholder for a value that will exist in the future so right now when i start running this task i don't yet have my return statement right i don't this code routine is not finished executing uh it may be paused in the middle i don't know what's going on with the code routine all i know is that i don't immediately have this data i can't immediately return this information and so before i can access this information i need to make sure that this task is finished so if you want to actually get the value returned from a coroutine you must await that coroutine or await that task so in this case what i'm going to say is a wait and then task one and specifically i'm gonna say value is equal to a weight task one so what this will do is ensure that task one is finished and then assign any return value that it had to this variable value so we'll wait until this task is completely done that value will then be assigned to the value variable if you don't do this if you say value is equal to task 1 and then you print out value i'll show you what actually happens here so let's just run this and let's see what we get we get start fetching we get zero and you can see here that the print statement up here said task pending name equals task two fetch data running at some location so when i printed this out that was the very first print statement that we had here well nothing happened and actually now that i'm looking at it too we only printed one number and we didn't even finish doing all of the fetching right and the reason why that's the case is because our entry function here well after these two tasks are scheduled and then we do these two lines it's done we're done executing this coroutine is now finished and well we're done and so we didn't wait for these things to finish and since we didn't wait for these tasks to finish well we didn't get a value and we didn't print all of these numbers so if we want these tasks to finish or we want to say get these values we must await them so i say value equals a weight task 1 and then i print the value now you're going to see what happens when i run this code we're going to print a bunch of values and then as soon as we get that value that we're looking for it says done fetching we ran that then we got the data and we printed it out but notice we didn't finish printing all the numbers there was one more number we had to print nine for us to be finished with print numbers the reason this was the case is we waited for task one to finish so we waited for these two seconds to be done and then as soon as they were done we just ended the program so after this after we get our value we can print that out that's fine but we also need to wait for our other task to finish so we need to say await task two and now if we run this code you're gonna see that we will print out in the same order and then we will print out nine we now have printed out nine because we now awaited task two to finish so hopefully this makes it a little bit more clear gives you like a decent example but what's happening here is we start task one we start task two and then we see this await statement when we see this await statement this tells our program hey we got to wait for task 1 to finish running before we can move any further down in the program and so we wait for task 1 which is fetch data to stop running but in task 1 we delay right we delay two seconds so as soon as this task is delayed this other task that is also a part of our events loop then is allowed to start running so it starts running it delays for 0.25 seconds when it delays it says okay can i give execution back to any other tasks it looks at the other tasks and they're still delayed and it says okay no i i can't give it back to them so it keeps running so that's why if you look at this time increment right we only print oh i can't i mean we can just run this one more time we're only printing done fetching at time eight the reason that's happening at time eight is because once our delay gets to about two seconds this now is done we can give the execution back to this function and then we can print out the value you get our return value all of that so hopefully that's like a decent example and that helps you understand a little bit about what's happening here but if we change this delay to 0.5 you're going to see now that we'll print this much sooner so let's do this and much sooner or not in terms of like actual time but in terms of in relation to the numbers being printed out so now notice that as soon as we get to three we print on fetching right because now since we're delaying 0.5 seconds as soon as we're at about that two second delay mark and as soon as this function can start executing again it starts executing we give the execution back and then this function is now done right so we you know passed this await here and we now finish or we wait for task two to finish and then we're all good and we stop now one last thing here is important to understand that these tasks they subclass something called a future now a future really just means that hey there's a value that's going to be returned or that could be returned in the future that's why it's called a future we may not have that value yet so we need some kind of substitute so that we know that a value is coming and so that's why when i printed out value before awaiting the task you saw that it said this task is still being completed it's not finished yet and then as soon as it was finished i was able to actually grab that value so if you want the value from an asynchronous function you must await it and if you create a task you can await the task to finish which is what we're doing right here whereas if i just await task one so if i say a way to fetch data now and i don't create the task this now is gonna wait for this to fully finish before task two can start running so let's run this and see it says start fetching we're gonna wait for it to end fetch uh oops wait what's the issue name task one not defined uh oh it's because i didn't okay sorry let me just remove these two lines here and run this okay so start fetching right done fetching and then it starts running task number two because we need to wait it for this before we define this task whereas if i now define task two up here and i start running task two and then i weight fetch data you can see what happens so it says start fetching then it will start running task two finish the fetching and then we're all good right and then even down here uh actually that's all i wanted to show there's nothing more that i can go through there okay so i think that's all i wanted to go through with async io i apologize if this video is kind of all over the place hopefully i gave you enough knowledge to start understanding async io and actually using it but understand you can only use the await keyword inside of asynchronous functions so inside of an actual code routine when you create this async function what you're really doing is wrapping another function with an asynchronous version of it that version is the co routine to actually run the code routine you must await it in some way or add it to the event loop adding it to the event loop can be done by creating a task this allows you to run different uh co routines what do you call it concurrently and to start your asynchronous program you must create an event loop that can be created by using asyncio.run and passing an entry point coroutine which in this case is the main function so hopefully that was helpful if you guys enjoyed make sure to leave a like subscribe to the channel i will see you in another youtube video

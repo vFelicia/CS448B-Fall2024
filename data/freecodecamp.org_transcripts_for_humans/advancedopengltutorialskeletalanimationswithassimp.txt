@@ -1,0 +1,1952 @@
+With timestamps:
+
+00:00 - In this intermediate OpenGL course, it Ty 
+will teach you about skeletal animation using  
+00:05 - 3d models. Hi, my name is Italian, I'd like to 
+welcome you to a course on skeletal animation in  
+00:11 - OpenGL. If you have some experience with OpenGL, 
+and you want to learn how to load an enemy 3d  
+00:17 - model files such as FBX x, which is used in unity, 
+then this is the course for you. The course is  
+00:22 - composed of two main sections. In the first one, 
+we learn how to load models using the SNP library.  
+00:29 - And the second section is actually made up of 
+five parts, where we implement skeletal animation,  
+00:34 - step by step, I consider the material here to be 
+intermediate level. So you should be familiar with  
+00:40 - the common 3d transformations, setting up vertex 
+and index buffers and writing shaders to do basic  
+00:46 - lighting. If you need some ramp up on these 
+topics, you will find beginner level tutorials  
+00:51 - on my YouTube channel and on my website, as well 
+as resources by other creators as well, of course,  
+00:58 - you'll find links in the video description below 
+the programming language of the course in C++.  
+01:03 - So you should be familiar with it. But don't 
+worry, you don't need to be a C++ expert. I'm  
+01:08 - using very basic stuff such as glasses, and no 
+fancy stuff from C++ 20, or anything like that.  
+01:14 - In terms of operating system. I'm running Linux 
+as my main development to us. But you can also use  
+01:20 - Windows Of course, you'll find all the sources in 
+GitHub, and I'll include Visual Studio solutions  
+01:25 - as well. So without further ado, let's get into 
+it. Welcome back to jail live, I guess it's quite  
+01:32 - clear that there is a limit to the complexity 
+of a manually created model. The pyramid is  
+01:36 - okay. And cube is also okay. But when it comes 
+to modeling something from the physical world,  
+01:42 - you need some help there. That's why we 
+have software like blender, Maya, 3ds,  
+01:46 - Max, and many many other tools that allow you to 
+create models in a sophisticated 3d environment.  
+01:53 - With lots of supporting tools that help the 
+modeling artists create the amazing 3d worlds  
+01:58 - and objects that we are used to in modern 
+games. The modeling software takes care of  
+02:03 - calculating the position texture coordinates and 
+any other vertex attributes that you may need.  
+02:08 - It also groups the vertices into triangles and 
+manages the corresponding indices. And finally,  
+02:14 - the modeling software saves all this data to file 
+so you'll be able to load the model in your game  
+02:19 - or application and manipulate it using OpenGL or 
+any other 3d API. It will probably not surprise  
+02:26 - you that since there are many 3d modelers, we 
+also have lots of formats for the model files.  
+02:32 - Choose a partial list. So if you want to load 
+these model files into your game, you can either  
+02:36 - write a custom loader yourself or use an existing 
+library for that. If you like writing everything  
+02:42 - from scratch, then you're welcome to write such 
+a parser on your own. But my recommendation is to  
+02:47 - go with an existing solution because it will save 
+you a lot of time. In this video, we're going to  
+02:53 - use the open asset import library or SMP, which 
+is a free and open source library that is very  
+02:59 - easy to use and supports many file formats. SMP 
+takes care of parsing the model file, which by  
+03:06 - the way can be text or binary, and loads it into 
+its own native data structure in memory. What we  
+03:13 - need to do is to use this data structure in order 
+to populate OpenGL vertex and index buffers. Load  
+03:19 - any textures that may also be present and 
+set up the layout of the vertex attributes.  
+03:26 - Let's start by installing SMP and we have several 
+options here. Depending on the operating system.  
+03:32 - I'll include the instructions for everything that 
+you are going to see in the video description.  
+03:37 - If you're on Linux Ubuntu, you can simply 
+execute the following command to install SMP.  
+03:44 - If you want to build SMP yourself, 
+you'll need to clone the following repo.  
+03:50 - CD into the new directory and execute C make 
+space.if You don't have CMake installed you can  
+03:57 - easily install it using sudo apt install Simic. At 
+this point, you may run into various difficulties  
+04:04 - mostly due to missing packages. Let me know of 
+any issues in the comments and I'll try to help  
+04:09 - as much as I can. You can also use the support 
+forum on the GitHub page. If CMA completed  
+04:15 - successfully you can execute make and then 
+sudo make install to complete the installation.  
+04:22 - Now you need to integrate SMP into your build 
+process. As you probably know, I'm using  
+04:27 - simple bash scripts to build my sources. In these 
+scripts, I'm using package config to get the build  
+04:33 - and link parameters. So all I need to do is to 
+add a sign p as a parameter to the command package  
+04:40 - config dash dash c flags to get the include 
+directory and package config dash dash libs to get  
+04:47 - the link command. The results of the two commands 
+are provided as parameters to g plus plus below.  
+04:55 - Package config is very handy because its behavior 
+is tailored to the distribution that it is running  
+05:01 - on, which makes it very flexible. On Windows, 
+you also have two options, you can use the  
+05:07 - binary is provided with my source repo or you 
+can build the source yourself. Unfortunately,  
+05:13 - it seems that prebuilt binaries for windows 
+are no longer available from the SMP website.  
+05:18 - Okay, so if you want to use the binaries that I've 
+created, you can go to the old jail dev directory,  
+05:24 - go to windows down here. And in the lib directory, 
+you will find that this file is sent PVC 142 Empty  
+05:31 - dot lib, that's the library that you need to link 
+against its release built of SMP and you also need  
+05:41 - the DLL for runtime, which is in this directory 
+DLL. It's the same file just with the extension  
+05:48 - DLL, okay. And you will also need all the headers 
+that we have here at old jail dev slash include,  
+05:56 - we have SNMP. And that's all the headers of this 
+library checked in right here. That's the latest  
+06:02 - version at this time. Now, if you want to build 
+the sources yourself, you need to check them  
+06:08 - out using gate. I'm using Tor to his gate. And 
+I've explained how to install it in a previous  
+06:14 - tutorial, the one about Windows support, so 
+you can find it there. So what you need to do  
+06:19 - is right click in some directory and then get 
+clone. And here's the address of the website,  
+06:26 - which by default will go to this SNP directory. 
+Now I don't need to press OK, because I already  
+06:33 - got it checked out right here. So let's go 
+inside. And here you can shift right click  
+06:40 - and go to Open PowerShell window here. And you 
+will also need C make installed just type C make  
+06:50 - C make lists dot txt and run it and it will 
+generate the Visual Studio solution file  
+07:01 - which we can find right here SMP 
+dot SLN. So let's open this one.  
+07:06 - And here it can select whether you want 
+the debug or the release version. As they  
+07:13 - said what is checked into the old jail 
+dev source repo is the release version  
+07:17 - and make sure that you're using x 64. And then you 
+just need to do build and rebuild solution okay.  
+07:29 - Okay, the build is complete. So we can 
+go back to SMP slash lib. And the Select  
+07:35 - debug or release whatever you use to build in 
+this case, release. So we have this file here,  
+07:43 - which is exactly the one with which is checked 
+into the origin of source repo and also  
+07:49 - in slash bin, we have the DLL, okay. Okay, now 
+go to your project. Right click it properties.  
+08:02 - Let's go to linker and input. And here in the 
+additional dependencies, we have the s&p lib file,  
+08:10 - you will also need to make sure that in C++, 
+general you will have the include directory here  
+08:17 - as the additional Include Directories 
+now, I've already got this directory from  
+08:22 - from all the previous project, which is going 
+up three directories and include from the  
+08:28 - location of the project. Okay, so if we go to 
+the location of the Visual Studio project file,  
+08:34 - in our jail there have windows or jail dev vs 
+2019. We have the project right here. So we're  
+08:42 - going up three directories. And here we've 
+got include, and here's the SMP headers. So  
+08:51 - when we include the headers, we can simply write 
+this directive right here because this references,  
+08:58 - the include directory that we just saw. And we 
+also need to make sure that the DLL file can  
+09:03 - be accessed during runtime. So let's go to the 
+project properties again, and go to debugging.  
+09:09 - And here we can see that I've added the location 
+of the DLL directory right here. So now we can  
+09:15 - run it. Now let's dive into the code and I will 
+explain the structure of a cmp as we go along.  
+09:21 - Okay, so first, I created a class called Basic 
+mesh that represents a model loaded using a cmp.  
+09:27 - This class is declared in OpenGL dev 
+basic metadata h in the include directory.  
+09:32 - We have several public and private functions 
+here, as well as a few private variables.  
+09:38 - We'll revisit these items as we go through the 
+class. Now let's go to the implementation of  
+09:42 - this class in ojio, def basic mesh dot CPP 
+in the common directory. The first function  
+09:48 - I'd like to review is load mesh, which is 
+a public function that takes the file name  
+09:52 - as a parameter and serves as the top level 
+entry point for the entire loading process.  
+09:58 - The first function call inside this function 
+is to declare a private function. This function  
+10:02 - clears all the internal data structure of the 
+class, allowing you to reuse the same class  
+10:07 - object for loading a different model. We're not 
+going to use this capability in this tutorial,  
+10:12 - so I'll just keep it next regenerate and bind 
+the vertex array object for the current model.  
+10:18 - We've covered videos in the previous tutorial, so 
+make sure you watch that for more details. Next,  
+10:23 - we generate six OpenGL buffer objects and buffers 
+is a private array of six unsigned integers.  
+10:30 - In this tutorial, we're going to see a 
+different method of storing vertices.  
+10:35 - What we've been using so far is a method known 
+as array of structures or aos. The core element  
+10:41 - in this method is a structure that contains 
+vertex attributes such as position, texture  
+10:46 - coordinates, normals, etc. For storing multiple 
+vertices, we have an array of this structure,  
+10:52 - hence the name array of structures. This arrays 
+loaded into the open GL buffer, which means that  
+10:57 - the attributes are interleaved, they're in the 
+exact same way as in CPU memory. The second method  
+11:03 - and the one that I'm going to demonstrate today 
+is a structure of arrays or SOA. Here we have a  
+11:09 - separate array for each of the attributes. 
+Okay, so we have an array of positions,  
+11:13 - array of texture, coordinates, and so on, we can 
+group these arrays together in a single structure.  
+11:19 - As the name structure of arrays, the arrays must 
+all be of the same length. So in order to access  
+11:26 - all the attributes of a single vertex, we need to 
+use the same index to access each of the arrays.  
+11:31 - OpenGL allows us to use both methods to build 
+up our 3d objects. We use an enum to access  
+11:38 - each buffer by its name or other than an obscure 
+number. So the first buffer is the index buffer,  
+11:44 - we have the position at index one texture 
+coordinates at index two, and normal let index  
+11:49 - three normal vectors are required for lighting 
+effects. For now, this is just a placeholder. So  
+11:55 - if you're writing this code yourself, you can drop 
+it. The last two buffers W, VP, math VB and World  
+12:02 - Map VB are also placeholders. They will be used 
+in the future when we get to instancing. Back to  
+12:09 - load mesh, we can see that we're initializing all 
+the buffers in a single call to GL Gen buffers.  
+12:15 - By the way, array size in elements is a handy 
+macro for calculating the number of elements  
+12:20 - in an array by dividing the size of the 
+array by the size of the first element,  
+12:25 - which must always exists. In order to access 
+the services of SMP, we define an object of  
+12:31 - the importer class which is defined in the SMP 
+namespace. To get this compiled, we must include  
+12:37 - three files from the SMP include directory, 
+importer, dot HPP, scene dot h and postprocess  
+12:45 - dot h, we actually load the model we call importer 
+dot read file passing in the model file name,  
+12:50 - and the list of SNP flags which is wrapped inside 
+this SNP load flags macro. These flags allow us to  
+12:58 - modify the behavior of SMP so let's quickly go 
+over them. First, we have to triangulate flag.  
+13:04 - Many modeling tools allow you to build models 
+using polygons with more than three vertices,  
+13:09 - we must use triangles. So this flag tells this MP 
+to split these polygons into triangles. Jen smooth  
+13:17 - normals is for lighting. So let's keep it for now. 
+Clip UV flips the texture coordinates along the V  
+13:23 - or the y axis of the texture. This is something 
+that you may need to play with to make this work  
+13:29 - with your models because some modelers will allow 
+you to control this when exporting the model.  
+13:34 - And finally, we want the same pay to 
+join identical vertices and adjust the  
+13:39 - index buffer accordingly. This will save 
+us some memory. There are many more flags  
+13:43 - available in the SNP postprocess dot h header 
+and you can find the full documentation online.  
+13:49 - This is actually one of the reasons why SNP is so 
+flexible. If read file returns now then the call  
+13:55 - has failed and we print the error using important 
+dot get error string. Else we get back a pointer  
+14:01 - to an object of the AI scene class. And we call 
+init from scene to continue the initialization.  
+14:07 - A scene is the top level data structure in the 
+memory representation of the model that SMP  
+14:13 - created. As usual before we leave this function, 
+we unbind our V O from the OpenGL state. And let's  
+14:20 - continue with the init from scene which is defined 
+below this function. The way that the AI scene is  
+14:26 - structured is that it matches the behavior of most 
+modelers that enable you to split up the model  
+14:32 - into subcomponents. This allows you to apply some 
+transformation on one component without affecting  
+14:38 - the others. So you can have a head and arm a 
+sword and whatever. If the model is split into  
+14:44 - sub components SMP creates an AI mesh structure 
+for each component. This AI mesh contains all the  
+14:52 - vertices and indices of that component. The number 
+of AI mesh structures is given in the M num meshes  
+14:58 - variable The AI scene class, we reserve a matching 
+number of elements in our private variable meshes,  
+15:05 - which is a vector of basic mesh entry. Basic mesh 
+entry contains a few variables that we will need  
+15:11 - to maintain for each AI mesh, such as the number 
+of vertices, base vertex, etc. We're going to see  
+15:17 - these soon. A scene can also contain textures, 
+and SAP reps one or more textures in something  
+15:24 - which it calls materials. These are stored in an 
+array of AI material structures. And the size of  
+15:30 - this array is given in m&m materials. We have a 
+matching vector of pointers to our texture class,  
+15:37 - we reserve space there accordingly. Now, 
+here's the plan, we're going to stack up all  
+15:42 - the vertices and indices from all the AI mesh 
+structures in the buffers we've just created,  
+15:48 - according to their type, index, position, 
+texture, coordinates, etc. However,  
+15:53 - each AI mesh may use a different texture, but we 
+can switch textures in the middle of a draw call.  
+15:59 - This means that we need to launch a draw call 
+for each a mesh separately, and this will give  
+16:04 - us the opportunity to switch textures as needed 
+between draw calls. This also means that we cannot  
+16:10 - use GL draw elements. Because this function only 
+draws vertices from the beginning of the buffer,  
+16:16 - we need a more sophisticated function that allows 
+us to draw from different offsets within the  
+16:21 - buffer. And OpenGL provides us with such a draw 
+function. Okay, so in order to actually allocate  
+16:27 - space in our index and vertex buffers, we need 
+to know how many vertices and indices there are  
+16:33 - in the entire scene object. Unfortunately, 
+these are not readily available to us,  
+16:38 - so we need to actually count them. We do this in 
+the private function count vertices and indices,  
+16:44 - which also updates the meshes array, we just need 
+to loop over the elements in the meshes array that  
+16:49 - we've just resized. For each element, we copied 
+the material index from the corresponding a mesh,  
+16:55 - we calculate the number of indices in the current 
+mesh by multiplying the number of faces by three,  
+17:02 - since after triangulation, all the polygons are 
+now triangles, the base vertex is the index of  
+17:08 - the first vertex of the current mesh in our global 
+buffers. To calculate it, we increment number this  
+17:14 - is by the number of vertices in the AI mesh, we 
+calculate the base index in a similar fashion by  
+17:21 - incrementing num indices by the number of indices 
+of the current mesh that we've just calculated. So  
+17:27 - for example, if we have three meshes with 100 250 
+vertices, then the first mesh is at offset zero,  
+17:35 - the second mesh is at offset 100. And the last 
+one is at offset 300. When we exit the function,  
+17:42 - both num vertices and indices contain the totals 
+for each type. When we're back to Unit from scene,  
+17:48 - we call reserved space with the two counters. 
+This function allocates space in four vectors  
+17:54 - for the positions, texture, coordinates, normals, 
+and indices. These vectors are private members of  
+18:00 - the class, they will be used to accumulate all 
+the further says from the AI scene structure.  
+18:05 - So we can load each OpenGL buffer with a single 
+call to GL buffer data. Back to load mesh,  
+18:11 - we call it all meshes, which simply reverses 
+all the SMP mesh structures and calls in each  
+18:18 - single match for each one. In this function, we 
+actually populate the vectors that we just saw  
+18:23 - with vertex and index data. We do this by going 
+over all the vertices in the a mesh and extracting  
+18:29 - the position normal and textural coordinates 
+from their respective location in the AI mesh.  
+18:35 - Notice that these items are represented by SMP 
+API vector 3d, which is very similar to our vector  
+18:42 - class. In the case of the texture coordinate, 
+we must also check that it exists in if not use  
+18:48 - the zero vector instead, we can now populate our 
+vectors with this data. Also, notice that in the  
+18:54 - case of the texture coordinates, we only use the X 
+and Y out of the 3d vector populating the indices  
+19:00 - is very similar. The mesh contains an array of 
+triangles called M faces. Each AI face structure  
+19:08 - contains the three indices, which we need to push 
+into the indices vector. The next function that  
+19:13 - you need from sin calls is you need materials. 
+This is where we allocate GL textures for the  
+19:19 - images in the model. The image files are stored 
+in the same directory as the main model file. So  
+19:24 - first, we need to extract the directory 
+of the model file. This is done by simple  
+19:29 - parsing of the last slash character. We can now 
+to reverse the Materials array in the SMP scene.  
+19:36 - Material is basically a container for multiple 
+textures, and it may contain diffuse specular  
+19:41 - and ambient textures, as well as stuff like a 
+height map, normal map and etc. These are required  
+19:48 - for more advanced stuff like lighting, for basic 
+texturing we just need the diffuse texture. So we  
+19:54 - check whether it exists by calling get texture on 
+the material with the AI texture type. underscore  
+20:00 - diffuse enum. In the first parameter, the second 
+parameter is zero because we only want the first  
+20:06 - texture. The third parameter is an address of an 
+AI string variable, where the path of the texture  
+20:12 - will be returned if it exists. Of course, right 
+now we don't need the rest of the parameters. So  
+20:18 - we have nulls. There. If the call was successful, 
+we construct the full path of the texture file.  
+20:24 - Inside the model, the path of the texture is 
+relative to the location of the model file. Now  
+20:29 - we can create our texture object as usual and load 
+it. Let's go back to knit from scene for the last  
+20:35 - time. And the final call here is to the private 
+function populate buffers. And this is where we  
+20:41 - prepare stuff for using SOA. We start by binding 
+the position buffer to the GL array buffer target  
+20:48 - to make it current, we load the data from the 
+vector into the buffer by calling GL buffer data.  
+20:54 - The number of bytes is obtained by multiplying 
+the size of the first element by the number of  
+20:59 - elements in the vector. The base address is the 
+address of the first element and we use GL static  
+21:04 - draw, because we don't plan on updating the buffer 
+again. Next, we enable the vertex attribute for  
+21:10 - the position. At the top of this file, we 
+have macros for the location of the three  
+21:15 - vertex attributes. It's not the most robust design 
+because we must keep this in sync with the shader,  
+21:21 - but it will do for now. Next, we configure the 
+layout of the position buffer by calling GL vertex  
+21:27 - three pointer. Again, we use the macro for the 
+index of the attribute, we have three floats here,  
+21:34 - JL falls for no need to normalize, and the 
+last two parameters are now zero. Previously,  
+21:40 - we had to put here the size of the entire vertex 
+structure, and the offset of the current attribute  
+21:46 - inside the vertex. Since the positions are packed 
+one after the other, we can now put zeros here  
+21:52 - because the driver already knows everything from 
+the three floats. We repeat the same process  
+21:58 - for the texture coordinates and the normals. And 
+every time we call GL vertex a three pointer, the  
+22:04 - drivers stores the address of the buffer, which is 
+currently bound to GL array buffer for the current  
+22:10 - attribute. This enables each attribute to come 
+from different buffer. Okay, so SOA structure of  
+22:17 - arrays. Finally, we populate the indices, just 
+remember to use GL element array buffer for the  
+22:23 - target here. Congratulations, we are done with 
+uploading the model. The only thing that we have  
+22:29 - left here is of course, the render function, we 
+start by binding the V of this model, this brings  
+22:35 - in the vertex layout that we've just created. 
+Next, we traverse our internal meshes array,  
+22:41 - we get the material index, and we check whether 
+we have a corresponding element in the texture  
+22:46 - array because there may be a material without a 
+diffuse texture. If there is a texture we bind it,  
+22:53 - color texture unit is simply a macro for GL 
+texture zero that I keep in OpenGL dev engine  
+22:59 - common dot h, I'm using this file in order to keep 
+the tutorials somewhat consistent. Now comes the  
+23:06 - interesting part. Instead of GL draw elements, we 
+use GL draw elements base vertex that allows us to  
+23:12 - draw sub regions of the vertex and index buffers. 
+The first parameter is gL triangles as usual.  
+23:19 - The second parameter is the number of indices 
+of the current mesh, which we've calculated  
+23:23 - when we loaded the model. Next is the data 
+type of the index unsigned int in our case,  
+23:30 - next is the offset to the first index of the 
+current mesh in the index buffer. So we multiply  
+23:36 - the base index of the current mesh by the size 
+of an unsigned int. In order to get the offset,  
+23:42 - we also need to cast it to void pointer. I 
+think this is due to some historical issue  
+23:47 - with this function. The last parameter is 
+the base vertex for the current draw call.  
+23:52 - You see, the original indices that we got from 
+SMP started at zero in each AI mesh structure,  
+23:59 - but we decided to stack up all the vertices in a 
+single buffer per attribute. This messes up the  
+24:05 - indexing, one solution would be to adjust each 
+index based on the starting position of the mesh  
+24:12 - in our single buffer. A more simple solution is 
+to use this last parameter here as a base Vertex.  
+24:19 - This number will be added to each index so that 
+it will match the offset inside our buffer.  
+24:26 - For example, let's say that we have two AI 
+meshes. The indices have both meshes started zero,  
+24:33 - but each mesh obviously refers to its own set of 
+vertices. we stack up the two vertex groups one  
+24:38 - after the other and let's say that the size of 
+the first group is 100. So the base vertex for  
+24:45 - the second group will be calculated as 100. When 
+we render the second group we will pass in 100  
+24:52 - in this last parameter, so that index zero will 
+become 100 index, one will become 101, and etc.  
+25:00 - So we have a sub set of indices that started some 
+offset inside the index buffer. And to each index,  
+25:07 - OpenGL will automatically add whatever we put as 
+the base vertex. All these elements were already  
+25:14 - calculated when loading the model. So they 
+are now ready when we get here. Okay, so we  
+25:20 - have a series of draw calls here. Each draw call 
+uses a subset of the index and vertex buffers.  
+25:26 - And before each draw call, we have an opportunity 
+to switch textures. Now let's see the changes in  
+25:32 - the main application code. In the tutorial 
+18 class, I got rid of all the videos,  
+25:37 - videos, and index buffer that they used to keep 
+around here as well as the world transform object.  
+25:43 - Instead, we just need a single pointer to 
+basic mesh. In the init method, we need to  
+25:49 - call the mesh with the path of the model file. 
+In the main render function, we perform all the  
+25:54 - transformations on the wall trans object that 
+we have in the basic mesh class. So if we have  
+26:00 - multiple meshes, it makes it simple to keep the 
+transformation of each mesh inside its own object.  
+26:10 - Also, instead of calling GL draw elements, 
+we just need to call the render function  
+26:15 - on the mesh object. This is basically all we 
+need to do here. Let's build and run this. Okay,  
+26:21 - so this looks like a spider. But there's obviously 
+something wrong here, right? The problem is that  
+26:28 - they haven't enabled the depth test. Without it, 
+the frame buffer works like a regular Canvas.  
+26:33 - So whatever color you use last, that's the 
+color that you're actually going to get  
+26:39 - on the final screen. With simple stuff 
+like the cube, we couldn't see the problem.  
+26:44 - But with more complex models, the problem is 
+evident. I discussed the depth buffer in the  
+26:48 - previous episode, so I won't repeat it here. By 
+enabling the depth test, we make sure that the  
+26:54 - closest pixel is rendered. Regardless the order 
+of rendering. We do this by calling GL enable  
+27:01 - with the GL depth this macro as a parameter, we 
+must also clear the depth buffer on every frame,  
+27:07 - else it will contain garbage data from the 
+previous frame. So in the main render function,  
+27:12 - we add the GL depth buffer bit with the bit mask 
+that we provide to the GL clear call. Okay, guys,  
+27:19 - you can now go ahead and try to load different 
+models that you find for free online, or that you  
+27:25 - create yourself if you know how, I can't guarantee 
+that this code is bulletproof and will work for  
+27:30 - every model, it probably still contains some bugs, 
+please let me know if you run into a problem.  
+27:41 - Welcome back to jail then. In this tutorial, we're 
+starting to take a look at skeletal animation  
+27:47 - and how to implement it in OpenGL skillfull. 
+animation or skinning is considered the standard  
+27:53 - way of animating almost any living creature. And 
+it can also be used to animate monsters, aliens,  
+28:00 - as well as various types of types of machines, 
+such as robots. Therefore, it is a core technique  
+28:06 - in game development. So over the course of the 
+next few tutorials, we're going to do a deep dive  
+28:11 - into it. Si MP, the library that we've been using 
+to load models has very good support for skeletal  
+28:18 - animation across several file types. So we will 
+take advantage of it. The way that I'm going to  
+28:23 - cover this subject is going to be very hands on 
+oriented. I'll provide an overview of the process  
+28:29 - and the technique. And then we'll basically jump 
+back and forth between the code and the theory.  
+28:36 - We'll understand some part of the algorithm and 
+then see how to implement it in C++ using OpenGL.  
+28:43 - And then back to theory and etc. I'm going to use 
+Blender as the modeling tool. So for simplicity,  
+28:50 - I'll just use the name blender. But of course, all 
+the other major modeling tools support skillful  
+28:57 - animation as well. Just to clarify, I'm not an 
+artist. But for the purpose of developing this  
+29:03 - mini series. I did spend some time studying 
+blender because I think that the familiarity  
+29:09 - with the tool where you create and animate the 
+model gives you better and better understanding  
+29:16 - of the developer part in this process. Now let's 
+take the human body. As an example. As you're  
+29:22 - probably aware, 70% of our body is water, which is 
+why we are so flexible, the bones are wrapped by  
+29:29 - flesh and the flesh is wrapped by the skin. 
+So basically, you can say that the skin is  
+29:35 - carried or held by the bones. Now this is not 
+going to be a lesson in anatomy. All I'm saying  
+29:43 - is that the idea behind skeletal animation is 
+pretty much borrowed from the real world. All  
+29:49 - the models that we've been using so far have 
+been simply the exterior representation of a  
+29:55 - real world object. Inside the object. There is 
+nothing so In the context of skeletal animation,  
+30:02 - we call the model itself the skin, which is 
+why this technique is also called skinning.  
+30:08 - The bones are the skeleton, which kind of 
+carries the skin like in the real world.  
+30:13 - But since we don't have any flesh in our 
+model between the skeleton and the skin,  
+30:18 - the replacement that blender provides is simply a 
+list of vertices that are affected by each bone.  
+30:26 - This means that when the bone is animated, or to 
+put it in a language, which is more common to us,  
+30:33 - when it is translated and rotated, the same 
+transformation which is applied to the bone  
+30:39 - must be applied on the vertices that are affected 
+by it. For example, when the bone of an arm is  
+30:45 - translated, and rotated, the part of the mash that 
+represents that arm is translated and rotated. To  
+30:52 - follow the movement and rotation of the bone. 
+Calculating the transformations that must be  
+30:57 - applied on the vertices due to the movement of 
+the bones is the major goal of this technique,  
+31:03 - it is important to understand that only the skin 
+gets rendered and not a skeleton. The job of the  
+31:09 - skeleton and the bones is simply to help us 
+define the range of movement that is available  
+31:14 - to the skin. For example, the angle between 
+the arm and the forearm can range between zero,  
+31:21 - quote unquote when the two limbs touch each other, 
+and then in the 180 degrees when the forearm is  
+31:28 - fully stretched. Beyond that the elbow will break. 
+Not nice, the processing blender of placing the  
+31:35 - virtual bones inside the skin, making them in 
+the proper length to fit the specific body part  
+31:42 - and connecting them together into a skeleton 
+is called rigging. Skinning is the process  
+31:48 - where you connect the vertices to the skeleton and 
+define the amount by which each vertex is affected  
+31:55 - by the bones. The last piece of the puzzle 
+is animating. And this is where you use the  
+32:00 - available controls placed during the reading phase 
+in order to create a set of keyframes that define  
+32:07 - the movement of the bones of the bones. Over time, 
+skeletal animation has two main characteristics  
+32:13 - that help us mimic the real world movement. First, 
+the skeleton defines the hierarchy of bones,  
+32:20 - most bones will have a parent. So when the 
+parent bone moves, the child bone follows this  
+32:27 - relationship is one way the child may move without 
+affecting the parent. Second, each vertex may be  
+32:34 - affected by more than one bone. This means that 
+when one or more bones move, the transformation  
+32:41 - of the vertices that are influenced by these 
+bones must somehow combine the transformations  
+32:48 - of each bone. Actually, if you have a model where 
+every vertex is fully controlled by a single bone,  
+32:56 - then that model is probably that of a robot or any 
+other type of machine. A car is a simple example,  
+33:03 - you can use skeletal animation to animate the 
+opening and closing of car doors. The door is  
+33:09 - connected to the car by some kind of metal joint. 
+But when the door opens, the only vertices that  
+33:15 - are moving belong to the door, the rest of the car 
+stays exactly where it is, this is definitely not  
+33:21 - the case with living creatures. Here we want the 
+model to deform in a way that will simulate deal  
+33:27 - assisity of the skin. This behavior is most 
+evident around the joints. Skillful animation  
+33:34 - allows us a high degree of flexibility in terms 
+of calculating the movement of each vertex  
+33:40 - based on all the balls that are affected. We do 
+this by assigning a weight to each combination  
+33:46 - of a bone and a vertex the way it is a fraction 
+between zero and one. And the sum of all weights  
+33:52 - per vertex should be one, we do the calculation as 
+a linear combination of the bone transformations  
+34:00 - and their weights. For example, if the weight 
+of two bones affecting one vertex is a half,  
+34:06 - it means that the vertex is equally influenced by 
+both bones and its movement will be the average  
+34:13 - of the movement of the two bones. If one way 
+it is point nine and the other is point one, it  
+34:19 - means that the vertex is probably much closer to 
+the first bone so it will go along with it. But  
+34:25 - there will still be some minor influence coming 
+in from the second bone that may pull it a bit  
+34:31 - towards a different direction. Blender provides 
+the artist with powerful tools to set the weights  
+34:38 - of the different bones. Most artists will probably 
+start with an automatic assignment of weights in  
+34:44 - this method, Blender calculates the weights based 
+on the distance between the vertex and each bone.  
+34:51 - The next step will be to review the result and 
+start fixing and adjusting and tuning the model  
+34:57 - using weight painting. Weight painting is a 
+feature in Blender where you increase or decrease  
+35:03 - the weights of vertices for the selected bone by 
+going over them with a special brush. Usually,  
+35:10 - the artist will develop the skin first and then 
+structure the skeleton inside it. It makes sense  
+35:17 - because the bones must match the dimension of 
+the body part that will actually get rendered.  
+35:22 - At this stage before the animation processes 
+started. The posture of the skin is called  
+35:28 - Bind Pose. This is very important because all the 
+underlying transformations and math will reference  
+35:36 - the Bind Pose as a starting position. There 
+are no restrictions in terms of how the model  
+35:41 - should look like in Bind Pose. But the common 
+practice is to keep the model in this kind of  
+35:47 - relaxed posture without too many bendings 
+in the area of the joints. If you search for  
+35:52 - skillful animation Bind Pose in Google Images, 
+you will find many examples of this posture  
+35:59 - for the human or semi human models, with the 
+arms kind of stretched to the sides and the  
+36:05 - legs are straight and relaxed. When you render 
+the model without applying any animation on it,  
+36:11 - you should get it in Bind Pose. Once rigging 
+and skinning have been completed, the model is  
+36:17 - ready for animation. Naturally, the same set of 
+bones can be used for multiple sets of animation.  
+36:24 - Think about all the possibilities the human body 
+provides in terms of movement and flexibility. All  
+36:30 - this is achieved with just 206 bones. Even with 
+a small subset of these bones in a human model,  
+36:38 - you can still implement many animations. Therefore 
+each animation set will simulate some kind of  
+36:44 - activities such as walking, running, fighting, 
+etc. An animation set is composed of a series of  
+36:52 - transformations that are applied on the skeleton 
+as the artist animates it. These transformations  
+36:58 - may include as usual scaling, rotation and 
+translation. In the case of humans in many  
+37:05 - other living creatures, we will only encounter 
+rotation and translation. But the technique itself  
+37:11 - can support animated scaling of bones as well. 
+The transformations will be provided at regular  
+37:18 - intervals according to some frame rate. For 
+example, a 10 second animation and 24 frames per  
+37:24 - second will include 240 sets of transformations, 
+these sets are usually very close. So if the  
+37:32 - actual frame rate in the game is higher than 
+the animation frame rate, we can interpolate  
+37:38 - between consecutive transformations and get the 
+final animation. Since these transformations  
+37:44 - represent the changes in the orientation of the 
+bones, we can apply them on the vertices that are  
+37:50 - influenced by these bones and basically animate 
+the model. Okay, this is enough theory for now.  
+37:56 - I've left out many details that we will need 
+for the full implementation. But at this stage,  
+38:02 - I'd like to get our hands dirty with some code. 
+Now skeletal animation is supported by various  
+38:07 - file types. And if you implement the loader, 
+for a specific file type, you will probably  
+38:12 - need your skeletal animation code to adhere 
+to the conventions of that file type. However,  
+38:18 - since we are using SNMP, we only need our code 
+to adhere to the conventions and specifics  
+38:25 - of this library. And by that, we'll be able to 
+support many file types. As I said, we're going to  
+38:30 - implement these techniques step by step in hands 
+on approach. So let's create a simple utility  
+38:36 - that will parse the data structures created by 
+SMP and extract the relevant parts from it later,  
+38:42 - we will incorporate this logic into our OpenGL 
+application. Now this utility is not required for  
+38:49 - the actual execution of the animation, but will 
+be very useful for debugging etc. So this utility  
+38:56 - is composed of a single file, which I call the CMP 
+sandbox cpp. And we've also got a build script in  
+39:03 - the same directory called the build SNP sandbox 
+to build it, and it is very simple. We have the  
+39:09 - build flags right here called CPP flags. And for 
+now, I've included only dash g gdb. Three in order  
+39:17 - to build it with debug information for debugging. 
+And we've also got the link flags called LD flags,  
+39:25 - which is a call to package config dash dash libs 
+SNP. I'm often using package config in my build  
+39:32 - scripts in order for my code to hopefully compile 
+on as many machines and systems as possible.  
+39:39 - Okay, so if you run this on the command line, 
+package config dash dash libs a cmp. In this case  
+39:47 - on my machine, he tells you that the link 
+command is dash l si MP and on other systems,  
+39:55 - it may generate a different command. Okay, 
+and the final build command is very simple,  
+40:01 - we call g plus plus the name of the CPP 
+file, the compiler flags, the link flags  
+40:08 - dash O and the name of the binary. Okay, 
+so now let's take a look at the CPP file.  
+40:13 - And by the way, I have a video on loading models 
+using SNP so definitely check that out. If you  
+40:19 - want more details. I'll go over the major details 
+in this video. Okay, so first we need to include  
+40:26 - these three headers for SMP. Okay, let's 
+scroll down to the bottom. And here we have  
+40:34 - your standard main function, we're checking the 
+number of parameters here and needs to be two,  
+40:39 - because there's a single parameter to this 
+utility, which is the model file name. Okay,  
+40:45 - so if that's not the case, we simply exit 
+the utility. Next we pick up the file name  
+40:51 - from location one in the arg v array. And we 
+define an object of the SMP importer class,  
+40:59 - which basically handles all the s&p parsing stuff. 
+Next, we call read file on the importer object  
+41:06 - using the file name and the load flag for s&p 
+which I defined. For convenience right here. And  
+41:12 - this is pretty standard. We've done this already, 
+triangulate all the polygons in the mesh generate  
+41:19 - normals and join identical vertices, we check 
+for error, and we call porcine using the returned  
+41:26 - AI scene object from read file. So a 
+scene is the main object that handles  
+41:33 - all our interaction with SMP and it 
+has several interesting functions,  
+41:39 - as well as members that we can access. In this 
+case, we're going directly to the to the meshes,  
+41:46 - okay, there is array, an array of API mesh 
+object, which is where all the vertices live,  
+41:53 - and the indices as well as the bones. So porcine 
+is very simple, it just calls parse meshes  
+41:59 - with the scene object. And in the future, we 
+will have a function to handle the hierarchy  
+42:04 - and the animations. Okay, so this will grow 
+and develop over the next few tutorials.  
+42:10 - So we have parse meshes here. And we start by 
+printing the number of meshes in the scene object,  
+42:16 - which you can find in the M num meshes attribute 
+in the scene. Next, we prepare a few counters.  
+42:22 - For the total number of vertices, indices 
+and bonds, we loop over the number of meshes,  
+42:29 - and we extract each Mesh from the 
+meshes array based on the index,  
+42:35 - we take the number of vertices, we calculate 
+the number of indices, which is the number of  
+42:40 - faces time three, because we've triangulated, all 
+the polygons and we also access num bones. Okay,  
+42:47 - so in the AI mesh structure, we have an array of 
+bones right here. And we have the number of bones  
+42:57 - in this attribute, M num bones. Next, we 
+calculate the total number of vertices  
+43:02 - in decision bonds, which we're going to print at 
+the end of this function. And this is mostly for  
+43:08 - informative purposes, just to make sure that 
+everything everything is working correctly.  
+43:13 - The important pieces here, where we call has 
+bones, which is a Boolean function that tells us  
+43:18 - whether this mesh has any bones in it. And then 
+we call parse mesh bones on the specific mesh that  
+43:25 - we're currently processing. So now let's go to 
+parse mesh bones, which is up here. And this is  
+43:31 - also very simple, we loop over the number of 
+bones in this mesh, and we call parse single  
+43:38 - bone. Now if we run this right now, and we'll 
+use a model, which is checked into my repo,  
+43:45 - called Bob lamb clean, and the five mesh, which is 
+by the way, from Doom three, and you can see that  
+43:53 - it tells us that there are six meshes. And these 
+are the names of the meshes. Okay, we have a body,  
+44:00 - a face, a helmet, grill, grill, and another 
+body. And for each mesh, we can see the number  
+44:08 - of vertices and indices. And this is the important 
+thing here, the number of bones Okay, so the body  
+44:14 - has 28 bones, and the face has just two bones. 
+And these guys have one bone, and the last one  
+44:22 - has two bones. Okay, and if we load it in Blender, 
+we can actually see right here on the right hand  
+44:27 - side that these meshes correspond to components 
+of the mesh inside blender. So we have the grill  
+44:36 - which this guy is holding, and we have the body. 
+Okay, and this part of the body is actually  
+44:43 - the sword, the face and the helmet. Okay, so now 
+let's see, parse mesh bones, which is right here.  
+44:51 - And this is a simple loop over the number of bones 
+in the mesh, and we're calling parse single bone  
+44:58 - for each bone. From this array and we'll also 
+we're also passing in the index of the bone  
+45:04 - which we will later see. So let's see what we have 
+in this AI bone structure. And there are only four  
+45:11 - public attributes. Okay, we have the name of the 
+bone, which is used for informative purposes, as  
+45:17 - you saw in blender, you want to name the bones, so 
+you will be able to remember what it's supposed to  
+45:23 - do. And we have the number of weights here, which 
+is actually the number of elements in this array,  
+45:30 - and weights. Okay, we'll see that in a second, 
+we have an attribute called M offset matrix,  
+45:35 - which is a four by four matrix. And he 
+tells us that this matrix transforms  
+45:42 - from mesh space to bone space in Bind Pose. 
+Okay, so this may sound a bit intimidating,  
+45:48 - but we will see how to use that in a future video. 
+And the last attribute is the M weights array,  
+45:55 - which is of the AI vertex weight structure. And 
+this structure contains just two attributes. Okay,  
+46:02 - so every element in the structure has a vertex 
+ID, which tells us the index of the vertex  
+46:09 - that is influenced by this bone, and the strength 
+of that influence, which must be in the range zero  
+46:16 - to one as we talked about earlier. So in the 
+parse single bone function, we loop over the  
+46:22 - number of weights in the bone, and we extract the 
+vertex weight element from the M weights array,  
+46:29 - and let me just uncomment all these printf 
+calls, were basically printing the vertex ad,  
+46:36 - and the weight. Now let's run this again. And 
+now we're getting the list of bones for each mesh  
+46:43 - as well as the verses that are influenced by it. 
+Okay, so here we can see that the first bone bones  
+46:49 - zero is called pubis and the number of vertices 
+affected by this bone is 190. And here we can see  
+46:56 - all the all the indices of these vertices as 
+well as the weights okay. So we can see that  
+47:03 - this model is actually very simple. So when 
+we glanced through this, it seems like when a  
+47:09 - vertex is influenced by two bones, then the 
+weight of each bone will be a half and if  
+47:15 - it is influenced by three bones, then the 
+weight will be a third, okay, so always,  
+47:22 - the weight for each bone will be the same as 
+the other bones, okay, so it averages out.  
+47:27 - And here's the next bone which is pelvis 
+254 verses than the spine, and it continues  
+47:35 - like that. So the total number of bones is 
+35. This brings us to the first challenge,  
+47:42 - each bone is mapped to the vertices that it 
+influences and many vertices are influenced  
+47:48 - by multiple bones. But skeletal animation 
+is implemented in the vertex shader, because  
+47:54 - this is basically the only place where we can 
+actually change the position of vertex. Therefore,  
+48:01 - what we really need is a reverse mapping from each 
+vertex to the bones that influence it. This info  
+48:08 - must be provided to the vertex shader, so that we 
+can calculate the transformation of each vertex  
+48:15 - based on all these bones. All this and 
+more will be covered in the next tutorial.  
+48:26 - Okay, quick recap. from part one, we 
+created a small utility to load the  
+48:30 - bond related stuff from SMP SMP holds the model 
+in one or more mesh structures, and each mesh  
+48:38 - points to an array of bones and each bone points 
+to an array of the vertices that it influences.  
+48:44 - For each vertex, we have an index and the weight, 
+which is a floating point number between zero  
+48:50 - and one that represents the amount by which the 
+current bone influences this vertex. At the end of  
+48:57 - part one, I left you with the challenge of mapping 
+the vertices back to the bones that influenced  
+49:02 - them. Okay, so maybe it was a bit too dramatic. 
+Anyway, this video is going to be very technical,  
+49:09 - and the focus will be on implementing this mapping 
+and making sure that it is working correctly.  
+49:14 - Now since the core principle in this mini series 
+is to work in a step by step fashion, we're going  
+49:20 - to implement it first in the SMP utility, and 
+then move this logic over to the main application.  
+49:26 - I also want to visualize the relation between 
+the bones and the vertices. So in today's demo,  
+49:33 - you'll be able to actually see the effect that 
+each bone has over the vertices. In this example,  
+49:40 - the red triangles represent vertices that are 
+highly influenced by the current bone, and this  
+49:45 - influence decreases as we move from red to yellow, 
+and then to green. The blue triangles represent  
+49:52 - vertices that don't receive any influence from 
+the current bone. You can click the space bar  
+49:58 - and switch between the different Bones. This 
+part of the fragment shader is not required  
+50:03 - in the final implementation. But I think that 
+if you're implementing this in your own code,  
+50:08 - it will be a good debugging step, just to make 
+sure that everything is loaded correctly into the  
+50:13 - GPU. Okay, so let's jump back into SMP sandbox dot 
+cpp. And we start by including the map string in  
+50:20 - vector headers from the C++ standard library for 
+the data structures that we will need here. Next,  
+50:27 - we have a macro, which defines the maximum number 
+of balls per vertex four balls is enough for  
+50:33 - my model. So just tweak this to make it match 
+your assets. Next, we have the vertex bone data  
+50:39 - structure that contains two arrays, one for the 
+indices of all the bones that affect this vertex.  
+50:46 - And for each bone, we also have the corresponding 
+weight. I'll skip the rest of the structure for  
+50:52 - now. Next, we have three new data structures, we 
+have a vector of the vertex bone data for each  
+50:58 - vertex. This is basically the mapping from the 
+vertices back to the bones that influence them.  
+51:04 - We have a vector of integers called MeSH base 
+vertex. Yes, NPC in class contains meshes,  
+51:10 - which contain balls, and each bone references the 
+vertices of the mesh, in which it is contained,  
+51:16 - as if they start at zero, we're going to pack 
+all the vertices together in a single array  
+51:22 - called vertex two bones. So we want to map the 
+relative vertex index to a unique global vertex  
+51:28 - index. And we do that by calculating a base vertex 
+for each mesh and adding the relative vertex index  
+51:36 - to this base. Finally, we have a map from bone 
+names to their indices, because SNP uses strings  
+51:44 - for the name of the bones. But for us, it will 
+be much more straightforward to work with bone  
+51:50 - indices. So now let's jump down to main. And 
+we've seen this in part one. So very briefly,  
+51:56 - main calls porcine, which calls, parse meshes. 
+And here we resize mesh base vertex using the  
+52:05 - number of meshes in the scene. So for each mesh, 
+we have a base index, which we need to calculate.  
+52:12 - And we do this right here, the total number of 
+vertices in is increased for each mesh. So before  
+52:19 - we increase it, for the current mesh, we save the 
+current total number of vertices as the base, we  
+52:26 - also resize vertex to bones based on the updated 
+total number of vertices, because we're going to  
+52:32 - need this space when we parse the mesh. Now, 
+this is not the most efficient way to do this.  
+52:38 - But for utility like that, this is okay. 
+Basically, this vector is resized again and again,  
+52:44 - for each new mesh with just 
+enough space for this mesh.  
+52:48 - Finally, we call parse mesh bones. And you may 
+notice that I added the index of the current mesh,  
+52:55 - because we're going to need it later. First mesh 
+bones didn't change, we simply call for a single  
+53:02 - bone for each bone with the addition of the mesh 
+index in the first parameter. In part one, this  
+53:08 - function simply printed all the vertices that are 
+affected by the current bone and their weights.  
+53:14 - I added some code here to create the mapping 
+from the vertices back to the bones. First,  
+53:20 - we get the bone ID, which is a unique 
+index for each bone. Inside the loop,  
+53:26 - we calculate the global vertex ID by adding the 
+vertex ID from the AI vertex weight structure  
+53:32 - to the base vertex ID of the current mesh, which 
+we set in the past meshes function. Right here.  
+53:40 - Each mesh has a batch of vertices 
+and the balls that reference them  
+53:44 - use indices that start at zero, we want to stack 
+up all the indices of all these batches together,  
+53:52 - one after the other, because we're loading it 
+like that to the vertex buffer. So we have to make  
+53:57 - these indices unique. So the first batch starts at 
+zero, and then the base of the next batch starts  
+54:04 - with wherever the previous batch ended. Let's jump 
+to get bone ID, which maps the name of the bone to  
+54:11 - its unique index. We have a map between a string 
+and an integer called Bone name to index map.  
+54:17 - If the name already exists, we just return the 
+index. And if not, we set the mapping and the  
+54:23 - bone Id simply increments automatically as we add 
+more items into the map back to parse single mesh.  
+54:31 - Now that we have the global vertex ad, we use 
+it to access the vertex two bones array, which  
+54:37 - I remind you is a vector of vertex bone data 
+structure. And we call Add Bone data with the  
+54:44 - index of the current bone and the weight which 
+is coming from the AI vertex weights structure.  
+54:50 - This function searches for a free slot in the 
+weights array and places the bone ID and the  
+54:56 - weight in that slot. We assume that if The weight 
+is zero, then this slot is free because the weight  
+55:03 - must be greater than zero with the bone actually 
+influences that vertex. Once we find the free  
+55:10 - slot and do the update, we can actually 
+the function, if we can find a free slot,  
+55:15 - there will be an assertion because either 
+you have a bug, or you need to increment  
+55:20 - the maximum number of bones per vertex. Now let's 
+run this on our Bob lamb clean.md. Five mesh file.  
+55:28 - And you can see that we get the vertex ID, the 
+bone index, the weight and the index of the slot,  
+55:35 - where this info was recorded. Let's do 
+a bit of OHLC magic, let's grab vertex  
+55:41 - and have oak printed just the values in this line. 
+Okay, so we have the vertex ID at index three,  
+55:48 - bone index at five, weight at 
+seven and slot at nine works, okay.  
+55:56 - We can solve this numerically by the vertex IDs 
+and we can see that the first vertex is fully  
+56:02 - influenced by bone number two, the second vertex 
+is influenced by bones two and three. And we got  
+56:09 - their weights at slot zero and one. So this 
+makes sense. Vertex eight is influenced by 11,  
+56:17 - two and three. So this looks okay as well. If 
+you want, you can check this more thoroughly.  
+56:23 - But I think that for now it is okay. The next step 
+will be to integrate this piece of logic into our  
+56:29 - OpenGL application and actually load the indices 
+and weights of the bones per vertex into a vertex  
+56:36 - buffer. We can then access it from the vertex 
+shader, and do cool stuff like applying some color  
+56:42 - to all the pixels that are affected by a certain 
+bone. Again, this is just for debugging but we're  
+56:48 - making progress in small steps and making sure 
+at each step that everything is working correctly  
+56:54 - is very helpful. For the integration I copied all 
+GL def basic mesh header and cpp files into this  
+57:01 - directory and I renamed them skinned mesh dot h 
+and cpp. The next tutorial, we'll include a new  
+57:08 - version of the same files in its own directory, 
+so you'll be able to compare the two revisions  
+57:14 - or jail death basic mesh was already covered in 
+a previous tutorial, I'll put a link below to  
+57:20 - that video right now we'll just cover the skeletal 
+animation related code. This class is called Skin  
+57:27 - mesh, same as the header. And here we have the max 
+number of bones per vertex. Vertex bone data is  
+57:34 - here as a private declaration, and it is the same 
+one as in the sandbox, so no need to go over it,  
+57:40 - we're going to use a new vertex buffer for 
+the bones in addition to the index position,  
+57:46 - texture coordinates normals, so we have 
+in your enum for the bone vertex buffer,  
+57:51 - we have the declarations of three functions 
+that I simply copied from the sandbox as these  
+57:57 - load mesh bones load single bone and get bone ID, 
+I use the word load instead of parse because it  
+58:04 - is more common. In this class, we have a vector 
+of vertex bone data, again same as the sandbox,  
+58:11 - we're going to use it to populate a vertex buffer 
+of the bones. And finally, the map between the  
+58:17 - bone name and it's index. Now let's go to the CPP 
+file, we have two new vertex attribute locations  
+58:24 - for the vertex shader. This will allow each vertex 
+to access its list of bones and the weights make  
+58:31 - sure to keep these numbers synchronized with the 
+vertex shader. In the reserved space function,  
+58:37 - we are resizing the bone vector based on the 
+number of bones Okay, so this is the same  
+58:43 - as all the other buffers here. In init single 
+mesh, I added a call to load mesh bones which  
+58:49 - calls load single bones which uses get bone ID 
+to map the name of the bone tweets index. Okay,  
+58:56 - so again, this works the same as in the SMP 
+utility. Basically, when the processing of  
+59:01 - the scene structure is complete, we have 
+all the mapping from the vertices to bones  
+59:06 - in this M bones vector, and then, in the Populate 
+buffers function, we bind and allocate the new  
+59:13 - bone vertex buffer. We also enabled the two vertex 
+attributes to access the bone IDs and weights,  
+59:20 - we also need to set the layout correctly. So 
+for the bone IDs, make sure to use GL int,  
+59:26 - and not GL float as all the other attributes, 
+we have four integers for the four IDs,  
+59:33 - followed by four floats, make sure to set the 
+offset correctly. For the second attribute,  
+59:39 - we have the max number of bones times the size of 
+a bone ID, so we should get 16 Bytes here. Okay,  
+59:46 - four bones times four bytes per integer. Now I 
+want to make sure that the bone vertex buffer is  
+59:52 - populated and loaded correctly. So in this demo, 
+we will paint the triangles that are affected by  
+59:58 - each bone using specific color. Let's see how to 
+do that. In the vertex shader, we have two new  
+60:04 - input attributes for the bone IDs and the weights. 
+Notice that the IDs are AI vac and not a regular  
+60:11 - veck. The regular veck is for floating points and 
+the IDs are integers. So we must use Ivic. The  
+60:19 - vertex shaders simply copies the two attributes 
+out to the fragment shader. So we also need to  
+60:25 - declare them as output attributes. Here, we need 
+the type qualifier flat. For the first time,  
+60:32 - we're used to having the rasterizer interpolate 
+attributes such as colors and texture coordinates  
+60:38 - across the triangle phase. But in the case of the 
+bone IDs, it doesn't make any sense. So this flat  
+60:45 - qualifier basically tells the rasterizer don't 
+interpolate, simply copy the attribute as is,  
+60:51 - we have a corresponding declaration in the 
+fragment shader. And we must use flat here as  
+60:56 - well. If we forget it, we will get an error that 
+says that integer Vereine must be flat. The rest  
+61:02 - of the fragment shader will simply copied from a 
+previous tutorial on lightning and the only change  
+61:08 - is in the main function, we loop over the number 
+of bones and we check each slot in the bone IDs  
+61:14 - attribute. Whether this is equal to display 
+bone index, which is a uniform attribute set  
+61:21 - by the application, we're going to see that 
+in a minute. If this is true, we want to set  
+61:26 - the output color and here, I tried to mimic the 
+behavior of Blender. Okay, so in Blender, if you  
+61:32 - go to Weight Paint mode, you can switch between 
+the vertex groups, which is basically the bones  
+61:39 - and then the blue vertices are not affected by the 
+selected bone at all. The red is highly affected  
+61:46 - and the green and yellow are somewhere 
+in between. I tried to do a similar thing  
+61:51 - in the fragment shader, okay, it's not perfect, 
+but it's pretty usable. If the weight of the  
+61:57 - current bone is more than point seven, we output 
+red modulated by the way because it looks like  
+62:03 - blender also uses the way to interpolate the color 
+between point four and point six, we use green  
+62:10 - and then yellow for anything else above point one. 
+If the bone index is not found for this pixel,  
+62:17 - we use blue. I also multiplied the original color 
+that comes from lighting by a small fraction,  
+62:24 - in order to disable its effect that I didn't use 
+zero, so that the compiler will not yell at me,  
+62:30 - the delighting stuff is not really used, the 
+application code is pretty standard, so no need  
+62:36 - to go over everything. The only thing to note here 
+is that when spacebar is pressed, we increment  
+62:43 - the current display bone index, we use modelu to 
+make sure we don't overflow the number of bones.  
+62:50 - And then we set this index into the fragment 
+shader. The fragment shader has a uniform integer  
+62:55 - for this index. And this is what we use for 
+checking the bone ID. So let's see how this works.  
+63:05 - So the next step is to understand matrices 
+that control the transformation of the  
+63:09 - vertices during the animation. All this and 
+more will be covered in the next tutorial.  
+63:20 - In part one, and two, we learned how to load 
+the skeleton information using the SMP library.  
+63:26 - And we created a mapping so that each vertex 
+can access the bones that influence it. Along  
+63:32 - with the weights. We verified the implementation 
+using a simple demo that shows the triangles that  
+63:39 - are influenced by selected bone. In this video, 
+we're going to study the core transformations,  
+63:45 - or the skeletal animation technique. Remember that 
+in part one, we talked about how you create the  
+63:51 - appearance of animation in Blender using a set 
+of keyframes where you adjust the location and  
+63:57 - orientation of the bones in each keyframe. Now, if 
+this was a job interview, and they asked you Well,  
+64:03 - given the way that blender works, how would you 
+implement animation in general, then I guess that  
+64:09 - off the top of your head, you know, you could say 
+that you can save the position of all the vertices  
+64:14 - in each frame. And then during runtime simply 
+render a different set of vertices in each frame.  
+64:21 - Well, I guess this would work. But you can 
+obviously see the downsides of this approach.  
+64:26 - This will probably blow up your model files, as 
+well as your vertex buffer or buffers. Therefore,  
+64:32 - the approach taken by the actual algorithm is 
+to save a single set of positions specifically  
+64:38 - in Bind Pose that we talked about in part one. In 
+addition, we associate a set of transformations  
+64:45 - with each bone, one transformation for each 
+keyframe. During one time we perform a weighted  
+64:51 - average of all the transformations that affect 
+each vertex. In practice, SNP actually saved the  
+64:58 - transformations step Read items, one vector for 
+scaling and other vector for translation, and  
+65:04 - the quaternion. For the rotation, we already know 
+how to create transformation matrices from these  
+65:10 - guys. So no problem there, we only need to figure 
+out how to apply these matrices on the model.  
+65:16 - Because it's not that straightforward. There is an 
+additional complexity from the fact that we want a  
+65:21 - parent bone to affect the child bone, but not the 
+reverse. So if the finger moves, it doesn't affect  
+65:27 - the hand. But when the hand moves, obviously, 
+the fingers also move. To understand how all this  
+65:34 - works, we need to introduce a new coordinate 
+system, called the bone coordinate system,  
+65:39 - or bone space, the origin of the bone coordinate 
+system is at the base of the bone. The bone itself  
+65:46 - points along the y axis, and the X and Zed 
+axis are perpendicular to the Y axis and to  
+65:52 - each other. Of course, you can turn on the display 
+of this coordinate system in Blender by selecting  
+65:58 - the armature in the outlier. Going into Object 
+Data Properties tab and inside viewport display,  
+66:05 - you have a checkbox called axis. We know that in 
+general, the vertices of the mesh are specified  
+66:11 - in reference to a local coordinate system. So what 
+is the relationship between the local coordinate  
+66:17 - system and the bone coordinate system? Well, the 
+bones form a hierarchy, which is a simple graph,  
+66:23 - there is a root at the top and every node has 
+zero or more children, every node except the root  
+66:30 - has a single parent. When rigging a new model, 
+the artist will designate some bone at the core  
+66:36 - of the model as the root, the remaining bones will 
+branch out from this route and from each other.  
+66:43 - In the case of a simple human model, it 
+makes sense to use the spine as the root,  
+66:47 - and then the immediate children will be 
+the four limbs and the neck. From there,  
+66:52 - you can continue down to the fingers, the bone 
+space of the root is specified in reference  
+66:58 - to the local space. So you can think about 
+the local space as a primary coordinate system  
+67:04 - with the origin 000 on the axis are as usual 
+100010 and 001, the base of the root bone will  
+67:13 - be some point in this system, same as the regular 
+verses, and the root bone access will be vectors  
+67:20 - in this system. In the following 2d example, the 
+origin of the bones space of the root is located  
+67:26 - at one on the x and one on the y and the bone 
+space axes are some arbitrary unit vectors, things  
+67:33 - become a bit more complex. When we move from the 
+root of the hierarchy to its immediate children,  
+67:39 - the bone space of the children are defined in 
+reference to the root rather than the local space.  
+67:45 - Going back to the example, we can see the root of 
+the hierarchy at one on the x and one on the Y.  
+67:52 - And the base of the child bone is also at one on 
+the x and one on the on the Y but in reference  
+67:58 - to its parent, which is the root. In reference to 
+local space, the child's bone is actually located  
+68:04 - at two on the x and two on the Y. In this example, 
+I made the axis of the two bone spaces aligned  
+68:12 - with the axis of local space to make it easier 
+for me to calculate everything in my head.  
+68:16 - But obviously, it doesn't have to be this way. 
+By defining each bone space as a reference to its  
+68:22 - parent, we can create a chain of transformations 
+that goes from each bone back to the root of the  
+68:28 - hierarchy. A change in the transformation of a 
+node will obviously affect all of its descendants,  
+68:34 - but not its parents. If you need an intuition 
+for how this works, you can take the model of  
+68:40 - the universe as an example, you can trace the 
+orbit of the moon around the earth in a coordinate  
+68:46 - system which is centered on the earth. The parent 
+of this coordinate system is obviously the one  
+68:52 - where the Earth orbits around the Sun. So if 
+you want to calculate the location of the moon,  
+68:58 - in reference to the sun, you need to take its 
+coordinates in the original system and multiplied  
+69:04 - by transformation from the original system to the 
+coordinate system where the sun is at the origin.  
+69:11 - The next step will be to multiply the result with 
+the transformation from the sun coordinate system  
+69:17 - to the coordinate system where the sun 
+orbits around the center of the galaxy or  
+69:22 - something like that. The final transformation 
+will be from the Galaxy coordinate system  
+69:27 - to the universe coordinate system and this 
+will give you the coordinates of the moon  
+69:32 - in the universe. So I'm not sure if professional 
+astronomers will approve this model.  
+69:37 - But I think that for us it is okay, going 
+back to the bones. The process in skeletal  
+69:42 - animation begins by transforming the position of 
+a vortex which is given as usual in local space,  
+69:49 - while the model is in Bind Pose to the 
+coordinate system of a bone that influences it.  
+69:55 - From there. We transform it to the bone space 
+of the parent and we continue until we get to  
+70:01 - the root of the hierarchy. At the end of the 
+process, we are back at local space, which is  
+70:06 - where the root is defined. And we can continue 
+to hold and view space as usual. Now there is  
+70:13 - a small twist here with SMP known as the global 
+inverse transform, which you may have heard of,  
+70:19 - and I will talk about it later. Since each 
+vertex is often influenced by more than one bone,  
+70:24 - we actually need to do a weighted average 
+of the transformations of several bones.  
+70:29 - Each bone transformation will be calculated in 
+the same way by going back from the bone all the  
+70:35 - way to the root. In addition to that, we also need 
+to tweak the transformation of each node. As time  
+70:41 - progresses, otherwise, there won't be any movement 
+to actually implement this process. SMP provides  
+70:47 - us with two matrices. The first one is called 
+the offset matrix, and it is part of the bone  
+70:53 - structure, which also contains all the weights for 
+the vertices. This matrix transforms from local  
+70:59 - space directly into bone space, and it already 
+contains all the transformations that go from the  
+71:06 - root down to the bone. So you don't need to worry 
+about the hierarchy. When you use this matrix.  
+71:11 - The official documentation says that the offset 
+matrix transforms from mesh space to bone space  
+71:18 - in Bind Pose, which is basically saying that if 
+you take a vertex in local space, while the model  
+71:25 - is in Bind Pose, and you multiply it by the offset 
+matrix of a bone, you will get the coordinates of  
+71:31 - the vertex in reference to that bone. This means 
+that if two bones influence the same vertex,  
+71:38 - then by multiplying the vertex position by 
+the offset matrix of each bone separately,  
+71:43 - you will get two different coordinates 
+in reference to the two bone spaces.  
+71:48 - Of course, you will need to go back from 
+each bone to the root and calculate the final  
+71:53 - matrix for each bone. If you transform 
+the vertex by the two final matrices,  
+71:59 - and assuming that both bones are moving, you 
+will get to different positions in local space,  
+72:05 - which is why we do a weighted average of the two 
+final matrices to get a position somewhere between  
+72:11 - the two bones. For the next example, I've created 
+the world's simplest skeleton in blender with the  
+72:17 - standard box at the origin, and the single bone 
+which is aligned with the y axis which is green.  
+72:23 - As you can see, the Zed axis of the bone points 
+up, which is actually the default in Blender,  
+72:29 - I exported the model in the setup to keep it 
+simpler otherwise blender will add transformations  
+72:35 - from its own coordinate system to the one that 
+we are using. And it will complicate the analysis  
+72:41 - back to our SNP sandbox. In the function bar 
+single bone, I've added a call to print SNP matrix  
+72:48 - using the M offset matrix attribute of the bone as 
+a parameter, print SNP matrix is defined appear,  
+72:56 - and it is very simple, it just prints the matrix 
+nicely. Now let's run this on the model single  
+73:02 - bone dot FBX x which is in the Git repo, we 
+can see that we're getting the identity matrix  
+73:08 - as the offset matrix. The reason is, of course, 
+that the base of the bone is at the origin of  
+73:14 - the local space and the axis of the bone space are 
+aligned with those of local space. So transforming  
+73:22 - from local space to bone space basically means 
+doing nothing, it's the same system. Let's see  
+73:28 - another example. I've added a child bone that 
+extends the root bone along the y axis, we can  
+73:35 - see in blender that the root bone is located at 
+the origin and the end of the bone is at one unit  
+73:41 - on the Y the child bones starts in the same 
+location and ends at two units on the y. If we run  
+73:48 - this using the sandbox, we can see that the offset 
+matrix of the parent is still the identity matrix.  
+73:54 - But the offset matrix of the child will translate 
+us one unit along the negative y axis. And this  
+74:01 - makes sense because this bone space is shifted one 
+unit on the positive y so in order to transform  
+74:08 - one vertex, for example, this one right 
+here, which in local space is a two on the Y  
+74:15 - to the bone space of the child, we need to 
+subtract one unit from the Y because the  
+74:21 - vertex is closer to the base of the bone than to 
+the origin. I have one last example here called  
+74:27 - to bones translation rotation dot F BX where 
+the child bone has been rotated 45 degrees up  
+74:35 - and we can see that the offset matrix of the child 
+is very similar to a matrix that we have developed  
+74:40 - in the past. So I will leave this up to you as 
+homework to explore. Okay, I hope that everything  
+74:46 - up until this point made sense. So we can now 
+take a look at the second matrix which is located  
+74:52 - at the new section of the SMP scene. This is the 
+node hierarchy. The node represents an entity  
+74:58 - in the scene that has location and orientation 
+relative to a parent. And entity can be meshes,  
+75:05 - bones, and even cameras and lighting, you can 
+actually design an entire scene in Blender  
+75:12 - and export it with the camera in lighting, and 
+then load it with the same p. I may do a video  
+75:18 - about it in the future. But for now let's just 
+focus on the bones. The node hierarchy starts  
+75:23 - with a single root node, and each node includes 
+an array of pointers to zero or more children  
+75:29 - and an array of pointers to zero or more measures. 
+This allows you to have a single mesh in your  
+75:35 - model file and place it in different locations in 
+the world using multiple nodes. As you can see, it  
+75:42 - is very simple to create the graph that we talked 
+about earlier. Using this node structure. There is  
+75:48 - also a pointer to a single parent and the matrix 
+called M transformation. The job of this matrix  
+75:55 - is to transform a vector to the coordinate system 
+of its parent. So this is like the transformation  
+76:01 - from the coordinate system of the earth to the 
+coordinate system of the sun. After we multiply  
+76:06 - position vector by the offset matrix, we find 
+ourselves in the coordinate system of the bone.  
+76:12 - The next step is to find the corresponding node 
+in the graph, apply the transformation matrix of  
+76:19 - this node and continue all the way to the root. 
+by traversing the parent attribute of the node.  
+76:25 - The bones are mapped to the nodes. Simply using 
+their names you search for the name of the bone  
+76:31 - in the node hierarchy until you find the node with 
+the same name. Let's explore the node hierarchy  
+76:38 - using our SNP sandbox. In the parsing 
+function. I've added a call to parse hierarchy  
+76:44 - which I will now uncomment this function takes 
+the scene as a parameter, and then calls parse  
+76:50 - node using the m root node attribute of the 
+scene, parse node, for instance, the number  
+76:56 - of meshes and children in the node as well as the 
+M transformation matrix event reverses the graph  
+77:02 - downwards by recursively, calling parse node on 
+each of its children. Okay, so now let's test it.  
+77:10 - On the first example, single bone dot F bx, we 
+can see that the root node is the identity matrix,  
+77:17 - it has two children, the cube and the armature, 
+the transformation matrix of the armature  
+77:23 - switches the Y and Zed axis, and also flipped the 
+sign of the y coordinate. Okay, interesting. The  
+77:32 - armature contains a node called bone. And you 
+can see that the M transformation matrix here  
+77:38 - does exactly the reverse. It's which is the Y 
+and Zed axis again, and flips the sign of the  
+77:45 - Zed coordinate, which was previously the y. Okay, 
+so they're basically cancelling each other out.  
+77:51 - If we multiply these matrices together, we can 
+verify that we're getting the identity matrix.  
+77:58 - So I actually posted the question about it on the 
+SFP forum. And I will let you know when I get an  
+78:03 - answer, there is actually an additional node here 
+called bone and which I guess, is for the tail of  
+78:10 - the bone, but there isn't an actual bone for 
+this node. So the hierarchy may include nodes  
+78:17 - that don't have a corresponding bone. But if 
+these nodes have children, then they will have  
+78:22 - an effect on them. And we will need to take care 
+of that the transformation of bone and translates  
+78:28 - one unit on the Y axis. And this makes sense, 
+because bone and also defines a coordinate system.  
+78:35 - So if you multiply the origin of this coordinate 
+system 000 by this matrix, you will get 010 which  
+78:43 - is the location of bone and in the coordinate 
+system of bone. So this is a trivial example,  
+78:49 - but it helps us feel how the hierarchy works. 
+If we run this on a real model, like our good  
+78:54 - old Bob lamb clean, we can see a much more 
+complex hierarchy. We have the root here,  
+79:00 - then MD five hierarchy, origin, pubis, pelvis, 
+spine, neck and head. The transformations here are  
+79:09 - too complex. So let's just hope it will all work 
+out correctly. The next step is to integrate the  
+79:15 - two matrices into our skinned mesh class. All this 
+and more will be covered in the next tutorial.  
+79:27 - Today, we're going to integrate the two matrices 
+that we got introduced to in the previous video,  
+79:32 - the offset and the transformation into our 
+skinned mesh class. This includes two steps.  
+79:38 - First, we need to transform the vertex from local 
+space to bone space using the offset matrix. Next,  
+79:45 - we need to multiply the bone space position by 
+the transformation matrix of the node and continue  
+79:51 - multiplying while traversing all the way to the 
+top of the hierarchy. This will bring us back  
+79:57 - to local space. So we started in Local space and 
+we ended up in local space. So what has changed?  
+80:04 - Well, basically nothing. In this tutorial, 
+we are still not applying the animation data,  
+80:10 - which is what actually animates the model. We're 
+just applying the base transformations calculated  
+80:16 - somewhere between blender and si p. So the 
+expectation is that we will get the model back  
+80:22 - in Pause mode. Now remember that in addition to 
+the matrices, we're going to use the weights to  
+80:28 - perform a weighted average of the transformations. 
+So this result is far from negligible. It's  
+80:35 - an important milestone on the way to our final 
+destination. Okay, so let's review the changes  
+80:41 - in the skinned mesh class. And we begin with 
+skinned mesh dot h, I've added a public function  
+80:47 - called get bone transforms, this function will be 
+called in the Render loop. It basically calculates  
+80:54 - all the transformations for all the bones and 
+returns them in a vector of matrices, which the  
+81:00 - caller must supply as a reference. Each bone has 
+a single matrix which we can access in the vector  
+81:06 - using its bone ID. In the final implementation, 
+this function also takes the current time  
+81:12 - is a parameter, and then it returns a 
+different set of matrices in each call,  
+81:17 - based on the current posture of the model. 
+In this tutorial, we still don't need it.  
+81:22 - So I dropped it for now, in the private section, 
+I've added a function called Read node hierarchy.  
+81:28 - I'll talk more about this function when we get to 
+the implementation of this class. I've also added  
+81:33 - the SMP importer object, and the pointer to the a 
+scene object as private attributes. And the reason  
+81:40 - is that we will need to access the hierarchy in 
+the scene. during runtime, when I tried to do it  
+81:46 - in the previous implementation, where the importer 
+was a local variable in the function load mesh,  
+81:52 - I got a segmentation fault. So I guess that we 
+need to keep the importer alive throughout the  
+81:57 - execution. And finally, we have a structure called 
+Bone info, which stores a couple of matrices,  
+82:04 - we have the bone offset matrix, which is here 
+for easy access. File transformation stores the  
+82:11 - intermediate results of the whole transformation 
+chain so that when the entire process is complete,  
+82:17 - we just grab it from here and return it to the 
+application. The constructor of this class takes  
+82:23 - the offset matrix has a parameter, it stores it 
+in the corresponding member. And it initializes  
+82:29 - the transformation matrix to zero. And of course, 
+we also have a vector of bone infrastructures,  
+82:36 - one structure for each bone. Okay, so 
+this concludes the changes in the header.  
+82:41 - As always, you can compare this file to the 
+previous version, actually, in part two,  
+82:46 - because in part three, we only touch the sandbox, 
+and you'll be able to see all of these changes.  
+82:52 - Now let's take a look at the CPP file, we 
+have a minor change in the load mesh function.  
+82:58 - Instead of the local variables for the importer 
+in the scene, we have the new private attributes  
+83:03 - in the class, so we will use them the next 
+change is in the load single bone function.  
+83:08 - After we get the bone ID we check whether it 
+equals to the size of the bone in for vector.  
+83:14 - If this turns out to be true, we know that this 
+is a new bone, because the bone IDs are a running  
+83:20 - index. In that case, we create a bone info object 
+using the M offset matrix from the AI bone class.  
+83:28 - Remember that in addition to the weights, the 
+SMP AI bone class also has this offset matrix.  
+83:35 - After we initialize the bone info object, we push 
+it into the vector. This means that we can access  
+83:41 - the bone information using the bone index. At 
+the bottom of this file, we have the two new  
+83:46 - functions. First, we have get bone transforms, 
+which takes reference to a vector of matrices.  
+83:53 - We start by resizing this vector using the 
+number of bone infrastructures that we have.  
+84:00 - Next, we initialize the local matrix to be the 
+identity matrix. And we call Read node hierarchy  
+84:06 - using the root node of the scene. And this matrix, 
+after Read node hierarchy returns, we should have  
+84:13 - the transformations that we need in the final 
+transformation member of the bone info vector.  
+84:18 - So all we need to do is to copy these matrices to 
+the vector supplied by the color. Now let's take a  
+84:24 - look at the Read node hierarchy function. Which is 
+a bit tricky because it is a recursive function.  
+84:30 - It takes a pointer to an AI node object and 
+the reference to a parent matrix. The first  
+84:36 - call to this function is done using the root 
+node of the hierarchy and the identity matrix.  
+84:42 - We start by creating a no transformation matrix 
+using the N transformation matrix from the node.  
+84:49 - Next, we create a global transformation matrix by 
+multiplying the parent matrix with this matrix.  
+84:56 - So we're actually traversing the graph from top to 
+bottom rather than from the node back to the root,  
+85:02 - because this global matrix is going to be used 
+in the calculation of all of its children, so by  
+85:09 - going from top to bottom, we can calculate it 
+only once. Note that we're taking advantage of  
+85:15 - the associativity nature of matrix multiplication, 
+that tells us that as long as we keep the order of  
+85:22 - the matrices, we can change the location of the 
+parentheses. Next, we check if we have a bone  
+85:28 - that matches the name of the node, all the bones 
+of the corresponding node in the hierarchy. But  
+85:34 - there may be nodes without bones, we already have 
+a map between bone names in their indices. So this  
+85:40 - is very easy to do. If we find such a bone, we 
+update its final transformation to be the result  
+85:46 - of multiplying gets offset matrix by the global 
+matrix, which basically captures the entire chain  
+85:53 - from the node back to the root. Finally, we 
+traverse the children of the current node,  
+85:58 - and we call Read node hierarchy recursively on 
+each child node with the global transformation  
+86:04 - matrix in the second parameter. So as we go 
+deeper into the graph, this global transformation  
+86:11 - encapsulates more and more M transformation 
+matrices. Let's take a look at the changes in the  
+86:17 - application code. And this is very simple. In the 
+render function, we define a vector of matrices,  
+86:24 - we get the bone transformations from the mesh, 
+and we loop over the vector that we got back,  
+86:30 - we set the matrices into the skinning technique 
+one by one. This is a very simple function that  
+86:35 - updates the uniform array in the shader, so 
+I'll skip it and you can take a look at it  
+86:40 - later. The last change is in the vertex shader, 
+we have a new uniform called G bones. This is  
+86:46 - an array of 100 matrices, so make sure this is 
+enough. For the models that you plan to load.  
+86:53 - In the main function, we create a bone transfer 
+matrix as a weighted average of the matrices of  
+86:59 - all the bones that influence the current vertex, 
+we use the bone IDs of the vertex to access the  
+87:05 - bone uniform array. Take a look at Part Two if you 
+don't remember, where the bone ideas came from,  
+87:11 - each bone matrix is multiplied 
+by the corresponding weight,  
+87:15 - which is also a vertex attribute. If the number of 
+bones is less than four, the weight will be zero,  
+87:21 - so the calculation will have no effect. We sum 
+up the results of all these multiplications  
+87:27 - to get the final bone transformation and we use 
+it to transform the vertex from local space back  
+87:34 - into local space again, once we integrate the 
+animation data, the position will be different  
+87:40 - than the original. The shader continues as 
+usual by multiplying the updated local position  
+87:46 - by the W VP matrix, there is actually no change in 
+the fragment shader. So this concludes this video.  
+87:57 - The next step is to integrate the animation 
+data so we can finally see something moving.  
+88:02 - All this and more will be 
+covered in the next tutorial.  
+88:11 - Welcome to the fifth and final part of the 
+skeletal animation tutorial miniseries,  
+88:17 - okay, so basically, this means that we need to get 
+the animation working by the end of this video.  
+88:22 - But first, let's do a quick checkup 
+of what we already know about the  
+88:27 - relevant SNP data structures. The AI scene 
+class has a list of meshes and each mesh  
+88:33 - has a list of bones for each bone. In 
+addition to the weights and the offset matrix,  
+88:39 - we also have a corresponding node in the node 
+hierarchy. The node has a transformation matrix  
+88:45 - that gets us to the coordinate system of its 
+parent. In the previous tutorial, we saw how  
+88:50 - these two matrices work together, so make sure 
+to watch that video first. The ice in class  
+88:56 - also has an array of AI animation structures. Each 
+structure represents the full animation sequence,  
+89:03 - such as running, fighting, or whatever 
+the character can do. There are a couple  
+89:08 - of time related attributes in this structure, 
+we have m duration, which is the length of the  
+89:13 - animation in text and empty x per second, which is 
+basically the intended frame rate of the animation  
+89:21 - set by the artist. So for example, if the frame 
+rate is 30, and your game is running at 60 frames  
+89:27 - per second, you will need to interpolate an extra 
+frame between two consecutive animation frames,  
+89:34 - and vice versa. If the game is slower than the 
+animated model, we will need to skip frames to  
+89:40 - keep up the intended pace of the animation. 
+Obviously, if we divide the duration by x  
+89:46 - per second, we get the length of the animation in 
+actual seconds. The most important attribute in AI  
+89:53 - animation is an array of AI node and M structures 
+called M channels. The size of the array array is  
+90:00 - given in M num channels. Each animated node in the 
+hierarchy has a corresponding entry in this array.  
+90:08 - So if we go into the declaration of AI node nm, 
+we can see that it has a member called M node  
+90:15 - name. In order to find the animation data for 
+a specific node in the hierarchy, we just need  
+90:21 - to find its name. In the M channels array. The 
+animation parameters themselves are given in  
+90:26 - three separate arrays, position and scaling are 
+given in vectors and the rotation is a quaternion.  
+90:33 - Each array can theoretically have a different 
+length, which is why we have num position keys,  
+90:40 - num rotation keys and num scaling keys. 
+In our example, we have 140 Position and  
+90:46 - Rotation entries, and no scaling. The code must 
+be flexible. To handle all the available cases,  
+90:53 - AI vector key and AI quad key are actually a pair 
+of attributes that represent the transformation.  
+91:00 - And the time it takes in which this transformation 
+should take place. The keys are guaranteed to be  
+91:06 - sorted in their chronological order. So searching 
+for the current time simply means reversing  
+91:12 - the array until we find the time range between 
+two consecutive keys in which the current time  
+91:18 - is located. Assuming that the current time 
+will usually land between two keys, we must  
+91:25 - interpolate between the animation parameters of 
+these two keys. After we interpolate the animation  
+91:31 - parameters, we combine the scaling rotation and 
+translation into a single transformation matrix.  
+91:38 - And that's basically it. So now let's jump into 
+the code and see how to actually implement it.  
+91:44 - This time, I'd like to start in the application 
+code where we have a minor change, and that is  
+91:50 - the tracking of time. I've added a new private 
+attribute for the start time in milliseconds.  
+91:56 - And when we are finished with the init 
+function, we initialize it by calling  
+92:00 - Get Current Time in Milly's. This function is 
+defined in common slash O GL dev utils dot cpp.  
+92:07 - And you can see that we actually have a different 
+implementation for Windows and Linux. On Windows,  
+92:13 - we use get account and on Linux, we use get time 
+of day. Both of these functions are very simple,  
+92:19 - and you can check out the documentation on your 
+own for more details. Now, there are also high  
+92:25 - resolution timers that you can use if you need 
+more precision, but I'm okay with the millisecond  
+92:31 - level. Okay, so in the render function, we just 
+need to call Get Current Time in Milly's again,  
+92:37 - and calculate the delta between the startup 
+time and the current time and that will give  
+92:41 - us the time that the application has been running. 
+Notice that we divide the result by 1000 here and  
+92:48 - cast it to float. So we get the animation time in 
+seconds with possible fractions. Between seconds,  
+92:55 - we provide the animation time to get bone 
+transforms, so that we can calculate the  
+93:00 - correct transformations for the current point in 
+time. Okay, so while recording, I forgot to tell  
+93:06 - you that get bone transforms needs to convert the 
+time in seconds into ticks, because the same piece  
+93:12 - specifies the start time for each frame in ticks. 
+We do this by multiplying the timing seconds  
+93:19 - by the number of ticks per second. The ticks per 
+second can be found in the AI animation structure.  
+93:26 - And in case it was not set by the modeling 
+software, we set it to 25 by default, which  
+93:32 - is simply the value that I saw in the SMP sources. 
+The next step depends on the logic of your game.  
+93:38 - If you want to run the animation sequence once 
+you need to reset the start time at the point  
+93:44 - where the animation is supposed to start. In this 
+demo, I want the animation to run again and again.  
+93:50 - So I'm using F mod to do a floating point 
+model operation of the current time in ticks,  
+93:55 - and the duration of the animation. This 
+divide the entire execution of the demo  
+94:00 - into segments of M duration length, and in the 
+animation time in ticks, we get the current time  
+94:06 - within that segment. Now let's jump directly 
+into the implementation of the skin mesh class.  
+94:13 - And in part three, I mentioned the global 
+inverse transform, so I want to talk about  
+94:17 - it for a second. The idea is that in some models 
+that are loaded by SMP, the transformation matrix  
+94:24 - of the root node may actually be the world 
+transformation of the object. This allows  
+94:30 - you to place the object in the world already in 
+Blender. In that case, we need to bring the object  
+94:36 - back into local space, apply the animation 
+in local space and then transform the object  
+94:43 - back to wherever you want it to be. In order to 
+do that, we need to reverse the transformation  
+94:48 - of the root node and apply that the end of the 
+entire transformation chain. So after we load the  
+94:54 - model, we grab the M transformation matrix of the 
+root node. We store it in a new Private attribute  
+95:00 - called M global inverse transform, and we call the 
+inverse function in order to inverse this matrix.  
+95:07 - The inverse function is defined in math 3d 
+dot cpp. And this is a standard implementation  
+95:13 - of matrix inversion, which you can find in 
+many resources online. So no big deal here,  
+95:19 - the global inverse transform is used 
+in the Read node hierarchy function,  
+95:23 - you can see that I've added it to the head of the 
+transformation chain. So the final transformation  
+95:29 - of a bone is first the offset matrix to go 
+from local space to bone space. Then we have  
+95:36 - the global transform, which caps captures all the 
+node transformations to the root of the hierarchy,  
+95:42 - and finally, the inverse global matrix. Okay, I 
+hope this makes sense. Now let's jump back to the  
+95:48 - top of this function, we get the animation time 
+in seconds as a parameter from the application.  
+95:53 - The next thing we need to do is to access the 
+animation sequence that we're interested in.  
+95:59 - In this tutorial, I'm keeping it 
+simple. So I use the first animation  
+96:03 - by default. But if you know that your model 
+has several animations, you can search for  
+96:08 - the one you want in the animation array. Next, we 
+need to search inside the AI animation structure  
+96:15 - for the AI node nm that matches the current node. 
+And we do this in the Find node and in function,  
+96:22 - which is defined right here, it takes the AI 
+animation structure and the name of the node,  
+96:28 - and it simply traverses the channels in 
+the animation until it finds the one that  
+96:33 - matches the name of the node. In that case, it 
+returns the matching AI node enum structure.  
+96:39 - Not all nodes are animated. And in that case, 
+we return now, back to read node hierarchy. If  
+96:46 - another dimension data was found, we calculate the 
+transformation matrix. For the animation, we're  
+96:51 - going to cover the calculation in just a bit. But 
+before we do that, I want you to pay attention to  
+96:57 - something which is very important. When the 
+current node has animation data, we override  
+97:04 - the no transformation matrix which was initial 
+initialized by the entrance formation matrix  
+97:10 - from the graph. And the explanation for that 
+can be found in the documentation that tells us  
+97:16 - that the transformation matrix computed from 
+these values replaces the nodes original  
+97:22 - transformation matrix at a specific time. This 
+means all keys are absolute and not relative  
+97:30 - to the bone default pose. Okay, so if you 
+expected the animation matrix to be applied,  
+97:37 - on top of the no transformation, that is not the 
+case, if the node is not animated, we continue the  
+97:43 - process with the transformation matrix from the 
+graph. But if it does have animation, we have to  
+97:49 - override this matrix with the one that we're going 
+to calculate. So you want to be careful here,  
+97:55 - otherwise it will get garbage. The transformation 
+matrix of the animation is calculated  
+98:00 - by initializing three separate matrices for the 
+scaling, rotation and translation, and combining  
+98:07 - them as usual, into a single matrix. For example, 
+let's see how the scaling matrix is calculated.  
+98:14 - We prepare a vector for the scaling and notice 
+that I'm using the SNP vector structure here, AI  
+98:21 - vector 3d, we call calc interpolated scaling with 
+the scaling vector, the animation time and the  
+98:28 - node animation structure. This function starts by 
+checking the number of scaling keys that we have.  
+98:34 - If there's only one key, there is no room for any 
+interpolation, so we just return the value of the  
+98:40 - first key. If there is more than one key, we need 
+to find the key that matches the current time.  
+98:46 - The keys are sorted by time. So we need to find 
+the first key whose time is greater than the  
+98:52 - current time and we need to interpolate between 
+that key and the one just before that. To do that,  
+98:58 - we have fine scaling, which traverses all 
+the scaling keys in the AI node nm structure,  
+99:04 - and compares the current time to the time in the 
+key. Notice that the for loop starts at zero and  
+99:09 - stops at one key before the end, because we're 
+actually checking the key at i plus one. And if  
+99:17 - the animation time is smaller than that time, 
+we return the index i back to calc interpolated  
+99:23 - scaling. Once we have the index of the correct 
+key, the next index is the one that we found  
+99:28 - plus one, we have to interpolate between these two 
+keys. And this is standard linear interpolation,  
+99:34 - we calculate the delta time between the two keys. 
+And the interpolation factor is the range between  
+99:40 - the beginning of the time range that we found 
+and the current time divided by the length of  
+99:45 - the range itself. So this will give us a factor 
+between zero and one depending on how close we  
+99:51 - are to the edges of the range. Okay, so 
+if we're very close to the beginning,  
+99:56 - the factor will be close to zero and if we're 
+almost at the end factor will be close to one,  
+100:02 - the way that we actually use the factor is by 
+grabbing the scaling vectors from the two indices,  
+100:08 - calculating the range between them. And then the 
+result is the starting value plus the product of  
+100:14 - the factor and the delta k. So this allows us to 
+smoothly interpolate between the scaling vectors,  
+100:21 - especially when the game is running at a higher 
+frame rate than what the model was originally  
+100:27 - designed for. Going back to read node hierarchy, 
+you can see that we use the interpolated scaling  
+100:32 - vector to initialize the standard scaling 
+matrix, calculating the interpolated rotation  
+100:38 - and translation is exactly the same. The 
+only thing worth mentioning here is that  
+100:43 - interpolating the two quaternions is done using 
+the SMP interpolate function, which is part of  
+100:49 - the AI quaternion class. We also normalize the 
+quaternion before we return it to the color,  
+100:55 - we combine the three transformation matrices 
+together in the standard order which you  
+101:00 - can also see in the documentation, scaling, 
+rotation and then translation. And that's it.  
+101:20 - So this completes the mini 
+series on skeletal animation.  
+101:24 - I hope you enjoyed it as much as 
+I did, please hit the like button  
+101:27 - subscribe, feel free to comment below 
+and they'll see you in the next tutorial.
+
+Cleaned transcript:
+
+In this intermediate OpenGL course, it Ty will teach you about skeletal animation using 3d models. Hi, my name is Italian, I'd like to welcome you to a course on skeletal animation in OpenGL. If you have some experience with OpenGL, and you want to learn how to load an enemy 3d model files such as FBX x, which is used in unity, then this is the course for you. The course is composed of two main sections. In the first one, we learn how to load models using the SNP library. And the second section is actually made up of five parts, where we implement skeletal animation, step by step, I consider the material here to be intermediate level. So you should be familiar with the common 3d transformations, setting up vertex and index buffers and writing shaders to do basic lighting. If you need some ramp up on these topics, you will find beginner level tutorials on my YouTube channel and on my website, as well as resources by other creators as well, of course, you'll find links in the video description below the programming language of the course in C++. So you should be familiar with it. But don't worry, you don't need to be a C++ expert. I'm using very basic stuff such as glasses, and no fancy stuff from C++ 20, or anything like that. In terms of operating system. I'm running Linux as my main development to us. But you can also use Windows Of course, you'll find all the sources in GitHub, and I'll include Visual Studio solutions as well. So without further ado, let's get into it. Welcome back to jail live, I guess it's quite clear that there is a limit to the complexity of a manually created model. The pyramid is okay. And cube is also okay. But when it comes to modeling something from the physical world, you need some help there. That's why we have software like blender, Maya, 3ds, Max, and many many other tools that allow you to create models in a sophisticated 3d environment. With lots of supporting tools that help the modeling artists create the amazing 3d worlds and objects that we are used to in modern games. The modeling software takes care of calculating the position texture coordinates and any other vertex attributes that you may need. It also groups the vertices into triangles and manages the corresponding indices. And finally, the modeling software saves all this data to file so you'll be able to load the model in your game or application and manipulate it using OpenGL or any other 3d API. It will probably not surprise you that since there are many 3d modelers, we also have lots of formats for the model files. Choose a partial list. So if you want to load these model files into your game, you can either write a custom loader yourself or use an existing library for that. If you like writing everything from scratch, then you're welcome to write such a parser on your own. But my recommendation is to go with an existing solution because it will save you a lot of time. In this video, we're going to use the open asset import library or SMP, which is a free and open source library that is very easy to use and supports many file formats. SMP takes care of parsing the model file, which by the way can be text or binary, and loads it into its own native data structure in memory. What we need to do is to use this data structure in order to populate OpenGL vertex and index buffers. Load any textures that may also be present and set up the layout of the vertex attributes. Let's start by installing SMP and we have several options here. Depending on the operating system. I'll include the instructions for everything that you are going to see in the video description. If you're on Linux Ubuntu, you can simply execute the following command to install SMP. If you want to build SMP yourself, you'll need to clone the following repo. CD into the new directory and execute C make space.if You don't have CMake installed you can easily install it using sudo apt install Simic. At this point, you may run into various difficulties mostly due to missing packages. Let me know of any issues in the comments and I'll try to help as much as I can. You can also use the support forum on the GitHub page. If CMA completed successfully you can execute make and then sudo make install to complete the installation. Now you need to integrate SMP into your build process. As you probably know, I'm using simple bash scripts to build my sources. In these scripts, I'm using package config to get the build and link parameters. So all I need to do is to add a sign p as a parameter to the command package config dash dash c flags to get the include directory and package config dash dash libs to get the link command. The results of the two commands are provided as parameters to g plus plus below. Package config is very handy because its behavior is tailored to the distribution that it is running on, which makes it very flexible. On Windows, you also have two options, you can use the binary is provided with my source repo or you can build the source yourself. Unfortunately, it seems that prebuilt binaries for windows are no longer available from the SMP website. Okay, so if you want to use the binaries that I've created, you can go to the old jail dev directory, go to windows down here. And in the lib directory, you will find that this file is sent PVC 142 Empty dot lib, that's the library that you need to link against its release built of SMP and you also need the DLL for runtime, which is in this directory DLL. It's the same file just with the extension DLL, okay. And you will also need all the headers that we have here at old jail dev slash include, we have SNMP. And that's all the headers of this library checked in right here. That's the latest version at this time. Now, if you want to build the sources yourself, you need to check them out using gate. I'm using Tor to his gate. And I've explained how to install it in a previous tutorial, the one about Windows support, so you can find it there. So what you need to do is right click in some directory and then get clone. And here's the address of the website, which by default will go to this SNP directory. Now I don't need to press OK, because I already got it checked out right here. So let's go inside. And here you can shift right click and go to Open PowerShell window here. And you will also need C make installed just type C make C make lists dot txt and run it and it will generate the Visual Studio solution file which we can find right here SMP dot SLN. So let's open this one. And here it can select whether you want the debug or the release version. As they said what is checked into the old jail dev source repo is the release version and make sure that you're using x 64. And then you just need to do build and rebuild solution okay. Okay, the build is complete. So we can go back to SMP slash lib. And the Select debug or release whatever you use to build in this case, release. So we have this file here, which is exactly the one with which is checked into the origin of source repo and also in slash bin, we have the DLL, okay. Okay, now go to your project. Right click it properties. Let's go to linker and input. And here in the additional dependencies, we have the s&p lib file, you will also need to make sure that in C++, general you will have the include directory here as the additional Include Directories now, I've already got this directory from from all the previous project, which is going up three directories and include from the location of the project. Okay, so if we go to the location of the Visual Studio project file, in our jail there have windows or jail dev vs 2019. We have the project right here. So we're going up three directories. And here we've got include, and here's the SMP headers. So when we include the headers, we can simply write this directive right here because this references, the include directory that we just saw. And we also need to make sure that the DLL file can be accessed during runtime. So let's go to the project properties again, and go to debugging. And here we can see that I've added the location of the DLL directory right here. So now we can run it. Now let's dive into the code and I will explain the structure of a cmp as we go along. Okay, so first, I created a class called Basic mesh that represents a model loaded using a cmp. This class is declared in OpenGL dev basic metadata h in the include directory. We have several public and private functions here, as well as a few private variables. We'll revisit these items as we go through the class. Now let's go to the implementation of this class in ojio, def basic mesh dot CPP in the common directory. The first function I'd like to review is load mesh, which is a public function that takes the file name as a parameter and serves as the top level entry point for the entire loading process. The first function call inside this function is to declare a private function. This function clears all the internal data structure of the class, allowing you to reuse the same class object for loading a different model. We're not going to use this capability in this tutorial, so I'll just keep it next regenerate and bind the vertex array object for the current model. We've covered videos in the previous tutorial, so make sure you watch that for more details. Next, we generate six OpenGL buffer objects and buffers is a private array of six unsigned integers. In this tutorial, we're going to see a different method of storing vertices. What we've been using so far is a method known as array of structures or aos. The core element in this method is a structure that contains vertex attributes such as position, texture coordinates, normals, etc. For storing multiple vertices, we have an array of this structure, hence the name array of structures. This arrays loaded into the open GL buffer, which means that the attributes are interleaved, they're in the exact same way as in CPU memory. The second method and the one that I'm going to demonstrate today is a structure of arrays or SOA. Here we have a separate array for each of the attributes. Okay, so we have an array of positions, array of texture, coordinates, and so on, we can group these arrays together in a single structure. As the name structure of arrays, the arrays must all be of the same length. So in order to access all the attributes of a single vertex, we need to use the same index to access each of the arrays. OpenGL allows us to use both methods to build up our 3d objects. We use an enum to access each buffer by its name or other than an obscure number. So the first buffer is the index buffer, we have the position at index one texture coordinates at index two, and normal let index three normal vectors are required for lighting effects. For now, this is just a placeholder. So if you're writing this code yourself, you can drop it. The last two buffers W, VP, math VB and World Map VB are also placeholders. They will be used in the future when we get to instancing. Back to load mesh, we can see that we're initializing all the buffers in a single call to GL Gen buffers. By the way, array size in elements is a handy macro for calculating the number of elements in an array by dividing the size of the array by the size of the first element, which must always exists. In order to access the services of SMP, we define an object of the importer class which is defined in the SMP namespace. To get this compiled, we must include three files from the SMP include directory, importer, dot HPP, scene dot h and postprocess dot h, we actually load the model we call importer dot read file passing in the model file name, and the list of SNP flags which is wrapped inside this SNP load flags macro. These flags allow us to modify the behavior of SMP so let's quickly go over them. First, we have to triangulate flag. Many modeling tools allow you to build models using polygons with more than three vertices, we must use triangles. So this flag tells this MP to split these polygons into triangles. Jen smooth normals is for lighting. So let's keep it for now. Clip UV flips the texture coordinates along the V or the y axis of the texture. This is something that you may need to play with to make this work with your models because some modelers will allow you to control this when exporting the model. And finally, we want the same pay to join identical vertices and adjust the index buffer accordingly. This will save us some memory. There are many more flags available in the SNP postprocess dot h header and you can find the full documentation online. This is actually one of the reasons why SNP is so flexible. If read file returns now then the call has failed and we print the error using important dot get error string. Else we get back a pointer to an object of the AI scene class. And we call init from scene to continue the initialization. A scene is the top level data structure in the memory representation of the model that SMP created. As usual before we leave this function, we unbind our V O from the OpenGL state. And let's continue with the init from scene which is defined below this function. The way that the AI scene is structured is that it matches the behavior of most modelers that enable you to split up the model into subcomponents. This allows you to apply some transformation on one component without affecting the others. So you can have a head and arm a sword and whatever. If the model is split into sub components SMP creates an AI mesh structure for each component. This AI mesh contains all the vertices and indices of that component. The number of AI mesh structures is given in the M num meshes variable The AI scene class, we reserve a matching number of elements in our private variable meshes, which is a vector of basic mesh entry. Basic mesh entry contains a few variables that we will need to maintain for each AI mesh, such as the number of vertices, base vertex, etc. We're going to see these soon. A scene can also contain textures, and SAP reps one or more textures in something which it calls materials. These are stored in an array of AI material structures. And the size of this array is given in m&m materials. We have a matching vector of pointers to our texture class, we reserve space there accordingly. Now, here's the plan, we're going to stack up all the vertices and indices from all the AI mesh structures in the buffers we've just created, according to their type, index, position, texture, coordinates, etc. However, each AI mesh may use a different texture, but we can switch textures in the middle of a draw call. This means that we need to launch a draw call for each a mesh separately, and this will give us the opportunity to switch textures as needed between draw calls. This also means that we cannot use GL draw elements. Because this function only draws vertices from the beginning of the buffer, we need a more sophisticated function that allows us to draw from different offsets within the buffer. And OpenGL provides us with such a draw function. Okay, so in order to actually allocate space in our index and vertex buffers, we need to know how many vertices and indices there are in the entire scene object. Unfortunately, these are not readily available to us, so we need to actually count them. We do this in the private function count vertices and indices, which also updates the meshes array, we just need to loop over the elements in the meshes array that we've just resized. For each element, we copied the material index from the corresponding a mesh, we calculate the number of indices in the current mesh by multiplying the number of faces by three, since after triangulation, all the polygons are now triangles, the base vertex is the index of the first vertex of the current mesh in our global buffers. To calculate it, we increment number this is by the number of vertices in the AI mesh, we calculate the base index in a similar fashion by incrementing num indices by the number of indices of the current mesh that we've just calculated. So for example, if we have three meshes with 100 250 vertices, then the first mesh is at offset zero, the second mesh is at offset 100. And the last one is at offset 300. When we exit the function, both num vertices and indices contain the totals for each type. When we're back to Unit from scene, we call reserved space with the two counters. This function allocates space in four vectors for the positions, texture, coordinates, normals, and indices. These vectors are private members of the class, they will be used to accumulate all the further says from the AI scene structure. So we can load each OpenGL buffer with a single call to GL buffer data. Back to load mesh, we call it all meshes, which simply reverses all the SMP mesh structures and calls in each single match for each one. In this function, we actually populate the vectors that we just saw with vertex and index data. We do this by going over all the vertices in the a mesh and extracting the position normal and textural coordinates from their respective location in the AI mesh. Notice that these items are represented by SMP API vector 3d, which is very similar to our vector class. In the case of the texture coordinate, we must also check that it exists in if not use the zero vector instead, we can now populate our vectors with this data. Also, notice that in the case of the texture coordinates, we only use the X and Y out of the 3d vector populating the indices is very similar. The mesh contains an array of triangles called M faces. Each AI face structure contains the three indices, which we need to push into the indices vector. The next function that you need from sin calls is you need materials. This is where we allocate GL textures for the images in the model. The image files are stored in the same directory as the main model file. So first, we need to extract the directory of the model file. This is done by simple parsing of the last slash character. We can now to reverse the Materials array in the SMP scene. Material is basically a container for multiple textures, and it may contain diffuse specular and ambient textures, as well as stuff like a height map, normal map and etc. These are required for more advanced stuff like lighting, for basic texturing we just need the diffuse texture. So we check whether it exists by calling get texture on the material with the AI texture type. underscore diffuse enum. In the first parameter, the second parameter is zero because we only want the first texture. The third parameter is an address of an AI string variable, where the path of the texture will be returned if it exists. Of course, right now we don't need the rest of the parameters. So we have nulls. There. If the call was successful, we construct the full path of the texture file. Inside the model, the path of the texture is relative to the location of the model file. Now we can create our texture object as usual and load it. Let's go back to knit from scene for the last time. And the final call here is to the private function populate buffers. And this is where we prepare stuff for using SOA. We start by binding the position buffer to the GL array buffer target to make it current, we load the data from the vector into the buffer by calling GL buffer data. The number of bytes is obtained by multiplying the size of the first element by the number of elements in the vector. The base address is the address of the first element and we use GL static draw, because we don't plan on updating the buffer again. Next, we enable the vertex attribute for the position. At the top of this file, we have macros for the location of the three vertex attributes. It's not the most robust design because we must keep this in sync with the shader, but it will do for now. Next, we configure the layout of the position buffer by calling GL vertex three pointer. Again, we use the macro for the index of the attribute, we have three floats here, JL falls for no need to normalize, and the last two parameters are now zero. Previously, we had to put here the size of the entire vertex structure, and the offset of the current attribute inside the vertex. Since the positions are packed one after the other, we can now put zeros here because the driver already knows everything from the three floats. We repeat the same process for the texture coordinates and the normals. And every time we call GL vertex a three pointer, the drivers stores the address of the buffer, which is currently bound to GL array buffer for the current attribute. This enables each attribute to come from different buffer. Okay, so SOA structure of arrays. Finally, we populate the indices, just remember to use GL element array buffer for the target here. Congratulations, we are done with uploading the model. The only thing that we have left here is of course, the render function, we start by binding the V of this model, this brings in the vertex layout that we've just created. Next, we traverse our internal meshes array, we get the material index, and we check whether we have a corresponding element in the texture array because there may be a material without a diffuse texture. If there is a texture we bind it, color texture unit is simply a macro for GL texture zero that I keep in OpenGL dev engine common dot h, I'm using this file in order to keep the tutorials somewhat consistent. Now comes the interesting part. Instead of GL draw elements, we use GL draw elements base vertex that allows us to draw sub regions of the vertex and index buffers. The first parameter is gL triangles as usual. The second parameter is the number of indices of the current mesh, which we've calculated when we loaded the model. Next is the data type of the index unsigned int in our case, next is the offset to the first index of the current mesh in the index buffer. So we multiply the base index of the current mesh by the size of an unsigned int. In order to get the offset, we also need to cast it to void pointer. I think this is due to some historical issue with this function. The last parameter is the base vertex for the current draw call. You see, the original indices that we got from SMP started at zero in each AI mesh structure, but we decided to stack up all the vertices in a single buffer per attribute. This messes up the indexing, one solution would be to adjust each index based on the starting position of the mesh in our single buffer. A more simple solution is to use this last parameter here as a base Vertex. This number will be added to each index so that it will match the offset inside our buffer. For example, let's say that we have two AI meshes. The indices have both meshes started zero, but each mesh obviously refers to its own set of vertices. we stack up the two vertex groups one after the other and let's say that the size of the first group is 100. So the base vertex for the second group will be calculated as 100. When we render the second group we will pass in 100 in this last parameter, so that index zero will become 100 index, one will become 101, and etc. So we have a sub set of indices that started some offset inside the index buffer. And to each index, OpenGL will automatically add whatever we put as the base vertex. All these elements were already calculated when loading the model. So they are now ready when we get here. Okay, so we have a series of draw calls here. Each draw call uses a subset of the index and vertex buffers. And before each draw call, we have an opportunity to switch textures. Now let's see the changes in the main application code. In the tutorial 18 class, I got rid of all the videos, videos, and index buffer that they used to keep around here as well as the world transform object. Instead, we just need a single pointer to basic mesh. In the init method, we need to call the mesh with the path of the model file. In the main render function, we perform all the transformations on the wall trans object that we have in the basic mesh class. So if we have multiple meshes, it makes it simple to keep the transformation of each mesh inside its own object. Also, instead of calling GL draw elements, we just need to call the render function on the mesh object. This is basically all we need to do here. Let's build and run this. Okay, so this looks like a spider. But there's obviously something wrong here, right? The problem is that they haven't enabled the depth test. Without it, the frame buffer works like a regular Canvas. So whatever color you use last, that's the color that you're actually going to get on the final screen. With simple stuff like the cube, we couldn't see the problem. But with more complex models, the problem is evident. I discussed the depth buffer in the previous episode, so I won't repeat it here. By enabling the depth test, we make sure that the closest pixel is rendered. Regardless the order of rendering. We do this by calling GL enable with the GL depth this macro as a parameter, we must also clear the depth buffer on every frame, else it will contain garbage data from the previous frame. So in the main render function, we add the GL depth buffer bit with the bit mask that we provide to the GL clear call. Okay, guys, you can now go ahead and try to load different models that you find for free online, or that you create yourself if you know how, I can't guarantee that this code is bulletproof and will work for every model, it probably still contains some bugs, please let me know if you run into a problem. Welcome back to jail then. In this tutorial, we're starting to take a look at skeletal animation and how to implement it in OpenGL skillfull. animation or skinning is considered the standard way of animating almost any living creature. And it can also be used to animate monsters, aliens, as well as various types of types of machines, such as robots. Therefore, it is a core technique in game development. So over the course of the next few tutorials, we're going to do a deep dive into it. Si MP, the library that we've been using to load models has very good support for skeletal animation across several file types. So we will take advantage of it. The way that I'm going to cover this subject is going to be very hands on oriented. I'll provide an overview of the process and the technique. And then we'll basically jump back and forth between the code and the theory. We'll understand some part of the algorithm and then see how to implement it in C++ using OpenGL. And then back to theory and etc. I'm going to use Blender as the modeling tool. So for simplicity, I'll just use the name blender. But of course, all the other major modeling tools support skillful animation as well. Just to clarify, I'm not an artist. But for the purpose of developing this mini series. I did spend some time studying blender because I think that the familiarity with the tool where you create and animate the model gives you better and better understanding of the developer part in this process. Now let's take the human body. As an example. As you're probably aware, 70% of our body is water, which is why we are so flexible, the bones are wrapped by flesh and the flesh is wrapped by the skin. So basically, you can say that the skin is carried or held by the bones. Now this is not going to be a lesson in anatomy. All I'm saying is that the idea behind skeletal animation is pretty much borrowed from the real world. All the models that we've been using so far have been simply the exterior representation of a real world object. Inside the object. There is nothing so In the context of skeletal animation, we call the model itself the skin, which is why this technique is also called skinning. The bones are the skeleton, which kind of carries the skin like in the real world. But since we don't have any flesh in our model between the skeleton and the skin, the replacement that blender provides is simply a list of vertices that are affected by each bone. This means that when the bone is animated, or to put it in a language, which is more common to us, when it is translated and rotated, the same transformation which is applied to the bone must be applied on the vertices that are affected by it. For example, when the bone of an arm is translated, and rotated, the part of the mash that represents that arm is translated and rotated. To follow the movement and rotation of the bone. Calculating the transformations that must be applied on the vertices due to the movement of the bones is the major goal of this technique, it is important to understand that only the skin gets rendered and not a skeleton. The job of the skeleton and the bones is simply to help us define the range of movement that is available to the skin. For example, the angle between the arm and the forearm can range between zero, quote unquote when the two limbs touch each other, and then in the 180 degrees when the forearm is fully stretched. Beyond that the elbow will break. Not nice, the processing blender of placing the virtual bones inside the skin, making them in the proper length to fit the specific body part and connecting them together into a skeleton is called rigging. Skinning is the process where you connect the vertices to the skeleton and define the amount by which each vertex is affected by the bones. The last piece of the puzzle is animating. And this is where you use the available controls placed during the reading phase in order to create a set of keyframes that define the movement of the bones of the bones. Over time, skeletal animation has two main characteristics that help us mimic the real world movement. First, the skeleton defines the hierarchy of bones, most bones will have a parent. So when the parent bone moves, the child bone follows this relationship is one way the child may move without affecting the parent. Second, each vertex may be affected by more than one bone. This means that when one or more bones move, the transformation of the vertices that are influenced by these bones must somehow combine the transformations of each bone. Actually, if you have a model where every vertex is fully controlled by a single bone, then that model is probably that of a robot or any other type of machine. A car is a simple example, you can use skeletal animation to animate the opening and closing of car doors. The door is connected to the car by some kind of metal joint. But when the door opens, the only vertices that are moving belong to the door, the rest of the car stays exactly where it is, this is definitely not the case with living creatures. Here we want the model to deform in a way that will simulate deal assisity of the skin. This behavior is most evident around the joints. Skillful animation allows us a high degree of flexibility in terms of calculating the movement of each vertex based on all the balls that are affected. We do this by assigning a weight to each combination of a bone and a vertex the way it is a fraction between zero and one. And the sum of all weights per vertex should be one, we do the calculation as a linear combination of the bone transformations and their weights. For example, if the weight of two bones affecting one vertex is a half, it means that the vertex is equally influenced by both bones and its movement will be the average of the movement of the two bones. If one way it is point nine and the other is point one, it means that the vertex is probably much closer to the first bone so it will go along with it. But there will still be some minor influence coming in from the second bone that may pull it a bit towards a different direction. Blender provides the artist with powerful tools to set the weights of the different bones. Most artists will probably start with an automatic assignment of weights in this method, Blender calculates the weights based on the distance between the vertex and each bone. The next step will be to review the result and start fixing and adjusting and tuning the model using weight painting. Weight painting is a feature in Blender where you increase or decrease the weights of vertices for the selected bone by going over them with a special brush. Usually, the artist will develop the skin first and then structure the skeleton inside it. It makes sense because the bones must match the dimension of the body part that will actually get rendered. At this stage before the animation processes started. The posture of the skin is called Bind Pose. This is very important because all the underlying transformations and math will reference the Bind Pose as a starting position. There are no restrictions in terms of how the model should look like in Bind Pose. But the common practice is to keep the model in this kind of relaxed posture without too many bendings in the area of the joints. If you search for skillful animation Bind Pose in Google Images, you will find many examples of this posture for the human or semi human models, with the arms kind of stretched to the sides and the legs are straight and relaxed. When you render the model without applying any animation on it, you should get it in Bind Pose. Once rigging and skinning have been completed, the model is ready for animation. Naturally, the same set of bones can be used for multiple sets of animation. Think about all the possibilities the human body provides in terms of movement and flexibility. All this is achieved with just 206 bones. Even with a small subset of these bones in a human model, you can still implement many animations. Therefore each animation set will simulate some kind of activities such as walking, running, fighting, etc. An animation set is composed of a series of transformations that are applied on the skeleton as the artist animates it. These transformations may include as usual scaling, rotation and translation. In the case of humans in many other living creatures, we will only encounter rotation and translation. But the technique itself can support animated scaling of bones as well. The transformations will be provided at regular intervals according to some frame rate. For example, a 10 second animation and 24 frames per second will include 240 sets of transformations, these sets are usually very close. So if the actual frame rate in the game is higher than the animation frame rate, we can interpolate between consecutive transformations and get the final animation. Since these transformations represent the changes in the orientation of the bones, we can apply them on the vertices that are influenced by these bones and basically animate the model. Okay, this is enough theory for now. I've left out many details that we will need for the full implementation. But at this stage, I'd like to get our hands dirty with some code. Now skeletal animation is supported by various file types. And if you implement the loader, for a specific file type, you will probably need your skeletal animation code to adhere to the conventions of that file type. However, since we are using SNMP, we only need our code to adhere to the conventions and specifics of this library. And by that, we'll be able to support many file types. As I said, we're going to implement these techniques step by step in hands on approach. So let's create a simple utility that will parse the data structures created by SMP and extract the relevant parts from it later, we will incorporate this logic into our OpenGL application. Now this utility is not required for the actual execution of the animation, but will be very useful for debugging etc. So this utility is composed of a single file, which I call the CMP sandbox cpp. And we've also got a build script in the same directory called the build SNP sandbox to build it, and it is very simple. We have the build flags right here called CPP flags. And for now, I've included only dash g gdb. Three in order to build it with debug information for debugging. And we've also got the link flags called LD flags, which is a call to package config dash dash libs SNP. I'm often using package config in my build scripts in order for my code to hopefully compile on as many machines and systems as possible. Okay, so if you run this on the command line, package config dash dash libs a cmp. In this case on my machine, he tells you that the link command is dash l si MP and on other systems, it may generate a different command. Okay, and the final build command is very simple, we call g plus plus the name of the CPP file, the compiler flags, the link flags dash O and the name of the binary. Okay, so now let's take a look at the CPP file. And by the way, I have a video on loading models using SNP so definitely check that out. If you want more details. I'll go over the major details in this video. Okay, so first we need to include these three headers for SMP. Okay, let's scroll down to the bottom. And here we have your standard main function, we're checking the number of parameters here and needs to be two, because there's a single parameter to this utility, which is the model file name. Okay, so if that's not the case, we simply exit the utility. Next we pick up the file name from location one in the arg v array. And we define an object of the SMP importer class, which basically handles all the s&p parsing stuff. Next, we call read file on the importer object using the file name and the load flag for s&p which I defined. For convenience right here. And this is pretty standard. We've done this already, triangulate all the polygons in the mesh generate normals and join identical vertices, we check for error, and we call porcine using the returned AI scene object from read file. So a scene is the main object that handles all our interaction with SMP and it has several interesting functions, as well as members that we can access. In this case, we're going directly to the to the meshes, okay, there is array, an array of API mesh object, which is where all the vertices live, and the indices as well as the bones. So porcine is very simple, it just calls parse meshes with the scene object. And in the future, we will have a function to handle the hierarchy and the animations. Okay, so this will grow and develop over the next few tutorials. So we have parse meshes here. And we start by printing the number of meshes in the scene object, which you can find in the M num meshes attribute in the scene. Next, we prepare a few counters. For the total number of vertices, indices and bonds, we loop over the number of meshes, and we extract each Mesh from the meshes array based on the index, we take the number of vertices, we calculate the number of indices, which is the number of faces time three, because we've triangulated, all the polygons and we also access num bones. Okay, so in the AI mesh structure, we have an array of bones right here. And we have the number of bones in this attribute, M num bones. Next, we calculate the total number of vertices in decision bonds, which we're going to print at the end of this function. And this is mostly for informative purposes, just to make sure that everything everything is working correctly. The important pieces here, where we call has bones, which is a Boolean function that tells us whether this mesh has any bones in it. And then we call parse mesh bones on the specific mesh that we're currently processing. So now let's go to parse mesh bones, which is up here. And this is also very simple, we loop over the number of bones in this mesh, and we call parse single bone. Now if we run this right now, and we'll use a model, which is checked into my repo, called Bob lamb clean, and the five mesh, which is by the way, from Doom three, and you can see that it tells us that there are six meshes. And these are the names of the meshes. Okay, we have a body, a face, a helmet, grill, grill, and another body. And for each mesh, we can see the number of vertices and indices. And this is the important thing here, the number of bones Okay, so the body has 28 bones, and the face has just two bones. And these guys have one bone, and the last one has two bones. Okay, and if we load it in Blender, we can actually see right here on the right hand side that these meshes correspond to components of the mesh inside blender. So we have the grill which this guy is holding, and we have the body. Okay, and this part of the body is actually the sword, the face and the helmet. Okay, so now let's see, parse mesh bones, which is right here. And this is a simple loop over the number of bones in the mesh, and we're calling parse single bone for each bone. From this array and we'll also we're also passing in the index of the bone which we will later see. So let's see what we have in this AI bone structure. And there are only four public attributes. Okay, we have the name of the bone, which is used for informative purposes, as you saw in blender, you want to name the bones, so you will be able to remember what it's supposed to do. And we have the number of weights here, which is actually the number of elements in this array, and weights. Okay, we'll see that in a second, we have an attribute called M offset matrix, which is a four by four matrix. And he tells us that this matrix transforms from mesh space to bone space in Bind Pose. Okay, so this may sound a bit intimidating, but we will see how to use that in a future video. And the last attribute is the M weights array, which is of the AI vertex weight structure. And this structure contains just two attributes. Okay, so every element in the structure has a vertex ID, which tells us the index of the vertex that is influenced by this bone, and the strength of that influence, which must be in the range zero to one as we talked about earlier. So in the parse single bone function, we loop over the number of weights in the bone, and we extract the vertex weight element from the M weights array, and let me just uncomment all these printf calls, were basically printing the vertex ad, and the weight. Now let's run this again. And now we're getting the list of bones for each mesh as well as the verses that are influenced by it. Okay, so here we can see that the first bone bones zero is called pubis and the number of vertices affected by this bone is 190. And here we can see all the all the indices of these vertices as well as the weights okay. So we can see that this model is actually very simple. So when we glanced through this, it seems like when a vertex is influenced by two bones, then the weight of each bone will be a half and if it is influenced by three bones, then the weight will be a third, okay, so always, the weight for each bone will be the same as the other bones, okay, so it averages out. And here's the next bone which is pelvis 254 verses than the spine, and it continues like that. So the total number of bones is 35. This brings us to the first challenge, each bone is mapped to the vertices that it influences and many vertices are influenced by multiple bones. But skeletal animation is implemented in the vertex shader, because this is basically the only place where we can actually change the position of vertex. Therefore, what we really need is a reverse mapping from each vertex to the bones that influence it. This info must be provided to the vertex shader, so that we can calculate the transformation of each vertex based on all these bones. All this and more will be covered in the next tutorial. Okay, quick recap. from part one, we created a small utility to load the bond related stuff from SMP SMP holds the model in one or more mesh structures, and each mesh points to an array of bones and each bone points to an array of the vertices that it influences. For each vertex, we have an index and the weight, which is a floating point number between zero and one that represents the amount by which the current bone influences this vertex. At the end of part one, I left you with the challenge of mapping the vertices back to the bones that influenced them. Okay, so maybe it was a bit too dramatic. Anyway, this video is going to be very technical, and the focus will be on implementing this mapping and making sure that it is working correctly. Now since the core principle in this mini series is to work in a step by step fashion, we're going to implement it first in the SMP utility, and then move this logic over to the main application. I also want to visualize the relation between the bones and the vertices. So in today's demo, you'll be able to actually see the effect that each bone has over the vertices. In this example, the red triangles represent vertices that are highly influenced by the current bone, and this influence decreases as we move from red to yellow, and then to green. The blue triangles represent vertices that don't receive any influence from the current bone. You can click the space bar and switch between the different Bones. This part of the fragment shader is not required in the final implementation. But I think that if you're implementing this in your own code, it will be a good debugging step, just to make sure that everything is loaded correctly into the GPU. Okay, so let's jump back into SMP sandbox dot cpp. And we start by including the map string in vector headers from the C++ standard library for the data structures that we will need here. Next, we have a macro, which defines the maximum number of balls per vertex four balls is enough for my model. So just tweak this to make it match your assets. Next, we have the vertex bone data structure that contains two arrays, one for the indices of all the bones that affect this vertex. And for each bone, we also have the corresponding weight. I'll skip the rest of the structure for now. Next, we have three new data structures, we have a vector of the vertex bone data for each vertex. This is basically the mapping from the vertices back to the bones that influence them. We have a vector of integers called MeSH base vertex. Yes, NPC in class contains meshes, which contain balls, and each bone references the vertices of the mesh, in which it is contained, as if they start at zero, we're going to pack all the vertices together in a single array called vertex two bones. So we want to map the relative vertex index to a unique global vertex index. And we do that by calculating a base vertex for each mesh and adding the relative vertex index to this base. Finally, we have a map from bone names to their indices, because SNP uses strings for the name of the bones. But for us, it will be much more straightforward to work with bone indices. So now let's jump down to main. And we've seen this in part one. So very briefly, main calls porcine, which calls, parse meshes. And here we resize mesh base vertex using the number of meshes in the scene. So for each mesh, we have a base index, which we need to calculate. And we do this right here, the total number of vertices in is increased for each mesh. So before we increase it, for the current mesh, we save the current total number of vertices as the base, we also resize vertex to bones based on the updated total number of vertices, because we're going to need this space when we parse the mesh. Now, this is not the most efficient way to do this. But for utility like that, this is okay. Basically, this vector is resized again and again, for each new mesh with just enough space for this mesh. Finally, we call parse mesh bones. And you may notice that I added the index of the current mesh, because we're going to need it later. First mesh bones didn't change, we simply call for a single bone for each bone with the addition of the mesh index in the first parameter. In part one, this function simply printed all the vertices that are affected by the current bone and their weights. I added some code here to create the mapping from the vertices back to the bones. First, we get the bone ID, which is a unique index for each bone. Inside the loop, we calculate the global vertex ID by adding the vertex ID from the AI vertex weight structure to the base vertex ID of the current mesh, which we set in the past meshes function. Right here. Each mesh has a batch of vertices and the balls that reference them use indices that start at zero, we want to stack up all the indices of all these batches together, one after the other, because we're loading it like that to the vertex buffer. So we have to make these indices unique. So the first batch starts at zero, and then the base of the next batch starts with wherever the previous batch ended. Let's jump to get bone ID, which maps the name of the bone to its unique index. We have a map between a string and an integer called Bone name to index map. If the name already exists, we just return the index. And if not, we set the mapping and the bone Id simply increments automatically as we add more items into the map back to parse single mesh. Now that we have the global vertex ad, we use it to access the vertex two bones array, which I remind you is a vector of vertex bone data structure. And we call Add Bone data with the index of the current bone and the weight which is coming from the AI vertex weights structure. This function searches for a free slot in the weights array and places the bone ID and the weight in that slot. We assume that if The weight is zero, then this slot is free because the weight must be greater than zero with the bone actually influences that vertex. Once we find the free slot and do the update, we can actually the function, if we can find a free slot, there will be an assertion because either you have a bug, or you need to increment the maximum number of bones per vertex. Now let's run this on our Bob lamb clean.md. Five mesh file. And you can see that we get the vertex ID, the bone index, the weight and the index of the slot, where this info was recorded. Let's do a bit of OHLC magic, let's grab vertex and have oak printed just the values in this line. Okay, so we have the vertex ID at index three, bone index at five, weight at seven and slot at nine works, okay. We can solve this numerically by the vertex IDs and we can see that the first vertex is fully influenced by bone number two, the second vertex is influenced by bones two and three. And we got their weights at slot zero and one. So this makes sense. Vertex eight is influenced by 11, two and three. So this looks okay as well. If you want, you can check this more thoroughly. But I think that for now it is okay. The next step will be to integrate this piece of logic into our OpenGL application and actually load the indices and weights of the bones per vertex into a vertex buffer. We can then access it from the vertex shader, and do cool stuff like applying some color to all the pixels that are affected by a certain bone. Again, this is just for debugging but we're making progress in small steps and making sure at each step that everything is working correctly is very helpful. For the integration I copied all GL def basic mesh header and cpp files into this directory and I renamed them skinned mesh dot h and cpp. The next tutorial, we'll include a new version of the same files in its own directory, so you'll be able to compare the two revisions or jail death basic mesh was already covered in a previous tutorial, I'll put a link below to that video right now we'll just cover the skeletal animation related code. This class is called Skin mesh, same as the header. And here we have the max number of bones per vertex. Vertex bone data is here as a private declaration, and it is the same one as in the sandbox, so no need to go over it, we're going to use a new vertex buffer for the bones in addition to the index position, texture coordinates normals, so we have in your enum for the bone vertex buffer, we have the declarations of three functions that I simply copied from the sandbox as these load mesh bones load single bone and get bone ID, I use the word load instead of parse because it is more common. In this class, we have a vector of vertex bone data, again same as the sandbox, we're going to use it to populate a vertex buffer of the bones. And finally, the map between the bone name and it's index. Now let's go to the CPP file, we have two new vertex attribute locations for the vertex shader. This will allow each vertex to access its list of bones and the weights make sure to keep these numbers synchronized with the vertex shader. In the reserved space function, we are resizing the bone vector based on the number of bones Okay, so this is the same as all the other buffers here. In init single mesh, I added a call to load mesh bones which calls load single bones which uses get bone ID to map the name of the bone tweets index. Okay, so again, this works the same as in the SMP utility. Basically, when the processing of the scene structure is complete, we have all the mapping from the vertices to bones in this M bones vector, and then, in the Populate buffers function, we bind and allocate the new bone vertex buffer. We also enabled the two vertex attributes to access the bone IDs and weights, we also need to set the layout correctly. So for the bone IDs, make sure to use GL int, and not GL float as all the other attributes, we have four integers for the four IDs, followed by four floats, make sure to set the offset correctly. For the second attribute, we have the max number of bones times the size of a bone ID, so we should get 16 Bytes here. Okay, four bones times four bytes per integer. Now I want to make sure that the bone vertex buffer is populated and loaded correctly. So in this demo, we will paint the triangles that are affected by each bone using specific color. Let's see how to do that. In the vertex shader, we have two new input attributes for the bone IDs and the weights. Notice that the IDs are AI vac and not a regular veck. The regular veck is for floating points and the IDs are integers. So we must use Ivic. The vertex shaders simply copies the two attributes out to the fragment shader. So we also need to declare them as output attributes. Here, we need the type qualifier flat. For the first time, we're used to having the rasterizer interpolate attributes such as colors and texture coordinates across the triangle phase. But in the case of the bone IDs, it doesn't make any sense. So this flat qualifier basically tells the rasterizer don't interpolate, simply copy the attribute as is, we have a corresponding declaration in the fragment shader. And we must use flat here as well. If we forget it, we will get an error that says that integer Vereine must be flat. The rest of the fragment shader will simply copied from a previous tutorial on lightning and the only change is in the main function, we loop over the number of bones and we check each slot in the bone IDs attribute. Whether this is equal to display bone index, which is a uniform attribute set by the application, we're going to see that in a minute. If this is true, we want to set the output color and here, I tried to mimic the behavior of Blender. Okay, so in Blender, if you go to Weight Paint mode, you can switch between the vertex groups, which is basically the bones and then the blue vertices are not affected by the selected bone at all. The red is highly affected and the green and yellow are somewhere in between. I tried to do a similar thing in the fragment shader, okay, it's not perfect, but it's pretty usable. If the weight of the current bone is more than point seven, we output red modulated by the way because it looks like blender also uses the way to interpolate the color between point four and point six, we use green and then yellow for anything else above point one. If the bone index is not found for this pixel, we use blue. I also multiplied the original color that comes from lighting by a small fraction, in order to disable its effect that I didn't use zero, so that the compiler will not yell at me, the delighting stuff is not really used, the application code is pretty standard, so no need to go over everything. The only thing to note here is that when spacebar is pressed, we increment the current display bone index, we use modelu to make sure we don't overflow the number of bones. And then we set this index into the fragment shader. The fragment shader has a uniform integer for this index. And this is what we use for checking the bone ID. So let's see how this works. So the next step is to understand matrices that control the transformation of the vertices during the animation. All this and more will be covered in the next tutorial. In part one, and two, we learned how to load the skeleton information using the SMP library. And we created a mapping so that each vertex can access the bones that influence it. Along with the weights. We verified the implementation using a simple demo that shows the triangles that are influenced by selected bone. In this video, we're going to study the core transformations, or the skeletal animation technique. Remember that in part one, we talked about how you create the appearance of animation in Blender using a set of keyframes where you adjust the location and orientation of the bones in each keyframe. Now, if this was a job interview, and they asked you Well, given the way that blender works, how would you implement animation in general, then I guess that off the top of your head, you know, you could say that you can save the position of all the vertices in each frame. And then during runtime simply render a different set of vertices in each frame. Well, I guess this would work. But you can obviously see the downsides of this approach. This will probably blow up your model files, as well as your vertex buffer or buffers. Therefore, the approach taken by the actual algorithm is to save a single set of positions specifically in Bind Pose that we talked about in part one. In addition, we associate a set of transformations with each bone, one transformation for each keyframe. During one time we perform a weighted average of all the transformations that affect each vertex. In practice, SNP actually saved the transformations step Read items, one vector for scaling and other vector for translation, and the quaternion. For the rotation, we already know how to create transformation matrices from these guys. So no problem there, we only need to figure out how to apply these matrices on the model. Because it's not that straightforward. There is an additional complexity from the fact that we want a parent bone to affect the child bone, but not the reverse. So if the finger moves, it doesn't affect the hand. But when the hand moves, obviously, the fingers also move. To understand how all this works, we need to introduce a new coordinate system, called the bone coordinate system, or bone space, the origin of the bone coordinate system is at the base of the bone. The bone itself points along the y axis, and the X and Zed axis are perpendicular to the Y axis and to each other. Of course, you can turn on the display of this coordinate system in Blender by selecting the armature in the outlier. Going into Object Data Properties tab and inside viewport display, you have a checkbox called axis. We know that in general, the vertices of the mesh are specified in reference to a local coordinate system. So what is the relationship between the local coordinate system and the bone coordinate system? Well, the bones form a hierarchy, which is a simple graph, there is a root at the top and every node has zero or more children, every node except the root has a single parent. When rigging a new model, the artist will designate some bone at the core of the model as the root, the remaining bones will branch out from this route and from each other. In the case of a simple human model, it makes sense to use the spine as the root, and then the immediate children will be the four limbs and the neck. From there, you can continue down to the fingers, the bone space of the root is specified in reference to the local space. So you can think about the local space as a primary coordinate system with the origin 000 on the axis are as usual 100010 and 001, the base of the root bone will be some point in this system, same as the regular verses, and the root bone access will be vectors in this system. In the following 2d example, the origin of the bones space of the root is located at one on the x and one on the y and the bone space axes are some arbitrary unit vectors, things become a bit more complex. When we move from the root of the hierarchy to its immediate children, the bone space of the children are defined in reference to the root rather than the local space. Going back to the example, we can see the root of the hierarchy at one on the x and one on the Y. And the base of the child bone is also at one on the x and one on the on the Y but in reference to its parent, which is the root. In reference to local space, the child's bone is actually located at two on the x and two on the Y. In this example, I made the axis of the two bone spaces aligned with the axis of local space to make it easier for me to calculate everything in my head. But obviously, it doesn't have to be this way. By defining each bone space as a reference to its parent, we can create a chain of transformations that goes from each bone back to the root of the hierarchy. A change in the transformation of a node will obviously affect all of its descendants, but not its parents. If you need an intuition for how this works, you can take the model of the universe as an example, you can trace the orbit of the moon around the earth in a coordinate system which is centered on the earth. The parent of this coordinate system is obviously the one where the Earth orbits around the Sun. So if you want to calculate the location of the moon, in reference to the sun, you need to take its coordinates in the original system and multiplied by transformation from the original system to the coordinate system where the sun is at the origin. The next step will be to multiply the result with the transformation from the sun coordinate system to the coordinate system where the sun orbits around the center of the galaxy or something like that. The final transformation will be from the Galaxy coordinate system to the universe coordinate system and this will give you the coordinates of the moon in the universe. So I'm not sure if professional astronomers will approve this model. But I think that for us it is okay, going back to the bones. The process in skeletal animation begins by transforming the position of a vortex which is given as usual in local space, while the model is in Bind Pose to the coordinate system of a bone that influences it. From there. We transform it to the bone space of the parent and we continue until we get to the root of the hierarchy. At the end of the process, we are back at local space, which is where the root is defined. And we can continue to hold and view space as usual. Now there is a small twist here with SMP known as the global inverse transform, which you may have heard of, and I will talk about it later. Since each vertex is often influenced by more than one bone, we actually need to do a weighted average of the transformations of several bones. Each bone transformation will be calculated in the same way by going back from the bone all the way to the root. In addition to that, we also need to tweak the transformation of each node. As time progresses, otherwise, there won't be any movement to actually implement this process. SMP provides us with two matrices. The first one is called the offset matrix, and it is part of the bone structure, which also contains all the weights for the vertices. This matrix transforms from local space directly into bone space, and it already contains all the transformations that go from the root down to the bone. So you don't need to worry about the hierarchy. When you use this matrix. The official documentation says that the offset matrix transforms from mesh space to bone space in Bind Pose, which is basically saying that if you take a vertex in local space, while the model is in Bind Pose, and you multiply it by the offset matrix of a bone, you will get the coordinates of the vertex in reference to that bone. This means that if two bones influence the same vertex, then by multiplying the vertex position by the offset matrix of each bone separately, you will get two different coordinates in reference to the two bone spaces. Of course, you will need to go back from each bone to the root and calculate the final matrix for each bone. If you transform the vertex by the two final matrices, and assuming that both bones are moving, you will get to different positions in local space, which is why we do a weighted average of the two final matrices to get a position somewhere between the two bones. For the next example, I've created the world's simplest skeleton in blender with the standard box at the origin, and the single bone which is aligned with the y axis which is green. As you can see, the Zed axis of the bone points up, which is actually the default in Blender, I exported the model in the setup to keep it simpler otherwise blender will add transformations from its own coordinate system to the one that we are using. And it will complicate the analysis back to our SNP sandbox. In the function bar single bone, I've added a call to print SNP matrix using the M offset matrix attribute of the bone as a parameter, print SNP matrix is defined appear, and it is very simple, it just prints the matrix nicely. Now let's run this on the model single bone dot FBX x which is in the Git repo, we can see that we're getting the identity matrix as the offset matrix. The reason is, of course, that the base of the bone is at the origin of the local space and the axis of the bone space are aligned with those of local space. So transforming from local space to bone space basically means doing nothing, it's the same system. Let's see another example. I've added a child bone that extends the root bone along the y axis, we can see in blender that the root bone is located at the origin and the end of the bone is at one unit on the Y the child bones starts in the same location and ends at two units on the y. If we run this using the sandbox, we can see that the offset matrix of the parent is still the identity matrix. But the offset matrix of the child will translate us one unit along the negative y axis. And this makes sense because this bone space is shifted one unit on the positive y so in order to transform one vertex, for example, this one right here, which in local space is a two on the Y to the bone space of the child, we need to subtract one unit from the Y because the vertex is closer to the base of the bone than to the origin. I have one last example here called to bones translation rotation dot F BX where the child bone has been rotated 45 degrees up and we can see that the offset matrix of the child is very similar to a matrix that we have developed in the past. So I will leave this up to you as homework to explore. Okay, I hope that everything up until this point made sense. So we can now take a look at the second matrix which is located at the new section of the SMP scene. This is the node hierarchy. The node represents an entity in the scene that has location and orientation relative to a parent. And entity can be meshes, bones, and even cameras and lighting, you can actually design an entire scene in Blender and export it with the camera in lighting, and then load it with the same p. I may do a video about it in the future. But for now let's just focus on the bones. The node hierarchy starts with a single root node, and each node includes an array of pointers to zero or more children and an array of pointers to zero or more measures. This allows you to have a single mesh in your model file and place it in different locations in the world using multiple nodes. As you can see, it is very simple to create the graph that we talked about earlier. Using this node structure. There is also a pointer to a single parent and the matrix called M transformation. The job of this matrix is to transform a vector to the coordinate system of its parent. So this is like the transformation from the coordinate system of the earth to the coordinate system of the sun. After we multiply position vector by the offset matrix, we find ourselves in the coordinate system of the bone. The next step is to find the corresponding node in the graph, apply the transformation matrix of this node and continue all the way to the root. by traversing the parent attribute of the node. The bones are mapped to the nodes. Simply using their names you search for the name of the bone in the node hierarchy until you find the node with the same name. Let's explore the node hierarchy using our SNP sandbox. In the parsing function. I've added a call to parse hierarchy which I will now uncomment this function takes the scene as a parameter, and then calls parse node using the m root node attribute of the scene, parse node, for instance, the number of meshes and children in the node as well as the M transformation matrix event reverses the graph downwards by recursively, calling parse node on each of its children. Okay, so now let's test it. On the first example, single bone dot F bx, we can see that the root node is the identity matrix, it has two children, the cube and the armature, the transformation matrix of the armature switches the Y and Zed axis, and also flipped the sign of the y coordinate. Okay, interesting. The armature contains a node called bone. And you can see that the M transformation matrix here does exactly the reverse. It's which is the Y and Zed axis again, and flips the sign of the Zed coordinate, which was previously the y. Okay, so they're basically cancelling each other out. If we multiply these matrices together, we can verify that we're getting the identity matrix. So I actually posted the question about it on the SFP forum. And I will let you know when I get an answer, there is actually an additional node here called bone and which I guess, is for the tail of the bone, but there isn't an actual bone for this node. So the hierarchy may include nodes that don't have a corresponding bone. But if these nodes have children, then they will have an effect on them. And we will need to take care of that the transformation of bone and translates one unit on the Y axis. And this makes sense, because bone and also defines a coordinate system. So if you multiply the origin of this coordinate system 000 by this matrix, you will get 010 which is the location of bone and in the coordinate system of bone. So this is a trivial example, but it helps us feel how the hierarchy works. If we run this on a real model, like our good old Bob lamb clean, we can see a much more complex hierarchy. We have the root here, then MD five hierarchy, origin, pubis, pelvis, spine, neck and head. The transformations here are too complex. So let's just hope it will all work out correctly. The next step is to integrate the two matrices into our skinned mesh class. All this and more will be covered in the next tutorial. Today, we're going to integrate the two matrices that we got introduced to in the previous video, the offset and the transformation into our skinned mesh class. This includes two steps. First, we need to transform the vertex from local space to bone space using the offset matrix. Next, we need to multiply the bone space position by the transformation matrix of the node and continue multiplying while traversing all the way to the top of the hierarchy. This will bring us back to local space. So we started in Local space and we ended up in local space. So what has changed? Well, basically nothing. In this tutorial, we are still not applying the animation data, which is what actually animates the model. We're just applying the base transformations calculated somewhere between blender and si p. So the expectation is that we will get the model back in Pause mode. Now remember that in addition to the matrices, we're going to use the weights to perform a weighted average of the transformations. So this result is far from negligible. It's an important milestone on the way to our final destination. Okay, so let's review the changes in the skinned mesh class. And we begin with skinned mesh dot h, I've added a public function called get bone transforms, this function will be called in the Render loop. It basically calculates all the transformations for all the bones and returns them in a vector of matrices, which the caller must supply as a reference. Each bone has a single matrix which we can access in the vector using its bone ID. In the final implementation, this function also takes the current time is a parameter, and then it returns a different set of matrices in each call, based on the current posture of the model. In this tutorial, we still don't need it. So I dropped it for now, in the private section, I've added a function called Read node hierarchy. I'll talk more about this function when we get to the implementation of this class. I've also added the SMP importer object, and the pointer to the a scene object as private attributes. And the reason is that we will need to access the hierarchy in the scene. during runtime, when I tried to do it in the previous implementation, where the importer was a local variable in the function load mesh, I got a segmentation fault. So I guess that we need to keep the importer alive throughout the execution. And finally, we have a structure called Bone info, which stores a couple of matrices, we have the bone offset matrix, which is here for easy access. File transformation stores the intermediate results of the whole transformation chain so that when the entire process is complete, we just grab it from here and return it to the application. The constructor of this class takes the offset matrix has a parameter, it stores it in the corresponding member. And it initializes the transformation matrix to zero. And of course, we also have a vector of bone infrastructures, one structure for each bone. Okay, so this concludes the changes in the header. As always, you can compare this file to the previous version, actually, in part two, because in part three, we only touch the sandbox, and you'll be able to see all of these changes. Now let's take a look at the CPP file, we have a minor change in the load mesh function. Instead of the local variables for the importer in the scene, we have the new private attributes in the class, so we will use them the next change is in the load single bone function. After we get the bone ID we check whether it equals to the size of the bone in for vector. If this turns out to be true, we know that this is a new bone, because the bone IDs are a running index. In that case, we create a bone info object using the M offset matrix from the AI bone class. Remember that in addition to the weights, the SMP AI bone class also has this offset matrix. After we initialize the bone info object, we push it into the vector. This means that we can access the bone information using the bone index. At the bottom of this file, we have the two new functions. First, we have get bone transforms, which takes reference to a vector of matrices. We start by resizing this vector using the number of bone infrastructures that we have. Next, we initialize the local matrix to be the identity matrix. And we call Read node hierarchy using the root node of the scene. And this matrix, after Read node hierarchy returns, we should have the transformations that we need in the final transformation member of the bone info vector. So all we need to do is to copy these matrices to the vector supplied by the color. Now let's take a look at the Read node hierarchy function. Which is a bit tricky because it is a recursive function. It takes a pointer to an AI node object and the reference to a parent matrix. The first call to this function is done using the root node of the hierarchy and the identity matrix. We start by creating a no transformation matrix using the N transformation matrix from the node. Next, we create a global transformation matrix by multiplying the parent matrix with this matrix. So we're actually traversing the graph from top to bottom rather than from the node back to the root, because this global matrix is going to be used in the calculation of all of its children, so by going from top to bottom, we can calculate it only once. Note that we're taking advantage of the associativity nature of matrix multiplication, that tells us that as long as we keep the order of the matrices, we can change the location of the parentheses. Next, we check if we have a bone that matches the name of the node, all the bones of the corresponding node in the hierarchy. But there may be nodes without bones, we already have a map between bone names in their indices. So this is very easy to do. If we find such a bone, we update its final transformation to be the result of multiplying gets offset matrix by the global matrix, which basically captures the entire chain from the node back to the root. Finally, we traverse the children of the current node, and we call Read node hierarchy recursively on each child node with the global transformation matrix in the second parameter. So as we go deeper into the graph, this global transformation encapsulates more and more M transformation matrices. Let's take a look at the changes in the application code. And this is very simple. In the render function, we define a vector of matrices, we get the bone transformations from the mesh, and we loop over the vector that we got back, we set the matrices into the skinning technique one by one. This is a very simple function that updates the uniform array in the shader, so I'll skip it and you can take a look at it later. The last change is in the vertex shader, we have a new uniform called G bones. This is an array of 100 matrices, so make sure this is enough. For the models that you plan to load. In the main function, we create a bone transfer matrix as a weighted average of the matrices of all the bones that influence the current vertex, we use the bone IDs of the vertex to access the bone uniform array. Take a look at Part Two if you don't remember, where the bone ideas came from, each bone matrix is multiplied by the corresponding weight, which is also a vertex attribute. If the number of bones is less than four, the weight will be zero, so the calculation will have no effect. We sum up the results of all these multiplications to get the final bone transformation and we use it to transform the vertex from local space back into local space again, once we integrate the animation data, the position will be different than the original. The shader continues as usual by multiplying the updated local position by the W VP matrix, there is actually no change in the fragment shader. So this concludes this video. The next step is to integrate the animation data so we can finally see something moving. All this and more will be covered in the next tutorial. Welcome to the fifth and final part of the skeletal animation tutorial miniseries, okay, so basically, this means that we need to get the animation working by the end of this video. But first, let's do a quick checkup of what we already know about the relevant SNP data structures. The AI scene class has a list of meshes and each mesh has a list of bones for each bone. In addition to the weights and the offset matrix, we also have a corresponding node in the node hierarchy. The node has a transformation matrix that gets us to the coordinate system of its parent. In the previous tutorial, we saw how these two matrices work together, so make sure to watch that video first. The ice in class also has an array of AI animation structures. Each structure represents the full animation sequence, such as running, fighting, or whatever the character can do. There are a couple of time related attributes in this structure, we have m duration, which is the length of the animation in text and empty x per second, which is basically the intended frame rate of the animation set by the artist. So for example, if the frame rate is 30, and your game is running at 60 frames per second, you will need to interpolate an extra frame between two consecutive animation frames, and vice versa. If the game is slower than the animated model, we will need to skip frames to keep up the intended pace of the animation. Obviously, if we divide the duration by x per second, we get the length of the animation in actual seconds. The most important attribute in AI animation is an array of AI node and M structures called M channels. The size of the array array is given in M num channels. Each animated node in the hierarchy has a corresponding entry in this array. So if we go into the declaration of AI node nm, we can see that it has a member called M node name. In order to find the animation data for a specific node in the hierarchy, we just need to find its name. In the M channels array. The animation parameters themselves are given in three separate arrays, position and scaling are given in vectors and the rotation is a quaternion. Each array can theoretically have a different length, which is why we have num position keys, num rotation keys and num scaling keys. In our example, we have 140 Position and Rotation entries, and no scaling. The code must be flexible. To handle all the available cases, AI vector key and AI quad key are actually a pair of attributes that represent the transformation. And the time it takes in which this transformation should take place. The keys are guaranteed to be sorted in their chronological order. So searching for the current time simply means reversing the array until we find the time range between two consecutive keys in which the current time is located. Assuming that the current time will usually land between two keys, we must interpolate between the animation parameters of these two keys. After we interpolate the animation parameters, we combine the scaling rotation and translation into a single transformation matrix. And that's basically it. So now let's jump into the code and see how to actually implement it. This time, I'd like to start in the application code where we have a minor change, and that is the tracking of time. I've added a new private attribute for the start time in milliseconds. And when we are finished with the init function, we initialize it by calling Get Current Time in Milly's. This function is defined in common slash O GL dev utils dot cpp. And you can see that we actually have a different implementation for Windows and Linux. On Windows, we use get account and on Linux, we use get time of day. Both of these functions are very simple, and you can check out the documentation on your own for more details. Now, there are also high resolution timers that you can use if you need more precision, but I'm okay with the millisecond level. Okay, so in the render function, we just need to call Get Current Time in Milly's again, and calculate the delta between the startup time and the current time and that will give us the time that the application has been running. Notice that we divide the result by 1000 here and cast it to float. So we get the animation time in seconds with possible fractions. Between seconds, we provide the animation time to get bone transforms, so that we can calculate the correct transformations for the current point in time. Okay, so while recording, I forgot to tell you that get bone transforms needs to convert the time in seconds into ticks, because the same piece specifies the start time for each frame in ticks. We do this by multiplying the timing seconds by the number of ticks per second. The ticks per second can be found in the AI animation structure. And in case it was not set by the modeling software, we set it to 25 by default, which is simply the value that I saw in the SMP sources. The next step depends on the logic of your game. If you want to run the animation sequence once you need to reset the start time at the point where the animation is supposed to start. In this demo, I want the animation to run again and again. So I'm using F mod to do a floating point model operation of the current time in ticks, and the duration of the animation. This divide the entire execution of the demo into segments of M duration length, and in the animation time in ticks, we get the current time within that segment. Now let's jump directly into the implementation of the skin mesh class. And in part three, I mentioned the global inverse transform, so I want to talk about it for a second. The idea is that in some models that are loaded by SMP, the transformation matrix of the root node may actually be the world transformation of the object. This allows you to place the object in the world already in Blender. In that case, we need to bring the object back into local space, apply the animation in local space and then transform the object back to wherever you want it to be. In order to do that, we need to reverse the transformation of the root node and apply that the end of the entire transformation chain. So after we load the model, we grab the M transformation matrix of the root node. We store it in a new Private attribute called M global inverse transform, and we call the inverse function in order to inverse this matrix. The inverse function is defined in math 3d dot cpp. And this is a standard implementation of matrix inversion, which you can find in many resources online. So no big deal here, the global inverse transform is used in the Read node hierarchy function, you can see that I've added it to the head of the transformation chain. So the final transformation of a bone is first the offset matrix to go from local space to bone space. Then we have the global transform, which caps captures all the node transformations to the root of the hierarchy, and finally, the inverse global matrix. Okay, I hope this makes sense. Now let's jump back to the top of this function, we get the animation time in seconds as a parameter from the application. The next thing we need to do is to access the animation sequence that we're interested in. In this tutorial, I'm keeping it simple. So I use the first animation by default. But if you know that your model has several animations, you can search for the one you want in the animation array. Next, we need to search inside the AI animation structure for the AI node nm that matches the current node. And we do this in the Find node and in function, which is defined right here, it takes the AI animation structure and the name of the node, and it simply traverses the channels in the animation until it finds the one that matches the name of the node. In that case, it returns the matching AI node enum structure. Not all nodes are animated. And in that case, we return now, back to read node hierarchy. If another dimension data was found, we calculate the transformation matrix. For the animation, we're going to cover the calculation in just a bit. But before we do that, I want you to pay attention to something which is very important. When the current node has animation data, we override the no transformation matrix which was initial initialized by the entrance formation matrix from the graph. And the explanation for that can be found in the documentation that tells us that the transformation matrix computed from these values replaces the nodes original transformation matrix at a specific time. This means all keys are absolute and not relative to the bone default pose. Okay, so if you expected the animation matrix to be applied, on top of the no transformation, that is not the case, if the node is not animated, we continue the process with the transformation matrix from the graph. But if it does have animation, we have to override this matrix with the one that we're going to calculate. So you want to be careful here, otherwise it will get garbage. The transformation matrix of the animation is calculated by initializing three separate matrices for the scaling, rotation and translation, and combining them as usual, into a single matrix. For example, let's see how the scaling matrix is calculated. We prepare a vector for the scaling and notice that I'm using the SNP vector structure here, AI vector 3d, we call calc interpolated scaling with the scaling vector, the animation time and the node animation structure. This function starts by checking the number of scaling keys that we have. If there's only one key, there is no room for any interpolation, so we just return the value of the first key. If there is more than one key, we need to find the key that matches the current time. The keys are sorted by time. So we need to find the first key whose time is greater than the current time and we need to interpolate between that key and the one just before that. To do that, we have fine scaling, which traverses all the scaling keys in the AI node nm structure, and compares the current time to the time in the key. Notice that the for loop starts at zero and stops at one key before the end, because we're actually checking the key at i plus one. And if the animation time is smaller than that time, we return the index i back to calc interpolated scaling. Once we have the index of the correct key, the next index is the one that we found plus one, we have to interpolate between these two keys. And this is standard linear interpolation, we calculate the delta time between the two keys. And the interpolation factor is the range between the beginning of the time range that we found and the current time divided by the length of the range itself. So this will give us a factor between zero and one depending on how close we are to the edges of the range. Okay, so if we're very close to the beginning, the factor will be close to zero and if we're almost at the end factor will be close to one, the way that we actually use the factor is by grabbing the scaling vectors from the two indices, calculating the range between them. And then the result is the starting value plus the product of the factor and the delta k. So this allows us to smoothly interpolate between the scaling vectors, especially when the game is running at a higher frame rate than what the model was originally designed for. Going back to read node hierarchy, you can see that we use the interpolated scaling vector to initialize the standard scaling matrix, calculating the interpolated rotation and translation is exactly the same. The only thing worth mentioning here is that interpolating the two quaternions is done using the SMP interpolate function, which is part of the AI quaternion class. We also normalize the quaternion before we return it to the color, we combine the three transformation matrices together in the standard order which you can also see in the documentation, scaling, rotation and then translation. And that's it. So this completes the mini series on skeletal animation. I hope you enjoyed it as much as I did, please hit the like button subscribe, feel free to comment below and they'll see you in the next tutorial.

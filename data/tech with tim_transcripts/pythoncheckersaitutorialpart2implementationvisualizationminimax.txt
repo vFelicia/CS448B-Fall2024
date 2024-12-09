@@ -1,0 +1,1473 @@
+00:02 - [Music]
+00:08 - hello everybody and welcome to part two
+00:10 - of the
+00:11 - checkers ai tutorial so in this video
+00:14 - we're actually going to be implementing
+00:15 - the mini max
+00:16 - algorithm now the first thing i want to
+00:18 - do though is make sure you guys are set
+00:19 - up with the code
+00:20 - so please go to the description and
+00:22 - download all of the code so this is what
+00:24 - it's going to look like here i'm going
+00:25 - to walk through it quickly just to make
+00:27 - sure everyone's clear
+00:28 - on how all this stuff works but if you
+00:30 - want to see how you actually build all
+00:32 - of this code again i already made a
+00:33 - series on just walking through and
+00:35 - building this checkers game
+00:36 - of course if you're interested in the ai
+00:38 - then just download the code and we'll go
+00:40 - from there
+00:40 - but anyways when you download the code
+00:42 - you'll see that there is a main.pi
+00:43 - file there's a checkers folder an assets
+00:46 - folder
+00:46 - and some init.pies main.pi is actually
+00:50 - how the game is played in terms of the
+00:51 - ui side
+00:52 - so this allows us to select certain
+00:55 - pieces
+00:55 - move so on so forth now we're going to
+00:58 - be modifying a few bits of this code
+01:00 - so the first thing i want to do is just
+01:01 - kind of explain to you how this works
+01:03 - so in main.pi it's pretty simple this is
+01:06 - really just what is actually getting the
+01:07 - user's input
+01:08 - so you can see we kind of have a main
+01:10 - game loop here it's checking if someone
+01:12 - has won
+01:13 - if it does you know it's printing the
+01:15 - winner and actually what we should do in
+01:16 - here is say
+01:17 - run equals false which means we're going
+01:19 - to quit the game so this is the first
+01:20 - edition we can make on line 27
+01:22 - if someone has won the game now what
+01:25 - else we see is we have game dot select
+01:28 - game dot update game is a class
+01:31 - and that represents the state of the
+01:33 - game so game is actually kind of like
+01:36 - i don't want to call it an api but it
+01:37 - kind of is just an api that we can use
+01:39 - to play a game
+01:40 - of checkers if you go ahead and look in
+01:41 - this class you can see we have an
+01:43 - update method this simply updates the
+01:45 - display and draws it
+01:47 - we have winner we have reset we have
+01:49 - select which will allow us to actually
+01:51 - select a piece or potentially move a
+01:53 - piece
+01:54 - we have the move method we have draw
+01:56 - valid moves
+01:58 - and then we have change turn so we can
+02:01 - use all of these things um
+02:02 - within this class like any ones that
+02:04 - don't have an underscore before then we
+02:06 - can use them
+02:06 - and essentially that is just kind of how
+02:08 - we actually play checkers
+02:10 - so within this class we actually create
+02:12 - a board from this init method
+02:14 - a board is another class that we've set
+02:16 - up the board handles the state of the
+02:18 - board so holding all of the pieces
+02:20 - allowing us to check what the valid
+02:21 - moves are
+02:22 - it's the actual checkers board whereas
+02:25 - the game
+02:26 - is more handling like okay can you move
+02:28 - there
+02:29 - uh can we allow the board to move over
+02:31 - here whose turn is it
+02:33 - that's kind of what the game is handling
+02:34 - whereas the board is handling more of
+02:36 - the state
+02:37 - of the actual game and it's less
+02:39 - concerned with what the user is actually
+02:41 - doing
+02:41 - so if we have a look here inside of
+02:43 - board we can see we have some stats
+02:45 - related to how many kings are left
+02:47 - how many pieces are left as well so red
+02:49 - left and white left
+02:51 - we have some methods to draw the squares
+02:53 - so the actual checkerboard squares
+02:55 - we have this move method which will
+02:56 - actually move a piece to a certain row
+02:59 - and column
+03:00 - we have get piece which given a row and
+03:02 - column will give us the piece that is at
+03:04 - that row and column
+03:05 - we have create board obviously this is
+03:07 - setting up the board we have draw which
+03:09 - is drawing everything
+03:10 - and then remove uh that's obviously
+03:13 - going to remove a piece or pieces
+03:15 - we have get valid moves which given a
+03:17 - piece will tell us all of the valid
+03:18 - moves that this piece could move to
+03:20 - we have traverse left and we have
+03:22 - traverse right which is handling how we
+03:24 - actually determine where we can move to
+03:26 - and that's it for board finally we have
+03:28 - peace this represents one singular piece
+03:31 - it stores simple things like the cover
+03:32 - if this piece is a king
+03:34 - it's xy position it allows us to draw it
+03:37 - and to move it
+03:38 - and that is kind of the basic setup now
+03:40 - we're going to concern ourselves mostly
+03:41 - with this game and board class
+03:43 - we'll just need to use them because as
+03:45 - the ai right we're not trying to build
+03:47 - this ai we need to know first of all
+03:49 - well where can the ai actually move from
+03:51 - this position
+03:52 - okay we need to have a board that we can
+03:54 - use to score right so we're going to
+03:55 - need some way to evaluate the positions
+03:58 - we need to figure out all of the pieces
+03:59 - that could potentially move
+04:01 - so we need to actually add a few things
+04:03 - to this code to allow that to work
+04:05 - i will do that actually maybe we'll do
+04:07 - that now maybe we'll do that after in
+04:09 - fact let's do it now
+04:10 - so the first thing that i want to do is
+04:12 - i'm going to go inside of this board
+04:13 - class
+04:14 - again go inside of here if you just
+04:15 - downloaded the code and what we're going
+04:17 - to do is simply add an evaluate method
+04:19 - now the evaluate will tell us
+04:21 - given the state of this board what is
+04:23 - its score
+04:24 - now we'll use a really simple evaluation
+04:26 - method which is going to take in ca
+04:28 - take into account how many kings we have
+04:30 - and how many pieces we have
+04:32 - so define evaluate
+04:35 - self now this means if we have a board
+04:37 - object we can just call dot evaluate on
+04:39 - it
+04:40 - it will return to us some number
+04:41 - positive or negative telling us the
+04:43 - score of this board
+04:45 - now in the last video i told us that to
+04:47 - score a board we would simply subtract
+04:49 - the amount of white versus the amount of
+04:51 - red
+04:52 - now we can do that if we want so we can
+04:54 - return self dot white left
+04:56 - minus self dot red
+04:59 - oops uh red left like that
+05:02 - and that will give us a positive
+05:03 - negative score white's going to be our a
+05:05 - i so if white has more pieces left
+05:07 - obviously this is going to be positive
+05:08 - now that's fine but i would like to
+05:10 - incentivize our ai
+05:12 - to actually try to become a king if it
+05:14 - can if i don't do this
+05:15 - it means that it's not going to
+05:17 - prioritize moving to the end of the
+05:19 - board it's just going to kind of slowly
+05:20 - move its pieces upwards
+05:22 - so if we actually prioritize it becoming
+05:24 - a king then it's more likely that we'll
+05:25 - see a forward progression and that
+05:27 - it actually will try to become a king
+05:29 - which obviously is an advantage
+05:31 - advantageous piece to be so what i'm
+05:33 - going to do is simply subtract this
+05:35 - and then i'm going to multiply the red
+05:38 - kings and the white kings
+05:40 - by a negative and positive number and
+05:41 - add them together so what i'm going to
+05:43 - do is i'm going to say
+05:43 - plus in this case the self
+05:47 - dot white king's left multiplied by 0.5
+05:50 - so that means if we have or sorry not
+05:52 - white
+05:53 - we'll say white kings my bad so
+05:56 - self.white kings multiplied by 0.5
+05:58 - and then we'll subtract here the self
+06:02 - dot red kings multiplied by 0.5
+06:06 - so what this will do is essentially just
+06:08 - give us another value right so
+06:10 - if there's more red kings and there's
+06:12 - white kings then obviously this will be
+06:14 - zero
+06:14 - minus this means we'll actually be
+06:16 - subtracting whatever the amount of red
+06:18 - kings times 0.5
+06:19 - is from this evaluate
+06:22 - or from this score sorry so hopefully
+06:24 - that makes sense but this is what we're
+06:26 - going to use
+06:26 - feel free to tweak this mess around with
+06:28 - it make it more complex if you want
+06:30 - the better we make this function not
+06:32 - evaluating the board the better our ai
+06:34 - is going to be
+06:35 - all right now that we have that the next
+06:37 - thing that i need to do is actually make
+06:39 - a method that can return to us
+06:41 - all of the pieces of a certain color the
+06:43 - reason i need this
+06:44 - is that we can simply use the board if
+06:47 - we have a look here it says
+06:48 - get valid moves to get all of the valve
+06:50 - moves for a specific piece
+06:52 - but if we want to check all the moves
+06:55 - that a possible
+06:56 - color could make what we need to do is
+06:58 - determine okay
+06:59 - what are all of the pieces on the board
+07:01 - that are this color
+07:02 - and then check all of the valid moves
+07:04 - for all of those pieces right if we have
+07:06 - 10 pieces
+07:07 - all of those 10 pieces could potentially
+07:09 - move so we need to actually get all of
+07:10 - those pieces
+07:12 - so again don't be too concerned about
+07:13 - this because this is code that you guys
+07:15 - haven't written yet i would not
+07:16 - expect you to understand it but just a
+07:18 - few things that we need to add
+07:20 - so define get underscore all underscore
+07:23 - pieces
+07:24 - like that we'll put self in here and
+07:27 - we'll say
+07:27 - cover now what's going to happen is
+07:30 - we're going to pass a color in here an
+07:31 - rgb color so either red green blue
+07:34 - whatever the piece color is
+07:35 - and we will loop through all of the
+07:37 - pieces that we're storing in this board
+07:39 - and return the ones that are that color
+07:41 - so i'm going to say
+07:42 - pieces equals a blank list and just try
+07:45 - to follow along here
+07:46 - although this code will be in the
+07:47 - description as well so not only the old
+07:49 - code but the final new code
+07:51 - i'm going to say 4 in this case row in
+07:55 - self.board so if we have a look here
+07:58 - this board has an
+07:58 - internal representation of all of its
+08:00 - pieces it's actually a two-dimensional
+08:02 - array
+08:03 - it looks something say like this where
+08:07 - you know let's just imagine it was like
+08:08 - a three by three checkerboard
+08:10 - it would have like a piece object it
+08:12 - would have a zero if there wasn't
+08:14 - anything there would have a piece
+08:15 - object it might have zero
+08:18 - piece zero so essentially if there is a
+08:21 - piece in that square
+08:22 - it stores a piece object otherwise it
+08:25 - stores
+08:26 - a zero we can figure out where a piece
+08:28 - is by looking at its position in the
+08:29 - list
+08:30 - in this case this piece would be at zero
+08:32 - zero because it's in the zeroth row and
+08:34 - the zeroth column
+08:35 - this would be at zero one because it is
+08:38 - in the zeroth row
+08:40 - or sorry this would be one zero if we're
+08:42 - going to go row columns this would be in
+08:44 - the first row and the zeroth column
+08:47 - all right so that is kind of how that
+08:50 - works hopefully that makes sense but
+08:51 - we're safe for row in self.board
+08:53 - and we'll save for peace in
+08:57 - not self in row and we'll say
+09:00 - if peace does not equal zero
+09:04 - and peace.cover equals equals color
+09:08 - then pieces dot append
+09:12 - piece return
+09:15 - pieces all right so make sure i spell
+09:18 - piece correctly
+09:19 - our pieces correctly hopefully this is
+09:21 - pretty straightforward again just
+09:22 - looping through all of the rows
+09:24 - for each row we're going to loop through
+09:25 - all the pieces if the piece is not zero
+09:27 - we will check and see what color it is
+09:29 - if it is the color that we requested we
+09:31 - will add it to the list and we will
+09:33 - return it
+09:33 - okay so that is i believe all we need
+09:35 - for the board we now need to go to
+09:38 - game and i'm just going to add one
+09:39 - method here because we'll need to do
+09:41 - this
+09:41 - i'm going to say define get underscore
+09:44 - board
+09:45 - and all we're going to do here say self
+09:47 - and then return
+09:48 - self dot board now actually i'll add one
+09:51 - more thing as well
+09:52 - so get bored is just saying okay we have
+09:54 - this board object right that's stored
+09:57 - here
+09:58 - we were going to want to get that when
+09:59 - we actually start using the algorithm
+10:02 - so we'll just add a method to return
+10:03 - that next what i'm going to do is say
+10:05 - define ai
+10:06 - underscore move now this is a bit
+10:10 - preemptive you're not really going to
+10:12 - understand why we're doing this right
+10:13 - now
+10:14 - but essentially when our ai makes a move
+10:17 - what it's going to do is just
+10:18 - return to us the new board after its
+10:20 - move
+10:21 - so rather than saying like oh i'm going
+10:22 - to move this piece here which we could
+10:24 - do but that will be
+10:25 - kind of complicated what i'm going to do
+10:27 - is just make it so that we can just pass
+10:29 - a new board object to the game and it
+10:31 - will simply
+10:32 - update the game with that new board
+10:33 - object so all we're going to say
+10:35 - is self.board equals board and i'm going
+10:38 - to say self
+10:40 - dot change turn so we'll simply change
+10:43 - turns right here
+10:45 - after we get this border after we update
+10:47 - the board because obviously if it's
+10:49 - white's turn well we need to change it
+10:50 - to red and you can see that that is what
+10:52 - this does
+10:53 - okay so now that we've done that we're
+10:55 - looking good what i'm going to do is add
+10:57 - a new folder
+10:58 - inside of this directory not inside of
+11:00 - the checkers directory story but inside
+11:01 - of the
+11:02 - like upper level directory that i'm in
+11:04 - and i'm going to call
+11:05 - this mini max now inside of minimax i'm
+11:09 - going to add a file
+11:10 - this is underscore underscore init dot
+11:12 - pi what this is going to do is make
+11:14 - minimax a package which means i can
+11:16 - import stuff directly from
+11:18 - this minimax folder inside of here now
+11:21 - what i'm going to do is make a new file
+11:22 - i'm going to call this algorithm.pi
+11:25 - and you can assume what's going to go in
+11:26 - here obviously the algorithm that we're
+11:28 - about to write
+11:29 - now i will be referencing my other
+11:31 - screen just because this is a
+11:33 - complicated algorithm
+11:34 - somewhat and i just don't want to mess
+11:36 - it up for you guys so i will be looking
+11:37 - over there if you see me kind of peering
+11:39 - to the left
+11:40 - anyways what i'm going to do is start by
+11:41 - importing a few things i'm going to say
+11:43 - from copy import deep copy we're going
+11:45 - to use this in a second
+11:47 - but what we're essentially going to do
+11:48 - is copy the board a bunch of times
+11:51 - what deep copy does is will make a
+11:54 - actual
+11:55 - it's kind of hard to say this but you
+11:56 - can make what's known as a
+11:58 - i don't think it's i think it's called a
+11:59 - shallow copy or a deep copy
+12:01 - a shallow copy will simply copy the
+12:03 - reference to
+12:04 - a object whereas a deep copy will copy
+12:07 - not only the reference but the object
+12:09 - itself so essentially said i do
+12:11 - did something like this right x equals
+12:12 - list y equals x
+12:14 - if i modify x or y it will modify both
+12:17 - of the variables
+12:18 - if i say x0 equals 1 then that means y 0
+12:22 - will equal 1 as well obviously we don't
+12:24 - want that when we're going to be doing
+12:25 - this algorithm so if we said something
+12:27 - like
+12:27 - y equals deep copy
+12:30 - of x then what would actually happen is
+12:33 - if i modified x or y now
+12:34 - they won't modify each other that's the
+12:36 - basis behind deep copy but we'll talk
+12:38 - about that after
+12:39 - i'm going to import pi game and i think
+12:41 - that's all i need for right now
+12:43 - i'm also going to define the two colors
+12:44 - we're going to be using so i'm going to
+12:46 - say red
+12:46 - equals 255 0 0. by the way if you don't
+12:50 - have pi game installed on your
+12:52 - system you will need to install that to
+12:53 - get this to work i'll quickly show you
+12:55 - how to do that
+12:56 - what you can do is open up your command
+12:58 - prompt or your terminal if you're on mac
+13:00 - or windows
+13:01 - and what you need to do is simply type
+13:03 - pip install
+13:05 - high game if you're on windows this will
+13:07 - be the command you need to run
+13:08 - press enter obviously you need to have
+13:10 - python on your system for this to work
+13:12 - and if you're on mac or linux type pip3
+13:15 - install pygame for some reason this
+13:18 - doesn't work for you i will leave videos
+13:20 - in the description that say how to
+13:22 - install pygame
+13:23 - on mac and how to install pygame on
+13:26 - windows
+13:26 - and i will also leave cards to them in
+13:28 - the corner it should be the top left or
+13:30 - right hand corner
+13:31 - where you guys can have a look at those
+13:32 - and follow along with that then come
+13:34 - back install pi game and be good to go
+13:36 - alright so we have red now i'm gonna say
+13:39 - white
+13:41 - now in pi game when we define colors we
+13:43 - define them with rgb
+13:44 - obviously all red zero green zero blue
+13:47 - is going to be red
+13:48 - and all of the colors is white so 255
+13:51 - 255 255
+13:53 - now what i'm going to do is i'm going to
+13:54 - say define mini max
+13:56 - and inside of here i'm going to say
+13:58 - position
+14:00 - depth max underscore player
+14:03 - and game now position is going to stand
+14:08 - for the current position
+14:09 - that we are in so what position will
+14:12 - actually be
+14:12 - is a board object so we have boards like
+14:16 - this right
+14:16 - and what we will do is we'll pass
+14:18 - different boards to the minimax
+14:20 - algorithm and say okay
+14:21 - based on this board give me the best
+14:24 - possible board after this that i should
+14:26 - move into
+14:27 - as the white player or as the red player
+14:29 - so we have position which stands for
+14:31 - really the board it's telling us okay
+14:33 - this is where we are what current
+14:34 - position we're in
+14:36 - depth is telling us okay how far am i
+14:38 - making this tree how far am i extending
+14:40 - this tree we're going to decrement this
+14:42 - and this is going to be a recursive call
+14:44 - which means every time we call this the
+14:46 - depth will decrease by 1.
+14:48 - next we're going to have max player this
+14:50 - is going to be a boolean value that
+14:52 - tells us
+14:52 - okay are we minimizing the value or are
+14:55 - we maximizing the value
+14:56 - so if max player is true then that means
+14:58 - we're trying to maximize
+15:00 - if min players are is max player's fault
+15:02 - we're trying to minimize
+15:04 - again that means we technically could
+15:06 - use this ai to have the ai play against
+15:08 - each other
+15:09 - white and red which maybe we'll show
+15:10 - later next we have game
+15:13 - game is the actual game object that
+15:15 - we're going to get right from here in
+15:16 - this main.pi
+15:17 - file we're going to pass that to the
+15:19 - algorithm
+15:20 - and what that will do is then strip out
+15:22 - anything it needs from that and
+15:23 - potentially
+15:25 - draw some stuff on the screen if we want
+15:26 - to do some visualization all right so
+15:28 - the first thing to do inside of the mini
+15:30 - max algorithm is to determine what our
+15:32 - depth is
+15:33 - now remember that we only evaluate a
+15:35 - position when we reach the end
+15:36 - of the tree so in our previous example
+15:39 - we had the root node and then we had two
+15:41 - side nodes right
+15:42 - and then or two or three nodes after
+15:45 - that and then after all those nodes we
+15:46 - had other nodes right so it went like
+15:48 - the red move or it went the white move
+15:51 - and then the red move and we evaluated
+15:53 - at the red move and
+15:54 - bubbled up those evaluations upwards so
+15:57 - we're only going to actually make an
+15:58 - evaluation
+15:59 - if the depth of our tree is at zero so
+16:02 - if we're looking at
+16:03 - the last node essentially in the branch
+16:05 - that we're on
+16:06 - so i'm going to say if depth equals
+16:08 - equal 0 or
+16:11 - position dot winner now remember
+16:14 - that if we look at board we have this
+16:16 - winner method that i put
+16:18 - somewhere maybe at the top
+16:22 - i think i had winner yeah winner is
+16:24 - right here so we can check if someone
+16:26 - has won the game
+16:27 - so essentially if uh position.winner we
+16:29 - can just say does not equal
+16:31 - none then what we're going to do is
+16:33 - return
+16:34 - position dot evaluate and position now
+16:38 - i'll talk about why we're also going to
+16:39 - return position
+16:40 - afterwards but the point of this is
+16:42 - essentially to say okay
+16:44 - if the depth is zero so we're at the
+16:45 - last node in the tree meaning it doesn't
+16:47 - we're not going any further than this
+16:49 - let's get the actual evaluation of that
+16:51 - position
+16:52 - and then let's return this current
+16:54 - position alongside of its evaluation so
+16:57 - we know what evaluation goes with what
+16:59 - position
+17:00 - now when i say or position.winner does
+17:03 - not equal none
+17:04 - what i'm trying to say is well if we've
+17:05 - won the game then the game is over
+17:07 - there's no need to continue evaluating
+17:10 - right
+17:10 - so that's what this is saying all right
+17:12 - so now i'm going to say if max
+17:14 - underscore player and else so the reason
+17:17 - for this you can kind of guess is
+17:18 - because well if it is the max player
+17:20 - then we're going to do something
+17:21 - different
+17:22 - maximize the score whereas if it's the
+17:24 - min player we're going to minimize
+17:25 - so these two blocks here the if and else
+17:28 - will be similar we can actually copy and
+17:30 - paste them and change some things
+17:32 - but it's just because max and min so the
+17:34 - first thing i'm going to say
+17:36 - is the max evaluation that i've seen so
+17:38 - far
+17:39 - is negative infinity reason for this is
+17:42 - because whenever we
+17:43 - check a new position we're going to
+17:45 - determine which one is the best
+17:47 - and well if we don't haven't checked
+17:48 - anything yet then currently the best
+17:50 - that we've seen
+17:51 - is negative infinity right meaning if we
+17:54 - see anything else
+17:55 - then as a score higher than negative
+17:56 - infinity which they all will we'll
+17:58 - consider that the current best
+18:00 - until something else comes along and
+18:01 - beats it next i'm going to say best
+18:04 - underscore path equals none
+18:06 - you can guess what or actually instead
+18:08 - of best path let's say
+18:09 - best move equals none you can guess what
+18:13 - that means that's going to store the
+18:14 - best move that we could make
+18:16 - and then we're going to say 4 move in
+18:19 - get
+18:19 - all moves which i'm going to write in a
+18:22 - second this is going to be a function
+18:24 - what this function will do is get all of
+18:26 - the possible moves
+18:28 - for our current position so we'll pass
+18:30 - it the position
+18:31 - we'll pass it actually the color that we
+18:33 - want to consider which in this case is
+18:35 - going to be white because the maximizing
+18:37 - player is going to be the white player
+18:39 - we're just going to hard code that in
+18:40 - there
+18:41 - and we will pass it the game in case
+18:43 - again we want to draw anything for
+18:44 - visualization purposes
+18:46 - so actually rather than waiting before
+18:48 - we write this i'm going to write this
+18:49 - now
+18:50 - just so that the get all moves function
+18:51 - just that it's clear and that we don't
+18:53 - get too confused and then go back to it
+18:55 - so i'm going to say define get
+18:56 - underscore all
+18:59 - underscore moves what this is going to
+19:01 - take
+19:02 - is a position it's going to take a color
+19:04 - and it's going to take the game
+19:06 - now the point of this function is to get
+19:09 - all of the possible moves that we could
+19:11 - make
+19:11 - from the current position so that is why
+19:14 - again within this board class
+19:15 - we just wrote that method that got all
+19:18 - moves i forget where i put it but i
+19:19 - think it was like
+19:21 - yeah uh sorry get all pieces so that in
+19:24 - inside of here we can get all of the
+19:25 - pieces
+19:26 - and then we can check all of the moves
+19:28 - for those pieces and add those into a
+19:30 - moves list
+19:31 - so i'm going to say moves equals a blank
+19:34 - list
+19:35 - moves what this list is going to store
+19:37 - is it's going to store the new
+19:38 - board so it's going to look like this
+19:41 - board
+19:42 - and piece essentially it's going to say
+19:43 - okay if we move this piece
+19:46 - this is what the new board will look
+19:48 - like if we move it to a certain position
+19:50 - so this is the piece
+19:51 - and this is the new board and then we'll
+19:53 - have a bunch of these that'll say okay
+19:55 - this is you know another new board so
+19:57 - new board and this is a piece that we
+19:59 - move to
+20:00 - get that new board so moves equals a
+20:02 - blank list
+20:03 - i'm going to say for piece in board
+20:07 - dot get all moves or not get all moves
+20:09 - sorry get all
+20:10 - pieces and we just need to pass it the
+20:13 - color so we'll simply pass it color like
+20:15 - that
+20:16 - and what this will do is get all of the
+20:17 - pieces of that certain color now i'm
+20:20 - going to say
+20:20 - valid underscore moves equals
+20:23 - board dot get
+20:27 - all valid moves or get valid underscore
+20:30 - moves
+20:31 - and we'll just pass it the piece so
+20:33 - hopefully this is making sense
+20:35 - loop through all the pieces in the board
+20:37 - there the certain color
+20:38 - get all of the valid moves for that
+20:40 - piece on the board
+20:41 - and then say for move comma skip
+20:44 - which i'll explain in a second invalid
+20:47 - moves
+20:48 - dot items like that now we're going to
+20:51 - do something
+20:53 - so validmoves.items is saying okay i
+20:55 - want to loop through since this is a
+20:56 - dictionary all of the items now the
+20:58 - items
+20:59 - is a key value pair right and the key
+21:01 - value pair is going to say
+21:03 - row column colon and then it's going to
+21:07 - have a list
+21:07 - of all of the row call or sorry of all
+21:09 - of the pieces
+21:11 - that we would skip if we move to this
+21:13 - row column so the way that i've kind of
+21:14 - done this is that
+21:16 - the keys are going to say okay if we
+21:18 - move this piece
+21:19 - to this position to this row column
+21:22 - position
+21:22 - we will skip over and need to remove
+21:25 - these pieces that say if i
+21:26 - jumped over another piece then there
+21:28 - would be pieces or
+21:30 - a piece in this list to tell me which
+21:32 - one i need to remove
+21:33 - if i take this move most of these won't
+21:35 - have anything because most of the moves
+21:37 - we make
+21:37 - won't be jumping over someone else but
+21:39 - they potentially could be right so
+21:41 - that's what we need to consider
+21:42 - alright so four moves skip invalid
+21:45 - move.items
+21:46 - move again is that row column tuple skip
+21:48 - is a list of the pieces we would skip
+21:51 - what i'm going to say is temporary board
+21:53 - equals
+21:54 - deep copy board so i need to do this
+21:58 - and sorry um instead of we're going to
+22:01 - call instead of position
+22:02 - i'm going to call this board it's really
+22:04 - the same thing but board i think is just
+22:06 - more clear here
+22:07 - so we'll say board but i'm going to deep
+22:10 - copy the board
+22:11 - because i'm going to be modifying this
+22:13 - board in order to determine
+22:15 - when i move to this position what the
+22:17 - new board will look like
+22:19 - so i don't want to modify the same board
+22:21 - i want to make a copy of it every single
+22:23 - time
+22:24 - so that the next piece that i consider
+22:26 - has a fresh board that it could
+22:28 - potentially move to
+22:30 - um like hopefully that makes sense but
+22:31 - we just can't have it be the same board
+22:33 - otherwise every time we move a piece it
+22:35 - will move on the same board which means
+22:37 - when we're running this algorithm but
+22:39 - board will permanently move
+22:41 - to all of the things that we're just
+22:42 - trying out right which obviously we
+22:45 - don't want
+22:45 - so now i'm going to say new board equals
+22:48 - and this is going to be a new method
+22:49 - which we'll write in a second
+22:50 - simulate underscore move of peace
+22:54 - move and then one second here we need to
+22:58 - pass the
+22:59 - temp board game and skip
+23:03 - now i'll write this method in just a
+23:05 - second but imagine that what this is
+23:06 - going to do
+23:08 - is or we haven't written this yet but
+23:09 - this function sorry imagine what this is
+23:11 - going to do
+23:12 - is take the piece take the move that we
+23:15 - want to make
+23:16 - take the temporary board and then make
+23:19 - that move on it
+23:20 - and return to us the new board
+23:23 - that's what it's doing it's telling us
+23:25 - okay if you make this move the new board
+23:27 - will look like this
+23:29 - and then we're going to store that and
+23:30 - we're going to put that in our moves
+23:31 - list
+23:32 - so we're going to say all right moves
+23:34 - dot append
+23:36 - the new board
+23:39 - like that and then comma the piece
+23:42 - so we're gonna say all right if this
+23:44 - piece moves
+23:45 - to whatever move it is then the new
+23:47 - board will look like this and then we'll
+23:49 - score that board from inside of here
+23:51 - and we'll see which board is the is the
+23:53 - best and we'll return that
+23:55 - and that will be the board that we then
+23:56 - set and like technically the move that
+23:58 - we make
+23:59 - so i hope that makes sense but here i'm
+24:01 - going to say return moves
+24:03 - and now i'm going to write the function
+24:05 - for simulate move
+24:06 - so to find define simulate underscore
+24:10 - move like that this is going to take a
+24:13 - piece
+24:14 - it's going to take a move it's going to
+24:15 - take a board it's going to take
+24:17 - game and it's going to take skip all
+24:20 - right
+24:20 - so what we're going to do in here is
+24:22 - simply just say
+24:23 - if i can look at here board
+24:27 - dot move so what i'm going to do in here
+24:29 - is now move the piece
+24:31 - now if i go to the board method here and
+24:34 - i have a look at move it takes a piece
+24:35 - and a row and column we want to move it
+24:37 - to
+24:37 - so what i'm going to say is board dot
+24:39 - move piece and we're going to move that
+24:41 - to the
+24:42 - move 0
+24:45 - move 1. now the reason i have to do this
+24:48 - is just because this is a tuple so i
+24:49 - just need to split it up
+24:51 - and make it 0 and 1. so this means we'll
+24:53 - get the row and then we'll get the
+24:54 - column so we'll move this piece
+24:56 - to that row and column and then i'll say
+24:58 - if skip
+24:59 - which means okay if we skipped over a
+25:02 - piece or we jumped over a piece
+25:04 - then board dot remove skip
+25:07 - like that and then return this board
+25:11 - so return board like that now
+25:14 - technically we don't really need to
+25:15 - return the board
+25:17 - i'm just going to do it because it makes
+25:18 - sense we could just actually not have
+25:20 - new board
+25:21 - equal to this and just use the temp
+25:22 - board inside of here but
+25:24 - it doesn't make a big difference so
+25:25 - we'll leave it like this okay but that
+25:28 - is the basics for simulate move and get
+25:30 - all moves
+25:31 - so now we can move back into our mini
+25:33 - max algorithm we're actually
+25:34 - almost done but i have to write this
+25:37 - core algorithm part now
+25:38 - so inside of here what i'm going to do
+25:40 - is i'm going to say move
+25:42 - or sorry not move child
+25:46 - comma underscore and in fact now that
+25:48 - i'm thinking about it
+25:49 - let me just say let me just leave move
+25:51 - where it is actually
+25:53 - and let me go here and just not add
+25:55 - piece
+25:56 - and actually just add new board because
+25:59 - i'm thinking about it now and i don't
+26:00 - really
+26:00 - care about the piece that move because
+26:03 - at least for right now i'm not
+26:04 - drawing it anywhere if we do decide to
+26:06 - draw the piece that's moving and draw a
+26:08 - circle around it and all that which
+26:10 - we might do then i will add this back
+26:12 - but anyways what i'm going to do is just
+26:13 - say new board like that so i'm going to
+26:15 - get rid of
+26:16 - the list that i had and just go back to
+26:18 - new board
+26:19 - all right so new board is there now
+26:21 - we're back here i'm going to say for
+26:23 - move in get
+26:24 - all moves now what i'm going to say is
+26:26 - evaluation
+26:28 - so i would write eval but evaluation is
+26:30 - what i have to write
+26:31 - is equal to mini max
+26:34 - of the move
+26:38 - the depth minus one i'm actually going
+26:41 - to write
+26:41 - false here and then for the game i'm
+26:44 - just going to pass game again
+26:46 - all right so before anyone gets confused
+26:48 - with this essentially what i'm saying is
+26:49 - okay
+26:50 - for every single move that i could
+26:52 - potentially make
+26:53 - i want to evaluate that move now
+26:56 - how i evaluate that is i call minimax
+27:00 - minimax will if this is the last branch
+27:03 - in the tree so if depth is equal to zero
+27:05 - it will give me that positions
+27:07 - evaluation if it's not
+27:09 - it will go through and it will do what's
+27:11 - about to be hap
+27:13 - be programmed here again so it's a
+27:14 - recursive call we start at the root node
+27:17 - and then we say okay well i want to
+27:18 - consider the two moves i could do from
+27:20 - here
+27:21 - all right so i can go left or and go
+27:23 - right imagine those are the two possible
+27:24 - moves
+27:25 - so from there we branch down to those
+27:27 - and now it says okay well we want to
+27:28 - evaluate
+27:29 - these so what can i do from these well i
+27:32 - can go here and then says okay well i
+27:34 - want to evaluate these what can i do
+27:35 - from here and then it keeps going and
+27:37 - keeps going
+27:38 - until we reach the depth that's desired
+27:40 - where it starts evaluating
+27:41 - those positions and then they bubble up
+27:43 - so it says okay
+27:44 - well this is negative 5. this is
+27:46 - negative 4 so we're going to pick
+27:47 - negative 4
+27:48 - and then that goes back and back and
+27:50 - back and that's kind of how it works
+27:52 - i hope that makes sense this is just
+27:54 - kind of recursion it's hard to explain
+27:56 - this with this example because it's kind
+27:57 - of complicated
+27:58 - but this is essentially getting an
+28:00 - evaluation for each of the nodes that
+28:02 - we're considering
+28:03 - alright so max evaluation is going to be
+28:05 - equal to the max
+28:07 - of max eval
+28:10 - and evaluation so this is saying all
+28:13 - right well now
+28:14 - we got our evaluation maybe it had to go
+28:16 - all the way down to the left
+28:18 - and had to check a bunch of different
+28:19 - things but we know how good
+28:21 - this move is so we're going to see is it
+28:24 - better than what we already have in here
+28:26 - if it is we'll change that otherwise it
+28:28 - will stay the same
+28:29 - then what we say is if max eval
+28:33 - equals equals evaluation we'll say the
+28:36 - best path
+28:37 - or the best move is equal to the current
+28:39 - move
+28:40 - and what this is going to do is keep
+28:41 - track of okay so
+28:43 - if the move that we just looked at is
+28:45 - the best one that we've seen so far then
+28:47 - let's set that in this variable so that
+28:49 - we
+28:49 - know that this is you know the best
+28:51 - board that we possibly have
+28:53 - the best move that we can make and then
+28:54 - what i'm going to say is return
+28:56 - the max evaluation and
+28:59 - the best underscore path
+29:02 - so what this will do imagine if i call
+29:04 - this one time right i call this minimax
+29:06 - algorithm the first time
+29:08 - if it's the max player it will go
+29:10 - through all of this
+29:11 - it will determine the maximum possible
+29:13 - move we could make and the best path and
+29:15 - return that to me
+29:16 - now of course that's not going to happen
+29:18 - until we do all of these recursive calls
+29:20 - but after all of this stuff has finished
+29:22 - it's been evaluated
+29:23 - we will know what the best path is and
+29:25 - we'll be able to return that from here
+29:27 - now we don't care about what the best
+29:30 - path is
+29:31 - when we actually are inside of here so
+29:33 - what i need to do is where it says
+29:35 - minimax
+29:35 - is i'm just going to take minimax of 0.
+29:38 - the reason for this is that minimax
+29:40 - returns to us a position or some board
+29:43 - as well as
+29:44 - the value for that position or board
+29:46 - right it tells us
+29:47 - the best or the worst one depending on
+29:48 - how we're calling it
+29:50 - so i'm just going to strip off the fact
+29:52 - that it's giving me the path
+29:54 - and just take the number only when i'm
+29:56 - returning back to the caller
+29:59 - excuse me do i care about actually
+30:00 - keeping the best path
+30:02 - so i know this is confusing this is an
+30:04 - advanced
+30:05 - thing but let's just keep going and
+30:07 - hopefully it's somewhat making sense
+30:09 - so actually i'm going to copy all this
+30:10 - now and i'm going to put it in here
+30:13 - and we're just going to change some of
+30:14 - these things to say instead of max eval
+30:16 - this is going to say minival
+30:18 - this is going to be positive infinity
+30:19 - because the worst that we've seen so far
+30:21 - is positive infinity
+30:23 - we're gonna say four move and get all
+30:24 - moves instead of white we're gonna say
+30:26 - red and then we're gonna say evaluation
+30:29 - equals minimax of move depth minus one
+30:31 - instead of false we're going to say true
+30:34 - again the reason for this is that
+30:36 - after we look inside of here right we're
+30:39 - evaluating for the best player here
+30:41 - so if we're going down another depth
+30:43 - then we need to consider what it's going
+30:44 - to be for the worst player so it's like
+30:46 - flip-flopping so what will happen is
+30:48 - it will start by going into this if
+30:50 - statement then this will be called with
+30:52 - false which means we'll then go into
+30:53 - this statement
+30:54 - then say we branch even more then this
+30:56 - one will be called with true which will
+30:57 - go into this statement
+30:58 - so it's going back and forth between red
+31:02 - white red white red white to figure out
+31:04 - the mini max right of whatever nodes
+31:06 - we're considering
+31:07 - okay so and sorry not best path that
+31:09 - should say best move
+31:10 - and instead of best path again this will
+31:12 - say best move
+31:14 - and now let's just change a few things
+31:15 - so instead of max eval it's going to say
+31:17 - mini vowel
+31:19 - it was the mini vowel of min eval
+31:22 - and evaluation and we'll say if the min
+31:25 - eval
+31:26 - equals evaluation then the best move
+31:28 - equals
+31:29 - move and we can return it the best move
+31:32 - so and instead of max eval sorry return
+31:34 - minival
+31:35 - best move so believe it or not this
+31:37 - algorithm is actually finished now i'll
+31:39 - show you it
+31:40 - functioning in a second we do actually
+31:41 - have to still call this but let me just
+31:43 - run through
+31:44 - one more high level time how all of this
+31:46 - works
+31:48 - so mini max it takes some board which is
+31:51 - telling us
+31:51 - the details about all the pieces on
+31:53 - there some depth which is telling us
+31:55 - okay how many positions do i want to
+31:57 - consider
+31:58 - tells us are we looking to maximize this
+32:00 - score or minimize this score and then
+32:01 - the game
+32:02 - game is relevant right now we might use
+32:04 - that later which is why i kept it in but
+32:06 - you can remove it if you want and then
+32:08 - i'm going to say if depth
+32:09 - equals zero so if we're at the furthest
+32:11 - down that we can go when we're
+32:13 - considering
+32:14 - then uh what we'll do is say
+32:16 - position.evaluate and return the
+32:18 - position
+32:19 - or of course in the situation where
+32:21 - someone has won there's no much there's
+32:23 - no more further to go down we've won the
+32:24 - game so we just returned this position
+32:26 - and the evaluation now the reason i'm
+32:29 - returning both
+32:30 - is again because just the way this works
+32:32 - we need to return two things so that we
+32:34 - can get
+32:34 - not only the best possible uh number
+32:38 - right so we get you know the highest
+32:39 - number the lowest number but we also get
+32:41 - what position corresponds with that
+32:43 - so we know where to move to anyways it
+32:46 - gives us that
+32:47 - and then in the situation where the
+32:48 - depth is not zero or someone is not one
+32:50 - we say okay
+32:51 - are we maximizing or minimizing for
+32:53 - maximizing we run this
+32:55 - this says all right the maxi valve
+32:56 - starts at negative infinity the best
+32:58 - move
+32:58 - yet we don't know and we say 4 move and
+33:01 - get all moves
+33:02 - first we get all of the moves related to
+33:04 - the current position for
+33:06 - the color white which is the maximizing
+33:08 - player
+33:09 - then what we do is we loop through all
+33:10 - these moves and we evaluate these moves
+33:13 - with the minimax algorithm we so we say
+33:15 - okay well if we're only at depth say 2
+33:18 - and we need to go to depth 0
+33:19 - then let's check what the minimax of
+33:22 - this move is right it's recursive
+33:24 - so then we call this minimax and we
+33:26 - would go and we would repeat this
+33:28 - process and we would then in this case
+33:30 - go to the minimizing player
+33:31 - if the depth was not zero then the
+33:34 - minimizing player would do its thing
+33:36 - it would return to us what the min
+33:38 - evaluation is it might potentially have
+33:40 - to call minimax again
+33:41 - and then all of a sudden we have an
+33:43 - evaluation for whatever move we could
+33:45 - potentially make
+33:46 - now we check okay is this evaluation
+33:49 - better than what we currently have if it
+33:51 - is we set it and we set the best move if
+33:53 - it's not we keep going
+33:54 - until we've considered all of the
+33:56 - possible moves works the exact same
+33:58 - thing for min evaluation
+33:59 - and hopefully that makes sense i think
+34:01 - simulate move and get all moves are
+34:03 - good enough and let's just make sure
+34:05 - valid moves is spelt
+34:07 - correctly okay a lot of talking sorry i
+34:10 - know this is complex i'm trying my best
+34:12 - to explain
+34:13 - now let's go into the main loop and i'm
+34:15 - going to show you how we can do this
+34:17 - so right now the game currently works
+34:19 - like we can select a piece we can move a
+34:21 - piece blah blah blah
+34:22 - now if we just run this right now none
+34:25 - of our algorithm oh it's telling me
+34:26 - invalid syntax one second
+34:28 - our algorithm obviously isn't going to
+34:29 - run because we haven't called it and
+34:31 - right now you just play
+34:32 - two players so what i'm going to do is
+34:34 - simply add a thing inside of here that
+34:36 - says
+34:36 - if game dot i think do i have get turn
+34:40 - no i don't i can just say
+34:41 - game dot turn equals equals white which
+34:44 - means the computer
+34:45 - then let's call the minimax algorithm on
+34:48 - the current board
+34:49 - so let me start by importing it i'm
+34:51 - going to say from
+34:52 - and remember minimax is in its own
+34:54 - folder so i say from
+34:55 - minimax dot algorithm
+34:58 - do i call it algorithms no it should
+35:00 - just be algorithm
+35:02 - import mini max all right so now we have
+35:05 - that
+35:05 - so inside of here i'm going to say mini
+35:08 - max
+35:09 - and i'll actually say the new underscore
+35:11 - board
+35:14 - i'll say value comma new underscore
+35:16 - board
+35:17 - equals the minimax of the game dot get
+35:21 - bored because we want to get the board
+35:22 - from this game
+35:23 - the color which is white and then we'll
+35:26 - just pass the game object
+35:28 - all right so value new board what is it
+35:30 - saying here undefined variable white
+35:32 - okay let me just import white from
+35:34 - constants you guys can just add this
+35:36 - right here comma white
+35:37 - and then that should fix it for you all
+35:40 - right so value comma new board equals
+35:41 - minimax of game.getboard white
+35:44 - game now what we're going to do is say
+35:46 - okay game.ai move
+35:50 - new board what that's going to do
+35:53 - right is it's going to say okay well the
+35:55 - ai has moved so let's
+35:57 - update the new board to be whatever
+35:58 - board this is
+36:00 - and then that will actually change the
+36:01 - turn for us and then it will allow
+36:04 - the red player to move again okay i know
+36:06 - this is a lot but let me just test this
+36:08 - and see if i messed anything up
+36:10 - and what do we get minimax missing one
+36:12 - required positional argument
+36:14 - game uh interesting so let me go back to
+36:16 - minimax and see what we've done ah i
+36:18 - forgot to add the depth
+36:19 - sorry guys so what we need to do is say
+36:21 - game.getboard
+36:22 - and we need to pass a depth i'm going to
+36:24 - pass a depth of 3.
+36:26 - you're going to notice if you're on a
+36:27 - slow machine this will take a while
+36:30 - go up as high as you want with the depth
+36:32 - but that means the higher the depth you
+36:34 - go technically the better the ai will be
+36:36 - but the longer it will take to run so
+36:38 - you know you can kind of pick your
+36:39 - poison on what you want there
+36:41 - but let me go and move and whoa okay we
+36:44 - got some crazy thing happening here so
+36:45 - let me just
+36:46 - quickly check what's going wrong notice
+36:48 - that a bunch of stuff just moved when
+36:50 - really only one thing should move
+36:52 - all right so i've realized the error
+36:54 - it's kind of a weird one it's also just
+36:55 - based on how i programmed this game so
+36:57 - my apologies to you guys that we're
+36:58 - gonna have to make this strange fix
+37:00 - but essentially the problem that was
+37:02 - happening is that these pieces
+37:04 - are not copied but the board is copied
+37:07 - so what's happening is when i pass piece
+37:09 - in here to simulate move
+37:11 - and we move this piece it's changing the
+37:14 - actual piece on the board so the board
+37:16 - itself isn't changing but it's changing
+37:18 - the piece that's associated with the
+37:20 - board
+37:20 - so what i need to do is get the new
+37:22 - piece that's copied
+37:24 - inside of this board and use that
+37:26 - instead to pass
+37:27 - here so i'm going to say temp underscore
+37:29 - piece
+37:30 - equals i'm not going to i'm not going to
+37:32 - deep copy that piece but what i'm
+37:34 - actually going to do is say temp
+37:35 - underscore board dot get piece
+37:39 - because this will copy all of the pieces
+37:41 - that are stored within the board
+37:42 - automatically
+37:43 - and what i'll do is i'll say piece dot
+37:45 - row
+37:47 - p stock call and then i'll pass a new
+37:49 - piece here
+37:50 - and now it'll work but uh or sorry not a
+37:53 - new piece 10 piece
+37:55 - but what this is saying essentially is
+37:56 - okay from this new board
+37:59 - get the piece that is is the same is in
+38:01 - the same position as where this piece
+38:02 - would be
+38:03 - and that should work i don't think we'll
+38:05 - have any errors with that
+38:06 - but let me run this and just make sure
+38:08 - okay so i've just been playing against
+38:09 - this for a minute to make sure
+38:10 - everything's working
+38:11 - i think it's all working properly the
+38:13 - white pieces actually managed to get a
+38:15 - king piece
+38:16 - i'm not really playing uh you know the
+38:18 - most properly ever
+38:19 - but now we're running into an issue
+38:21 - where he just keeps going in between
+38:23 - king not king king not king maybe it
+38:25 - just
+38:26 - doesn't want to actually move so let me
+38:28 - see what happens if i open myself up to
+38:30 - be jumped
+38:31 - i mean he's still moving like that oh
+38:32 - and now it decides to move there
+38:34 - so maybe the ai is just way smarter than
+38:35 - i think and he actually is moving in
+38:37 - some somewhat of an accurate place
+38:39 - all right so i've been messing around
+38:40 - with it it seems to work fine i mean you
+38:41 - guys can play with it yourself and see
+38:43 - if there's any bugs
+38:44 - but what i'm going to do now is just
+38:45 - show you how we can draw what's being
+38:47 - considered by the ai
+38:48 - and i'll actually make the depth 4 and
+38:51 - just show you the difference in speed
+38:53 - so now if i run this and i move we can
+38:56 - see that
+38:56 - it takes significantly longer to
+38:58 - actually make the move before it was
+38:59 - happening pretty much instantly
+39:01 - at least i'm not sure what you guys saw
+39:02 - in the video but it was going pretty
+39:04 - quickly
+39:05 - now it's actually taking more time
+39:07 - before it's moving
+39:08 - and if i change this to five i almost
+39:11 - guarantee
+39:12 - it's going to take a really long time to
+39:13 - move so let's see
+39:15 - i move it there and look at this it's
+39:18 - just thinking
+39:19 - thinking thinking i can't even move it
+39:20 - just frozen right because
+39:22 - adding that one extra layer makes it
+39:24 - take so much longer so it eventually
+39:26 - moved and that was the move it decided
+39:28 - on but i had to consider so much more
+39:30 - so it will be a better ai but you'll
+39:31 - have to tell your players hey you know
+39:33 - you're going to have to wait for it
+39:34 - because well it's going to have to take
+39:36 - some time to think
+39:37 - now we could add that optimization
+39:38 - technique as i mentioned i'm not going
+39:40 - to do that
+39:41 - but just wanted to be clear all right so
+39:43 - now let's go to algorithm and
+39:45 - since we have game inside of here what
+39:47 - we can do is actually start drawing some
+39:49 - stuff
+39:50 - related to the moves that the ai is
+39:52 - considering and i'll add some like time
+39:54 - dot sleeps in this so that we can see
+39:56 - kind of what it's actually looking at so
+39:57 - i'm just going to make a function here
+39:59 - i'm going to say define
+40:00 - draw underscore moves i'm going to take
+40:02 - a game
+40:03 - a board oops b-o-a-r-d
+40:06 - and a piece now what i'm going to do is
+40:10 - i'm going to say
+40:10 - valid underscore moves equals
+40:14 - board dot get underscore valid moves for
+40:16 - the piece
+40:17 - this is kind of redundant we've done
+40:19 - this before but anyways it's fine it's
+40:21 - just for the drawing purposes i'm going
+40:22 - to say board
+40:24 - dot draw and i'm going to simply pass
+40:27 - the game dot window to it
+40:29 - i'm just going to go through all this
+40:30 - and then i'll talk about what it's doing
+40:32 - i'm going to say
+40:32 - pie game dot draw dot
+40:36 - circle and i'm going to say game.win
+40:39 - i'm going to say 0 comma 255 0
+40:43 - i'm going to say piece.x
+40:46 - piece dot y and then i'm going to say
+40:50 - 50 comma 5. now what i just did is draw
+40:53 - a green circle around the piece
+40:55 - so we're going to pass to this draw
+40:57 - moves a piece a board in the game
+40:59 - and it's going to draw all the valid
+41:01 - moves for that piece just so that we can
+41:03 - see it
+41:03 - and make sure we're not running into any
+41:05 - like critical errors and you can kind of
+41:06 - visualize how this is working
+41:08 - next i'm going to say game.draw
+41:11 - underscore
+41:13 - valid underscore moves i think that's
+41:16 - what i called it and i'm going to say
+41:18 - valid underscore moves dot keys and then
+41:21 - finally i'm going to say pygame
+41:24 - dot display dot update and then
+41:28 - oops pygame
+41:31 - dot time dot sleep and i think i passed
+41:35 - milliseconds into this so i'm going to
+41:36 - pass 100 which means we'll sleep for 100
+41:38 - milliseconds
+41:39 - now i know i just like rushed through
+41:41 - that valid moves gets all the valid
+41:42 - moves for a piece
+41:44 - board dot draw redraws the board on the
+41:47 - game window so
+41:48 - game.win is just the window that we can
+41:50 - draw on
+41:51 - pygame.draw.circle draw it on the game
+41:53 - window
+41:54 - color green that's what zero two fifty
+41:55 - five zero is ps dot x p start y
+41:58 - this is the middle of the circle fifty
+42:00 - this is the radius 5 this is the
+42:02 - thickness of the outline of the circle
+42:04 - then game dot draw valid moves this will
+42:06 - draw all of the valid moves the reason i
+42:08 - got keys is again because our valid
+42:10 - moves look something like this
+42:11 - we have like four or five comma some
+42:14 - piece
+42:15 - object in here so we need to make sure
+42:17 - that we just passed the actual row call
+42:19 - we're not passing that piece object to
+42:21 - confuse this method next
+42:23 - pygame.display.update that will update
+42:25 - the display pygame.time.sleep this will
+42:27 - sleep it
+42:27 - for one millis sorry for 0.1 seconds so
+42:31 - that we can actually see it being drawn
+42:33 - let's run this and see what's happening
+42:36 - all right so when i do that nothing
+42:38 - happens because i didn't call that
+42:40 - method
+42:41 - or that function so we need to call that
+42:43 - i need to remember where i actually end
+42:45 - up calling this from
+42:47 - because i can't remember but i think i
+42:48 - do it inside of
+42:50 - the get all moves that would seem to
+42:53 - make sense simulate move ghetto move
+42:56 - yes let's do it inside of here alright
+42:59 - so i'm going to say draw
+43:01 - underscore moves and i'm going to draw
+43:03 - that
+43:04 - with the game the board
+43:07 - and the piece not important that i pass
+43:11 - that temporary board
+43:12 - or that other piece we're not going to
+43:13 - see them actually moving we're just
+43:15 - going to see them considering
+43:16 - these specific moves all right so let's
+43:18 - now do
+43:19 - this all right main dot pi run and let's
+43:22 - go ahead and move
+43:24 - and what is happening pie game has no
+43:26 - attribute sleep
+43:28 - i maybe i messed something up pie game
+43:30 - dot time dot sleep is that not an
+43:31 - attribute
+43:32 - okay you know what guys i don't know why
+43:34 - that one's not working
+43:35 - usually that's something ah sorry it's
+43:37 - not sleep
+43:38 - it's delay pi game dot time dot delay
+43:41 - all right
+43:41 - that's what it should be okay let's look
+43:44 - at this now
+43:45 - and we can see that it's going quite
+43:46 - quickly but it's showing us pretty much
+43:48 - what it's considering and you can kind
+43:49 - of see the pieces moving
+43:51 - as it's simulating everything as we go
+43:53 - through so this is really what's
+43:54 - happening kind of in the back end is
+43:56 - it's moving all these pieces
+43:57 - it's checking okay if i move in this
+44:00 - position what's the score is this the
+44:01 - best position should i move here should
+44:03 - i move there
+44:04 - and notice that it's not only
+44:05 - considering the white it's considering
+44:06 - the red because it has to consider all
+44:08 - of our moves
+44:09 - based on all of its potential moves so
+44:12 - this is obviously going to take a long
+44:13 - time
+44:13 - to run through and draw everything what
+44:16 - i'm going to do is just quit out of this
+44:17 - game
+44:18 - so close the program it's not responding
+44:21 - just because it's
+44:22 - not threaded so i can't do that uh and
+44:24 - what i'm gonna do is remove this delay
+44:26 - and you're just gonna watch it literally
+44:27 - like
+44:27 - zip through which i think is kind of
+44:29 - funny to see so now what i'll do is go
+44:31 - like that
+44:32 - and it just literally spams the screen
+44:35 - showing us okay we're thinking about
+44:36 - where we're going and
+44:38 - there you go the decided move was to go
+44:40 - from here to
+44:42 - here now of course you guys can add
+44:44 - stuff to this play around with it
+44:45 - but that is all i'm going to do for this
+44:47 - tutorial
+44:48 - if you guys have any questions as always
+44:50 - please leave them down below but that is
+44:52 - how you make a checkers ai using the
+44:54 - mini max
+44:54 - algorithm i apologize if any of this
+44:56 - went over your head it is difficult to
+44:58 - explain this stuff because it is um you
+45:00 - know
+45:00 - somewhat complicated stuff right that's
+45:02 - not the easiest thing in the world
+45:04 - anyways if you guys enjoyed make sure to
+45:05 - leave a like subscribe to the channel
+45:07 - and of course i will see you again in
+45:08 - another python tutorial you

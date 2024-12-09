@@ -1,0 +1,663 @@
+00:00 - hey there how's it going everybody in
+00:01 - this Django tutorial we're going to be
+00:02 - learning how to use Amazon s3 for our
+00:05 - file storage instead of our local file
+00:06 - system so using AWS and s3 is a nice
+00:10 - cost-effective way to store our files
+00:12 - and also it's going to be very scalable
+00:14 - secure and have some good performance
+00:16 - now I'm calling this video part 13 of
+00:18 - the series if you've been following
+00:20 - along then you might notice that the
+00:21 - last numbered video was part 12 where we
+00:24 - added the password reset functionality
+00:26 - I had a few videos after that about
+00:28 - deploying to a linux server but I didn't
+00:30 - number those because I'm going to show
+00:32 - multiple ways to deploy our application
+00:33 - and all of those deployment methods are
+00:36 - separate from actually adding
+00:37 - functionality to our application so the
+00:40 - videos where we are adding new features
+00:41 - will be numbered and the different
+00:43 - deployment videos won't be so I just
+00:45 - wanted to clear that up so in this video
+00:47 - we're going to be moving our file
+00:48 - storage to AWS s3 buckets now I actually
+00:52 - started making this video because I was
+00:54 - wanting to make a video where we deploy
+00:56 - our application to Heroku and Heroku
+00:58 - doesn't have a standard file system for
+01:00 - us to use so they require that we use s3
+01:03 - to store our files and s3 is a common
+01:06 - file storage solution for a lot of
+01:07 - websites so I figured that we could see
+01:10 - how to make that switch so let's go
+01:12 - ahead and get started so first things
+01:14 - first if you've been following along
+01:15 - with this Jango series and you didn't
+01:17 - watch my video about deploying to a
+01:19 - linux server then you may not have seen
+01:21 - a correction that I made to our Jango
+01:23 - code in that video the correction that
+01:25 - needs to be made is very small and it's
+01:27 - in our users models dot py file so I'm
+01:30 - going to open up my application here and
+01:32 - that is in our users app here models dot
+01:37 - py and the mistake is down here in our
+01:39 - save method so when we're calling the
+01:41 - save method on our parent class this
+01:44 - Super dot save part right here we need
+01:47 - to accept any other arguments that our
+01:49 - parent class might be accept expecting
+01:51 - so in this case we need to pass in args
+01:54 - which are positional arguments and
+01:56 - kwargs which are keyword arguments so we
+01:58 - need to pass those in to the save method
+02:00 - so to do this I will just say star args
+02:05 - and star star Cork's and we need to be
+02:08 - expecting these in the save method
+02:10 - itself as well so I'm going to copy
+02:12 - those
+02:12 - and paste those in there as well and
+02:15 - again what that does is it allows us to
+02:18 - accept any arbitrary number of
+02:19 - positional or keyword arguments to our
+02:22 - method and we're actually going to be
+02:24 - getting rid of this save method later so
+02:26 - we probably didn't need that change but
+02:28 - if you've been getting an error with
+02:30 - that save method I just wanted to show
+02:31 - you the fix for that
+02:32 - before we get started so with that
+02:34 - correction in place let's move on and
+02:36 - see how we can now use s3 buckets for
+02:38 - our file uploads so first of all you're
+02:40 - going to need an account with Amazon Web
+02:43 - Services so this is just like signing up
+02:46 - on any other site if you go to
+02:47 - aws.amazon.com that i have open here
+02:51 - then you'll be able to create an AWS
+02:54 - account so just walk through their
+02:56 - instructions to get set up with an
+02:58 - account on their site now I already have
+03:03 - an account that I'm signed into so
+03:04 - whenever I click on create an account
+03:07 - it takes me here to this management
+03:09 - console so once you have an account
+03:11 - you're going to want to open up your
+03:12 - management console here so that we can
+03:14 - create an s3 bucket so this management
+03:17 - console here might be a little
+03:18 - intimidating if you haven't used AWS
+03:20 - because there are so many different
+03:22 - services that are listed here so the
+03:24 - service that we want to open is called
+03:26 - s3 now you could scroll through here and
+03:29 - find this but instead of searching
+03:32 - through all of these down here we can
+03:34 - just search for it here so I'm going to
+03:36 - type in s3 and we can see that this pops
+03:40 - up here scalable storage in the cloud so
+03:43 - what s3 stands for is simple storage
+03:46 - service so let me see if I can make this
+03:48 - a little larger here so that we can see
+03:50 - a little better ok so now what we want
+03:52 - to do is create a new bucket so this
+03:55 - bucket is going to be what holds our
+03:57 - files now bucket names have to be
+03:59 - universally unique so they can't just be
+04:02 - unique for your account so there can't
+04:04 - be any other bucket in the world with
+04:06 - the same name so sometimes choosing a
+04:08 - name can take some trial and error so
+04:10 - I'm going to go to click on create
+04:12 - bucket here and I will create a bucket
+04:15 - I'll call this Jango - Blagh - files and
+04:20 - that should be a unique name now I like
+04:23 - to keep my bucket name simple and since
+04:25 - you're going to be using these and
+04:26 - Bram's I also try to only make them
+04:30 - lowercase letters here and only add in
+04:32 - dashes if the bucket name is too
+04:35 - complicated than sometimes that can
+04:36 - interfere with certain programming
+04:37 - languages okay so you can choose
+04:39 - whichever region you'd like I'm just
+04:41 - going to keep this selected as US West
+04:44 - Oregon here and now I'm just gonna click
+04:46 - through and accept most of these
+04:48 - defaults so you can change these if you
+04:50 - like and enable versioning I'm not going
+04:52 - I'm just going to accept all the
+04:53 - defaults here and click through when we
+04:55 - get to permissions I'll click Next and
+04:57 - finally I'll click on create bucket ok
+05:01 - so once we have our bucket created we're
+05:03 - going to need to change some permissions
+05:05 - with this now I've got these permissions
+05:07 - from the Heroku documentation for
+05:09 - setting up an s3 bucket so I'll just
+05:12 - paste those in once we get this pulled
+05:13 - up so to do this I'm going to click on
+05:16 - the bucket here and now for our top menu
+05:19 - here I'm going to click on permissions
+05:21 - and now I'm going to go to this course
+05:25 - configuration if I hover over this we
+05:27 - can see that this is cross-origin
+05:29 - resource sharing it defines a way for
+05:32 - client web applications to interact with
+05:35 - resources in a different domain so I'm
+05:37 - going to click on that and we can see
+05:39 - that it gives a sample policy there I'm
+05:41 - going to paste the one that I got from
+05:43 - Heroku and I will also put this on my
+05:46 - github as well so I have this open here
+05:49 - so I'm going to copy the one that I have
+05:52 - and again I'll have this on my github
+05:55 - and I'll leave a link to that in a
+05:56 - description section below if you would
+05:58 - like to copy and paste this as well so
+06:00 - I'm going to paste that in there and
+06:01 - then just click Save so this is
+06:03 - basically just telling our bucket that
+06:05 - we're going to be performing some
+06:07 - actions from some domains here now in
+06:11 - the Heroku documentation they say to
+06:13 - have this allowed origin set to your
+06:15 - domain name but I'm setting this to an
+06:17 - ask asterisk for now which will allow
+06:19 - the origin to be from anywhere now we
+06:22 - can tighten this up later if we'd like
+06:23 - once we get this application deployed
+06:25 - but for now I'm just going to leave that
+06:27 - as an asterisk ok so once we've got that
+06:29 - bucket created and those permissions set
+06:31 - up then we're going to want to create a
+06:33 - new user so I'm going to go back to my
+06:35 - management console here and we want a
+06:38 - user that has more limited
+06:40 - striction x' than our admin user that
+06:43 - way it adds an extra layer of security
+06:44 - now to do that we're going to open a
+06:47 - service called a or IAM which stands for
+06:51 - identity access management and again I'm
+06:53 - just going to search for this so I'll
+06:55 - type in I am and click on that and now
+06:59 - we want to create a new user so I'm
+07:01 - going to click on users and we can see
+07:05 - that right now only have this AWS admin
+07:07 - account here so now I'm going to click
+07:09 - on users and now for the user name I
+07:13 - will just call this Django underscore
+07:16 - user and now we have to select an AWS
+07:19 - access type here now I'm just going to
+07:21 - click on program programmatic access so
+07:24 - programmatic access means that we'll use
+07:26 - this user to access AWS with an Access
+07:29 - ID and a secret access key but we don't
+07:32 - need access of the AWS console with this
+07:35 - user so I'll just leave that unchecked
+07:36 - so now I will click Next and now we've
+07:40 - got to give this user some permissions
+07:42 - and I want to give this user permission
+07:44 - to access our s3 buckets so I'm going to
+07:47 - go to attach existing policies directly
+07:51 - and click on that over here and now for
+07:55 - the policies that we want to search I'm
+07:57 - going to search for an s3 policy and if
+08:00 - we search that we can see what we get a
+08:01 - few results here but there's one called
+08:04 - Amazon s3 full access so I'm gonna check
+08:07 - that one there now Amazon s3 full access
+08:10 - might give more permissions for our
+08:12 - application than we actually need
+08:14 - but we're still protected with our
+08:16 - secret access key and things like that
+08:18 - now if you wanted to be extra safe then
+08:20 - you can learn more about AWS policies
+08:22 - and tighten up that policy even further
+08:24 - if you'd like but for this series I'm
+08:27 - just going to do the Amazon s3 full
+08:29 - access so now we'll click Next and I
+08:32 - don't need any tags so I'll click Next
+08:33 - and finally I'll click create user ok so
+08:37 - now that we've created our user it's
+08:39 - going to give us an access key ID which
+08:43 - we can see here and a secret access key
+08:45 - that we can use in our program so that
+08:48 - AWS knows that we have the correct
+08:50 - credentials for this user now you don't
+08:53 - want to put
+08:54 - these credentials directly in our code
+08:55 - because that means anyone who has access
+08:58 - to our code will be able to see our
+09:00 - secret access key so anytime we want to
+09:02 - access sensitive information like this
+09:04 - in our code we just use environment
+09:06 - variables or something like that and you
+09:09 - can also put those in configuration
+09:10 - files that you don't commit to your
+09:13 - repository but in this series we've been
+09:15 - using environment variables so far so
+09:18 - for example if you've been following
+09:19 - along with this entire series then you
+09:21 - should already have some experience
+09:22 - setting environment variables since
+09:24 - that's where we put our username and
+09:26 - password for our email service but if
+09:28 - you don't know how to set environment
+09:29 - variables then I do have a separate
+09:31 - video on how to do that for your
+09:33 - operating system
+09:34 - so I'll leave a link to that video in
+09:36 - the description section below if you
+09:37 - need to give that a watch now since I'm
+09:39 - on a Mac I can put these environment
+09:41 - variables in my dot Bash underscore
+09:44 - profile file but like I said if you're
+09:47 - on a different operating system and
+09:48 - don't know how to do this then you can
+09:50 - watch that other video that I just
+09:52 - mentioned on how to set those so I'm
+09:54 - going to do this and my dot Bash
+09:56 - underscore profile so let me open this
+09:58 - up I'm going to open up my terminal here
+10:00 - and let me clear this screen okay so I'm
+10:04 - going to open up my bash profile which
+10:06 - is in my home folder in order to set
+10:10 - those environment variables so that's
+10:12 - bash underscore profile now I have that
+10:15 - sublime command to automatically open
+10:18 - this up and sublime but if you don't
+10:20 - have this command setup then you can
+10:21 - just open that in sublime manually okay
+10:24 - so I'm going to put these here
+10:25 - underneath this comment where I say that
+10:28 - I'm going to set my Django blog
+10:30 - variables so to do this on Mac we can
+10:32 - use the export command so I'll say
+10:35 - export and first we're going to set the
+10:37 - AWS access underscore key underscore ID
+10:41 - and we're going to set that equal to
+10:43 - it's going to go back to AWS here I want
+10:46 - to copy the access key ID that they gave
+10:49 - me when I created that user so I will
+10:53 - paste that in there now I'm going to
+10:56 - copy this and paste this under here
+11:00 - but now instead of the AWS access key ID
+11:03 - I'm going to also add the AWS the
+11:07 - is secret whoops secret underscore
+11:11 - access underscore key and this is going
+11:15 - to be equal to if I go back here I'm
+11:18 - going to show my secret access key and
+11:20 - copy that and I'm going to remove this
+11:23 - user before I put this video out live so
+11:25 - this access key ID and access key won't
+11:28 - be active when I release this so you
+11:31 - won't be able to use these so don't
+11:33 - worry I'm not accidentally exposing a
+11:35 - secret keys that will be active on my
+11:38 - account by the time this video goes
+11:39 - alive okay so I'm going to save that and
+11:44 - actually while we're at it let's also
+11:45 - add our s3 bucket as an environment
+11:48 - variable as well that way it can be
+11:50 - updated in one place for our application
+11:53 - if the name of the bucket ever changes
+11:55 - so let me go to view here I'm going to
+11:58 - turn this word wrap off so that that's
+11:59 - not going on the next line so I will say
+12:02 - export and I'm gonna call this AWS
+12:04 - underscore storage underscore bucket
+12:08 - underscore name I will set that equal to
+12:11 - the name of our bucket is Jengo - blog -
+12:15 - files and I'll save that so I'm not just
+12:18 - choosing arbitrary names here for these
+12:20 - environment variable names these
+12:22 - actually have to be named this way to
+12:25 - interact with a module that we're going
+12:26 - to use here in a bit that we'll see once
+12:29 - we actually start using this in our
+12:31 - Django application so be sure that
+12:33 - you're using at these same environment
+12:34 - variable names as well
+12:36 - okay so now that we have all of that set
+12:38 - up on our AWS and have the environment
+12:41 - variables in place let's now change our
+12:44 - Django code to use s3 instead of the
+12:46 - local file system
+12:47 - so first we'll need to install some
+12:49 - packages and these will be boto 3 which
+12:52 - is the AWS Python package and Django
+12:55 - storages which is an easier way for
+12:57 - Django and s3 to interact and Django
+13:01 - storages is also what's going to use
+13:03 - these environment variables here so with
+13:05 - that said I'm going to pull my terminal
+13:08 - back up here let me clear this out and
+13:10 - now I will install those packages so
+13:13 - that is pip install that's boto 3 so I
+13:18 - will run that
+13:20 - okay and once that's installed I will
+13:22 - clear the screen here and now I'm also
+13:24 - going to do a pip install of Django
+13:27 - - storages it's not just storage but
+13:31 - storages so I will run that okay and
+13:34 - once that's installed I'll clear my
+13:36 - screen okay and once those are installed
+13:37 - we're going to need to make some changes
+13:39 - to our settings not py file so I'm going
+13:42 - to open up my project here let me close
+13:44 - down these other files that we've been
+13:46 - messing with and now I'm going to open
+13:49 - up my settings dot P Y so that is within
+13:52 - Django project settings dot py and again
+13:56 - I'm going to turn off my word wrap here
+13:58 - so this isn't wrapping on two different
+14:00 - lines
+14:01 - okay so first the Django storages
+14:03 - package that we installed is a Django
+14:06 - app and needs to be included in our
+14:08 - installed apps so I'm gonna scroll down
+14:10 - here just a little bit until we see our
+14:12 - installed apps and I'm going to add this
+14:14 - and I'm just going to add it here to the
+14:16 - bottom and we don't put Django storages
+14:19 - here this is actually just going to be
+14:20 - storages so I will save that okay and
+14:23 - once we have that added to our installed
+14:25 - apps now we're going to need to set some
+14:27 - more variables for our settings so let's
+14:30 - scroll down to the very bottom and add
+14:32 - some of these so I'm gonna scroll down
+14:33 - to the very bottom of our settings dot
+14:36 - py file here and I will add these to the
+14:40 - bottom and the variables that we're
+14:41 - gonna add here are actually the same
+14:42 - ones that we just added to our
+14:44 - environment variables so actually let me
+14:46 - open that back up so that I can copy
+14:48 - these so I'm going to copy all three of
+14:52 - these here that we put in our
+14:54 - environment variables and I'm going to
+14:56 - paste these in to our settings here and
+14:59 - now we want to set each of these to the
+15:01 - value that is in our environment
+15:03 - variable so to do that this is what we
+15:06 - also did with our email user and email
+15:08 - password so I'm just going to copy that
+15:10 - line here or we're doing Oh s dot
+15:13 - environ get that's how you get an
+15:15 - environment variable and the environment
+15:17 - variable that we want to get we call
+15:19 - this AWS access key ID and I will just
+15:23 - copy this line here actually let me copy
+15:26 - the equal sign too I will just copy this
+15:29 - here for these other two and change this
+15:31 - one to AWS secret X
+15:33 - key and copy this one here and make this
+15:37 - AWS Storage bucket name
+15:39 - so technically whenever I said that
+15:41 - these environment variables had to be
+15:43 - named these for our Gengo storages
+15:46 - module really they just have to be named
+15:49 - that here in the settings not py file
+15:51 - but I think it makes it easier to
+15:54 - remember if you just have those same
+15:55 - names in the environment variables as
+15:57 - well okay so that will provide AWS with
+16:00 - all of the credentials that it needs to
+16:02 - access these buckets through this user
+16:06 - but we also want to set some additional
+16:09 - settings here so another one is going to
+16:12 - be AWS underscore s3 underscore file up
+16:17 - all caps file overwrite and I'm gonna
+16:21 - set that equal to false because if we
+16:24 - have if a user uploads a file that is
+16:26 - the same name as a file that someone
+16:29 - else uploaded we don't want those files
+16:31 - to be overwritten because then you know
+16:34 - if somebody uploaded file that was you
+16:36 - know user dot JPEG or something like
+16:38 - that we wouldn't want that to change
+16:40 - everybody's file that was called user
+16:42 - dot JPEG we would just want it to rename
+16:45 - it to something with some characters
+16:48 - appended to the end okay and another
+16:50 - setting that we want to set is going to
+16:52 - be one called
+16:53 - AWS underscore default underscore ACL
+16:56 - and we're gonna set that equal to none
+16:59 - so it's recommended to set this to none
+17:01 - since the current default of this value
+17:04 - can cause some issues and this will be
+17:07 - set to none by default in future
+17:09 - versions of Jango storage so we
+17:11 - shouldn't have to set it but for now we
+17:13 - do have to set this to none okay and
+17:15 - finally I'm gonna set a last setting
+17:17 - here and this is going to be default
+17:19 - underscore file underscore storage and
+17:22 - I'm gonna set this equal to storages
+17:26 - which will use that storage storages app
+17:28 - dot back ends dot s3 moto3 dot s3 boto
+17:37 - three storage and this is actually all
+17:39 - gonna be in a string so I forgot to put
+17:42 - my quotes there so I'll add those quotes
+17:43 - in there now I didn't just memorize
+17:47 - this stuff here I actually got this from
+17:49 - the documentation so if you ever want to
+17:52 - look at this then I'm you can just type
+17:55 - into Google Django storages
+17:59 - documentation and it should be the top
+18:02 - result here so if we go to their
+18:05 - storages file and then say that we're
+18:07 - saving our stuff on Amazon s3 then we
+18:10 - can look through here and see all of
+18:12 - these settings that need to be set where
+18:14 - some of these are optional but the AWS
+18:17 - access key the secret access key the
+18:19 - storage bucket name
+18:21 - here's that AWS a default where it gives
+18:24 - its recommendation here so if you want
+18:26 - to see more information about everything
+18:29 - that we set in our settings file then
+18:31 - you can come here to their documentation
+18:32 - and look through here and there's a lot
+18:34 - of different things and a lot of
+18:36 - different examples that they have so let
+18:39 - me open back up our project here okay so
+18:41 - we're just about done here but there's
+18:44 - one more thing that I have to do so
+18:46 - remember with our profile pictures we
+18:48 - set that up earlier in the series so
+18:50 - that the pillo library resizes those
+18:53 - images by open opening them up on the
+18:55 - file system and then resizing and
+18:58 - receiving them now this worked well with
+19:00 - our images when they lived on our local
+19:02 - file system but now they're in an s3
+19:04 - bucket and using pillow is just going to
+19:07 - give us some issues so I think it's best
+19:09 - just to remove that image resizing for
+19:11 - now and if anyone is interested then I
+19:13 - can show you in the future video how to
+19:15 - do this for files and s3 but for now
+19:17 - we're just going to remove that
+19:19 - functionality so that functionality is
+19:21 - actually in our users app and models dot
+19:26 - py and this is actually what we changed
+19:28 - at the beginning of the video the one
+19:30 - that I said had an error that when we
+19:32 - first created it in the series now that
+19:35 - was the save method down here and we're
+19:38 - just going to you can remove or comment
+19:40 - out the save method here I'm just going
+19:42 - to comment it out so that we can at
+19:44 - least see how we resized those images if
+19:47 - we ever want to see that again or you
+19:49 - can completely remove it but I'm just
+19:51 - going to comment that out for now so now
+19:53 - images aren't going to be automatically
+19:55 - resized like they were on the file
+19:57 - system but for anyone who is curious if
+19:59 - we wanted to add that functionality
+20:01 - back to our application we could simply
+20:03 - create an AWS lambda function that
+20:06 - resizes our images for us automatically
+20:09 - when they're uploaded to s3 but I don't
+20:11 - want to get too far into the AWS weeds
+20:13 - in this video so maybe we'll do that in
+20:15 - a future video okay so now all of this
+20:18 - should be working now we don't currently
+20:20 - have our current profile pictures on AWS
+20:23 - so if we start up the site now then
+20:26 - those aren't going to show up so if we
+20:28 - want to get the existing pictures to
+20:30 - show up then we'll also have to transfer
+20:32 - those to our s3 bucket so I'm gonna do
+20:35 - that simply by opening our s3 bucket in
+20:38 - the browser and dragging and dropping
+20:40 - our existing profile pictures into that
+20:42 - bucket so I'm going to go back to our
+20:44 - browser here and go back to our s3
+20:48 - bucket so I'll go to our management
+20:50 - console and search for s3 go to s3 and
+20:54 - we only have one bucket here which are
+20:56 - our Django blog files and currently this
+20:58 - is empty so I have my application open
+21:02 - here in the finder so this is our Django
+21:04 - project and our profile pictures are
+21:06 - currently saved in our media folder so
+21:09 - I'm going to open up that media folder
+21:10 - and we have our default and then we also
+21:12 - have our profile pictures so I'm just
+21:14 - going to highlight both of those and you
+21:17 - can add those to s3 just by dragging
+21:18 - them over here and dropping them and we
+21:21 - can see that it's asking us if we want
+21:22 - to upload those and I will just say next
+21:25 - and we could set some permissions here
+21:28 - if we wanted to but I'll just click next
+21:30 - and next and finally upload ok so it
+21:35 - looks like those pictures were uploaded
+21:36 - to our bucket so if I was to click on
+21:38 - the default JPEG and open that then we
+21:41 - can see that that is that that opens on
+21:44 - our bucket so that is good now remember
+21:47 - we're not currently resizing these
+21:49 - images that get added to our bucket so
+21:52 - be careful that you're not dumping you
+21:53 - know extremely large files in there s3
+21:56 - is fairly cheap I think it's like two
+21:58 - cents per gigabyte or something like
+22:00 - that but still you might as well keep it
+22:02 - small if possible okay so now that we
+22:05 - have that in place we should be able to
+22:06 - run our application with our media files
+22:08 - being served from AWS s3 instead of our
+22:12 - local file system so let's give that
+22:14 - a try so I currently have a server
+22:18 - running here so I'm going to stop that
+22:20 - okay and I will open up a new terminal
+22:26 - here so we get those environment
+22:28 - variable changes and now let me navigate
+22:31 - to our project so that we can run this
+22:34 - now I am working within a virtual
+22:37 - environment you might not be using a
+22:39 - virtual environment but since I opened
+22:41 - up a new terminal here I need to
+22:43 - activate that really quick so that is in
+22:46 - Jango env bin activate if you're on
+22:50 - Windows then you'll activate a virtual
+22:52 - environment a little bit different than
+22:54 - that but now we can see that I have my
+22:56 - Jango environment activated here and
+22:58 - that's where I installed all of those
+23:00 - new modules so now I can run my Django
+23:05 - project so we can do that just by saying
+23:07 - python managed py run server okay and
+23:12 - that says that it's running on our
+23:15 - localhost here so I will go back and
+23:18 - reload that okay so our website looks
+23:20 - the same let me make this a little
+23:22 - larger here it looks the same but if I
+23:25 - open an image for our site if we look at
+23:29 - the URL for this image then this says
+23:31 - Django blog files dot you know s3 uswest
+23:35 - Amazon AWS so this is actually coming
+23:38 - from our s3 bucket and not from our
+23:41 - local file system so that's good that
+23:43 - means that it is serving up those s3
+23:45 - files now let me also try to upload a
+23:49 - new profile picture to see if that works
+23:51 - so I'm going to log in as the core ES
+23:54 - user that I created earlier in this
+23:56 - series and now let me go to my profile
+23:59 - and upload a new image so I'll go to
+24:02 - choose file these are going to be
+24:05 - located on my desktop so I'll just
+24:08 - upload this avatar image here and update
+24:12 - that okay so we can see that it updated
+24:16 - our image here so if I open this image
+24:19 - up in a new tab then this should be
+24:22 - coming from AWS now we can see that this
+24:25 - didn't get resized so that was expect
+24:28 - but if we look at the image URL here
+24:30 - this is coming from our django blog
+24:33 - files s3 bucket so that is actually
+24:35 - uploading those files as well and if we
+24:38 - wanted to be completely sure of that
+24:40 - then we could actually go back to our s3
+24:43 - bucket here and reload this and if I
+24:47 - click on profile pics here then we can
+24:50 - see that that avatar square was uploaded
+24:53 - so if I open that in here then we can
+24:57 - see that the last modified time is the
+25:00 - current time so that was just now
+25:02 - uploaded okay so that seems to be
+25:04 - working well now like I said if anyone
+25:07 - is interested then I can show you how to
+25:09 - create an AWS lambda function that
+25:11 - automatically resizes images in an s3
+25:14 - bucket but I didn't want to get into
+25:16 - that here since this video is a bit long
+25:18 - already
+25:18 - but we can see that with those changes
+25:21 - that we can now have all of these files
+25:24 - being served from AWS which is
+25:26 - definitely nice in terms of allowing our
+25:28 - application to scale and also we'll be
+25:30 - more efficient as well and also if
+25:33 - you're deploying to a service like
+25:34 - Heroku then you actually have to have
+25:36 - these files being served from a service
+25:38 - like s3 because they don't have a
+25:40 - typical file system that allows user
+25:42 - uploads and we'll be seeing how to
+25:44 - deploy this application to Heroku in the
+25:46 - next video so that we can see what that
+25:48 - looks like okay so I think that is going
+25:50 - to do it for this video hopefully now
+25:52 - you have a good understanding of how we
+25:54 - can use AWS to serve files for our
+25:56 - website but if anyone has any questions
+25:58 - about what we covered in this video then
+26:00 - feel free to ask in the comment section
+26:02 - below and I'll do my best to answer
+26:03 - those and if you enjoy these tutorials
+26:05 - and would like to support them then
+26:06 - there are several ways you can do that
+26:07 - the easiest ways to simply like the
+26:09 - video and give it a thumbs up and also
+26:11 - it's a huge help to share these videos
+26:12 - with anyone who you think would find
+26:14 - them useful and if you have the means
+26:15 - you can contribute through patreon and
+26:17 - there's a link to that page in the
+26:18 - description section below be sure to
+26:20 - subscribe for future videos and thank
+26:21 - you all for watching
+26:23 - you
+26:33 - you

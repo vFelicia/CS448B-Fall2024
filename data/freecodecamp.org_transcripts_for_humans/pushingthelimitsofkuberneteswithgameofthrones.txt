@@ -1,0 +1,592 @@
+With timestamps:
+
+00:00 - let me say it's a huge honor and let me
+00:02 - first thank the academy
+00:05 - wrong stage
+00:06 - all right
+00:08 - my name is ilya this is zee and today
+00:10 - we'll talk to you about hbo journey to
+00:12 - kubernetes
+00:13 - the journey which began not that long
+00:15 - ago from not having a single service
+00:17 - running inside the container to hosting
+00:19 - game of thrones season 7 on kubernetes z
+00:22 - and i will split this talk i'll tell you
+00:24 - about why reasons and z will cover how
+00:26 - we get it done
+00:29 - okay it's downhill from there
+00:32 - hbo has come to the shows that everyone
+00:34 - is talking about from the groundbreaking
+00:36 - series to the documentaries sports to
+00:39 - the biggest blockbuster movies available
+00:40 - anywhere
+00:41 - for over 40 years people who love
+00:43 - entertainment have recognized hbo as the
+00:45 - original the
+00:47 - first and the best place to find world
+00:49 - most innovative programming
+00:51 - hbo digital products is represented by
+00:54 - hbo go which is part of your tv
+00:56 - programming subscription through cable
+00:57 - satellite or other providers
+00:59 - and hbo now subscription directly with
+01:01 - hbo
+01:02 - both provide unlimited access to
+01:05 - hbo programming just about on any device
+01:08 - it broad sense
+01:10 - digital products is everything and
+01:11 - anything to do with the content
+01:12 - streaming and digital products where z
+01:14 - and i work and platform team
+01:18 - so if we zoom if we look at the hbo
+01:20 - streaming services this how they could
+01:22 - look like from the mile high view this
+01:23 - is not the actual image but resemblance
+01:25 - is pretty close
+01:27 - and if we zoom in
+01:28 - they could be best described as a mesh
+01:30 - of api services written mostly in
+01:32 - node.js
+01:33 - also we added more and more sources
+01:35 - written in go
+01:36 - and all sources were deployed into ec2
+01:40 - into a single service instance single
+01:42 - instance paradigm all wrapped with other
+01:44 - scaling group which handled both
+01:46 - deployment and scale
+01:48 - all fronted with the internal or
+01:50 - external load balancers and
+01:53 - route route usually handled dns needs
+01:56 - overall it was and still is tried and
+01:58 - true set up for running services on aws
+02:01 - it works for general case however if you
+02:03 - will see next that hbo case is anything
+02:06 - but
+02:06 - general hbo traffic pattern can be best
+02:09 - described as the wall and this is just a
+02:11 - random example of how fast playbacks are
+02:14 - started on sunday night during the game
+02:16 - of thrones season premiere a season
+02:17 - around 6 pm known as a prime time
+02:21 - and i think this point in time can be
+02:22 - best represented by this image
+02:25 - in terms of what our api source is faced
+02:27 - with
+02:29 - as well as the emotional state of our
+02:31 - engineers
+02:32 - and
+02:35 - so looking at game of thrones uh traffic
+02:38 - pattern um
+02:39 - episode after episode season of the
+02:41 - season
+02:42 - left us with very insulin feelings about
+02:44 - a future
+02:45 - can we hold on during the next episode
+02:47 - what about next season
+02:49 - and the answers were less on optimistic
+02:51 - because we were running into multiple
+02:52 - problems
+02:53 - chief of them would be
+02:55 - under utilization
+02:57 - running node.js implies that you can
+02:59 - utilize a single cpu core at most
+03:02 - now since we're deploying ec2 instances
+03:04 - uh ec2 instances with single core
+03:06 - typically
+03:07 - almost always do not have good network
+03:10 - so to find good balance between network
+03:12 - and cpu we had to select instances which
+03:15 - run at least two cores of cpu so right
+03:17 - there we would not be utilizing 50
+03:18 - percent of icps across all deployments
+03:21 - on demand scaling is good however it's
+03:23 - slow or slower in comparison and
+03:24 - sometimes it is inadequately slow to
+03:26 - react to spike traffic
+03:28 - thus we have to over provision the
+03:30 - deployments doubling triple and
+03:31 - sometimes more to accommodate for
+03:33 - unpredicted traffic patterns
+03:35 - so you take initial 50 percent uh on the
+03:37 - utilization
+03:39 - buffer up with over scaling
+03:41 - and multiply by a number of regions
+03:43 - that will be a lot of unused cpus
+03:47 - so
+03:48 - as for elb goes that every service
+03:51 - communication requires lb and again it's
+03:52 - tried and true elb plus asg approach
+03:55 - however even for internal communication
+03:57 - within the same vpcu required to stand
+03:59 - up elb4 services again that resulted in
+04:02 - a lot of elbs which
+04:04 - led us to
+04:05 - problems uh limits or otherwise known
+04:08 - things that we running out of
+04:11 - it's ironic because we were utilizing
+04:13 - more than 50 of cpus and yet we're
+04:15 - running out of all other resources
+04:18 - so to keep up with the resource usage we
+04:19 - have dedicated alerts which will fire up
+04:21 - every time we cross 80 percent threshold
+04:24 - utilization on given resources elbs ehgs
+04:26 - security groups
+04:28 - and when we get notified we'll contact
+04:30 - aws
+04:31 - support to increase our quarter limits
+04:33 - of course things got more interesting
+04:35 - when we began to run out of
+04:36 - instances for given instance types or ip
+04:39 - addresses for given subnets where even
+04:40 - aws could not help us with our problems
+04:43 - then of course there are external
+04:44 - resources that directly tie to instance
+04:46 - account like a telemetry provider who
+04:48 - would
+04:49 - calculate the license usage based on the
+04:51 - instances
+04:53 - so this brings us to kubernetes and
+04:56 - rather than going through these bullet
+04:58 - points
+04:59 - they're all true
+05:01 - i will tell you my personal story
+05:04 - in fact this is my second time being on
+05:06 - the stage at the kubecon
+05:07 - first time was in san francisco in 2015
+05:10 - when i was summoned to stage just like
+05:12 - today by kelsey hightower
+05:14 - but to my great surprise and horror
+05:16 - because i was not supposed to present
+05:19 - what happened that
+05:21 - walking through the hallways of cubecon
+05:22 - 2015 i dropped my wallet somewhere and
+05:25 - someone had found it and returned it to
+05:26 - event organizers and he called me to
+05:28 - stage to return my wallet
+05:30 - so i cannot simply find a better example
+05:32 - of kubernetes saving the day maintaining
+05:34 - stories up and running and prevented
+05:36 - outages
+05:37 - otherwise would be very interesting
+05:38 - flight home
+05:39 - so uh we
+05:41 - i was settled on kubernetes from the
+05:43 - sargon
+05:44 - but we did do a diligence we looked at
+05:46 - masses with this years we looked at
+05:47 - swarm we looked at ecr and for us
+05:50 - kubernetes wasn't still is a clear
+05:51 - winner
+05:53 - we were just the beginning of a journey
+05:54 - and we had a very tight schedule uh
+05:57 - given that we had to continualize all
+05:58 - the services first and continuization
+06:00 - and mass scale is a huge undertaking on
+06:02 - its own
+06:04 - so
+06:05 - uh once we begin conquering that health
+06:07 - though
+06:08 - we start playing with kubernetes and aws
+06:10 - and again this is the end of 2015 a lot
+06:13 - of change since then
+06:15 - so what we started with we with most
+06:17 - basic setup available running cube up to
+06:20 - deploy kubernetes
+06:21 - into our existing pcs we have to tweak
+06:23 - and
+06:24 - make some configuration changes
+06:26 - and what we needed to do we need to show
+06:28 - to our peers to our bosses to ourselves
+06:30 - that kubernetes known as vaporware but
+06:32 - more importantly that kubernetes can be
+06:34 - operated
+06:36 - in aws cluster to host production grade
+06:38 - services
+06:39 - and once we get uh
+06:41 - we started cutting a teeth with jenkins
+06:43 - infrastructure cluster
+06:45 - and once we got in successful that we
+06:47 - began to provision a home cluster to our
+06:49 - streaming services and that's when we
+06:51 - realized that basic setup simply won't
+06:52 - cut it and we had more work to do and z
+06:54 - will tell you how we got it done
+06:58 - okay i'm going to tell you something we
+07:01 - learned from our kubernetes journey so
+07:03 - we create our own telephone templates
+07:05 - for our provisioning our clusters
+07:07 - we started before some of the community
+07:09 - projects started for example our cube
+07:12 - aws k-ops or cube spray
+07:14 - this allowed us to do something really
+07:16 - cool for example we can deploy our
+07:18 - clusters into our existing aws
+07:20 - infrastructure by providing our vpc ids
+07:23 - subnet ids and security group ids
+07:27 - we also had high availability in mind so
+07:29 - from the very beginning our minions and
+07:32 - master asgs are multi-easy
+07:34 - um the purpose of the esgs are different
+07:36 - though so for masters we want to
+07:38 - maintain a fixed number of nodes so if
+07:41 - one fails aws will automatically launch
+07:43 - a new master
+07:44 - for minions we want to scale up and down
+07:46 - very fast so we use asg to launch and
+07:49 - terminate nodes
+07:52 - master is also running in hr mode
+07:54 - meaning that api servers are low
+07:56 - balanced and schedulers and
+07:58 - controller managers are running as
+08:01 - leader and followers
+08:02 - despite being home grown we keep
+08:04 - incorporating best practice from the
+08:06 - community
+08:07 - we turn on oidc or open id connect
+08:10 - authentication for a coupe api server so
+08:13 - as long as our
+08:15 - developers github accounts are in hbo
+08:18 - organization they will get
+08:20 - a token for their creepcattle
+08:22 - authentication
+08:25 - terraform modules is a great way to
+08:27 - promote reusability and modularity we
+08:30 - create we created self-contained
+08:32 - terraform modules for both communities
+08:35 - masters and minions
+08:37 - when we want to launch a cluster what we
+08:39 - do is we compose a terraform template
+08:42 - like this
+08:43 - and we will run terraform apply and bam
+08:46 - we have a cluster up and running
+08:49 - several weeks later we have had some
+08:51 - experience of how to operate a cluster
+08:53 - and then we noticed a few problems
+08:56 - so first we run prometheus
+08:59 - in the cluster to
+09:00 - script metrics
+09:02 - with a provision iops ebs volume as data
+09:05 - storage because our cluster is scaled up
+09:07 - and down all the time
+09:09 - sometimes the meaning that hosts the
+09:11 - premises part get terminated
+09:13 - we have to wait a long time for
+09:15 - permissive spot to come back because
+09:17 - kubernetes has to detach and reattach
+09:19 - the ebs volume that process could be
+09:21 - very slow and during that time we were
+09:23 - losing metrics the second problem is for
+09:25 - big events like game of thrones premiere
+09:28 - of finale or simply our regular load
+09:30 - testing we have to scale pre-scale our
+09:33 - cluster up significantly to overcome the
+09:35 - wall effect elia just mentioned and
+09:38 - sometimes aws cannot provide sufficient
+09:40 - capacity of our desired instance type
+09:42 - for the minions
+09:45 - so these issues led us to
+09:47 - an improved version of our telephone
+09:48 - modules first we added instance type
+09:51 - variable to our minimum module
+09:54 - so that all the minutes launched from
+09:55 - this sg will get this particular
+09:57 - instance type
+09:58 - we also added a taint var
+10:00 - to the media module and pass that as a
+10:02 - cubelet startup flag
+10:05 - so if this
+10:06 - var is defined then all the all the
+10:08 - minions launch from this this sg will
+10:11 - register with that particular taint
+10:15 - again we benefit from the modularity of
+10:17 - our telephone code so for regular
+10:19 - minions we pass our main instance type
+10:22 - to the 2d module
+10:26 - we added another module to our cluster
+10:29 - we call it backup minion these minions
+10:31 - are exactly the same as our regular
+10:33 - minions except that they run on our
+10:35 - backup instance type which is c4.8x
+10:40 - another module we added what we call
+10:42 - reserve the minions so reserved minions
+10:45 - are again exactly the same as regular
+10:47 - minions except that
+10:48 - they are tainted by this chain to
+10:50 - reserve equals true
+10:51 - at the same time we update our cluster
+10:53 - auto scaler so that when cluster scales
+10:56 - down the mean uh reserved minions are
+10:58 - excluded so to summarize we added two
+11:02 - new mini asgs to our cluster to address
+11:04 - the issues we had earlier first if aws
+11:07 - runs out of the
+11:08 - mainstream type we want we scaled up our
+11:10 - backup minion to bring more capacity
+11:13 - and second for prometheus we update the
+11:15 - premises deployment
+11:17 - to have affinity to reserve the minions
+11:19 - and also tolerate the reserve taint
+11:22 - so in this way primitive's part is not
+11:23 - interrupted even when cluster scales
+11:25 - down
+11:28 - um flannel was the networking layer we
+11:30 - chose at the beginning compared to other
+11:32 - solutions it was simple to set up
+11:33 - especially before the cni came
+11:36 - and it's included in every um cores
+11:38 - digital the digital that we use
+11:41 - however when we were doing our regular
+11:42 - load test we discovered that on the
+11:45 - heavy load there were some problems
+11:46 - first it was
+11:48 - increased latency and timeouts both
+11:50 - between parts and going out of the
+11:52 - cluster and second there was udp package
+11:55 - drop which
+11:56 - impacted our cube dns lookups and custom
+11:59 - metric collection both of which are udp
+12:02 - traffic
+12:04 - these are just
+12:06 - two issues that we saw very frequently
+12:08 - during the season
+12:09 - the github links are on the slide
+12:14 - now let's talk about different types of
+12:16 - services that we tried and the different
+12:18 - ways we
+12:19 - used to get traffic into our cluster
+12:21 - first we provisioned elbs for every node
+12:24 - poor type of service and associate these
+12:26 - elbs with the minion asgs
+12:29 - so in this way all the minions launched
+12:30 - from the esgs will be registered with
+12:32 - the obvious automatically
+12:34 - however there's a aws hard limit of 50
+12:37 - erbs per asg
+12:39 - and also since we are
+12:41 - provisioning elvis ourselves you have to
+12:43 - keep track of them manually
+12:46 - next is ingress
+12:47 - which i think is the most common setup
+12:49 - out there
+12:50 - so we put a shared elb in front of
+12:53 - ingress controllers
+12:55 - and uh the elb forward traffic to
+12:57 - ingress controllers which then proxies
+12:58 - traffic to upstream services
+13:01 - however there were some problems with
+13:02 - that too
+13:03 - first when we looked at the
+13:05 - cloud watch metrics for shared elb and
+13:08 - we noticed some 500 errors but which
+13:11 - backend services
+13:13 - or service exactly these 500 comes from
+13:15 - it's
+13:16 - pretty hard to tell without scrunching
+13:18 - the ingress controller logs or elb
+13:20 - access locks
+13:22 - and second we notice the ingress
+13:24 - controller seems to be
+13:25 - uh seems to struggle against a very
+13:27 - burst of spiky traffic that we saw
+13:30 - and this this test this setup produced
+13:33 - more connection timeout errors in our
+13:35 - load test versus the no port setup on
+13:37 - the previous slide
+13:39 - and finally the publicity of your shared
+13:41 - ingress eob will determine all the
+13:43 - publicity of all the services
+13:47 - and last but not least we tried load
+13:49 - balancer service type which is cloud
+13:52 - provider specific uh in this scenario
+13:55 - kubernetes actually handles the
+13:56 - provisioning of the elbs and registered
+13:58 - minions with the elbs
+14:00 - this method is not affected by 50 elb
+14:03 - limits
+14:04 - but first we noticed
+14:06 - there was a api database api throttling
+14:09 - problem and second
+14:12 - there was some elb security group
+14:13 - customization issue that didn't get
+14:15 - resolved until recent 1.8 release
+14:19 - so at the end this is these are our
+14:21 - choices for services and ingress
+14:24 - for production services we use no port
+14:26 - plus individual eobs
+14:29 - for non-production services we use
+14:31 - ingress controllers and shared erbs in
+14:33 - both scenarios we use the built-in
+14:35 - service discovery for making calls
+14:37 - between our micro services
+14:41 - cube dns is always an interesting topic
+14:44 - have you ever looked at the resolve.com
+14:46 - file in your parts basically this is how
+14:48 - it looks like
+14:49 - first you got a bunch of internal domain
+14:51 - names to search for and other and aws
+14:54 - domain internal domain names
+14:56 - so this code is actually from a part in
+14:59 - default namespace so you see the
+15:00 - default.service the cluster local there
+15:03 - um second you got your um service ip of
+15:06 - qdns and finally there's n.5 option so
+15:09 - this option basically means that there
+15:11 - will be many invalid and not unnecessary
+15:14 - uh dns lookups
+15:16 - basically this is what happens
+15:19 - so for example we if you want to
+15:22 - resolve a dns called
+15:24 - pgsql.backend.xp.com because it has less
+15:26 - than five dollars in it we will append
+15:29 - all search domains and try them first
+15:31 - before an actual dns query happens
+15:34 - so why the indus file was chosen was
+15:37 - explained in detail in this ticket by
+15:38 - tim hawkins first reasons like same name
+15:41 - space lookups cross name space lookups
+15:43 - and of course cluster federation
+15:47 - in the next following slide we will
+15:49 - share some of the
+15:50 - tunings we have done to reduce those
+15:53 - invalid lookups
+15:56 - okay these are some of the tunings that
+15:58 - we found very important to us first is
+16:00 - the cache size of dns mask container
+16:03 - i think the default is somewhere around
+16:04 - 100 or 200 but you should set it to max
+16:07 - with ten thousand unless memory is
+16:09 - really constrained in your system well
+16:11 - set it into ten thousand only cost you
+16:13 - additional couple megabytes of memory
+16:17 - um
+16:18 - dash dash address
+16:20 - flag it is a really big performance
+16:22 - booster so this flag tells dns mask
+16:25 - to return an ip address for a specified
+16:27 - domain name
+16:29 - however we use it slightly differently
+16:32 - and we specify a whole bunch of invalid
+16:34 - domain names that were created by n.5
+16:38 - and
+16:39 - we do not specify ip address
+16:42 - so effectively for these invalid domain
+16:45 - name lookups
+16:47 - dns mask will return not found
+16:49 - immediately instead of doing an actual
+16:51 - lookup this way we speed up things a lot
+16:54 - so if you haven't taken a look at your
+16:55 - cube dns deployment i recommend this
+16:57 - flag
+16:59 - and finally
+17:01 - if you have some internal name servers
+17:03 - you want to hook up
+17:04 - the
+17:05 - server flag is for you all your parts
+17:08 - will be able to resolve internal domain
+17:10 - names without additional changes
+17:12 - and with that i'll hand it back to ilia
+17:17 - a quick word about telemetry uh it's not
+17:19 - surprising that we didn't have any
+17:20 - containerized services before we
+17:22 - couldn't take almost anything from
+17:24 - telemetry start to kubernetes except uh
+17:26 - splunk and with splunk telemetry team
+17:28 - did some heavy
+17:30 - customization and tuning for splunk
+17:32 - forward to get reliable logs everything
+17:34 - else on this slide is uh was new
+17:36 - technology to us and i think it was a
+17:37 - great thing
+17:38 - zero dimension special case for reserve
+17:41 - instances for stable service like
+17:42 - prometheus and we also love prometheus
+17:45 - however
+17:46 - running ebs with the availability zones
+17:49 - and no affinity for prometheus juggling
+17:51 - of it is not fun at all and speaking of
+17:53 - ebs
+17:55 - it can have some interesting mountain
+17:57 - and mountain times
+17:59 - so we evaluated rook with a great
+18:01 - success and we just didn't risk to put
+18:03 - in production before game of thrones
+18:04 - season however we excited to see rook
+18:07 - become a cncf
+18:09 - project he's been submitted to toc
+18:13 - okay so for c advisor is one thing to
+18:15 - consume metrics from c advisor run a new
+18:18 - infrastructure cluster with few nodes uh
+18:20 - two cpu cores each and couple jenkins
+18:22 - spot deployed it's totally another to
+18:24 - run on 300 node cluster with 40 cores
+18:27 - each and more than 20 000 containers
+18:29 - deployed
+18:30 - consuming metrics at that scale felt
+18:32 - like drinking out of the fire hose and
+18:34 - we had to do some extensive metric
+18:35 - tuning filtering and prometheus memory
+18:38 - adjustments to get metrics in reliable
+18:41 - state
+18:43 - so when you know you are ready ready for
+18:45 - game of thrones season premiere
+18:48 - for us it boiled down by setting up the
+18:50 - bar and
+18:51 - in terms of threshold viewership and
+18:53 - ramp up speed and beating it with the
+18:55 - low tests so for about two or three
+18:57 - months leading to game of thrones
+18:58 - premier season premiere we ran a weekly
+19:00 - mega load test and the first attempts
+19:02 - were just beautiful it left us in ruins
+19:05 - and that's when the real work began
+19:07 - it began on both runs on services side a
+19:09 - service engineer did some heroic job
+19:11 - investigating issues and fine tuning
+19:13 - services to accommodate for new
+19:14 - environments and on kubernetes side when
+19:17 - we began to look for issues reporting if
+19:19 - none were found and fixing what we could
+19:22 - slowly we began to emerge in
+19:24 - better shape gaining more confidence in
+19:26 - kubernetes and services running on it
+19:29 - if there is any moral to a story
+19:31 - after successful game of thrones season
+19:33 - 7 on kubernetes
+19:35 - it feels it feels good it felt good to
+19:37 - be right perhaps for the first time by
+19:39 - making the right choice
+19:40 - and if there is any advice we can give
+19:42 - is trust yourself trust your team
+19:45 - succeed the small things and you'll be
+19:46 - well positioned to succeed at big
+19:48 - initiatives
+19:49 - and it won't always be a smooth ride
+19:51 - but
+19:52 - you and your systems will emerge in
+19:54 - better shape than you went in for us
+19:56 - many problems we found in our services
+19:58 - were not caused by kubernetes they were
+20:00 - there all along kubernetes made them
+20:02 - more visible
+20:03 - so
+20:05 - as mentioned earlier we looked in
+20:07 - alternatives however the biggest and
+20:09 - undeniably most important reason why we
+20:11 - chose kubernetes was vibrant and active
+20:13 - kubernetes community without all the
+20:15 - github issues and fixes without
+20:19 - c groups and
+20:20 - slack channels without meetups and coupe
+20:22 - counts just like this there's high
+20:24 - chance that the journey would not end
+20:26 - well and will most likely end up like
+20:28 - these two guys
+20:29 - but likely didn't happen and here we are
+20:31 - at kubecon telling a success story of
+20:33 - game of thrones season 7 on kubernetes
+20:35 - thank you
+20:38 - [Music]
+
+Cleaned transcript:
+
+let me say it's a huge honor and let me first thank the academy wrong stage all right my name is ilya this is zee and today we'll talk to you about hbo journey to kubernetes the journey which began not that long ago from not having a single service running inside the container to hosting game of thrones season 7 on kubernetes z and i will split this talk i'll tell you about why reasons and z will cover how we get it done okay it's downhill from there hbo has come to the shows that everyone is talking about from the groundbreaking series to the documentaries sports to the biggest blockbuster movies available anywhere for over 40 years people who love entertainment have recognized hbo as the original the first and the best place to find world most innovative programming hbo digital products is represented by hbo go which is part of your tv programming subscription through cable satellite or other providers and hbo now subscription directly with hbo both provide unlimited access to hbo programming just about on any device it broad sense digital products is everything and anything to do with the content streaming and digital products where z and i work and platform team so if we zoom if we look at the hbo streaming services this how they could look like from the mile high view this is not the actual image but resemblance is pretty close and if we zoom in they could be best described as a mesh of api services written mostly in node.js also we added more and more sources written in go and all sources were deployed into ec2 into a single service instance single instance paradigm all wrapped with other scaling group which handled both deployment and scale all fronted with the internal or external load balancers and route route usually handled dns needs overall it was and still is tried and true set up for running services on aws it works for general case however if you will see next that hbo case is anything but general hbo traffic pattern can be best described as the wall and this is just a random example of how fast playbacks are started on sunday night during the game of thrones season premiere a season around 6 pm known as a prime time and i think this point in time can be best represented by this image in terms of what our api source is faced with as well as the emotional state of our engineers and so looking at game of thrones uh traffic pattern um episode after episode season of the season left us with very insulin feelings about a future can we hold on during the next episode what about next season and the answers were less on optimistic because we were running into multiple problems chief of them would be under utilization running node.js implies that you can utilize a single cpu core at most now since we're deploying ec2 instances uh ec2 instances with single core typically almost always do not have good network so to find good balance between network and cpu we had to select instances which run at least two cores of cpu so right there we would not be utilizing 50 percent of icps across all deployments on demand scaling is good however it's slow or slower in comparison and sometimes it is inadequately slow to react to spike traffic thus we have to over provision the deployments doubling triple and sometimes more to accommodate for unpredicted traffic patterns so you take initial 50 percent uh on the utilization buffer up with over scaling and multiply by a number of regions that will be a lot of unused cpus so as for elb goes that every service communication requires lb and again it's tried and true elb plus asg approach however even for internal communication within the same vpcu required to stand up elb4 services again that resulted in a lot of elbs which led us to problems uh limits or otherwise known things that we running out of it's ironic because we were utilizing more than 50 of cpus and yet we're running out of all other resources so to keep up with the resource usage we have dedicated alerts which will fire up every time we cross 80 percent threshold utilization on given resources elbs ehgs security groups and when we get notified we'll contact aws support to increase our quarter limits of course things got more interesting when we began to run out of instances for given instance types or ip addresses for given subnets where even aws could not help us with our problems then of course there are external resources that directly tie to instance account like a telemetry provider who would calculate the license usage based on the instances so this brings us to kubernetes and rather than going through these bullet points they're all true i will tell you my personal story in fact this is my second time being on the stage at the kubecon first time was in san francisco in 2015 when i was summoned to stage just like today by kelsey hightower but to my great surprise and horror because i was not supposed to present what happened that walking through the hallways of cubecon 2015 i dropped my wallet somewhere and someone had found it and returned it to event organizers and he called me to stage to return my wallet so i cannot simply find a better example of kubernetes saving the day maintaining stories up and running and prevented outages otherwise would be very interesting flight home so uh we i was settled on kubernetes from the sargon but we did do a diligence we looked at masses with this years we looked at swarm we looked at ecr and for us kubernetes wasn't still is a clear winner we were just the beginning of a journey and we had a very tight schedule uh given that we had to continualize all the services first and continuization and mass scale is a huge undertaking on its own so uh once we begin conquering that health though we start playing with kubernetes and aws and again this is the end of 2015 a lot of change since then so what we started with we with most basic setup available running cube up to deploy kubernetes into our existing pcs we have to tweak and make some configuration changes and what we needed to do we need to show to our peers to our bosses to ourselves that kubernetes known as vaporware but more importantly that kubernetes can be operated in aws cluster to host production grade services and once we get uh we started cutting a teeth with jenkins infrastructure cluster and once we got in successful that we began to provision a home cluster to our streaming services and that's when we realized that basic setup simply won't cut it and we had more work to do and z will tell you how we got it done okay i'm going to tell you something we learned from our kubernetes journey so we create our own telephone templates for our provisioning our clusters we started before some of the community projects started for example our cube aws kops or cube spray this allowed us to do something really cool for example we can deploy our clusters into our existing aws infrastructure by providing our vpc ids subnet ids and security group ids we also had high availability in mind so from the very beginning our minions and master asgs are multieasy um the purpose of the esgs are different though so for masters we want to maintain a fixed number of nodes so if one fails aws will automatically launch a new master for minions we want to scale up and down very fast so we use asg to launch and terminate nodes master is also running in hr mode meaning that api servers are low balanced and schedulers and controller managers are running as leader and followers despite being home grown we keep incorporating best practice from the community we turn on oidc or open id connect authentication for a coupe api server so as long as our developers github accounts are in hbo organization they will get a token for their creepcattle authentication terraform modules is a great way to promote reusability and modularity we create we created selfcontained terraform modules for both communities masters and minions when we want to launch a cluster what we do is we compose a terraform template like this and we will run terraform apply and bam we have a cluster up and running several weeks later we have had some experience of how to operate a cluster and then we noticed a few problems so first we run prometheus in the cluster to script metrics with a provision iops ebs volume as data storage because our cluster is scaled up and down all the time sometimes the meaning that hosts the premises part get terminated we have to wait a long time for permissive spot to come back because kubernetes has to detach and reattach the ebs volume that process could be very slow and during that time we were losing metrics the second problem is for big events like game of thrones premiere of finale or simply our regular load testing we have to scale prescale our cluster up significantly to overcome the wall effect elia just mentioned and sometimes aws cannot provide sufficient capacity of our desired instance type for the minions so these issues led us to an improved version of our telephone modules first we added instance type variable to our minimum module so that all the minutes launched from this sg will get this particular instance type we also added a taint var to the media module and pass that as a cubelet startup flag so if this var is defined then all the all the minions launch from this this sg will register with that particular taint again we benefit from the modularity of our telephone code so for regular minions we pass our main instance type to the 2d module we added another module to our cluster we call it backup minion these minions are exactly the same as our regular minions except that they run on our backup instance type which is c4.8x another module we added what we call reserve the minions so reserved minions are again exactly the same as regular minions except that they are tainted by this chain to reserve equals true at the same time we update our cluster auto scaler so that when cluster scales down the mean uh reserved minions are excluded so to summarize we added two new mini asgs to our cluster to address the issues we had earlier first if aws runs out of the mainstream type we want we scaled up our backup minion to bring more capacity and second for prometheus we update the premises deployment to have affinity to reserve the minions and also tolerate the reserve taint so in this way primitive's part is not interrupted even when cluster scales down um flannel was the networking layer we chose at the beginning compared to other solutions it was simple to set up especially before the cni came and it's included in every um cores digital the digital that we use however when we were doing our regular load test we discovered that on the heavy load there were some problems first it was increased latency and timeouts both between parts and going out of the cluster and second there was udp package drop which impacted our cube dns lookups and custom metric collection both of which are udp traffic these are just two issues that we saw very frequently during the season the github links are on the slide now let's talk about different types of services that we tried and the different ways we used to get traffic into our cluster first we provisioned elbs for every node poor type of service and associate these elbs with the minion asgs so in this way all the minions launched from the esgs will be registered with the obvious automatically however there's a aws hard limit of 50 erbs per asg and also since we are provisioning elvis ourselves you have to keep track of them manually next is ingress which i think is the most common setup out there so we put a shared elb in front of ingress controllers and uh the elb forward traffic to ingress controllers which then proxies traffic to upstream services however there were some problems with that too first when we looked at the cloud watch metrics for shared elb and we noticed some 500 errors but which backend services or service exactly these 500 comes from it's pretty hard to tell without scrunching the ingress controller logs or elb access locks and second we notice the ingress controller seems to be uh seems to struggle against a very burst of spiky traffic that we saw and this this test this setup produced more connection timeout errors in our load test versus the no port setup on the previous slide and finally the publicity of your shared ingress eob will determine all the publicity of all the services and last but not least we tried load balancer service type which is cloud provider specific uh in this scenario kubernetes actually handles the provisioning of the elbs and registered minions with the elbs this method is not affected by 50 elb limits but first we noticed there was a api database api throttling problem and second there was some elb security group customization issue that didn't get resolved until recent 1.8 release so at the end this is these are our choices for services and ingress for production services we use no port plus individual eobs for nonproduction services we use ingress controllers and shared erbs in both scenarios we use the builtin service discovery for making calls between our micro services cube dns is always an interesting topic have you ever looked at the resolve.com file in your parts basically this is how it looks like first you got a bunch of internal domain names to search for and other and aws domain internal domain names so this code is actually from a part in default namespace so you see the default.service the cluster local there um second you got your um service ip of qdns and finally there's n.5 option so this option basically means that there will be many invalid and not unnecessary uh dns lookups basically this is what happens so for example we if you want to resolve a dns called pgsql.backend.xp.com because it has less than five dollars in it we will append all search domains and try them first before an actual dns query happens so why the indus file was chosen was explained in detail in this ticket by tim hawkins first reasons like same name space lookups cross name space lookups and of course cluster federation in the next following slide we will share some of the tunings we have done to reduce those invalid lookups okay these are some of the tunings that we found very important to us first is the cache size of dns mask container i think the default is somewhere around 100 or 200 but you should set it to max with ten thousand unless memory is really constrained in your system well set it into ten thousand only cost you additional couple megabytes of memory um dash dash address flag it is a really big performance booster so this flag tells dns mask to return an ip address for a specified domain name however we use it slightly differently and we specify a whole bunch of invalid domain names that were created by n.5 and we do not specify ip address so effectively for these invalid domain name lookups dns mask will return not found immediately instead of doing an actual lookup this way we speed up things a lot so if you haven't taken a look at your cube dns deployment i recommend this flag and finally if you have some internal name servers you want to hook up the server flag is for you all your parts will be able to resolve internal domain names without additional changes and with that i'll hand it back to ilia a quick word about telemetry uh it's not surprising that we didn't have any containerized services before we couldn't take almost anything from telemetry start to kubernetes except uh splunk and with splunk telemetry team did some heavy customization and tuning for splunk forward to get reliable logs everything else on this slide is uh was new technology to us and i think it was a great thing zero dimension special case for reserve instances for stable service like prometheus and we also love prometheus however running ebs with the availability zones and no affinity for prometheus juggling of it is not fun at all and speaking of ebs it can have some interesting mountain and mountain times so we evaluated rook with a great success and we just didn't risk to put in production before game of thrones season however we excited to see rook become a cncf project he's been submitted to toc okay so for c advisor is one thing to consume metrics from c advisor run a new infrastructure cluster with few nodes uh two cpu cores each and couple jenkins spot deployed it's totally another to run on 300 node cluster with 40 cores each and more than 20 000 containers deployed consuming metrics at that scale felt like drinking out of the fire hose and we had to do some extensive metric tuning filtering and prometheus memory adjustments to get metrics in reliable state so when you know you are ready ready for game of thrones season premiere for us it boiled down by setting up the bar and in terms of threshold viewership and ramp up speed and beating it with the low tests so for about two or three months leading to game of thrones premier season premiere we ran a weekly mega load test and the first attempts were just beautiful it left us in ruins and that's when the real work began it began on both runs on services side a service engineer did some heroic job investigating issues and fine tuning services to accommodate for new environments and on kubernetes side when we began to look for issues reporting if none were found and fixing what we could slowly we began to emerge in better shape gaining more confidence in kubernetes and services running on it if there is any moral to a story after successful game of thrones season 7 on kubernetes it feels it feels good it felt good to be right perhaps for the first time by making the right choice and if there is any advice we can give is trust yourself trust your team succeed the small things and you'll be well positioned to succeed at big initiatives and it won't always be a smooth ride but you and your systems will emerge in better shape than you went in for us many problems we found in our services were not caused by kubernetes they were there all along kubernetes made them more visible so as mentioned earlier we looked in alternatives however the biggest and undeniably most important reason why we chose kubernetes was vibrant and active kubernetes community without all the github issues and fixes without c groups and slack channels without meetups and coupe counts just like this there's high chance that the journey would not end well and will most likely end up like these two guys but likely didn't happen and here we are at kubecon telling a success story of game of thrones season 7 on kubernetes thank you

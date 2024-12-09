@@ -1,0 +1,414 @@
+00:00 - hello in this tutorial I'm going to show
+00:03 - you how to use ray casting in Godot 3.0
+00:05 - to implement visibility we're going to
+00:07 - make an automated turret that will shoot
+00:09 - at you but only if you can see you so
+00:14 - here's your situation you have your
+00:15 - player and you have these turrets that
+00:19 - when they detect the player are going to
+00:20 - try to shoot them and so you can see if
+00:23 - I enter the circular detection area of
+00:26 - the turret it will see me and start
+00:28 - shooting at me and this is all fine this
+00:32 - is just being done with area enter and
+00:34 - area exit so it knows whether it can see
+00:38 - me or not the problem is that even if
+00:41 - I'm up here on the other side of the
+00:43 - wall the turret is still shooting at me
+00:46 - and I want to make sure that the turret
+00:50 - can't shoot at me if it can't see me so
+00:53 - I need this turret to have some sort of
+00:55 - limit to its visibility before we go too
+00:59 - far let's take a look at how the code is
+01:01 - organized right now this is the player
+01:03 - script it is just detecting the four
+01:07 - directional keys and moving the player
+01:10 - in whatever direction is indicated we're
+01:13 - not going to change anything about the
+01:15 - players movement to do the visibility
+01:18 - now the turret the turret has got a
+01:20 - couple things going on so it has a
+01:23 - detect radius variable that's how big
+01:25 - that visibility circle is the bullet
+01:29 - sorry the turret has a is a kinematic
+01:34 - body but it has an area 2d attached to
+01:37 - it with a collision shape and that area
+01:40 - 2d is called visibility that's the thing
+01:42 - that you saw in yellow and we're setting
+01:47 - its detect radius in the script so that
+01:50 - you can set it in your inspector here
+01:54 - and then in the ready function we will
+01:58 - take the shape and set its rate create a
+02:01 - circle shape and set its radius and then
+02:04 - we also have a fire rate and the bullet
+02:07 - scene so that it can do the shooting and
+02:09 - it'll just instance a bullet every X
+02:12 - number of seconds
+02:14 - or X number of times per second this is
+02:17 - the color this is that pale yellow that
+02:19 - I was using to do the outline of the
+02:22 - visibility circle and then we have a
+02:25 - variable to store our target and can
+02:28 - shoot is for the fire rate so what's
+02:33 - going on is we have our body entered and
+02:37 - body exited when the area detects a body
+02:41 - entering if we already have a target we
+02:44 - ignore it because we already have a
+02:46 - target but if we don't then we make that
+02:48 - body the target and then I'm using
+02:51 - modulate to just dim the dim the sprite
+02:54 - and make it red when it sees a target so
+02:58 - that we have a visual confirmation when
+03:02 - the visibility are sorry when the
+03:03 - visibility body exited signal happens
+03:06 - then if the body that exited was the
+03:09 - target then our target gets set to null
+03:11 - and we go back to dim we don't have a
+03:15 - target anymore and then in our physics
+03:19 - process we are just updating if we have
+03:22 - a target we rotate to point at the
+03:24 - target and if can shoot lets us we shoot
+03:28 - shoot spawns a bullet and sets the
+03:32 - bullet off on its way and lastly we have
+03:36 - the update being called here in the
+03:38 - physics process so that we can do our
+03:42 - draw function which is which is drawing
+03:44 - a circle to show that detect radius so
+03:47 - that's what we're seeing here when we
+03:50 - enter the player is set as the target
+03:55 - bullets are spawned and when we exit the
+03:59 - target is null so it doesn't have
+04:01 - anything to shoot at now if you want to
+04:04 - download this starting project I'll link
+04:07 - it in the description below so you can
+04:09 - start out at the same point that I do
+04:12 - for moving forward and making the
+04:14 - visibility work so to start with we want
+04:18 - to get rid of this if we have a target
+04:21 - we're not just going to turn and point
+04:23 - at it and shoot we're going to get rid
+04:25 - of that instead we're going to try to
+04:28 - aim and we're gonna see if we can hit it
+04:30 - so this is where our visibility is gonna
+04:35 - come into play is we're gonna check to
+04:37 - see if we can hit something and so the
+04:40 - first thing we need to do is we need to
+04:43 - test array towards our target and in
+04:48 - order to visualize this we're also going
+04:50 - to add some some visualizations so I'm
+04:52 - gonna go up here and add a variable
+04:54 - called hit pause
+04:56 - that's going to be the position of where
+04:58 - our raycast hit so that we can draw it
+05:00 - on the screen and so in our aim function
+05:05 - we're going to get the space state this
+05:11 - is the get the world 2d direct space
+05:18 - state and this when you use it inside a
+05:22 - physics process is a snapshot of the
+05:25 - physics state during this frame so where
+05:29 - every physics body is and what it's
+05:32 - doing and you can access a lot of things
+05:34 - about the physics of the world using
+05:38 - this object and so we're gonna cast
+05:43 - array so our ray is going to use the
+05:48 - space state and the command is intersect
+05:52 - ray and what this method takes as its
+06:00 - arguments are a starting point so that's
+06:04 - going to be our position an ending point
+06:07 - that's the target position and these by
+06:13 - the way are in global coordinates so
+06:17 - these are not relative to the turret
+06:20 - these are going to be global and then
+06:23 - the third argument is a list of objects
+06:27 - to exclude well we want to exclude
+06:29 - ourself we don't want the array to hit
+06:33 - ourselves or it wouldn't travel any
+06:34 - distance at all and then finally you
+06:38 - have a fourth parameter and that is
+06:40 - collision masks that you can use to say
+06:42 - what things should I hit and what things
+06:44 - should I avoid well the turret itself
+06:47 - has a collision mask that's set to
+06:51 - detect the environment layer and the
+06:54 - player layer and it doesn't see any of
+06:57 - the other physics layers well that's
+07:00 - perfect for us
+07:01 - so rather than create a new mask we're
+07:03 - just gonna use the parent bodies mask
+07:07 - okay and we can actually put this on the
+07:12 - next line if you want to make it a
+07:13 - little more readable so we're gonna cast
+07:17 - array from the position from from our
+07:19 - turret towards the targets position
+07:22 - which is going to be the center of the
+07:24 - target
+07:25 - remember we're gonna ignore ourself and
+07:28 - we're also going to only count the
+07:31 - objects that are in the collision mask
+07:32 - which are going to be the walls and the
+07:34 - player and now result is either going to
+07:36 - be null or have something in it so if we
+07:39 - got a result then we hit something so if
+07:43 - our ray hits something it might have
+07:46 - been the player it might have been a
+07:47 - wall so let's set our hit pause to the
+07:54 - result dot position and this result
+07:58 - object has a lot of different properties
+08:00 - in it one of them is the position of the
+08:03 - thing we hit if result if the result
+08:10 - Collider has the name player well then
+08:14 - we should shoot at it right this is
+08:17 - where we should set our rotation and
+08:22 - point it at the player so we want to go
+08:26 - from the targets position to our
+08:28 - position angle and we want to say if can
+08:33 - shoot then we'll call shoot to the
+08:38 - target position target dot position and
+08:44 - so that's what we were doing before
+08:46 - right if we're allowed to shoot then we
+08:49 - call shoot but the reason that we stored
+08:51 - this right here this hit pause
+08:53 - variable because so that we can also
+08:55 - visualize what's going on with our race
+08:59 - so we can make sure that things are
+09:00 - working right so if we go over to our
+09:03 - draw method where we're drawing our
+09:07 - circle we're also going to draw a line
+09:12 - at the along the raycast
+09:16 - to the hit position where it hit so we
+09:18 - can see where that ray intersects the
+09:19 - wall or whatever it ran into so we're
+09:22 - going to say if there's a target we want
+09:24 - to draw this line so we're going to do
+09:28 - two things we're going to draw a circle
+09:29 - and that circle is going to be at the
+09:35 - hit position now draw a circle and all
+09:38 - these draw all these draw up functions
+09:40 - actually are in relative coordinates
+09:43 - they're relative to the parent body so
+09:46 - this is going to be relative to the
+09:47 - turret so we need to do some little some
+09:50 - calculations to take the hit pause and
+09:55 - subtract the position of the turret we
+10:00 - also need to cancel out the rotation of
+10:04 - the turret because it might be rotated
+10:07 - we'll set the radius which doesn't have
+10:12 - to be that big and then we'll set the
+10:15 - color now I'm actually going to go up
+10:17 - here and I'm just gonna define this up
+10:18 - here laser color because I have I think
+10:23 - already saved yeah there we go
+10:27 - I'm just going to use this which is a
+10:30 - kind of pale ish red color that we can
+10:33 - use this is like our our aiming laser on
+10:38 - our turrets gun so we draw the circle
+10:42 - we're also going to draw a line and for
+10:49 - drawing the line we need to do pretty
+10:50 - much the same thing we need to start at
+10:53 - the turret so we'll put it at 0 0 that
+10:58 - means again relative to the turret
+11:00 - that's where we're gonna go and then
+11:03 - we're going to take hit pause - position
+11:05 - and we're gonna rotate it again to
+11:08 - cancel out the rotation and we'll put
+11:14 - that in the same laser color and there
+11:19 - we go so now we have if we have a target
+11:22 - we'll be drawing that line towards it
+11:25 - and marking the spot where we hit oh and
+11:27 - one other thing we'll do is instead of
+11:28 - making the turret light up red win it
+11:32 - when the body enters the circle we only
+11:36 - want to do it if it can actually see it
+11:38 - so if you can actually see it will set
+11:42 - the color to red all right so let's run
+11:45 - it and see what happens so here's our
+11:47 - player when we enter shooting us as it
+11:52 - did before but now you can see that ray
+11:54 - and where it's and where it's hitting
+11:56 - the player now if I'm out here and I go
+12:00 - up here now the arrays being casted and
+12:04 - we can see where it's hitting the wall
+12:06 - before it's able to reach the player so
+12:09 - it cannot and shouldn't light up and
+12:13 - shoot now that all works pretty well but
+12:16 - there is one small problem which you'll
+12:17 - notice if you go over here near a corner
+12:21 - let's say I hug the wall here you can
+12:25 - see as I get down here this still counts
+12:29 - as the turret not being able to see me
+12:31 - but of course the turret is trying to
+12:34 - shoot array only at the center of the
+12:38 - player so it's shooting towards this
+12:40 - position and it can't see that position
+12:42 - but it can't see all of this part of the
+12:45 - player so if you can see all this part
+12:48 - of the player it ought to still be
+12:50 - shooting at them so we need to actually
+12:53 - improve this a bit by casting more than
+12:55 - one ray what we actually want to do is
+12:57 - cast Ray's towards the four corners of
+13:00 - the player and if any of them contact
+13:06 - the player then we should still be able
+13:08 - to shoot towards them so I'm going to
+13:12 - start by the aim getting the targets
+13:16 - extense and this is so I can tell where
+13:19 - their corners of the target are so we're
+13:24 - going to get its collision shaped 2d
+13:30 - node and we're going to check its shape
+13:34 - extents now if we just do that the
+13:38 - problem is going to be that we are right
+13:40 - at the very very corners of the
+13:44 - collision shape which are going to be
+13:47 - against the wall and so our Ray shape
+13:50 - could all right say our raycast could
+13:52 - still hit the corner of the wall so what
+13:54 - we want to do is actually back that out
+13:56 - a little bit from the from the corners
+13:58 - so I'm just going to subtract about five
+14:03 - pixels from each corner just a very
+14:05 - small amount but we're just a little bit
+14:08 - inside the collision shape now so now we
+14:14 - have those extents now we have now we
+14:17 - have to list the four corners so I'm
+14:20 - going to call them northwest-southeast
+14:23 - and so on so the northwest corner is the
+14:27 - target is the target position minus the
+14:35 - target extents that's the northwest
+14:39 - corner the southeast corner is the
+14:41 - target position plus the target extents
+14:49 - right because that's down into the right
+14:52 - now the Northeast is up and to the right
+14:56 - so we need to take the target position
+14:59 - and we need to add a vector with the
+15:06 - target extents X and a negative of the
+15:10 - target extents Y and then finally for
+15:15 - the southwest we need to do the opposite
+15:18 - of that so the target position plus a
+15:23 - vector two of the negative target
+15:27 - extents X and the positive of the tar
+15:31 - extend that way and then we have our
+15:35 - four corners that we need to shoot at so
+15:41 - we'll just do a loop in here four paws
+15:42 - in and we'll just go Northwest northeast
+15:48 - southeast southwest order doesn't really
+15:52 - matter for these and then each time we
+15:55 - do that we're going to cast array so our
+16:02 - place we're shooting at is now the pause
+16:09 - whatever pause we're on in the loop and
+16:12 - then if there's a result then we want to
+16:19 - do the same thing we did before but if
+16:23 - we're going to visualize all of this
+16:27 - then I want hit pause to actually be a
+16:31 - list I wanted to be an array of
+16:34 - positions so we're gonna set that to a
+16:40 - blank array an empty array and then when
+16:45 - we do hit something we're going to
+16:49 - append it hit pause dot append the
+16:55 - result position and then we still shoot
+16:59 - towards the player if we hit it that way
+17:00 - if we didn't hit the player we will have
+17:03 - a list of the positions that we did hit
+17:07 - on the wall and we can see where these
+17:08 - are going this is again just so that we
+17:10 - can visualize so down in our draw
+17:12 - section instead of just doing one we're
+17:18 - gonna say for hit in hit pause and we're
+17:22 - gonna draw the line in the circle using
+17:26 - those coordinates
+17:30 - alright now let's see what happens when
+17:32 - we run it
+17:36 - I'm going to go up here to the wall and
+17:44 - I made a typo with vector2
+17:48 - all right now if we go up here there you
+17:52 - can see the four rays getting cast
+17:55 - towards the player and that way now when
+17:58 - I'm here I'm shooting but the problem is
+18:02 - now of course I'm shooting I'm not
+18:05 - shooting at the Ray position I'm still
+18:08 - shooting at the center of the player so
+18:10 - we want to shoot at the place that we
+18:14 - saw so we'll add that we want to shoot
+18:18 - at the position that we saw the Ray hit
+18:24 - and now if we get over here on the
+18:27 - corner you can see we're shooting oh
+18:29 - just along that gap and still hitting
+18:31 - the player in the corner sometimes
+18:34 - alright so that isn't bad but the
+18:39 - problem is that that we have is out here
+18:41 - in the open area we're gonna wind up
+18:44 - shooting at the corner of the player
+18:46 - because that's the first one it sees so
+18:50 - it starts shooting at that one and that
+18:53 - looks a little weird
+18:54 - why is Italy shooting at one edge of the
+18:57 - player right over here it's always
+19:00 - shooting at that one or if we're down
+19:01 - here it's only going to be shooting at
+19:04 - one of the corners so we can fix that by
+19:08 - adding in our lifts it's list of
+19:13 - positions we can also put the target
+19:16 - position in here that which is again the
+19:19 - center of the sprite so now it'll shoot
+19:21 - at five and so now we're going to have
+19:24 - five rays shooting towards the player
+19:30 - fives not that many more and now what we
+19:33 - want to do is since we since we checked
+19:37 - the center position
+19:38 - first right we check the center position
+19:42 - first then our result is going to be at
+19:45 - that position and we'll shoot if we want
+19:48 - to speed things
+19:49 - up a little bit or be a little bit more
+19:50 - efficient than what we can do is say if
+19:52 - we did find a one that worked then we
+19:56 - can break out we don't need to check the
+19:58 - other remaining we don't need to check
+20:01 - the other remaining corners if we
+20:03 - already found one that works and started
+20:04 - shooting right there's no point in doing
+20:07 - that after we've already shot so that
+20:09 - means that when we're here we're gonna
+20:11 - cast one ray and that's all we need when
+20:15 - we're up here we may have to cast more
+20:17 - than one when we're at a obscured
+20:20 - position we may need to cast more than
+20:22 - one but once we've found one that works
+20:24 - we just keep using that one and now when
+20:29 - we're inside in a clear area it still
+20:32 - looks like it used to that we're
+20:33 - shooting straight towards the player so
+20:38 - now you have some really nice functional
+20:39 - turrets and you can add a bunch of them
+20:41 - to the map and get a lot of Duggal
+20:45 - situations where the player can't find a
+20:47 - place to hide and might even be getting
+20:50 - attacked by multiple turrets at the same
+20:52 - time and you can make for a much more
+20:57 - challenging experience if that's what
+21:00 - you're going for
+21:02 - of course there are many more
+21:03 - applications of this that you could use
+21:05 - instead of the turrets firing bullets
+21:08 - that Ray itself could be the weapon of
+21:12 - the of the turret shooting its laser
+21:15 - towards you you can vary it a little bit
+21:19 - give it a little bit of randomness to
+21:20 - have it you know sometimes shoot to the
+21:23 - sides you can even do ricochets if you
+21:28 - want so if you have something like if
+21:31 - you have something like this situation
+21:34 - here the Ray comes out and hits the wall
+21:38 - you you cast a second ray from here at
+21:42 - the reflected angle in this direction
+21:44 - and then you see what that hits and you
+21:46 - can put that in a loop and do that as
+21:49 - many times as you want there are lots of
+21:51 - possibilities so I hope this video was
+21:53 - useful to you if you like this kind of
+21:56 - content please let me know in the in the
+21:58 - comments below and I'll try and make
+22:01 - more happy
+22:02 - here requests if you haven't subscribed
+22:05 - please do so you'll see the next videos
+22:07 - and I'll see you next time
+22:16 - you

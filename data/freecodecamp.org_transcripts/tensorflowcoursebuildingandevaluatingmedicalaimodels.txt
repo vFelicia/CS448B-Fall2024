@@ -1,0 +1,575 @@
+00:00 - Machine learning is being used to save lives in the medical industry.
+00:04 - In this course, you will learn how to build and evaluate AI models with TensorFlow.
+00:09 - This is a great real-world project for improving your machine learning skills.
+00:13 - Dr. Jason Adelberg teaches this course.
+00:16 - He is a radiologist in New York City and also a programmer.
+00:20 - So let's start learning.
+00:22 - Hey everyone, my name is Jason.
+00:24 - I'm a doctor and computer programmer in New York City.
+00:27 - And today we're going to talk about how to build and evaluate medical AI models with TensorFlow.
+00:35 - This tutorial today will have two parts.
+00:38 - The first part is going to be building and training a really simple TensorFlow model.
+00:42 - And the second part is going to be going through the statistics, the evaluation of our model,
+00:47 - and we'll talk about metrics like AUC, sensitivity, specificity.
+00:52 - This stuff will be really useful, especially if we're interested in
+00:55 - deploying this in the clinical space.
+00:59 - I wanted to give a big shout out to Dr. Walter Wiggins for inspiring this tutorial.
+01:03 - Here's his Twitter and here's mine.
+01:06 - And with that, let's get started.
+01:10 - All right, so today we're going to be using Google Colab.
+01:13 - Google Colab is a really cool website through which you can run different parts of Python code.
+01:20 - If you've never used it before, it's relatively easy.
+01:22 - We'll start by clicking connect up here.
+01:27 - And then basically in this tutorial, all these different blocks of code here,
+01:33 - these are known as cells, and we can click the play button here to the left of it
+01:38 - to get everything up and running.
+01:40 - This first cell will just be us downloading a whole bunch of things,
+01:43 - so it's a good one to get started with.
+01:46 - All right, so today we're going to be working with chest x-rays.
+01:49 - And chest x-rays are the most common imaging study performed in hospitals,
+01:53 - in emergency departments, in outpatient settings.
+01:56 - It's usually one of the very first things that doctors want to know about
+01:59 - if you're not feeling well.
+02:01 - Now, there are a number of things and structures you can see on a chest x-ray,
+02:07 - so let's just go over them real quickly.
+02:10 - Here's a normal chest x-ray.
+02:12 - You can see the lungs.
+02:14 - You can see the heart here in the middle.
+02:16 - You can see the aorta coming off of the heart and supplying blood to the rest of the body.
+02:22 - You can see a number of skeletal structures.
+02:24 - So, for example, here's your collarbone or your clavicle.
+02:29 - You can see all the ribs here on both sides.
+02:34 - You can see the vertebra here in the middle.
+02:38 - This line here is called your diaphragm.
+02:41 - It goes around like that.
+02:42 - And this separates your chest, your thorax, from your abdomen.
+02:48 - Underneath this line is your liver.
+02:52 - Your spleen is over here.
+02:54 - And this little kind of air bubble sitting in here, this is your stomach,
+02:58 - which in this case just has a little bit of air in it.
+03:01 - And again, this is a normal chest x-ray.
+03:05 - Today, we're going to be using a pretty big data set of chest x-rays called the N-ray.
+03:10 - And this is an open source data set of a few thousand chest x-rays,
+03:15 - which happens to have eight different labels.
+03:19 - So, here's the eight different labels available to us in this data set.
+03:23 - And these represent eight pretty commonly seen things on x-rays.
+03:28 - This is not everything that you can see that can go wrong in a chest x-ray,
+03:33 - but this is some of the more common things in the world.
+03:36 - And let's just go through them real quickly.
+03:43 - Here we have atelectasis.
+03:45 - This is when a little piece of the lung kind of deflates a little bit.
+03:51 - So, that is up here.
+03:54 - Basically, this wedge-shaped thing up here in the right upper lobe.
+03:58 - Here we have cardiomegaly.
+04:00 - Cardiomegaly is when you have a really big heart.
+04:02 - Specifically, it's when like this length of the heart is more than 50% the length of rib-to-rib.
+04:11 - And this is a sign of heart disease.
+04:15 - Here we have a pleural effusion.
+04:17 - That's when you have something that's basically sitting right outside the lung
+04:20 - in what's called the pleural space, which is not really supposed to be full of anything.
+04:26 - This one here, this is an infiltrate.
+04:29 - And that's when you have something sitting inside the alveoli of the lungs.
+04:33 - It's not supposed to be there.
+04:35 - There's a few different things that can do that,
+04:38 - but most of the time this means that you have a pneumonia.
+04:43 - In this x-ray, we have a mass.
+04:45 - It's this rounded density up here in the left upper lobe apex or on top of the lung.
+04:53 - A mass is something that's more than three centimeters in diameter.
+04:56 - And with the mass, you know, again, it depends on the context,
+04:59 - but generally we're sort of worried here about some sort of tumor.
+05:05 - This is a nodule, and a nodule is a mass that's smaller than three centimeters.
+05:11 - So this is a little bit harder to see.
+05:13 - Here's pneumonia.
+05:15 - A pneumonia is an infection inside of your alveoli.
+05:20 - Again, this is not like mutually exclusive with infiltrate.
+05:23 - And then finally, last but not least, this is a pneumothorax.
+05:28 - And you know how in this one we said you can have sometimes some fluid sitting in the plural space.
+05:34 - Well, here you have air in the plural space.
+05:37 - And this is also known as a collapsed lung.
+05:42 - I bring all this up because some of these conditions are a little bit easier to see
+05:47 - and some are a little bit harder to see.
+05:49 - For example, you can bet that you can have some of these conditions
+05:52 - For example, you can bet that a mass, which again is more than three centimeters,
+05:58 - you can bet that that will be easier for us to see than a nodule.
+06:02 - And so it should be easier for a computer to see this than to see this, to see a nodule.
+06:10 - You know, basically how good our model is is going to depend partly
+06:14 - on the technology that we're using, but partly on the data itself, generally speaking.
+06:19 - You know, if you have more data, that's better. If you have a higher diversity of data, like
+06:24 - different types of nodules, et cetera, the model will work a little bit better.
+06:29 - But the quality of the labels really matters as well.
+06:34 - So now that we've looked at the eight different findings,
+06:38 - the e-label is available to us in our data set, let's choose one for the AI model.
+06:42 - So I'm going to choose cardiomegaly. And let's take a look at the data
+06:53 - to actually see kind of a little bit more about the different images that we have.
+06:56 - So I'm going to click here on the folder button and click here on the medical AI folder
+07:03 - and here on the images. And here's just a random one we'll open up.
+07:10 - You can see that this is an example of a chest x-ray up here.
+07:17 - Also in the data that we downloaded, so there's all the images there.
+07:22 - And then here is a giant spreadsheet of all of the images that we have
+07:27 - available to us with all the labels on them.
+07:30 - So for example, here are, you know, 100 or so images with the labels right there in that column.
+07:38 - I'm going to grab the path for that file.
+07:57 - And then put that in here.
+08:01 - And then here's just another way that we can make sure that
+08:03 - the python that our google collab can see everything.
+08:08 - This is showing just the first five rows which happen to be atelectasis.
+08:15 - Okay, next I'm going to look for the rows of this column where the label equals our finding.
+08:25 - And then we'll do the same thing for where the finding is no finding at all.
+08:38 - These are going to serve as negatives to us.
+08:43 - We want to make sure that we have enough images to train a model with here.
+08:46 - So for this line here, I'm just going to go ahead and make sure
+08:51 - that we have enough examples of positive cases.
+08:54 - So this is showing us that we have 146 examples of cardiomegaly that we can use today.
+08:59 - That's pretty good.
+09:05 - Now one concept for building AI models is that you want to separate the data into
+09:10 - a training set and a testing set.
+09:13 - Usually you do about 80% for training and 20% for testing.
+09:17 - What does that mean? So, you know, the AI model is going to get taught,
+09:22 - is going to learn what's what from our training data set.
+09:25 - But in order to tell if it's working or not, we want to show it images that's never seen before.
+09:30 - And that's going to be our testing data set, which is the other 20% of all those images.
+09:35 - So I'm just going to manually define that right now, just like this.
+09:39 - And then I'm going to go ahead and spell out exactly
+09:49 - the number of images that we're going to use for our training data set.
+09:53 - So I'm just going to say that that number is 80% of what we have to work with today.
+10:12 - And the same thing for our test data set.
+10:14 - Let's print those out just to make sure that they make sense.
+10:27 - And you can see that we're going to go, and as you can see, we'll use 116 positive cases
+10:33 - for our training data set and 29 positive cases for our testing data set.
+10:37 - Here, you can see we have quite a lot, we have a lot of negative examples.
+10:44 - So our limiting factor today is going to be the number of positive cases.
+10:50 - For this example, today, we're going to do a 50-50 split where we want to have an equal number of
+10:55 - positive and negative cases for our training and for our testing.
+10:58 - So we're just going to spell that out right here.
+11:00 - Right here, I'm just going to put together the rows that are going to go in our training data set.
+11:09 - That will look like this.
+11:11 - So right here, I'm just going to put together the rows that are going to go in our training data set.
+11:19 - And the same thing for our testing data set.
+11:45 - And the same thing for our testing data set.
+11:58 - Cool.
+12:12 - Okay, great.
+12:32 - All right, so now that we know how many images we have to work with, now we'll just move them
+12:37 - to different folders. And we'll see a few examples of the images with Python to make sure we're ready
+12:42 - to go. So now we're just going to make some directories. Here is our root directory
+12:54 - with all the images in it. And then this is how I'm just choosing to make some new directories.
+13:02 - So we'll make one like this for our finding. We'll make one for our test data set.
+13:19 - We'll make one for our train data set.
+13:23 - And then we're going to do the same thing, but just make negative
+13:30 - folders instead of the positive folders too. And negative just means that there's no finding at all.
+13:38 - Like that.
+13:44 - Now we're going to go ahead and just move those files over.
+13:47 - And we're going to do this basically by iterating through like the rows in our data frame
+13:55 - that we care about. So we pay a little bit of attention to exactly how many images we have to
+14:03 - move over. But here's where, for example, the training positive examples happen to be located.
+14:13 - They are like this, as it's defined in our CSV file.
+14:22 - Here's where we're going to move it to. And this is, again, the way that we defined it
+14:26 - in the code block above. And then this line here, this actually does the moving.
+14:38 - We'll try it real quick just to make sure it works. If it does, we can double check by clicking here.
+14:52 - We're going into images.
+14:57 - Waiting a minute.
+15:00 - Going to cardiomegaly. And you can see that now we've made some test folders,
+15:04 - some train folders, and this should be a whole bunch of the images here, right?
+15:14 - Now I'm just going to copy and paste this. And instead of doing the positives in our training
+15:19 - data set, I'm going to do the positives in our testing data set. Because our training data set
+15:27 - is 80% of all of this, this is more or less like the 80th percent row of all of the positive
+15:37 - things that we have. And then again, we're going to move this to the testing part. Just going to
+15:42 - tweak that right there. And then we're going to do the same thing for our negatives. So now I'm
+15:49 - just going to again copy and paste those lines. I'm just going to change positives to negatives.
+15:57 - Positive to negative. Here and here.
+16:08 - Done. I'll go ahead and just copy this here.
+16:11 - Cool. Now that we've moved everything over, let's just use Python to show everything
+16:17 - directly in this notebook, just to make sure that what we're doing makes sense and is appropriate.
+16:24 - So I'm going to define two arrays. And then this is something that we declared in the first
+16:32 - blocker code when we started today. But let's just like, for emphasis, describe that. Right here,
+16:42 - we're just going to show like smaller versions of the pictures that we're loading up.
+16:48 - And then we'll just show like six examples.
+16:57 - And this is the way that we're going to load it.
+16:59 - And this is the way that we're going to load it into Python itself.
+17:03 - image dot open image path dot resize image width image height
+17:26 - image height like that
+17:38 - positive images append. And this is basically like a helper function that
+17:46 - we declared up at the very top again. Image just like that. And I'll be sure that I spelled it
+17:54 - correctly. Just going to do the same thing again for the negative images. So again, those are the
+18:02 - images that have no findings at all. Like that. Now that we've actually loaded everything,
+18:17 - we'll go ahead and actually just like show everything with matplotlib.
+18:29 - And so we're going to go ahead and show just six images.
+18:36 - So these will be our six images that have cardiomegaly.
+18:55 - That will go there. And then we're gonna do the same thing. I'm copy and pasting this for
+19:01 - negative images. So I'm just going to tweak that. I'm going to tweak this. And we're not using,
+19:11 - again, like the whole point with the negative images is to show ones that have no finding at
+19:15 - all. So let's go ahead and click play. Here you can see that it's showing us six examples
+19:22 - of cardiomegaly from like the folder that it's created. And to me, these all look like definite
+19:28 - cases of cardiomegaly. You can see that the heart here is for sure it's enlarged. It's more than
+19:32 - half of the chest. And here these look like cases with no findings. So here the heart
+19:38 - is normal size and there's not really much else going on as well.
+19:45 - Okay, so now we have visualized our data. We've moved everything around and we know that we want
+19:51 - to build an AI model for cardiomegaly. In this part, we're going to actually build the TensorFlow
+19:56 - model. Now there are lots of different ways to approach model building and we can spend an hour
+20:02 - on this topic alone. But basically here, I want to talk about two different concepts for this part.
+20:08 - So the first is called transfer learning. And the second concept is called data augmentation.
+20:14 - We're going to use both of those things today. All right, so this first line here,
+20:22 - this is going to have us load our model directly through TensorFlow itself.
+20:32 - And we're just going to define the size of the image that it's going to be working with,
+20:38 - which we kind of talked about earlier, but these are going to be kind of smaller,
+20:41 - basically scaled down versions of our chest x-ray. This three here is saying that basically
+20:47 - it's a three channel image, so like a color image, right, like red, green, and blue. Now it's true
+20:53 - that, you know, our chest x-rays are actually just all shades of gray, but we're just going
+21:01 - to put that in there because it's a little bit easier. And then this one here, include top equals
+21:08 - false. We'll come back to this, but this is basically going to let us customize our model
+21:13 - to do what we want to do here.
+21:27 - This should be weights plural.
+21:34 - And now we're using again the ImageNet network here.
+21:39 - But what we're basically going to do is, on top of all this, for the last layer of our model,
+21:44 - we're going to have it spit out whether it thinks there's cardiomegaly or not.
+21:50 - So we're going to just manually define that here. This is basically talking about exactly
+21:58 - what type of output we want our model to put out.
+22:02 - So this is just getting that last layer, and here we're going to go ahead
+22:10 - and define this by saying that we want to say either basically yes or no, positive or negative.
+22:19 - So this is the way that we can do that.
+22:24 - This is just basically some stuff to, again, help us with our big task, which is saying yes or no,
+22:38 - cardiomegaly or not cardiomegaly. I'm going to say yes or no, and then I'm going to say yes or no.
+22:46 - So this is just basically some stuff to, again, help us with our big task, which is saying yes or no,
+22:55 - cardiomegaly or not cardiomegaly. All these decisions here, we could talk about this for
+23:02 - such a long time, but I'm going to skip over exactly some of the specifics here. And if there's
+23:09 - something to put an x in there, right. Okay, as for the model, so now we have
+23:21 - this model with a slightly customized last layer.
+23:24 - And now we're just going to basically go ahead and compile it.
+23:42 - Here we're just going to say that we're interested in the accuracy, basically,
+23:48 - so how accurate is our model in between, saying whether something is positive or negative,
+23:52 - and that's sort of the metric that we're going to use to help us figure out if our model is working
+23:59 - or not. Oh, and then one other thing is that we should put an equal sign right in there,
+24:08 - and that would help us as well. Okay, so now that this is all done,
+24:15 - now we're going to go ahead and just define a bunch of things that are basically just kind
+24:23 - of helping point our model to the right information. So if you remember from earlier,
+24:31 - all of our images are hiding out right there. The directory where everything is located for
+24:39 - the imaging for the training stuff is like this. For testing, it's just about the same,
+24:50 - but like this, change this here. And then this kind of keeps going. So the way we have our data
+25:01 - structured is that we have like sub-folders in our training directory that are called positive,
+25:14 - one called negative, which we're going to put in right here. That looks like this.
+25:22 - Like this. And then the same thing also exists just for our test data. So I'm going to make
+25:30 - these changes here, here, here, and there. I'll click play right there.
+25:43 - Okay, so now the next concept I want to talk about is something called data augmentation.
+25:49 - So as we discussed earlier, we have a bunch of images available to us with cardiomegaly, but
+25:56 - it's not like a ton. There are some ways that we can basically kind of cleverly create more
+26:03 - training data for ourselves, and that's called data augmentation. So what we're going to use here
+26:09 - is basically a really cool concept called an image data generator.
+26:15 - And this is basically something that's going to look at all the images that we have
+26:20 - and kind of tweak them a little bit so that we're kind of generating like more data from
+26:28 - the data we already have. Now there's a lot of different ways that you can augment data,
+26:35 - that you can kind of tweak data around, but these are the ones we'll just happen to use today.
+26:40 - And, you know, if you're playing around with this sort of on your own, you're welcome to, you know,
+26:45 - kind of experiment with different ideas here. So what are we doing? So first of all, we're just kind
+26:52 - of, all these methods here basically are generating extra images that are slightly tweaked from our
+26:59 - images. So specifically, this is going to generate images that are slightly rotated one way or the
+27:09 - other, that are slightly shifted, like stretched out, that are sheared, and that are zoomed in
+27:19 - as well. One thing that's important with data augmentation is that it's not just going to be
+27:27 - zoomed in. One thing that's important with augmentation for medical data is that, you know,
+27:36 - there's kind of some different thoughts on this, but when it comes to flipping images, you know,
+27:41 - a chest x-ray is never really going to be flipped around, right? Like, you know, your heart is
+27:48 - always going to be like, you know, you're, you know, when you take a chest x-ray, like,
+27:57 - right side up, right? Like your stomach's always going to be below your lungs. So if we were to
+28:02 - flip the data upside down, that wouldn't necessarily really be helpful for our AI model.
+28:08 - In regard to horizontal flipping, you know, I think there's not really like a consensus on this
+28:14 - when it comes to medical imaging or specifically chest x-rays. It's true that our bodies are not
+28:20 - completely symmetrical, even though we like to pretend there are, so your heart's a little bit
+28:24 - more on your left side. There is a condition where your heart can be more on the right side,
+28:30 - but it's not super common. So I'm just going to say that we're not going to flip things
+28:34 - horizontally so that we don't kind of confuse our model, but that's a choice that you could make if
+28:40 - you wanted to. For our test data, we definitely don't want to augment, don't want to mess with
+28:49 - our test data at all. So this is just a line where, you know, we are creating an image generator,
+29:01 - but all that we're doing here is just like redefining the numbers that are inside of our,
+29:08 - of each pixel, basically. So this is, it's not really actually doing anything, right?
+29:13 - This is basically saying that instead of each pixel going from like zero to 255, it's going
+29:18 - to be between zero and one. All right, let's go ahead and click there. That works.
+29:29 - So that's image augmentation. And now this here is something that we need to use in order to get
+29:36 - our model to train, called a train and test generator.
+29:43 - And this is basically the way that we do it here. So from directory, which we already have,
+29:52 - target size and then we're just going to do the same thing for testing right below.
+30:22 - And then, you know, of course, we just need to kind of tweak some of these things here
+30:34 - for this particular part. We'll go ahead and just define the number of steps that we're
+30:40 - going to use for this, which is basically because we have a batch size of one.
+30:45 - It's happens to be the same, happens to be just like all the images that we're using.
+30:52 - So, I mean, this is one way of doing it, like the way that our data is structured.
+30:56 - Like the way that our data is structured. So again, train steps equals the length
+31:13 - of that folder times two. And then for testing, we're going to go ahead and say that it's like
+31:22 - this. And then we actually typed this in wrong here. So let's go ahead and just fix this real
+31:30 - quick. That goes like that. And then this goes like this. And you can see here that when we click,
+31:40 - so it's found 232 images for the training part and 60 images for the testing part. And again,
+31:48 - that is pretty close to 80% and 20% split. All right, so we have everything set up. We
+31:59 - have our model ready to go. We have our data ready to go. This is the cool part. Now we're finally
+32:04 - going to run our model and let it train. So in order to do that, this is the method that we're
+32:10 - going to use. We're going to use what's called model.fit. We're going to point it to the train
+32:16 - generator that we talked about earlier. We're just going to mention exactly the number of steps
+32:24 - per epoch. And epoch is basically one scan through all the data. So in this particular example,
+32:32 - we're just going to ask it to look at all the pictures 20 times in order to do the training.
+32:38 - And then we're also pointing it to the validation set. That's our test set, the 20% that we
+32:45 - sectioned off that it has not seen before. And when we click play, you can see that
+32:57 - you can see that I spelled epochs wrong. And then finally, it's going to actually start to
+33:03 - do its thing. Now, the way that we formatted it for this tutorial today, it shouldn't really take
+33:09 - too long to go through all the data. But this will take about a few minutes or so. So we're just
+33:14 - going to click play and then basically step back. We'll come back in a few minutes.
+33:20 - All right, so we're back. It's been three minutes of training, which is really not that much time
+33:25 - at all. But that's OK. That's enough for us to understand some of the concepts that we're
+33:30 - working with today. So now what we're going to do is we're going to see exactly how good of a job
+33:34 - it did over time. So basically, we're just going to plot how the accuracy changed. And this is
+33:45 - basically the accuracy for the training set, which should go up over time. And then this is
+33:52 - the accuracy for the validation set, the testing data set, which is basically the accuracy for the
+34:00 - , you know, it hasn't seen before. So we hope that this goes up. But, you know, this is why
+34:04 - we had to keep it separate, because this will actually show us like if it's doing a good job or
+34:10 - not. I do the same thing for loss. And basically, loss is sort of another kind of abstract way of
+34:19 - thinking about how good a job it's doing. So loss is basically, you know, you want your accuracy to
+34:26 - be going up over time, and you want your loss to be going down over time. And loss is basically
+34:35 - sort of a mathematical way of talking about, you know, the way that the network should look
+34:40 - and the way that the network does look as it currently is.
+34:43 - So I'm just going to plot using matplotlib, some different stuff related to the loss and related
+35:00 - to the accuracy as it changes over time. We'll do the same thing here, but for the validation
+35:10 - data set.
+35:18 - And again, this is going to be the training and test accuracy as it changes over time.
+35:40 - I'll just put this in here like this. Let's click play. And this is actually pretty encouraging. So,
+35:51 - you know, as this thing ran for a few minutes, only after a few minutes, it started to figure out
+35:57 - what was what, what was cartomegaly and what wasn't. So the training data set,
+36:01 - we expect that to go up. We expect that to get more accurate over time.
+36:04 - But the testing data set we hope gets more accurate. And as you can see, it did. So when
+36:09 - it first started, it had like a 50-50 chance. But after just a few minutes of training,
+36:13 - it got to be roughly 70% or so accurate. And, you know, that's better than flipping a coin.
+36:21 - I'm also going to go ahead and just do the same thing for loss,
+36:24 - which again, that's another way of thinking about how good a job our model is doing.
+36:29 - And so instead of accuracy, we're just going to plot loss.
+36:36 - And I'm just going to like change this here so that we have a slightly better idea
+36:44 - of what's going on. So here's our loss. And as you can see, this goes down quite a lot over time.
+36:52 - We could still, you know, we could zoom in on this to see a little bit more, but that's kind
+36:56 - of the basic idea here. All right, so now that we've trained a model, let's see how well it does.
+37:06 - And this section will basically have two parts. So first, we'll just play around with a few images
+37:11 - to see like what the model thinks. And then we'll systematically look through all of the images with
+37:16 - statistics, thinking about things like sensitivity, specificity, and AUC, or area under the curve.
+37:23 - You know, I think that kind of what distinguishes applications of AI in medicine is attention to
+37:31 - all these details, because I think that, you know, these metrics are really important when
+37:37 - it comes to thinking about whether, you know, this is really something that's going to ultimately
+37:41 - help people. All right, so let's start off with just like two different helper methods.
+37:48 - This first one here is just going to be a little helper method to load up an image like this.
+37:58 - We're going to resize it to fit the size that our model requires,
+38:08 - which looks like that. And we have to do an actual
+38:15 - parentheses here. From here, it's going to load it into a numpy array.
+38:30 - This is something we have to use just again to convert it from like zero to 255. That is each
+38:42 - pixel is going to go from a value between zero to 255 to zero and one.
+38:55 - This is just making sure that the array has three different values for like red, green, and blue.
+39:04 - Even though it's true, we aren't really using that, because x-rays are like usually all
+39:10 - hopefully all in gray.
+39:22 - Okay, and then this line here.
+39:28 - This is what's going to return. So this line model.predict.
+39:33 - This is how we're going to interact with our model to actually return a value between zero
+39:38 - and one, where zero means that the model thinks there's no finding, and one means it thinks
+39:44 - there is a finding, which here is cardiomegaly.
+39:50 - We're going to do another helper method here, and this is sort of like a sanity check for us.
+39:56 - So what this is ultimately going to do is this is going to show us an image.
+40:02 - It's going to show us like the actual file path that's associated with it.
+40:11 - Let's go ahead and load this up here.
+40:19 - And then, because our model returns us a value between zero and one, what we're going to do
+40:29 - is we're going to define some cutoff point, which here I'm going to say is 0.5, where
+40:36 - if the prediction is above 0.5, then the model's going to think that it's positive, right?
+40:47 - So in this case, the model's going to think that it has cardiomegaly.
+40:53 - And this will make a little bit more sense in a minute once we actually like use this method,
+40:58 - but this is just basically showing us all of the different information about the image
+41:07 - as we're doing the prediction on it.
+41:10 - So this is the way that I'm going to just access all of that information.
+41:16 - Guess, plus, score, okay.
+41:33 - And then once we're down here, this will basically just use matplotlib to go ahead
+41:41 - and get all of that up and running.
+41:49 - Let's go ahead and click play there.
+41:52 - Let's make sure that we added all of the plus signs.
+42:02 - And again, you know, one thing that's really important is that we want to be systematic
+42:07 - in the way that we evaluate all of our data.
+42:11 - So what we're going to do here is we're going to iterate through all of the pictures,
+42:16 - all the images in our test set, and basically try to just systematically,
+42:23 - like in an organized way, figure out what I thought about everything.
+42:28 - This is going to be really important when it comes to getting things like sensitivity
+42:33 - and specificity, which I'll come back to in one second.
+42:38 - But basically what we're going to do here is we're going to go through all of the negative images,
+42:46 - so all the images in which there is no finding.
+42:50 - It was labeled, that is, as no finding.
+42:56 - And we're just going to do predictions on every single one of them.
+43:01 - So we have this array called results array.
+43:08 - And basically what we're going to do is we're just going to create this kind of like results array
+43:15 - with all of the information that we care about.
+43:18 - So each row in the results array is going to be the file name, like the image itself,
+43:25 - whether or not it had a label of being positive or negative.
+43:28 - These are all the negative images here, so it's going to have a negative label.
+43:32 - The guess, so what it happened to think.
+43:35 - And then the confidence, which again is that number between 0 and 1,
+43:38 - where we're using like a 0.5 cutoff for positive versus negative,
+43:45 - or cardiomegaly versus not cardiomegaly.
+43:50 - That first part was looking at all the negative images.
+43:54 - And now we're going to do the same thing with all the positive images.
+43:57 - I'm just going to change this down here, because again, these are like positive labels.
+44:02 - So at this point, we'll have some array with a whole bunch of stuff in it,
+44:07 - with a whole bunch of predictions for all of the positive and negative test images.
+44:16 - What I'm going to do here is I'm just going to sort this array
+44:21 - on basically that last column, which is like the confidence column.
+44:26 - So basically it's going to show us in order what it really thought was cardiomegaly,
+44:31 - and then it's going to show us what it really thought was not cardiomegaly,
+44:35 - what was no finding at all.
+44:39 - We're going to create a data frame from all these results here.
+44:44 - And then so that we can be kind of organized,
+44:48 - we are going to create an actual list of column names too, that would be helpful.
+45:00 - File path, file name, label, guess, confidence.
+45:17 - And then once we click this here, it's going to go through
+45:20 - and basically just make a guess on all the different images in our test set.
+45:28 - Okay, let's scroll.
+45:32 - Again, this array that we created, or this data frame that we created,
+45:38 - let's just take a sneak peek to make sure that this makes sense.
+45:44 - Cool. And here's the first five rows, right?
+45:47 - So here's just five images in our data set where these are the five images
+45:52 - that our model thought had the most cardiomegaly.
+46:01 - All right, so that helper method that we did earlier,
+46:08 - where it was like a sanity check to see if our model was actually working,
+46:14 - let's go ahead and actually make a call to that.
+46:17 - So first, we're just going to grab a random number, like from the test set.
+46:27 - And then we're going to grab a random row from our data frame,
+46:30 - which is like all the predictions on the test set.
+46:33 - And this is that helper method that we used earlier, right?
+46:37 - So here's a random picture.
+46:42 - You can see that it was labeled as having cardiomegaly,
+46:47 - and the model guessed there was cardiomegaly.
+46:52 - Here's an example where this was labeled as not having cardiomegaly.
+46:56 - I agree, I think that's a normal heart.
+46:58 - And our model also thought there was no cardiomegaly.
+47:02 - Here's an example where it was labeled as having cardiomegaly,
+47:06 - and our model got it wrong.
+47:10 - Here's an example where the model said that there was cardiomegaly,
+47:14 - and it was labeled also as cardiomegaly.
+47:16 - And just like checking it out, I think that's a pretty big heart,
+47:19 - so I have to agree with that.
+47:21 - We can click this button a whole bunch of different times
+47:23 - to see whether or not it was accurate or not.
+47:26 - We can also use some numbers, like again, sensitivity and specificity, AUC,
+47:31 - to help us also get a better feel for if it's doing a good job or not.
+47:37 - So we'll get to that in one second,
+47:39 - but let's just go ahead and show the entire data frame right now.
+47:45 - Or rather, let's show every fifth row in the data frame,
+47:50 - just to get another feel for what it had.
+47:59 - So this is going to show the name of the file,
+48:03 - whether or not it was labeled as positive or negative,
+48:12 - whether or not it was labeled as positive or negative,
+48:14 - and basically the confidence that it had.
+48:16 - So just looking at this really quick kind of overview,
+48:20 - it looks like it did a pretty decent job,
+48:22 - but some of the ones here in the middle I wasn't so sure about.
+48:26 - So in other words, you know, when it was really confident
+48:29 - that there was cardiomegaly, it got it right.
+48:31 - When it was really confident that there was not cardiomegaly, it got it right.
+48:35 - But some of these ones in the middle, it kind of was a little bit iffy.
+48:41 - So now I want to show the same information in a histogram format,
+48:45 - and this is good because this is going to kind of start to get us
+48:49 - to think about some of those statistics that we mentioned earlier.
+48:59 - So this is the way that I'm going to build the histogram.
+49:18 - I'm going to grab the same thing here for the negative labels.
+49:34 - And then this is going to use the map plot lib histogram function.
+49:52 - That was kind of a mouthful there, but just some more stuff setting up this histogram chart.
+50:10 - X-axis, title, confidence, scores for different images.
+50:34 - And make a legend.
+50:44 - Okay.
+50:49 - Plot.show.
+50:55 - And here you can start to see exactly how good of a job it did.
+51:02 - We'll go ahead and just scoot this legend a little bit out of the way.
+51:07 - And this is a little bit better, right?
+51:09 - So you can see that when the model was pretty confident, it got it right on both sides.
+51:15 - So every example close to a one, it got it right.
+51:19 - Every example close to a zero, it got it right.
+51:22 - But in the middle, it was kind of iffy.
+51:27 - Overall, this is actually pretty decent, though, in my opinion.
+51:34 - So now let's go ahead and look at a confidence score.
+51:39 - So now let's think about, you know, whether...
+51:44 - So earlier we had mentioned that, you know, again, the model was returning a value between zero and one.
+51:50 - And we were using like 50 or 0.5 as the cutoff.
+51:53 - So if it was above 0.5, we would say that it was positive, that the model thought that there was card immediately.
+52:00 - And if the model returned a number between zero and 0.5, we would think that it had no finding.
+52:06 - Let's see if maybe that was the best number for it to use.
+52:10 - So here we're going to create a helper function.
+52:14 - Called createWithCutoff that basically is going to kind of just redraw our histogram, but now we're going to talk about false negatives, false positives, true negatives, and true positives.
+52:30 - So this line here, this is saying, let's find everything where it was labeled as positive.
+52:43 - And the model thought that it was positive, or it thought that the confidence value was more than that.
+52:59 - This is going to give us an array of like exactly all of the confidence values that are above our cutoff.
+53:08 - Let's do the same thing with false positive, true negative, and false negative.
+53:17 - So for false positive, that means that the real label was actually negative, but we thought it was positive.
+53:28 - For true negative, that means that the real label was negative, and our model said that it was lower than the cutoff.
+53:41 - And I'm going to go ahead and just fix this right here before I forget.
+53:51 - And then again for false negatives, finally, that's going to mean that, you know, this was labeled as positive, but the model accidentally thought it was less than our cutoff value.
+54:06 - Here we're just going to make another histogram, but we're just going to kind of tweak it a little bit.
+54:11 - So now instead of having two different colors, we're going to have four different colors, one for each of those four categories we talked about.
+54:22 - It's going to be pretty similar otherwise.
+54:51 - And then all this stuff here is going to be basically just the same as it was last time.
+55:11 - So I won't go through basically all this again.
+55:28 - Just going to type another title in, so confidence scores for different images.
+55:45 - This line here, this is going to draw like a vertical line that helps us kind of differentiate where that cutoff value is, and I'll come back to that in a second as to why we care about that.
+56:07 - We're going to put this in the upper right.
+56:16 - All right, and now this part here is pretty important. So now we're going to calculate the sensitivity.
+56:23 - So sensitivity basically is something that we use a mess and a lot to see if we should roll something in.
+56:32 - So like a screening test, generally, you want to have high sensitivity for that.
+56:39 - And the formula for sensitivity is true positives over true positives plus false negatives.
+56:45 - So another way of saying this is that something that's really sensitive has a low number of false negatives.
+56:51 - It might have a lot of false positives, so it might just think that like everything is positive, but at least we're avoiding false negatives that way.
+57:01 - And then, you know, the general scheme of things is that once we have a confirmatory test, then we want high specificity.
+57:11 - So for that, it's kind of the other way around where we want there to be basically a low false positive rate.
+57:22 - So, you know, something that's like an example of this, like if you remember, you know, in 2020, when we wanted to know more about whether someone had COVID, you could use like the screening test.
+57:35 - Sometimes that would be like the self swab test or a spit test. I guess that was a thing.
+57:40 - But ultimately, the PCR test was the most specific. So that was like the more confirmatory test.
+57:48 - A lot of the screening tests would have high false positives, but the PCR test, that was like a lot more accurate.
+58:00 - But the PCR test was like a little bit more specific.
+58:14 - Here, I'm just going to actually like spell it out on the thing itself.
+58:28 - All right. And here, we're going to go ahead and basically say that we want a cutoff of 0.5.
+58:38 - So let's try this out. Okay.
+58:44 - And as you can see, now that we've defined a cutoff of 0.5, now we can start to think about true positives, false positives, true negatives and false negatives.
+58:56 - So here you can see that if we use a confidence level of 0.5, we have a relatively low rate of false positives, but higher amount of false negatives.
+59:09 - Let's see about if we change this value to be something like that. How does that change our sensitivity and specificity?
+59:17 - Well, if we lower that, then we have higher sensitivity, but we have worse specificity.
+59:24 - And basically, the big picture here is that a lot of tests in medicine kind of struggle with this.
+59:30 - Like, you know, how do we define a cutoff value for whether or not someone has a disease?
+59:36 - For example, if you have diabetes, you can get a test called an A1C that basically looks at the amount of sugar in your blood over time.
+59:45 - And, you know, what should the cutoff be for someone who has diabetes versus someone who doesn't have diabetes?
+59:52 - Now, the answer to that is 6.5. And a lot of testing went in to figure out what's the best value for that particular test.
+60:01 - But here we're kind of thinking about a similar thing. I mean, what is the cutoff for whether or not our model thinks you have cardiomegaly or doesn't have cardiomegaly?
+60:11 - And the kind of important concept here is that, you know, we just arbitrarily chose 0.5, but that might not actually be the very best value.
+60:22 - And a lot of issues that might not be the very best value.
+60:27 - And, you know, ultimately, if our goal is to build something that can look at a chest x-ray and diagnose a disease,
+60:33 - we want to be totally sure that whatever cutoff value it has for saying yes or no, we want to be sure that it's the very, very best cutoff value.
+60:45 - So for this next part, we're going to talk about ROC, or receiver operator curve, which is related to AUC, or area under the curve.
+60:56 - And this concept is basically how we can kind of figure out what is the very best cutoff point for this particular test, for this particular AI model, which again is going to say yes or no.
+61:10 - So let's build a method to create an AUC curve.
+61:16 - And basically what an AUC curve is going to do is it's going to do every single possible cutoff between 0 and 1.
+61:26 - It's going to calculate the sensitivity and specificity for all those possible values and classifications.
+61:38 - And that's going to give us a lot more information through which we can then figure out what's the best cutoff value.
+61:56 - So what we're going to do here is we're going to feed this thing all of the guesses that it made earlier.
+62:09 - So we're going to have it go through each one and basically now create that AUC curve.
+62:30 - So this is basically just going through all of the guesses that it had made.
+62:44 - And we'll take it that way.
+63:13 - Alright, so now we're just going to return basically all of the numbers of true positives, false positives, true negatives, and false negatives.
+63:38 - We're going to manually calculate the sensitivity, which we talked about earlier.
+63:59 - So we'll go ahead and do it this way, like this. Specificity is going to be like this.
+64:09 - Oops.
+64:38 - Alright, so this is sort of the first step.
+64:44 - And then now that we've created this function, AUC curve, sorted results.
+65:07 - Now basically from here, we're just going to create a line that basically strings together like all of these different sensitivities and specificities for all these different possible cutoff values.
+65:36 - And now that we have all these different values as well, we're going to make sure that we calculate what's called the area under the curve, which basically like numerically represents how good of a model this is.
+65:57 - Or in other words, it's basically how close is our AUC curve to being perfect.
+66:04 - So here's just some code to create a line plot.
+66:34 - Alright, there's the rest of the code there.
+66:42 - And now once we go ahead and run, you can see that our AUC curve is actually pretty good. It has a pretty high area of 0.923.
+66:51 - One thing that's kind of funky about this curve, about this whole graph, is that you notice the x-axis here is kind of like backwards, like one minus specificity.
+67:02 - The reason for that is basically, you know, as sensitivity goes up, as a test becomes more sensitive, it gets less specific.
+67:10 - So as the number of false negatives goes down, the number of false positives is going to go up.
+67:18 - So here, you know, like this point on the curve up here, this test is like super sensitive, which really just means that it doesn't really have that many false negatives.
+67:32 - But you can see there's going to be a lot of false positives, so it's not going to be as specific as it could be.
+67:39 - Overall, this is a pretty good ROC. And you know, given that we only trained this model for like three minutes, and we only fed it like 100 images instead of like thousands of images, this is pretty encouraging.
+67:52 - You know, if we were to redo this experiment with like a way more powerful model, with like way more images, and with a lot more training time, so three minutes, something like maybe, you know, overnight or whatever.
+68:08 - There's no reason why this ROC curve couldn't get way closer to one. But again, 0.923 is already like pretty good as it is.
+68:17 - If you want to go ahead and save your model, that's pretty easy to do with the code base that we're using. You can just do model.save.
+68:25 - We'll save it to the content part.
+68:29 - And we'll just go ahead and put it like this so that you can find it maybe a little bit more easily.
+68:37 - You also might want to zip all this stuff up. And what's really cool about Colab is that you can do just exactly that by hitting the exclamation point when you start in Colab that allows us to do like shell shell commands.
+68:57 - So if you want to go ahead and try all this here, we'll click play.
+69:03 - And in a minute, you'll see that the model is basically saved to here and zipped up.
+69:12 - I took like two minutes or so for it to zip everything up there but anyway, just click on this icon here.
+69:20 - And then here's our model which is about a gigabyte or so big. Click on those three dots, download, and then that'll save it to your computer in a minute or so.
+69:31 - Alright, well that just about wraps up this presentation.
+69:35 - If you have any questions, feel free to reach me at that Twitter account above or comment on this video below.
+69:43 - And I hope you enjoyed that and thanks for your attention. Thanks for your time.

@@ -1,0 +1,1573 @@
+00:02 - [Music]
+00:08 - hello everybody and welcome to another
+00:10 - video in this
+00:11 - django and react tutorial series in this
+00:14 - video we're going to be continuing from
+00:15 - where we left off
+00:17 - we're going to be using the spotify api
+00:19 - we're going to be getting access or i
+00:20 - guess the information about the
+00:22 - currently playing song
+00:24 - and displaying that on the screen now
+00:26 - depending on how quickly that goes we
+00:27 - may also be playing and pausing the
+00:29 - current song i'll show you how to do
+00:30 - that
+00:31 - and then in future videos we'll talk
+00:32 - about fast forwarding the song and some
+00:34 - other random things as well
+00:36 - so anyways that's what we have in store
+00:38 - for today so let's go ahead and get
+00:39 - started
+00:40 - although i will just let you guys know
+00:41 - right now that this is where the cool
+00:43 - stuff in my
+00:44 - opinion kind of starts to happen uh this
+00:46 - app at this point in time
+00:47 - sure it's interesting but there's not
+00:49 - really any you know cool thing that
+00:50 - we're doing with it it doesn't really
+00:52 - have any purpose we just have users in a
+00:54 - room now as soon as we finish this part
+00:56 - there will actually be a purpose to this
+00:57 - application and well you'll start to see
+00:59 - why i wanted to do this tutorial series
+01:02 - anyways
+01:02 - let's dive in so the first thing that we
+01:05 - need to do
+01:06 - is we want to be able to get the
+01:07 - information about the currently playing
+01:09 - song
+01:10 - so i want something like the title of
+01:11 - the song the artist the duration the
+01:13 - time
+01:14 - the uh you know the album cover if it's
+01:16 - playing if it's pause the id of the song
+01:18 - all that information is stuff that i
+01:20 - want so to do that we're gonna have to
+01:21 - send a request to the spotify api
+01:24 - to get the current information about the
+01:26 - current person i guess the host of the
+01:28 - room's
+01:29 - playback information so the first thing
+01:31 - that we're going to do
+01:32 - to do this is we're going to set up a
+01:33 - new view and this view is going to be
+01:35 - responsible for returning information
+01:37 - about the current song
+01:38 - so we're going to call this current song
+01:40 - so class current
+01:42 - song this is going to be an api view and
+01:44 - we'll just define a get method inside of
+01:46 - here that will take self
+01:48 - request and then optional format which
+01:50 - is equal to none
+01:51 - now the first thing that i'm going to do
+01:53 - inside of this method here is i'm going
+01:54 - to get the room code so i'm going to say
+01:56 - room code is equal to
+02:00 - self.request.session.get
+02:01 - and then we're looking for the room
+02:03 - underscore code
+02:04 - and then after that what i'm going to do
+02:06 - is actually get access to
+02:08 - this room object so i can figure out who
+02:10 - the host is
+02:11 - so the reason i need to do this is
+02:13 - because
+02:14 - whoever is requesting the information
+02:16 - about the current song
+02:17 - may not actually be the host right they
+02:19 - may not be the person who's actually
+02:21 - authenticated their spotify with us so
+02:23 - we just need to
+02:25 - look for the information relating to the
+02:27 - host of the room
+02:28 - so if someone sends us a request and
+02:29 - they're not the host we need to figure
+02:31 - out what room they're in
+02:32 - we need to figure out who the host is
+02:33 - and we need to use that host information
+02:35 - to
+02:36 - get the the information about the song
+02:38 - so let's say
+02:39 - room is equal to and then we're going to
+02:41 - say room and we might need to import
+02:42 - that so we'll do that in a second but
+02:44 - room
+02:44 - dot objects dot filter we're going to
+02:47 - filter
+02:47 - code is equal to room underscore code
+02:50 - and then we're going to take index 0.
+02:52 - we know that this room will exist
+02:53 - because if it's in the session well it
+02:55 - should exist at least
+02:56 - we'll index it at 0 and that will give
+02:58 - us the room so next we can say the host
+03:00 - is equal to room dot host and now that
+03:03 - we have the host
+03:04 - we'll be able to actually get the token
+03:06 - information relating to this host
+03:08 - and then send the request using that
+03:10 - token right
+03:11 - so the first thing i'm going to do is
+03:12 - just say endpoint is equal to and i'm
+03:14 - going to define the endpoint that i want
+03:16 - to hit
+03:17 - to get to the currently playing song
+03:18 - information so i'm going to say
+03:20 - player currently hyphen playing this is
+03:23 - the end point that we need to use if we
+03:24 - want to get access to the song that is
+03:26 - currently playing
+03:27 - for this user spotify account now before
+03:29 - i forget let me go
+03:30 - import room from oh actually sorry we
+03:32 - already have room in here so we're going
+03:33 - to say from
+03:34 - api dot models import room i'm not sure
+03:37 - if you guys have this in your code or
+03:38 - not either way it'll be
+03:39 - link in the description but yeah just
+03:40 - import this line
+03:42 - again we're just referencing the api
+03:44 - folder which has the room model in it so
+03:46 - that's how we do that
+03:47 - all right so now that we have this here
+03:50 - we actually need to send a request to
+03:52 - spotify now
+03:53 - whenever we send a request to spotify we
+03:55 - need to include our token
+03:57 - so rather than me just sending one
+03:58 - request in here and writing all the
+04:00 - stuff that we need to do to send that
+04:01 - request
+04:02 - i'm gonna write a separate function that
+04:03 - can handle pretty much sending any type
+04:05 - of request to spotify
+04:07 - it'll just make it easier for us in the
+04:08 - future so i'm gonna go into my util.pi
+04:11 - file i'm gonna go down to the bottom
+04:12 - and i'm just going to define a function
+04:14 - and i'm going to call this function
+04:15 - execute spotify api api call so execute
+04:19 - and then spotify underscore api
+04:21 - underscore call
+04:22 - or we could say request if we wanted to
+04:25 - be more specific
+04:26 - now inside of here i'm going to take the
+04:28 - session id
+04:30 - now really this is going to be the host
+04:32 - id of the room
+04:34 - so that we can get access to their token
+04:35 - and then we can we'll send the token as
+04:38 - a part of the request
+04:39 - then i'm going to say endpoint so what
+04:41 - i'm taking here is the session id and
+04:43 - then the endpoint the endpoint is what
+04:45 - endpoint
+04:45 - of the spotify api do i actually want to
+04:47 - hit and then i'm going to say
+04:49 - post underscore is equal to false you'll
+04:52 - see why we have the underscore later
+04:53 - and i'm going to say put underscore is
+04:55 - equal to false now the reason for this
+04:57 - is that we could potentially be sending
+04:58 - a post request a put request or a get
+05:01 - request
+05:01 - so we need to kind of handle the
+05:03 - different types of requests
+05:04 - and we just do this with a boolean
+05:06 - variable so the first thing i'm going to
+05:08 - do inside of here
+05:09 - is say tokens is equal to get underscore
+05:12 - user underscore tokens and then we'll
+05:14 - get them from the session id
+05:15 - so assuming we send in the host here
+05:17 - we'll get the host token and well that's
+05:19 - what we want
+05:20 - next i'm going to say header is equal to
+05:22 - and then inside of here i'm going to say
+05:24 - content hyphen type and this is going to
+05:27 - be equal to
+05:27 - the standard so application uh
+05:30 - if we spell that correctly slash json
+05:33 - and then
+05:34 - i need to pass my authorization token so
+05:36 - i'm going to say
+05:38 - authorization if i spelt that correctly
+05:41 - colon and this is going to be equal to
+05:42 - the tokens dot
+05:44 - access token now it's also actually
+05:47 - going to be equal to something else
+05:48 - sorry we need to change this a little
+05:49 - bit
+05:50 - we're going to say bearer and then a
+05:52 - space and then plus tokens dot access
+05:54 - token
+05:55 - now this is just something that you need
+05:57 - to send before the actual access token
+05:59 - you can look at the spotify
+06:00 - documentation if you want to see exactly
+06:02 - why
+06:03 - but just trust me here this is how you
+06:05 - send the correct
+06:06 - authorization token to spotify so you do
+06:08 - the content type
+06:09 - application json and then you say the
+06:12 - authorization this is a key here is
+06:14 - equal to bearer
+06:15 - and then plus tokens.access token make
+06:17 - sure you have a space here
+06:18 - so we're just concatenating these two
+06:20 - strings together now that we have that
+06:22 - what we can say is if
+06:23 - post underscore then what we'll do is
+06:25 - we'll send a post request now i think i
+06:27 - imported that function yeah it looks
+06:29 - like i did so i'm going to say
+06:30 - post like that we're going to take the
+06:33 - base url
+06:34 - which i think i've defined already so
+06:35 - it's up here https colon
+06:38 - slash api.spotify.com v1
+06:42 - me okay so that's our base url and then
+06:45 - we're going to
+06:46 - add that to the end point so we're going
+06:48 - to say base url and then oops
+06:50 - plus endpoint like that then we're going
+06:54 - to say
+06:55 - that the headers is equal to the header
+06:57 - i mean really we could call this headers
+06:59 - if we wanted to so we say headers like
+07:00 - that
+07:01 - but that's fine and that is going to
+07:03 - send our request or our post request to
+07:05 - whatever endpoint we put in
+07:07 - next we'll say if put underscore so if
+07:09 - we're sending a put request
+07:10 - then rather than post we're just going
+07:12 - to say put and then we'll say base
+07:14 - underscore url
+07:15 - plus endpoint and again headers is equal
+07:17 - to headers
+07:18 - and then finally we will say response is
+07:21 - equal to
+07:22 - and then a get request because if you
+07:24 - didn't say that you wanted to post and
+07:25 - you didn't say that you wanted to put
+07:27 - we're going to assume that you want the
+07:28 - get request
+07:29 - we're going to say base url plus
+07:31 - endpoint and then we will have headers
+07:33 - but in between headers
+07:35 - and the base url plus endpoint we're
+07:37 - just going to have an empty dictionary
+07:39 - the reason for this is just uh syntax
+07:40 - for the get request we need to put
+07:42 - something in here that we're like
+07:44 - sending with the get request anyways so
+07:46 - we just put that there
+07:47 - this is the get request and i think that
+07:49 - i imported get yeah i did so post put
+07:51 - get so we're all good
+07:52 - up there awesome so now we have response
+07:55 - there
+07:55 - the next thing i'm going to do is just
+07:56 - say try response
+07:59 - dot json like that or sorry not try
+08:02 - return response.json and then otherwise
+08:06 - so accept return
+08:09 - and we're just going to return an error
+08:11 - like that
+08:12 - and say that could not send request
+08:17 - or could not yeah
+08:20 - we'll say issue with request
+08:24 - okay so just to clarify what we're doing
+08:26 - here again we have post underscore put
+08:28 - underscore the reason i added the
+08:29 - underscores is because these would
+08:31 - mirror the post function and the put
+08:32 - function
+08:33 - uh so obviously i need to distinguish
+08:35 - them from that so that's why i put the
+08:36 - underscore
+08:37 - then here what i'm doing at the end is
+08:39 - i'm just sending a get request now
+08:40 - there's a potential to get some issues
+08:42 - with the get request
+08:43 - when we send the get request we're
+08:44 - looking for information we could
+08:47 - possibly have an issue sending this get
+08:49 - request so if we try to return
+08:51 - response.json
+08:52 - and well this crashes and doesn't work
+08:54 - because for some reason we can't get the
+08:56 - json information
+08:57 - then instead we're just going to return
+08:58 - an error now there won't be any issue
+09:00 - with the put or post because we don't
+09:01 - care about the response from these
+09:02 - requests
+09:04 - so that's why i'm not doing the try and
+09:06 - catch for those ones with the try and
+09:07 - accept
+09:08 - anyways hopefully that is clear so now
+09:11 - that we have this we can use this
+09:12 - function to send a request to any uh
+09:14 - spotify endpoint
+09:16 - so we will continue in just one second
+09:18 - but i need to quickly thank the sponsor
+09:19 - of this video and this series which is
+09:21 - algo
+09:22 - expert if you are preparing for your
+09:23 - software engineering coding interviews
+09:25 - you need to be using algo expert
+09:27 - is the best platform to use to learn
+09:29 - data structures and algorithms and how
+09:31 - to solve advanced interview
+09:32 - problems i happen to be an instructor on
+09:34 - the platform and can guarantee you that
+09:36 - there is many
+09:37 - high quality questions there check out
+09:39 - algo expert from the link in the
+09:40 - description and use the code tech with
+09:42 - tim for a discount on
+09:43 - the platform so let's go back to
+09:45 - views.pi
+09:46 - and inside of views.pi we're going to
+09:48 - use this function to send a request
+09:50 - to this endpoint so we're going to say
+09:52 - that our response
+09:53 - is equal to and this is going to be
+09:55 - execute
+09:57 - spotify api call and let me just import
+09:59 - this first
+10:01 - so just to save us from typing all of
+10:02 - these out i'm going to say from dot util
+10:05 - import star and what importing star will
+10:08 - do is just import
+10:09 - everything from the file so we can use
+10:11 - anything that we've defined inside of
+10:13 - there so
+10:13 - that's perfect so we're going to say
+10:15 - execute underscore spotify api
+10:17 - request and then inside of here we're
+10:19 - going to pass the host because that's
+10:20 - the id
+10:21 - or the session id of the host is what
+10:23 - host is
+10:24 - and then we'll pass the endpoint and
+10:27 - there we go
+10:28 - for this specific request it's going to
+10:29 - be a get request so we don't need to set
+10:32 - you know true or false for
+10:34 - put and and post as you can see here
+10:37 - okay so now that we have the response
+10:39 - what we want to do is have a look at
+10:41 - this response and just see what is
+10:43 - actually in it so before i start doing
+10:44 - anything too fancy
+10:46 - let's just print out response like that
+10:49 - and then just make sure we don't have an
+10:50 - error let's return
+10:51 - a response inside of here this will just
+10:53 - be an empty response
+10:55 - and we will just say that the status is
+10:57 - equal to status.http
+11:00 - underscore 200 underscore okay
+11:04 - and in fact maybe we can just return the
+11:07 - response i don't know if this is going
+11:09 - to give us an issue or not but we'll
+11:10 - just return the response and see
+11:12 - what happens now okay so let's go back
+11:15 - to our
+11:16 - server that's all working okay i'm going
+11:18 - to go to my web browser oops that's not
+11:20 - what i meant to open
+11:21 - and i'm just going to actually type in
+11:23 - this
+11:24 - view and that reminds me that we haven't
+11:26 - set up the url for
+11:28 - current songs let's do that now let's go
+11:30 - to urls.pi
+11:31 - let's import current song and this
+11:34 - actually would be a good opportunity to
+11:36 - change this to just be an asterisk as
+11:38 - well because we just pretty well want
+11:39 - everything from inside of there
+11:41 - so we're going to say path and then this
+11:44 - i guess will just be
+11:46 - current hyphen song that makes sense to
+11:49 - me and then we'll say current song
+11:51 - dot as underscore view like that
+11:55 - see if we're getting yelled at no it
+11:57 - looks good and now let's go to our
+11:59 - browser so i'm going to go to slash
+12:01 - spotify slash and i guess this is going
+12:04 - to be
+12:05 - current hyphen song and when we do that
+12:08 - we get an index error okay so
+12:10 - interesting
+12:11 - we get a list index out of range which i
+12:14 - guess
+12:15 - means ah okay so this would make sense
+12:17 - so the reason we got an index out of
+12:19 - range error there
+12:20 - was because we are not currently in a
+12:22 - room and if we go back and have a look
+12:24 - at our views dot pi
+12:25 - we are filtering and looking for the
+12:28 - room
+12:29 - code and we're trying to index zero but
+12:31 - if there is nothing that exists there
+12:32 - then well that's a problem
+12:34 - so we should probably fix this to make
+12:35 - sure we don't run into this error
+12:37 - so i'm going to just write something
+12:38 - down here i'm going to say if room
+12:40 - dot exists then we will say room is
+12:43 - equal to
+12:44 - room at index 0. otherwise we're just
+12:47 - going to return
+12:48 - a response that just says like 404 not
+12:51 - found or something like that
+12:53 - so return response this can just be
+12:55 - empty and then
+12:56 - here we'll say the status is equal to
+12:58 - status dot
+13:00 - http underscore 404 not found
+13:03 - great so that should fix that problem
+13:04 - for us but anyways to
+13:06 - test if this is actually working let's
+13:08 - create a room
+13:09 - and what's going on here come on
+13:13 - create room there we go okay create a
+13:15 - room
+13:16 - and you can see it brings me to spotify
+13:18 - i'm going to blur out my email so you
+13:19 - guys
+13:20 - don't see it and i'm just gonna log in
+13:23 - and then i'll be back right back
+13:24 - okay so to test this out now and see if
+13:26 - it's actually working
+13:28 - let's go and create a room i'm gonna
+13:30 - press create room brings us into a room
+13:32 - and now what i can do is send this
+13:34 - request so send slash
+13:37 - spotify if we spell spotify correctly
+13:41 - slash current hyphen song and there we
+13:44 - go
+13:44 - we get status 404 service not found
+13:48 - okay interesting let me take a quick
+13:50 - look and see what the issue is there and
+13:52 - i will be right
+13:53 - back so just a silly error on my part
+13:55 - here we're going to go into the current
+13:57 - song
+13:57 - view and just remove this forward
+13:59 - slasher sorry the first slash i had one
+14:01 - right there
+14:02 - that's not going to work because if we
+14:04 - look at our base url inside of here we
+14:06 - have a trailing slash so that was going
+14:07 - to give us two slashes
+14:09 - when we combine these two strings so
+14:10 - obviously that's no good that's why
+14:12 - we're getting service not found because
+14:14 - it couldn't find the url
+14:15 - we were sending the requests to so let's
+14:18 - go back here
+14:18 - let's run this and now you can see that
+14:21 - we're actually getting something
+14:23 - for this uh response right we're
+14:25 - actually getting the current song that
+14:26 - is playing
+14:27 - so i do have spotify open in the
+14:29 - background here i'll kind of drag it
+14:30 - onto the screen
+14:31 - quickly and you can see that i am
+14:33 - actually running a song
+14:34 - but inside of here let's just see what
+14:36 - we actually get so we get a time stamp
+14:39 - we have a context we have a progress in
+14:42 - milliseconds
+14:42 - we have an item this represents the
+14:44 - current song it tells us
+14:46 - information about the album there's
+14:48 - information about the artists you can
+14:49 - see this is by
+14:50 - chris ria or re or however you say that
+14:54 - available markets shows you all the
+14:55 - available markets for this song
+14:57 - lots of things like images so you can
+14:59 - get like the album cover it has the id
+15:01 - of the song
+15:02 - the name of the song so dancing with
+15:04 - strangers there you go i don't know why
+15:05 - that's on
+15:06 - uh total tracks in the album 28 and then
+15:09 - more information about the artist
+15:11 - and just other information as well so
+15:12 - you guys can see there's a lot of
+15:14 - information
+15:14 - here about the currently playing song we
+15:16 - also have is playing this is equal to
+15:18 - false because the song is currently
+15:20 - paused
+15:21 - if this was true obviously the song
+15:22 - would be playing you have
+15:24 - duration of the song anyways lots of
+15:27 - stuff so i'm going to show you how we
+15:28 - can kind of parse through this
+15:29 - because we don't want to return all of
+15:31 - this information to the front end
+15:33 - we only want to return the information
+15:35 - the front actually wants just to make
+15:36 - the request as small as possible
+15:38 - now in theory we could return all of
+15:40 - this but we don't need to so we'll just
+15:42 - return the stuff that
+15:43 - that we want and we'll kind of clean
+15:44 - that up in our view function
+15:46 - so let's go to views dot pi here let's
+15:48 - go back to current song
+15:49 - and now that we understand what's being
+15:51 - returned to us from the spotify api
+15:54 - we can actually start kind of parsing
+15:55 - through it so the first thing i'm going
+15:57 - to do is just make sure that here we
+15:58 - don't actually have an error right so
+16:00 - i'm going to say if
+16:01 - error is in i guess this is just going
+16:04 - to be
+16:04 - response or item
+16:08 - not in response an item is a key that
+16:11 - we're looking for because that has the
+16:13 - information about the current song
+16:15 - then what we're going to do is just
+16:16 - return a response
+16:19 - this response will just be empty and
+16:20 - we'll say the status is equal to status
+16:24 - dot http underscore uh this is sorry not
+16:27 - 200 this should be 204
+16:29 - no content so this will happen we will
+16:31 - not have
+16:32 - an item tag in our response in a
+16:34 - situation where there is
+16:36 - no currently playing song right if
+16:37 - there's no song playing whatsoever we're
+16:39 - not going to get any information back
+16:40 - so in that case we'll just return to the
+16:42 - front end nothing right we'll just say
+16:44 - hey sorry we don't have any song
+16:45 - information
+16:47 - that's it you know this is you have to
+16:48 - deal with it uh anyway so that's what
+16:50 - we'll handle there
+16:51 - now after that so if this is not the
+16:53 - case that means we actually do have a
+16:55 - currently playing song
+16:56 - we'll get the information about the song
+16:57 - like the title and all of that so we'll
+16:59 - say item
+17:00 - is oops not in all capitals item is
+17:02 - equal to
+17:03 - response dot gets and we're going to get
+17:06 - the item
+17:07 - and then we're going to say that the
+17:08 - duration is equal to
+17:10 - and this should be item now dot get
+17:13 - because item itself stores a dictionary
+17:16 - so we're going to reference from item
+17:18 - the duration underscore
+17:20 - milliseconds then the progress so this
+17:23 - is like the current
+17:24 - timestamp the song like how far in we
+17:26 - are is going to be equal to
+17:28 - response dot get and this is going to be
+17:32 - progress underscore milliseconds then we
+17:35 - will say that the
+17:36 - album underscore cover or yeah album
+17:39 - cover i guess that's what you call it
+17:41 - is equal to item dot get we're going to
+17:44 - get
+17:45 - the album like that and then we are
+17:48 - going to get
+17:49 - from the album uh e key called images
+17:53 - and then from images we're going to
+17:55 - reference the first image
+17:56 - and then we're going to get the key that
+17:58 - is url
+18:00 - now i know i'm doing a lot here and it's
+18:01 - kind of like how are you coming up with
+18:03 - this stuff
+18:03 - the way i'm doing this is i'm i've just
+18:05 - looked at this response right
+18:07 - and if you see we have item and then if
+18:10 - i'm looking for let's say the album
+18:11 - cover right
+18:12 - then what i'm doing is i'm referencing
+18:14 - the album which is right here so i get
+18:16 - that
+18:17 - from item then inside of album there is
+18:19 - a tag
+18:20 - called images so images is right here
+18:22 - you can see this is a list
+18:24 - and this has three images one that's 640
+18:26 - by 640
+18:27 - 300 by 364 by 64. i want the largest one
+18:31 - so i'm getting this one so the first
+18:33 - image and then i'm getting the url
+18:35 - tag that's how you can get the
+18:36 - information that you want you just kind
+18:38 - of have to read through the
+18:39 - json here and see how you would actually
+18:41 - access it
+18:42 - anyways moving on next thing that i'm
+18:45 - going to do is say is underscore playing
+18:47 - is equal to response oops like that
+18:51 - dot get and then is underscore playing
+18:54 - is what
+18:55 - we want and then finally song underscore
+18:58 - id
+18:59 - is equal to uh not response but item
+19:02 - dot get id awesome so there we go that's
+19:06 - the information that we want
+19:08 - now you'll notice though or you probably
+19:10 - won't notice because i have to come up
+19:11 - with an example for that which is kind
+19:13 - of hard to do but
+19:14 - if you have multiple artists the artist
+19:17 - tag is going to have multiple keys
+19:19 - inside of it so the next few lines i'm
+19:21 - about to write
+19:22 - are just to handle the fact that if you
+19:24 - have multiple artists for a song
+19:26 - it has like a really weird format so
+19:28 - we're just going to clean that format up
+19:29 - when we send it to the front end so
+19:31 - anyways just keep that in mind as we as
+19:34 - we write this so
+19:35 - artist underscore string is going to be
+19:37 - equal to an empty string
+19:38 - we're just going to kind of create our
+19:39 - own string that represents the artist so
+19:41 - they're like separated by commas and all
+19:43 - nice
+19:44 - and anyways we're going to say if sorry
+19:45 - not if we're going to say 4i
+19:47 - comma artist in enumerate and then we're
+19:50 - going to say
+19:51 - item dot get and we're going to get
+19:55 - the artist like that of the song we'll
+19:58 - say
+19:58 - if i is greater than 0 so if it's not
+20:01 - the first artist in the list
+20:03 - then what we want to do is say the
+20:04 - artist string plus
+20:06 - equals a comma and we'll do a space
+20:08 - after the comma as well
+20:10 - then we're going to say name
+20:11 - representing for the name of the artist
+20:13 - is going to be equal to artist
+20:14 - dot get we're going to get their name
+20:17 - and then we're simply going to say
+20:19 - artist string plus equals
+20:22 - and we will append uh the name like that
+20:25 - so this is pretty straightforward i
+20:26 - imagine you guys understand what's going
+20:28 - on here but again we're just creating a
+20:29 - string that has all of the artist names
+20:31 - separated by commas
+20:33 - awesome and then the next thing we're
+20:34 - going to do is we're going to say song
+20:36 - is equal to and inside of here we're
+20:38 - going to create our own object that has
+20:39 - all the information we want to send back
+20:41 - to the front end
+20:42 - so we're going to say item dot get
+20:45 - inside of here we're going to put
+20:46 - the name for the title of the song
+20:49 - then we're going to say artist is equal
+20:52 - to the artist string that we just unders
+20:55 - just underscore created no just created
+20:57 - okay
+20:58 - and then we will say the duration
+21:02 - is equal to the duration i will say
+21:05 - the progress is equal to or
+21:08 - actually i'm not going to call it
+21:09 - progress i'm going to call it time that
+21:11 - makes more sense to me
+21:12 - is going to be equal to progress then
+21:14 - i'm going to say that
+21:16 - the image underscore url is equal to
+21:20 - the album cover because that is actually
+21:22 - just going to be a link to an image
+21:23 - which is really convenient for us to
+21:25 - show that image on the screen
+21:26 - then we'll say is underscore playing
+21:29 - well that's equal
+21:30 - to is underscore playing uh and finally
+21:32 - we will add something for the number of
+21:34 - votes that this song
+21:35 - has uh to skip but this is something
+21:38 - that we're gonna do later on and
+21:39 - actually
+21:39 - one more thing so we'll just leave votes
+21:41 - at zero for now just so we have it in
+21:43 - the request already
+21:44 - last thing we'll do here is we'll put
+21:46 - the id equal to the song underscore id
+21:50 - now am i why am i getting yelled at here
+21:52 - let's see what's going on okay now i
+21:54 - think
+21:54 - everything is good i don't know what was
+21:56 - happening there so this
+21:58 - should be about it for the current song
+22:00 - so now instead of just returning the
+22:02 - response
+22:03 - we're going to return the song which is
+22:05 - kind of our custom object
+22:08 - that has all of the information about
+22:09 - the song that we actually want to send
+22:11 - to the front end
+22:12 - because as a reminder we like our
+22:14 - application is calling this
+22:15 - endpoint and this endpoint in turn calls
+22:18 - the spotify endpoint
+22:19 - which then gives us information we parse
+22:21 - through it and then send back the
+22:22 - necessary
+22:23 - information so anyways now that we have
+22:26 - this we want to actually show this
+22:27 - information on the screen right we want
+22:29 - to see this in the room
+22:30 - so i'm going to make actually some
+22:32 - pretty major modifications to the room
+22:34 - page and we're going to be
+22:35 - making another component uh shortly as
+22:37 - well but the first thing that i want to
+22:39 - do is go into the room page and i
+22:40 - just want to remove a lot of this stuff
+22:43 - relating to like the votes guests can
+22:45 - pause host like all this we don't need
+22:46 - all this stuff
+22:47 - so i'm going to get rid of host guests
+22:49 - can pause and vote i don't think that's
+22:51 - necessary to see at least right now so
+22:53 - let's delete all of this
+22:55 - because again we just we don't need to
+22:56 - see this information we're just showing
+22:57 - it previously kind of like for debugging
+22:59 - the application
+23:01 - uh and now let's go to the state of our
+23:04 - uh application here and yes this is
+23:07 - where we want to be in the constructor
+23:08 - i'm going to add one piece of state here
+23:11 - i'm going to call this
+23:11 - song now by default song is just going
+23:14 - to be equal actually to an empty
+23:15 - dictionary
+23:16 - and what we're going to do is we're
+23:17 - going to store all of the information
+23:19 - relating to the current song
+23:20 - in the state of this component so that
+23:23 - way if the song ever changes we'll
+23:25 - update the state and then that will in
+23:26 - turn update the component
+23:28 - so let's now write a a a method inside
+23:31 - of here that can actually use the
+23:32 - endpoint that we just created and get
+23:34 - information about the current song
+23:36 - so let's write a method in here i'm
+23:38 - going to call this get
+23:39 - current song and inside of here all
+23:42 - we're going to do is
+23:43 - call the fetch request we're going to
+23:45 - say fetch slash
+23:47 - spotify slash and then i guess this is
+23:50 - going to be current hyphen song i think
+23:52 - that's what we called it
+23:53 - we'll then add our dot then we will have
+23:56 - response as the parameter and what we're
+23:59 - going to do
+24:00 - to start is we're actually going to
+24:01 - check if this response is not okay so
+24:04 - if not response
+24:07 - dot okay then what we're going to do is
+24:09 - we're simply going to
+24:11 - return blank squigglies like this so
+24:13 - just
+24:14 - a blank object otherwise we're going to
+24:16 - return
+24:17 - the response dot json now the reason for
+24:20 - this is just in the situation where for
+24:21 - some reason this response errors out or
+24:23 - it doesn't work
+24:24 - we'll just return empty pretty much
+24:26 - saying hey we don't have any song data
+24:28 - whereas otherwise we'll actually return
+24:30 - all of the json data related to the song
+24:32 - that's playing
+24:34 - then we'll say dot then and then data
+24:37 - and inside of here we're just going to
+24:38 - say this dot set
+24:41 - state and we're simply going to set the
+24:43 - state of
+24:44 - song to be equal to the data like that
+24:47 - so the data that we get will simply just
+24:49 - be all the stuff that we want to put
+24:51 - inside of the state so all that
+24:52 - information and well
+24:53 - that is all we need so now that we have
+24:55 - that we want to call
+24:57 - get current song and then we'll display
+24:58 - some of this information
+25:00 - so i'm just going to go in my uh
+25:03 - render here and i'm just going to
+25:04 - actually just put this dot state dot
+25:06 - song
+25:08 - so this dot state dot song just so we
+25:10 - can have a look at it i'm hoping this
+25:12 - will just print out and
+25:14 - not give me some weird error and then
+25:15 - ideally we can just look at what the
+25:17 - current song is playing in our web
+25:19 - browser
+25:19 - all right so we need to call that though
+25:21 - so when does it make sense to
+25:23 - call get current song well it makes
+25:25 - sense to call that after we have
+25:27 - authenticated so
+25:28 - in theory we could place that under here
+25:31 - or somewhere in here but it doesn't
+25:33 - really make sense to me to do that there
+25:36 - so let's actually just place this under
+25:37 - this dot get room detail so we'll say
+25:39 - this
+25:40 - dot and then get current song
+25:44 - and just hope that the timing is okay
+25:45 - we're going to do this a different way
+25:46 - later on this is just
+25:47 - kind of for testing purposes and for me
+25:49 - to show you how this works
+25:50 - but anyways let's uh let's test this out
+25:52 - i'm going to go here
+25:53 - i'm just going to refresh um okay it
+25:56 - looks like it's returning nothing right
+25:58 - now i guess i don't have any
+25:59 - currently playing song okay
+26:03 - okay so i just ran this request again i
+26:05 - was just testing spotify
+26:07 - current song and i got an error
+26:09 - basically the fix to the error is that i
+26:11 - had artist
+26:12 - rather than artists so if you look at
+26:14 - line 83 this should have a plural s on
+26:17 - it so let's just add that there to make
+26:18 - sure that we fix that
+26:20 - that endpoint and now let me quickly run
+26:22 - this and there we go so now we can see
+26:24 - we're getting title artist duration time
+26:26 - image url all of that but that's not
+26:28 - really what i want to test i don't just
+26:29 - want to test this endpoint i want to
+26:30 - test the actual application
+26:32 - so let's go into a room we can see that
+26:34 - we're in a room doesn't look like it
+26:36 - updated our front end so let me just do
+26:37 - a
+26:38 - hard reset here and it looks like we're
+26:40 - getting an error and what is the error
+26:41 - here
+26:42 - uh minified react error oh that's great
+26:44 - that just means it's not actually going
+26:45 - to tell me what's wrong
+26:47 - so i'm just going to have to dig for a
+26:48 - second i'll be right back after i fix
+26:49 - this problem
+26:50 - so i've made another silly mistake that
+26:52 - was causing the errors here i gotta go
+26:54 - to line 75
+26:55 - and simply return response.json i'm sure
+26:58 - you guys probably caught that
+26:59 - but inside of my get current song method
+27:02 - i just made an issue and or an error and
+27:04 - just forgot to return
+27:05 - response.json so i was returning this
+27:07 - blank one but then i just had
+27:09 - response.json like that and said we need
+27:11 - to return
+27:12 - and that should hopefully fix the error
+27:14 - that we were having i've also added a
+27:15 - console.log statement here
+27:17 - to getcurrentsong just so hopefully we
+27:19 - can see something popping up so let's
+27:20 - refresh here
+27:21 - and there we go so we can see in my
+27:23 - console i'm getting the title i'm
+27:24 - getting the duration i'm getting all the
+27:26 - information that i wanted
+27:27 - about the current song okay so that's
+27:30 - great but the issue here now is that
+27:32 - this endpoint is only being hit whenever
+27:34 - we refresh the page
+27:36 - now that's kind of an issue because that
+27:38 - means we don't know if the song is fast
+27:40 - forwarded we don't know if someone
+27:41 - paused the song
+27:42 - because remember anyone on the spotify
+27:44 - account can be modifying what's
+27:45 - happening to this song
+27:46 - so what we really need to do here is we
+27:49 - need to what's known as pull
+27:51 - this endpoint so we are constantly
+27:53 - checking
+27:54 - whether or not uh you know a song is
+27:55 - playing if it's paused what song is
+27:57 - playing we're just
+27:58 - constantly checking for updates that's
+27:59 - what we need to do
+28:01 - now some of you if you're more advanced
+28:03 - may have heard of something called
+28:04 - web sockets now with websockets we
+28:07 - wouldn't need to do this because what we
+28:08 - could do is we could set up a websocket
+28:10 - and the websocket could hit an endpoint
+28:12 - on our server
+28:13 - every single time the song is updated
+28:15 - unfortunately spotify does not have
+28:17 - support for websock it's at least not
+28:19 - for the public
+28:20 - so we're stuck with having to do this
+28:21 - polling method now
+28:23 - just so you are aware what we're going
+28:24 - to do is every single second we're going
+28:26 - to send the request to get this
+28:28 - information
+28:28 - we're just going to continually update
+28:30 - it every single second
+28:32 - so we always know what's happening on
+28:33 - spotify and we're only at most a second
+28:36 - behind
+28:36 - now that is going to result in a lot of
+28:38 - requests right we're going to be sending
+28:39 - a lot of requests
+28:40 - and if multiple people on our website
+28:42 - that's going to be multiple people
+28:44 - sending all of these requests every
+28:45 - second so this is not an
+28:47 - optimal solution for the amount of
+28:49 - people on our website this will be
+28:50 - totally fine and even up to like 40 or
+28:53 - 50 000 users this will be fine
+28:55 - but as soon as you start getting into
+28:56 - really large websites doing something
+28:58 - like polling just
+28:59 - really doesn't make sense and it's not a
+29:01 - very efficient way of doing things
+29:03 - regardless i'm going to show you how we
+29:05 - do it here and i just want you to be
+29:07 - aware that this method
+29:08 - is called polling you can kind of look
+29:09 - it up and see how exactly it works
+29:12 - and why it's not usually the preferred
+29:13 - method but we're kind of stuck with this
+29:15 - because
+29:15 - spotify did not implement web sockets
+29:18 - anyways what we're going to do is we're
+29:20 - going to set up an interval
+29:22 - on this room page so every second every
+29:24 - one second we
+29:26 - pull this endpoint and update the state
+29:28 - with the current song information
+29:30 - to do this we're going to use some
+29:31 - lifecycle methods so component did mount
+29:33 - this is once the component has loaded i
+29:36 - believe yeah i believe this is loaded on
+29:37 - the screen
+29:39 - then what we're going to do is set a
+29:40 - variable we're going to say this dot
+29:42 - interval
+29:43 - is equal to this function it's called
+29:44 - set interval this is just built into a
+29:47 - javascript i believe or react so you
+29:50 - don't need to import it or anything like
+29:51 - that
+29:52 - and then what we're going to do is we're
+29:53 - going to put the function inside of here
+29:56 - that we want to be called at every
+29:58 - interval so i'm going to say
+29:59 - this dot get current
+30:02 - room now get current what what am i
+30:04 - saying get current room
+30:06 - get current song sorry my bad get get
+30:08 - current song is the uh the function
+30:09 - we've defined here
+30:10 - and then what i'm going to do is i'm
+30:12 - going to put the delay at which i want
+30:14 - to uh
+30:14 - to call this so every 1000 milliseconds
+30:17 - which is one
+30:18 - second so again all this is doing is
+30:20 - it's going to call this function
+30:21 - every second and i'm starting this
+30:23 - interval as soon as the component mounts
+30:25 - now since i have this interval i need to
+30:27 - make sure i close or stop this interval
+30:30 - when the component unmounts so i'm going
+30:31 - to say component did
+30:33 - unmount or i guess sorry we're doing
+30:35 - component will unmount my bad
+30:37 - and inside of here we're going to say
+30:39 - clear
+30:40 - interval and we're going to clear this
+30:42 - dot interval all this is going to do is
+30:44 - just stop this interval from running
+30:46 - now component will unmount pretty much
+30:48 - tells us this component is going to be
+30:50 - gone it's about to be destroyed
+30:52 - what do we have to do uh before it's
+30:54 - destroyed kind of like cleanup
+30:55 - operations is what we're doing inside of
+30:57 - here
+30:57 - so anyways with this interval set now if
+31:00 - i actually go ahead and refresh my web
+31:02 - page
+31:02 - you'll see that if we have a look in my
+31:06 - well apparently this is causing an error
+31:08 - but if we have a look here
+31:10 - we are constantly hitting this endpoint
+31:12 - and we're printing something out i don't
+31:13 - know where i
+31:14 - have that printed but every second we
+31:16 - are sending a request to
+31:18 - the server so this interval is indeed
+31:20 - working but
+31:21 - there is some error here it says
+31:23 - uncaught in promise
+31:24 - type error this dot set state is not a
+31:26 - function so
+31:27 - to fix this what we do need to do is
+31:29 - actually bind the get current song
+31:31 - method
+31:32 - to uh this keyword so we're gonna say
+31:34 - this
+31:35 - dot get current song is equal to this
+31:38 - dot get current song dot bind to the
+31:41 - this
+31:42 - keyword and then we can actually go
+31:43 - ahead and remove this
+31:45 - call to get current song in the
+31:46 - constructor because we're going to
+31:48 - automatically do that
+31:49 - based on this interval that we've set so
+31:52 - now if i go here
+31:53 - and i refresh we can see that all is
+31:56 - indeed working we're printing out
+31:58 - the song information every single time
+32:00 - and now all that's left to do is
+32:02 - actually display this in kind of a nice
+32:03 - format on the actual web page so
+32:07 - let's start doing that what i'm actually
+32:09 - going to do now is i'm going to make
+32:11 - another component a brand new component
+32:13 - we're going to call this a
+32:14 - media player or a music player and what
+32:16 - this component will do
+32:18 - is it will actually display the
+32:19 - information about the song so we'll have
+32:21 - kind of a nice
+32:21 - little player that has you know like a
+32:23 - play button and then a skip button
+32:25 - and it'll show the album cover and it
+32:26 - will have the title of the artist or
+32:28 - the title of the song sorry as well as
+32:30 - the artist of the song and anyways
+32:32 - that's what we're going to do
+32:33 - now so to do that let's make a new
+32:36 - component so let's go into components
+32:38 - new file let's call this musicplayer.js
+32:42 - all right so at the top of our file
+32:43 - let's start by importing react so we're
+32:45 - going to say import react
+32:46 - and then inside of here we're going to
+32:48 - say component and this is going to be
+32:50 - from
+32:51 - simply react next we're going to import
+32:54 - a bunch of other things we're going to
+32:55 - use for styling you're probably familiar
+32:57 - with most of these at this point we're
+32:58 - going to import grid
+32:59 - we're going to import typography we're
+33:01 - going to import the
+33:02 - card we're going to import the button uh
+33:05 - sorry not the button the icon button
+33:08 - and then i'm trying to look here i think
+33:11 - that's all we need
+33:12 - from at material
+33:15 - hyphen ui core but we are going to
+33:19 - import some icons
+33:20 - like the play icon and the pause icon
+33:22 - stuff like that
+33:23 - so we're going to say import and then
+33:25 - from here we're going to import
+33:27 - the play arrow icon
+33:30 - this is going to be from at material ui
+33:34 - slash not core this time it's actually
+33:37 - going to be slash
+33:38 - icons like that then we also want
+33:42 - not just the play arrow icon but we want
+33:44 - the skip
+33:45 - next icon
+33:48 - we also want the pause icon and
+33:52 - finally we're going to import one more
+33:54 - thing from material ui core i forgot
+33:57 - this one
+33:57 - this is called linear progress we're
+33:59 - going to use linear progress
+34:01 - just as a way to show the uh the current
+34:03 - status of the song or like
+34:05 - i guess how much time is gone from the
+34:07 - song i don't really know
+34:08 - a good way to describe this but
+34:10 - hopefully you get the idea you know when
+34:11 - you look at a song it tells you like how
+34:12 - much time has already played in it
+34:14 - that's what we use linear progress to do
+34:16 - anyways let's make our class we're going
+34:18 - to say exports
+34:20 - default class we're going to call this
+34:22 - music player
+34:23 - and this is going to extend the
+34:26 - component
+34:27 - then we're going to start by creating
+34:28 - our constructor inside of the
+34:30 - constructor we're going to take props
+34:31 - we're going to start by calling super on
+34:34 - the props we always have to do this when
+34:35 - we make a
+34:36 - new class or a new react component then
+34:39 - we're going to say
+34:40 - this dot state is equal to and we want
+34:42 - two things we want playing
+34:44 - this is going to be equal to false and
+34:47 - actually sorry i don't think we even
+34:49 - need the state in fact we don't need the
+34:51 - state i'm just looking at some old code
+34:53 - here so let's remove the state
+34:55 - okay now let's just write the render
+34:57 - function
+34:58 - and this will be all we have for this
+35:00 - video so what we're going to do now is
+35:02 - just spend a few minutes kind of
+35:03 - styling this component again what i want
+35:05 - this component to look like it's just
+35:07 - like a general media player right i want
+35:09 - it to have the current status of the
+35:10 - song
+35:11 - i want it to have a play button a fast
+35:14 - forward button i want to have the album
+35:15 - cover the name of the song the artist of
+35:17 - the song
+35:18 - and that's pretty much it so let's start
+35:20 - by creating a card
+35:22 - if you haven't seen a card well i guess
+35:24 - you'll just kind of see what it looks
+35:25 - like when we actually render this on the
+35:26 - screen
+35:27 - but they're pretty popular in most like
+35:28 - component libraries they're just kind of
+35:30 - like a nice
+35:31 - like styled little box with rounded
+35:33 - corners they kind of pop off the screen
+35:35 - a bit
+35:36 - and well yeah you'll see how it looks
+35:38 - when we render the page
+35:39 - anyways we're going to make a card
+35:41 - inside of the card we're going to make a
+35:42 - grid we've used this many times so i'll
+35:44 - go through it quickly but grid container
+35:46 - we're going to say align items and this
+35:48 - is going to be equal to
+35:49 - center this should align all the items
+35:50 - vertically in the grid
+35:52 - then we're going to close the grid we're
+35:54 - going to create a few grid items
+35:56 - so we'll start by saying grid item align
+36:00 - equals center we're going to say xs
+36:03 - equals 4.
+36:04 - now you'll see why we're doing xs equals
+36:06 - 4 in a second but this is going to be
+36:07 - for our album cover because we want this
+36:09 - to be on the furthest left
+36:11 - and then we want everything else to be
+36:12 - the to the right of the album cover as
+36:14 - you would kind of expect it to be
+36:16 - so grid item align center xs4 let's just
+36:18 - copy this
+36:19 - one more time because we will have
+36:20 - another grid item
+36:22 - so inside of here what i'm going to do
+36:24 - is i'm actually going to render the
+36:25 - image which is the album cover so to do
+36:27 - this i'm going to say img
+36:29 - standing for image i'm going to say src
+36:31 - standing for
+36:32 - source and since we actually know the
+36:35 - image source
+36:36 - we can put it directly here so just
+36:38 - before i get too far ahead of myself
+36:40 - what i'm going to do is i am going to
+36:42 - pass all of the information
+36:44 - relating to a song to this component
+36:47 - here to the music player
+36:49 - and then it will have access to it here
+36:50 - right so i'm going to assume that i have
+36:52 - things like the title the artist
+36:54 - all of the stuff that gets returned from
+36:56 - our api call
+36:57 - we will have access to in this music
+36:59 - player through the props because we're
+37:01 - going to pass it in
+37:02 - as a prop to this component so what i
+37:05 - can say
+37:05 - if that's the case is this dot props dot
+37:08 - and then i'm going to say image
+37:09 - underscore url
+37:11 - because this is the url of the album
+37:14 - cover image that we want to display
+37:15 - then i'm just going to say height is
+37:17 - equal to a hundred percent
+37:19 - and i'm going to say that width is equal
+37:20 - to 100 this is just to make sure it
+37:22 - fills uh the entire container
+37:25 - that's what we're doing that for awesome
+37:26 - so now we have that let me just
+37:28 - quickly save i'm wondering why i'm
+37:30 - getting this
+37:31 - error here with grid and with
+37:34 - card ah i see it's because i forgot to
+37:38 - return so let's actually return all of
+37:41 - this stuff
+37:42 - in parentheses and that should hopefully
+37:44 - fix it
+37:45 - and it seems like that was not the fix i
+37:47 - believe ah okay that's what it is i
+37:48 - didn't end my image tag
+37:50 - anyways now we have our image tag this
+37:52 - will show the album
+37:54 - cover now after we show the album cover
+37:56 - i want to show pretty much
+37:58 - everything else that will be in this
+37:59 - other grid item now i'm going to say
+38:01 - xs equals 8 for this grid item and i
+38:04 - think i've gone through this before with
+38:05 - how xs
+38:06 - works for grid but pretty much this is
+38:08 - going to take up one third of the width
+38:10 - of the grid
+38:10 - this is going to take up two-thirds of
+38:12 - the width of the grid which kind of
+38:14 - makes sense if you think about the text
+38:15 - relative
+38:16 - to the size of the album cover anyways
+38:19 - that's
+38:19 - kind of why i have four and eight there
+38:21 - you can mess with the numbers and see
+38:22 - see how it changes but the first thing
+38:25 - that i'm going to do
+38:26 - is have the title of the song so i'm
+38:27 - going to say typography
+38:29 - and then i'm going to say component is
+38:31 - equal to
+38:32 - this is going to be an h5 nice and large
+38:35 - we're going to say
+38:36 - or sorry h5 i guess would be smaller
+38:37 - than something like
+38:39 - h4 then we'll say that the variant
+38:42 - is going to be equal to h5 and
+38:46 - inside of typography all we're going to
+38:48 - do is say this
+38:49 - dot props dot title awesome so next what
+38:53 - i'm going to do is just copy this
+38:54 - typography tag because we're going to
+38:56 - have the artist
+38:57 - showing up next so we'll start by
+38:59 - changing this.props.title to be artist
+39:01 - we're then going to change the component
+39:03 - actually sorry we're not going to use a
+39:04 - component for this one
+39:06 - we're going to say color is equal to and
+39:08 - this is going to be text
+39:10 - secondary this is going to make it kind
+39:12 - of like a nice gray color
+39:14 - that works well for the artist you'll
+39:15 - see that in a second and the variant
+39:17 - is actually going to be subtitle one now
+39:20 - there is multiple subtitles again you
+39:22 - can look at those on your own but this
+39:23 - will just make it kind of
+39:25 - a little dimmer a little smaller like
+39:27 - light underneath this
+39:28 - uh this text here which is the title of
+39:31 - the song
+39:32 - all right so now that we have that what
+39:33 - i'm going to do is i'm just going to
+39:34 - open up a div inside of this grid item
+39:37 - the reason i'm doing this is just to
+39:38 - make sure that all of my icons are in
+39:40 - kind of the same
+39:41 - upper level container i don't want them
+39:43 - to be in this i don't want their parent
+39:45 - directly to be the grid i want it to be
+39:47 - a div
+39:48 - anyways first thing i'm going to do is
+39:50 - i'm going to make a icon
+39:52 - button so when you make an icon button
+39:54 - what you have to do is you have to
+39:55 - actually put an icon
+39:56 - inside of this tag and then on the icon
+40:00 - button itself you can do things like
+40:01 - create the on click
+40:02 - so anyways we'll see the on click when
+40:04 - we start uh
+40:06 - you know i guess messing with the on
+40:07 - click and actually having these buttons
+40:08 - function we're not going to do that in
+40:10 - this tutorial
+40:11 - but i'm just going to write a little bit
+40:12 - of javascript here because the first
+40:14 - button that i want to show is either a
+40:16 - play button or a pause button
+40:18 - so if the song is currently playing then
+40:20 - i want to show the pause button because
+40:21 - you should be able to pause it
+40:23 - if the song is currently not playing if
+40:24 - it's paused then i want to show the play
+40:26 - button so you play it
+40:27 - so this is pretty straightforward and
+40:28 - we've done this many times already but
+40:30 - i'm going to say this stop props that is
+40:32 - underscore playing
+40:33 - question mark and this is just doing
+40:35 - that one line if statement or
+40:37 - there's a fancy word for it that someone
+40:38 - reminded me of but i forget and
+40:40 - in this case if it is playing then what
+40:43 - we are going to
+40:44 - show is we are going to show the pause
+40:46 - icon which we imported from above
+40:49 - otherwise we are going to show the play
+40:52 - arrow icon like that now don't ask me
+40:55 - why they don't just call it the play
+40:57 - icon
+40:58 - maybe there is a different one that is
+40:59 - just play but we're going to use play
+41:01 - arrow icon
+41:02 - so now this will show us a different
+41:04 - icon based on whether the song is
+41:06 - playing or not
+41:07 - now after we have that icon button we
+41:09 - want one more icon button that's always
+41:11 - going to be the same and this is going
+41:12 - to be the skip button
+41:13 - so inside of here we will simply display
+41:16 - the skip
+41:17 - next icon like that and
+41:20 - let's just do a little slash like that
+41:24 - awesome so this should show our buttons
+41:26 - and then the last thing that we need
+41:28 - because that's actually all we need for
+41:29 - right now is the progress bar that will
+41:31 - kind of act as like the song
+41:33 - progress so at the bottom outside of our
+41:36 - grid but still inside of our card
+41:38 - i'm going to say linear progress and
+41:41 - this is going to be
+41:42 - variant equal to determinant
+41:45 - this just means that we are determining
+41:47 - the value of this linear progress bar
+41:50 - and we're going to say that the value is
+41:52 - equal to and then i'm going to
+41:54 - place the value inside of here in one
+41:56 - second so now that we have this
+41:58 - let's just go to the top of the render
+41:59 - function i want to write a variable
+42:02 - and the variable i'm going to call it
+42:03 - song progress now
+42:05 - if you're unfamiliar with how these
+42:07 - linear progress things work this is
+42:09 - specific to material ui
+42:10 - but we pass a value out of a hundred so
+42:13 - what i need to do
+42:14 - if i want to show an accurate depiction
+42:16 - of how far along we are in the song
+42:18 - is i need to take the current time stamp
+42:21 - we are at in the song
+42:22 - the duration of the song so i need to
+42:23 - divide the two and i need to multiply it
+42:26 - by a hundred to pretty much figure out
+42:27 - what percentage of the song we're
+42:29 - currently through and that way i'm going
+42:31 - to have a number for the value that is
+42:33 - out of 100 so between 0 and 100
+42:35 - that kind of accurately represents the
+42:37 - current duration of the song that's been
+42:39 - played so
+42:40 - you'll see when i do the math here but
+42:41 - it's pretty straightforward i'm just
+42:42 - going to say
+42:43 - this dot props dot time and then that's
+42:46 - going to be divided by
+42:47 - this dot props dot duration remember
+42:50 - duration is the length of the song and
+42:52 - time is the current time into the song
+42:54 - and then i'm just going to multiply that
+42:55 - number by a hundred and that will give
+42:57 - me what i'm looking for so for
+42:58 - value now we'll just plug in this
+43:00 - variable song progress
+43:01 - i could have also just put that in there
+43:03 - but i figured it'd be cleaner to do it
+43:04 - this way
+43:05 - and now we should see that this progress
+43:07 - bar actually moves
+43:09 - as we continually get a new duration for
+43:12 - the song or a new a new time story i
+43:14 - guess like a new progress time
+43:16 - anyways i've been talking a lot let's
+43:18 - refresh here and let's see what we're
+43:20 - getting
+43:20 - ah well i guess nothing is happening
+43:22 - first of all because we have an issue
+43:24 - here which i'll have to look into
+43:26 - but also because we haven't actually
+43:27 - rendered this component so let's do that
+43:29 - now
+43:30 - all right so i just was looking at this
+43:31 - error here essentially what happens
+43:33 - sometimes is if you don't play a song on
+43:35 - spotify for like a really long time
+43:37 - then you just don't get any results
+43:39 - essentially for this
+43:40 - it just gives you blank so we're getting
+43:42 - uncaught syntax error unexpected end of
+43:44 - json input
+43:45 - it's actually fine we don't really need
+43:47 - to even handle this because in the
+43:49 - situation where we don't have a current
+43:51 - a song currently playing we just won't
+43:52 - show anything on the screen or it'll
+43:54 - like look blank as you'll see in a
+43:55 - second
+43:56 - anyway so don't worry about that but
+43:57 - let's render this component now
+43:59 - so let's go to the room.js page let's
+44:03 - import this component first of all and
+44:05 - why is responsive font size in there i
+44:06 - don't want that there
+44:08 - let's go and say import
+44:11 - this is going to be i guess music oops
+44:14 - if i can get my caplocks working here
+44:17 - music player from and then dot slash
+44:20 - music player like that now what we'll do
+44:24 - is we will go here into
+44:27 - our render method and right
+44:30 - where we had everything else before so
+44:32 - in between these two grid items
+44:34 - we'll simply just render that component
+44:36 - so we'll render
+44:37 - the music player and like that
+44:41 - and then what we'll pass to music player
+44:43 - is all of the information relating to
+44:45 - the song
+44:46 - so what i can do is actually use the
+44:48 - spread operator so i'll do three dots
+44:50 - and then say this dot state dot song
+44:53 - this is what will pass through the props
+44:55 - to the music player
+44:57 - and this means that we will take all of
+44:59 - the information related to the song so
+45:00 - like the title the artist all of that
+45:02 - and we'll pass them in as separate keys
+45:04 - or separate props
+45:05 - to music player so that's ideal that's
+45:08 - what we want
+45:08 - and then that will allow us inside of
+45:10 - music player to do things like
+45:12 - this.props.title this stop props.artist
+45:15 - so on so forth so let's do that now
+45:17 - let's refresh and let's see what we get
+45:20 - and we're getting an error uh icon
+45:22 - button is not defined
+45:24 - okay so i think uh it should be button
+45:27 - icon or icon but okay
+45:28 - anyways let's go to music player and ah
+45:31 - so icon
+45:32 - button we don't have a capital b here
+45:34 - for button that would be why we're
+45:35 - running into that issue
+45:37 - let's refresh now and let's see if this
+45:39 - fixes the problem
+45:41 - okay so still not fixing the problem
+45:43 - minified react
+45:44 - error i will be right back all right so
+45:46 - i was having some issue with these icons
+45:48 - right here i just figured out what the
+45:50 - problem is
+45:50 - really stupid issue i really don't like
+45:52 - the way that they did this but
+45:54 - this import statement is just wrong what
+45:56 - we have up here we need to import all
+45:58 - these individually actually and you'll
+45:59 - see why in a second
+46:00 - we need to import the play arrow
+46:04 - icon from and then at material
+46:07 - oops at material ui slash icons
+46:10 - slash and then actually play arrow you
+46:13 - don't even include the icon at the end
+46:15 - which is really strange to me
+46:16 - and then import and we're going to
+46:18 - import the pause
+46:19 - icon from you guessed it this time the
+46:22 - same
+46:23 - thing except we're not going to include
+46:24 - the icon again so material ui
+46:27 - icons slash pause like that which
+46:31 - again is really strange and then import
+46:33 - next one which is going to be
+46:35 - skip oops skip next
+46:38 - icon from at until ui slash
+46:43 - icons slash skip next
+46:46 - okay so i'm hoping this is gonna work
+46:47 - now uh let's give a quick refresh of our
+46:50 - application
+46:51 - and let's see and there we go it does
+46:53 - indeed work so you can see we have this
+46:55 - song
+46:56 - the blinding lights and then there's the
+46:58 - play button as well as the fast forward
+47:00 - button
+47:01 - and if i actually go ahead and play this
+47:02 - uh you'll see again that the progress
+47:04 - bar
+47:05 - will start going if i fast forward the
+47:07 - song
+47:08 - we can see that the new song shows up uh
+47:10 - and with really long text you might run
+47:12 - into some errors here but
+47:13 - as i expand this you can see all looks
+47:15 - well and all is good
+47:17 - so anyways that is it for this tutorial
+47:20 - video
+47:20 - i hope you all enjoyed in the next video
+47:22 - we'll go over how to get this pause and
+47:24 - fast forward button to work and then
+47:26 - we'll do a few other things as well
+47:28 - so with that said if you enjoyed make
+47:29 - sure to leave a like subscribe to the
+47:30 - channel and i will see you in another
+47:32 - youtube video
+47:41 - you

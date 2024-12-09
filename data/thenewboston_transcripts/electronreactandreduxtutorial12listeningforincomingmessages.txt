@@ -1,0 +1,447 @@
+00:00 - all right so now that we have the logic
+00:02 - in place to properly send a block to
+00:04 - another device next up what we'll do is
+00:06 - we'll go ahead and write out all the
+00:08 - code to properly accept the block
+00:10 - now before we just hop into writing the
+00:12 - code as always we'll go ahead and take a
+00:14 - look at exactly how this is going to
+00:15 - work
+00:16 - so what happens is whenever tnb OS
+00:20 - receives a block from the core server
+00:22 - the first thing that it does is it looks
+00:25 - at this field right here the PID now
+00:27 - remember this PID the process ID is the
+00:30 - same as the app ID so this is
+00:32 - essentially how it knows which app to
+00:34 - Route this block to
+00:36 - so once it has that again it's going to
+00:38 - Route it to something called the app
+00:40 - router basically passing it off and say
+00:43 - hey speed test this block is for you you
+00:45 - take care of it from here
+00:47 - now what the app router is going to do
+00:49 - is it's going to look at this field
+00:50 - right here this FN
+00:53 - and again this is pretty much a remote
+00:56 - function call and for each of these
+00:58 - function calls we're going to have a
+01:00 - separate listener set up in other words
+01:02 - just like the function itself or a
+01:03 - function Handler so since we have two
+01:06 - functions in the speed test one ping one
+01:08 - pong we're also going to have two
+01:09 - listeners basically listening for Ping
+01:12 - blocks in pong blocks so pretty simple
+01:14 - architecture based on this payload it
+01:17 - knows which app to Route it to and which
+01:19 - listener throughout it to and just like
+01:21 - last time what we'll do is we'll kind of
+01:23 - work on this From the Inside Out
+01:24 - starting with the listeners and then
+01:26 - once we have both those written we'll
+01:28 - construct the app router and then last
+01:30 - but not least we'll plug it into cnbos
+01:32 - to say okay I'm now ready to start
+01:34 - listening to speed test blocks so for
+01:37 - these listeners I like to organize those
+01:39 - by creating a new directory
+01:42 - called listeners and just like basically
+01:45 - every other naming convention the
+01:48 - function name followed by a listener is
+01:50 - the name of the file so ping
+01:53 - listener and from here let me just go
+01:56 - ahead and first import everything that I
+01:58 - need to and okay
+02:00 - so I'm gonna make a function called ping
+02:03 - listener and these listeners are all
+02:06 - going to follow the same convention
+02:07 - whenever they're called they're passed
+02:09 - in three parameters the first one is the
+02:12 - block itself
+02:14 - second one is a dispatch param and this
+02:18 - is
+02:19 - I'll talk to you about this in just a
+02:21 - second but the last one is the network
+02:22 - ID and this is just the network that it
+02:24 - was sent over and the reason that we
+02:27 - pass in dispatch as well is because very
+02:30 - often whenever data is received what
+02:34 - happens is this listener is going to
+02:36 - first validate that data to make sure
+02:37 - that everything is received in the
+02:39 - correct format pretty much like you're
+02:40 - setting up a server or API call and you
+02:43 - need to validate that the client sent in
+02:45 - the right format now after this usually
+02:48 - one of two things happen once you have
+02:50 - valid data receive you're either going
+02:52 - to dispatch something to your Redux
+02:53 - store or you're going to send back a
+02:55 - request now in this case once we receive
+02:58 - this ping and we validate it and all
+03:01 - this validation is going to do is make
+03:02 - sure that the Run ID is valid a valid
+03:04 - uuid and after we know it's valid what
+03:07 - we're going to do is just send back that
+03:08 - ping block however a lot of the time for
+03:11 - example in this chat app right here
+03:12 - whenever another device sends you a chat
+03:15 - message and you receive it and validate
+03:17 - it then for example you would want to
+03:19 - set it in your chat store
+03:21 - so that is the kind of basic flow of
+03:24 - this now because we're not going to be
+03:26 - dispatching any data in this listener
+03:28 - I'm just going to replace that dispatch
+03:29 - variable with an underscore and also let
+03:32 - me go ahead and
+03:33 - export this
+03:35 - is the default export all right now
+03:38 - right after this what I actually like to
+03:40 - do is carry off an anonymous async
+03:43 - function
+03:44 - and let me do that right now so async
+03:47 - I'll say
+03:49 - now the reason that we need this to be
+03:51 - async is like I said once we validate
+03:54 - that data we're going to be responding
+03:56 - by sending back a pawn block and for
+03:58 - that we need to await it so there you go
+04:01 - that's a story about that and I also am
+04:04 - going to throw in a try catch statement
+04:07 - here
+04:08 - and for this
+04:10 - what we can do is if we want to get
+04:13 - really fancy later on we can handle this
+04:15 - error by sending back the other device a
+04:17 - proper error message and I don't know
+04:19 - maybe have some UI to have like a toast
+04:21 - appear on the screen or something but
+04:23 - for right now keep things simple holy
+04:26 - moly what's going on here let me just go
+04:27 - ahead and log out this error actually
+04:29 - let me do Consular error error
+04:31 - and I'm also going to display an error
+04:34 - toast and this is just for me
+04:36 - debugging purposes whenever we get one
+04:38 - since I may not be looking
+04:41 - one second let me uh
+04:49 - since I'm not often looking in the
+04:51 - console all the time just to have
+04:52 - something uh pop up on my screen and
+04:54 - then I can check the console but this is
+04:56 - the basic flow again just a kind of
+04:59 - structure everything out we'll say
+05:00 - validate data and then once it's valid
+05:04 - respond by sending back pop block
+05:09 - so to validate this data what we need to
+05:12 - do is okay we need to pull off the
+05:15 - params because that's where the Run ID
+05:16 - is and essentially all we're going to do
+05:18 - like I said is make sure that run ID is
+05:20 - a valid uuid
+05:22 - before I do that let me go ahead and
+05:24 - destructure some things from the Block
+05:26 - and that is the payload first of all
+05:30 - and again this is where those params are
+05:31 - and then I also want to check the sender
+05:34 - so
+05:35 - and the center is going to be needed
+05:37 - whenever we are sending back that pong
+05:39 - response we need to know who to send it
+05:41 - to so there you go and then const
+05:45 - params I can just destructure those from
+05:47 - payload
+05:49 - all right
+05:51 - so these params right here if I pull
+05:54 - open this
+05:56 - you can see that these pink ramps are
+05:59 - just going to be equal to a run ID so in
+06:01 - our validator we can probably write it
+06:03 - right here but just to keep everything
+06:04 - standardized what I do for all my
+06:07 - validation is I create new directory
+06:11 - called validators
+06:13 - and then you can probably guess what I'm
+06:15 - going to do here I'll just say
+06:17 - ping validators
+06:20 - now for these validators I'm using the
+06:22 - yup Library
+06:24 - and I'll show you how we can validate
+06:26 - this right now so make validator I'll
+06:29 - just say ping validator and we are
+06:33 - basically ensuring that we have an
+06:35 - object whose key is run ID and whose
+06:38 - value is a valid uuid so to verify that
+06:41 - or validate I mean we can just say
+06:44 - object
+06:45 - now in here
+06:47 - we are just going to say run ID and
+06:50 - that's the key that we're going to be
+06:51 - looking for and what is the value well
+06:53 - according to the yup you say yup string
+06:56 - and you also need to say that this is
+06:58 - required
+07:00 - and then in addition one last thing it
+07:03 - already has this method method built in
+07:06 - which is uuid
+07:07 - so again we're going to be passing in an
+07:09 - object in here which is just our params
+07:12 - and it's going to make sure that it
+07:13 - conforms to these rules if it doesn't
+07:16 - then it's going to throw a validation
+07:17 - error so that is why this is essentially
+07:21 - going to be handled by this logic right
+07:23 - here and use that validator to actually
+07:26 - validate our data what we need to do is
+07:28 - await it and it was the Ping validator I
+07:31 - already have it imported and then on
+07:34 - that we call the function validate and
+07:37 - pass in the data that we wanted to
+07:38 - validate which are these params right
+07:41 - here
+07:44 - all right so we can remove this comment
+07:48 - as well
+07:49 - actually this is supposed to be pong
+07:51 - block
+07:53 - now under here what we can do is we can
+07:56 - await that pawn block
+08:00 - and again this pong block what it does
+08:03 - is it takes a network ID params
+08:07 - you guys hear that it's like a monster
+08:09 - truck or something outside all right
+08:11 - anyways getting a little bit distracted
+08:13 - right here okay so the network ID and
+08:16 - the params and the recipient which is
+08:20 - just a sender property From the Block
+08:22 - right here
+08:24 - all right pretty sweet and again the
+08:26 - reason that we don't have to have any
+08:28 - additional checks we can just write it
+08:29 - underneath this validator is because if
+08:31 - this data is not valid then it's just
+08:33 - going to throw an error right here and
+08:35 - break out of this block and then just
+08:37 - this is our error catching logic right
+08:40 - here
+08:40 - so anyways that is our listener function
+08:44 - and let me actually go ahead and iterate
+08:48 - in how I want to do this I'll go ahead
+08:51 - and write the pong listener real quick
+08:53 - so under here gonna make a new function
+09:01 - and I'll kind of just make this a
+09:03 - placeholder right now
+09:05 - because we want to be spicing this up in
+09:08 - just a bit but
+09:10 - for right now what I'll do is just to
+09:13 - make sure that like things are kind of
+09:15 - structured together I'll just log
+09:17 - everything out
+09:20 - all right so console log block
+09:27 - batch
+09:31 - and the network ID
+09:34 - now remove those so of course the pong
+09:37 - listener is eventually going to whenever
+09:40 - it receives the pong response then it's
+09:42 - going to like uh set the response status
+09:44 - and the response date and set everything
+09:47 - in Redux but I just want to keep this uh
+09:49 - video a little bit lean
+09:51 - so on that note now that we have both
+09:53 - our listener structured I'm going to go
+09:55 - ahead and create that index file
+09:58 - just aggregate everything
+10:01 - there we go so popping back open our
+10:04 - diagram what we did is we just wrote
+10:06 - These two uh components I guess not
+10:09 - actual components but like pieces of the
+10:11 - system so now that we have these the
+10:13 - next step is just the aggregate them
+10:15 - into our app router so whenever this app
+10:17 - router receives a block it knows which
+10:19 - one to send them to
+10:21 - and for this I will make a new directory
+10:28 - called routers and I'll just have one
+10:30 - file in here and I'll just say app
+10:32 - router
+10:38 - was those
+10:39 - all right
+10:41 - so I'm just going to have one constant
+10:42 - in here and I'll just say app router and
+10:45 - this is going to be equal to this
+10:51 - [Music]
+10:54 - come on there we go all right so the
+10:57 - standard for these app routers is that
+11:00 - whenever tnbos finds a matching process
+11:02 - ID it's going to send it to this app
+11:04 - router and it's going to call this
+11:05 - function by passing in a block first
+11:09 - and then let me actually steal this too
+11:12 - lazy to type out definitely could have
+11:14 - just typed it by now but it's oh
+11:17 - I could have typed it like eight times
+11:18 - by now all right it's gonna pass in a
+11:21 - block and then dispatch and then the
+11:22 - network ID which is a string
+11:25 - and then remember the main job of this
+11:27 - app router is to figure out which a
+11:29 - listener to forward this data to
+11:31 - so to do that we first need to pluck off
+11:33 - some data from this block
+11:35 - and let me just save this
+11:40 - so From the Block what we want to do is
+11:42 - we want to look at the payload and we're
+11:44 - going to be looking at the function and
+11:46 - also the process ID
+11:48 - and now based on that we can figure out
+11:50 - which Handler or basically listeners to
+11:52 - call so I'm going to make a consonant
+11:54 - called FN
+11:56 - handlers and the keys of these are going
+11:58 - to be the function name and that the
+12:00 - value is going to be the listener so
+12:04 - let me do this
+12:07 - so the type of this is an app data
+12:10 - handlers and I'll just show you what
+12:12 - this means
+12:13 - again just a dictionary of these
+12:16 - functions right here a Handler it's a
+12:18 - handle app data and like I said the keys
+12:23 - of each of these is going to be the
+12:24 - function
+12:25 - so for ping
+12:27 - we are going to be forwarding that to
+12:30 - the Ping listener
+12:32 - and when we receive a block
+12:36 - for the pong function of course that's
+12:38 - going to be sent off to the pong
+12:39 - listener and now just to get my hand
+12:42 - there I'll say const FN Handler is equal
+12:45 - to one of those function handlers that
+12:48 - we just declared above
+12:49 - and for the key I'm just going to be
+12:51 - passing in this function From the Block
+12:54 - payload so that is going to give us one
+12:57 - of these hopefully however there is one
+13:01 - other Edge case and that is this let me
+13:04 - see if I can well we don't need to look
+13:06 - at it right now but if
+13:09 - we ever were yet lucidchart okay so if
+13:14 - we ever kind of structure our block
+13:16 - incorrectly and we are sending it to the
+13:19 - right process ID so speed test but we're
+13:22 - sending it to a function that doesn't
+13:23 - exist uh I don't know maybe we had a
+13:26 - typo or something we just need to
+13:28 - account for that so we'll say if there
+13:32 - is no FN Handler
+13:35 - if there's no effin Handler that's uh a
+13:39 - little inappropriate but all right what
+13:41 - do we want to do well let's just go
+13:43 - ahead and display an error toast
+13:46 - and we'll just say something actually
+13:49 - let me steal one from chat
+13:51 - so chats
+13:53 - react routers
+13:55 - all right we'll just deal with this
+13:57 - logic
+13:59 - so if there's no F inhaler which means
+14:01 - if you just you know had a typo in the
+14:03 - function name we'll say this process ID
+14:06 - dot function is an unknown speed test
+14:09 - function and then we'll just return it
+14:11 - right there otherwise if you do have a
+14:14 - valid FN Handler and you spelled
+14:16 - everything correctly got the right
+14:17 - process ID and a valid function name
+14:19 - then we're just going to call that
+14:20 - Handler and again remember each of these
+14:23 - which is just the listener it accepts
+14:25 - the block dispatch and network ID
+14:29 - so again block
+14:31 - dispatch
+14:34 - and network ID
+14:37 - and there you go that is our app router
+14:40 - and again that is
+14:42 - this right here so now that we have all
+14:46 - of this logic written the last thing
+14:48 - that we need to do is basically write
+14:49 - the equivalent of this Arrow just
+14:52 - letting tnbos know that we have a new
+14:54 - app router in that if it ever receives a
+14:56 - block it can begin routing data to the
+14:59 - correct listener
+15:00 - so to do that it is pretty easy
+15:04 - close these to the right
+15:06 - all right so in my speed Titus
+15:09 - registration
+15:14 - see under speed test and go ahead and
+15:16 - import this and all right so this app
+15:18 - registration also takes an optional
+15:22 - router uh property a router key and this
+15:25 - is just going to be equal to whatever
+15:26 - your app router is
+15:29 - I'm just importing this app router that
+15:31 - we just wrote right here
+15:32 - and then the last thing is in this app
+15:36 - registry
+15:37 - right here under app routers we just
+15:41 - need to tell tnbos for any speed test
+15:44 - blocks that you receive then go ahead
+15:46 - and Route it to this router which is the
+15:49 - speed test registration router so speed
+15:51 - test registration
+15:53 - router
+15:54 - just like that
+15:57 - now what I'm actually going to do is I'm
+15:59 - going to open my MacBook and I'm going
+16:01 - to pull down this code and then we'll
+16:04 - kind of test to see if everything's
+16:05 - working
+16:06 - all right so I got tnbos running the
+16:09 - latest changes pulled down now is the
+16:11 - moment of truth so if everything is
+16:13 - working correctly when I hit go uh just
+16:16 - uh again before I know I'm building up
+16:19 - the suspense right here but what should
+16:21 - happen is that the my MacBook or the
+16:25 - device I'm sending it to should receive
+16:27 - this ping function call everything
+16:31 - should be valid as long as we didn't
+16:33 - make any mistakes and then once it's
+16:35 - validating it should send back a pong
+16:37 - block and since we have this listener
+16:39 - set up
+16:40 - um on this device I'll receive this pong
+16:43 - message and then this is just going to
+16:45 - print out the block a dispatch I don't
+16:49 - this is probably going to look weird
+16:50 - whenever it prints this out but also the
+16:51 - network ID
+16:53 - so
+16:54 - pop this open send it
+16:58 - all right ah beautiful look at that so
+17:03 - again this is our block of course we
+17:05 - have to do something a little bit more
+17:06 - smart than just log this out and this is
+17:09 - our ugly dispatch in the network ID
+17:11 - pretty sweet
+17:13 - just look in the network make sure
+17:15 - nothing's breaking
+17:17 - nice beautiful so we have some life here
+17:21 - we have our two devices communicating
+17:23 - with each other all right I'm uh I'm
+17:26 - pretty pumped up now so let's see in the
+17:28 - next video we uh just have to spice a
+17:31 - couple things up of course still got to
+17:33 - work on this timer and then actually
+17:35 - what we're going to be doing whenever we
+17:37 - receive these pong responses is we'll
+17:39 - calculate the difference between
+17:42 - whenever I first sent that block and
+17:45 - whenever I receive that response and of
+17:48 - course dispatch everything to Redux log
+17:50 - it out in this history table
+17:52 - so yeah looking forward to it see you
+17:54 - next time

@@ -1,0 +1,742 @@
+With timestamps:
+
+00:01 - welcome back now this is one that's been
+00:03 - very frequently requested how to make a
+00:06 - 3d
+00:07 - car game and now godot
+00:10 - has a vehicle body node which is based
+00:14 - on rigid body
+00:16 - and simulates pretty much everything
+00:18 - from suspension
+00:20 - to acceleration breaking
+00:23 - all that kind of thing but for my mind
+00:26 - it introduces a lot of complexity
+00:28 - and i think it tends to be overkill for
+00:30 - a lot of more casual
+00:32 - racing or driving games if you are
+00:35 - interested in
+00:37 - how the vehicle body node works there's
+00:40 - a great
+00:41 - series that i will link you to
+00:44 - at the end of the video and i recommend
+00:47 - you go look at it it's really well done
+00:49 - uh but we're going to go with a
+00:50 - kinematic body based solution here
+00:52 - because
+00:53 - it's much easier to set up much easier
+00:55 - to control
+00:56 - and will give you most of what you need
+00:58 - for most
+01:00 - like i said casual racing style games
+01:04 - now if you've seen my 2d car steering
+01:08 - video then you probably will find most
+01:11 - of this familiar
+01:12 - because since a car
+01:16 - stays on the ground for the most part
+01:18 - all of its movement happens in the x
+01:20 - z plane so it's pretty much a 2d problem
+01:24 - anyway and so we can reuse a lot of the
+01:27 - code we used in the 2d
+01:29 - car tutorial to make our 3d car work
+01:33 - and if you haven't watched that one i do
+01:35 - recommend you go and watch
+01:36 - it as well as i do go into more detail
+01:40 - on how the algorithm works there and i
+01:42 - won't go as deep
+01:43 - on this one all right well why don't we
+01:47 - get started
+01:48 - to start with we're going to need some
+01:49 - models and i'm going to use
+01:51 - kenny's car kit which you can find at
+01:54 - kenny.nl
+01:55 - the link is posted below and this has
+01:58 - got a bunch of different car
+01:59 - models in it i'm going to use this red
+02:03 - coupe here but you can use any of these
+02:05 - and we might want to use some of these
+02:07 - later for
+02:08 - npc cars and things like that so go
+02:10 - ahead and download the whole kit
+02:13 - and when you download the kit you're
+02:14 - going to get a folder
+02:17 - that has a models folder in it
+02:20 - and in there are the models saved in a
+02:24 - variety of different formats
+02:25 - gltf is going to be the easiest one to
+02:27 - use with godot
+02:29 - so in the gltf folder you'll see
+02:32 - a glb which is a binary gltf
+02:36 - file for each of the card types so you
+02:39 - can go ahead and drag those
+02:40 - and drop them in a folder in your
+02:45 - godot project what i did is i made an
+02:47 - assets folders
+02:48 - folder and then inside of their cars
+02:50 - folder and i've just dropped them all in
+02:52 - there
+02:54 - and specifically i want to use this
+02:55 - sedan sports.glb
+02:59 - and if you go over to the import
+03:03 - tab you can change the root type here
+03:07 - i'm going to change the root type to
+03:09 - kinematic body
+03:11 - and re-import and what that will do is
+03:13 - it'll import
+03:14 - the gltf file
+03:19 - along with all of its materials and so
+03:21 - forth
+03:22 - and make it so that when you double
+03:24 - click on this to start a new
+03:26 - scene the root node will be a kinematic
+03:28 - body which is what we want for our car
+03:31 - okay so let's see what it looks like if
+03:32 - we go over here and just double click on
+03:34 - the
+03:35 - glb file we're gonna make a new
+03:38 - inherited scene
+03:39 - from that car and there we go there is
+03:41 - our car
+03:43 - and you can see the scene the note
+03:45 - hierarchy over here
+03:46 - for the scene we have our root node
+03:48 - which is a kinematic body
+03:50 - which the first thing you usually want
+03:52 - to check is the orientation because
+03:54 - different artists will save their
+03:58 - models with different orientations
+04:00 - depending on what software they're used
+04:02 - to using
+04:02 - we want forward to be the negative
+04:04 - z-axis which is
+04:06 - the way it's aligned already so we're
+04:07 - already good there
+04:09 - and you can see we've got a few
+04:11 - different nodes in here we've got a body
+04:14 - mesh which is the body of the car the
+04:17 - spoiler is separate because i think
+04:18 - those are made to be interchangeable
+04:20 - and then we have a different mesh for
+04:23 - each of the
+04:24 - for each of the wheels all right there's
+04:27 - the left wheel there's the front left
+04:28 - wheel
+04:29 - uh and then there are a couple of
+04:32 - intermediate
+04:33 - spatial nodes here um unfortunately
+04:36 - due to the way it was exported from
+04:38 - blender
+04:40 - but we don't really need to care about
+04:41 - that we're not going to be using the
+04:43 - scene hierarchy all that much
+04:45 - so don't worry too much about this temp
+04:47 - parent all right we're going to be
+04:48 - moving the kinematic body around
+04:50 - and the only thing that's missing now is
+04:53 - we need some
+04:54 - collision shapes to apply to our
+04:57 - kinematic body that's why we have the
+04:58 - little warning symbol there
+05:00 - and what i'm going to do is i'm going to
+05:02 - set up we want our wheels to be able to
+05:04 - obviously roll along the ground
+05:06 - and we also want to be able to go over
+05:07 - small bumps and things like that
+05:10 - irregularities in the ground when you
+05:11 - get when it gets time to
+05:13 - to adding terrain you might have a
+05:15 - variety
+05:16 - a variety of different approaches to
+05:17 - that so so i'm going to use
+05:20 - cylinders for the wheels and rather than
+05:24 - go under here and make a cylinder for
+05:26 - each
+05:26 - wheel i'm just going to make one big
+05:28 - long cylinder
+05:30 - for the whole front axle because that's
+05:31 - all we really need to
+05:33 - simulate our car rolling along the
+05:35 - ground and then i'm going to do a
+05:36 - separate box collider for the
+05:39 - body of the car so it can bump into
+05:41 - walls bump into other cars things like
+05:43 - that
+05:44 - okay starting with our box glider here
+05:46 - i'm going to show you a trick to makes
+05:48 - it easier to
+05:50 - size your collision shapes when you're
+05:53 - doing things like this so what i'm going
+05:54 - to do is i'm going to set this
+05:56 - to the left view so we're looking at the
+05:58 - car head on
+06:01 - and we're going to be in orthogonal mode
+06:03 - not perspective which means you don't
+06:05 - want to what you don't want to do
+06:06 - is rotate the camera because that's
+06:09 - going to
+06:10 - make the perspective all kind of wonky
+06:12 - because you're in orthogonal mode
+06:14 - but if you have this button here called
+06:15 - auto or orthogonal enabled
+06:17 - when you choose left view it's going to
+06:19 - automatically change to
+06:21 - orthogonal and what that means is you're
+06:24 - looking at it as if it was a flat
+06:26 - image and that's going to make it really
+06:27 - easy to position
+06:29 - and size our box to cover
+06:33 - the body like we wanted to and yeah i'm
+06:36 - just going to
+06:36 - estimate it for now we can adjust this
+06:39 - later depending on what kind of behavior
+06:41 - you want
+06:42 - when you have the game working and let's
+06:44 - look at the
+06:46 - view from the front and then you can see
+06:48 - we're going to need to
+06:51 - bring that in right and now if we go
+06:52 - back to perspective mode you can see
+06:55 - we have our box set up to enclose the
+06:57 - body
+06:59 - good enough for now and so
+07:03 - i'm just for right now i'm just going to
+07:04 - add one more collision shape
+07:07 - with a cylinder shape
+07:10 - now the cylinders are by default
+07:12 - oriented this way so we're going to
+07:14 - change its rotation
+07:16 - around the z-axis by 90
+07:20 - degrees so it's oriented right and then
+07:23 - if we position this
+07:24 - again using the left view
+07:27 - we can change the
+07:32 - radius of the cylinder we can get it
+07:34 - over here and
+07:36 - we're going to pan the camera not rotate
+07:38 - it and we can position this so that we
+07:40 - get it nice and centered on the wheel
+07:42 - get the radius the way we want it for
+07:45 - the wheel
+07:46 - and remember you want to go a little big
+07:47 - because these wheels are are beveled on
+07:49 - the edge so you want the bottom of the
+07:50 - wheel not the
+07:52 - front edge and then if we look at it
+07:54 - from
+07:56 - this side it's obviously going to be too
+07:57 - wide so we're going to bring this in
+08:00 - to the width of the two wheels and now
+08:03 - we have
+08:04 - go back over to my left view now we have
+08:06 - one cylinder that's perfect
+08:09 - right and then we can just duplicate it
+08:11 - and with that second one
+08:12 - we're just going to pull it over to the
+08:14 - other wheel
+08:17 - we'll zoom in here make sure we are
+08:19 - nicely
+08:20 - centered but it'll be exactly at the
+08:22 - same height because i'm not moving it in
+08:23 - the y
+08:24 - so now i know that my two
+08:27 - cylinder collision shapes are perfectly
+08:30 - aligned
+08:31 - um in the y and then from the bottom
+08:34 - they'll be lined up too
+08:36 - all right and if we if we were to hide
+08:38 - the
+08:40 - the car there you can see the collision
+08:42 - shapes how they're going to be set up
+08:46 - all right so that's going to be it for
+08:47 - our collusion shapes to get started
+08:50 - and the last thing i like to do is give
+08:51 - these collision shapes some names that
+08:53 - are easier to keep track of
+08:55 - and so i'm naming these collision body
+08:57 - collision wheels oops i got a typo there
+09:00 - collision wheels front and collision
+09:02 - wheels rear
+09:04 - in case i ever need to refer to them in
+09:07 - code or
+09:08 - keep track of what collision shape is
+09:10 - you know is colliding with something
+09:12 - uh naming them will make it easier to
+09:14 - remember the collision shape one
+09:15 - collision shape two
+09:16 - and so on okay and then go ahead and
+09:19 - save this car
+09:21 - i like to make a cars folder that i can
+09:24 - save the different cars that i make in
+09:25 - there
+09:26 - and any scripts that go along with them
+09:28 - i'm calling this one demo car
+09:30 - but you can name it something
+09:31 - descriptive for whatever car you're
+09:33 - making
+09:34 - and we're ready to start adding a script
+09:36 - but we need to think a little bit about
+09:37 - what
+09:39 - we want our script to do and if you
+09:42 - think about what the inputs
+09:44 - for driving a car are there's
+09:47 - essentially three
+09:48 - we have accelerate we have decelerate or
+09:51 - break
+09:52 - and we have steering and
+09:55 - whether the car is controlled by a human
+09:58 - using the keyboard or a gamepad or
+10:00 - something to do those inputs
+10:02 - or we decide to make an ai controlled
+10:05 - npc card that's going to drive around
+10:06 - the track by itself
+10:08 - that npc car is still making those same
+10:10 - decisions do i accelerate do i break do
+10:12 - i turn left do i turn right
+10:14 - and so the input may come from different
+10:17 - sources
+10:19 - but the way the car moves once those
+10:20 - inputs are applied it's going to be the
+10:22 - same regardless
+10:23 - of where those inputs come from so we
+10:26 - can have a lot of the code
+10:27 - will be shared between all different
+10:30 - kinds of cars
+10:32 - including cars that have different
+10:34 - behavior profiles right you might have
+10:36 - heavy cars
+10:36 - slow cars cars with tight turning
+10:39 - radiuses and
+10:40 - cars with wide ones and that kind of
+10:42 - thing but all those are parameters that
+10:44 - go into the same
+10:44 - general movement code so for that reason
+10:48 - what we're going to do is we're going to
+10:49 - make a script
+10:50 - called car underscore base.gd
+10:54 - and this is going to be the common code
+10:56 - that all
+10:57 - cars are going to share that we can use
+11:00 - for any car
+11:01 - and it's going to extend kinematic body
+11:02 - that's we're going to attach these
+11:04 - scripts to and we're going to start with
+11:06 - some
+11:07 - parameter variables okay and i'll just
+11:09 - go through and explain these real quick
+11:10 - gravity is how fast that object's gonna
+11:14 - fall when it's in the air
+11:16 - and i like to use a custom value here
+11:19 - you
+11:19 - you're perfectly welcome to go into
+11:21 - project settings and use the global
+11:24 - physics gravity setting which is what
+11:26 - rigid bodies use
+11:29 - but you know when we're making an arcade
+11:31 - style game with
+11:32 - not necessarily
+11:35 - a concern for realistic the most
+11:37 - realistic physics
+11:39 - i like to be able to get some
+11:40 - flexibility and maybe i want the
+11:42 - some objects to fall faster than others
+11:44 - and so on but it works out the same way
+11:46 - we use some value the default in the
+11:49 - project settings of 9.8
+11:50 - i never find to be fast enough things
+11:53 - feel
+11:54 - too floaty so i'm using negative 20 here
+11:58 - so negative meaning down and 20 is the
+12:02 - magnitude of that wheelbase is going to
+12:05 - be the distance between your two
+12:07 - axles how far apart of the front and
+12:08 - rear wheels and
+12:10 - that will depend on your model and you
+12:12 - can you can eyeball it or you can adjust
+12:14 - it once you're driving around and see
+12:16 - what kind of
+12:17 - behavior you like it's going to have a
+12:19 - lot to do with how tight
+12:20 - that car can turn right a bus has
+12:24 - a really long wheelbase it's not going
+12:25 - to be able to make as tight a turn
+12:28 - steering limit is in degrees how many
+12:31 - degrees can you turn the wheel how many
+12:33 - what's the maximum amount those wheels
+12:35 - can turn
+12:36 - to cause the car to turn engine power
+12:40 - and braking are going to be for the
+12:42 - acceleration and deceleration right the
+12:45 - stronger your engine the higher your
+12:47 - faster acceleration is going to be
+12:49 - and how fast and then how quickly you
+12:52 - can break as well
+12:52 - so those are things you can adjust um
+12:55 - and then friction and drag the same
+12:58 - these are going to be
+12:59 - friction is your interaction with the
+13:01 - ground and is
+13:02 - essentially proportional to your
+13:04 - velocity drag
+13:06 - is your interaction with the air it's
+13:09 - air resistance
+13:10 - and it's proportional to your velocity
+13:14 - squared
+13:15 - so this is why sports cars tend to be
+13:18 - more streamlined than
+13:20 - buses or trucks or things right because
+13:23 - to go faster you want less drag
+13:25 - and and so these these can have a lot of
+13:29 - adjustment happen so i'm just using some
+13:31 - really
+13:32 - starting numbers here to play around
+13:34 - with when we
+13:35 - uh when we start driving around and then
+13:38 - i don't want to be able to
+13:39 - reverse at the full speed that we're
+13:41 - going to be going forward so we're going
+13:42 - to
+13:43 - cap our reverse speed to some number
+13:46 - that's fairly slow so that when you're
+13:47 - in reverse you're just
+13:49 - usually using that to get out of when
+13:52 - you've run into a wall or something
+13:54 - okay and that's that now we also have
+13:57 - some variables
+13:58 - for the kind of ongoing state
+14:03 - of the car and those are going to be the
+14:07 - acceleration the velocity
+14:09 - and then we're going to keep track of
+14:10 - how far the wheels are turned
+14:13 - and those will be here as a brief aside
+14:16 - most of this code that you're going to
+14:18 - see is
+14:20 - almost exactly the same as the code for
+14:22 - my 2d
+14:24 - car steering recipe that i made a little
+14:26 - while back
+14:27 - you can watch the video for that at the
+14:30 - link below
+14:31 - so i won't go into too much detail you
+14:33 - can go back and watch those if you're
+14:35 - interested
+14:37 - so we're going to start with the physics
+14:39 - process
+14:40 - here so what we're going to do is we're
+14:42 - going to check if we're on the floor
+14:44 - because we don't want to be able to
+14:46 - steer
+14:47 - and accelerate and decide when we're in
+14:49 - mid-air right the wheels aren't touching
+14:50 - the ground
+14:51 - you can't control the car
+14:54 - so this will let us do if we have if we
+14:56 - want to have jumps and things like that
+14:58 - in the in the game or or allow you to
+15:01 - you know fly off the top of hills and
+15:03 - things like that
+15:05 - so we're going to check we're on the
+15:06 - floor we're going to get the input
+15:08 - we're going to apply any friction that
+15:09 - applies and we're going to calculate the
+15:12 - steering
+15:13 - that is being applied by the input
+15:17 - then we're going to add the acceleration
+15:19 - of gravity downwards
+15:21 - update our velocity based on our
+15:23 - acceleration
+15:24 - and then we're going to use move and
+15:26 - slide with snap
+15:28 - for our movement and here i'll put this
+15:31 - on the next line so you can see it a
+15:33 - little better
+15:35 - so we're going to move by our velocity
+15:39 - we're going to use our basis dot y
+15:43 - so the local downward vector
+15:47 - as our snap vector right so we want this
+15:50 - will
+15:50 - this will be so that we can have slopes
+15:53 - so if you're going up a slope
+15:54 - your snap vector is pointing into the
+15:57 - slope
+15:57 - not down in the global y axis and then
+16:01 - vector three dot up is what defines
+16:04 - the flat ground
+16:07 - and then true is the stop on slip and
+16:11 - that is it for our physics process so
+16:12 - this was what will happen every
+16:14 - physics frame okay
+16:18 - and now we're going to want to apply the
+16:20 - apply friction that
+16:22 - that's going to be common to everything
+16:25 - and this is pretty much copied and
+16:26 - pasted from the 2d version
+16:29 - all right if we're going if we're going
+16:32 - really slow
+16:33 - then we could we can just stop
+16:37 - but friction is going to be based on our
+16:39 - velocity
+16:40 - drag is going to be based on our
+16:42 - velocity squared and then we add them
+16:44 - both together
+16:45 - to get our full acceleration
+16:49 - or deceleration in this case
+16:53 - we're going to do calculate steering now
+16:55 - calculate steering is going to take
+16:57 - whatever input was applied and adjust
+17:02 - the movement so
+17:05 - so here's what we have here and i might
+17:08 - have to make this font a little smaller
+17:09 - hopefully everybody can still read it
+17:11 - so we're using as described in that 2d
+17:17 - recipe we're using this bicycle model
+17:19 - where you have where you really just
+17:22 - simulate one front wheel and one rear
+17:24 - wheel and extrapolate everything from
+17:25 - there
+17:26 - so our rear wheel and our front wheel
+17:28 - have a position they're based
+17:29 - basically uh at our car's position
+17:33 - plus or minus the wheelbase
+17:36 - half the wheelbase right because the
+17:38 - total wheelbase is the distance between
+17:40 - the two
+17:41 - so now we know the locations of our
+17:44 - front rear wheel
+17:45 - the rear wheel just moves forward by the
+17:48 - velocity
+17:49 - but the front wheel moves forward
+17:52 - by the direction it's pointing right so
+17:55 - rotated by whatever the current
+17:57 - steer angle is so that means our new
+18:01 - heading
+18:02 - is the direction from the rear wheel to
+18:04 - the front wheel right the rear
+18:06 - front wheel moved off to the right sum
+18:08 - then our new
+18:09 - heading is going to be pointing to the
+18:12 - right
+18:13 - and then we're just going to check if
+18:14 - our new heading right which is the
+18:16 - front facing direction of the car that's
+18:18 - the direction of the car is pointing
+18:20 - but if our velocity is the opposite of
+18:22 - that that means we must be going
+18:24 - backwards
+18:25 - so we're going to make our velocity be
+18:29 - our new heading backwards the opposite
+18:31 - direction so
+18:32 - that's what's going to let us go in
+18:33 - reverse so that
+18:35 - we're not having our if we always move
+18:37 - forward in our heading direction then
+18:38 - we'd never be able to go backwards
+18:40 - and then now that we have our new
+18:41 - velocity calculated what
+18:44 - what direction we're going in we're
+18:45 - going to use look at to rotate
+18:49 - around our up vector to point in the new
+18:52 - direction right the new heading is just
+18:54 - where we are
+18:55 - plus the new heading and that's pretty
+18:58 - much it for the movement
+19:00 - we will have our get input command we'll
+19:02 - go ahead and
+19:03 - define that function so we don't get the
+19:04 - error up here but we're going to leave
+19:06 - it blank
+19:07 - because this is going to get overridden
+19:10 - in
+19:11 - whatever inherited script we want so the
+19:14 - player controls will go in here if we're
+19:16 - doing
+19:17 - the player cars the npc ai logic will go
+19:21 - in here if we're doing
+19:23 - a computer controlled car so we can't
+19:25 - really test this out since we don't have
+19:27 - any input so we're going to start with
+19:28 - some
+19:29 - player input just to get our car driving
+19:31 - and make sure that it
+19:32 - works so we're going to
+19:35 - need some inputs in our input map i've
+19:38 - defined
+19:39 - four inputs steer left and steer right
+19:43 - accelerate and break and these are going
+19:46 - to be
+19:47 - i've done keyboard controls and i've
+19:49 - done
+19:51 - gamepad controls and the reason for that
+19:54 - is
+19:55 - you know when if you're using keys keys
+19:57 - are binary they can only be
+19:58 - pressed or not pressed and that means
+20:01 - that when you want to turn right
+20:03 - and you press right or the d key then
+20:06 - your wheels will turn
+20:07 - the maximum amount and you will do a
+20:10 - hard turn to the right
+20:12 - or you let go and you go straight you
+20:14 - can't do anything in between
+20:15 - like you would turn a steering wheel
+20:17 - just a little bit
+20:18 - to turn just a shallow turn
+20:22 - and using the analog stick on the
+20:24 - gamepad is going to allow you to do that
+20:26 - so you will have better control if you
+20:29 - use
+20:30 - an analog input of course so what we're
+20:32 - going to do
+20:34 - is we're going to attach a script now to
+20:36 - our demo car
+20:38 - and the script that we attach is going
+20:41 - to
+20:43 - not inherit from kinematic body it's
+20:45 - going to inherit from
+20:46 - car base
+20:49 - all right and then we hit create and now
+20:51 - see we're going to extend
+20:53 - car base so all we need to do here is we
+20:55 - need to override
+20:57 - we need to override that get input and
+21:00 - we're going to do
+21:01 - there's two things we've got to check
+21:02 - we're gonna check our steering and we
+21:03 - have to check our
+21:04 - accelerator brake uh input
+21:07 - and so to check the steering
+21:10 - we're just going to get the
+21:14 - get you're gonna use get action strength
+21:16 - on the steer left
+21:17 - and subtract the steer right and that
+21:20 - will give us
+21:21 - our steering so that's gonna be you know
+21:23 - get action strength will be one
+21:25 - if you're just pressing the the key
+21:28 - but if you are using the analog stick on
+21:32 - your
+21:32 - game controller then it's going to be
+21:34 - some value between 0 and 1 so we can get
+21:36 - an
+21:36 - amount of turning to do and then we're
+21:39 - just going to multiply that by the
+21:41 - steering limit so if turn is one
+21:45 - then you will be turning the maximum
+21:46 - amount as term is 0.5 it will be turning
+21:48 - half that amount and so on
+21:50 - and to make things look nice we're also
+21:53 - going to want to
+21:55 - rotate those wheels and so what i did
+21:59 - was i went and
+21:59 - i copied you can you can right click on
+22:01 - one of these
+22:04 - meshes and copy node path okay and then
+22:08 - we can paste that in here and say i want
+22:10 - you to
+22:13 - i want you to take the front right and
+22:15 - front left wheel
+22:16 - and just rotate it in its y by whatever
+22:19 - that steer angle was
+22:21 - and i'm actually multiplying it by two
+22:23 - here just to make it a little bit more
+22:25 - exaggerated
+22:27 - so while we may only be turning 10
+22:29 - degrees
+22:30 - the wheel will actually be more visible
+22:33 - if it rotates 20 degrees
+22:35 - and so this is just exaggerating the
+22:36 - amount of the turn so if you're
+22:38 - usually gonna be playing with the camera
+22:40 - zoomed out you'll see that
+22:42 - wheel actually rotate as you move the as
+22:44 - you press the keys or move the stick
+22:46 - okay and so oops and that's our steering
+22:50 - okay and then the other portion of what
+22:52 - we need to do is check
+22:54 - the is check the accelerate or
+22:59 - decelerate and so that means here we're
+23:03 - going to
+23:06 - set our acceleration to zero by default
+23:09 - if we press the accelerate
+23:11 - accelerate key we're gonna go forward by
+23:13 - we're gonna accelerate forward by the
+23:14 - engine power
+23:16 - uh if we press break
+23:19 - uh we're gonna do the opposite
+23:25 - and now all that's left is to try it out
+23:27 - so i made a test scene here with just a
+23:28 - big
+23:29 - plane a static body that's a plane and i
+23:31 - stuck a camera up here
+23:33 - just so that we can see the car
+23:36 - in the world and make sure that our
+23:38 - controls work so
+23:40 - i'm using my gamepad i'm going to press
+23:42 - the a key and
+23:43 - steer with the analog stick
+23:46 - and there we go we can run around
+23:50 - and i can make sharp turns i can make
+23:53 - shallow turns
+23:55 - right now notice we are not doing any
+23:58 - kind of
+23:59 - traction so we are on rails kind of here
+24:02 - we're not doing any kind of subtraction
+24:04 - we're not doing any kind of drifting
+24:06 - but that's something that we can add
+24:08 - later this
+24:10 - video was all about getting the basic
+24:13 - movement and controls down
+24:14 - to sort of have a starting point where
+24:17 - you can
+24:18 - take this adjust all of those properties
+24:21 - of friction and drag and
+24:24 - steer turning radius and all that kind
+24:26 - of thing
+24:28 - for whatever type of behavior you want
+24:32 - and then we can build on that some more
+24:34 - so there will be some follow-up
+24:37 - tutorials to this where we add things
+24:40 - like
+24:42 - a track and move around in a more
+24:45 - interesting world
+24:47 - we will add some traction and drifting
+24:51 - to it to give it that feel when you're
+24:52 - going really fast take a sharp turn your
+24:55 - rear end slides out
+24:56 - and you can drift around corners and
+24:58 - things and we will talk about how to do
+25:00 - an ai controlled car
+25:02 - that will also be able to make its way
+25:04 - around a track and
+25:06 - navigate just like the human player
+25:09 - would do and then you can
+25:11 - you can even race against it all right
+25:13 - thanks for watching
+25:14 - please post your comments and questions
+25:17 - in the
+25:18 - comments below and click the link below
+25:21 - as well if you'd like to see the written
+25:22 - version of this
+25:23 - on goodorrecipes.com i will be adding it
+25:27 - there as well
+25:28 - so that you can you can see the code a
+25:30 - little better and
+25:31 - and copy and paste it if you need to you
+25:33 - can find this recipe and lots more on
+25:35 - the godot recipes
+25:36 - website at goodorresps.com
+25:40 - here you can find a wide variety of
+25:42 - recipes
+25:43 - for creating the game system you need
+25:45 - some help on how to get started with
+25:47 - godot
+25:48 - in the basics section and lots more i
+25:50 - recommend you go over there and explore
+25:52 - and let me know if there's something
+25:54 - you're looking for
+25:55 - that you'd like me to add as i'm always
+25:57 - adding more recipes
+25:59 - over time thanks for watching and i'll
+26:01 - see you in a future video
+
+Cleaned transcript:
+
+welcome back now this is one that's been very frequently requested how to make a 3d car game and now godot has a vehicle body node which is based on rigid body and simulates pretty much everything from suspension to acceleration breaking all that kind of thing but for my mind it introduces a lot of complexity and i think it tends to be overkill for a lot of more casual racing or driving games if you are interested in how the vehicle body node works there's a great series that i will link you to at the end of the video and i recommend you go look at it it's really well done uh but we're going to go with a kinematic body based solution here because it's much easier to set up much easier to control and will give you most of what you need for most like i said casual racing style games now if you've seen my 2d car steering video then you probably will find most of this familiar because since a car stays on the ground for the most part all of its movement happens in the x z plane so it's pretty much a 2d problem anyway and so we can reuse a lot of the code we used in the 2d car tutorial to make our 3d car work and if you haven't watched that one i do recommend you go and watch it as well as i do go into more detail on how the algorithm works there and i won't go as deep on this one all right well why don't we get started to start with we're going to need some models and i'm going to use kenny's car kit which you can find at kenny.nl the link is posted below and this has got a bunch of different car models in it i'm going to use this red coupe here but you can use any of these and we might want to use some of these later for npc cars and things like that so go ahead and download the whole kit and when you download the kit you're going to get a folder that has a models folder in it and in there are the models saved in a variety of different formats gltf is going to be the easiest one to use with godot so in the gltf folder you'll see a glb which is a binary gltf file for each of the card types so you can go ahead and drag those and drop them in a folder in your godot project what i did is i made an assets folders folder and then inside of their cars folder and i've just dropped them all in there and specifically i want to use this sedan sports.glb and if you go over to the import tab you can change the root type here i'm going to change the root type to kinematic body and reimport and what that will do is it'll import the gltf file along with all of its materials and so forth and make it so that when you double click on this to start a new scene the root node will be a kinematic body which is what we want for our car okay so let's see what it looks like if we go over here and just double click on the glb file we're gonna make a new inherited scene from that car and there we go there is our car and you can see the scene the note hierarchy over here for the scene we have our root node which is a kinematic body which the first thing you usually want to check is the orientation because different artists will save their models with different orientations depending on what software they're used to using we want forward to be the negative zaxis which is the way it's aligned already so we're already good there and you can see we've got a few different nodes in here we've got a body mesh which is the body of the car the spoiler is separate because i think those are made to be interchangeable and then we have a different mesh for each of the for each of the wheels all right there's the left wheel there's the front left wheel uh and then there are a couple of intermediate spatial nodes here um unfortunately due to the way it was exported from blender but we don't really need to care about that we're not going to be using the scene hierarchy all that much so don't worry too much about this temp parent all right we're going to be moving the kinematic body around and the only thing that's missing now is we need some collision shapes to apply to our kinematic body that's why we have the little warning symbol there and what i'm going to do is i'm going to set up we want our wheels to be able to obviously roll along the ground and we also want to be able to go over small bumps and things like that irregularities in the ground when you get when it gets time to to adding terrain you might have a variety a variety of different approaches to that so so i'm going to use cylinders for the wheels and rather than go under here and make a cylinder for each wheel i'm just going to make one big long cylinder for the whole front axle because that's all we really need to simulate our car rolling along the ground and then i'm going to do a separate box collider for the body of the car so it can bump into walls bump into other cars things like that okay starting with our box glider here i'm going to show you a trick to makes it easier to size your collision shapes when you're doing things like this so what i'm going to do is i'm going to set this to the left view so we're looking at the car head on and we're going to be in orthogonal mode not perspective which means you don't want to what you don't want to do is rotate the camera because that's going to make the perspective all kind of wonky because you're in orthogonal mode but if you have this button here called auto or orthogonal enabled when you choose left view it's going to automatically change to orthogonal and what that means is you're looking at it as if it was a flat image and that's going to make it really easy to position and size our box to cover the body like we wanted to and yeah i'm just going to estimate it for now we can adjust this later depending on what kind of behavior you want when you have the game working and let's look at the view from the front and then you can see we're going to need to bring that in right and now if we go back to perspective mode you can see we have our box set up to enclose the body good enough for now and so i'm just for right now i'm just going to add one more collision shape with a cylinder shape now the cylinders are by default oriented this way so we're going to change its rotation around the zaxis by 90 degrees so it's oriented right and then if we position this again using the left view we can change the radius of the cylinder we can get it over here and we're going to pan the camera not rotate it and we can position this so that we get it nice and centered on the wheel get the radius the way we want it for the wheel and remember you want to go a little big because these wheels are are beveled on the edge so you want the bottom of the wheel not the front edge and then if we look at it from this side it's obviously going to be too wide so we're going to bring this in to the width of the two wheels and now we have go back over to my left view now we have one cylinder that's perfect right and then we can just duplicate it and with that second one we're just going to pull it over to the other wheel we'll zoom in here make sure we are nicely centered but it'll be exactly at the same height because i'm not moving it in the y so now i know that my two cylinder collision shapes are perfectly aligned um in the y and then from the bottom they'll be lined up too all right and if we if we were to hide the the car there you can see the collision shapes how they're going to be set up all right so that's going to be it for our collusion shapes to get started and the last thing i like to do is give these collision shapes some names that are easier to keep track of and so i'm naming these collision body collision wheels oops i got a typo there collision wheels front and collision wheels rear in case i ever need to refer to them in code or keep track of what collision shape is you know is colliding with something uh naming them will make it easier to remember the collision shape one collision shape two and so on okay and then go ahead and save this car i like to make a cars folder that i can save the different cars that i make in there and any scripts that go along with them i'm calling this one demo car but you can name it something descriptive for whatever car you're making and we're ready to start adding a script but we need to think a little bit about what we want our script to do and if you think about what the inputs for driving a car are there's essentially three we have accelerate we have decelerate or break and we have steering and whether the car is controlled by a human using the keyboard or a gamepad or something to do those inputs or we decide to make an ai controlled npc card that's going to drive around the track by itself that npc car is still making those same decisions do i accelerate do i break do i turn left do i turn right and so the input may come from different sources but the way the car moves once those inputs are applied it's going to be the same regardless of where those inputs come from so we can have a lot of the code will be shared between all different kinds of cars including cars that have different behavior profiles right you might have heavy cars slow cars cars with tight turning radiuses and cars with wide ones and that kind of thing but all those are parameters that go into the same general movement code so for that reason what we're going to do is we're going to make a script called car underscore base.gd and this is going to be the common code that all cars are going to share that we can use for any car and it's going to extend kinematic body that's we're going to attach these scripts to and we're going to start with some parameter variables okay and i'll just go through and explain these real quick gravity is how fast that object's gonna fall when it's in the air and i like to use a custom value here you you're perfectly welcome to go into project settings and use the global physics gravity setting which is what rigid bodies use but you know when we're making an arcade style game with not necessarily a concern for realistic the most realistic physics i like to be able to get some flexibility and maybe i want the some objects to fall faster than others and so on but it works out the same way we use some value the default in the project settings of 9.8 i never find to be fast enough things feel too floaty so i'm using negative 20 here so negative meaning down and 20 is the magnitude of that wheelbase is going to be the distance between your two axles how far apart of the front and rear wheels and that will depend on your model and you can you can eyeball it or you can adjust it once you're driving around and see what kind of behavior you like it's going to have a lot to do with how tight that car can turn right a bus has a really long wheelbase it's not going to be able to make as tight a turn steering limit is in degrees how many degrees can you turn the wheel how many what's the maximum amount those wheels can turn to cause the car to turn engine power and braking are going to be for the acceleration and deceleration right the stronger your engine the higher your faster acceleration is going to be and how fast and then how quickly you can break as well so those are things you can adjust um and then friction and drag the same these are going to be friction is your interaction with the ground and is essentially proportional to your velocity drag is your interaction with the air it's air resistance and it's proportional to your velocity squared so this is why sports cars tend to be more streamlined than buses or trucks or things right because to go faster you want less drag and and so these these can have a lot of adjustment happen so i'm just using some really starting numbers here to play around with when we uh when we start driving around and then i don't want to be able to reverse at the full speed that we're going to be going forward so we're going to cap our reverse speed to some number that's fairly slow so that when you're in reverse you're just usually using that to get out of when you've run into a wall or something okay and that's that now we also have some variables for the kind of ongoing state of the car and those are going to be the acceleration the velocity and then we're going to keep track of how far the wheels are turned and those will be here as a brief aside most of this code that you're going to see is almost exactly the same as the code for my 2d car steering recipe that i made a little while back you can watch the video for that at the link below so i won't go into too much detail you can go back and watch those if you're interested so we're going to start with the physics process here so what we're going to do is we're going to check if we're on the floor because we don't want to be able to steer and accelerate and decide when we're in midair right the wheels aren't touching the ground you can't control the car so this will let us do if we have if we want to have jumps and things like that in the in the game or or allow you to you know fly off the top of hills and things like that so we're going to check we're on the floor we're going to get the input we're going to apply any friction that applies and we're going to calculate the steering that is being applied by the input then we're going to add the acceleration of gravity downwards update our velocity based on our acceleration and then we're going to use move and slide with snap for our movement and here i'll put this on the next line so you can see it a little better so we're going to move by our velocity we're going to use our basis dot y so the local downward vector as our snap vector right so we want this will this will be so that we can have slopes so if you're going up a slope your snap vector is pointing into the slope not down in the global y axis and then vector three dot up is what defines the flat ground and then true is the stop on slip and that is it for our physics process so this was what will happen every physics frame okay and now we're going to want to apply the apply friction that that's going to be common to everything and this is pretty much copied and pasted from the 2d version all right if we're going if we're going really slow then we could we can just stop but friction is going to be based on our velocity drag is going to be based on our velocity squared and then we add them both together to get our full acceleration or deceleration in this case we're going to do calculate steering now calculate steering is going to take whatever input was applied and adjust the movement so so here's what we have here and i might have to make this font a little smaller hopefully everybody can still read it so we're using as described in that 2d recipe we're using this bicycle model where you have where you really just simulate one front wheel and one rear wheel and extrapolate everything from there so our rear wheel and our front wheel have a position they're based basically uh at our car's position plus or minus the wheelbase half the wheelbase right because the total wheelbase is the distance between the two so now we know the locations of our front rear wheel the rear wheel just moves forward by the velocity but the front wheel moves forward by the direction it's pointing right so rotated by whatever the current steer angle is so that means our new heading is the direction from the rear wheel to the front wheel right the rear front wheel moved off to the right sum then our new heading is going to be pointing to the right and then we're just going to check if our new heading right which is the front facing direction of the car that's the direction of the car is pointing but if our velocity is the opposite of that that means we must be going backwards so we're going to make our velocity be our new heading backwards the opposite direction so that's what's going to let us go in reverse so that we're not having our if we always move forward in our heading direction then we'd never be able to go backwards and then now that we have our new velocity calculated what what direction we're going in we're going to use look at to rotate around our up vector to point in the new direction right the new heading is just where we are plus the new heading and that's pretty much it for the movement we will have our get input command we'll go ahead and define that function so we don't get the error up here but we're going to leave it blank because this is going to get overridden in whatever inherited script we want so the player controls will go in here if we're doing the player cars the npc ai logic will go in here if we're doing a computer controlled car so we can't really test this out since we don't have any input so we're going to start with some player input just to get our car driving and make sure that it works so we're going to need some inputs in our input map i've defined four inputs steer left and steer right accelerate and break and these are going to be i've done keyboard controls and i've done gamepad controls and the reason for that is you know when if you're using keys keys are binary they can only be pressed or not pressed and that means that when you want to turn right and you press right or the d key then your wheels will turn the maximum amount and you will do a hard turn to the right or you let go and you go straight you can't do anything in between like you would turn a steering wheel just a little bit to turn just a shallow turn and using the analog stick on the gamepad is going to allow you to do that so you will have better control if you use an analog input of course so what we're going to do is we're going to attach a script now to our demo car and the script that we attach is going to not inherit from kinematic body it's going to inherit from car base all right and then we hit create and now see we're going to extend car base so all we need to do here is we need to override we need to override that get input and we're going to do there's two things we've got to check we're gonna check our steering and we have to check our accelerator brake uh input and so to check the steering we're just going to get the get you're gonna use get action strength on the steer left and subtract the steer right and that will give us our steering so that's gonna be you know get action strength will be one if you're just pressing the the key but if you are using the analog stick on your game controller then it's going to be some value between 0 and 1 so we can get an amount of turning to do and then we're just going to multiply that by the steering limit so if turn is one then you will be turning the maximum amount as term is 0.5 it will be turning half that amount and so on and to make things look nice we're also going to want to rotate those wheels and so what i did was i went and i copied you can you can right click on one of these meshes and copy node path okay and then we can paste that in here and say i want you to i want you to take the front right and front left wheel and just rotate it in its y by whatever that steer angle was and i'm actually multiplying it by two here just to make it a little bit more exaggerated so while we may only be turning 10 degrees the wheel will actually be more visible if it rotates 20 degrees and so this is just exaggerating the amount of the turn so if you're usually gonna be playing with the camera zoomed out you'll see that wheel actually rotate as you move the as you press the keys or move the stick okay and so oops and that's our steering okay and then the other portion of what we need to do is check the is check the accelerate or decelerate and so that means here we're going to set our acceleration to zero by default if we press the accelerate accelerate key we're gonna go forward by we're gonna accelerate forward by the engine power uh if we press break uh we're gonna do the opposite and now all that's left is to try it out so i made a test scene here with just a big plane a static body that's a plane and i stuck a camera up here just so that we can see the car in the world and make sure that our controls work so i'm using my gamepad i'm going to press the a key and steer with the analog stick and there we go we can run around and i can make sharp turns i can make shallow turns right now notice we are not doing any kind of traction so we are on rails kind of here we're not doing any kind of subtraction we're not doing any kind of drifting but that's something that we can add later this video was all about getting the basic movement and controls down to sort of have a starting point where you can take this adjust all of those properties of friction and drag and steer turning radius and all that kind of thing for whatever type of behavior you want and then we can build on that some more so there will be some followup tutorials to this where we add things like a track and move around in a more interesting world we will add some traction and drifting to it to give it that feel when you're going really fast take a sharp turn your rear end slides out and you can drift around corners and things and we will talk about how to do an ai controlled car that will also be able to make its way around a track and navigate just like the human player would do and then you can you can even race against it all right thanks for watching please post your comments and questions in the comments below and click the link below as well if you'd like to see the written version of this on goodorrecipes.com i will be adding it there as well so that you can you can see the code a little better and and copy and paste it if you need to you can find this recipe and lots more on the godot recipes website at goodorresps.com here you can find a wide variety of recipes for creating the game system you need some help on how to get started with godot in the basics section and lots more i recommend you go over there and explore and let me know if there's something you're looking for that you'd like me to add as i'm always adding more recipes over time thanks for watching and i'll see you in a future video

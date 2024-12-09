@@ -1,0 +1,1030 @@
+00:00 - [MUSIC PLAYING]
+00:03 - They're not
+colliding very often.
+00:06 - Come on, collide!
+00:07 - [THEME MUSIC]
+00:12 - Welcome to a Coding Challenge.
+00:14 - Today, I am going
+to look at something
+00:16 - that I refer to in my new
+version of The Nature of Code
+00:21 - book, which is coming
+out on September 3, 2024.
+00:26 - The first half of
+the book is largely
+00:30 - dedicated to a step-by-step
+process of building
+00:34 - your own physics engine.
+00:37 - There is a part of the book
+where I stop and look at,
+00:41 - what does it mean to use
+a third-party library?
+00:45 - There are a variety
+of reasons why
+00:48 - you might want to
+use a physics library
+00:51 - or not use a physics library.
+00:53 - But in the book, I
+make the argument
+00:55 - that a key reason to go over
+and use another physics library
+01:00 - is if what you need
+in your p5.js sketch
+01:04 - is rigid body collisions.
+01:08 - All right, let me
+see if I can give you
+01:10 - a quick summary of everything
+in chapters 1 through 5,
+01:14 - just to get us up to this point.
+01:16 - And of course, you can
+watch all my other Nature
+01:17 - of Code videos,
+which go through all
+01:19 - this stuff in much more detail.
+01:21 - All right, I have a p5 canvas.
+01:24 - I have a particle
+in that canvas.
+01:26 - That particle presumably
+has a position.
+01:31 - And the particle
+also has a velocity.
+01:35 - The velocity is a
+vector, an arrow
+01:38 - that's providing
+instructions as to where
+01:41 - the next position of
+the particle should be.
+01:45 - So after some amount of time,
+typically referred to as dt,
+01:51 - or delta time, the new position,
+often written as position prime,
+01:58 - equals the current position plus
+the velocity times delta time.
+02:07 - But I make the argument
+in The Nature of Code book
+02:10 - that life is short.
+02:11 - We don't need to over
+complicate things.
+02:13 - We have a draw loop in p5.
+02:15 - One frame is one
+cycle through draw.
+02:18 - We can also consider
+that the change in time.
+02:21 - So delta time, as
+a simplification,
+02:24 - can just be the value 1,
+in which case, we're saying
+02:28 - the new position equals
+the current position
+02:30 - plus the velocity.
+02:32 - Now, there's also this
+concept of an acceleration,
+02:36 - which is additionally a
+vector that changes velocity.
+02:42 - And this forms the basis
+of the physics engine
+02:46 - that I walk slowly
+through and build and use
+02:50 - for a variety of scenarios,
+including the flocking system
+02:53 - in The Nature of Code.
+02:55 - There's additional
+concepts, like the particle
+02:58 - might have a mass.
+03:00 - It's important to note that
+these are all vector quantities
+03:04 - with an x and y component.
+03:05 - But the mass is a scalar.
+03:07 - And there's also the
+concept of forces,
+03:10 - forces being some external
+or internal factor that
+03:15 - causes an object with
+mass to accelerate.
+03:18 - Or the force equals
+mass times acceleration,
+03:22 - being Newton's
+second law of motion.
+03:25 - So why are we here?
+03:28 - I would like to
+expand the material
+03:31 - in The Nature of Code book to
+consider the following scenario.
+03:36 - Let's say I have
+particle A, and I
+03:39 - have particle B. Particle
+B is moving this way.
+03:43 - Particle A is moving this way.
+03:45 - At some point, the
+two of them will meet.
+03:49 - How do I know when these
+two particles collide?
+03:53 - This is called
+collision detection.
+03:58 - This is something
+I cover in the book
+04:00 - and have countless examples
+in videos over the years,
+04:03 - where I determine if two
+objects are intersecting.
+04:07 - That's the easy part.
+04:09 - The difficult part is what's
+known as collision resolution.
+04:17 - When these two
+particles collide,
+04:21 - when they're
+intersecting, how do I
+04:23 - solve for their new velocities?
+04:26 - So this is a very
+important moment
+04:28 - in your life, where you're going
+to have to make a decision.
+04:30 - Do you want to stick
+with me and continue
+04:33 - watching this video where I
+am going to look at the math
+04:37 - for solving for
+these new velocities?
+04:40 - You could just stop right now.
+04:42 - If you read chapter 6, I
+look at a wonderful library
+04:46 - called Matter.js, which does
+all of the collision math
+04:51 - for you-- resolving,
+detecting, everything.
+04:55 - And in fact, what I'm going
+to do in this video will not
+04:58 - get nearly as far as what
+Matter.js does, because,
+05:01 - for example, what if these
+two particles aren't circles?
+05:05 - What if they're squares or
+some other arbitrary irregular
+05:08 - polygon?
+05:09 - This is why these
+physics libraries exist.
+05:11 - There's no reason
+for me to reinvent
+05:14 - the proverbial rigid
+body collision wheel.
+05:17 - I don't know.
+05:18 - But I do think it's
+really interesting
+05:21 - to learn about the
+vector math and see
+05:24 - how far we can get just baking
+it into our own p5 sketch.
+05:28 - And I imagine that I've
+got this Passenger Showcase
+05:31 - thing that if you continue
+watching, follow the code,
+05:34 - you might be able to create
+something wonderful that I
+05:37 - can't even imagine right now.
+05:38 - And so that's why I'm
+going to keep going.
+05:40 - Here's the sketch I'm
+going to start with.
+05:43 - It's one of my Nature
+of Code examples.
+05:45 - It's got two particles in it.
+05:47 - The particle class
+has all those things
+05:50 - I talked about-- position,
+velocity, acceleration.
+05:53 - The velocity is set randomly.
+05:54 - The acceleration is zero.
+05:56 - I won't actually be
+using acceleration
+05:58 - in this particular
+demonstration,
+06:00 - but it could come into
+play into the things
+06:03 - that you might
+build on top of what
+06:05 - I'm doing here, in combination
+with other examples.
+06:08 - Each particle has
+a mass, which is
+06:10 - a random value between 1 and 6.
+06:13 - And then I am setting
+the particles' radius
+06:16 - to the square root of that mass,
+because the area of a circle
+06:19 - is pi r squared.
+06:21 - And then just scaling it up
+so that I have smaller values,
+06:24 - draw bigger circles.
+06:26 - The update method
+has velocity change
+06:29 - by acceleration, position
+change by velocity.
+06:32 - And then I quickly cooked
+up this edges function.
+06:36 - So this is actually already
+a perfectly elastic collision
+06:41 - between a circle and a wall.
+06:43 - So this is a very similar
+scenario to what I need to do.
+06:48 - I've got collision detection.
+06:50 - Does the position along the
+x-axis reach either edge?
+06:54 - And if so, perform
+collision resolution
+06:59 - by inverting the polarity
+of the x component
+07:02 - of the velocity for the
+horizontal edges and the y--
+07:06 - well, those are the
+vertical edges, I guess--
+07:08 - and the y component
+of the velocity
+07:09 - for the horizontal edges,
+the top and the bottom.
+07:12 - We're finally there.
+07:13 - All of that exposition
+to get to the part
+07:17 - that I'm here to talk
+about in this video.
+07:20 - Let's do a little
+warm-up and first just
+07:23 - look at collision detection
+between two circular bodies.
+07:29 - The first thing I need to
+do to determine if those two
+07:32 - circles are colliding is look
+at the distance between the two
+07:35 - of them.
+07:37 - Once I have that
+distance, I can compare it
+07:40 - to the sum of those two radii.
+07:46 - So I've written a
+Boolean expression here.
+07:48 - Distance is less than the
+sum of radius 1 and radius 2.
+07:54 - Let's think about,
+what does it mean
+07:56 - for that distance to be less
+than the sum of those two radii?
+08:01 - Look at this case.
+08:02 - If the two circles
+are overlapping,
+08:05 - that distance is going
+to be less than radius 1
+08:10 - plus radius 2.
+08:12 - If the two circles are
+not overlapping and not
+08:15 - intersecting, that
+distance is going
+08:17 - to be much greater than-- or
+not much greater than, just
+08:20 - simply greater than-- the sum
+of radius 2 plus radius 1.
+08:26 - Let's add collision
+detection now to this sketch.
+08:29 - Let's-- I don't know--
+write a function.
+08:31 - I mean, not write a function.
+08:33 - I will write a function
+called collide, where I say
+08:36 - particleA.collide particleB.
+08:38 - And the way I'm thinking
+about this right
+08:40 - now is it would be
+the same either way.
+08:42 - I could say particleB collide
+particleA or vice versa.
+08:46 - That means I need
+a new function.
+08:51 - And the argument
+in that function
+08:53 - I'll call other, referring
+to the other particle
+08:56 - that this particle is checking
+whether it's colliding with.
+09:00 - So what do I need first?
+09:01 - Distance.
+09:03 - Ah!
+09:03 - There's a vector function in p5.
+09:06 - I can say this.position.distance
+other.position.
+09:12 - I'm pretty sure that will give
+me the distance between two
+09:16 - vectors.
+09:17 - If that distance
+is less than what?
+09:20 - this.r plus other.r.
+09:23 - Then, what should we do?
+09:25 - Just to know that
+it's working, let's
+09:27 - just console.log something.
+09:31 - All right, moment of truth.
+09:35 - [CHOO-CHOO]
+09:35 - I think that works.
+09:37 - Yeah, it's working.
+09:38 - You can see, whenever those
+two circles are colliding,
+09:40 - the choo-choo number
+goes up and up and up.
+09:43 - We've got collision detection.
+09:45 - That was the easy part.
+09:47 - It's time for the
+really hard part--
+09:49 - collision resolution.
+09:50 - To talk about
+collision resolution,
+09:52 - I need to introduce some
+new concepts, concepts
+09:55 - that I don't actually get into
+in The Nature of Code book.
+09:57 - Are you glad that you stuck
+with me so far in this video?
+10:00 - I hope so.
+10:02 - So I probably said at some point
+earlier the word "elastic."
+10:06 - And I certainly wrote
+it on the board here.
+10:08 - What do I mean by
+an elastic collision
+10:11 - versus an inelastic collision?
+10:13 - First, let me talk about
+the concept of momentum.
+10:17 - Momentum is a vector quantity.
+10:20 - And it is the product of
+the mass times the velocity.
+10:27 - A massive object
+with a small velocity
+10:30 - has just as much momentum
+as a small object
+10:34 - with a lot of velocity.
+10:36 - There is also the concept
+of kinetic energy.
+10:41 - The kinetic energy of an
+object is 1/2 of the mass times
+10:49 - the speed, the scalar magnitude
+of the velocity squared.
+10:55 - The reason why I'm talking
+about these two concepts
+10:59 - is because in an elastic,
+a perfectly elastic,
+11:03 - idealized elastic collision
+both the total momentum
+11:08 - and the total kinetic energy
+are conserved, meaning--
+11:13 - let's say I have
+particles, again, A and B.
+11:16 - They have a mass--
+11:18 - the mass of A, the mass of
+B-- as well as the velocity,
+11:22 - which I'll just use V for--
+11:24 - velocity A and velocity
+B. And remember,
+11:28 - the reason I'm doing
+this is because if I
+11:31 - have object A and object
+B that are colliding--
+11:36 - and maybe they have
+these velocities--
+11:38 - I need to solve for
+the new velocities--
+11:42 - velocity A prime,
+velocity B prime.
+11:47 - If this collision is
+elastic and it conserves
+11:51 - the momentum and the kinetic
+energy of the system,
+11:54 - that means that the
+momentum before collision
+11:59 - and after collision are equal.
+12:05 - Additionally, in an
+elastic collision,
+12:07 - there is no loss
+of kinetic energy,
+12:10 - meaning the total sum
+of the kinetic energy
+12:13 - before and after the
+collision must be equal.
+12:22 - Conservation of momentum.
+12:24 - Conservation of kinetic energy.
+12:27 - Now, in an inelastic
+collision, some kinetic energy
+12:30 - would be lost.
+12:31 - And that usually
+manifests itself
+12:33 - in the form of heat or sound.
+12:35 - This would be quite
+interesting to model.
+12:37 - And if you're interested, if
+this video goes at all well
+12:40 - and anybody actually
+watches it and enjoys it
+12:44 - or makes something with it,
+or if it works out in any way
+12:46 - whatsoever, I would be
+glad to come back and try
+12:49 - to add the concept of inelastic
+collisions into another example.
+12:53 - But right now, I want to solve
+for these new velocities based
+13:00 - on these two equations.
+13:03 - I'm not actually going
+to do that in this video.
+13:06 - I'm just going to tell
+you what the solution is
+13:08 - and show you some resources
+into how it could be derived.
+13:11 - So my first stop before
+recording this video
+13:14 - was to review this Wikipedia
+page for elastic collisions.
+13:18 - You can see this nice
+animated demonstration
+13:20 - of atoms in the thermal
+agitation system
+13:23 - that are undergoing essentially
+perfectly elastic collisions.
+13:27 - These same equations
+that I've covered for you
+13:29 - on the whiteboard are here
+on the page, as well as
+13:32 - some animated demonstrations
+of how this plays out
+13:36 - in one dimension.
+13:37 - So one-dimensional collisions,
+which I looked at briefly
+13:41 - in my Pi Day video, where I
+calculated the digits of pi with
+13:46 - elastic one-dimensional
+collisions based off of the work
+13:49 - of 3Blue1Brown.
+13:51 - Now what I'm hoping
+to do is model
+13:54 - those same elastic collisions
+but in two dimensions.
+13:58 - And here is a nice
+visual demonstration
+14:02 - that shows you the
+primary components
+14:05 - and aspects of the vectors
+that you need to solve
+14:09 - for that collision resolution.
+14:11 - The key element here
+being the line of impact.
+14:19 - The line of impact is a
+vector or a line that connects
+14:23 - the centers of both particles.
+14:26 - In this case, it
+becomes an axis.
+14:29 - You can think of it
+as the horizontal axis
+14:31 - of a new coordinate system.
+14:33 - So why is this line
+of impact important?
+14:36 - Well, remember, the objects
+have velocities-- velocity A
+14:40 - and velocity B.
+14:42 - Typically speaking, when
+you take a velocity vector
+14:46 - and divide it into
+its components,
+14:48 - you get the x component
+along the horizontal axis
+14:51 - and the y component
+along the vertical axis.
+14:54 - What if you were
+to unpack and get
+14:57 - the components of these vectors
+according to the line of impact?
+15:04 - And that is, in fact, what's
+necessary for calculating
+15:09 - the new velocities.
+15:10 - This is very much
+related to the section
+15:13 - in chapter 5 of The
+Nature of Code book,
+15:15 - where I talk about
+the dot product
+15:17 - and the concept of
+scalar projection.
+15:20 - Scrolling down on
+the Wikipedia page,
+15:22 - you'll actually find
+the result of all
+15:25 - of that math, the new velocity
+for particle 1-- or, in my case,
+15:30 - I'm calling it A--
+and velocity 2 prime.
+15:33 - Now, interestingly
+enough, the Wikipedia page
+15:36 - doesn't have a full
+derivation of the formula.
+15:39 - If you want to learn more,
+I'm going to point you
+15:41 - to two additional resources.
+15:43 - This is an article called
+"2-Dimensional Elastic
+15:45 - Collisions without
+Trigonometry."
+15:48 - It is from a piece
+of software from 2009
+15:50 - called Bouncescope
+from vobarian.com
+15:52 - and includes
+additional explanation
+15:55 - on finding the new velocities of
+two objects after a collision.
+15:58 - Coding Train viewer
+and contributor Dipam,
+16:00 - who was very helpful to me
+in preparing for this video,
+16:03 - created a PDF called
+Elastic Collisions, which
+16:06 - goes through one-dimensional
+elastic collisions
+16:09 - and the derivation of
+the new velocities, as
+16:13 - well as two-dimensional
+elastic collisions
+16:15 - and how to resolve the
+velocities along the line
+16:18 - of impact, as well as covering
+another key component here,
+16:22 - which is the vector that is
+tangent to that line of impact
+16:25 - at the point of impact,
+the place where those two
+16:28 - circles meet.
+16:29 - And here, again, are
+the final formulas,
+16:32 - which I don't know how long
+it took me to get here,
+16:35 - but I'm now actually going
+to implement in the code.
+16:37 - OK.
+16:38 - I have printed out
+the formulas here.
+16:40 - And I'm going to put
+them into the code now.
+16:43 - I can think about this formula
+in different components.
+16:46 - For example, I want
+the sum of the masses.
+16:51 - Why did I call it mSub?
+16:53 - mSum.
+16:54 - I also need the line
+of impact, which is--
+16:59 - my particle B will be position
+2, or x2, in the formula.
+17:06 - And I'm considering
+particle B to be the other.
+17:08 - Again, these are somewhat
+arbitrary decisions.
+17:12 - Then I need the
+velocity difference--
+17:17 - velocity B minus
+velocity A. Now,
+17:23 - the change in this velocity-- so
+I'm going to call this deltaV--
+17:28 - equals 2 times the
+other mass divided
+17:33 - by the mass sum plus the
+dot product between vDiff
+17:40 - and the line of
+impact divided by--
+17:44 - I'm doing this in a
+kind of a clunky way.
+17:48 - Let me change this a little bit.
+17:51 - Where did the plus come in?
+17:53 - There's no plus.
+17:54 - I'm going to do the top,
+the top of the formula,
+17:56 - the numerator, then
+divided by the denominator.
+17:59 - Let's call it the
+numerator-- numerator A.
+18:01 - I'm just going to
+call it numerator A,
+18:03 - is 2 times the
+other's mass times
+18:08 - the vector velocity difference
+dot the line of impact.
+18:13 - And the denominator A equals
+mSum times the magnitude--
+18:21 - I'm going to call that--
+that's the distance.
+18:23 - That's the distance.
+18:25 - The magnitude of that
+line of impact is d--
+18:28 - times d times d.
+18:30 - So the change in that velocity--
+18:34 - I should make a copy
+of the line of impact
+18:37 - and then multiply
+it by the numerator
+18:41 - A divided by the denominator A.
+18:43 - And then this.velocity
+changes by that deltaV.
+18:49 - I don't know what's going
+to happen when they collide.
+18:53 - One of them-- it's kind
+of working, but only off
+18:57 - of one of them.
+18:58 - OK, this is good.
+18:59 - I think I did my
+math right there.
+19:01 - I'm sure I could write
+this in a clearer way.
+19:04 - Maybe I'll come back to that.
+19:05 - Let me just do the other one.
+19:07 - So Particle A this.
+19:11 - And now for particle B, which is
+other, it is 2 times this mass.
+19:21 - Denominator is the same.
+19:23 - So I don't need a separate
+denominator A or denominator B.
+19:29 - This should be deltaVA, deltaVB.
+19:34 - deltaVB multiplied by
+the-- wait a second.
+19:38 - So the polarity changes
+because for B, I
+19:44 - need to take the difference
+between x1 minus x2 instead
+19:49 - of x2 minus x1, which means just
+multiply this by negative 1.
+19:54 - So that should work.
+19:56 - And then
+other.velocity.add deltaVB.
+20:00 - OK, are you ready for this?
+20:02 - We're about to see my
+implementation of the formulas
+20:06 - works.
+20:08 - They're not
+colliding very often.
+20:11 - Come on, collide!
+20:13 - Here we go.
+20:14 - It's going to happen!
+20:15 - There, that looks pretty good.
+20:16 - OK, I actually have
+a mistake here.
+20:18 - vDiff needs to be
+reversed for the other one
+20:24 - because it's V1 minus V2.
+20:26 - Also, the line of
+impact should look--
+20:29 - let me just reverse them here.
+20:31 - And then instead of doing that
+here, that should be fine.
+20:34 - Now, somehow it worked
+before, because it's really
+20:38 - just a matter of I somehow got
+the negative in the right place
+20:42 - by accident.
+20:43 - But really, if I look
+at these formulas,
+20:45 - I've got V1 minus
+V2 dot x1 minus x2
+20:49 - for the second particle.
+20:51 - So both of those need
+to be reversed before I
+20:54 - compute that dot product.
+20:56 - Let's run it again
+just to make sure.
+20:58 - Will they ever collide?
+21:00 - I really hope so.
+21:02 - Collide again, please.
+21:04 - Yes!
+21:05 - OK.
+21:06 - Looking good.
+21:07 - All right.
+21:07 - So it worked by accident before.
+21:09 - It still works now.
+21:10 - Now I'm realizing I could
+actually simplify this
+21:13 - further because ultimately,
+it's just about the numerator
+21:18 - being positive in the top
+formula for particle 1
+21:22 - and negative in the bottom.
+21:23 - So actually, we just
+have a numerator.
+21:26 - Forget about this.
+21:28 - And then there is
+only a numerator.
+21:31 - And then the numerator
+is negative here.
+21:34 - And I don't need
+this second one.
+21:36 - So that's simplifying it.
+21:39 - Wait.
+21:39 - What's going on?
+21:41 - Oh, I know what's going on.
+21:43 - I'm going to have
+to fix something.
+21:45 - It freaked out!
+21:45 - I thought it was working.
+21:46 - But what did I get wrong here?
+21:48 - I think to make this more
+clear, let's calculate
+21:52 - the line of impact here.
+21:54 - And we'll call this--
+21:56 - I'll just call it impactVector.
+21:58 - And then the distance is the
+magnitude of that impactVector.
+22:06 - And that should also save
+one small calculation
+22:11 - and simplify a few things.
+22:13 - Oh, what did I get wrong?
+22:15 - This is called impactVector.
+22:21 - Why is it speeding
+up like crazy?
+22:24 - I've been writing this a lot.
+22:25 - I'm encountering two issues.
+22:27 - One is, for some
+reason, sometimes
+22:28 - I seem to be manufacturing
+kinetic energy out of thin air.
+22:31 - The balls keep going faster
+and faster as they collide.
+22:34 - They also are getting
+stuck on each other.
+22:37 - This is because-- and it
+goes back to that question
+22:41 - of the time step--
+22:42 - there's a certain
+inaccuracy here
+22:44 - of having a large
+time step of 1.
+22:48 - As two particles are
+approaching each other,
+22:51 - when I detect that
+they collide, they
+22:55 - might actually end up
+looking something like this.
+22:58 - They could easily have moved
+quite a bit into the same space.
+23:01 - This is something I can
+correct for right here.
+23:04 - What I need to look at
+is, what is the difference
+23:06 - between that distance and
+the actual sum of the radii?
+23:09 - In a perfect world of
+perfect elastic collisions,
+23:12 - those two values would be equal.
+23:15 - I'll call it overlap.
+23:17 - Along that line
+of impact, I need
+23:19 - to move each particle
+half of that difference.
+23:25 - So let me make a copy of that
+vector, set its magnitude
+23:31 - to half of the overlap.
+23:33 - And then particle
+A, which is this,
+23:37 - should be offset
+by that direction.
+23:41 - And then particle B
+should also be offset
+23:45 - but in the other direction.
+23:46 - So I should subtract
+that vector.
+23:51 - And then when I use the
+distance in the calculation,
+23:55 - I should correct it as well
+to be the sum of the radii.
+24:00 - Now that I've added this
+overlapping correction,
+24:03 - let's take a look at
+the total momentum
+24:06 - and total kinetic
+energy of the system
+24:08 - and see if it's being conserved.
+24:10 - Let's start with just
+the kinetic energy.
+24:12 - That's a scalar quantity.
+24:13 - That will be a little
+easier to track.
+24:15 - Kinetic energy of A is equal
+to 0.5 times particle A's mass.
+24:22 - Let's get speedA to
+be particle A's speed,
+24:28 - the magnitude of its velocity.
+24:31 - And speedB.
+24:35 - And let's console.log the
+total kinetic energy--
+24:38 - kinetic energy A plus
+kinetic energy B.
+24:42 - Now, I don't expect
+this to be perfect.
+24:45 - The large time steps
+of Euler integration,
+24:49 - JavaScript rounding,
+there's all sorts
+24:51 - of reasons why this
+could go wrong.
+24:52 - But let's at least see how
+close it is to being accurate.
+24:58 - So far, the total kinetic
+energy is not changed,
+25:01 - but they haven't collided yet.
+25:03 - Oh, boy, it doubled.
+25:05 - It halved.
+25:08 - It doubled.
+25:09 - OK, that's way off.
+25:12 - Something must be wrong.
+25:14 - Let's go back and
+look at my formulas.
+25:18 - 2.
+25:19 - Oh.
+25:20 - Oh!
+25:22 - When I did this simplification
+of only one numerator, ah,
+25:29 - I forgot that I have to change--
+25:32 - this can change.
+25:33 - This part of the numerator can
+change to positive to negative.
+25:37 - But I need to use
+mass 1, not mass 2.
+25:41 - That was the error.
+25:43 - I tried to simplify this
+code, and I made it worse.
+25:45 - We're going to fix this.
+25:47 - The numerator is just
+going to be this.
+25:52 - And what I'm going to do is
+I'm going to say, 2 times
+25:56 - other.mass times the numerator.
+26:00 - And this one is negative 2 times
+this.mass times the numerator.
+26:07 - Moment of truth.
+26:09 - We lost a little kinetic
+energy, but just a tiny bit.
+26:13 - That's a rounding error, maybe.
+26:15 - I'm curious about not
+correcting this distance.
+26:19 - I'm just curious to
+see what that does.
+26:22 - Yeah, let's not
+correct that distance.
+26:26 - So correcting that distance
+felt like it should
+26:29 - be something I should do.
+26:30 - But apparently, I should not.
+26:33 - Look at how beautifully
+this kinetic energy
+26:36 - is being maintained now.
+26:38 - Now it's just rounding errors.
+26:39 - Why did I think I
+wanted to do that?
+26:41 - I moved them apart.
+26:43 - Ah, but I didn't actually--
+26:45 - I see.
+26:46 - I moved them apart,
+but I didn't actually
+26:48 - change the length of
+the impact vector.
+26:52 - And I'm using that here.
+26:53 - So if I wanted to
+correct that distance,
+26:56 - I think I might also need to
+just adjust the impact vector
+27:03 - to be that correct length.
+27:05 - Let's see if this--
+27:07 - yeah.
+27:07 - So I just needed
+to be consistent.
+27:09 - If I'm going to correct that
+distance, maybe I should,
+27:12 - maybe I shouldn't.
+27:13 - Doesn't really matter so much.
+27:14 - But I just need
+to be consistent.
+27:16 - So I'm going to do
+that correction.
+27:18 - I'm going to move them apart.
+27:19 - And I'm going to consider
+that impact vector to be
+27:23 - slightly elongated if need be.
+27:26 - OK, let's have some fun now.
+27:28 - Let's put a lot of these
+particles onto the screen.
+27:32 - Comment it out, this
+kinetic energy calculation.
+27:35 - Now I'm going to have
+an array of particles.
+27:39 - Let's try just
+adding five of them
+27:42 - just to start, at
+random locations.
+27:53 - Now they're all
+on screen and all
+27:56 - updating, bouncing off the
+edges, and drawing themselves.
+28:00 - Let me make them a
+little bit smaller.
+28:03 - And let's try making 10 of them.
+28:08 - Great.
+28:09 - Now let's see if we can get
+them to collide with each other.
+28:12 - So I'm going to do that
+in a separate loop.
+28:18 - So particleA is every single
+particle in the array.
+28:22 - But now when I want to look
+at the other particles,
+28:24 - I'm going to start
+from particle i plus 1,
+28:29 - the idea being that I want
+every particle to check
+28:32 - every other particle.
+28:34 - But I don't want particles
+to check against themselves.
+28:37 - And I don't want a particle
+to recheck against another one
+28:40 - later.
+28:41 - So if I have 10
+particles, zero checks
+28:44 - 1, all the way to the end.
+28:46 - 1 checks 2, all
+the way to the end.
+28:48 - 2 checks 3, all the way to the
+end, and so on and so forth.
+28:52 - particleB is particles index j.
+28:55 - And then I can say
+particleA.collide particleB.
+29:00 - Here we go.
+29:03 - I love it already.
+29:04 - Let's make a lot more.
+29:08 - And there you have it.
+29:10 - Coding challenge complete.
+29:13 - So I'm curious to see what
+you might do with this.
+29:16 - I don't have any ideas.
+29:17 - I'm exhausted from
+recording this whole video.
+29:20 - I'm sure you'll have some.
+29:21 - Share them with me in
+the Passenger Showcase.
+29:23 - I do want to say one
+more thing, though.
+29:26 - I'm going to make these
+particles briefly much,
+29:30 - much smaller.
+29:32 - And then I am going to add
+400 of them into the canvas.
+29:37 - Wow.
+29:38 - That's amazingly still working.
+29:40 - Let's do a thousand of them.
+29:42 - This is actually
+running much faster
+29:44 - than I would expect, because
+I'm able to start j at i plus 1.
+29:48 - But technically, it is still
+an n squared algorithm.
+29:52 - And it's going to get quite
+slow if I were to get up
+29:56 - to, let's say, 3,000 particles.
+29:59 - So I believe this can run quite
+fast with 3,000 particles with
+30:03 - a particular kind
+of optimization.
+30:06 - This is something
+that I cover in, guess
+30:08 - what, chapter 5 of The Nature
+of Code, under optimization,
+30:13 - and is something that
+I've explored quite
+30:15 - extensively in my Coding
+Challenge Quadtree video series.
+30:19 - So I have--
+30:21 - I mean, I haven't
+made it right now,
+30:22 - but after I finished
+recording this,
+30:24 - I'm going to make a
+version of what you're
+30:26 - seeing right here that uses
+a quad tree to optimize
+30:29 - those collision checks.
+30:31 - I will release that
+as part of this video.
+30:33 - Take a look.
+30:34 - If you're interested,
+I could come back
+30:36 - and unpack that further
+in a live stream
+30:38 - or make another video about it.
+30:39 - I don't know.
+30:40 - What should I do next?
+30:41 - Was this helpful?
+30:42 - Was this interesting?
+30:43 - Are you at least
+mildly interested
+30:44 - in The Nature of Code book now?
+30:46 - I hope so.
+30:47 - Thanks for watching.
+30:48 - And I'll see you next
+time on The Coding Train.
+30:51 - [CHOO-CHOO]
+30:53 - [MUSIC PLAYING]
+30:58 - [BEEPING]

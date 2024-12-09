@@ -1,0 +1,651 @@
+00:00 - thanks for tuning in at brakus hello I
+00:04 - want to welcome to video number seven on
+00:05 - making a multiplayer FPS in unity in
+00:08 - today's video we're going to take a look
+00:10 - at damaging our player so we'll be
+00:11 - introducing a health variable and a cool
+00:14 - system for kind of keeping track of
+00:15 - players in our game we'll have this
+00:17 - dictionary that associates a player ID
+00:20 - with an actual player component but
+00:23 - before we get started I quickly want to
+00:25 - apologize for not making a video last
+00:27 - week but I got sick but I'm fairly
+00:30 - healthy now so that's good and also next
+00:33 - week you might not see a video either
+00:35 - because I'm attending Dreamhack in
+00:37 - Sweden if you don't know it it's this
+00:39 - huge land event it's really awesome and
+00:42 - I'll probably tweet a bit about it while
+00:46 - I'm down there so stay tuned for that
+00:48 - and also as always if you have any
+00:51 - questions go to from top brackets comm
+00:53 - so you can basically go ahead and
+00:55 - skipped right here use the annotation on
+00:58 - the screen through the actual video but
+01:00 - I quickly want to answer some questions
+01:01 - that you've got that you guys have left
+01:04 - in the comments about preventing
+01:06 - cheaters in the game so in the on the
+01:10 - last video you guys wrote that it would
+01:12 - be a good idea to kind of shift the
+01:16 - raycasting the shooting mechanic from
+01:18 - the client side to the server because
+01:20 - clients will they can't be trusted and
+01:23 - you're actually very right about that
+01:25 - but and I did write to you that I wanted
+01:29 - to just change it in this video however
+01:31 - I thought about it some more and a lot
+01:34 - of problems kind of arise because we
+01:37 - can't just change the raycast over and
+01:39 - that would be a fairly easy process and
+01:41 - we would have to do some layer
+01:43 - management and and that but we could do
+01:46 - that but there would still be a lot of
+01:49 - issues because the some important
+01:52 - variables like our damage variable and
+01:54 - the future we're going to have a rate of
+01:56 - fire and stuff like the range and and
+01:59 - all that would still be very exposed to
+02:02 - cheaters so it wouldn't really prevent
+02:04 - anything and we would have to move all
+02:07 - of that logic over to the server and
+02:09 - things start getting really
+02:11 - comprehensive and
+02:13 - difficult so and kind of without the
+02:16 - scope of this tutorial so what I suggest
+02:20 - we do instead is we continue making the
+02:23 - game with a minimal amount of security
+02:27 - and what I would really recommend you do
+02:30 - is if you find your game to be fun and
+02:33 - you want to publish it and expect to get
+02:35 - some users and maybe some that want to
+02:37 - cheat well then I suggest you check out
+02:40 - a find some kind of acid that will
+02:45 - prevent cheating and there are a bunch
+02:47 - of solutions for this out there I mean
+02:49 - these guys have put their lives work
+02:53 - into preventing cheaters and the one
+02:56 - that I would recommend is what is called
+02:58 - entity NC cheat toolkit and it's on the
+03:01 - acid storm it costs $30 but it's very
+03:05 - easy to implement so it's not something
+03:07 - that you need to buy right now but it's
+03:09 - something that you can think of buying
+03:10 - once you feel that your game is ready to
+03:12 - be launched and this the most important
+03:16 - functionality I believe in here is the
+03:19 - ability to kind of protect your types
+03:21 - protect your variables so that it's not
+03:24 - easily to insert a new value into them
+03:27 - so you can protect the damage variable
+03:29 - so the players can do insane amounts of
+03:32 - damage and they also have stuff
+03:34 - preventing a wall hack and speed hack
+03:38 - and stuff like that so this is a really
+03:40 - good tool kit it's very easy to use and
+03:43 - they suggest you check that out if you
+03:45 - worry about cheaters or another solution
+03:48 - it's completely up to you so that's just
+03:51 - my reasoning behind this and now I just
+03:54 - think we should move on to today's video
+03:56 - so we're here in unity and the first
+04:00 - thing that I want to do here is just
+04:01 - take a look at the player and if we just
+04:04 - double click on the player shoot script
+04:06 - and open it up in visual studio we can
+04:08 - kind of see where we left off in the
+04:10 - last video here so move this over here
+04:14 - and scroll down and we can see that we
+04:17 - have this command which is of course
+04:18 - cost called on the server that takes in
+04:21 - an ID and then says that that ID has
+04:24 - been shot well now we need
+04:27 - kind of way for us to easily find the
+04:30 - player with this ID and then call a
+04:34 - method on that player and we could
+04:37 - create a player script or health script
+04:39 - that will subtract a certain amount of
+04:41 - health and I think a good way to do this
+04:44 - would be to introduce a kind of central
+04:48 - game manager component that has a
+04:51 - dictionary of players in it so what
+04:54 - we're going to do is we are going to
+04:55 - rename this from ID to our player ID and
+05:00 - do the same down here and we can just
+05:04 - leave the debug log statement here and
+05:06 - this will only be called on the server
+05:08 - and what we can then do is we can go
+05:11 - ahead and create a new component so
+05:14 - let's go on to create and then c-sharp
+05:17 - script and let's name these this the
+05:20 - game a manager and while we're in here
+05:24 - let's also create another c-sharp script
+05:27 - and let's name this the arm oops the
+05:31 - player so this is our central player
+05:34 - component you can also call the player
+05:36 - manager if you want and let's just go
+05:39 - ahead and open up the game manager here
+05:41 - and the game manager is of course going
+05:44 - to be of type on network behavior but
+05:49 - actually as I'm thinking about it I
+05:51 - think we can go ahead and keep this as a
+05:55 - mono behavior for now and then we'll add
+05:58 - on to it later if if needed so basically
+06:03 - I want to create a static dictionary in
+06:06 - here so we are going to be using system
+06:10 - collections dot generic so that's
+06:13 - something you want to type up here and
+06:15 - then we are going to create a public
+06:17 - actually I'll make the list itself
+06:19 - private and then we'll access it through
+06:22 - public methods so a private static
+06:26 - dictionary and it's going to take in as
+06:29 - the key a type string that's going to be
+06:31 - ID and it's going to give us the value
+06:34 - which is going to be a type player
+06:36 - remember the component that we just
+06:38 - created well that's a component
+06:40 - we want all of our players to have and
+06:42 - therefore well it makes sense to use
+06:44 - that component that not a game object or
+06:47 - anything else because this then that way
+06:50 - we restrict ourselves to only having
+06:52 - players in our dictionary or not other
+06:54 - game objects and then we call this our
+06:57 - players and we set it equal to a new
+06:59 - dictionary of type string and player and
+07:03 - then open closed parenthesis and a
+07:06 - semicolon so that's kind of the syntax
+07:08 - for creating a dictionary here I believe
+07:10 - it's the first time we do this on this
+07:14 - series so then we need some methods that
+07:17 - will actually interact with this
+07:19 - dictionary and the first one is going to
+07:22 - be a public void and it's simply going
+07:24 - to register a player and of course we
+07:31 - want some arguments here and the first
+07:33 - one is going to be a string and we are
+07:35 - going to call this the net ID we are
+07:38 - simply going to be taking in the network
+07:39 - ID from the player's network identity
+07:42 - component and then we're going to be
+07:44 - kind of transforming that into a player
+07:47 - ID so we can give it any kind of format
+07:49 - that we want and then we are going to
+07:52 - also be taking in a player of course so
+07:55 - a player underscore player there we go
+07:57 - and we could just say that well the
+08:02 - player ID and nettie ID should be the
+08:05 - same if you don't know when a player
+08:07 - joins he gets assigned a number that's
+08:10 - his net ID and by default that's just
+08:15 - going to be one two three so the first
+08:17 - player is 1 the second player is 2 and
+08:19 - you get the idea but instead of kind of
+08:23 - just renaming all of our players to 1 2
+08:26 - & 3 we should maybe call them player 1
+08:29 - player 2 or player ID 1 or whatever
+08:32 - format you want to kind of do for this
+08:34 - so I want to just prefix this net ID
+08:39 - with another string and instead of
+08:42 - hard-coding it down here we could just
+08:44 - say that the string player ID should be
+08:47 - equal to player + net ID well then I
+08:52 - just
+08:53 - want to kind of create a variable up
+08:55 - here that's easy to spot and change and
+08:58 - we're simply going to call this we're
+09:00 - going to make it a private constant
+09:03 - string because it's not going to be
+09:05 - changed and with constants the naming
+09:08 - convention is all capital letters so
+09:10 - we're going to call this the player
+09:13 - prefix our ID prefix like this I will
+09:19 - simply do player like that and then we
+09:22 - can simply take this down here instead
+09:25 - so we can change it up here and it's
+09:27 - easily visible ah cool so we get the
+09:32 - player ID here and now we can simply go
+09:35 - in and add this to the dictionary so we
+09:37 - can say players dot add and you can see
+09:39 - it takes in first a key and then a value
+09:41 - and the play is going to the key is
+09:44 - going to be player ID and the value is
+09:48 - going to be player there we go and I
+09:51 - also quickly want to rename on the
+09:54 - player transform to the player ID so
+09:59 - that we can quickly see what players are
+10:01 - what in the hierarchy and in order to do
+10:04 - this we're simply going to say player
+10:05 - dot transform dot name equals player ID
+10:13 - there we go and I believe that's all we
+10:16 - need to do inside of this method so now
+10:18 - in the player setup you can see that we
+10:20 - have this start method that disabled the
+10:24 - components enables the camera or
+10:28 - disables the scene camera and then it
+10:30 - registers the player locally and all it
+10:32 - does is it says sets are transformed our
+10:36 - name equal to player plus the net ID so
+10:39 - that's kind of the same that we've done
+10:41 - here but now we can remove it here and
+10:44 - know that the game manager takes care of
+10:47 - this for us so I'm actually going to
+10:50 - move this completely out of the start
+10:53 - method and then instead to create a
+10:55 - another method and new method we're
+10:58 - going to say public override board and
+11:02 - it's going to be on start client
+11:06 - and OnStar client is a method already in
+11:11 - the network behavior class and it's
+11:17 - basically called every time a client is
+11:20 - set up locally so what this will allow
+11:24 - us to do you can see it calls its own
+11:26 - base here is we can simply add the
+11:29 - register player onto this so we can now
+11:31 - say game manager dot register oops
+11:35 - did we not do this correctly game
+11:38 - manager this of course needs to be
+11:40 - static - game manager dot register
+11:44 - player there we go
+11:46 - and then we give it first off the net ID
+11:50 - and then the player itself so we need to
+11:52 - get some components here the first one
+11:54 - is going to be the net ID and that's
+11:57 - going to be equal to get component
+11:59 - network identity dot net ID and the
+12:04 - second one is going to be the player
+12:06 - itself so that's going to be on the
+12:08 - score player equals get component player
+12:13 - there we go and we can simply put these
+12:16 - in here so we give it the net ID and the
+12:19 - player reference oops
+12:23 - cold and we know that the of course we
+12:28 - need to convert this to a string so we
+12:30 - call the to string method we know that
+12:33 - the network ID is always going to sit on
+12:35 - this because it's soft type it derived
+12:39 - from network behavior and therefore it
+12:40 - requires a net ID but we want to make
+12:46 - sure that it always has the player
+12:49 - component and therefore we should
+12:50 - require it up here so we'll call require
+12:53 - component type of and then player there
+12:57 - we go so now we'll always get a a valid
+13:02 - component here and not a null type so
+13:05 - this will just work and we don't need to
+13:07 - do any error checking now down here in
+13:10 - the on disable method well we want to of
+13:13 - course also deregister players once they
+13:17 - are killed so on the under the
+13:19 - game-manager
+13:20 - we can now say dot unregister and we'll
+13:23 - create this in a second
+13:27 - unregistered player and we'll give it
+13:29 - the ID of the player with this which is
+13:32 - equal to transform dot name we could
+13:34 - also pass over the UM the player
+13:39 - component and search for that but we'll
+13:41 - just give it the ID it's the ID because
+13:44 - that would be easiest so of course
+13:48 - registering and D registering players is
+13:50 - something that we will do once a player
+13:52 - joins and disconnects and this will do
+13:55 - that every time a player joins and then
+14:00 - when he is destroyed and that's not the
+14:03 - same as him disconnecting right now it
+14:06 - is because we don't have any way to
+14:08 - destroy our player other than if we
+14:10 - disconnect but at some point we're going
+14:13 - to have to make a destroy a distinction
+14:16 - there
+14:17 - but for now we'll write it in like this
+14:19 - and we'll handle things as they come so
+14:22 - now we can make a public static void
+14:26 - called unregistered player actually this
+14:30 - should probably do register unread dear
+14:35 - you English stalkers are going to
+14:37 - probably correct me on that but I'm
+14:40 - going to write unregister and face the
+14:42 - facts it doesn't matter okay so we'll
+14:45 - take in a net ID I don't know a player
+14:48 - ID of course and we'll basically say
+14:52 - that players don't remove and then give
+14:55 - it the key which is player ID and it
+14:58 - will be removed from the dictionary and
+15:00 - it's it's that easy
+15:02 - so when it comes to dictionaries that
+15:04 - can be kind of hard to work with in
+15:06 - unity because unity doesn't have a way
+15:08 - to actually visualize these in the
+15:10 - inspector so you have to kind of create
+15:13 - your own UI if you want to do that and
+15:17 - we could go down here and create a on
+15:19 - GUI method that lists all of the
+15:22 - registered players but I don't really
+15:25 - think it's something that we should be
+15:26 - spending time on right now I'm thin
+15:30 - looking about it okay you know what
+15:34 - let's do this so we'll create a void on
+15:37 - GUI and in here we're simply going to be
+15:43 - using a GUI layout so we'll say GUI
+15:48 - layout dot begin area and we're going to
+15:55 - give it a new rectangle this is by no
+15:57 - means something that you need to do this
+16:00 - is just something I'm doing to visualize
+16:02 - what is going on and you can just copy
+16:04 - off me here I'm not going to be
+16:06 - explaining to more much so we are
+16:07 - creating an area for GUI to reside in
+16:10 - and that's going to be at 200 200 and
+16:13 - with the width of 300 200 and a height
+16:18 - of 500 and of course when we begin
+16:22 - something we have to end it so in area
+16:24 - and GUI layout dot pick in vertical UI
+16:33 - layout dot nth vertical and so now we
+16:39 - will list things like whoops like this
+16:45 - and then we can loop through our
+16:50 - dictionary here so for each on what are
+16:58 - we going to do player in and we'll just
+17:01 - call this player in players is this
+17:08 - going to work I don't remember how the
+17:10 - proper way to loop through a dictionary
+17:12 - is give me just a moment and I'll check
+17:15 - what we are going to do here so of
+17:17 - course I was being a bit stupid here
+17:19 - well we want to loop through the key so
+17:21 - we are going to create a string here for
+17:24 - each player ID in players dot keys
+17:28 - that's going to be the array stowing all
+17:30 - of our keys but then we want to create a
+17:32 - GUI layout label and this is going to
+17:37 - store our ID first so we're going to say
+17:40 - player ID
+17:42 - Plus and then we'll just create some
+17:44 - space here and then the players and then
+17:48 - we're going to input the key in order to
+17:50 - get the value so we're going to say
+17:52 - player ID here and then dot transform
+17:58 - dot name so we'll give it the name there
+18:02 - and that should be fine
+18:04 - I believe cool so we'll just create a
+18:08 - bunch of labels here and lay them out I
+18:09 - think that should work and we'll test
+18:12 - this in a second
+18:14 - but also I want to create one last
+18:17 - method which is kind of just a utility
+18:20 - method for getting a certain player with
+18:23 - an ID so we'll create a public static
+18:25 - void get player and it's going to take
+18:29 - in a string player ID and of course its
+18:34 - return type is going to be player and
+18:36 - not board and it's simply going to
+18:38 - return players and then input the player
+18:42 - ID and we'll get the value there we go
+18:46 - and that's basically all for our game
+18:48 - managers now under our player setup we
+18:50 - can see that we are setting up the
+18:53 - player we're registering him and we are
+18:55 - D registering him down there and then in
+18:58 - a player shoot script we can use to get
+19:00 - player but we're going to do that in a
+19:02 - second for now let's just check that
+19:04 - these players are attribute
+19:06 - appropriately add it to a list so you
+19:09 - can see here that something is going
+19:11 - wrong and what is going wrong here so
+19:17 - reference not set to instance of an
+19:19 - object well first off we need to make
+19:22 - sure that our player here actually has
+19:26 - the player script attached and he might
+19:30 - not because well remember we added the
+19:36 - require component after actually having
+19:39 - added the scripts and therefore that
+19:41 - sometimes one work so yeah we'll simply
+19:46 - drag that in so all we need to do is
+19:48 - find our player lock that on there take
+19:53 - our player script here and
+19:55 - added on to their and now that that is
+19:58 - added we also need to create actually
+20:02 - right now everything is static with this
+20:05 - game manager so we don't need to add it
+20:07 - but I don't think everything is going to
+20:10 - be static so therefore I'll create an
+20:11 - empty game manager component up here and
+20:14 - we don't need that locked anymore and
+20:16 - we'll reset that and add the game
+20:18 - manager answer there but now it's just
+20:20 - going to sit there and do nothing
+20:21 - because we don't instance this in any
+20:23 - way but at some point we probably will
+20:25 - so now let's clear this out and
+20:27 - hopefully we will get no errors land
+20:31 - host and you can see here that it says
+20:33 - player 1 that's the ID and its
+20:35 - associated here they player 1 up here
+20:38 - and I know it looks stupid that it just
+20:41 - sets player 1 and player 1 but it means
+20:43 - that it's actually working and of course
+20:46 - we had to add this here because we've
+20:48 - done the gooey stuff so it's a great
+20:52 - thing that we remember to do that so now
+20:54 - if we just go ahead and build this it's
+20:56 - not going to be kind of especially
+20:59 - impressive in any way but we are going
+21:02 - to see the fact that we have this
+21:04 - central manager component that keeps
+21:06 - track of our players so let's hit play
+21:08 - there go under your host here select
+21:11 - client over here and you can see that we
+21:13 - have the two players in here in the
+21:15 - dictionary that's just a way for us to
+21:17 - visualize what is going on cool so that
+21:22 - was all we needed to do and now we can
+21:26 - actually go ahead and use this so I'll
+21:29 - just go into the game manager here and
+21:31 - comment out this on GUI method we might
+21:35 - be needing it at some point but not for
+21:37 - now so under our players shoot script
+21:40 - you can see that we are currently just
+21:41 - writing out what player has been shot
+21:43 - well we can use this information much
+21:46 - much for to do much more so we are going
+21:49 - to call it game manager don't get player
+21:52 - and this will of course return a player
+21:54 - object and we can input the player ID
+21:57 - and therefore down here let's create a
+22:02 - player object let's just call this
+22:04 - player and set it equal to that now we
+22:07 - can call
+22:08 - methods on that player component so
+22:11 - let's go ahead and make a method for
+22:13 - this we can say player Don to take
+22:15 - damage and we can give it the damage
+22:18 - amount but in order to give it the and
+22:22 - this is a method we're going to be
+22:23 - creating in a second in order to give it
+22:25 - the damage amount we of course needs
+22:27 - need to pass this on so down here when
+22:30 - we call the command we give it the ID
+22:33 - which is the colliders name and we also
+22:35 - wanted to want to give it the player or
+22:38 - the weapon damage variable and I've
+22:42 - changed my mind I don't want this to be
+22:43 - a float I want it to be an integer so up
+22:47 - here we're just going to say int damage
+22:49 - and we're going to pass it on down here
+22:52 - because we want to pass it into the take
+22:56 - damage method and now we need to go
+22:58 - under the player weapon script and
+22:59 - change this from a float to an integer
+23:02 - and just remove the F here there we go
+23:05 - so now all damage is calculated with
+23:07 - integers and so will our health now we
+23:10 - can go and you are into our player
+23:12 - script and actually configure that so
+23:15 - let's open that up and in here this is
+23:19 - of course going to be of type network
+23:21 - behavior behavior and we need to be
+23:25 - using unity engine dot networking as
+23:29 - always and we're going to need to create
+23:32 - a couple of variables here so the first
+23:35 - one is a public actually I don't want it
+23:39 - to be public I just wanted to show up in
+23:40 - the inspector so we're going to make it
+23:42 - a serialize field and we'll mark it as
+23:44 - private and that's going to be an
+23:47 - integer storing our max health and let's
+23:52 - just default that to 800 then we are
+23:55 - going to have another variable and this
+23:58 - one is definitely going to be private
+24:00 - and this is going to be our current
+24:02 - health and we don't want to set that
+24:05 - equal to anything yet however our
+24:07 - current health needs to be synced across
+24:10 - all the different clients so it would be
+24:15 - really stupid if we damage the player
+24:19 - and the only one who knew we damaged the
+24:22 - player was the server the clients were
+24:24 - never notified of this and if we just go
+24:27 - in and change this by using this command
+24:31 - and calling a take damage function on
+24:33 - the player well then it's only going to
+24:36 - be changed on this server so in order to
+24:38 - sync this information about the value
+24:41 - being changed out to the all of the
+24:44 - different clients so they like so that
+24:47 - they can update their GUI or kill off
+24:49 - the player if you died and all of that
+24:51 - well then we need to create a sync
+24:54 - variable and all we have to do in order
+24:58 - to mark this as a sync variable is
+25:00 - simply use an attribute so we just type
+25:03 - in sync var and now every time the value
+25:08 - changes it will push be pushed out to
+25:10 - all of the clients it's that easy and
+25:13 - this is an amazing feature in unit so
+25:17 - that's all we needed to do there and
+25:19 - then we can maybe stay in the start
+25:22 - function here or we could do this in a
+25:25 - wake even we can simply call some kind
+25:28 - of method that will set our current
+25:30 - health equal to max health and all of
+25:33 - the other stuff that we might want to
+25:34 - reset in the future so let's create a
+25:37 - set defaults method and it's not going
+25:42 - to take in any arguments at all here and
+25:45 - we're just going to create that down
+25:47 - here and we're going to make it public
+25:48 - because I imagine that we're going to be
+25:51 - calling this this from outside the
+25:54 - script and it's going to be called set
+25:57 - defaults and it's simply going to say
+26:01 - that current health equals max health
+26:03 - and it's that easy
+26:05 - cool and next up a public void take
+26:10 - damage that takes in a amount and simply
+26:16 - says well we want to subtract our
+26:19 - current health with the amount and again
+26:23 - we don't need to do anything here it's
+26:25 - going to be synced out because we mark
+26:27 - this as a sync variable and then we can
+26:30 - just a debug ID lock and this is only be
+26:33 - going to be done on the server of course
+26:35 - so you're going to send out a debug
+26:37 - deadlock statement saying that transform
+26:41 - dot name plus hat now has plus current
+26:49 - health plus health there we go so we can
+26:54 - see the health updating in the inspector
+26:56 - and of course this is again only called
+26:58 - on the server so only the host will be
+27:01 - able to see this in their console log
+27:04 - but that's ok for us
+27:06 - so now we actually have this structure
+27:09 - in place where our player checks all of
+27:12 - the different players check locally if
+27:14 - they hit something if they do they take
+27:17 - they send our over information or an ID
+27:22 - of what we've hit and some damage this
+27:28 - is called on the server so the server
+27:30 - now takes the information about this ID
+27:32 - and finds the player component by using
+27:37 - a utility method on our game manager
+27:39 - that tracks all of our different players
+27:42 - it then it takes our damage variable and
+27:46 - puts it into a take damage method that
+27:50 - we call on that player we jump over here
+27:54 - the player locally on the server applies
+27:58 - this damage to the current health
+28:00 - variable and unity recognizes that this
+28:04 - variable has changed and then swings it
+28:07 - over out to all of the clients so that's
+28:10 - kind of the route that that's kind of
+28:14 - how the networking is it's working in
+28:16 - this case and I hope like you can follow
+28:20 - along here if not don't worry you'll get
+28:22 - a hang of this in no time by just
+28:25 - playing around with it and if this is
+28:28 - working well I hope it is let's test it
+28:32 - out so let's build this actually I just
+28:35 - build it locally here so we can see if
+28:36 - there's any errors they aren't so let's
+28:38 - build this to a standalone and see if
+28:42 - it's actually working for us we'll also
+28:46 - build it here
+28:48 - I'm going to select host here and client
+28:51 - here we'll move up here and shoot the
+28:56 - guy you can see here that it says player
+28:59 - now a player has been shot player one
+29:02 - now has ninety health remember we start
+29:04 - at 100 and we subtract ten and we can
+29:08 - actually view this if we select our
+29:10 - player one and you can see that this is
+29:12 - indeed the first player to join this is
+29:15 - the host we can then actually inspect
+29:19 - the private variable here and this is a
+29:21 - fairly handy feature if we go up here in
+29:24 - the inspector we can change to debug
+29:26 - mode and a bunch of information is going
+29:29 - to be appearing but this will allow us
+29:32 - to view private variable so you can see
+29:34 - down here now that current health is
+29:36 - indeed 90 on player two it's still 100
+29:40 - because we haven't hit that player yet
+29:41 - let's try and actually do that so let's
+29:44 - try and shoot that player so I'm going
+29:46 - to shoot him here click you can see
+29:49 - player 2 has been shot player 2 now has
+29:51 - 90 health I'm going to do this a few
+29:53 - more times bring him down to 60 and you
+29:57 - can see here that current health on
+29:59 - player 2 is indeed 60 and this is going
+30:02 - to work regardless of who is hosting so
+30:06 - you can see here that we got a timeout
+30:08 - error that's because the host
+30:10 - disconnected that we can simply close
+30:12 - the developer console let's now host on
+30:14 - this system
+30:16 - let's host on and join us a client on
+30:20 - this system you can see we don't get any
+30:22 - errors because we are properly
+30:24 - registering and D registering players
+30:26 - into the dictionary well you can see
+30:29 - that I can shoot this player two times
+30:31 - and I can shoot this player three times
+30:34 - nothing is appearing in the console
+30:37 - because this is the one this client is
+30:39 - or on this game instance is the host and
+30:43 - therefore all console logs are being
+30:47 - sent over here on the server but we can
+30:51 - see that it's still updated so down here
+30:53 - this guy now has 70 health and this guy
+30:57 - has 80 so that was basically it for
+31:00 - damaging a player's
+31:02 - taking damage over on the network kind
+31:04 - of keeping track of players in a
+31:06 - intuitive way using IDs and yeah I don't
+31:11 - have any more to show you today I hope
+31:13 - you were able to follow along and maybe
+31:15 - I'll see you at dreamhack until then
+31:17 - enjoy

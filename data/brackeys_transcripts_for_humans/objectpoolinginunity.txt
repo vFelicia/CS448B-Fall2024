@@ -1,0 +1,571 @@
+With timestamps:
+
+00:00 - in this video we'll learn how to spawn a
+00:01 - bunch of objects without spending a lot
+00:03 - of processing power
+00:04 - we'll do this using a method called
+00:06 - object polling we'll get into what it is
+00:08 - and why it's useful in just a sec but
+00:10 - first
+00:11 - this video is sponsored by skillshare
+00:13 - skillshare is an online learning
+00:15 - community with more than 18 000 quality
+00:17 - classes on tech
+00:19 - design and more and it's actually
+00:21 - something that i personally
+00:23 - use and love i recently came across this
+00:25 - awesome course on the fundamentals of
+00:27 - creating pixel art for games
+00:29 - and i definitely recommend you check it
+00:30 - out a premium membership gives you
+00:32 - unlimited access to
+00:33 - all classes for less than 10 a month so
+00:36 - to get started simply click the link in
+00:38 - the description
+00:38 - and the first 500 people to sign up will
+00:40 - get their first 2 months for only 99
+00:43 - cents and with that let's get into the
+00:45 - video
+00:45 - so when making a game you often want to
+00:47 - spawn in objects while playing
+00:49 - of course unity has a built-in function
+00:50 - for this called instantiate but using
+00:52 - this function is not very performant
+00:55 - in many cases it's much better to use an
+00:57 - object pole
+00:58 - this essentially means that when the
+01:00 - game starts we create
+01:01 - a bunch of inactive game objects in
+01:04 - other words we make a pool of
+01:06 - objects when we then want to spawn one
+01:08 - of these objects
+01:09 - instead of creating the object from
+01:10 - scratch we simply take one of the
+01:12 - objects from the pool
+01:13 - enable it and put it in the right place
+01:16 - if we run out of objects in the poll we
+01:17 - can either decide to grow it
+01:19 - or reuse older objects alright with that
+01:22 - explanation let's jump right into unity
+01:24 - so here in unity i've set up a very
+01:26 - simple scene there's really only a
+01:28 - ground
+01:29 - and a light and a bit of image effects
+01:31 - in here
+01:32 - if we hit play you can see that i've set
+01:34 - up this cube spawner that will just spit
+01:36 - out a bunch
+01:37 - of cube objects and that's pretty much
+01:39 - all that's happening here
+01:41 - you'll notice as this go it spits out
+01:43 - more and more cubes
+01:44 - and slowly fills up our hierarchy and it
+01:47 - will keep going
+01:48 - until unity crashes if we have a look at
+01:50 - how this works it's actually very simple
+01:52 - i have a cube spawning object
+01:54 - and on this object i have a cube spawner
+01:56 - script all the script does
+01:58 - is that every fixed update call it
+02:00 - instantiates a
+02:02 - cube and the cube object is here it's
+02:04 - just a rigid body with a cube script
+02:06 - attached and all the script does is
+02:09 - calculate a random force that it then
+02:11 - adds to the rigid body
+02:12 - so this is a good example of a scene
+02:15 - where we can add object polling to make
+02:17 - it more performant
+02:18 - but before we start writing our script
+02:19 - there are a few things that we need to
+02:21 - understand
+02:21 - so basically what we want to be able to
+02:23 - do is create different
+02:25 - object poles here we have three poles
+02:27 - pull one
+02:28 - two and three and we want each of these
+02:30 - poles to be responsible for storing
+02:32 - objects of a certain type
+02:34 - we might have the first ones for circles
+02:36 - the second one store
+02:37 - squares and you get the idea and i think
+02:39 - the best way to go about this
+02:41 - is actually by using a dictionary
+02:44 - because the dictionary allows us to
+02:45 - create as many poles as we want to
+02:48 - and associate each pool with some kind
+02:51 - of
+02:51 - tag in our case it's fairly simple we
+02:53 - could take the first poll and associate
+02:55 - it with
+02:56 - circles and second one with squares and
+02:58 - the third one with
+02:59 - well something what this allows us to do
+03:02 - is encode
+03:03 - access one of these pools using its tag
+03:05 - so if i wanted to access the
+03:07 - squares i'll simply put that in and this
+03:09 - would then give us the square pole
+03:11 - then i would store each of these objects
+03:13 - inside of the pool in what we call a
+03:15 - queue the good thing about a queue is
+03:17 - that it's basically like a list but it's
+03:20 - very very fast to get the first item
+03:22 - and we can also easily add new items to
+03:24 - the end of the queue
+03:25 - we can imagine why this is useful
+03:27 - because if we wanted to go ahead
+03:29 - and instantiate or spawn one of these
+03:31 - objects we would simply take it from the
+03:33 - queue
+03:33 - and put it inside of our world and we
+03:36 - would actually keep doing this
+03:37 - until the pole gets emptied the smart
+03:40 - thing about using aq in this instance is
+03:42 - that if all of our objects are actually
+03:44 - currently
+03:45 - active in the world but we can still go
+03:47 - ahead and grab the first one in the
+03:48 - queue
+03:49 - and that's just going to be the
+03:50 - beginning object so each time we move
+03:52 - them from the poll
+03:53 - into the world we simply re-add them to
+03:55 - the queue and so if we wanted to go
+03:57 - ahead and add a new object say up here
+03:59 - we would simply take the oldest object
+04:01 - in the world which is this one
+04:02 - and move it from that position into the
+04:05 - new one and we could just keep
+04:06 - doing that forever so now that we have a
+04:08 - good understanding of how dictionaries
+04:10 - and
+04:11 - cues can be used to our advantage it's
+04:13 - time to start scripting it out to do
+04:15 - that let's create a new
+04:16 - empty object in our hierarchy let's
+04:18 - reset the transform on it and let's call
+04:20 - it
+04:20 - object polar let's just drag it to the
+04:23 - top so we can always see it
+04:25 - let's hit i component and let's create a
+04:26 - new script called object polar as well
+04:29 - we then double click it to open it up in
+04:31 - visual studio i'm going to remove the
+04:33 - update method here we won't be using it
+04:35 - and i'm then going to go to the very top
+04:36 - here
+04:37 - and i'm going to create the dictionary
+04:39 - so we'll write public
+04:40 - dictionary and here the dictionary takes
+04:42 - two types the first one is going to be
+04:44 - the tag that we want to associate each
+04:46 - pool with
+04:47 - this is also referred to as the key and
+04:49 - this is going to be of type string
+04:52 - second we want to have the actual poll
+04:54 - and remember we wanted to store that as
+04:56 - a queue
+04:57 - so we'll go ahead and create a queue
+04:58 - here and whenever we create a queue we
+05:00 - also need to tell unity
+05:02 - what we want to store in the queue so we
+05:04 - want to go ahead and store
+05:05 - a queue of game objects and we'll call
+05:08 - this dictionary poll
+05:09 - dictionary remember whenever you're
+05:11 - using dictionaries and
+05:13 - cues you want to make sure to be using
+05:16 - system.collections.generic
+05:17 - so now in our start method we can set
+05:19 - poll dictionary
+05:21 - equal to a new dictionary and here we
+05:23 - can use autocomplete to make it just
+05:25 - fill out all of the types
+05:27 - so now we have a new empty dictionary to
+05:28 - work with and it's time to start filling
+05:30 - it up with pools of objects
+05:32 - but instead of doing this manually
+05:34 - through code
+05:35 - let's have some way of configuring what
+05:37 - polls we want inside of the inspector
+05:39 - to do this let's go to the top here and
+05:41 - let's create our own class
+05:43 - called poll so we'll create a public
+05:45 - class we'll call it poll
+05:48 - and we now choose what we want to store
+05:49 - in each poll first of all we want to
+05:51 - have a string with the tag of the poll
+05:53 - we'll then have a public game object
+05:55 - which is going to store the prefab
+05:57 - of the objects in that pool and finally
+05:59 - we'll have a public int which is going
+06:01 - to store the total size of our pool
+06:03 - that means at which point are we going
+06:05 - to start reusing objects instead of
+06:07 - spawning in new ones
+06:08 - and to make sure this will show up
+06:10 - inside of the inspector we have to mark
+06:12 - it with an attribute called
+06:14 - system.serializable
+06:15 - so now we've created this class and
+06:17 - let's go ahead and make a list
+06:20 - so we'll create a public list of polls
+06:23 - that we'll call pools if we now save
+06:26 - this and head
+06:27 - into unity we now see a list of polls
+06:30 - show up
+06:30 - and we can go ahead and add entries to
+06:32 - this so i'm just going to add a single
+06:33 - one
+06:34 - and now for the first element here we
+06:36 - can define a tag
+06:37 - i'm going to tag this one as cube as the
+06:40 - prefab i'm going to drag in my cube
+06:42 - prefab
+06:42 - and as the size here i'm going to set
+06:44 - that to something like 150. so we'll
+06:47 - only have a maximum
+06:48 - of 150 active cubes at a time so now
+06:51 - that we have our list of poles we need
+06:53 - to start
+06:53 - adding them to the dictionary to do that
+06:56 - we want to loop through all of the pools
+06:58 - so we'll go for each poll and we'll call
+07:01 - each item
+07:02 - poll in our polls list
+07:05 - we want to go ahead and create a queue
+07:07 - of objects
+07:08 - so we'll create a queue here of game
+07:11 - objects
+07:12 - we'll call it our object pool and we'll
+07:14 - set it equal to a new queue of game
+07:16 - objects
+07:17 - and now we want to go through and create
+07:19 - each one of these objects so
+07:21 - we'll create another for loop here and
+07:23 - here we want to keep looping as long as
+07:25 - i is less than pole dot size in other
+07:28 - words we want to make sure that we fill
+07:30 - out our entire poll by instantiating as
+07:32 - many objects as we've defined in the
+07:34 - size
+07:35 - so now for each one of these we'll
+07:36 - instantiate
+07:38 - poll dot prefab and we'll store a
+07:41 - reference to this object that we just
+07:42 - created so
+07:43 - gameobject we'll call it object and now
+07:46 - we can go
+07:48 - object.setactivefalse to make sure to
+07:50 - disable it so we can't actually see it
+07:52 - yet
+07:52 - and finally we can add it to the end of
+07:54 - our queue to do this
+07:56 - all we need to write is object poll dot
+07:59 - in q and then we'll feed it our object
+08:02 - and that's really all
+08:03 - so for each pool that we want to create
+08:05 - we create a queue full of objects
+08:07 - we make sure to add all the objects that
+08:09 - we want to add to the queue
+08:10 - and finally we want to add this pool to
+08:13 - the dictionary so we'll go pull
+08:14 - dictionary dot add and here we first
+08:17 - want to give it the tag so pull.tag
+08:20 - and then our pool of objects so object
+08:22 - pull awesome
+08:23 - so now we should actually see that if we
+08:25 - save this go into unity and hit play
+08:28 - it immediately spawns 150 cubes that are
+08:32 - deactivated
+08:33 - in our hierarchy these are of course not
+08:35 - the cubes that we're seeing here they
+08:36 - are added on top by the cube spawner but
+08:39 - we'll go ahead and change that
+08:40 - soon first we need to add functionality
+08:42 - for taking some of these inactive cubes
+08:44 - and spawning them into our active world
+08:47 - to do that we'll create a new
+08:48 - public void and we'll call it spawn from
+08:52 - pull this is first going to take in a
+08:54 - string with a
+08:55 - tag which is of course the tag of the
+08:57 - object that we want to spawn
+08:58 - and we also want to take in a vector3
+09:01 - storing a position
+09:02 - this is where we want to spawn our
+09:03 - object as well as a quaternion for the
+09:06 - rotation
+09:08 - now here we can get the prefab that we
+09:10 - want to spawn by simply going pull
+09:12 - dictionary and then feeding it our tag
+09:14 - just like i showed with the squares in
+09:16 - the example
+09:17 - so this now gives us the appropriate cue
+09:20 - and then all we need to do is go
+09:22 - dot dq in order to pull out the first
+09:25 - element in the queue
+09:26 - we then store this object so we'll
+09:27 - create a game object and we'll call it
+09:29 - object to spawn and set it equal to that
+09:32 - object
+09:33 - and now we can configure our object to
+09:34 - spawn so we can set it to active so
+09:37 - enable it we can also set its position
+09:40 - optic to spawn.transform.position is
+09:43 - going to be
+09:43 - equal to position object to
+09:47 - spawn.transform.rotation is going to be
+09:48 - equal to rotation
+09:50 - so we've actually now taken the object
+09:52 - that we want to spawn
+09:53 - set it to active moved it to the
+09:55 - appropriate place
+09:56 - in the world and so it should be showing
+09:58 - and working just fine
+09:59 - but we also want to remember to add it
+10:01 - back to our queue so that it can be
+10:03 - reused later
+10:04 - to do that we simply go pull dictionary
+10:07 - and we remember to pass in the tag
+10:09 - dot nq and we feed it the object to
+10:12 - spawn
+10:12 - now there are still some things that we
+10:14 - can add here to make it a tiny bit safer
+10:16 - and easier to use
+10:17 - one of these is we can go to the top
+10:19 - here and check if
+10:20 - poll dictionary dot contains key
+10:23 - and this is just to make sure that if we
+10:25 - give it a tag that it doesn't have a
+10:27 - pool for
+10:28 - we don't go through and cause any errors
+10:31 - so if this
+10:31 - is not true well then we simply want to
+10:34 - go ahead and throw a debug.log
+10:36 - warning saying that the pull with tag
+10:40 - and then we feed it the tag doesn't
+10:43 - exist
+10:45 - there we go and then we can simply
+10:46 - return out of the function
+10:48 - a really nice feature of instantiate
+10:51 - that i use a lot so when we go and
+10:52 - instantiate an object is that it returns
+10:55 - the object that we just created
+10:56 - so let's do the same thing here we'll
+10:58 - mark the return type as
+11:00 - game object and right at the end of the
+11:02 - function here we'll return the
+11:03 - object to spawn so now we can always
+11:06 - grab
+11:06 - it from the place where we spawn it and
+11:09 - here we simply want to return
+11:10 - null in the case that there is no object
+11:13 - so that should actually complete the
+11:15 - main functionality of our object polar
+11:17 - script
+11:18 - but we still need a easy way to access
+11:20 - it from within our cube
+11:22 - spawner to do that we'll use a very
+11:24 - simple singleton
+11:25 - pattern now this is not a true singleton
+11:27 - it's just a quick workaround
+11:29 - and if you've never heard of singletons
+11:31 - before or if you want to read more about
+11:32 - them
+11:33 - i'll make sure to have a link for that
+11:34 - in the description all we're doing here
+11:36 - is just
+11:37 - very easily allowing ourselves to grab
+11:38 - the object puller from the cube spawner
+11:41 - so i'm just going to write a public
+11:43 - static object polar
+11:45 - which we'll call instance and then we'll
+11:48 - create an
+11:48 - awake method and in here we'll simply
+11:50 - set instance
+11:52 - equal to this and just to let everyone
+11:55 - know that this is
+11:56 - an attempt at a singleton we'll write
+11:58 - singleton here
+11:59 - and we'll end the region down here this
+12:02 - doesn't do anything it just allows us to
+12:04 - collapse the code like this and we don't
+12:05 - have to look at it anymore
+12:07 - so now we can save that and now when we
+12:09 - go into the cube spawner
+12:10 - what this allows us to do is actually
+12:12 - delete the variable right here
+12:14 - delete the instantiate call and instead
+12:16 - we can go object polar
+12:18 - dot instance dot and now we can simply
+12:21 - call the function from in here so we'll
+12:23 - call
+12:24 - spawn from pool and then we can feed it
+12:26 - a tag and we'll
+12:28 - use the tag cube we can feed it a
+12:30 - position we'll just use
+12:31 - transform.position
+12:32 - as well as a rotation we'll use
+12:35 - criterion.identity
+12:36 - and there we go if you're going to be
+12:38 - calling this a lot like i'm doing here i
+12:40 - would recommend storing this in a
+12:41 - variable so we can just do that very
+12:43 - quickly
+12:44 - we'll create an object puller call it
+12:46 - object pooler
+12:48 - and then inside of the start method we
+12:50 - can set
+12:51 - object pooler equal to optic.instance
+12:54 - and now we can simply reference it
+12:56 - here that just makes things a tiny bit
+12:58 - more performant so if we now save this
+13:00 - go into unity and hit play we should see
+13:03 - that
+13:03 - after we spawn 150 cubes it stops
+13:07 - but it hasn't actually stopped it's
+13:09 - still reusing
+13:11 - cubes but for some reason they aren't
+13:13 - really
+13:14 - moving anywhere they're just all stacked
+13:16 - on top of each other
+13:17 - the reason for this is that our cube
+13:19 - script is currently set up to only apply
+13:21 - a force
+13:22 - in the start method and start is only
+13:24 - called once
+13:25 - when the object is actually instantiated
+13:28 - so what we need to do is
+13:29 - create some kind of way in order to
+13:32 - notify this object
+13:33 - that it has just been reused in other
+13:35 - words we need to create our own start
+13:37 - method
+13:38 - and a fairly easy way to do this is
+13:40 - using what we call an
+13:41 - interface now if we go into a project we
+13:44 - can go ahead and create
+13:45 - a c-sharp script because this is going
+13:47 - to be an interface we'll start it with
+13:49 - an i
+13:49 - for interface and we'll then call it
+13:52 - pold
+13:52 - object let's open it up in visual studio
+13:56 - we don't want this to derive from mono
+13:58 - behavior we want to remove
+13:59 - both of the functions we can basically
+14:01 - remove all of the namespaces
+14:03 - and we don't want this to be a class we
+14:05 - want it to be an interface
+14:07 - now basically what an interface does is
+14:10 - allows you to specify some types and
+14:12 - functions that all objects that derive
+14:14 - from this interface
+14:16 - have to implement so in our case we can
+14:18 - just write void
+14:20 - on object spawn and we'll just close it
+14:23 - off like this
+14:24 - that's pretty much all we need to write
+14:25 - inside of our interface if we now save
+14:27 - this
+14:28 - and go into our cube script we want to
+14:30 - make sure that
+14:31 - our cube derives from mono behavior and
+14:34 - and this is where we put
+14:35 - a comma i pulled object
+14:38 - and you will see here that it now lights
+14:40 - red and the reason why is that
+14:42 - well now this class derives from i
+14:45 - pulled object
+14:46 - but it doesn't implement this on object
+14:48 - spawn
+14:49 - function so we need to make sure to go
+14:51 - in here and instead of using start
+14:54 - we want to use on object spawn
+14:57 - and we'll also want to mark it as public
+15:00 - and right away we can see that it no
+15:01 - longer
+15:01 - underlines with red because we're now
+15:04 - implementing the function
+15:05 - what we can then do is save this and go
+15:07 - into our object polar
+15:09 - go down to where we actually spawn an
+15:11 - object from the pole
+15:12 - and in here we can now get a component
+15:14 - on the object that we're spawning so
+15:16 - object to spawn dot get component of
+15:19 - type
+15:20 - i pulled object that's right we can
+15:22 - actually search for
+15:23 - interfaces we can installed this in a
+15:25 - variable so i pulled
+15:27 - object and we'll call it pooled object
+15:30 - like this now it's not certain that we
+15:32 - want all objects to have a script that
+15:33 - derives from this interface we want that
+15:35 - to be optional so we'll go in here and
+15:36 - write if
+15:37 - pulled object is not equal to null
+15:41 - well then we can actually call a
+15:43 - function on this
+15:44 - interface and we of course want to go
+15:46 - ahead and call
+15:47 - on object spawn so this should in fact
+15:50 - search for the interface
+15:52 - check if it's not equal to null and if
+15:53 - it isn't it will go in
+15:55 - access the interface look for an
+15:57 - implementation of this method
+15:59 - and then inside of the cube actually
+16:02 - call it and
+16:02 - execute all the code so if we now save
+16:05 - this
+16:06 - go into unity and play we can see that
+16:09 - cubes are now being properly
+16:11 - reused yay definitely play around with
+16:14 - this and have fun with it
+16:15 - you can easily go in and add multiple
+16:17 - pools we could go ahead and try and
+16:19 - increase the size here to 300 as well
+16:21 - and check out the results
+16:23 - of course this object pulley could be
+16:24 - made more performant one of the things
+16:26 - that i would do is definitely try and
+16:27 - get rid of the get component call
+16:29 - so definitely have fun with it yourself
+16:31 - also a cool guy from the community sent
+16:33 - me over
+16:34 - this script that he has made you can
+16:36 - check that out on github
+16:38 - and also just quickly search the asset
+16:40 - store and found this plugin that is
+16:41 - currently free
+16:42 - and looks like it has most of the
+16:44 - functionality that you're going to need
+16:46 - i'll of course have links for both in
+16:47 - the description that's pretty much it
+16:49 - for this
+16:50 - video make sure to check out skillshare
+16:52 - simply click the link in the description
+16:53 - for your chance to get a discount on
+16:55 - that thanks for watching and i will see
+16:56 - you
+16:57 - in the next video thanks to all the
+16:59 - awesome patreon supporters who donated
+17:00 - in january and a special thanks to sean
+17:02 - carry diego geick duderman
+17:04 - diane gein biffio infinity ppr urai omer
+17:08 - cyborg mummy derek keemsgerk myrrh
+17:10 - facebook marify theodor dye
+17:11 - john ramirez doubletap 45 james p
+17:14 - superman the great john brewer guard
+17:16 - jason detito
+17:16 - alex rokitsky jan phil knapp suny
+17:19 - jacobson james rogers robert brundt
+17:21 - rob fern and erasmus
+
+Cleaned transcript:
+
+in this video we'll learn how to spawn a bunch of objects without spending a lot of processing power we'll do this using a method called object polling we'll get into what it is and why it's useful in just a sec but first this video is sponsored by skillshare skillshare is an online learning community with more than 18 000 quality classes on tech design and more and it's actually something that i personally use and love i recently came across this awesome course on the fundamentals of creating pixel art for games and i definitely recommend you check it out a premium membership gives you unlimited access to all classes for less than 10 a month so to get started simply click the link in the description and the first 500 people to sign up will get their first 2 months for only 99 cents and with that let's get into the video so when making a game you often want to spawn in objects while playing of course unity has a builtin function for this called instantiate but using this function is not very performant in many cases it's much better to use an object pole this essentially means that when the game starts we create a bunch of inactive game objects in other words we make a pool of objects when we then want to spawn one of these objects instead of creating the object from scratch we simply take one of the objects from the pool enable it and put it in the right place if we run out of objects in the poll we can either decide to grow it or reuse older objects alright with that explanation let's jump right into unity so here in unity i've set up a very simple scene there's really only a ground and a light and a bit of image effects in here if we hit play you can see that i've set up this cube spawner that will just spit out a bunch of cube objects and that's pretty much all that's happening here you'll notice as this go it spits out more and more cubes and slowly fills up our hierarchy and it will keep going until unity crashes if we have a look at how this works it's actually very simple i have a cube spawning object and on this object i have a cube spawner script all the script does is that every fixed update call it instantiates a cube and the cube object is here it's just a rigid body with a cube script attached and all the script does is calculate a random force that it then adds to the rigid body so this is a good example of a scene where we can add object polling to make it more performant but before we start writing our script there are a few things that we need to understand so basically what we want to be able to do is create different object poles here we have three poles pull one two and three and we want each of these poles to be responsible for storing objects of a certain type we might have the first ones for circles the second one store squares and you get the idea and i think the best way to go about this is actually by using a dictionary because the dictionary allows us to create as many poles as we want to and associate each pool with some kind of tag in our case it's fairly simple we could take the first poll and associate it with circles and second one with squares and the third one with well something what this allows us to do is encode access one of these pools using its tag so if i wanted to access the squares i'll simply put that in and this would then give us the square pole then i would store each of these objects inside of the pool in what we call a queue the good thing about a queue is that it's basically like a list but it's very very fast to get the first item and we can also easily add new items to the end of the queue we can imagine why this is useful because if we wanted to go ahead and instantiate or spawn one of these objects we would simply take it from the queue and put it inside of our world and we would actually keep doing this until the pole gets emptied the smart thing about using aq in this instance is that if all of our objects are actually currently active in the world but we can still go ahead and grab the first one in the queue and that's just going to be the beginning object so each time we move them from the poll into the world we simply readd them to the queue and so if we wanted to go ahead and add a new object say up here we would simply take the oldest object in the world which is this one and move it from that position into the new one and we could just keep doing that forever so now that we have a good understanding of how dictionaries and cues can be used to our advantage it's time to start scripting it out to do that let's create a new empty object in our hierarchy let's reset the transform on it and let's call it object polar let's just drag it to the top so we can always see it let's hit i component and let's create a new script called object polar as well we then double click it to open it up in visual studio i'm going to remove the update method here we won't be using it and i'm then going to go to the very top here and i'm going to create the dictionary so we'll write public dictionary and here the dictionary takes two types the first one is going to be the tag that we want to associate each pool with this is also referred to as the key and this is going to be of type string second we want to have the actual poll and remember we wanted to store that as a queue so we'll go ahead and create a queue here and whenever we create a queue we also need to tell unity what we want to store in the queue so we want to go ahead and store a queue of game objects and we'll call this dictionary poll dictionary remember whenever you're using dictionaries and cues you want to make sure to be using system.collections.generic so now in our start method we can set poll dictionary equal to a new dictionary and here we can use autocomplete to make it just fill out all of the types so now we have a new empty dictionary to work with and it's time to start filling it up with pools of objects but instead of doing this manually through code let's have some way of configuring what polls we want inside of the inspector to do this let's go to the top here and let's create our own class called poll so we'll create a public class we'll call it poll and we now choose what we want to store in each poll first of all we want to have a string with the tag of the poll we'll then have a public game object which is going to store the prefab of the objects in that pool and finally we'll have a public int which is going to store the total size of our pool that means at which point are we going to start reusing objects instead of spawning in new ones and to make sure this will show up inside of the inspector we have to mark it with an attribute called system.serializable so now we've created this class and let's go ahead and make a list so we'll create a public list of polls that we'll call pools if we now save this and head into unity we now see a list of polls show up and we can go ahead and add entries to this so i'm just going to add a single one and now for the first element here we can define a tag i'm going to tag this one as cube as the prefab i'm going to drag in my cube prefab and as the size here i'm going to set that to something like 150. so we'll only have a maximum of 150 active cubes at a time so now that we have our list of poles we need to start adding them to the dictionary to do that we want to loop through all of the pools so we'll go for each poll and we'll call each item poll in our polls list we want to go ahead and create a queue of objects so we'll create a queue here of game objects we'll call it our object pool and we'll set it equal to a new queue of game objects and now we want to go through and create each one of these objects so we'll create another for loop here and here we want to keep looping as long as i is less than pole dot size in other words we want to make sure that we fill out our entire poll by instantiating as many objects as we've defined in the size so now for each one of these we'll instantiate poll dot prefab and we'll store a reference to this object that we just created so gameobject we'll call it object and now we can go object.setactivefalse to make sure to disable it so we can't actually see it yet and finally we can add it to the end of our queue to do this all we need to write is object poll dot in q and then we'll feed it our object and that's really all so for each pool that we want to create we create a queue full of objects we make sure to add all the objects that we want to add to the queue and finally we want to add this pool to the dictionary so we'll go pull dictionary dot add and here we first want to give it the tag so pull.tag and then our pool of objects so object pull awesome so now we should actually see that if we save this go into unity and hit play it immediately spawns 150 cubes that are deactivated in our hierarchy these are of course not the cubes that we're seeing here they are added on top by the cube spawner but we'll go ahead and change that soon first we need to add functionality for taking some of these inactive cubes and spawning them into our active world to do that we'll create a new public void and we'll call it spawn from pull this is first going to take in a string with a tag which is of course the tag of the object that we want to spawn and we also want to take in a vector3 storing a position this is where we want to spawn our object as well as a quaternion for the rotation now here we can get the prefab that we want to spawn by simply going pull dictionary and then feeding it our tag just like i showed with the squares in the example so this now gives us the appropriate cue and then all we need to do is go dot dq in order to pull out the first element in the queue we then store this object so we'll create a game object and we'll call it object to spawn and set it equal to that object and now we can configure our object to spawn so we can set it to active so enable it we can also set its position optic to spawn.transform.position is going to be equal to position object to spawn.transform.rotation is going to be equal to rotation so we've actually now taken the object that we want to spawn set it to active moved it to the appropriate place in the world and so it should be showing and working just fine but we also want to remember to add it back to our queue so that it can be reused later to do that we simply go pull dictionary and we remember to pass in the tag dot nq and we feed it the object to spawn now there are still some things that we can add here to make it a tiny bit safer and easier to use one of these is we can go to the top here and check if poll dictionary dot contains key and this is just to make sure that if we give it a tag that it doesn't have a pool for we don't go through and cause any errors so if this is not true well then we simply want to go ahead and throw a debug.log warning saying that the pull with tag and then we feed it the tag doesn't exist there we go and then we can simply return out of the function a really nice feature of instantiate that i use a lot so when we go and instantiate an object is that it returns the object that we just created so let's do the same thing here we'll mark the return type as game object and right at the end of the function here we'll return the object to spawn so now we can always grab it from the place where we spawn it and here we simply want to return null in the case that there is no object so that should actually complete the main functionality of our object polar script but we still need a easy way to access it from within our cube spawner to do that we'll use a very simple singleton pattern now this is not a true singleton it's just a quick workaround and if you've never heard of singletons before or if you want to read more about them i'll make sure to have a link for that in the description all we're doing here is just very easily allowing ourselves to grab the object puller from the cube spawner so i'm just going to write a public static object polar which we'll call instance and then we'll create an awake method and in here we'll simply set instance equal to this and just to let everyone know that this is an attempt at a singleton we'll write singleton here and we'll end the region down here this doesn't do anything it just allows us to collapse the code like this and we don't have to look at it anymore so now we can save that and now when we go into the cube spawner what this allows us to do is actually delete the variable right here delete the instantiate call and instead we can go object polar dot instance dot and now we can simply call the function from in here so we'll call spawn from pool and then we can feed it a tag and we'll use the tag cube we can feed it a position we'll just use transform.position as well as a rotation we'll use criterion.identity and there we go if you're going to be calling this a lot like i'm doing here i would recommend storing this in a variable so we can just do that very quickly we'll create an object puller call it object pooler and then inside of the start method we can set object pooler equal to optic.instance and now we can simply reference it here that just makes things a tiny bit more performant so if we now save this go into unity and hit play we should see that after we spawn 150 cubes it stops but it hasn't actually stopped it's still reusing cubes but for some reason they aren't really moving anywhere they're just all stacked on top of each other the reason for this is that our cube script is currently set up to only apply a force in the start method and start is only called once when the object is actually instantiated so what we need to do is create some kind of way in order to notify this object that it has just been reused in other words we need to create our own start method and a fairly easy way to do this is using what we call an interface now if we go into a project we can go ahead and create a csharp script because this is going to be an interface we'll start it with an i for interface and we'll then call it pold object let's open it up in visual studio we don't want this to derive from mono behavior we want to remove both of the functions we can basically remove all of the namespaces and we don't want this to be a class we want it to be an interface now basically what an interface does is allows you to specify some types and functions that all objects that derive from this interface have to implement so in our case we can just write void on object spawn and we'll just close it off like this that's pretty much all we need to write inside of our interface if we now save this and go into our cube script we want to make sure that our cube derives from mono behavior and and this is where we put a comma i pulled object and you will see here that it now lights red and the reason why is that well now this class derives from i pulled object but it doesn't implement this on object spawn function so we need to make sure to go in here and instead of using start we want to use on object spawn and we'll also want to mark it as public and right away we can see that it no longer underlines with red because we're now implementing the function what we can then do is save this and go into our object polar go down to where we actually spawn an object from the pole and in here we can now get a component on the object that we're spawning so object to spawn dot get component of type i pulled object that's right we can actually search for interfaces we can installed this in a variable so i pulled object and we'll call it pooled object like this now it's not certain that we want all objects to have a script that derives from this interface we want that to be optional so we'll go in here and write if pulled object is not equal to null well then we can actually call a function on this interface and we of course want to go ahead and call on object spawn so this should in fact search for the interface check if it's not equal to null and if it isn't it will go in access the interface look for an implementation of this method and then inside of the cube actually call it and execute all the code so if we now save this go into unity and play we can see that cubes are now being properly reused yay definitely play around with this and have fun with it you can easily go in and add multiple pools we could go ahead and try and increase the size here to 300 as well and check out the results of course this object pulley could be made more performant one of the things that i would do is definitely try and get rid of the get component call so definitely have fun with it yourself also a cool guy from the community sent me over this script that he has made you can check that out on github and also just quickly search the asset store and found this plugin that is currently free and looks like it has most of the functionality that you're going to need i'll of course have links for both in the description that's pretty much it for this video make sure to check out skillshare simply click the link in the description for your chance to get a discount on that thanks for watching and i will see you in the next video thanks to all the awesome patreon supporters who donated in january and a special thanks to sean carry diego geick duderman diane gein biffio infinity ppr urai omer cyborg mummy derek keemsgerk myrrh facebook marify theodor dye john ramirez doubletap 45 james p superman the great john brewer guard jason detito alex rokitsky jan phil knapp suny jacobson james rogers robert brundt rob fern and erasmus

@@ -1,0 +1,1551 @@
+With timestamps:
+
+00:00 - [Music]
+00:06 - hello everyone
+00:07 - in this episode i will tell you how i
+00:10 - built an online bookstore
+00:12 - using aws stripe and react
+00:15 - from aws i use aws amplify library to
+00:18 - connect resources at
+00:19 - aws end so we are going to create an
+00:22 - appsync api
+00:23 - as our graphql api and then we will
+00:26 - create
+00:26 - s3 buckets to store our book images and
+00:29 - so on
+00:30 - now before i start i want to tell that
+00:32 - i'm not going to cover each and every
+00:33 - line of the react code
+00:35 - what i will be covering is how to
+00:37 - connect to aws
+00:39 - from react i will also be covering
+00:42 - different relationships
+00:43 - like many-to-many relationship between
+00:45 - books and orders
+00:46 - and also different authorization
+00:48 - mechanisms for example
+00:50 - the admin users can create books but
+00:53 - unauthenticated like the guest users
+00:55 - can only view the books if they want to
+00:57 - check out they have to login but still
+00:59 - again they are not able to create books
+01:01 - that's only for the admins
+01:03 - and finally i will tell you how i did
+01:05 - the checkout part as well
+01:07 - including the payment processing order
+01:09 - creation etc
+01:11 - you will also learn how i use pipeline
+01:13 - resolvers
+01:14 - to deal with different custom logics and
+01:16 - then
+01:17 - create resources or create records in
+01:20 - dynamodb table
+01:21 - from within lambda functions well i'm
+01:24 - really excited about this project so
+01:26 - without further ado
+01:27 - let's look at the learnings and the
+01:28 - agenda that we are going to cover in
+01:30 - this video
+01:31 - and hey if you are interested about this
+01:33 - content make sure you subscribe to my
+01:35 - channel for more videos just like this
+01:39 - so let's start with the product demo so
+01:41 - i'll go through all the pages
+01:42 - and the main functionalities and then
+01:46 - let's look at the architecture diagram
+01:48 - and it will contain what resources are
+01:49 - we using and how they connect each other
+01:52 - and then let's start configuring our
+01:54 - application cloning the github
+01:56 - repository
+01:57 - of course i'll put all the code in the
+01:58 - tab repository so you guys can look at
+02:01 - the front-end code
+02:02 - and then we will initialize an amplify
+02:04 - project into the react application
+02:07 - then we are going to add multiple
+02:09 - amplify categories
+02:10 - starting from the authentication which
+02:13 - will handle all the login sign up all
+02:15 - that part
+02:16 - and then the storage category where i
+02:18 - will create an s3 bucket
+02:20 - to store images and we will also use
+02:24 - function category to create two lambda
+02:26 - functions for
+02:27 - pipeline resolvers to handle the
+02:29 - checkout functionality
+02:31 - then we will also be adding the api
+02:33 - category
+02:34 - and we'll specifically add a graphql api
+02:38 - so our front-end can communicate with
+02:40 - the dynamodb tables and so on
+02:42 - and then i'll explain the process of
+02:44 - processing orders
+02:46 - and once all these resources are synced
+02:48 - with the cloud
+02:50 - then we'll look at how we can
+02:52 - communicate with them or interact with
+02:54 - them from within our front-end react
+02:55 - application
+02:57 - then we'll see how we can verify a order
+03:00 - that is placed by the customer
+03:02 - from the stripe dashboard as well as
+03:04 - from appsync
+03:05 - console and finally we will be deploying
+03:08 - our application to s3 as an static
+03:11 - website
+03:12 - now let's have a look at the final
+03:13 - product demo
+03:15 - okay now this is our online bookstore
+03:16 - it's called wisdomly
+03:18 - and it has multiple menu point home
+03:20 - books cart and checkout
+03:22 - so in the home page we can either view
+03:24 - all books or
+03:25 - see the featured collection right here
+03:28 - so if i open up one of these
+03:30 - books let's say the details section it
+03:32 - will show the title description the
+03:34 - author and the price
+03:35 - and also i can add it to the cart and if
+03:38 - i go to the book section
+03:40 - then it will show all the books that i
+03:41 - have including featured and unfeatured
+03:44 - ones
+03:45 - and then i have the cart so at the
+03:46 - moment okay there's a
+03:48 - one thing let me take it out so it's an
+03:50 - empty cart right here
+03:52 - and then we have the checkout page so
+03:55 - checkout page
+03:56 - is not loaded unless you sign into the
+03:59 - application
+04:00 - and we have a hidden link as well so
+04:02 - that is for admin
+04:03 - so you can go to slash admin and then
+04:07 - you will be directed to another sign-in
+04:09 - page so here
+04:11 - we can login as an admin and start
+04:13 - adding new books to our store
+04:15 - so this is basically that mean section
+04:17 - let me sign in okay
+04:19 - so i can like choose a new book
+04:22 - let's say this one again i can
+04:28 - type the title and the description
+04:32 - let's add a new description and the
+04:34 - author
+04:35 - napoleon hill and the price it says 35
+04:39 - then we can select whether this is a
+04:41 - featured book or not let's say no
+04:43 - and we can submit it well i haven't
+04:45 - cleared the input but
+04:47 - anyways it will be submitted
+04:51 - let me sign out and go to home
+04:55 - or the books and then do a refresh then
+04:58 - i should see the
+04:59 - new book right here now let's add
+05:01 - something to our cart
+05:03 - so i'll come here and then i'll add this
+05:05 - book and i can increase the number of
+05:07 - books i want to add you can see the
+05:08 - total get updated
+05:10 - accordingly let me add another one let's
+05:12 - see this one
+05:14 - to make habits okay added and another
+05:17 - one maybe
+05:18 - okay 100 startup okay
+05:22 - so now i can check out so if i click
+05:24 - checkout then i have to login
+05:27 - so let me log in with the user
+05:30 - so if you haven't sign up you can click
+05:32 - create account and sign up
+05:34 - and then i will sign in
+05:37 - then i get to the checkout page i can
+05:39 - put
+05:40 - the address and then the card number so
+05:43 - right now we have linked the stripe test
+05:45 - account so the default
+05:47 - card number is 424242
+05:51 - 28 and the csv one one one
+05:54 - and one two one two okay something like
+05:57 - that
+05:57 - and i'll take a console so you can see
+06:00 - the console message
+06:01 - i click submit payment there you go
+06:04 - all day is successful so now i can go to
+06:07 - the stripe
+06:08 - account and see if i get a payment
+06:12 - and here we go we just got a payment
+06:17 - now let's look at the architecture
+06:18 - diagram now it is not a very complex
+06:21 - architecture that we have
+06:22 - we'll be using most of the serverless
+06:24 - services
+06:26 - now starting from the front end of our
+06:28 - bookstore
+06:29 - we'll be coding it in react library
+06:33 - and the final application we will be
+06:35 - hosting it on s3 bucket
+06:37 - which has static hosting enabled then we
+06:40 - also have another s3 bucket
+06:42 - to store all the public images now these
+06:45 - images can be accessed by anybody
+06:48 - authenticated or guest users now in the
+06:51 - react front end
+06:52 - we have the amplify library installed
+06:56 - now we use amplify library to connect
+06:58 - with our backend
+06:59 - so as our backend we have an graphql api
+07:03 - which is powered by appsync and that is
+07:06 - going to handle crud operations for
+07:08 - books
+07:08 - such as admin create books user read
+07:11 - books
+07:12 - etc now all this crud operation will be
+07:15 - handled by
+07:16 - vtl templates or velocity templates
+07:19 - and the best part is we never have to
+07:21 - write any of these templates because
+07:22 - that is automatically being provided by
+07:24 - amplify when we are configuring this api
+07:28 - and not only the vtl template it will
+07:30 - also provide all the queries mutations
+07:33 - and all these
+07:34 - front-end resources to connect with our
+07:36 - backend without we having to write
+07:39 - any of those codes and then we have
+07:42 - the amazon cognito as our main
+07:45 - authentication provider
+07:47 - but in this application we will also be
+07:49 - using multi-oauth
+07:51 - functionality which we will use both
+07:54 - amazon cognito
+07:55 - as well as identity and access
+07:57 - management or iam
+07:59 - to allow guest users to connect to our
+08:02 - backend
+08:02 - and read the books and then we have the
+08:06 - pipeline resolver
+08:07 - that is built to process the payments or
+08:10 - the checkout process
+08:12 - so as soon as a user checks out then
+08:15 - the first lambda function get triggered
+08:17 - to make the payment will
+08:19 - charge the customer and before charging
+08:21 - the customer it will acquire user
+08:23 - details from cognito and then only it
+08:25 - will charge the customer with
+08:26 - more user details and after the charging
+08:30 - is successful
+08:31 - then the next lambda function takes over
+08:33 - and create the
+08:34 - order in dynamodb table so this is the
+08:37 - serverless architecture that we'll be
+08:39 - using to create our bookstore
+08:41 - all right so now to start let's first
+08:43 - clone our repository
+08:45 - so i'll head over to the github
+08:46 - repository i'll put the link below and
+08:48 - then click
+08:49 - code and get the clone url
+08:53 - i'll make a new directory
+08:56 - my bookstore and then do budget clone
+09:00 - to that directory
+09:06 - cd into that and open it in visual
+09:08 - studio code
+09:10 - so in the folder structure source folder
+09:12 - contain all the source code
+09:14 - and then we have a video resources
+09:16 - section and it has different code
+09:18 - snippets and other resources which i
+09:20 - will use during this video
+09:22 - next let's initialize an amplifier
+09:24 - project in aws and connect our project
+09:27 - now we need to install amplify cli so
+09:30 - make sure you install this exact version
+09:32 - to avoid
+09:33 - any conflicts due to library updates
+09:38 - npm i-g at aws amplify cli
+09:43 - at 4.24
+09:46 - so this will install amplify cli
+09:48 - globally
+09:50 - now before initializing an amplify
+09:53 - project we have to configure amplify cli
+09:55 - with your aws account
+09:57 - so let's type amplify configure
+10:00 - then you need to sign into your aws
+10:02 - account and after
+10:04 - that you can hit enter then you have to
+10:06 - pick which region you want to spin up
+10:08 - all the resources i will choose
+10:10 - usd2 and amplify username
+10:14 - let me type amplify manage
+10:18 - click next permission administrator
+10:22 - access is by default selected
+10:24 - review and create user
+10:29 - hit enter again you have to add the
+10:31 - access key
+10:32 - and secret access key i'll add the
+10:35 - access key here
+10:37 - and i'll add the secret access key of
+10:39 - the camera
+10:40 - okay hit enter then you can
+10:43 - provide a profile name i type youtube
+10:47 - profile so that setup a new user now i
+10:50 - will type amplify init
+10:52 - to initialize an amplifier project on
+10:54 - aws
+10:56 - enter a project name my bookstore sound
+10:59 - good
+11:00 - i'll let the environment name as prod
+11:02 - let's develop for production directly
+11:05 - and then visual studio code javascript
+11:07 - react
+11:08 - source distribution is on built
+11:11 - accept all the defaults now pick the
+11:14 - youtube profile
+11:15 - as my aws profile
+11:20 - with that we have successfully connected
+11:22 - our application to an amplifier project
+11:25 - next let's add authentication with aws
+11:27 - cognito
+11:29 - type amplify add auth
+11:32 - and accept the default configuration the
+11:34 - defaults are good for application
+11:37 - select username for sign in now i am
+11:40 - done
+11:41 - with that it will configure a user pool
+11:43 - for our application so that our users
+11:45 - can log into it
+11:47 - now as the next configuration let's
+11:49 - create an s3 bucket to store
+11:51 - images for our books type amplify
+11:54 - add storage select contain images audio
+11:58 - etc let's provide a friendly name for
+12:01 - this category
+12:02 - book images bucket name i'll accept the
+12:04 - default because this has to be unique
+12:06 - who has access to it both oauth and
+12:08 - guest users as you have already seen in
+12:10 - the demo
+12:11 - even a user who has not logged in should
+12:14 - be able to weave the books
+12:15 - so let's pick the option both
+12:17 - authenticated users and guest users
+12:19 - hit enter now for authenticated user
+12:23 - he should be able to create read
+12:26 - and delete now if you remember the admin
+12:29 - user who logged in he can create books
+12:32 - but the other users who logged in cannot
+12:34 - create book
+12:36 - we will accomplish that by adding this
+12:38 - admin user to an admin group
+12:41 - hit enter then what kind of access a
+12:44 - guest user has
+12:45 - only the read access is necessary
+12:48 - because he should be able to
+12:49 - view the books hit enter
+12:52 - no lambda triggers with that we have
+12:54 - configured the s3 bucket successfully
+12:56 - with our application
+12:58 - next let's add two lambda functions to
+13:00 - process
+13:01 - a book code now when a user add the
+13:04 - required books to the cart and then
+13:07 - press checkout
+13:08 - we have to do two things number one we
+13:10 - will charge the user
+13:12 - using stripe and number two we will
+13:15 - create the order
+13:16 - and then we will link the order with the
+13:18 - books that he requested
+13:20 - to handle these two activities we'll use
+13:22 - pipeline resolvers in
+13:23 - appsync more on that later type amplify
+13:27 - at function select lambda function
+13:31 - a friendly name for this category let's
+13:33 - call it
+13:34 - this our first function that will charge
+13:37 - the user
+13:38 - so we'll call it process payment
+13:42 - hit enter i'll accept the same name for
+13:44 - the lambda function
+13:46 - and then i'll choose node.js as the
+13:48 - runtime for this function
+13:50 - hit enter i'll use the hello world
+13:52 - template
+13:54 - no and i don't want any
+13:57 - recurring schedules no lambda layers for
+14:00 - now
+14:01 - i will update the lambda function little
+14:02 - later so i'll hit now again
+14:06 - then let's add our next lambda function
+14:08 - amplify add
+14:10 - function again lambda function friendly
+14:13 - name
+14:14 - let's say create
+14:18 - order create order will accept as the
+14:21 - same name for the lambda function
+14:23 - runtime node.js hello world no no
+14:27 - no no again now as we're adding this
+14:30 - resources you can see there's a folder
+14:32 - automatically created called amplify
+14:34 - and under that you will see there's a
+14:36 - folder called backend
+14:38 - so in that backend right now we have
+14:41 - three folders
+14:42 - one for oauth the oath category we
+14:44 - configured
+14:45 - the storage category we configured and
+14:48 - the functions
+14:49 - now here are the two folders for two
+14:51 - functions that we created
+14:52 - create order and process payment okay as
+14:55 - the next step
+14:55 - let's create a graphql api so that our
+14:59 - front end
+14:59 - the react application can communicate
+15:02 - with appsync
+15:03 - amplify add api hit enter
+15:07 - select graphql mybookstore is fine for
+15:09 - the api name
+15:10 - the default authorization type i will
+15:12 - choose cognito user pool
+15:14 - however we will be using multi-auth so
+15:17 - that we can use
+15:18 - cognito user pool to authenticate our
+15:20 - logged in users
+15:22 - and then api keys to authenticate our
+15:26 - guest users so let's first select
+15:29 - cognito user pool and the next questions
+15:32 - don't click
+15:32 - no i am done or don't select that rather
+15:36 - select i want to make some additional
+15:39 - changes
+15:40 - hit enter then the next question asks do
+15:43 - you want to configure
+15:44 - additional types type yes
+15:47 - hit enter then select api key with your
+15:51 - space
+15:51 - bar and hit enter then description for
+15:55 - the api key
+15:56 - guest user access to
+16:00 - books you can type anything hit enter
+16:04 - how long is it going to be valid the
+16:06 - apik i'll put
+16:08 - the maximum 365 days no conflict
+16:10 - detection
+16:12 - i don't have actually i have but let's
+16:15 - copy paste later let's choose single
+16:18 - object
+16:19 - as the example do i want to edit it
+16:22 - this time let's edit it right away i
+16:24 - will go to my video resources
+16:26 - and then i should see the schema.graphql
+16:29 - i'll copy the whole thing
+16:31 - and come back here delete this and paste
+16:34 - it
+16:34 - now this is the schema for our graphql
+16:37 - api that choose aws appsync
+16:39 - now we have multiple types as you can
+16:41 - see we have book type
+16:43 - book code type again an order type
+16:47 - and also the mutation types
+16:54 - and these rest are input types so let's
+16:57 - look at the first type
+16:58 - the book code now our whole application
+17:01 - is revolve around
+17:02 - books right so for a book let's add an
+17:05 - id
+17:05 - field and it has a title description
+17:08 - image url the author whether or not it
+17:11 - is featured
+17:12 - so that's the flag boolean flag and then
+17:14 - the price
+17:16 - i'll get to the connection in a bit so
+17:18 - but these are
+17:19 - the main attributes for a book and here
+17:21 - i'm using the oauth directive of amplify
+17:24 - and i have multiple rules configured the
+17:27 - first rule states
+17:28 - allow the group admins so allow all the
+17:31 - users in this
+17:32 - group to create update delete
+17:35 - and do all these things because admins
+17:37 - should be able to do any of that
+17:39 - so that's why when i log in with an
+17:41 - admin user i could
+17:43 - add and book but if i'm not part of the
+17:45 - admin group
+17:46 - even though i signed in i cannot do that
+17:49 - now this is handled through cognito user
+17:52 - pool authentication
+17:53 - then we have two other rules one of that
+17:55 - is private and operation
+17:57 - is the read so this means all
+18:00 - authenticated users can read the post so
+18:02 - both authenticated users and guest users
+18:04 - should be able to read the
+18:06 - post so that's what i added two rules
+18:09 - allow private as well as allow public so
+18:11 - public as
+18:12 - in the guest users who are not
+18:13 - authenticated and we allow them to
+18:16 - read so that they can see all the books
+18:18 - so people
+18:19 - in the admin group can do whatever but
+18:22 - the others
+18:23 - who authenticated or the guest users can
+18:26 - only read
+18:27 - the books then i'm using another
+18:29 - directive called model
+18:31 - so this directive is going to create a
+18:33 - dynamodb table
+18:34 - for this type so for this book type
+18:38 - it's going to create a table and also
+18:40 - and also
+18:41 - it will create the vtl template so
+18:44 - velocity templates that will handle
+18:46 - create read delete and all this crud
+18:48 - operation
+18:49 - and i pass an attribute or a parameter
+18:52 - called subscription
+18:53 - null so this means it is not going to
+18:56 - create any subscriptions
+18:58 - but it will create the mutations and the
+19:00 - query so the mutations we can create
+19:02 - update
+19:03 - and with queries we can query the books
+19:06 - so we don't need real-time updates so
+19:08 - that's why i set subscriptions to now
+19:10 - now let's look at our next main type
+19:12 - that is
+19:13 - the order for an order it has an id
+19:16 - field
+19:17 - and then it has the user the username
+19:20 - who made that order and the date of uh
+19:23 - order
+19:24 - the total load so that is a float and
+19:27 - then we have a connection
+19:28 - we'll get to that in a bit so then i'll
+19:30 - use three directives here
+19:32 - number one the model again it is going
+19:33 - to create a dynamodb
+19:35 - table folder just like books and create
+19:37 - all the crud operation for that
+19:39 - and then we have oauth and i have two
+19:42 - rules
+19:43 - one of the rules is allow the users
+19:47 - in the group admin to do anything so
+19:49 - they can view they can
+19:51 - delete read update orders from the users
+19:55 - so
+19:55 - there's no restriction for admin users
+19:58 - then there's another rule
+20:00 - it says allow the owner that means if
+20:02 - there's a user who logged into the
+20:03 - application it could be an admin or he
+20:05 - could be a normal user
+20:06 - he can see the orders that he created
+20:10 - but he cannot see the orders that is
+20:12 - created by other users
+20:13 - now both of these rules are handled by
+20:15 - cognito user pool
+20:17 - and when a user logged into the
+20:19 - application using cognito usable there's
+20:21 - an email
+20:21 - field so i'm using that email field
+20:25 - as the identity field for order
+20:28 - now when we have email as the identity
+20:30 - field we can easily allow
+20:32 - our backend functions to create an order
+20:35 - for a particular users
+20:37 - because as you know before we create an
+20:39 - order we have to do
+20:40 - a set of things we have to charge him
+20:42 - and we have to see whether it is
+20:43 - successful or not
+20:45 - and then only we will create the order
+20:47 - for him
+20:48 - so to handle all that complexities we
+20:50 - use those two lambda functions
+20:52 - and towards the end we will create the
+20:55 - order for the user by using
+20:57 - dynamodb sd case that's where this email
+21:01 - fields come
+21:01 - handy next we have a at key attribute
+21:05 - so this is we define a secondary index
+21:08 - and the index name is by user and we use
+21:11 - the user field
+21:12 - here i'm planning to add the username so
+21:15 - the admins
+21:16 - can query users by their username not
+21:19 - only just by using the table primary
+21:21 - keys which obviously
+21:22 - the id so we have more flexibility to
+21:25 - query with this
+21:26 - secondary index and they can in fact
+21:28 - type queries
+21:29 - find all the orders of the user whose
+21:32 - username starts with
+21:34 - let's say manoj next we have the
+21:36 - mutation called type now this
+21:37 - is the default mutation and when amplify
+21:41 - converts these
+21:42 - types to the full-blown scheme right
+21:45 - anyway it's going to create the
+21:46 - mutations for
+21:48 - older books and all that but now we have
+21:50 - a custom need
+21:52 - that is we have to create a new mutation
+21:55 - for processing orders and it is not
+21:57 - directly linked with a
+21:58 - dynamodb table also but we have to run
+22:02 - two functions so it's a custom name so
+22:04 - that's why i'm creating the mutation
+22:07 - separately for that
+22:08 - so i call it process order and it will
+22:11 - take the
+22:12 - input as the process order input now it
+22:14 - is this one
+22:15 - now when a user clicks checkout we will
+22:18 - get
+22:18 - the full array of his cart items
+22:21 - and then the total and the token from
+22:24 - stripe
+22:24 - and the address so we get this as the
+22:27 - input
+22:28 - and then we will output at the end
+22:31 - the order status whether it is succeed
+22:33 - or failed
+22:34 - now as this data comes in it will
+22:37 - execute
+22:38 - two functions sequentially and we call
+22:40 - it a pipeline resolver
+22:43 - so in our pipeline the first function
+22:44 - that get called is the process payment
+22:47 - the function we created earlier and then
+22:49 - we have the other function
+22:50 - so this will make sure the stripe
+22:52 - payment is successful if and only if
+22:54 - call this create order so let's add code
+22:57 - for these
+22:57 - two lambda functions i'll go to
+23:01 - video resources and then i should see
+23:03 - the process payment js
+23:06 - let me copy this whole thing close this
+23:09 - and in the back end i will go to the
+23:12 - functions
+23:14 - process payment and then source folder
+23:16 - index
+23:17 - you have a simple handler function let
+23:19 - me delete that and
+23:21 - paste that code the process payment
+23:23 - function is very simple
+23:25 - if i go to the handler function it will
+23:27 - do two things so it will first get the
+23:29 - total price for the order
+23:31 - from the input that is passed to this
+23:33 - and then it will charge the customer
+23:35 - so from the event we can get the
+23:37 - arguments and these
+23:39 - fields are extracted from that and out
+23:42 - of that there's this total
+23:44 - then i'll use stripe sdk to charge the
+23:47 - user
+23:48 - the amount the total amount in usd
+23:51 - currency
+23:52 - then the token of stripe that is being
+23:55 - passed down to this one and then as
+23:57 - description let's say order the date and
+23:59 - the email
+24:00 - now there's a one small thing guys we
+24:02 - have to get the user's email using
+24:04 - cognito
+24:06 - admin api so that's what this function
+24:08 - does
+24:09 - so if i go to this function user email
+24:13 - so this is that function we will call
+24:16 - the admin get user function with the
+24:18 - parameters the user pool id
+24:20 - and the username because the username is
+24:22 - passed down to us as the claim but we
+24:24 - don't get the email
+24:26 - as the claim so in order to get the full
+24:28 - user context we have to
+24:30 - call this admin get user with these
+24:32 - params
+24:33 - of course and then i'll return the email
+24:36 - and this email is here then
+24:38 - i'll add that as the description here i
+24:41 - can add the username as well let me in
+24:43 - fact do that
+24:44 - username with
+24:48 - email so that's about process payment
+24:51 - function
+24:52 - let's go to our video resources and go
+24:55 - to
+24:56 - create order function and then copy the
+24:58 - whole thing
+24:59 - so on the function let's expand the
+25:01 - create order source
+25:03 - index.js delete this and
+25:06 - paste so the process order does few
+25:09 - things
+25:10 - now the earlier function and this get
+25:12 - called sequentially so we can pass
+25:14 - down some information from the previous
+25:16 - function to this
+25:18 - so i will get the order details from the
+25:20 - process payment lambda
+25:21 - so that's what this code is all about i
+25:24 - will get
+25:25 - event.previous dots results so that will
+25:27 - give me
+25:28 - all the results that i passed down from
+25:30 - the previous function
+25:31 - and then i'm going to create an order so
+25:34 - we will create an order using aws
+25:38 - dynamodb sdk so that's what this
+25:40 - function does so it will pass down the
+25:43 - payload and create an order and then
+25:46 - we will link the books that he purchased
+25:50 - to this order select what this create
+25:53 - book
+25:54 - order function does now there's a
+25:56 - many-to-many relationship between
+25:58 - orders and books so that's why we have
+26:02 - this type exist you know the book order
+26:06 - so this is the third table that handles
+26:09 - this many-to-many relationship
+26:11 - you know when we are defining them in
+26:12 - domain relationship we have this third
+26:14 - table
+26:14 - that handles it so the book coder
+26:18 - it will have two main attributes the
+26:20 - book id
+26:21 - and the old id so when we are creating
+26:23 - an order from
+26:25 - the create order function we will first
+26:27 - create the order
+26:28 - and then get the order id and then we'll
+26:31 - create another record
+26:33 - in the book order table so that will
+26:36 - have
+26:36 - the order id of that order then we'll
+26:39 - create
+26:40 - links for each and every book in that
+26:42 - order so old id book id so if we
+26:44 - purchase three books then
+26:46 - the same old id will be there for three
+26:48 - records but the book ids will be
+26:50 - different
+26:51 - now with this connection we can achieve
+26:53 - two things
+26:54 - so one of the things is a user can see
+26:57 - his previous orders
+26:58 - so we can provide a feature which i
+27:00 - haven't added it anyway in this demo
+27:02 - a user can view his previous orders
+27:06 - because a user can have many orders
+27:08 - right and in the same time
+27:10 - from the admin panel you can look up all
+27:13 - the orders of
+27:14 - all the users or all the orders of a
+27:18 - certain user so that is also possible
+27:20 - now in order to set up these
+27:22 - relationships we use
+27:23 - the connection directive now
+27:26 - the book it has multiple orders so
+27:30 - it will have multiple book coders so
+27:32 - this is the third table that we are
+27:34 - referencing right
+27:35 - so it will have multiple book coders and
+27:37 - there is the connection
+27:39 - in the same time order has multiple
+27:41 - books
+27:42 - so that is of again book code middle
+27:46 - function and when we are resolving it we
+27:48 - are querying these attributes by using
+27:51 - the secondary indexes now in order to
+27:53 - get all the books for an order we use
+27:55 - the by order this secondary index
+27:58 - to do the other way around that means to
+28:01 - get all the orders
+28:03 - for a book we use by book
+28:06 - secondary index right here both indexes
+28:09 - are defined in the
+28:10 - book code type i hope this is clear so
+28:13 - let's move on
+28:14 - so i'll pull up the terminal again it's
+28:16 - waiting for my
+28:17 - command so let me hit enter
+28:20 - then that will start executing this
+28:23 - graphql schema and
+28:25 - create that full blown schema for us
+28:27 - okay it is done
+28:28 - now the next step would be to push all
+28:30 - these resources onto aws so it will
+28:32 - create and provision these resources
+28:35 - but before that we have some
+28:36 - dependencies in the lambda functions
+28:39 - which we need to fill up
+28:40 - and i'll go to amplify backend functions
+28:44 - let's first go to process payment under
+28:46 - the source
+28:47 - index.js as you can see it use aws sdk
+28:51 - as one of the dependencies but this is
+28:53 - provided at the lambda runtime
+28:55 - so it's fine but we need to fill in the
+28:57 - user pool id and the stripe
+28:59 - private key i don't have this one yet
+29:03 - so let's do an amplify push anyways
+29:06 - now the amplify push is going to create
+29:08 - these resources
+29:10 - in aws a user pool with our own category
+29:13 - s3 bucket with our storage category
+29:16 - appsync api with our api category
+29:19 - and the dynamodb together with devsync
+29:22 - as the resolvers
+29:23 - and the two lambda functions again as
+29:25 - part of our api
+29:27 - pipeline resolvers i'll do amplify push
+29:31 - so after this i will get an user pull id
+29:33 - then i'll update this again
+29:35 - yes so all these are yet to create my
+29:38 - two function
+29:39 - st bucket both the user pool and the app
+29:42 - sync api
+29:43 - now i want to generate the code so i can
+29:45 - easily use
+29:46 - my api from front-end i don't have to
+29:49 - write any code
+29:50 - say yes i want it in javascript
+29:53 - in these folders queries mutation
+29:56 - subscription yes i want them
+29:58 - and how deeply it is nested let's use
+30:00 - four because
+30:01 - in future we may add more nested queries
+30:04 - all right so now it is successful and it
+30:06 - took me about three minutes to
+30:08 - complete this whole process now let's
+30:10 - understand the two functions that
+30:12 - process a book code
+30:14 - let me close all these windows now in
+30:17 - source folder
+30:18 - i should find a file called aws
+30:21 - export.js
+30:22 - let me copy this user pool id there
+30:25 - and go to amplify function process
+30:28 - payment
+30:28 - and replace this placeholder with that
+30:30 - then i need a stripe
+30:32 - private key for that you need to create
+30:35 - a stripe account
+30:36 - go to stripe.com and then sign up for
+30:39 - account
+30:40 - and in the dashboard you will see get
+30:41 - your test api keys
+30:43 - so from our react front-end we will use
+30:45 - the public key
+30:46 - to generate a stripe token then that
+30:49 - token will be passed down to our lambda
+30:51 - function
+30:52 - then we will use a secret key to make a
+30:55 - charge for the user
+30:57 - so first i will copy the public key and
+31:00 - then let's first update the front end
+31:02 - for that you go to source and pages
+31:05 - check
+31:05 - out and there's another place folder for
+31:08 - the public key
+31:11 - save it then i'll view the
+31:14 - secret key copy that go to the lambda
+31:16 - function
+31:17 - and here i will paste it by the way you
+31:20 - should use your own
+31:21 - private and public key because i'm going
+31:23 - to remove this account
+31:25 - so payment process dependencies are now
+31:28 - complete
+31:29 - let's go to create order function
+31:30 - dependencies source
+31:32 - even index.js and there i have to
+31:36 - install
+31:37 - guid or uuid so right click open in
+31:40 - terminal
+31:41 - then let me type npmi uuid
+31:44 - now since this function create orders in
+31:46 - the dynamodb
+31:47 - table directly we have to pass the order
+31:50 - table
+31:51 - and the book code table so that will
+31:53 - create the link between boot book
+31:55 - and the order so how to find that
+31:58 - so take another new terminal and then
+32:01 - type
+32:01 - amplify console so that will open your
+32:05 - amplify project in aws automatically
+32:08 - choose the correct region this is it i
+32:10 - click on to that
+32:11 - then here go to in environment and then
+32:14 - i'll click
+32:15 - the prod environment i created then i
+32:18 - see the categories i have added
+32:21 - can go to api and under that i get all
+32:24 - the data sources
+32:25 - the table names so i need the book table
+32:28 - name and the
+32:29 - book order table name so i'll click view
+32:32 - here that that will open up the dynamodb
+32:34 - table
+32:35 - so this is the order table so let me
+32:37 - copy this
+32:39 - order table name replace the placeholder
+32:42 - then i need the book called a table so
+32:45 - this is the book code
+32:46 - table copy
+32:49 - paste it save okay with that i'm going
+32:53 - to run
+32:54 - another amplify push
+32:57 - so this time it will update only these
+32:59 - two functions
+33:01 - as you see update is only for these two
+33:04 - functions everything else is not changed
+33:06 - so it will be much quick now hey one
+33:09 - other additional thing
+33:11 - when you are storing these strings you
+33:13 - know this because this
+33:14 - private key is very sensitive you can
+33:17 - use
+33:18 - ssm or parameter store and then refer
+33:20 - this parameter store variable here
+33:22 - or else you can use the secret manager
+33:24 - as well
+33:26 - so with that we have successfully
+33:27 - configured all our resources on cloud
+33:30 - okay now that we have spent much time on
+33:32 - configuring the application
+33:34 - let's run the app with the current
+33:36 - configuration
+33:37 - clear the screen let's run npm install
+33:40 - to install the dependencies for our
+33:42 - front-end
+33:43 - in the package.json we have bunch of
+33:45 - dependencies to be installed
+33:47 - let me run npm i or npm install
+33:50 - that will install all the dependencies
+33:53 - okay now let's start our application by
+33:55 - running
+33:55 - npm run start
+33:58 - here we go it opens up our application
+34:00 - but we don't have any books
+34:02 - no featured books no books scottish
+34:05 - empty
+34:06 - everything so why don't we create some
+34:09 - books from the admin section go to admin
+34:12 - slash admin
+34:13 - and let's create an admin user
+34:16 - so let's create a normal user first and
+34:19 - we'll
+34:20 - make him an admin i'll use 10 minutes
+34:23 - email to get a temporary email
+34:26 - box
+34:31 - put that email address here fake phone
+34:34 - number
+34:35 - create account let me see if i get an
+34:38 - email right away and this is the
+34:40 - verification id copy that
+34:42 - paste confirm great now we are in the
+34:45 - add new book section
+34:47 - so let's add a book click choose file
+34:50 - let's add this one
+34:56 - paste some description author
+35:02 - let's make it a feature book now before
+35:04 - i submit
+35:06 - let's take a console and inspect it
+35:09 - network
+35:10 - and i'll hit submit
+35:13 - i don't see anything now
+35:16 - so let's go to our project go to our
+35:18 - admin page
+35:19 - so on the pages we have admin so this is
+35:22 - the admin component
+35:23 - so on top we are requiring react
+35:27 - and also use date for keeping some
+35:29 - states and then
+35:31 - we import some amplified dependencies so
+35:34 - one of those dependencies is this create
+35:36 - book mutation when we do amplify push
+35:39 - it's going to create all the mutations
+35:41 - queries and subscription in javascript
+35:44 - for us
+35:44 - and those files are in this graphql
+35:47 - folder you see we have mutation we have
+35:50 - queries
+35:51 - but in my file i am referencing a
+35:54 - mutation
+35:55 - file in api folder which is here so at
+35:58 - the moment it has nothing
+35:59 - queries it is empty why i'm doing that
+36:03 - because
+36:03 - this graphql folder is always being
+36:06 - replaced as and when
+36:08 - i do an update so i want to keep it
+36:10 - constant and have more control over it
+36:13 - so that's why i am referencing a
+36:14 - different directory
+36:16 - but now let's go to mutation in the
+36:18 - graphql folder copy that
+36:20 - and go to this api folder mutation save
+36:23 - it
+36:24 - similarly queries copy this and
+36:27 - queries paste it now my previous data is
+36:31 - anyway
+36:32 - not here so let me add it quickly let's
+36:34 - try submitting again
+36:37 - and i'm getting an error in creating
+36:39 - to-do's so let's observe this error
+36:41 - so i get an error called unauthorized
+36:44 - now as you remember
+36:45 - the creation of books is only allowed
+36:47 - for admin so we sign up a user but he's
+36:50 - not an admin
+36:51 - so let's create him an admin so i'll
+36:53 - take another terminal
+36:55 - let's go to amplify console
+37:01 - click on authentication then i can view
+37:03 - my users in the user pool
+37:05 - click this user pool button pick the
+37:08 - region
+37:08 - so click on my user pool here then i get
+37:12 - number of users one so i'll go to users
+37:15 - so this is our admin user
+37:17 - so now i go to groups and then create a
+37:19 - new group
+37:20 - i call this group admin so it has to
+37:23 - match exactly the
+37:25 - word or the string that we give in our
+37:27 - schema file
+37:28 - admin user groups to create books i
+37:30 - don't have to select a role but
+37:32 - precedence
+37:33 - are set as 0. so the lesser the
+37:35 - precedence more priority is given
+37:37 - so this is basically if i'm part of
+37:39 - multiple groups which group
+37:41 - should be prioritized so then i'll
+37:43 - create the group
+37:44 - go into that then i'll add the user
+37:48 - i'll click the admin user again don't
+37:50 - get confused my group name is also admin
+37:53 - the username is also admin but this
+37:55 - username could be anything
+37:57 - so now let's go back and clear the
+37:59 - screen and try
+38:00 - submitting before that i have to sign
+38:03 - out then only it will take effect
+38:05 - login again okay now i go to the bottom
+38:10 - and click
+38:10 - submit so this time
+38:13 - it should be successful and i don't get
+38:16 - any error the create book is now
+38:18 - successful
+38:19 - so i'll refresh and add another book
+38:21 - because i haven't implemented this
+38:22 - clearing up feature
+38:24 - which i will do in upcoming day so let
+38:26 - me add another file
+38:28 - or book rather
+38:33 - submit it and be successful
+38:37 - so we have two books so i think that
+38:39 - should be enough
+38:40 - so let's go to home i have to do a
+38:42 - refresh
+38:43 - but even though i don't see any books
+38:46 - returned to me
+38:47 - right now i'm not authenticated user
+38:49 - because i signed out but why is it not
+38:51 - showing
+38:51 - so let's inspect the query that triggers
+38:55 - in the home page
+38:56 - so it is basically list book query and i
+38:59 - am getting an error
+39:00 - so i get unauthorized error and if i
+39:02 - further look into this
+39:04 - there's something unauthorized in the
+39:06 - book coders connection
+39:08 - so let's look at that query so i will go
+39:11 - to home
+39:12 - page under pages go to home and i'm
+39:15 - using the context api here
+39:17 - so i have a context for book so the book
+39:19 - context
+39:20 - so so that is there inside
+39:24 - the context folder so right here and
+39:27 - this is the book context
+39:29 - in the book context we are fetching
+39:30 - books and once we fetch the book we set
+39:33 - this featured books in a separate array
+39:36 - and all the books in a separate array
+39:38 - so our components that use this context
+39:41 - can refer
+39:42 - either of it but however in order to get
+39:45 - the books it is using this list books
+39:47 - query so if i go to queries
+39:51 - so that is list books now this all looks
+39:54 - fine except for one thing
+39:56 - that is this orders now an
+39:58 - unauthenticated user
+40:00 - can only look at the books read the
+40:03 - books
+40:04 - these orders attribute or the fields
+40:07 - are coming from a connection with the
+40:09 - older type
+40:10 - or the table but they are not authorized
+40:12 - to be with that's why
+40:14 - it is saying unauthorized this field is
+40:16 - unauthorized but everything else is
+40:18 - authorized for him
+40:19 - so what i will do is i will remove this
+40:23 - and save it and this is one of the
+40:25 - advantage that we can reap
+40:27 - when we have these queries and mutation
+40:29 - outside this automatically
+40:32 - updating folder so that's why i put it
+40:34 - in a separate fold in the first place
+40:36 - so now let's look at it and as you can
+40:39 - see
+40:39 - it is loaded very nice but there's
+40:43 - another problem
+40:44 - you know my images are not loading so
+40:46 - let's go back to our amplify console
+40:48 - and this time let's go to file storage
+40:51 - and here in the file storage
+40:53 - so i will view my bucket in s3 and when
+40:56 - we upload book images so it has
+40:58 - uploaded into a folder called public and
+41:01 - inside that there's another folder
+41:03 - called
+41:03 - images then we have these three images
+41:07 - in order for an unauthenticated user to
+41:09 - weave the books
+41:10 - we have to add the public permission for
+41:13 - this folder
+41:14 - with amplify storage there are three
+41:16 - levels of folders public folder private
+41:19 - and protected
+41:20 - public is for everybody to see but still
+41:22 - again we have to add some permission to
+41:24 - this
+41:25 - since we are using the api key
+41:27 - authentication to request these
+41:29 - resources
+41:30 - so what i will do here is i will go to
+41:32 - permissions
+41:33 - and go to bucket policy and i'll go to
+41:36 - the documentation links right
+41:38 - beneath it and then there's a link
+41:41 - to policy examples and this page if i
+41:44 - scroll little bit down
+41:46 - i'll get grant read-only permission to
+41:49 - anonymous users
+41:50 - so i'll copy this policy come back to my
+41:54 - console s3 and paste it in
+41:58 - here instead of the example bucket i
+42:00 - will replace it with the exact
+42:02 - bucket name is this
+42:05 - paste it out and i don't want the public
+42:08 - access to the entire fold
+42:10 - only to the public folder and inside
+42:13 - that there's a
+42:14 - images folder so you get this
+42:18 - message bucket has public access but
+42:21 - it only has public access to this folder
+42:24 - so i will go back to my wisdomly app and
+42:27 - then
+42:28 - do another refresh we'll see if the
+42:30 - images are now loading
+42:33 - so as predicted now the images loads
+42:36 - next
+42:37 - let's look at how we have actually
+42:38 - connected our front end
+42:40 - to our back end now we already seen some
+42:43 - of these api calls to the backend
+42:45 - but let's look at in page wise so i'll
+42:48 - close all these files
+42:49 - and i will go to the pages folder now
+42:52 - here in the home folder
+42:54 - we display featured products so we use
+42:57 - the context
+42:58 - book context here in the context which
+43:00 - is the book context
+43:02 - and we are passing this featured book
+43:05 - list
+43:06 - to our context thereby from within our
+43:08 - components we can
+43:10 - require it the featured books is nothing
+43:13 - but we get all the books
+43:15 - using fetchbooks
+43:19 - and then we set the featured books to
+43:21 - featured
+43:22 - by filtering them by the featured flag
+43:25 - the boolean value
+43:27 - so it's that simple in the books page we
+43:30 - use
+43:30 - books instead of featured so we'll get
+43:32 - the whole list of books
+43:34 - now both of these pages are public even
+43:36 - the cart page is also public
+43:38 - but when you look at the checkout page
+43:40 - it is not public
+43:42 - you have to log in so that's where we
+43:44 - use this amplify authenticator
+43:47 - and that comes from amplify ui react
+43:49 - library
+43:50 - which got installed when we did npm
+43:52 - install and from there there's a
+43:54 - component amplify authenticator we just
+43:56 - have to wrap it around our
+43:57 - component then you will get that nice
+44:00 - little
+44:00 - login screen so in the same time if i go
+44:03 - to the admin
+44:04 - here also we are wrapping the return
+44:07 - value
+44:08 - or the return jsx using the amplify
+44:10 - authenticator thereby we get the
+44:13 - login screen that's all to it i think
+44:15 - the rest is quite explanatory
+44:17 - when we want to make an api call we get
+44:20 - the api component from
+44:22 - aws amplify and then we'll use
+44:25 - amplify.graphql
+44:26 - then we use this helper function graphql
+44:28 - operation
+44:30 - and we get the corresponding mutation
+44:32 - from our api mutation and then we'll
+44:34 - pass down the
+44:35 - input parameters that's it i mean it's
+44:39 - very easy to make an api call
+44:41 - using amplify because everything is
+44:44 - generated for you
+44:44 - especially these mutations and queries
+44:47 - next
+44:48 - let's create an order and see if it is
+44:50 - properly
+44:51 - processed so in my localhost i'll select
+44:55 - 10nx rule and add that to the card let's
+44:58 - increase it
+44:59 - three times i need three of these books
+45:01 - and then i'll go to
+45:03 - startup again one of these the order
+45:05 - total is
+45:07 - 63.85 dollars then i'll click
+45:10 - checkout so i have to login in order to
+45:12 - check out
+45:13 - and i only have the admin user so let's
+45:15 - create another user
+45:20 - so i get a new email address and paste
+45:22 - that in
+45:23 - create account let's check there you go
+45:26 - and the verification code paste
+45:30 - confirm
+45:35 - now in the checkout component we have a
+45:38 - place to enter the shipping address
+45:40 - and then the stripe component by the way
+45:43 - let me quickly show you how i linked it
+45:45 - if i go to pages and check out and you
+45:48 - see i'm using stripe elements
+45:50 - from stripe react library for this
+45:53 - element i am pressing the
+45:55 - public key as a attribute and then i
+45:58 - have this
+45:58 - checkout form which is under component
+46:00 - so in this component
+46:02 - i'm using the other elements the card
+46:04 - element
+46:05 - you stripe and those things so it will
+46:07 - properly show
+46:08 - the card element or the place to enter
+46:11 - the card details
+46:12 - which is this one so let's try to add
+46:17 - address and then the card by default it
+46:20 - is four two four two four two
+46:21 - this can be anything and i'll click
+46:24 - submit payment in the order
+46:28 - i get an error it says couldn't find the
+46:30 - module stripe
+46:31 - i think we haven't installed one of
+46:33 - those dependencies let's install that
+46:35 - real quick
+46:36 - amplify backend open it in
+46:39 - terminal stripe let's save it as well
+46:46 - i'll do another amplify push
+46:55 - it's updated so let's try again clear
+46:58 - everything and then
+46:59 - create another payment again there's an
+47:01 - error so this time
+47:03 - i have a different error so if you can
+47:05 - see the hover text it says
+47:07 - this lambda function is not authorized
+47:09 - to perform
+47:10 - cognito admin get user well that is
+47:14 - right because we haven't provided
+47:15 - any permission to this function to call
+47:18 - cognito to get
+47:19 - admin user so let's do that so let's
+47:22 - provide the permission
+47:23 - amplify console
+47:26 - backend environment functions
+47:30 - the process payment i will click view in
+47:32 - lambda
+47:33 - so i can see the role that is currently
+47:36 - attached to this
+47:37 - and then i can add that additional
+47:38 - permission to it and here's the code
+47:42 - and in the permission tab this is the
+47:44 - role that is attached
+47:45 - so i'll click on to this then it will
+47:47 - open that role in identity and access
+47:50 - management
+47:50 - and i'm going to add an inline policy
+47:53 - for that
+47:54 - click inline policy choose the service
+47:57 - cognito and
+48:00 - cognito user pool because we are getting
+48:02 - a user from the cognito user poll
+48:05 - and read i will select the permission
+48:08 - admin get user because that's what we
+48:10 - are doing and which user pool
+48:12 - so let's click on to this and then i
+48:14 - have to add the arn of the user pool
+48:17 - so let's take that i will go to the user
+48:19 - pool which i have open into another step
+48:21 - i will go to general settings then here
+48:25 - i will get the arn
+48:26 - copy that go back to that file click add
+48:29 - arn paste it then click
+48:33 - add review policy
+48:37 - create and that is been attached in the
+48:39 - same time
+48:40 - we have another lambda function that is
+48:43 - create total
+48:44 - and this create total lambda function so
+48:46 - it is connecting to dynamodb
+48:48 - and we have not provided any permission
+48:51 - to interact with dynamodb as well
+48:53 - so let's add that permission as well so
+48:55 - i'll go to amplify console again
+48:57 - and go back to my bookstore backend
+49:00 - environment
+49:01 - again functions select the second
+49:03 - function here
+49:04 - we win lambda so this is the lambda code
+49:08 - permission tab this is the role that is
+49:11 - currently attached to it
+49:12 - so do you see we don't have any
+49:14 - permission for dynamodb
+49:16 - this time instead of an inline policy i
+49:18 - will attach and managed policy
+49:20 - i'll search for dynamo db
+49:24 - so this time i'll add the full access to
+49:25 - dynamodb of course you can add
+49:27 - the granular access only for those two
+49:29 - table
+49:31 - i'll leave it to you but here let the
+49:33 - full
+49:34 - access and i think that should do it
+49:37 - so let's come back and let's try to run
+49:40 - this again
+49:41 - let's see if we get the order successful
+49:43 - message hopefully
+49:45 - submit payment i get another error
+49:52 - well i'll click that once again then it
+49:55 - says the order is successful you know it
+49:57 - takes just a little bit to
+49:59 - propagate that permission that is
+50:01 - understandable so now
+50:02 - my order is successful very nice so how
+50:05 - do we verify whether my order is
+50:07 - successful
+50:08 - we can do it in two ways number one
+50:11 - we can go to our stripe and see if
+50:13 - there's a payment
+50:14 - so in my cart there should be a payment
+50:17 - for 63.85
+50:18 - i'll go to stripe dashboard and payments
+50:22 - tab
+50:23 - and here we go 63.85 so we receive the
+50:26 - payment that means our first lambda
+50:28 - function
+50:28 - charging the user is properly done in
+50:31 - the second lambda function it will do
+50:32 - two things
+50:33 - first it will create the order then it
+50:35 - will create the links
+50:37 - to the books of that order let's go to
+50:39 - amplify
+50:40 - and i'll go to api again then i'll
+50:44 - select view the api the app sync api so
+50:47 - we can run some queries and see exactly
+50:50 - those tables updated let's go to data
+50:52 - sources and then directly look at the
+50:54 - table first so
+50:55 - in the order table we should have an
+50:57 - order record so i'll open it in a new
+51:00 - tab
+51:00 - and here we have the record so the order
+51:03 - is there and 63.85 the total
+51:06 - and the customer email is added so
+51:08 - that's because we set up the identity
+51:10 - field as the email
+51:11 - cancel that and then we'll go to book
+51:14 - quotas there should be
+51:15 - two book coders because we had two
+51:17 - orders
+51:18 - let me quickly show you one and two so
+51:21 - these two books
+51:22 - so there are two records for the same
+51:24 - old id and different two
+51:26 - book ids 79 is the old id 04
+51:30 - and the other one different word id 0 6
+51:33 - but
+51:33 - same old id 04 well with this we can run
+51:37 - some nice queries
+51:38 - so i'll go to appsync console again then
+51:40 - go to queries
+51:41 - how to log in with a user so this time i
+51:44 - will log in
+51:45 - with the admin user how to provide the
+51:47 - client id
+51:48 - so and go to source aws
+51:52 - export.js then we can find the client id
+51:56 - here
+51:56 - copy paste it here then the admin user
+52:02 - login clear everything i'll go back to
+52:05 - my video resources
+52:07 - and example graphql i'll use this query
+52:11 - to list all orders so it's going to list
+52:14 - all orders
+52:15 - and in each and every order it will go
+52:18 - into the books of that order and will
+52:21 - print out
+52:22 - the list of books so let me run that
+52:24 - there you go
+52:25 - so we get the order and the books that
+52:28 - is
+52:29 - included in that order so in the same
+52:31 - time we can filter it by the
+52:33 - customer so let's look at this query so
+52:36 - it's the same query
+52:37 - but with the field attribute this is the
+52:39 - same one but we are adding the filter
+52:41 - let's say this time it's not manoj
+52:44 - fernando see this is
+52:46 - andrew and hit enter
+52:49 - well i don't see the android user and
+52:51 - that's strange so let's go to our
+52:53 - dynamodb table for order and we'll see
+52:55 - if there's a
+52:56 - user column and i don't see it and let's
+52:59 - go to our stripe dashboard and we'll see
+53:02 - if there's a user mention
+53:04 - no you know it is undefined something to
+53:07 - do with the
+53:08 - username let's try to debug it go to
+53:11 - amplify folder
+53:12 - create order index.js and we should get
+53:15 - the username
+53:16 - here but apparently it is not passed
+53:19 - let's go to the previous function where
+53:21 - the username is
+53:22 - passed down to this one so that is
+53:24 - process payment source
+53:26 - index.js well in the handler function
+53:29 - we are trying to access the username
+53:31 - from arguments.input and this is the
+53:33 - error
+53:34 - the username is not inside the
+53:36 - arguments.input
+53:37 - instead it is in the claims so
+53:41 - this is where it is let me
+53:44 - take out the username here because you
+53:46 - don't get the username
+53:48 - and add const username
+53:51 - and paste this one i'll take out the
+53:54 - username part
+53:55 - so it will destructure properly format
+53:58 - it
+53:58 - now it should do it so i take console
+54:01 - and then
+54:02 - do an amplify push again
+54:06 - okay it's updated so let's check that
+54:09 - again
+54:10 - so i will increase the order let's say
+54:13 - 180
+54:15 - 107.85
+54:20 - submit payment order is successful
+54:23 - let's go to the stripe dashboard to the
+54:25 - payments again
+54:28 - and there we go 180 197.85
+54:32 - and this time we get the user and row
+54:35 - so that means if i go to the query that
+54:37 - i previously ran
+54:38 - and i run it again then i should get
+54:41 - the order now these are the books for
+54:44 - android order
+54:45 - well now we got everything working
+54:47 - except
+54:48 - we haven't host this application so
+54:50 - let's use amplify itself
+54:52 - to host it let's look at the query that
+54:54 - admin can write to get all the orders of
+54:57 - a user
+54:58 - now host this application with amplify
+55:00 - there are multiple
+55:01 - ways one we can link a proper cicd
+55:05 - pipeline
+55:05 - you know with different environment test
+55:08 - qa and production environment
+55:10 - and then you can use custom domains for
+55:11 - these each environment as well
+55:13 - or else we can simply use an s3n cloud
+55:16 - front to host this application as a one
+55:19 - environment
+55:20 - so we'll use the second one in fact
+55:22 - we'll not use cloud front as well just
+55:24 - s3 bucket
+55:25 - so i'll go to my bookstore add a new
+55:27 - category amplify ad hosting
+55:30 - i'll choose the second option cloudfront
+55:32 - ns3
+55:33 - so i'll use the dev environment that is
+55:35 - only s3
+55:36 - hosting bugger name i'll accept the
+55:38 - default index html as our
+55:41 - main page and then i'll do amplify
+55:44 - publish
+55:45 - so i think this is all it it should give
+55:47 - out an url
+55:48 - to an s3 bucket which is configured to
+55:50 - be host and static website
+55:52 - then we can view application on cloud
+55:55 - okay now it is published successfully
+55:57 - so it has open up the
+56:00 - website for me and you can see it is all
+56:03 - here
+56:04 - and it is not on my local machine but on
+56:06 - s3 so i can add
+56:10 - can check out of course i have to log in
+56:14 - and it's all here so this is what i want
+56:17 - to cover in this video
+56:19 - and hey if you are interested about this
+56:21 - content make sure you subscribe to my
+56:22 - channel
+56:23 - for more videos just like these
+
+Cleaned transcript:
+
+hello everyone in this episode i will tell you how i built an online bookstore using aws stripe and react from aws i use aws amplify library to connect resources at aws end so we are going to create an appsync api as our graphql api and then we will create s3 buckets to store our book images and so on now before i start i want to tell that i'm not going to cover each and every line of the react code what i will be covering is how to connect to aws from react i will also be covering different relationships like manytomany relationship between books and orders and also different authorization mechanisms for example the admin users can create books but unauthenticated like the guest users can only view the books if they want to check out they have to login but still again they are not able to create books that's only for the admins and finally i will tell you how i did the checkout part as well including the payment processing order creation etc you will also learn how i use pipeline resolvers to deal with different custom logics and then create resources or create records in dynamodb table from within lambda functions well i'm really excited about this project so without further ado let's look at the learnings and the agenda that we are going to cover in this video and hey if you are interested about this content make sure you subscribe to my channel for more videos just like this so let's start with the product demo so i'll go through all the pages and the main functionalities and then let's look at the architecture diagram and it will contain what resources are we using and how they connect each other and then let's start configuring our application cloning the github repository of course i'll put all the code in the tab repository so you guys can look at the frontend code and then we will initialize an amplify project into the react application then we are going to add multiple amplify categories starting from the authentication which will handle all the login sign up all that part and then the storage category where i will create an s3 bucket to store images and we will also use function category to create two lambda functions for pipeline resolvers to handle the checkout functionality then we will also be adding the api category and we'll specifically add a graphql api so our frontend can communicate with the dynamodb tables and so on and then i'll explain the process of processing orders and once all these resources are synced with the cloud then we'll look at how we can communicate with them or interact with them from within our frontend react application then we'll see how we can verify a order that is placed by the customer from the stripe dashboard as well as from appsync console and finally we will be deploying our application to s3 as an static website now let's have a look at the final product demo okay now this is our online bookstore it's called wisdomly and it has multiple menu point home books cart and checkout so in the home page we can either view all books or see the featured collection right here so if i open up one of these books let's say the details section it will show the title description the author and the price and also i can add it to the cart and if i go to the book section then it will show all the books that i have including featured and unfeatured ones and then i have the cart so at the moment okay there's a one thing let me take it out so it's an empty cart right here and then we have the checkout page so checkout page is not loaded unless you sign into the application and we have a hidden link as well so that is for admin so you can go to slash admin and then you will be directed to another signin page so here we can login as an admin and start adding new books to our store so this is basically that mean section let me sign in okay so i can like choose a new book let's say this one again i can type the title and the description let's add a new description and the author napoleon hill and the price it says 35 then we can select whether this is a featured book or not let's say no and we can submit it well i haven't cleared the input but anyways it will be submitted let me sign out and go to home or the books and then do a refresh then i should see the new book right here now let's add something to our cart so i'll come here and then i'll add this book and i can increase the number of books i want to add you can see the total get updated accordingly let me add another one let's see this one to make habits okay added and another one maybe okay 100 startup okay so now i can check out so if i click checkout then i have to login so let me log in with the user so if you haven't sign up you can click create account and sign up and then i will sign in then i get to the checkout page i can put the address and then the card number so right now we have linked the stripe test account so the default card number is 424242 28 and the csv one one one and one two one two okay something like that and i'll take a console so you can see the console message i click submit payment there you go all day is successful so now i can go to the stripe account and see if i get a payment and here we go we just got a payment now let's look at the architecture diagram now it is not a very complex architecture that we have we'll be using most of the serverless services now starting from the front end of our bookstore we'll be coding it in react library and the final application we will be hosting it on s3 bucket which has static hosting enabled then we also have another s3 bucket to store all the public images now these images can be accessed by anybody authenticated or guest users now in the react front end we have the amplify library installed now we use amplify library to connect with our backend so as our backend we have an graphql api which is powered by appsync and that is going to handle crud operations for books such as admin create books user read books etc now all this crud operation will be handled by vtl templates or velocity templates and the best part is we never have to write any of these templates because that is automatically being provided by amplify when we are configuring this api and not only the vtl template it will also provide all the queries mutations and all these frontend resources to connect with our backend without we having to write any of those codes and then we have the amazon cognito as our main authentication provider but in this application we will also be using multioauth functionality which we will use both amazon cognito as well as identity and access management or iam to allow guest users to connect to our backend and read the books and then we have the pipeline resolver that is built to process the payments or the checkout process so as soon as a user checks out then the first lambda function get triggered to make the payment will charge the customer and before charging the customer it will acquire user details from cognito and then only it will charge the customer with more user details and after the charging is successful then the next lambda function takes over and create the order in dynamodb table so this is the serverless architecture that we'll be using to create our bookstore all right so now to start let's first clone our repository so i'll head over to the github repository i'll put the link below and then click code and get the clone url i'll make a new directory my bookstore and then do budget clone to that directory cd into that and open it in visual studio code so in the folder structure source folder contain all the source code and then we have a video resources section and it has different code snippets and other resources which i will use during this video next let's initialize an amplifier project in aws and connect our project now we need to install amplify cli so make sure you install this exact version to avoid any conflicts due to library updates npm ig at aws amplify cli at 4.24 so this will install amplify cli globally now before initializing an amplify project we have to configure amplify cli with your aws account so let's type amplify configure then you need to sign into your aws account and after that you can hit enter then you have to pick which region you want to spin up all the resources i will choose usd2 and amplify username let me type amplify manage click next permission administrator access is by default selected review and create user hit enter again you have to add the access key and secret access key i'll add the access key here and i'll add the secret access key of the camera okay hit enter then you can provide a profile name i type youtube profile so that setup a new user now i will type amplify init to initialize an amplifier project on aws enter a project name my bookstore sound good i'll let the environment name as prod let's develop for production directly and then visual studio code javascript react source distribution is on built accept all the defaults now pick the youtube profile as my aws profile with that we have successfully connected our application to an amplifier project next let's add authentication with aws cognito type amplify add auth and accept the default configuration the defaults are good for application select username for sign in now i am done with that it will configure a user pool for our application so that our users can log into it now as the next configuration let's create an s3 bucket to store images for our books type amplify add storage select contain images audio etc let's provide a friendly name for this category book images bucket name i'll accept the default because this has to be unique who has access to it both oauth and guest users as you have already seen in the demo even a user who has not logged in should be able to weave the books so let's pick the option both authenticated users and guest users hit enter now for authenticated user he should be able to create read and delete now if you remember the admin user who logged in he can create books but the other users who logged in cannot create book we will accomplish that by adding this admin user to an admin group hit enter then what kind of access a guest user has only the read access is necessary because he should be able to view the books hit enter no lambda triggers with that we have configured the s3 bucket successfully with our application next let's add two lambda functions to process a book code now when a user add the required books to the cart and then press checkout we have to do two things number one we will charge the user using stripe and number two we will create the order and then we will link the order with the books that he requested to handle these two activities we'll use pipeline resolvers in appsync more on that later type amplify at function select lambda function a friendly name for this category let's call it this our first function that will charge the user so we'll call it process payment hit enter i'll accept the same name for the lambda function and then i'll choose node.js as the runtime for this function hit enter i'll use the hello world template no and i don't want any recurring schedules no lambda layers for now i will update the lambda function little later so i'll hit now again then let's add our next lambda function amplify add function again lambda function friendly name let's say create order create order will accept as the same name for the lambda function runtime node.js hello world no no no no again now as we're adding this resources you can see there's a folder automatically created called amplify and under that you will see there's a folder called backend so in that backend right now we have three folders one for oauth the oath category we configured the storage category we configured and the functions now here are the two folders for two functions that we created create order and process payment okay as the next step let's create a graphql api so that our front end the react application can communicate with appsync amplify add api hit enter select graphql mybookstore is fine for the api name the default authorization type i will choose cognito user pool however we will be using multiauth so that we can use cognito user pool to authenticate our logged in users and then api keys to authenticate our guest users so let's first select cognito user pool and the next questions don't click no i am done or don't select that rather select i want to make some additional changes hit enter then the next question asks do you want to configure additional types type yes hit enter then select api key with your space bar and hit enter then description for the api key guest user access to books you can type anything hit enter how long is it going to be valid the apik i'll put the maximum 365 days no conflict detection i don't have actually i have but let's copy paste later let's choose single object as the example do i want to edit it this time let's edit it right away i will go to my video resources and then i should see the schema.graphql i'll copy the whole thing and come back here delete this and paste it now this is the schema for our graphql api that choose aws appsync now we have multiple types as you can see we have book type book code type again an order type and also the mutation types and these rest are input types so let's look at the first type the book code now our whole application is revolve around books right so for a book let's add an id field and it has a title description image url the author whether or not it is featured so that's the flag boolean flag and then the price i'll get to the connection in a bit so but these are the main attributes for a book and here i'm using the oauth directive of amplify and i have multiple rules configured the first rule states allow the group admins so allow all the users in this group to create update delete and do all these things because admins should be able to do any of that so that's why when i log in with an admin user i could add and book but if i'm not part of the admin group even though i signed in i cannot do that now this is handled through cognito user pool authentication then we have two other rules one of that is private and operation is the read so this means all authenticated users can read the post so both authenticated users and guest users should be able to read the post so that's what i added two rules allow private as well as allow public so public as in the guest users who are not authenticated and we allow them to read so that they can see all the books so people in the admin group can do whatever but the others who authenticated or the guest users can only read the books then i'm using another directive called model so this directive is going to create a dynamodb table for this type so for this book type it's going to create a table and also and also it will create the vtl template so velocity templates that will handle create read delete and all this crud operation and i pass an attribute or a parameter called subscription null so this means it is not going to create any subscriptions but it will create the mutations and the query so the mutations we can create update and with queries we can query the books so we don't need realtime updates so that's why i set subscriptions to now now let's look at our next main type that is the order for an order it has an id field and then it has the user the username who made that order and the date of uh order the total load so that is a float and then we have a connection we'll get to that in a bit so then i'll use three directives here number one the model again it is going to create a dynamodb table folder just like books and create all the crud operation for that and then we have oauth and i have two rules one of the rules is allow the users in the group admin to do anything so they can view they can delete read update orders from the users so there's no restriction for admin users then there's another rule it says allow the owner that means if there's a user who logged into the application it could be an admin or he could be a normal user he can see the orders that he created but he cannot see the orders that is created by other users now both of these rules are handled by cognito user pool and when a user logged into the application using cognito usable there's an email field so i'm using that email field as the identity field for order now when we have email as the identity field we can easily allow our backend functions to create an order for a particular users because as you know before we create an order we have to do a set of things we have to charge him and we have to see whether it is successful or not and then only we will create the order for him so to handle all that complexities we use those two lambda functions and towards the end we will create the order for the user by using dynamodb sd case that's where this email fields come handy next we have a at key attribute so this is we define a secondary index and the index name is by user and we use the user field here i'm planning to add the username so the admins can query users by their username not only just by using the table primary keys which obviously the id so we have more flexibility to query with this secondary index and they can in fact type queries find all the orders of the user whose username starts with let's say manoj next we have the mutation called type now this is the default mutation and when amplify converts these types to the fullblown scheme right anyway it's going to create the mutations for older books and all that but now we have a custom need that is we have to create a new mutation for processing orders and it is not directly linked with a dynamodb table also but we have to run two functions so it's a custom name so that's why i'm creating the mutation separately for that so i call it process order and it will take the input as the process order input now it is this one now when a user clicks checkout we will get the full array of his cart items and then the total and the token from stripe and the address so we get this as the input and then we will output at the end the order status whether it is succeed or failed now as this data comes in it will execute two functions sequentially and we call it a pipeline resolver so in our pipeline the first function that get called is the process payment the function we created earlier and then we have the other function so this will make sure the stripe payment is successful if and only if call this create order so let's add code for these two lambda functions i'll go to video resources and then i should see the process payment js let me copy this whole thing close this and in the back end i will go to the functions process payment and then source folder index you have a simple handler function let me delete that and paste that code the process payment function is very simple if i go to the handler function it will do two things so it will first get the total price for the order from the input that is passed to this and then it will charge the customer so from the event we can get the arguments and these fields are extracted from that and out of that there's this total then i'll use stripe sdk to charge the user the amount the total amount in usd currency then the token of stripe that is being passed down to this one and then as description let's say order the date and the email now there's a one small thing guys we have to get the user's email using cognito admin api so that's what this function does so if i go to this function user email so this is that function we will call the admin get user function with the parameters the user pool id and the username because the username is passed down to us as the claim but we don't get the email as the claim so in order to get the full user context we have to call this admin get user with these params of course and then i'll return the email and this email is here then i'll add that as the description here i can add the username as well let me in fact do that username with email so that's about process payment function let's go to our video resources and go to create order function and then copy the whole thing so on the function let's expand the create order source index.js delete this and paste so the process order does few things now the earlier function and this get called sequentially so we can pass down some information from the previous function to this so i will get the order details from the process payment lambda so that's what this code is all about i will get event.previous dots results so that will give me all the results that i passed down from the previous function and then i'm going to create an order so we will create an order using aws dynamodb sdk so that's what this function does so it will pass down the payload and create an order and then we will link the books that he purchased to this order select what this create book order function does now there's a manytomany relationship between orders and books so that's why we have this type exist you know the book order so this is the third table that handles this manytomany relationship you know when we are defining them in domain relationship we have this third table that handles it so the book coder it will have two main attributes the book id and the old id so when we are creating an order from the create order function we will first create the order and then get the order id and then we'll create another record in the book order table so that will have the order id of that order then we'll create links for each and every book in that order so old id book id so if we purchase three books then the same old id will be there for three records but the book ids will be different now with this connection we can achieve two things so one of the things is a user can see his previous orders so we can provide a feature which i haven't added it anyway in this demo a user can view his previous orders because a user can have many orders right and in the same time from the admin panel you can look up all the orders of all the users or all the orders of a certain user so that is also possible now in order to set up these relationships we use the connection directive now the book it has multiple orders so it will have multiple book coders so this is the third table that we are referencing right so it will have multiple book coders and there is the connection in the same time order has multiple books so that is of again book code middle function and when we are resolving it we are querying these attributes by using the secondary indexes now in order to get all the books for an order we use the by order this secondary index to do the other way around that means to get all the orders for a book we use by book secondary index right here both indexes are defined in the book code type i hope this is clear so let's move on so i'll pull up the terminal again it's waiting for my command so let me hit enter then that will start executing this graphql schema and create that full blown schema for us okay it is done now the next step would be to push all these resources onto aws so it will create and provision these resources but before that we have some dependencies in the lambda functions which we need to fill up and i'll go to amplify backend functions let's first go to process payment under the source index.js as you can see it use aws sdk as one of the dependencies but this is provided at the lambda runtime so it's fine but we need to fill in the user pool id and the stripe private key i don't have this one yet so let's do an amplify push anyways now the amplify push is going to create these resources in aws a user pool with our own category s3 bucket with our storage category appsync api with our api category and the dynamodb together with devsync as the resolvers and the two lambda functions again as part of our api pipeline resolvers i'll do amplify push so after this i will get an user pull id then i'll update this again yes so all these are yet to create my two function st bucket both the user pool and the app sync api now i want to generate the code so i can easily use my api from frontend i don't have to write any code say yes i want it in javascript in these folders queries mutation subscription yes i want them and how deeply it is nested let's use four because in future we may add more nested queries all right so now it is successful and it took me about three minutes to complete this whole process now let's understand the two functions that process a book code let me close all these windows now in source folder i should find a file called aws export.js let me copy this user pool id there and go to amplify function process payment and replace this placeholder with that then i need a stripe private key for that you need to create a stripe account go to stripe.com and then sign up for account and in the dashboard you will see get your test api keys so from our react frontend we will use the public key to generate a stripe token then that token will be passed down to our lambda function then we will use a secret key to make a charge for the user so first i will copy the public key and then let's first update the front end for that you go to source and pages check out and there's another place folder for the public key save it then i'll view the secret key copy that go to the lambda function and here i will paste it by the way you should use your own private and public key because i'm going to remove this account so payment process dependencies are now complete let's go to create order function dependencies source even index.js and there i have to install guid or uuid so right click open in terminal then let me type npmi uuid now since this function create orders in the dynamodb table directly we have to pass the order table and the book code table so that will create the link between boot book and the order so how to find that so take another new terminal and then type amplify console so that will open your amplify project in aws automatically choose the correct region this is it i click on to that then here go to in environment and then i'll click the prod environment i created then i see the categories i have added can go to api and under that i get all the data sources the table names so i need the book table name and the book order table name so i'll click view here that that will open up the dynamodb table so this is the order table so let me copy this order table name replace the placeholder then i need the book called a table so this is the book code table copy paste it save okay with that i'm going to run another amplify push so this time it will update only these two functions as you see update is only for these two functions everything else is not changed so it will be much quick now hey one other additional thing when you are storing these strings you know this because this private key is very sensitive you can use ssm or parameter store and then refer this parameter store variable here or else you can use the secret manager as well so with that we have successfully configured all our resources on cloud okay now that we have spent much time on configuring the application let's run the app with the current configuration clear the screen let's run npm install to install the dependencies for our frontend in the package.json we have bunch of dependencies to be installed let me run npm i or npm install that will install all the dependencies okay now let's start our application by running npm run start here we go it opens up our application but we don't have any books no featured books no books scottish empty everything so why don't we create some books from the admin section go to admin slash admin and let's create an admin user so let's create a normal user first and we'll make him an admin i'll use 10 minutes email to get a temporary email box put that email address here fake phone number create account let me see if i get an email right away and this is the verification id copy that paste confirm great now we are in the add new book section so let's add a book click choose file let's add this one paste some description author let's make it a feature book now before i submit let's take a console and inspect it network and i'll hit submit i don't see anything now so let's go to our project go to our admin page so on the pages we have admin so this is the admin component so on top we are requiring react and also use date for keeping some states and then we import some amplified dependencies so one of those dependencies is this create book mutation when we do amplify push it's going to create all the mutations queries and subscription in javascript for us and those files are in this graphql folder you see we have mutation we have queries but in my file i am referencing a mutation file in api folder which is here so at the moment it has nothing queries it is empty why i'm doing that because this graphql folder is always being replaced as and when i do an update so i want to keep it constant and have more control over it so that's why i am referencing a different directory but now let's go to mutation in the graphql folder copy that and go to this api folder mutation save it similarly queries copy this and queries paste it now my previous data is anyway not here so let me add it quickly let's try submitting again and i'm getting an error in creating todo's so let's observe this error so i get an error called unauthorized now as you remember the creation of books is only allowed for admin so we sign up a user but he's not an admin so let's create him an admin so i'll take another terminal let's go to amplify console click on authentication then i can view my users in the user pool click this user pool button pick the region so click on my user pool here then i get number of users one so i'll go to users so this is our admin user so now i go to groups and then create a new group i call this group admin so it has to match exactly the word or the string that we give in our schema file admin user groups to create books i don't have to select a role but precedence are set as 0. so the lesser the precedence more priority is given so this is basically if i'm part of multiple groups which group should be prioritized so then i'll create the group go into that then i'll add the user i'll click the admin user again don't get confused my group name is also admin the username is also admin but this username could be anything so now let's go back and clear the screen and try submitting before that i have to sign out then only it will take effect login again okay now i go to the bottom and click submit so this time it should be successful and i don't get any error the create book is now successful so i'll refresh and add another book because i haven't implemented this clearing up feature which i will do in upcoming day so let me add another file or book rather submit it and be successful so we have two books so i think that should be enough so let's go to home i have to do a refresh but even though i don't see any books returned to me right now i'm not authenticated user because i signed out but why is it not showing so let's inspect the query that triggers in the home page so it is basically list book query and i am getting an error so i get unauthorized error and if i further look into this there's something unauthorized in the book coders connection so let's look at that query so i will go to home page under pages go to home and i'm using the context api here so i have a context for book so the book context so so that is there inside the context folder so right here and this is the book context in the book context we are fetching books and once we fetch the book we set this featured books in a separate array and all the books in a separate array so our components that use this context can refer either of it but however in order to get the books it is using this list books query so if i go to queries so that is list books now this all looks fine except for one thing that is this orders now an unauthenticated user can only look at the books read the books these orders attribute or the fields are coming from a connection with the older type or the table but they are not authorized to be with that's why it is saying unauthorized this field is unauthorized but everything else is authorized for him so what i will do is i will remove this and save it and this is one of the advantage that we can reap when we have these queries and mutation outside this automatically updating folder so that's why i put it in a separate fold in the first place so now let's look at it and as you can see it is loaded very nice but there's another problem you know my images are not loading so let's go back to our amplify console and this time let's go to file storage and here in the file storage so i will view my bucket in s3 and when we upload book images so it has uploaded into a folder called public and inside that there's another folder called images then we have these three images in order for an unauthenticated user to weave the books we have to add the public permission for this folder with amplify storage there are three levels of folders public folder private and protected public is for everybody to see but still again we have to add some permission to this since we are using the api key authentication to request these resources so what i will do here is i will go to permissions and go to bucket policy and i'll go to the documentation links right beneath it and then there's a link to policy examples and this page if i scroll little bit down i'll get grant readonly permission to anonymous users so i'll copy this policy come back to my console s3 and paste it in here instead of the example bucket i will replace it with the exact bucket name is this paste it out and i don't want the public access to the entire fold only to the public folder and inside that there's a images folder so you get this message bucket has public access but it only has public access to this folder so i will go back to my wisdomly app and then do another refresh we'll see if the images are now loading so as predicted now the images loads next let's look at how we have actually connected our front end to our back end now we already seen some of these api calls to the backend but let's look at in page wise so i'll close all these files and i will go to the pages folder now here in the home folder we display featured products so we use the context book context here in the context which is the book context and we are passing this featured book list to our context thereby from within our components we can require it the featured books is nothing but we get all the books using fetchbooks and then we set the featured books to featured by filtering them by the featured flag the boolean value so it's that simple in the books page we use books instead of featured so we'll get the whole list of books now both of these pages are public even the cart page is also public but when you look at the checkout page it is not public you have to log in so that's where we use this amplify authenticator and that comes from amplify ui react library which got installed when we did npm install and from there there's a component amplify authenticator we just have to wrap it around our component then you will get that nice little login screen so in the same time if i go to the admin here also we are wrapping the return value or the return jsx using the amplify authenticator thereby we get the login screen that's all to it i think the rest is quite explanatory when we want to make an api call we get the api component from aws amplify and then we'll use amplify.graphql then we use this helper function graphql operation and we get the corresponding mutation from our api mutation and then we'll pass down the input parameters that's it i mean it's very easy to make an api call using amplify because everything is generated for you especially these mutations and queries next let's create an order and see if it is properly processed so in my localhost i'll select 10nx rule and add that to the card let's increase it three times i need three of these books and then i'll go to startup again one of these the order total is 63.85 dollars then i'll click checkout so i have to login in order to check out and i only have the admin user so let's create another user so i get a new email address and paste that in create account let's check there you go and the verification code paste confirm now in the checkout component we have a place to enter the shipping address and then the stripe component by the way let me quickly show you how i linked it if i go to pages and check out and you see i'm using stripe elements from stripe react library for this element i am pressing the public key as a attribute and then i have this checkout form which is under component so in this component i'm using the other elements the card element you stripe and those things so it will properly show the card element or the place to enter the card details which is this one so let's try to add address and then the card by default it is four two four two four two this can be anything and i'll click submit payment in the order i get an error it says couldn't find the module stripe i think we haven't installed one of those dependencies let's install that real quick amplify backend open it in terminal stripe let's save it as well i'll do another amplify push it's updated so let's try again clear everything and then create another payment again there's an error so this time i have a different error so if you can see the hover text it says this lambda function is not authorized to perform cognito admin get user well that is right because we haven't provided any permission to this function to call cognito to get admin user so let's do that so let's provide the permission amplify console backend environment functions the process payment i will click view in lambda so i can see the role that is currently attached to this and then i can add that additional permission to it and here's the code and in the permission tab this is the role that is attached so i'll click on to this then it will open that role in identity and access management and i'm going to add an inline policy for that click inline policy choose the service cognito and cognito user pool because we are getting a user from the cognito user poll and read i will select the permission admin get user because that's what we are doing and which user pool so let's click on to this and then i have to add the arn of the user pool so let's take that i will go to the user pool which i have open into another step i will go to general settings then here i will get the arn copy that go back to that file click add arn paste it then click add review policy create and that is been attached in the same time we have another lambda function that is create total and this create total lambda function so it is connecting to dynamodb and we have not provided any permission to interact with dynamodb as well so let's add that permission as well so i'll go to amplify console again and go back to my bookstore backend environment again functions select the second function here we win lambda so this is the lambda code permission tab this is the role that is currently attached to it so do you see we don't have any permission for dynamodb this time instead of an inline policy i will attach and managed policy i'll search for dynamo db so this time i'll add the full access to dynamodb of course you can add the granular access only for those two table i'll leave it to you but here let the full access and i think that should do it so let's come back and let's try to run this again let's see if we get the order successful message hopefully submit payment i get another error well i'll click that once again then it says the order is successful you know it takes just a little bit to propagate that permission that is understandable so now my order is successful very nice so how do we verify whether my order is successful we can do it in two ways number one we can go to our stripe and see if there's a payment so in my cart there should be a payment for 63.85 i'll go to stripe dashboard and payments tab and here we go 63.85 so we receive the payment that means our first lambda function charging the user is properly done in the second lambda function it will do two things first it will create the order then it will create the links to the books of that order let's go to amplify and i'll go to api again then i'll select view the api the app sync api so we can run some queries and see exactly those tables updated let's go to data sources and then directly look at the table first so in the order table we should have an order record so i'll open it in a new tab and here we have the record so the order is there and 63.85 the total and the customer email is added so that's because we set up the identity field as the email cancel that and then we'll go to book quotas there should be two book coders because we had two orders let me quickly show you one and two so these two books so there are two records for the same old id and different two book ids 79 is the old id 04 and the other one different word id 0 6 but same old id 04 well with this we can run some nice queries so i'll go to appsync console again then go to queries how to log in with a user so this time i will log in with the admin user how to provide the client id so and go to source aws export.js then we can find the client id here copy paste it here then the admin user login clear everything i'll go back to my video resources and example graphql i'll use this query to list all orders so it's going to list all orders and in each and every order it will go into the books of that order and will print out the list of books so let me run that there you go so we get the order and the books that is included in that order so in the same time we can filter it by the customer so let's look at this query so it's the same query but with the field attribute this is the same one but we are adding the filter let's say this time it's not manoj fernando see this is andrew and hit enter well i don't see the android user and that's strange so let's go to our dynamodb table for order and we'll see if there's a user column and i don't see it and let's go to our stripe dashboard and we'll see if there's a user mention no you know it is undefined something to do with the username let's try to debug it go to amplify folder create order index.js and we should get the username here but apparently it is not passed let's go to the previous function where the username is passed down to this one so that is process payment source index.js well in the handler function we are trying to access the username from arguments.input and this is the error the username is not inside the arguments.input instead it is in the claims so this is where it is let me take out the username here because you don't get the username and add const username and paste this one i'll take out the username part so it will destructure properly format it now it should do it so i take console and then do an amplify push again okay it's updated so let's check that again so i will increase the order let's say 180 107.85 submit payment order is successful let's go to the stripe dashboard to the payments again and there we go 180 197.85 and this time we get the user and row so that means if i go to the query that i previously ran and i run it again then i should get the order now these are the books for android order well now we got everything working except we haven't host this application so let's use amplify itself to host it let's look at the query that admin can write to get all the orders of a user now host this application with amplify there are multiple ways one we can link a proper cicd pipeline you know with different environment test qa and production environment and then you can use custom domains for these each environment as well or else we can simply use an s3n cloud front to host this application as a one environment so we'll use the second one in fact we'll not use cloud front as well just s3 bucket so i'll go to my bookstore add a new category amplify ad hosting i'll choose the second option cloudfront ns3 so i'll use the dev environment that is only s3 hosting bugger name i'll accept the default index html as our main page and then i'll do amplify publish so i think this is all it it should give out an url to an s3 bucket which is configured to be host and static website then we can view application on cloud okay now it is published successfully so it has open up the website for me and you can see it is all here and it is not on my local machine but on s3 so i can add can check out of course i have to log in and it's all here so this is what i want to cover in this video and hey if you are interested about this content make sure you subscribe to my channel for more videos just like these

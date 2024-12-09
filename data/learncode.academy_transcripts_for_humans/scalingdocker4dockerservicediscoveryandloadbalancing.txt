@@ -1,0 +1,201 @@
+With timestamps:
+
+00:00 - okay we have two problems to solve
+00:02 - before our high availability production
+00:04 - docker uh solution is complete so we've
+00:08 - got everything running our apps are
+00:09 - registering so now we just need to kind
+00:11 - of pull that internal lcd registry for
+00:14 - changes and reload our nginx
+00:16 - configuration and this is actually a
+00:18 - decent bit easier than service
+00:20 - registration i feel like service
+00:22 - registration is always the hardest part
+00:23 - me telling you that i exist
+00:26 - service discovery there's just some good
+00:27 - solutions and tools for that that make
+00:29 - it a lot easier we're going to be using
+00:30 - conf d
+00:32 - for nginx co and fd and what conf d is
+00:35 - going to do is it's going to
+00:38 - run inside of this container and then
+00:40 - it's going to watch the cd registry keys
+00:42 - that we tell it to watch and whenever
+00:44 - things change it's going to reload the
+00:46 - nginx configuration template
+00:49 - it's going to template it out and change
+00:50 - the configuration file and then it's
+00:52 - going to reload nginx
+00:54 - and i have made a docker image that
+00:56 - makes this very simple it's will r stern
+00:58 - slash nginx lb
+01:01 - and all you do is you run it you pass it
+01:02 - two things you tell it the service name
+01:05 - that you're listening for and that's
+01:06 - your load balancing for
+01:08 - and then you give it another environment
+01:10 - variable called scd and this is simply
+01:12 - your ip address import that it can
+01:14 - access scd from so in this case we're
+01:17 - running this command right here to get
+01:20 - the internal fcd ip address which is
+01:23 - always port 2379 so we're passing this
+01:26 - in this won't change the only thing
+01:27 - that'll change is what your service name
+01:30 - is called so in this case we're load
+01:31 - balancing some app
+01:33 - and then i'll give it a name some app lb
+01:35 - so that's it
+01:37 - let's go ahead and run this and then
+01:38 - i'll show you kind of what's going on
+01:40 - under the hood uh so let's go ahead and
+01:42 - submit this service file
+01:46 - uh submit what i call it some app lb
+01:52 - and then i can just start it
+01:58 - now
+01:59 - ideally we would probably run two copies
+02:01 - of this so i'd i'd make it a some app
+02:04 - lb at file and then i'd launch two
+02:06 - versions of it because we do want
+02:08 - failover we want there to be in case
+02:10 - this nginx instance goes down we want
+02:12 - there to be another one that can get
+02:14 - picked up as well
+02:15 - but for now we're just doing one for
+02:17 - this example
+02:18 - let's look at this fleet control list
+02:20 - units
+02:23 - so there's my lb it is running on this
+02:26 - guy oh it's still activating so it's
+02:28 - pulling the image right now
+02:30 - it'll probably take about 30 seconds
+02:32 - start post
+02:33 - and should be done any second there we
+02:35 - go it's running so let's go ahead and
+02:37 - look at this guy
+02:41 - i guess i'll just ssh into here
+02:44 - i don't know what port it's running on
+02:48 - so gosh ssh
+02:51 - all these commands can kind of get to
+02:53 - you sometimes
+02:54 - there you go docker ps
+02:58 - there we go node sample is exposing this
+03:00 - port 32770
+03:02 - and again that was on this ip address so
+03:04 - let's go to here three two seven seven
+03:06 - zero
+03:08 - three two seven seven zero
+03:11 - sum app one
+03:13 - let's see if it load balances
+03:15 - am i looking at the wrong one yes i am
+03:18 - three two seven seven one
+03:20 - i was just going directly to some app
+03:22 - one
+03:23 - there we go
+03:25 - two
+03:26 - one two four three excellent so it's
+03:29 - load balancing between all four great
+03:31 - that's very very good to see
+03:33 - so let's go and show you how that's
+03:36 - doing what it's doing
+03:37 - and then we'll move on to our last
+03:40 - problem to solve
+03:41 - so here's basically everything it took
+03:44 - to create that nginx lb image that i
+03:47 - made very very simple to recreate on
+03:49 - your own
+03:50 - i'm doing it from a boon from ubuntu
+03:53 - i'm installing conf d i'm installing
+03:55 - nginx
+03:58 - and then i'm just basically going to
+03:59 - remove a few things i'm going to copy a
+04:01 - couple files over i'm going to expose
+04:03 - port 80 and then my entry command is
+04:05 - just to run comfd watch which is this
+04:08 - file right here so this is what gets run
+04:10 - when you run that load balancer
+04:13 - and i'm doing two things i'm simply
+04:16 - looking at this tomo file
+04:19 - and i'm looking this tomo file is
+04:21 - basically the configuration for conf d
+04:24 - and it's very very simple you can see
+04:26 - here's my template file
+04:28 - here's where i'm putting that template
+04:30 - file
+04:31 - and here's the keys that i'm watching in
+04:33 - fcd
+04:34 - and then here's my check command this is
+04:36 - important too because once you've
+04:38 - templated that out you want to make sure
+04:39 - that what got automatically generated is
+04:41 - actually
+04:42 - um
+04:44 - actually valid so it's going to run this
+04:46 - first it will not reload nginx unless
+04:48 - that template file is valid which is a
+04:49 - very good thing and we can probably make
+04:52 - that do a very loud and clear alert if
+04:54 - for some reason our our template file
+04:56 - blows up on us
+04:58 - and so then it's going to reload nginx
+05:00 - when that template's out here's all the
+05:01 - template file is
+05:02 - is um we're going to proxy to app we're
+05:06 - going to listen on port 80 and we're
+05:08 - going to proxy up here to all of our up
+05:09 - streams so for everything in services
+05:11 - app name upstream we're just going to
+05:13 - spit out a new server so we have to do
+05:16 - two things for this to work is we have
+05:17 - to change app name here here and here
+05:20 - and then we have to change the app name
+05:22 - that we're listening to so if you
+05:23 - remember
+05:24 - when i started this i did one thing i
+05:26 - gave it a service name environment
+05:28 - variable and right now we're calling
+05:30 - that sum app so when conf d watch starts
+05:33 - up we're going to replace every instance
+05:35 - of app name in both our tomo file and
+05:38 - our nginx template
+05:39 - with uh whatever service name we gave it
+05:42 - so it's going to automatically replace
+05:43 - all this stuff with some app
+05:47 - and it's going to automatically replace
+05:48 - all this
+05:50 - with some app all this all this right
+05:53 - here
+05:55 - so there we go it's going to change
+05:56 - those
+05:57 - and then it's going to start up conf d
+05:59 - which is going to watch at cd and
+06:02 - whenever it changes it's going to do its
+06:03 - thing so that's what's happening and
+06:06 - that's running so whenever nodes arrive
+06:10 - go away all that
+06:12 - nginx automatically reloads its
+06:14 - configuration
+06:15 - um and that's great and so we can
+06:17 - actually use this exact same
+06:21 - nginx lb image for as many services as
+06:24 - we want we just have to give it a
+06:25 - different service name and as long as we
+06:27 - adhere to this structure
+06:31 - as long as we adhere to this structure
+06:33 - in etcd services slash service name
+06:36 - slash upstream we can use that same
+06:38 - image for everything so now we just have
+06:40 - one problem left to solve and that's the
+06:43 - problem of we still don't know which ip
+06:45 - addresses imports all our nginx load
+06:48 - balancers will have so now we have to
+06:50 - register these somewhere else
+06:52 - and then we have a public-facing proxy
+06:54 - in front of them that automatically
+06:57 - points all of our sub-domains to our
+06:58 - services so let's move on to that last
+07:00 - and final piece
+
+Cleaned transcript:
+
+okay we have two problems to solve before our high availability production docker uh solution is complete so we've got everything running our apps are registering so now we just need to kind of pull that internal lcd registry for changes and reload our nginx configuration and this is actually a decent bit easier than service registration i feel like service registration is always the hardest part me telling you that i exist service discovery there's just some good solutions and tools for that that make it a lot easier we're going to be using conf d for nginx co and fd and what conf d is going to do is it's going to run inside of this container and then it's going to watch the cd registry keys that we tell it to watch and whenever things change it's going to reload the nginx configuration template it's going to template it out and change the configuration file and then it's going to reload nginx and i have made a docker image that makes this very simple it's will r stern slash nginx lb and all you do is you run it you pass it two things you tell it the service name that you're listening for and that's your load balancing for and then you give it another environment variable called scd and this is simply your ip address import that it can access scd from so in this case we're running this command right here to get the internal fcd ip address which is always port 2379 so we're passing this in this won't change the only thing that'll change is what your service name is called so in this case we're load balancing some app and then i'll give it a name some app lb so that's it let's go ahead and run this and then i'll show you kind of what's going on under the hood uh so let's go ahead and submit this service file uh submit what i call it some app lb and then i can just start it now ideally we would probably run two copies of this so i'd i'd make it a some app lb at file and then i'd launch two versions of it because we do want failover we want there to be in case this nginx instance goes down we want there to be another one that can get picked up as well but for now we're just doing one for this example let's look at this fleet control list units so there's my lb it is running on this guy oh it's still activating so it's pulling the image right now it'll probably take about 30 seconds start post and should be done any second there we go it's running so let's go ahead and look at this guy i guess i'll just ssh into here i don't know what port it's running on so gosh ssh all these commands can kind of get to you sometimes there you go docker ps there we go node sample is exposing this port 32770 and again that was on this ip address so let's go to here three two seven seven zero three two seven seven zero sum app one let's see if it load balances am i looking at the wrong one yes i am three two seven seven one i was just going directly to some app one there we go two one two four three excellent so it's load balancing between all four great that's very very good to see so let's go and show you how that's doing what it's doing and then we'll move on to our last problem to solve so here's basically everything it took to create that nginx lb image that i made very very simple to recreate on your own i'm doing it from a boon from ubuntu i'm installing conf d i'm installing nginx and then i'm just basically going to remove a few things i'm going to copy a couple files over i'm going to expose port 80 and then my entry command is just to run comfd watch which is this file right here so this is what gets run when you run that load balancer and i'm doing two things i'm simply looking at this tomo file and i'm looking this tomo file is basically the configuration for conf d and it's very very simple you can see here's my template file here's where i'm putting that template file and here's the keys that i'm watching in fcd and then here's my check command this is important too because once you've templated that out you want to make sure that what got automatically generated is actually um actually valid so it's going to run this first it will not reload nginx unless that template file is valid which is a very good thing and we can probably make that do a very loud and clear alert if for some reason our our template file blows up on us and so then it's going to reload nginx when that template's out here's all the template file is is um we're going to proxy to app we're going to listen on port 80 and we're going to proxy up here to all of our up streams so for everything in services app name upstream we're just going to spit out a new server so we have to do two things for this to work is we have to change app name here here and here and then we have to change the app name that we're listening to so if you remember when i started this i did one thing i gave it a service name environment variable and right now we're calling that sum app so when conf d watch starts up we're going to replace every instance of app name in both our tomo file and our nginx template with uh whatever service name we gave it so it's going to automatically replace all this stuff with some app and it's going to automatically replace all this with some app all this all this right here so there we go it's going to change those and then it's going to start up conf d which is going to watch at cd and whenever it changes it's going to do its thing so that's what's happening and that's running so whenever nodes arrive go away all that nginx automatically reloads its configuration um and that's great and so we can actually use this exact same nginx lb image for as many services as we want we just have to give it a different service name and as long as we adhere to this structure as long as we adhere to this structure in etcd services slash service name slash upstream we can use that same image for everything so now we just have one problem left to solve and that's the problem of we still don't know which ip addresses imports all our nginx load balancers will have so now we have to register these somewhere else and then we have a publicfacing proxy in front of them that automatically points all of our subdomains to our services so let's move on to that last and final piece

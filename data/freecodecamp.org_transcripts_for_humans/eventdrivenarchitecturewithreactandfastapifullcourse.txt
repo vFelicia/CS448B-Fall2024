@@ -1,0 +1,1890 @@
+With timestamps:
+
+00:00 - in this course you will learn how to
+00:01 - build an event driven system with react
+00:04 - and fast API an event-driven system is a
+00:07 - common way to set up software Antonio
+00:09 - from scalable scripts developed this
+00:11 - course we've published quite a few
+00:13 - courses from him and they're always
+00:15 - great so this is up let me explain you
+00:18 - first how it will work we will create a
+00:22 - delivery that will pick a product from
+00:25 - one place and deliver it to a customer
+00:28 - we need to set a budget and we need to
+00:32 - write some delivery notes like Peak to
+00:37 - pizzas
+00:38 - and deliver to customer
+00:44 - and that should be it let's submit
+00:47 - and this is the new page that we
+00:50 - redirect so this is the delivery and
+00:52 - this is the idea of the delivery we can
+00:54 - see it here also so this Json is the
+00:58 - object that we create
+01:02 - on our first submit so this object here
+01:06 - will change once we submit these events
+01:10 - so while we deliver a product
+01:13 - it may happen a lot of events so
+01:16 - starting the delivery increasing the
+01:18 - budget pickup products deliver products
+01:20 - and many more but I will keep this
+01:24 - events
+01:26 - very small because they can be a lot and
+01:29 - once I submit this
+01:33 - events this Json will change and this
+01:36 - progress bar here will
+01:39 - change like this for example when I
+01:43 - start the delivery
+01:44 - we can see that we have the first half
+01:49 - is in progress because now the status is
+01:53 - active so now we are delivering this
+01:57 - product so we haven't picked up yet the
+02:00 - products because we need to submit this
+02:02 - form so
+02:04 - when we pick the products we have the
+02:07 - purchase price so I'll put 20 here and
+02:10 - the quantity so we need two pizzas
+02:13 - let's submit
+02:15 - and now the Json changed and also the
+02:18 - the First Progress bar has been
+02:21 - completed
+02:22 - the status now it is collected and we
+02:25 - have purchase price 20 and quantity 2 2
+02:28 - so we have two pizzas and we want to
+02:30 - deliver it to the customer now when we
+02:33 - deliver to the customer we want to sell
+02:35 - it with a higher price and uh the same
+02:39 - two pizzas that we want once we submit
+02:42 - this
+02:43 - everything is completed here and the
+02:46 - Json has changed so the quantity is zero
+02:49 - but we have also a sale price and the
+02:52 - budget has increased
+02:54 - so this is a simplified app of course
+02:58 - can here can be many more events many
+03:02 - more States but let's see how uh do we
+03:07 - build the state in the backend for this
+03:10 - scenario so the main part of this
+03:12 - tutorial is to explain that we will have
+03:15 - events in our backend which we will
+03:19 - store them in the database and all these
+03:22 - events will construct in a redis cache
+03:27 - the state of the current delivery so the
+03:32 - state we show it here this is the
+03:35 - current state and this is built by all
+03:39 - these events in the back end so this is
+03:43 - the main concept that we will learn in
+03:45 - this tutorial and this will function
+03:47 - even if Radice fails what do I mean by
+03:52 - that so in case redis fails and we don't
+03:56 - have the current state in our cache we
+03:59 - still have all our events in the
+04:02 - database and once redis fails we will
+04:06 - reconstruct this object from the
+04:08 - beginning doing the same logic that we
+04:12 - did in every event so we will see how we
+04:16 - will do this in this tutorial now let's
+04:20 - start building wrap let's start by
+04:23 - building the backend with fast API and
+04:26 - let's connect also to the radius
+04:29 - database so the first step is to log in
+04:32 - in the redis cloud and here I will
+04:37 - create a new subscription
+04:39 - I'll select Europe here
+04:42 - and this is free
+04:46 - and the subscription name I'll call it
+04:49 - just DB
+04:51 - database
+04:54 - and I'll create this subscription and I
+04:58 - will create a new database here so this
+04:59 - is just a subscription that I call it
+05:01 - database
+05:03 - and the database name I'll call it a
+05:07 - fast API DB
+05:12 - so
+05:13 - we will use the ready stack here
+05:16 - I don't think we need anything else
+05:20 - make sure to get the password here
+05:23 - because we need to connect with
+05:26 - the database and I will create this
+05:30 - database right now so let's wait a
+05:33 - little
+05:35 - so the database is ready we have the end
+05:37 - point here and we are ready now to build
+05:41 - the backend with fast API but first we
+05:45 - need to download also another software
+05:47 - which is redis inside this tool will be
+05:51 - used to monitor the database because we
+05:55 - need to check the data that are inside
+05:58 - for the moment my editor pycharm cannot
+06:02 - see the
+06:03 - data inside the radius Cloud but this
+06:06 - software
+06:09 - is buy radius and we can connect it
+06:11 - connect here directly so we need the
+06:13 - host which is uh this one so let me copy
+06:16 - it
+06:17 - paste it here
+06:19 - and automatically it will set also the
+06:22 - port the other alias
+06:25 - the username should be default
+06:28 - so username is default
+06:32 - enter the password I will copy it here
+06:37 - and
+06:39 - I will paste it here
+06:41 - and do we have test connection so let's
+06:44 - add release database
+06:46 - and I think it is ready so if I go here
+06:50 - we can see that we don't have any tables
+06:53 - inside this database but we will create
+06:56 - it with a fast API so let's create the
+07:00 - uh
+07:01 - [Music]
+07:02 - empty folder here fast API and I will
+07:05 - create a file
+07:07 - called Main
+07:09 - dot Pi the first step here is to install
+07:12 - fast API so pip install
+07:15 - fast API I already have installed it in
+07:19 - my machine and we will import it here so
+07:22 - from Fast API we need to import fast API
+07:27 - and then we will create the app which is
+07:30 - equal to fast API like this and that
+07:34 - should be it for creating a basic app
+07:37 - that does nothing but we need to add
+07:41 - some endpoints later
+07:43 - uh one other thing which is important
+07:46 - because we will use
+07:48 - also react front-end we need to import
+07:51 - fast API middleware
+07:53 - course
+07:55 - and we will import the course middleware
+07:59 - why do we need this
+08:01 - old paste also this code so we will add
+08:05 - the middleware course middleware and we
+08:07 - will allow this origin which will be our
+08:10 - react app so we need this because
+08:15 - our backend will random Port 8000 and
+08:18 - our front end will run on Port 3000 and
+08:21 - we will have problems if we don't add
+08:24 - this line so they won't communicate with
+08:26 - each other if we add this middleware
+08:30 - our react up will successfully connect
+08:33 - with our backend and that should be it
+08:36 - now let's connect with redis so for that
+08:41 - we need to install a package uh pip
+08:45 - install
+08:46 - radius
+08:49 - om
+08:51 - so this package
+08:54 - is useful for connecting to the radius
+08:57 - database so from redis
+08:59 - om
+09:01 - we need to import get ready connection
+09:04 - and
+09:07 - the radius connection here will be equal
+09:09 - to get redis connection
+09:12 - and we need to add some values which the
+09:15 - first one is host
+09:18 - and let's go to our Cloud here and uh
+09:23 - I'll copy again the public endpoint and
+09:25 - I will paste it here I will cut the port
+09:28 - here because we need another value here
+09:31 - which is a port
+09:33 - and will be equal to that port
+09:36 - then we need the password
+09:39 - which I will copy it here
+09:44 - and we don't need to add the the
+09:46 - username because it is a default
+09:49 - username and we need also another value
+09:52 - which is decode responses to true
+09:56 - and that should be it so with this
+10:01 - we may connect successfully to radius
+10:04 - but we have to test it to test it open
+10:07 - the terminal and write UV corn
+10:11 - make sure also to install a UV corn in
+10:14 - your machine
+10:15 - main up
+10:18 - reload
+10:20 - so we don't have any errors which means
+10:24 - this redis connection here it is
+10:27 - successful and now let's add the models
+10:32 - that we will work in this app so from
+10:37 - ready so M we need to import also the
+10:40 - hash model
+10:41 - and let's create
+10:43 - a glass here
+10:45 - I'll call it delivery
+10:48 - and this will extend from the hash model
+10:52 - and this object
+10:54 - I will add only two properties the
+10:58 - budget
+11:00 - which is an integer
+11:02 - and by default I will initialize it with
+11:05 - 0 and the notes
+11:08 - which is a string
+11:09 - by default empty
+11:12 - and to connect this model with the
+11:15 - radius database we need to add here a
+11:18 - class meta
+11:22 - in the database
+11:24 - will be equal to Radice
+11:27 - and that should be it for this model
+11:31 - I will save it not sure if radius inside
+11:35 - will create something here let me
+11:37 - refresh
+11:39 - so we need to create objects in order to
+11:42 - see it so we don't have any objects
+11:45 - and let's create the second one that we
+11:49 - need which is the event so I'll copy
+11:52 - this
+11:53 - paste it here and I will create the
+11:56 - event
+11:56 - so uh this will be the main object we
+12:01 - need the delivery object just for the ID
+12:05 - so we will create it in the beginning
+12:06 - just to get the idea of this uh delivery
+12:10 - and we will work only with events and
+12:14 - this event will have the delivery
+12:18 - ID
+12:19 - which will be a string
+12:22 - and by default it will be none
+12:25 - window type
+12:30 - so this is the event type we will see it
+12:33 - later how we will use it which is a
+12:35 - string and the data
+12:37 - which is a string so the data will be
+12:39 - the Json or the body that we will send
+12:42 - in the request
+12:44 - and that's it so we created two objects
+12:47 - and now we need to add the endpoints
+12:52 - that we will work
+12:54 - so let's create the first one which is
+12:57 - the creating a delivery so I will create
+13:03 - here I will add a decorator up
+13:06 - this will be a post request to
+13:09 - the endpoint will be
+13:12 - deliveries
+13:14 - create
+13:17 - and let's add the synchronous function
+13:19 - here
+13:21 - def create
+13:23 - this will have a request
+13:26 - as a request
+13:30 - so let's import a
+13:33 - in the first API here also the request
+13:38 - and I want to get the body of that
+13:42 - request so body is equal to a weight
+13:45 - request
+13:47 - Json
+13:50 - and with that Json we will create the
+13:53 - delivery so the delivery
+13:57 - will be equal to a new delivery
+14:02 - with a budget
+14:05 - which be which will be equal to body
+14:09 - data
+14:12 - budget so why will
+14:16 - uh why we will we have this data in
+14:20 - front of the body
+14:22 - I'll explain it later because
+14:24 - all the requests will have the same
+14:27 - format and because they have the same
+14:30 - format all the parameters will be inside
+14:33 - the data key and that's why I will
+14:36 - create it like this
+14:38 - and the same will happen for the notes
+14:41 - so notes will be equal to
+14:46 - body data and notes
+14:50 - and in the end I will save it
+14:54 - for the moment let's return this
+14:57 - delivery
+15:00 - and let's see if it works and to test it
+15:03 - let's see if UV corn is running it is
+15:06 - running
+15:07 - let's open Postman
+15:09 - and let's make here a request a post
+15:12 - request to
+15:15 - http
+15:18 - localhost Port 8000 slash deliveries
+15:25 - create
+15:26 - and in the body
+15:28 - we will have this
+15:32 - Json so we need to type
+15:35 - which for the moment we don't use it but
+15:39 - this will be the request
+15:41 - and the type will be create
+15:44 - delivery
+15:48 - it will make sense later why we need
+15:50 - that type and we need the data
+15:54 - which is an object that will contain the
+15:56 - budget
+15:59 - uh 50 for the moment and the notes
+16:02 - which is uh
+16:04 - pick two pizzas
+16:10 - and that should be it so this is a
+16:12 - format that we want in every event if I
+16:17 - send this request
+16:19 - I get this response so I get the budget
+16:22 - I get the notes and I get also a primary
+16:25 - key so this uh is the idea that is
+16:29 - stored in the radius database if I open
+16:32 - Reddit is inside now I will refresh and
+16:36 - we have now a value here if I click here
+16:40 - we will see also the fields so we have a
+16:43 - primary key a budget and the notes so as
+16:47 - we can see we can monitor the database
+16:49 - with this software so
+16:52 - we created a delivery but this is not
+16:56 - the main part of our app we want to
+17:01 - create the event which is a the focus of
+17:05 - this tutorial so uh with the delivery I
+17:10 - will also create an event here
+17:14 - which is equal to event
+17:17 - and this level delivery ID
+17:22 - which is equal to this delivery primary
+17:25 - key like this
+17:27 - uh it will have a type
+17:30 - so
+17:33 - the type will be stored in the the event
+17:37 - object so type here
+17:39 - and we need the data as they are so data
+17:44 - will be equal to
+17:46 - I can use here
+17:48 - body.data but since the data here is a
+17:52 - string I need to
+17:54 - convert it from a dictionary to a string
+17:57 - so I need to use here Json
+18:01 - uh dump
+18:04 - string like this
+18:09 - and don't forget to import Json on top
+18:14 - and with this we will store also the
+18:17 - event in the database and let me return
+18:20 - the event here
+18:22 - and let me send this request again send
+18:26 - it and as you can see we created the
+18:30 - event which has its own primary key the
+18:33 - delivery ID of that delivery that we
+18:36 - just created the type and the data
+18:39 - as a string but it is a Json inside and
+18:42 - also in the radius inside we can see
+18:45 - that
+18:46 - we created the delivery but we didn't
+18:50 - create the event because I forgot to add
+18:52 - save here
+18:54 - so my bet there
+18:56 - let me send it again
+18:58 - and if I check it again we will have the
+19:02 - event object here which has its own ID
+19:05 - delivery ID the type and the budget so
+19:09 - this event table will contain all the
+19:12 - logs that all the events that happen for
+19:15 - this delivery so it is really important
+19:20 - now we stored these objects in the
+19:24 - database but this is not enough so
+19:27 - the response that we return here is the
+19:30 - object that we store in the database but
+19:32 - we have to return something else so we
+19:35 - have to return the
+19:37 - state of the delivery so this is a
+19:43 - delivery object in the database and this
+19:45 - is the event but we have to combine both
+19:48 - of those to represent the actual state
+19:50 - so it may be confusing for you for the
+19:54 - moment but you will understand it uh
+19:58 - more
+19:59 - once I add more code so I will create
+20:03 - here
+20:04 - uh
+20:06 - python file I'll call it uh
+20:10 - I want to call it events
+20:13 - but this will be confusing with the
+20:16 - actual event here so I'll call it
+20:18 - consumers
+20:21 - it is the same
+20:23 - but I just want to avoid confusion and
+20:27 - here I'll create a function which is
+20:30 - create delivery
+20:33 - and this function will have two
+20:36 - parameters state
+20:38 - and an event
+20:40 - so
+20:41 - you may be already confused here
+20:44 - this is a function that we will use
+20:48 - let me use it right now here to
+20:52 - construct the state that we want to
+20:55 - return so the state will be equal to
+20:58 - Consumers
+21:01 - create delivery
+21:03 - so this function we will pass the actual
+21:07 - state but the actual State for the first
+21:10 - event so the first delivers create is an
+21:14 - empty object because we didn't create
+21:16 - anything yet so the first parameter here
+21:20 - is an empty string and the second one is
+21:22 - the actual event that we just created
+21:25 - here and this function will return the
+21:31 - a state that we want in the front end to
+21:34 - handle and I will return it here
+21:38 - and what will be that state
+21:40 - for the moment it will be very simple
+21:43 - I will return
+21:45 - the
+21:46 - budget
+21:49 - which is a
+21:51 - uh actually I will get the data here
+21:54 - which is equal to Json
+21:57 - load string
+21:59 - event dot data
+22:02 - uh we need to pass the data that we
+22:05 - store here which is
+22:08 - this data here
+22:10 - and the budget will be equal to data
+22:14 - budget
+22:15 - I will cast it as an integer because we
+22:18 - may have problems later on with uh
+22:23 - these types
+22:25 - we need the nodes
+22:29 - which is equal not equal it is data
+22:33 - notes
+22:35 - and we need also the
+22:38 - another value which we don't have it for
+22:41 - the moment which is the status
+22:44 - so the first time that we created
+22:46 - delivery the status will be ready
+22:50 - so this is an extra value which I will
+22:53 - front end won't provide but we need this
+22:56 - value in order to track the delivery
+23:01 - and this will change once a different
+23:06 - event happens and
+23:08 - it is a the best way to do it like this
+23:12 - instead of just updating it from the
+23:15 - front end or any or any other way
+23:18 - also I forgot also one other value which
+23:21 - is the ID of the
+23:25 - delivery so this will be event that
+23:28 - delivery ID like this
+23:31 - and that should be it so this is the
+23:34 - state that we want to build and it it is
+23:37 - almost similar with the value that we
+23:41 - returned here but it will change a lot
+23:46 - and we want to be able to maintain this
+23:50 - structure
+23:51 - so let's test it we pass the state
+23:54 - parameter here but we don't use it but
+23:57 - it's okay because this is our first
+23:59 - event in the other events we will use it
+24:02 - every time
+24:04 - and if I send now the request
+24:07 - we will get this response so it is
+24:10 - almost similar but we have a status now
+24:14 - and this object will change a lot
+24:19 - and now we need another endpoint to get
+24:22 - the status of this delivery so
+24:27 - this is a post request we update the
+24:30 - status here but we need another get the
+24:34 - request to get the current status and
+24:37 - for that I'll create another function
+24:40 - actually I will create it here on top
+24:43 - this will be an asynchronous function
+24:45 - get
+24:47 - state
+24:48 - and this will have a primary key as a
+24:51 - string as a parameter
+24:53 - and
+24:55 - this will be
+24:57 - a get request
+24:59 - to
+25:00 - deliveries
+25:05 - with the primary key here
+25:09 - and status
+25:13 - but how do we get the status so this
+25:17 - state that we just created here
+25:20 - here we won't rebuild it again and the
+25:24 - best way is to get it from redis so we
+25:29 - should add also another line here that
+25:33 - we need to store the actual state in the
+25:37 - reddish cache when we save the objects
+25:40 - here we save it in the radius Json
+25:43 - database so it is a database just like a
+25:45 - mongodb
+25:47 - but if you if we use the radius object
+25:50 - directly like this we will store it in
+25:53 - the radius cache so uh that's why I
+25:56 - chose it like this it is a benefit of
+25:58 - using also the radius cache and also the
+26:01 - radius database just like mongodb
+26:05 - now when we set
+26:07 - the value in the cache we need a key and
+26:10 - a value so the key will be
+26:13 - deliver it
+26:15 - and we need to pass the delivery ID here
+26:18 - and to pass it I will add an F here not
+26:23 - here here
+26:25 - and I will pass
+26:27 - the delivery
+26:30 - primary key here
+26:32 - and the value will be the state but this
+26:35 - state it is an object so I have to use
+26:37 - Json dump string the state
+26:42 - and that should be it so be when we
+26:45 - create the state we will store it in the
+26:48 - cache and return it and when we get the
+26:51 - state here we will do the opposite so we
+26:54 - will get it from the cache so state
+26:57 - is equal to radius
+27:00 - get
+27:01 - I'll put an F here
+27:04 - delivery
+27:06 - with the primary key
+27:10 - and
+27:13 - I will return
+27:15 - Json
+27:17 - string the state because the value that
+27:20 - we stored is a string and we will get
+27:23 - also a string here and we want to return
+27:25 - an object or a dictionary
+27:29 - and that should be it this endpoint
+27:32 - won't work because we haven't stored
+27:35 - anything uh in radius so I will
+27:38 - add another get request
+27:41 - this will be
+27:43 - the get request to localhost 8000
+27:46 - deliveries we need this idea that we
+27:49 - just created
+27:51 - I'll pass it here and status
+27:54 - send it and we get an error because I
+28:00 - think
+28:02 - this value here is none when we don't
+28:06 - have anything
+28:07 - and
+28:09 - let me do it like this if
+28:12 - state
+28:13 - is not known
+28:18 - we return this value otherwise I will
+28:21 - return
+28:23 - just an empty object but this will
+28:25 - change later so for the moment I will
+28:27 - just put it as an empty object
+28:30 - and if I get the value here
+28:34 - so I need to
+28:36 - restart your record
+28:39 - I get an empty object because I need to
+28:43 - create another object again in order to
+28:46 - be saved already so I'll create another
+28:48 - object I'll copy the ID here
+28:52 - I will paste it here
+28:55 - send it and we get the value
+28:58 - so it's not looking good
+29:03 - because instead of dumping the string I
+29:07 - need to load the string so my bad here
+29:11 - and now it looks better so
+29:14 - this endpoint will get the current state
+29:18 - of this delivery every time
+29:22 - now we want to add another event that
+29:25 - just changes the status from ready to
+29:27 - active so let's do it now I will add
+29:32 - another endpoint
+29:33 - which will be similar to this one
+29:36 - so this will be
+29:39 - think
+29:40 - a death
+29:41 - I'll call it a dispatch
+29:46 - and this will have a request as a
+29:48 - request just like this one
+29:52 - and this will be
+29:54 - a post request to just
+29:57 - event
+29:59 - and what do we want to add here
+30:03 - so this delivers create is similar to
+30:06 - this one the only problem that we need
+30:10 - another endpoint for the delivers create
+30:12 - is that we don't have a delivery ID
+30:15 - and we create it here but here we have
+30:18 - the delivery ID in the event itself
+30:21 - actually let me create the event
+30:24 - so I'll duplicate the tab and this will
+30:27 - be event here
+30:29 - and in the body will be
+30:33 - the type will change now instead of
+30:35 - create create delivery it will be start
+30:39 - delivery
+30:41 - and in the data we don't need to send
+30:43 - anything so it will be like this so this
+30:46 - is the event that we will send and all
+30:50 - the other events will be sent through
+30:52 - this endpoint so the only the type will
+30:55 - distinguish the behavior and the data
+30:58 - and now let's go here so how do we
+31:03 - change the status based on this
+31:07 - information
+31:08 - the first step is to get the body to
+31:12 - parse it
+31:14 - and we need to
+31:16 - create the event in the database just
+31:20 - like we did here
+31:24 - so we are missing the delivery ID so the
+31:27 - delivery
+31:29 - ID will be equal to
+31:32 - a body
+31:34 - delivery ID
+31:37 - so this is something that uh
+31:40 - I should add because I forgot so we need
+31:46 - the type we need also the delivery
+31:48 - ID here which will be
+31:51 - uh this one
+31:54 - so my better
+31:57 - these are all the informations that we
+32:00 - need
+32:00 - start delivery delivery ID and the data
+32:04 - and now
+32:06 - we created the event and now we need to
+32:10 - manipulate the state how it will work so
+32:14 - the first step is to get the current
+32:17 - state and we will get it like this so
+32:20 - state
+32:22 - will be equal we have this function get
+32:25 - State here
+32:26 - it will be equal to 08 get underscore
+32:29 - State and we need to pass the delivery
+32:32 - ID there
+32:35 - we need a width because this is an
+32:38 - asynchronous function otherwise it won't
+32:40 - return what we want
+32:42 - and this state for the moment will be
+32:46 - this value so this is what do we want to
+32:50 - get and based on that state we need to
+32:53 - just change the status from ready to
+32:56 - active and we can simply do it here
+33:00 - state
+33:01 - let's say
+33:03 - it is a status it is active
+33:09 - but uh it won't work like that so this
+33:14 - is not the right way to do it we need to
+33:16 - create another function in the consumers
+33:19 - here
+33:21 - start delivery
+33:24 - which will accept the state and the
+33:28 - event
+33:29 - and the this time we will just update
+33:34 - the state
+33:36 - uh we can do it like this state
+33:39 - status is equal
+33:43 - to
+33:44 - active but I prefer this way so I will
+33:48 - return here
+33:49 - the state always a pipe here
+33:53 - and I want to change the status to
+33:59 - active like this
+34:02 - so
+34:04 - this operator will update
+34:08 - this value to the this new value
+34:11 - and that should be it so if I go to the
+34:14 - main.pi file
+34:16 - the new state now will be equal to
+34:21 - consumers
+34:23 - start delivery we will pass the current
+34:27 - state and the event which momentarily we
+34:31 - won't use there but it doesn't matter
+34:34 - we need to save it to reduce
+34:38 - so delivery primary key here is delivery
+34:41 - ID
+34:43 - and we need to save the new state and we
+34:47 - need to return the new state
+34:51 - so
+34:52 - that's it for this event we need we
+34:55 - still need to make some changes but
+34:57 - let's test if it works so if I send this
+35:02 - event
+35:05 - I will get the same object but now the
+35:08 - status is active and now if I send also
+35:12 - the same request again here the status
+35:15 - is active as you can see the status of
+35:19 - that delivery has been updated now it is
+35:23 - uh driving let's say so
+35:28 - this is how it will work but there are
+35:30 - some problems here
+35:32 - which is this start delivery
+35:35 - we added the endpoint to the event here
+35:38 - so we don't know if it is star delivery
+35:40 - or another event so we need to create a
+35:44 - general way to call the function based
+35:48 - on the type so the type is a
+35:52 - start delivery in our case
+35:55 - how do we do that so
+35:58 - I'll create now here a constant
+36:02 - I'll call it consumers
+36:06 - and this will be equal to an object that
+36:09 - will be mapped like this
+36:13 - create
+36:14 - underscore delivery
+36:16 - which will be the type
+36:19 - will be mapped to the create delivery
+36:21 - function
+36:22 - like this
+36:24 - and start delivery
+36:27 - will be mapped to the start delivery
+36:31 - function
+36:32 - so why do we need this constant
+36:35 - we need this constant now because
+36:38 - we can change now the start delivery
+36:42 - to consumers consumers constant here
+36:47 - we will pass
+36:49 - the type which is this body type or
+36:53 - event that type so I'll pass event that
+36:56 - type there
+37:00 - and we will do the same thing so the
+37:04 - same will happen for the create deliver
+37:06 - here so I will do it like this
+37:10 - and this is a dynamic way of calling
+37:14 - different function based on just the
+37:17 - type
+37:19 - so right now we don't know if we are
+37:23 - calling uh
+37:26 - start delivery or another event that we
+37:30 - will create later so let us try this
+37:34 - event so I'll create another delivery
+37:38 - sent Ando indeed it works so I will copy
+37:42 - this new ID
+37:43 - paste it here
+37:45 - and it works the status is ready now if
+37:49 - I go to this other event I will paste
+37:52 - the new delivery ID here
+37:54 - send it and now the status is active if
+37:58 - I send the request here
+38:00 - the status is active so
+38:03 - this is the dynamic way of calling
+38:07 - different consumers
+38:10 - now the structure is ready and we can
+38:13 - add the easily multiple events so let's
+38:16 - add another one so here we made the
+38:20 - status active I will duplicate the tab
+38:23 - and now we will send another event and
+38:26 - this time will be pick up
+38:29 - products
+38:31 - and the delivery will be the same
+38:35 - and in the data property we will send
+38:38 - the
+38:39 - purchase
+38:42 - price
+38:43 - which will be 20 and the quantity
+38:48 - which will be 2 in our case so we want
+38:52 - to send this event and we don't want to
+38:56 - do anything here so this is ready this
+38:59 - can handle multiple events types and the
+39:03 - only thing left that we need to add is
+39:05 - to add the consumer here so we need to
+39:08 - add I will create the function
+39:12 - uh pick up
+39:14 - products
+39:16 - this will accept a state and an event
+39:21 - and that's it so it has become really
+39:25 - easy to add multiple events this is a
+39:28 - pickup products
+39:31 - and this is a
+39:33 - pickup products
+39:36 - so
+39:37 - we easily added one event let's handle
+39:40 - the case in our function now what will
+39:45 - happen when we when we get this event so
+39:48 - first I will copy this part I'll get the
+39:51 - data
+39:53 - from the vendite data
+39:56 - and
+39:57 - I will return in the end the state
+40:02 - the pipe here and these are the things
+40:05 - that will change it will change the
+40:07 - budget
+40:09 - it will decrease
+40:11 - so I'll put an empty value for the
+40:14 - moment
+40:15 - we will add the purchase price
+40:19 - which will be data
+40:22 - purchase
+40:23 - price
+40:24 - I will cast it as an integer
+40:27 - because we may have problems
+40:32 - we need also the quantity
+40:36 - and this is a quantity here
+40:40 - and also the status will change
+40:44 - it will become collected
+40:48 - so let's also calculate the budget so
+40:51 - the new budget
+40:55 - I'll add it here new
+40:56 - budget is equal to state
+41:01 - budget
+41:03 - minus
+41:05 - the purchase price times here the
+41:11 - quantity
+41:12 - and that should be it we will assign the
+41:15 - new budget here
+41:18 - and it is ready so this is almost
+41:21 - completed so we will add later
+41:23 - validation but for the moment this will
+41:27 - work let's try to send the request and
+41:31 - it worked as we can see our budget
+41:33 - decreased we the status changed and we
+41:37 - added two new properties and if we send
+41:40 - the request we will get the new updated
+41:43 - State here so it is working fine and now
+41:47 - we can add also the last event which we
+41:50 - can complete this
+41:52 - uh delivery I'll duplicate this and this
+41:55 - will be delivered
+41:59 - products
+42:01 - and uh
+42:02 - here instead of purchase price we will
+42:06 - add sell
+42:07 - price
+42:09 - and that should be it so let's add it
+42:12 - here also this will be almost similar
+42:16 - let's add the function deliver
+42:19 - products
+42:23 - with the state and the event
+42:28 - and let's add it here
+42:31 - deliver
+42:32 - products
+42:38 - and inside here
+42:42 - actually I will copy the code here
+42:43 - because it is almost similar
+42:46 - so we will get the data from the event
+42:49 - and now our new budget it will be our
+42:52 - budget Plus
+42:55 - the not purchase price but sell price
+42:59 - here
+43:01 - this is also sell price
+43:04 - the quantity also will change so I will
+43:06 - add a new field here new quantity
+43:11 - is the old quantity which is state
+43:15 - quantity
+43:18 - minus
+43:20 - this value
+43:22 - and here I will add the new quantity
+43:27 - and in the end the status will be
+43:29 - completed
+43:31 - so we will complete the delivery here so
+43:34 - it is the same as this one but we will
+43:36 - increase the budget we will decrease the
+43:38 - quantity and we will change the status
+43:41 - and that should be it so deliver
+43:44 - products sell price quantity everything
+43:46 - is correct let's send this event
+43:49 - and it is working fine as we can see the
+43:52 - status has changed the purchase price
+43:54 - and the sale price are the same and the
+43:58 - quantity has been decreased to zero so
+44:02 - everything is correct we added all the
+44:05 - events and this is the best case
+44:08 - scenario so what do I mean by that every
+44:11 - event that we send has been successfully
+44:15 - executed and we didn't have any edge
+44:18 - cases
+44:19 - uh when we create an event-driven
+44:21 - architecture sometimes we may send
+44:24 - events that
+44:26 - should not when it should not be the
+44:29 - time or we can send errors so we should
+44:33 - have a lot of validation using these
+44:36 - events
+44:37 - for example when we start a delivery
+44:42 - what happens when we send it again the
+44:46 - delivery is already active we should
+44:49 - throw an error like
+44:52 - the delivery has already started
+44:56 - or what happens when we purchase
+44:58 - products and we don't have the budget
+45:00 - for it so let's handle these edge cases
+45:05 - the first step is to create another
+45:07 - event and this time I will change the
+45:11 - notes Here we will pick three pizzas but
+45:16 - we won't have the budget for it because
+45:19 - one pizza is 20 and the budget is 50.
+45:22 - let's send this request and it worked
+45:26 - fine now I will copy this ID
+45:31 - I will add it here
+45:34 - and I will start this delivery but
+45:37 - before I send the event I'll add a
+45:39 - validation here and the validation will
+45:42 - be for the status of this uh delivery
+45:48 - so here I will add a new condition if
+45:51 - state
+45:53 - that status
+45:55 - is not
+45:58 - ready
+46:00 - then we will raise an exception
+46:04 - because we cannot make the delivery
+46:08 - active once it's already gone or it has
+46:13 - another state so only when the state is
+46:16 - ready we can change the status to active
+46:20 - and here I will raise an http
+46:23 - exception
+46:27 - so let me import this
+46:30 - so the HTTP should be uppercase
+46:35 - and we need to import from a fast API
+46:39 - HTTP exception and here the status code
+46:44 - I'll make it 400.
+46:47 - and the detail is
+46:50 - delivery
+46:52 - already
+46:56 - started
+46:59 - and that's it for a simple validation so
+47:02 - if we have this validation
+47:04 - when we post it the first time to start
+47:08 - the delivery
+47:10 - we will make it active so this is
+47:13 - correct but when is when we send it the
+47:16 - second time
+47:17 - we will get an error delivery has
+47:20 - already started we cannot start it again
+47:23 - so that is the simplest validation and
+47:28 - we can add more complex validations like
+47:31 - this budget here so we decrease the
+47:34 - budget but what happens
+47:37 - if the budget so the new budget is less
+47:41 - than zero so we don't have the budget to
+47:43 - purchase the products so I will raise
+47:47 - another exception here
+47:48 - and the status code will be the same and
+47:52 - here I will say
+47:54 - not enough
+47:58 - budget
+48:01 - and that should be it so the delivery
+48:05 - has already been started I'll copy the
+48:08 - delivery ID
+48:09 - I'll paste it here the purchase price is
+48:13 - 20 and the quantity will be three so
+48:15 - this is this will be more than the
+48:18 - current budget which is 50. let's send
+48:20 - this request and we get the error not
+48:24 - enough budget and now uh
+48:27 - it will become like a tree so in this
+48:32 - case we may have multiple choices to
+48:35 - solve this problem
+48:37 - we may increase the budget so
+48:41 - uh we should buy those three products
+48:44 - or we may buy two products and deliver
+48:48 - less products to the customer so as you
+48:52 - can see with this approach we can handle
+48:57 - many cases many decisions handling all
+49:00 - these cases using the traditional way of
+49:03 - rest apis it is very difficult but in
+49:07 - this way we can handle every case
+49:10 - so what will we do now so we will handle
+49:15 - both cases and I will add now another
+49:18 - event which is increased budget so
+49:23 - increase
+49:26 - budget
+49:28 - this will have a state
+49:31 - and an event
+49:34 - and I will add it here also
+49:38 - increase
+49:40 - budget
+49:45 - and what will we add here so it will be
+49:48 - very simple we will get the data from
+49:51 - the event and now the state
+49:53 - budget
+49:56 - we will increase it with the
+50:00 - data
+50:02 - budget
+50:04 - like this and we will return the state
+50:08 - so it is super simple
+50:11 - and let's add it also here so let's
+50:14 - duplicate this let's add another event
+50:17 - I'll duplicate tab
+50:20 - let's copy the delivery ID
+50:25 - and this will have only the new budget
+50:29 - so we will
+50:31 - increase
+50:35 - the budget
+50:38 - with uh by 20 here so let me send again
+50:43 - the event so if I send this event I will
+50:46 - get not enough budget maybe I have an
+50:48 - error here
+50:50 - so yes not enough budget but if I
+50:53 - increase the budget
+50:55 - we can see the budget now is 70 and if I
+50:59 - send this event again
+51:02 - the transaction will be completed and
+51:05 - the status will be collected so we got
+51:07 - the three pizzas we can deliver these
+51:11 - items now to the customer so
+51:15 - I'll paste it here and the sale price
+51:18 - will be 25
+51:20 - end of the quantity will be three let's
+51:24 - say the quantity is four so we make
+51:26 - another mistake here so
+51:29 - here we can add another validation just
+51:31 - like we added the validation with the
+51:33 - budget here
+51:35 - but this time is the quantity so if the
+51:39 - quantity is less than zero
+51:43 - we can say not enough quantity or not
+51:46 - enough quantity I will
+51:50 - I will make the message
+51:52 - so if we had this validation
+51:55 - this won't work as well because we will
+51:59 - we are selling more products that we
+52:02 - currently have so it should be three
+52:06 - and now everything is completed so
+52:10 - that should be it this is the case when
+52:14 - we decide to increase the budget but
+52:17 - what will happen if we decided to
+52:20 - deliver less products so let's do it
+52:24 - right now I'll create another delivery
+52:26 - I'll copy the delivery ID
+52:29 - and I will start this event
+52:33 - and now I will
+52:37 - uh pickup products here
+52:40 - and I'll get this error which says not
+52:44 - enough budget
+52:46 - and this time I will decide that I will
+52:49 - deliver less I will buy less products
+52:54 - and it's it it is working but as you can
+52:57 - see in the notes we have big three
+52:59 - pizzas and the quantity is two
+53:03 - and we can go now to the customer and we
+53:07 - can deliver the the products which in
+53:10 - our case we cannot deliver three anymore
+53:12 - but we will deliver two of them
+53:16 - which works but
+53:20 - is the customer satisfied or not so we
+53:24 - may go to another decision tree here so
+53:27 - the customer may accept less products or
+53:33 - the customer may want the other product
+53:36 - next time or the customer may refund the
+53:41 - order so either three products or none
+53:44 - of them so there are many decisions that
+53:47 - should be made here and I will not
+53:50 - handle all of them you can understand
+53:53 - now how this architecture can help us
+53:57 - handle all possible validation and all
+54:02 - possible scenarios
+54:04 - when we have an event-driven
+54:06 - architecture so we are finished with all
+54:10 - the events and all the apis but still
+54:14 - there is one case which we didn't handle
+54:18 - so what happens when a radius fails so
+54:24 - in this case here as we can see uh we
+54:28 - are getting the products from redis and
+54:32 - I will copy again here the deliver ID
+54:36 - paste it here
+54:38 - and the status is completed but this
+54:41 - status is the aggregation of all the
+54:45 - other events that happened here
+54:48 - in case redis fails our system should
+54:53 - should be the same so so it should
+54:56 - return the same value here but how do we
+55:00 - do that the way that we can do that is
+55:04 - by rebuilding all the events from the
+55:08 - beginning so we have
+55:11 - a log of all events that happened in
+55:15 - this app so I will refresh here and we
+55:18 - have a lot of events so here in a radius
+55:22 - inside I can filter with main dot event
+55:26 - column star here and here we will get
+55:29 - all the events
+55:31 - we should filter all by this delivery ID
+55:34 - but it doesn't matter we should get all
+55:38 - the events from the database and we
+55:41 - should recreate this uh State here so
+55:47 - let's do that now I will comment this
+55:49 - part and the state for the moment is
+55:52 - known let's say that already returns
+55:55 - none here and if that is the case
+55:59 - if I send this event I will get an empty
+56:04 - object which is this one so here now I
+56:08 - want to do an algorithm that will return
+56:12 - the actual state
+56:15 - so that the
+56:17 - function I'll create it here I'll call
+56:20 - it build
+56:22 - state
+56:23 - and this will have a primary key as a
+56:27 - string
+56:29 - and I'll call it here so the new state
+56:33 - will be equal to build state with the
+56:36 - primary key and we will return it here
+56:41 - so this is correct here the only thing
+56:45 - left is to build the state here so let's
+56:48 - complete this function the first step is
+56:51 - to get all the records so
+56:53 - radius Json has this function event
+56:57 - all primary keys unfortunately there is
+57:01 - no other function that returns all the
+57:05 - objects so this is all we have
+57:08 - but we can manage to do what we want
+57:12 - with this function so we got all the
+57:15 - primary Keys now all the events
+57:18 - will be equal to
+57:20 - uh
+57:22 - something for primary key in primary
+57:25 - keys
+57:27 - so
+57:28 - uh this something here will be event get
+57:32 - primary key
+57:34 - so this will return all the events as
+57:38 - objects
+57:40 - actually
+57:42 - let us do it like this so first let's
+57:46 - return all the primary keys
+57:49 - so we can see how it works step by step
+57:54 - if we do that
+57:58 - let me start this
+58:00 - if we do that
+58:02 - we will return all the primary Keys like
+58:05 - this
+58:07 - and if we do the Second Step I will save
+58:11 - it
+58:13 - we will return all the events
+58:16 - of all the
+58:18 - product all the deliveries
+58:21 - so it is working fine but we want only
+58:25 - this delivery ID so we need to make
+58:29 - another filter here
+58:30 - events will be equal to
+58:33 - something here
+58:35 - for event in
+58:38 - all events
+58:40 - with the condition
+58:42 - if events that delivery ID is equal to
+58:46 - this primary key that we pass here
+58:50 - and this will be just the event like
+58:54 - this
+58:55 - so this is a filtering that we want to
+58:58 - get all events for this delivery if I
+59:02 - return it here
+59:03 - I'll save it we can see that this
+59:06 - delivery ID is different from the first
+59:10 - and the second
+59:12 - event if I send the request now
+59:15 - all the delivery ideas will be the same
+59:19 - so these are all the events for this
+59:22 - delivery
+59:24 - and that should be it so we got all of
+59:27 - these events and now what do we want to
+59:30 - do how do we rebuild the state
+59:33 - as it was in redis uh
+59:37 - now the way to rebuild the state is to
+59:41 - redo everything from the beginning
+59:44 - I will make a for Loop now for event in
+59:47 - events
+59:49 - and for each event
+59:52 - we will
+59:53 - build the state so the state
+59:57 - will start as an empty dictionary just
+60:01 - like we did when we create a delivery
+60:03 - here
+60:04 - and for each event in the events the
+60:07 - state will change and the new state will
+60:10 - be consumers
+60:12 - consumers again
+60:14 - so it will be this function here
+60:18 - I'll not pass here an empty object but
+60:21 - this will be the actual state
+60:25 - and that should be it we will start with
+60:28 - an empty state
+60:30 - we will pass the first event which will
+60:32 - be create the delivery and we will
+60:34 - update the state and then we will go in
+60:37 - the next event
+60:39 - and this will change the state again and
+60:42 - again till the end where we will return
+60:44 - the updated State and this state will be
+60:48 - the state that we want so this is how we
+60:52 - rebuild the state
+60:54 - uh I will save it let's see if we have
+60:57 - any errors we don't and let's send again
+61:01 - this request
+61:02 - so we have an internal server error
+61:06 - care budget
+61:09 - so I think I know the problem when we
+61:13 - return the events
+61:17 - I will save it
+61:20 - and when I return the events I see a
+61:22 - problem here is that the order is
+61:26 - different that the order that we want so
+61:30 - what the what should we do right now
+61:33 - uh to be honest I'm not sure why is it
+61:38 - that it returns in this order I think
+61:41 - they are ordered by the primary key
+61:43 - which should not be the case they should
+61:46 - be ordered by the creation time so uh
+61:51 - it is the order is totally random so the
+61:56 - only solution that
+61:58 - I can find for the moment is this one so
+62:02 - the first one is create delivery
+62:04 - and I will get this primary key so I
+62:09 - will
+62:10 - make it manually
+62:14 - but it should work
+62:17 - in every other database it should work
+62:19 - normally so we should get all the events
+62:22 - in the normal order then it is a start
+62:25 - delivery this is the second one
+62:29 - the third one is pickup products
+62:35 - and the last one so not pick up products
+62:38 - here so my bad it should be this primary
+62:40 - key and the last one should be the
+62:44 - first primary key
+62:47 - and if we do it like this
+62:50 - we will get other events in the correct
+62:55 - order and now
+62:59 - let's uncomment this part
+63:02 - let's get to the state
+63:05 - I will save it
+63:07 - send a request and this is what we get
+63:10 - so this is the result that we wanted so
+63:15 - everything works fine except this get
+63:19 - all primary keys for some reason it
+63:22 - orders the primary Keys alphabetically
+63:25 - but they should we should get all those
+63:29 - values based on the creation time so
+63:32 - this is a small bug but I guess
+63:36 - um it's not a problem you get the idea
+63:39 - how it works now I'll get the state from
+63:43 - redis
+63:45 - just like we did before and if the state
+63:48 - is known uh is not known we return the
+63:52 - state directly if it is known we will
+63:56 - rebuild the state and we will save it
+63:59 - again to radius here
+64:01 - so we want to rebuild it again and this
+64:05 - is just the primary key
+64:07 - and this is the function so if I send a
+64:12 - request now I'll get the exact same
+64:15 - result and that's it uh this is how we
+64:20 - handle the state in the backend now it's
+64:23 - time to build the front end
+64:26 - now let's create the front end so I will
+64:29 - open a terminal here and run MPX create
+64:32 - react app I'll call it react events
+64:37 - and let's wait till is completed
+64:42 - so it is completed and now I'll open it
+64:45 - with my IDE here I'll run npm start so
+64:49 - we can
+64:52 - start our react up on Port 3000 so
+64:56 - it should work fine so now it is running
+65:00 - now let's install bootstrap for this
+65:03 - project I will install it directly
+65:05 - through the terminal so npm installed
+65:07 - bootstrap
+65:11 - so it is installed and I will go now to
+65:14 - our app.js
+65:17 - I will remove these Imports we don't
+65:20 - need the app CSS
+65:23 - or delete it
+65:25 - even index CSS actually I will just
+65:28 - remove the code here
+65:30 - I will remove a
+65:32 - test.js file
+65:34 - and in our app.js I will simply import
+65:38 - bootstrap here
+65:42 - this CSS bootstrap.css
+65:47 - so
+65:48 - we will get the bootstrap here let's
+65:52 - also remove what we don't need here
+65:56 - and it will look like this so this is
+66:00 - just a blank page I will go now to
+66:04 - index.html
+66:07 - and here
+66:08 - in the body I will add this class so I
+66:12 - want to make the background dark so I
+66:15 - will add this class here
+66:17 - and now it will look like this uh then
+66:22 - in our app.js
+66:24 - I will remove this code and I will
+66:27 - replace with this code so
+66:30 - this won't change anything but if we
+66:35 - want to add now a card which I will add
+66:38 - so
+66:39 - I'll add div here with a class name of
+66:42 - card
+66:44 - then inside I will add another div with
+66:47 - a class name of a card header
+66:53 - I'll add here create
+66:56 - delivery
+66:58 - here I will add the form
+67:03 - with the class name of
+67:06 - card body
+67:09 - and inside now we can have inputs so I
+67:13 - will add the
+67:14 - another div here
+67:17 - with a class name of
+67:22 - input
+67:24 - uh just margin bottom three
+67:28 - and another input here
+67:32 - this will be a type of
+67:35 - number
+67:37 - name will be budget
+67:41 - class name
+67:43 - will be
+67:45 - form control
+67:48 - and the placeholder will be budget
+67:54 - so I'll copy this paste it here and we
+67:58 - need another input but this time it
+68:01 - won't be a type number this will be a
+68:03 - text area
+68:07 - and uh this will have the name of notes
+68:13 - form control here and this will be notes
+68:17 - and that should be it let's add also a
+68:20 - button here
+68:23 - with a class name of
+68:26 - BTN vtn primary
+68:30 - submit here
+68:32 - so this will look like this so we have a
+68:37 - card here to create a delivery when we
+68:41 - submit we want to redirect to the
+68:45 - delivery page so we need to create a
+68:48 - another component here which is a
+68:51 - delivery
+68:54 - .js
+68:58 - here I will use the shortcut
+69:02 - so this is the delivery component that
+69:05 - we want
+69:08 - and
+69:09 - what will we show inside so for the
+69:13 - moment I'll just display delivery here
+69:18 - and let's add the logic in our app.js
+69:22 - so
+69:24 - here
+69:26 - I will create a variable
+69:28 - ID set ID is equal to use state
+69:34 - empty string inside
+69:36 - so we need the ID of the delivery that
+69:40 - we will create we will create that
+69:42 - delivery from this form here and if the
+69:46 - ID is set we will display the delivery
+69:49 - component and the way that we will do it
+69:53 - is like this so I will add here
+69:57 - if I deep is equal to empty string
+70:02 - question mark I will show this form
+70:05 - otherwise I will show the delivery
+70:11 - component
+70:13 - and that should be it so in the
+70:17 - beginning the ID is empty so we will see
+70:20 - the card here but if this is something
+70:24 - else
+70:26 - we'll show the delivery here so the text
+70:30 - that we just wrote there and when we
+70:34 - submit this form
+70:37 - I'll create a submit function
+70:42 - this will be asynchronous and this will
+70:45 - have an event here
+70:47 - that we will
+70:49 - call prevent
+70:51 - default
+70:54 - and when we submit this form so on
+70:57 - submit we will call that submit function
+71:02 - so
+71:04 - here now
+71:06 - we will get the inputs from the form so
+71:09 - I will use a shorter wave so I'll create
+71:12 - a variable form which is equal to new
+71:13 - form data
+71:15 - inside I will pass event.target
+71:21 - the data
+71:25 - so the values the budget and the notes
+71:28 - will be equal to object
+71:32 - from entries
+71:35 - form
+71:37 - so my bad form entries like this
+71:41 - so this form data that and entries will
+71:46 - return all these number and notes so all
+71:50 - the inputs and if we do use it like this
+71:52 - it will convert it to a Json as we want
+71:55 - so just like this uh
+71:57 - like a budget
+72:00 - 10
+72:01 - etc etc so this is the format that this
+72:04 - will return
+72:06 - and now we got everything that we want
+72:08 - the only thing left is to get the
+72:11 - response
+72:12 - which is equal to a weight
+72:15 - fetch
+72:17 - the request to create the delivery is
+72:20 - http
+72:22 - localhost Port 8000
+72:26 - slash deliveries
+72:30 - slash create
+72:32 - we'll pass some values here
+72:34 - like the method is a post request
+72:38 - and the headers
+72:41 - are like this content
+72:44 - type is application
+72:48 - Json
+72:51 - then we need the body which is Json
+72:55 - stringify
+72:56 - and the way that we will return we will
+72:59 - send the data is exactly as we did in
+73:03 - our Postman here so it is like this we
+73:08 - need the type which is create delivery
+73:11 - type is create delivery
+73:14 - and the data is this data as it is here
+73:18 - that's why I call it data
+73:21 - this will convert those values like this
+73:25 - Json here
+73:26 - and that should be it we will get a
+73:29 - response
+73:30 - and we will convert that response to
+73:35 - Json so we will await
+73:37 - response
+73:40 - Json like this
+73:42 - and that Json will contain the ID that
+73:45 - we want so we will set the ID
+73:48 - to content
+73:53 - or I will deconstruct it directly so we
+73:56 - need the ID here
+73:58 - and I'll set the ID directly like this
+74:02 - and that should be it so I will remove
+74:05 - this one now
+74:07 - and
+74:09 - if we go to our browser now
+74:13 - I'll put the budget to 50 and in the
+74:16 - notes Peak
+74:18 - two burgers
+74:22 - submit and we redirected to the delivery
+74:26 - page so that's it so this is uh
+74:29 - completed
+74:30 - I should have gotten the ID of that
+74:34 - delivery but let's create it again so 50
+74:39 - pick two burgers
+74:43 - submit
+74:44 - and this will get this object actually I
+74:48 - will
+74:49 - copy it all
+74:53 - oh
+74:55 - this is the object the ID here will be
+74:57 - this one
+74:58 - and I'll cut this
+75:02 - I'll create another object here
+75:05 - I'll call it state
+75:09 - and it will be equal to use state
+75:12 - so this state does not is not connected
+75:16 - with this react State here
+75:18 - there are different things but
+75:23 - this is the first state of our delivery
+75:29 - and I will put it directly here because
+75:32 - I don't want to
+75:34 - recreate it multiple times but later on
+75:37 - I will revert it back because the
+75:40 - default state for this will be just an
+75:44 - empty object
+75:46 - so I'll put it like this
+75:49 - and if I do it like this we will go
+75:51 - directly to the delivery page and now
+75:54 - let's build this page
+75:57 - let's go to the HTML and I will I will
+76:00 - replace this HTML with a div here
+76:05 - over the class name of row and width
+76:10 - 100. then the second element will be a
+76:14 - div with a class name of call 12.
+76:20 - margin border form
+76:22 - inside I will just display an H4
+76:27 - with a class name of
+76:30 - uh
+76:32 - bold and text White
+76:36 - and this will be the delivery
+76:39 - and I will show here
+76:41 - restate.id so this will be just the
+76:45 - delivery ID as I show it here so which
+76:49 - this is a title and the next value will
+76:52 - be the progress bar so this is a little
+76:55 - bit more complicated but
+76:59 - this is a div
+77:01 - with a class name of call 12. and margin
+77:06 - bottom to five
+77:08 - and I'll add another div here
+77:11 - with a class name of
+77:14 - progress
+77:16 - and now we need to add the bootstrap
+77:19 - progress bar so how do we add it
+77:23 - you can check the documentation so if we
+77:26 - go to get bootstrap.com
+77:30 - in the docs we have the progress
+77:34 - bar
+77:35 - so progress
+77:38 - bar like this so this is what I want to
+77:42 - build and I want to add an animation
+77:45 - just like this one
+77:47 - so
+77:49 - inside the class name will be
+77:54 - progress bar
+77:57 - background success
+78:01 - progress
+78:05 - bar progress stripped
+78:10 - actually not like this it will be
+78:12 - progress bar
+78:14 - stripped
+78:15 - and progress
+78:20 - bar
+78:21 - animated
+78:23 - I will close this part so we can see
+78:26 - more code
+78:27 - and then I will add a role
+78:30 - which is
+78:32 - progress bar
+78:34 - then we need some Style
+78:37 - which we need to add only the width
+78:42 - 250
+78:44 - percent
+78:46 - like this
+78:48 - and we need to close the div so this
+78:51 - will
+78:52 - look like this so as you can see the 50
+78:57 - of this bar is is looking like it is a
+79:01 - uh
+79:03 - in progress so we need a second one
+79:08 - and uh
+79:11 - now it looks like a one progress bar but
+79:14 - we need to show different uh animation
+79:19 - Styles based on different statuses so if
+79:24 - the status is ready then we don't want
+79:27 - to show any progress bar so in this case
+79:33 - I will do it like this
+79:36 - all that here if state that status
+79:40 - is not
+79:42 - ready
+79:46 - question mark also this progress bar
+79:48 - then
+79:50 - I will
+79:52 - uh not show anything
+79:55 - so I'll make it like this here
+79:58 - I will not show anything then so same
+80:01 - will happen for this other one but uh
+80:06 - I can add the same condition but it's
+80:10 - not the same condition so if we do it
+80:14 - like this the status ready is a white
+80:18 - bar which is correct now the next status
+80:22 - is
+80:23 - I will manually change it here it is
+80:27 - active
+80:31 - so if the status is active we need to
+80:33 - show the half of the progress bar here
+80:36 - uh in progress so how do we do that
+80:42 - first
+80:44 - for the status here I will change it so
+80:47 - this status here it should be either
+80:50 - collected
+80:52 - or
+80:54 - I'll copy
+80:56 - it again or completed
+81:00 - so this is the second half we need the
+81:03 - status either collected or completed
+81:06 - and now we'll show it like this which is
+81:10 - correct
+81:11 - nope the next part is the status is
+81:15 - collected
+81:18 - if we do it like this we can see that
+81:21 - the old bar is kind of animated but it
+81:26 - should not be like this
+81:27 - because the first part should not be
+81:30 - animated because only the second part
+81:32 - should be animated so for that the class
+81:35 - name here
+81:36 - I'll change it
+81:38 - like this
+81:40 - so here I will
+81:43 - uh check if the status it is active
+81:50 - question mark
+81:51 - if it is active then I will show this
+81:55 - class that we had
+81:57 - otherwise
+81:59 - I'll paste it again but I will I'll
+82:01 - remove this progress bar script and
+82:04 - animated
+82:06 - so if the status is active we will show
+82:09 - the strips and the animation style if
+82:13 - it's not active then it is just the
+82:15 - background success
+82:17 - and this will make it look like this so
+82:21 - it seems like the first part is
+82:23 - completed
+82:24 - only the second part is not completed
+82:27 - and now the status is collected and this
+82:31 - is the correct animation
+82:34 - and the last status is completed
+82:40 - completed
+82:42 - which in this case this should be all
+82:46 - green and the logic will be similar to
+82:50 - this one that we just copied
+82:54 - I will paste it here
+82:56 - except the difference is the status that
+83:00 - we will compare it
+83:02 - is a
+83:04 - completed
+83:06 - and that should be it so
+83:10 - did I make mistakers or something
+83:15 - collected actually
+83:20 - now it is correct so
+83:22 - that's it for the statuses so we have a
+83:26 - lot of conditions here but the main
+83:29 - thing that I wanted to show is if the
+83:32 - status is ready
+83:34 - then we show a white bar if the status
+83:38 - is active
+83:41 - we show the first part is in progress
+83:45 - if the status is collected
+83:49 - the first part is the green and the
+83:52 - second part is in progress and the last
+83:55 - one is completed
+83:59 - which is all green so these are all
+84:02 - animations that I wanted
+84:07 - now let's add the events so we need some
+84:12 - kind of events to trigger these
+84:15 - animations so for that I will add here
+84:20 - another div
+84:22 - with a class name of
+84:27 - called
+84:29 - 3 here
+84:31 - inside I will add the card so I'll copy
+84:35 - the card from
+84:37 - this
+84:38 - form here it will be almost similar and
+84:42 - I'll paste it here
+84:45 - so the difference is that this is start
+84:48 - delivery
+84:51 - and it won't have any inputs
+84:55 - and I will add later the on submit
+84:57 - button
+84:58 - so if I add this
+85:01 - uh it seems I have a problem here
+85:04 - now it should be correct
+85:07 - we can see the start delivery event here
+85:10 - so let's add the more events the second
+85:13 - one is
+85:15 - increased budget
+85:22 - and
+85:23 - this time we need an input
+85:27 - I'll paste it directly
+85:30 - so we need a number input
+85:34 - uh that uh says the budget so this is a
+85:39 - second event I'll copy this
+85:43 - paste it again and the other event will
+85:46 - be
+85:49 - pick up
+85:51 - products
+85:55 - and for the inputs here I'll paste them
+85:58 - again
+86:00 - we will have two inputs one is the
+86:02 - purchase price and the second one is the
+86:06 - quantity
+86:07 - and I'll copy this again to add the last
+86:11 - event which is the deliver
+86:15 - products and the only difference here
+86:18 - this is a sell price
+86:21 - and this is cell price
+86:25 - and that's it so these are the four
+86:28 - events that we will work with
+86:32 - and they will all submit to the same
+86:37 - function so let's create that submit
+86:40 - function here
+86:43 - is equal to
+86:46 - in a synchronous function this will have
+86:48 - an event and the event will have
+86:52 - a
+86:54 - prevent default
+86:57 - now here I can copy the code from app.js
+87:02 - so this part here it is almost the same
+87:07 - let's go back
+87:08 - and I'll paste it here so we will get
+87:11 - the form here we will get the data so
+87:14 - these are the inputs if we have any of
+87:17 - them if we don't have that's not a
+87:19 - problem
+87:20 - the event will be on the
+87:23 - event here so that it was the wrong
+87:26 - endpoint
+87:27 - a method post the headers are correct
+87:31 - and the type will be different so the
+87:35 - problem here is the type because each
+87:38 - event has a different type there but we
+87:42 - can pass the type in the function here
+87:45 - directly
+87:47 - and I can remove it here so when I send
+87:51 - the request uh the type will be dynamic
+87:56 - and it will work like this
+87:59 - so let's go to the first one start
+88:01 - delivery we will have on submit here
+88:05 - we'll have an event but we will call a
+88:09 - submit function with the event and the
+88:12 - type will be start delivery
+88:16 - so this is the difference when we submit
+88:19 - we will call all the same function only
+88:21 - the type will change I'll copy this
+88:26 - I'll paste it here and this is increased
+88:29 - budget so increase
+88:31 - budget
+88:34 - same for the other one
+88:37 - this is pickup
+88:40 - products
+88:42 - and the last one is
+88:46 - delivered
+88:48 - products
+88:51 - and that's it so all of these functions
+88:55 - will send
+88:57 - almost the same events but with
+89:00 - different types and we need also to
+89:03 - handle the response how do we handle the
+89:06 - response
+89:08 - first I will add the condition here if
+89:12 - the response
+89:15 - is not okay so we get an error
+89:19 - validation error then we will get
+89:23 - the detail
+89:26 - from the response which is equal await
+89:31 - a response
+89:35 - Json here
+89:38 - and we will simply alert that detail
+89:43 - and we will return
+89:45 - otherwise we will
+89:49 - refresh the state so
+89:53 - about the state we didn't add here use
+89:57 - the effect
+90:01 - so
+90:02 - for the moment I want to do anything
+90:06 - here in this user effect but I will go
+90:09 - back to our app.js because we are
+90:12 - getting a manual delivery here
+90:17 - uh we need to pass that ID to this
+90:22 - delivery object so like this so ID is
+90:25 - equal to that ID
+90:28 - and if we pass it like that
+90:31 - in our delivery.js here
+90:34 - I'll add the an asynchronous function
+90:38 - that calls
+90:42 - the status endpoint so like this
+90:46 - here I'll get a response
+90:49 - which is equal to 08
+90:51 - fetch
+90:53 - and the end point that we want to call
+90:55 - here is HTTP localhost Port 8000
+91:00 - slash deliveries
+91:04 - and I'll change the quotes here to this
+91:07 - backtics
+91:09 - I need to pass here the ID
+91:13 - that we sent from our app.js so we need
+91:17 - the props here
+91:19 - and this value will be props.id
+91:23 - and this is the status
+91:27 - so this is how we get the current status
+91:30 - the data so let me close this
+91:36 - data is equal to weight response.json
+91:42 - and we will set the state to this data
+91:45 - like this and we don't need this values
+91:50 - that we set before so with this user
+91:54 - effect we can directly get the state
+91:58 - that we want and in our app.js
+92:04 - we can remove this one also because
+92:09 - once we create a new delivery
+92:12 - we will pass it directly here so
+92:16 - that should be it let's see how our app
+92:19 - will work now let's add the budget as
+92:22 - well with 50 and pick two burgers
+92:27 - and deliver to customer
+92:32 - submit
+92:33 - as we can see once we submit we get the
+92:37 - ID we deliver we move to the delivery
+92:40 - page and we have a lot of statuses so
+92:44 - here I forgot to add also another thing
+92:47 - which is to show the Json
+92:51 - I'll go to the delivery.js
+92:55 - and here
+92:56 - I will show
+92:58 - the Json
+93:01 - like this so div
+93:05 - all that here a class name of call 12.
+93:09 - and margin top four
+93:12 - and I will show
+93:15 - uh
+93:16 - so this is not a div here this is a code
+93:20 - and inside I will show Json stringify
+93:25 - the state
+93:26 - like this so if I add this line in the
+93:30 - end we can see the actual State at the
+93:34 - bottom so this is the object that we
+93:37 - just created
+93:39 - and now we want to start the delivery
+93:42 - and when we submit we want also to
+93:45 - update this uh
+93:47 - [Music]
+93:48 - progress bar
+93:50 - how can we do that so uh
+93:53 - we can do that by calling the state
+93:57 - again once this request has finished and
+94:01 - the only way to do that is to add
+94:03 - another variable here refresh
+94:06 - set refresh
+94:09 - is equal to use State false it doesn't
+94:12 - matter if it is false or true but I will
+94:14 - add here refresh
+94:17 - and once this value changes we will get
+94:21 - the new state so if the response is not
+94:25 - okay we will display an alert if it is
+94:27 - okay
+94:28 - I will set refresh
+94:30 - to the opposite of refresh
+94:34 - so basically I want to
+94:36 - uh get the status again and that should
+94:40 - be it so let's click now start delivery
+94:47 - it should work actually why it didn't
+94:50 - work
+94:59 - so now that I check the Json that we
+95:02 - sent we forgot to send something so the
+95:06 - thing that we forgot to send
+95:08 - in this submit function is the delivery
+95:11 - ID that we are so that is my mistake so
+95:16 - we are we forgot to add here the
+95:18 - delivery
+95:19 - ID which is the state
+95:23 - dot ID like this and now we can test it
+95:28 - again
+95:29 - and as you can see the first part is
+95:32 - animated the status has become active
+95:35 - and now let's pick up products so
+95:40 - uh
+95:42 - two products with the price of 20.
+95:45 - submit and as you can see this part is
+95:49 - completed this is in progress the
+95:51 - purchase price is 20 and the quantity is
+95:54 - 2. we can deliver the products we can
+95:56 - sell with a higher price quantity submit
+95:59 - and it is successful so the first case
+96:04 - worked just fine
+96:06 - so that's it now all the refresh again
+96:09 - and let's create another delivery so the
+96:12 - budget now is again 50.
+96:15 - and now we speak
+96:17 - three ice creams
+96:22 - and let's submit so as you can see
+96:26 - everything is working correctly let's
+96:29 - start the delivery and let's start it
+96:31 - again so
+96:33 - now we are alerting error so the
+96:36 - delivery has already started and we
+96:38 - cannot start it again so this is working
+96:41 - fine
+96:42 - what happens now when we pick
+96:45 - three products but we don't have enough
+96:48 - budget let's submit not enough budget so
+96:52 - what do we do
+96:53 - we may increase the budget so I will
+96:56 - increase the budget with 20. submit and
+97:00 - now the new budget has been increased
+97:02 - and now if we pick up the products with
+97:05 - these values
+97:07 - it should be not a problem and now let's
+97:11 - deliver these products so
+97:13 - a higher price and the quantity will be
+97:16 - four
+97:17 - we have another problem now not enough
+97:20 - quantity so it should be three
+97:24 - and now it is successful so this is the
+97:29 - simplest way of an event-driven
+97:32 - architecture I hope you learned a lot of
+97:35 - things from this tutorial thank you for
+97:38 - watching and don't forget to like share
+97:41 - and subscribe thank you
+
+Cleaned transcript:
+
+in this course you will learn how to build an event driven system with react and fast API an eventdriven system is a common way to set up software Antonio from scalable scripts developed this course we've published quite a few courses from him and they're always great so this is up let me explain you first how it will work we will create a delivery that will pick a product from one place and deliver it to a customer we need to set a budget and we need to write some delivery notes like Peak to pizzas and deliver to customer and that should be it let's submit and this is the new page that we redirect so this is the delivery and this is the idea of the delivery we can see it here also so this Json is the object that we create on our first submit so this object here will change once we submit these events so while we deliver a product it may happen a lot of events so starting the delivery increasing the budget pickup products deliver products and many more but I will keep this events very small because they can be a lot and once I submit this events this Json will change and this progress bar here will change like this for example when I start the delivery we can see that we have the first half is in progress because now the status is active so now we are delivering this product so we haven't picked up yet the products because we need to submit this form so when we pick the products we have the purchase price so I'll put 20 here and the quantity so we need two pizzas let's submit and now the Json changed and also the the First Progress bar has been completed the status now it is collected and we have purchase price 20 and quantity 2 2 so we have two pizzas and we want to deliver it to the customer now when we deliver to the customer we want to sell it with a higher price and uh the same two pizzas that we want once we submit this everything is completed here and the Json has changed so the quantity is zero but we have also a sale price and the budget has increased so this is a simplified app of course can here can be many more events many more States but let's see how uh do we build the state in the backend for this scenario so the main part of this tutorial is to explain that we will have events in our backend which we will store them in the database and all these events will construct in a redis cache the state of the current delivery so the state we show it here this is the current state and this is built by all these events in the back end so this is the main concept that we will learn in this tutorial and this will function even if Radice fails what do I mean by that so in case redis fails and we don't have the current state in our cache we still have all our events in the database and once redis fails we will reconstruct this object from the beginning doing the same logic that we did in every event so we will see how we will do this in this tutorial now let's start building wrap let's start by building the backend with fast API and let's connect also to the radius database so the first step is to log in in the redis cloud and here I will create a new subscription I'll select Europe here and this is free and the subscription name I'll call it just DB database and I'll create this subscription and I will create a new database here so this is just a subscription that I call it database and the database name I'll call it a fast API DB so we will use the ready stack here I don't think we need anything else make sure to get the password here because we need to connect with the database and I will create this database right now so let's wait a little so the database is ready we have the end point here and we are ready now to build the backend with fast API but first we need to download also another software which is redis inside this tool will be used to monitor the database because we need to check the data that are inside for the moment my editor pycharm cannot see the data inside the radius Cloud but this software is buy radius and we can connect it connect here directly so we need the host which is uh this one so let me copy it paste it here and automatically it will set also the port the other alias the username should be default so username is default enter the password I will copy it here and I will paste it here and do we have test connection so let's add release database and I think it is ready so if I go here we can see that we don't have any tables inside this database but we will create it with a fast API so let's create the uh empty folder here fast API and I will create a file called Main dot Pi the first step here is to install fast API so pip install fast API I already have installed it in my machine and we will import it here so from Fast API we need to import fast API and then we will create the app which is equal to fast API like this and that should be it for creating a basic app that does nothing but we need to add some endpoints later uh one other thing which is important because we will use also react frontend we need to import fast API middleware course and we will import the course middleware why do we need this old paste also this code so we will add the middleware course middleware and we will allow this origin which will be our react app so we need this because our backend will random Port 8000 and our front end will run on Port 3000 and we will have problems if we don't add this line so they won't communicate with each other if we add this middleware our react up will successfully connect with our backend and that should be it now let's connect with redis so for that we need to install a package uh pip install radius om so this package is useful for connecting to the radius database so from redis om we need to import get ready connection and the radius connection here will be equal to get redis connection and we need to add some values which the first one is host and let's go to our Cloud here and uh I'll copy again the public endpoint and I will paste it here I will cut the port here because we need another value here which is a port and will be equal to that port then we need the password which I will copy it here and we don't need to add the the username because it is a default username and we need also another value which is decode responses to true and that should be it so with this we may connect successfully to radius but we have to test it to test it open the terminal and write UV corn make sure also to install a UV corn in your machine main up reload so we don't have any errors which means this redis connection here it is successful and now let's add the models that we will work in this app so from ready so M we need to import also the hash model and let's create a glass here I'll call it delivery and this will extend from the hash model and this object I will add only two properties the budget which is an integer and by default I will initialize it with 0 and the notes which is a string by default empty and to connect this model with the radius database we need to add here a class meta in the database will be equal to Radice and that should be it for this model I will save it not sure if radius inside will create something here let me refresh so we need to create objects in order to see it so we don't have any objects and let's create the second one that we need which is the event so I'll copy this paste it here and I will create the event so uh this will be the main object we need the delivery object just for the ID so we will create it in the beginning just to get the idea of this uh delivery and we will work only with events and this event will have the delivery ID which will be a string and by default it will be none window type so this is the event type we will see it later how we will use it which is a string and the data which is a string so the data will be the Json or the body that we will send in the request and that's it so we created two objects and now we need to add the endpoints that we will work so let's create the first one which is the creating a delivery so I will create here I will add a decorator up this will be a post request to the endpoint will be deliveries create and let's add the synchronous function here def create this will have a request as a request so let's import a in the first API here also the request and I want to get the body of that request so body is equal to a weight request Json and with that Json we will create the delivery so the delivery will be equal to a new delivery with a budget which be which will be equal to body data budget so why will uh why we will we have this data in front of the body I'll explain it later because all the requests will have the same format and because they have the same format all the parameters will be inside the data key and that's why I will create it like this and the same will happen for the notes so notes will be equal to body data and notes and in the end I will save it for the moment let's return this delivery and let's see if it works and to test it let's see if UV corn is running it is running let's open Postman and let's make here a request a post request to http localhost Port 8000 slash deliveries create and in the body we will have this Json so we need to type which for the moment we don't use it but this will be the request and the type will be create delivery it will make sense later why we need that type and we need the data which is an object that will contain the budget uh 50 for the moment and the notes which is uh pick two pizzas and that should be it so this is a format that we want in every event if I send this request I get this response so I get the budget I get the notes and I get also a primary key so this uh is the idea that is stored in the radius database if I open Reddit is inside now I will refresh and we have now a value here if I click here we will see also the fields so we have a primary key a budget and the notes so as we can see we can monitor the database with this software so we created a delivery but this is not the main part of our app we want to create the event which is a the focus of this tutorial so uh with the delivery I will also create an event here which is equal to event and this level delivery ID which is equal to this delivery primary key like this uh it will have a type so the type will be stored in the the event object so type here and we need the data as they are so data will be equal to I can use here body.data but since the data here is a string I need to convert it from a dictionary to a string so I need to use here Json uh dump string like this and don't forget to import Json on top and with this we will store also the event in the database and let me return the event here and let me send this request again send it and as you can see we created the event which has its own primary key the delivery ID of that delivery that we just created the type and the data as a string but it is a Json inside and also in the radius inside we can see that we created the delivery but we didn't create the event because I forgot to add save here so my bet there let me send it again and if I check it again we will have the event object here which has its own ID delivery ID the type and the budget so this event table will contain all the logs that all the events that happen for this delivery so it is really important now we stored these objects in the database but this is not enough so the response that we return here is the object that we store in the database but we have to return something else so we have to return the state of the delivery so this is a delivery object in the database and this is the event but we have to combine both of those to represent the actual state so it may be confusing for you for the moment but you will understand it uh more once I add more code so I will create here uh python file I'll call it uh I want to call it events but this will be confusing with the actual event here so I'll call it consumers it is the same but I just want to avoid confusion and here I'll create a function which is create delivery and this function will have two parameters state and an event so you may be already confused here this is a function that we will use let me use it right now here to construct the state that we want to return so the state will be equal to Consumers create delivery so this function we will pass the actual state but the actual State for the first event so the first delivers create is an empty object because we didn't create anything yet so the first parameter here is an empty string and the second one is the actual event that we just created here and this function will return the a state that we want in the front end to handle and I will return it here and what will be that state for the moment it will be very simple I will return the budget which is a uh actually I will get the data here which is equal to Json load string event dot data uh we need to pass the data that we store here which is this data here and the budget will be equal to data budget I will cast it as an integer because we may have problems later on with uh these types we need the nodes which is equal not equal it is data notes and we need also the another value which we don't have it for the moment which is the status so the first time that we created delivery the status will be ready so this is an extra value which I will front end won't provide but we need this value in order to track the delivery and this will change once a different event happens and it is a the best way to do it like this instead of just updating it from the front end or any or any other way also I forgot also one other value which is the ID of the delivery so this will be event that delivery ID like this and that should be it so this is the state that we want to build and it it is almost similar with the value that we returned here but it will change a lot and we want to be able to maintain this structure so let's test it we pass the state parameter here but we don't use it but it's okay because this is our first event in the other events we will use it every time and if I send now the request we will get this response so it is almost similar but we have a status now and this object will change a lot and now we need another endpoint to get the status of this delivery so this is a post request we update the status here but we need another get the request to get the current status and for that I'll create another function actually I will create it here on top this will be an asynchronous function get state and this will have a primary key as a string as a parameter and this will be a get request to deliveries with the primary key here and status but how do we get the status so this state that we just created here here we won't rebuild it again and the best way is to get it from redis so we should add also another line here that we need to store the actual state in the reddish cache when we save the objects here we save it in the radius Json database so it is a database just like a mongodb but if you if we use the radius object directly like this we will store it in the radius cache so uh that's why I chose it like this it is a benefit of using also the radius cache and also the radius database just like mongodb now when we set the value in the cache we need a key and a value so the key will be deliver it and we need to pass the delivery ID here and to pass it I will add an F here not here here and I will pass the delivery primary key here and the value will be the state but this state it is an object so I have to use Json dump string the state and that should be it so be when we create the state we will store it in the cache and return it and when we get the state here we will do the opposite so we will get it from the cache so state is equal to radius get I'll put an F here delivery with the primary key and I will return Json string the state because the value that we stored is a string and we will get also a string here and we want to return an object or a dictionary and that should be it this endpoint won't work because we haven't stored anything uh in radius so I will add another get request this will be the get request to localhost 8000 deliveries we need this idea that we just created I'll pass it here and status send it and we get an error because I think this value here is none when we don't have anything and let me do it like this if state is not known we return this value otherwise I will return just an empty object but this will change later so for the moment I will just put it as an empty object and if I get the value here so I need to restart your record I get an empty object because I need to create another object again in order to be saved already so I'll create another object I'll copy the ID here I will paste it here send it and we get the value so it's not looking good because instead of dumping the string I need to load the string so my bad here and now it looks better so this endpoint will get the current state of this delivery every time now we want to add another event that just changes the status from ready to active so let's do it now I will add another endpoint which will be similar to this one so this will be think a death I'll call it a dispatch and this will have a request as a request just like this one and this will be a post request to just event and what do we want to add here so this delivers create is similar to this one the only problem that we need another endpoint for the delivers create is that we don't have a delivery ID and we create it here but here we have the delivery ID in the event itself actually let me create the event so I'll duplicate the tab and this will be event here and in the body will be the type will change now instead of create create delivery it will be start delivery and in the data we don't need to send anything so it will be like this so this is the event that we will send and all the other events will be sent through this endpoint so the only the type will distinguish the behavior and the data and now let's go here so how do we change the status based on this information the first step is to get the body to parse it and we need to create the event in the database just like we did here so we are missing the delivery ID so the delivery ID will be equal to a body delivery ID so this is something that uh I should add because I forgot so we need the type we need also the delivery ID here which will be uh this one so my better these are all the informations that we need start delivery delivery ID and the data and now we created the event and now we need to manipulate the state how it will work so the first step is to get the current state and we will get it like this so state will be equal we have this function get State here it will be equal to 08 get underscore State and we need to pass the delivery ID there we need a width because this is an asynchronous function otherwise it won't return what we want and this state for the moment will be this value so this is what do we want to get and based on that state we need to just change the status from ready to active and we can simply do it here state let's say it is a status it is active but uh it won't work like that so this is not the right way to do it we need to create another function in the consumers here start delivery which will accept the state and the event and the this time we will just update the state uh we can do it like this state status is equal to active but I prefer this way so I will return here the state always a pipe here and I want to change the status to active like this so this operator will update this value to the this new value and that should be it so if I go to the main.pi file the new state now will be equal to consumers start delivery we will pass the current state and the event which momentarily we won't use there but it doesn't matter we need to save it to reduce so delivery primary key here is delivery ID and we need to save the new state and we need to return the new state so that's it for this event we need we still need to make some changes but let's test if it works so if I send this event I will get the same object but now the status is active and now if I send also the same request again here the status is active as you can see the status of that delivery has been updated now it is uh driving let's say so this is how it will work but there are some problems here which is this start delivery we added the endpoint to the event here so we don't know if it is star delivery or another event so we need to create a general way to call the function based on the type so the type is a start delivery in our case how do we do that so I'll create now here a constant I'll call it consumers and this will be equal to an object that will be mapped like this create underscore delivery which will be the type will be mapped to the create delivery function like this and start delivery will be mapped to the start delivery function so why do we need this constant we need this constant now because we can change now the start delivery to consumers consumers constant here we will pass the type which is this body type or event that type so I'll pass event that type there and we will do the same thing so the same will happen for the create deliver here so I will do it like this and this is a dynamic way of calling different function based on just the type so right now we don't know if we are calling uh start delivery or another event that we will create later so let us try this event so I'll create another delivery sent Ando indeed it works so I will copy this new ID paste it here and it works the status is ready now if I go to this other event I will paste the new delivery ID here send it and now the status is active if I send the request here the status is active so this is the dynamic way of calling different consumers now the structure is ready and we can add the easily multiple events so let's add another one so here we made the status active I will duplicate the tab and now we will send another event and this time will be pick up products and the delivery will be the same and in the data property we will send the purchase price which will be 20 and the quantity which will be 2 in our case so we want to send this event and we don't want to do anything here so this is ready this can handle multiple events types and the only thing left that we need to add is to add the consumer here so we need to add I will create the function uh pick up products this will accept a state and an event and that's it so it has become really easy to add multiple events this is a pickup products and this is a pickup products so we easily added one event let's handle the case in our function now what will happen when we when we get this event so first I will copy this part I'll get the data from the vendite data and I will return in the end the state the pipe here and these are the things that will change it will change the budget it will decrease so I'll put an empty value for the moment we will add the purchase price which will be data purchase price I will cast it as an integer because we may have problems we need also the quantity and this is a quantity here and also the status will change it will become collected so let's also calculate the budget so the new budget I'll add it here new budget is equal to state budget minus the purchase price times here the quantity and that should be it we will assign the new budget here and it is ready so this is almost completed so we will add later validation but for the moment this will work let's try to send the request and it worked as we can see our budget decreased we the status changed and we added two new properties and if we send the request we will get the new updated State here so it is working fine and now we can add also the last event which we can complete this uh delivery I'll duplicate this and this will be delivered products and uh here instead of purchase price we will add sell price and that should be it so let's add it here also this will be almost similar let's add the function deliver products with the state and the event and let's add it here deliver products and inside here actually I will copy the code here because it is almost similar so we will get the data from the event and now our new budget it will be our budget Plus the not purchase price but sell price here this is also sell price the quantity also will change so I will add a new field here new quantity is the old quantity which is state quantity minus this value and here I will add the new quantity and in the end the status will be completed so we will complete the delivery here so it is the same as this one but we will increase the budget we will decrease the quantity and we will change the status and that should be it so deliver products sell price quantity everything is correct let's send this event and it is working fine as we can see the status has changed the purchase price and the sale price are the same and the quantity has been decreased to zero so everything is correct we added all the events and this is the best case scenario so what do I mean by that every event that we send has been successfully executed and we didn't have any edge cases uh when we create an eventdriven architecture sometimes we may send events that should not when it should not be the time or we can send errors so we should have a lot of validation using these events for example when we start a delivery what happens when we send it again the delivery is already active we should throw an error like the delivery has already started or what happens when we purchase products and we don't have the budget for it so let's handle these edge cases the first step is to create another event and this time I will change the notes Here we will pick three pizzas but we won't have the budget for it because one pizza is 20 and the budget is 50. let's send this request and it worked fine now I will copy this ID I will add it here and I will start this delivery but before I send the event I'll add a validation here and the validation will be for the status of this uh delivery so here I will add a new condition if state that status is not ready then we will raise an exception because we cannot make the delivery active once it's already gone or it has another state so only when the state is ready we can change the status to active and here I will raise an http exception so let me import this so the HTTP should be uppercase and we need to import from a fast API HTTP exception and here the status code I'll make it 400. and the detail is delivery already started and that's it for a simple validation so if we have this validation when we post it the first time to start the delivery we will make it active so this is correct but when is when we send it the second time we will get an error delivery has already started we cannot start it again so that is the simplest validation and we can add more complex validations like this budget here so we decrease the budget but what happens if the budget so the new budget is less than zero so we don't have the budget to purchase the products so I will raise another exception here and the status code will be the same and here I will say not enough budget and that should be it so the delivery has already been started I'll copy the delivery ID I'll paste it here the purchase price is 20 and the quantity will be three so this is this will be more than the current budget which is 50. let's send this request and we get the error not enough budget and now uh it will become like a tree so in this case we may have multiple choices to solve this problem we may increase the budget so uh we should buy those three products or we may buy two products and deliver less products to the customer so as you can see with this approach we can handle many cases many decisions handling all these cases using the traditional way of rest apis it is very difficult but in this way we can handle every case so what will we do now so we will handle both cases and I will add now another event which is increased budget so increase budget this will have a state and an event and I will add it here also increase budget and what will we add here so it will be very simple we will get the data from the event and now the state budget we will increase it with the data budget like this and we will return the state so it is super simple and let's add it also here so let's duplicate this let's add another event I'll duplicate tab let's copy the delivery ID and this will have only the new budget so we will increase the budget with uh by 20 here so let me send again the event so if I send this event I will get not enough budget maybe I have an error here so yes not enough budget but if I increase the budget we can see the budget now is 70 and if I send this event again the transaction will be completed and the status will be collected so we got the three pizzas we can deliver these items now to the customer so I'll paste it here and the sale price will be 25 end of the quantity will be three let's say the quantity is four so we make another mistake here so here we can add another validation just like we added the validation with the budget here but this time is the quantity so if the quantity is less than zero we can say not enough quantity or not enough quantity I will I will make the message so if we had this validation this won't work as well because we will we are selling more products that we currently have so it should be three and now everything is completed so that should be it this is the case when we decide to increase the budget but what will happen if we decided to deliver less products so let's do it right now I'll create another delivery I'll copy the delivery ID and I will start this event and now I will uh pickup products here and I'll get this error which says not enough budget and this time I will decide that I will deliver less I will buy less products and it's it it is working but as you can see in the notes we have big three pizzas and the quantity is two and we can go now to the customer and we can deliver the the products which in our case we cannot deliver three anymore but we will deliver two of them which works but is the customer satisfied or not so we may go to another decision tree here so the customer may accept less products or the customer may want the other product next time or the customer may refund the order so either three products or none of them so there are many decisions that should be made here and I will not handle all of them you can understand now how this architecture can help us handle all possible validation and all possible scenarios when we have an eventdriven architecture so we are finished with all the events and all the apis but still there is one case which we didn't handle so what happens when a radius fails so in this case here as we can see uh we are getting the products from redis and I will copy again here the deliver ID paste it here and the status is completed but this status is the aggregation of all the other events that happened here in case redis fails our system should should be the same so so it should return the same value here but how do we do that the way that we can do that is by rebuilding all the events from the beginning so we have a log of all events that happened in this app so I will refresh here and we have a lot of events so here in a radius inside I can filter with main dot event column star here and here we will get all the events we should filter all by this delivery ID but it doesn't matter we should get all the events from the database and we should recreate this uh State here so let's do that now I will comment this part and the state for the moment is known let's say that already returns none here and if that is the case if I send this event I will get an empty object which is this one so here now I want to do an algorithm that will return the actual state so that the function I'll create it here I'll call it build state and this will have a primary key as a string and I'll call it here so the new state will be equal to build state with the primary key and we will return it here so this is correct here the only thing left is to build the state here so let's complete this function the first step is to get all the records so radius Json has this function event all primary keys unfortunately there is no other function that returns all the objects so this is all we have but we can manage to do what we want with this function so we got all the primary Keys now all the events will be equal to uh something for primary key in primary keys so uh this something here will be event get primary key so this will return all the events as objects actually let us do it like this so first let's return all the primary keys so we can see how it works step by step if we do that let me start this if we do that we will return all the primary Keys like this and if we do the Second Step I will save it we will return all the events of all the product all the deliveries so it is working fine but we want only this delivery ID so we need to make another filter here events will be equal to something here for event in all events with the condition if events that delivery ID is equal to this primary key that we pass here and this will be just the event like this so this is a filtering that we want to get all events for this delivery if I return it here I'll save it we can see that this delivery ID is different from the first and the second event if I send the request now all the delivery ideas will be the same so these are all the events for this delivery and that should be it so we got all of these events and now what do we want to do how do we rebuild the state as it was in redis uh now the way to rebuild the state is to redo everything from the beginning I will make a for Loop now for event in events and for each event we will build the state so the state will start as an empty dictionary just like we did when we create a delivery here and for each event in the events the state will change and the new state will be consumers consumers again so it will be this function here I'll not pass here an empty object but this will be the actual state and that should be it we will start with an empty state we will pass the first event which will be create the delivery and we will update the state and then we will go in the next event and this will change the state again and again till the end where we will return the updated State and this state will be the state that we want so this is how we rebuild the state uh I will save it let's see if we have any errors we don't and let's send again this request so we have an internal server error care budget so I think I know the problem when we return the events I will save it and when I return the events I see a problem here is that the order is different that the order that we want so what the what should we do right now uh to be honest I'm not sure why is it that it returns in this order I think they are ordered by the primary key which should not be the case they should be ordered by the creation time so uh it is the order is totally random so the only solution that I can find for the moment is this one so the first one is create delivery and I will get this primary key so I will make it manually but it should work in every other database it should work normally so we should get all the events in the normal order then it is a start delivery this is the second one the third one is pickup products and the last one so not pick up products here so my bad it should be this primary key and the last one should be the first primary key and if we do it like this we will get other events in the correct order and now let's uncomment this part let's get to the state I will save it send a request and this is what we get so this is the result that we wanted so everything works fine except this get all primary keys for some reason it orders the primary Keys alphabetically but they should we should get all those values based on the creation time so this is a small bug but I guess um it's not a problem you get the idea how it works now I'll get the state from redis just like we did before and if the state is known uh is not known we return the state directly if it is known we will rebuild the state and we will save it again to radius here so we want to rebuild it again and this is just the primary key and this is the function so if I send a request now I'll get the exact same result and that's it uh this is how we handle the state in the backend now it's time to build the front end now let's create the front end so I will open a terminal here and run MPX create react app I'll call it react events and let's wait till is completed so it is completed and now I'll open it with my IDE here I'll run npm start so we can start our react up on Port 3000 so it should work fine so now it is running now let's install bootstrap for this project I will install it directly through the terminal so npm installed bootstrap so it is installed and I will go now to our app.js I will remove these Imports we don't need the app CSS or delete it even index CSS actually I will just remove the code here I will remove a test.js file and in our app.js I will simply import bootstrap here this CSS bootstrap.css so we will get the bootstrap here let's also remove what we don't need here and it will look like this so this is just a blank page I will go now to index.html and here in the body I will add this class so I want to make the background dark so I will add this class here and now it will look like this uh then in our app.js I will remove this code and I will replace with this code so this won't change anything but if we want to add now a card which I will add so I'll add div here with a class name of card then inside I will add another div with a class name of a card header I'll add here create delivery here I will add the form with the class name of card body and inside now we can have inputs so I will add the another div here with a class name of input uh just margin bottom three and another input here this will be a type of number name will be budget class name will be form control and the placeholder will be budget so I'll copy this paste it here and we need another input but this time it won't be a type number this will be a text area and uh this will have the name of notes form control here and this will be notes and that should be it let's add also a button here with a class name of BTN vtn primary submit here so this will look like this so we have a card here to create a delivery when we submit we want to redirect to the delivery page so we need to create a another component here which is a delivery .js here I will use the shortcut so this is the delivery component that we want and what will we show inside so for the moment I'll just display delivery here and let's add the logic in our app.js so here I will create a variable ID set ID is equal to use state empty string inside so we need the ID of the delivery that we will create we will create that delivery from this form here and if the ID is set we will display the delivery component and the way that we will do it is like this so I will add here if I deep is equal to empty string question mark I will show this form otherwise I will show the delivery component and that should be it so in the beginning the ID is empty so we will see the card here but if this is something else we'll show the delivery here so the text that we just wrote there and when we submit this form I'll create a submit function this will be asynchronous and this will have an event here that we will call prevent default and when we submit this form so on submit we will call that submit function so here now we will get the inputs from the form so I will use a shorter wave so I'll create a variable form which is equal to new form data inside I will pass event.target the data so the values the budget and the notes will be equal to object from entries form so my bad form entries like this so this form data that and entries will return all these number and notes so all the inputs and if we do use it like this it will convert it to a Json as we want so just like this uh like a budget 10 etc etc so this is the format that this will return and now we got everything that we want the only thing left is to get the response which is equal to a weight fetch the request to create the delivery is http localhost Port 8000 slash deliveries slash create we'll pass some values here like the method is a post request and the headers are like this content type is application Json then we need the body which is Json stringify and the way that we will return we will send the data is exactly as we did in our Postman here so it is like this we need the type which is create delivery type is create delivery and the data is this data as it is here that's why I call it data this will convert those values like this Json here and that should be it we will get a response and we will convert that response to Json so we will await response Json like this and that Json will contain the ID that we want so we will set the ID to content or I will deconstruct it directly so we need the ID here and I'll set the ID directly like this and that should be it so I will remove this one now and if we go to our browser now I'll put the budget to 50 and in the notes Peak two burgers submit and we redirected to the delivery page so that's it so this is uh completed I should have gotten the ID of that delivery but let's create it again so 50 pick two burgers submit and this will get this object actually I will copy it all oh this is the object the ID here will be this one and I'll cut this I'll create another object here I'll call it state and it will be equal to use state so this state does not is not connected with this react State here there are different things but this is the first state of our delivery and I will put it directly here because I don't want to recreate it multiple times but later on I will revert it back because the default state for this will be just an empty object so I'll put it like this and if I do it like this we will go directly to the delivery page and now let's build this page let's go to the HTML and I will I will replace this HTML with a div here over the class name of row and width 100. then the second element will be a div with a class name of call 12. margin border form inside I will just display an H4 with a class name of uh bold and text White and this will be the delivery and I will show here restate.id so this will be just the delivery ID as I show it here so which this is a title and the next value will be the progress bar so this is a little bit more complicated but this is a div with a class name of call 12. and margin bottom to five and I'll add another div here with a class name of progress and now we need to add the bootstrap progress bar so how do we add it you can check the documentation so if we go to get bootstrap.com in the docs we have the progress bar so progress bar like this so this is what I want to build and I want to add an animation just like this one so inside the class name will be progress bar background success progress bar progress stripped actually not like this it will be progress bar stripped and progress bar animated I will close this part so we can see more code and then I will add a role which is progress bar then we need some Style which we need to add only the width 250 percent like this and we need to close the div so this will look like this so as you can see the 50 of this bar is is looking like it is a uh in progress so we need a second one and uh now it looks like a one progress bar but we need to show different uh animation Styles based on different statuses so if the status is ready then we don't want to show any progress bar so in this case I will do it like this all that here if state that status is not ready question mark also this progress bar then I will uh not show anything so I'll make it like this here I will not show anything then so same will happen for this other one but uh I can add the same condition but it's not the same condition so if we do it like this the status ready is a white bar which is correct now the next status is I will manually change it here it is active so if the status is active we need to show the half of the progress bar here uh in progress so how do we do that first for the status here I will change it so this status here it should be either collected or I'll copy it again or completed so this is the second half we need the status either collected or completed and now we'll show it like this which is correct nope the next part is the status is collected if we do it like this we can see that the old bar is kind of animated but it should not be like this because the first part should not be animated because only the second part should be animated so for that the class name here I'll change it like this so here I will uh check if the status it is active question mark if it is active then I will show this class that we had otherwise I'll paste it again but I will I'll remove this progress bar script and animated so if the status is active we will show the strips and the animation style if it's not active then it is just the background success and this will make it look like this so it seems like the first part is completed only the second part is not completed and now the status is collected and this is the correct animation and the last status is completed completed which in this case this should be all green and the logic will be similar to this one that we just copied I will paste it here except the difference is the status that we will compare it is a completed and that should be it so did I make mistakers or something collected actually now it is correct so that's it for the statuses so we have a lot of conditions here but the main thing that I wanted to show is if the status is ready then we show a white bar if the status is active we show the first part is in progress if the status is collected the first part is the green and the second part is in progress and the last one is completed which is all green so these are all animations that I wanted now let's add the events so we need some kind of events to trigger these animations so for that I will add here another div with a class name of called 3 here inside I will add the card so I'll copy the card from this form here it will be almost similar and I'll paste it here so the difference is that this is start delivery and it won't have any inputs and I will add later the on submit button so if I add this uh it seems I have a problem here now it should be correct we can see the start delivery event here so let's add the more events the second one is increased budget and this time we need an input I'll paste it directly so we need a number input uh that uh says the budget so this is a second event I'll copy this paste it again and the other event will be pick up products and for the inputs here I'll paste them again we will have two inputs one is the purchase price and the second one is the quantity and I'll copy this again to add the last event which is the deliver products and the only difference here this is a sell price and this is cell price and that's it so these are the four events that we will work with and they will all submit to the same function so let's create that submit function here is equal to in a synchronous function this will have an event and the event will have a prevent default now here I can copy the code from app.js so this part here it is almost the same let's go back and I'll paste it here so we will get the form here we will get the data so these are the inputs if we have any of them if we don't have that's not a problem the event will be on the event here so that it was the wrong endpoint a method post the headers are correct and the type will be different so the problem here is the type because each event has a different type there but we can pass the type in the function here directly and I can remove it here so when I send the request uh the type will be dynamic and it will work like this so let's go to the first one start delivery we will have on submit here we'll have an event but we will call a submit function with the event and the type will be start delivery so this is the difference when we submit we will call all the same function only the type will change I'll copy this I'll paste it here and this is increased budget so increase budget same for the other one this is pickup products and the last one is delivered products and that's it so all of these functions will send almost the same events but with different types and we need also to handle the response how do we handle the response first I will add the condition here if the response is not okay so we get an error validation error then we will get the detail from the response which is equal await a response Json here and we will simply alert that detail and we will return otherwise we will refresh the state so about the state we didn't add here use the effect so for the moment I want to do anything here in this user effect but I will go back to our app.js because we are getting a manual delivery here uh we need to pass that ID to this delivery object so like this so ID is equal to that ID and if we pass it like that in our delivery.js here I'll add the an asynchronous function that calls the status endpoint so like this here I'll get a response which is equal to 08 fetch and the end point that we want to call here is HTTP localhost Port 8000 slash deliveries and I'll change the quotes here to this backtics I need to pass here the ID that we sent from our app.js so we need the props here and this value will be props.id and this is the status so this is how we get the current status the data so let me close this data is equal to weight response.json and we will set the state to this data like this and we don't need this values that we set before so with this user effect we can directly get the state that we want and in our app.js we can remove this one also because once we create a new delivery we will pass it directly here so that should be it let's see how our app will work now let's add the budget as well with 50 and pick two burgers and deliver to customer submit as we can see once we submit we get the ID we deliver we move to the delivery page and we have a lot of statuses so here I forgot to add also another thing which is to show the Json I'll go to the delivery.js and here I will show the Json like this so div all that here a class name of call 12. and margin top four and I will show uh so this is not a div here this is a code and inside I will show Json stringify the state like this so if I add this line in the end we can see the actual State at the bottom so this is the object that we just created and now we want to start the delivery and when we submit we want also to update this uh progress bar how can we do that so uh we can do that by calling the state again once this request has finished and the only way to do that is to add another variable here refresh set refresh is equal to use State false it doesn't matter if it is false or true but I will add here refresh and once this value changes we will get the new state so if the response is not okay we will display an alert if it is okay I will set refresh to the opposite of refresh so basically I want to uh get the status again and that should be it so let's click now start delivery it should work actually why it didn't work so now that I check the Json that we sent we forgot to send something so the thing that we forgot to send in this submit function is the delivery ID that we are so that is my mistake so we are we forgot to add here the delivery ID which is the state dot ID like this and now we can test it again and as you can see the first part is animated the status has become active and now let's pick up products so uh two products with the price of 20. submit and as you can see this part is completed this is in progress the purchase price is 20 and the quantity is 2. we can deliver the products we can sell with a higher price quantity submit and it is successful so the first case worked just fine so that's it now all the refresh again and let's create another delivery so the budget now is again 50. and now we speak three ice creams and let's submit so as you can see everything is working correctly let's start the delivery and let's start it again so now we are alerting error so the delivery has already started and we cannot start it again so this is working fine what happens now when we pick three products but we don't have enough budget let's submit not enough budget so what do we do we may increase the budget so I will increase the budget with 20. submit and now the new budget has been increased and now if we pick up the products with these values it should be not a problem and now let's deliver these products so a higher price and the quantity will be four we have another problem now not enough quantity so it should be three and now it is successful so this is the simplest way of an eventdriven architecture I hope you learned a lot of things from this tutorial thank you for watching and don't forget to like share and subscribe thank you

@@ -1,0 +1,291 @@
+00:00 - in this video we're gonna talk about
+00:01 - basic architecture of kubernetes now
+00:05 - kubernetes is a complete framework which
+00:07 - is very powerful but at the same time
+00:09 - very complex and a lot of people when
+00:12 - they read the documentation of
+00:13 - kubernetes they actually get overwhelmed
+00:16 - because they read the description of how
+00:18 - kubernetes mechanism is built and how
+00:21 - all the processes inside of that
+00:23 - mechanism actually work to make up the
+00:25 - cluster and make it possible to manage
+00:28 - and orchestrate the containers so we're
+00:31 - gonna look at two types of notes that
+00:34 - kubernetes operates on one is master in
+00:37 - another one is slave and we're gonna see
+00:39 - what is the difference between those and
+00:41 - which role each one of them has inside
+00:44 - of the cluster and we're going to go
+00:46 - through the basic concepts of how
+00:48 - kubernetes does what it does and how the
+00:50 - cluster is self-managed and self-healing
+00:54 - and automated and how you as a operator
+00:57 - of the kubernetes cluster should end up
+01:00 - having much less manual effort
+01:03 - [Music]
+01:10 - and we're gonna start with this basic
+01:12 - setup of OneNote with two application
+01:15 - pots running on it so one of the main
+01:18 - components of kubernetes architecture
+01:20 - are its worker servers or nodes and each
+01:24 - node will have multiple application pots
+01:26 - with containers running on that node and
+01:29 - the way communities does it is using
+01:32 - three processes that must be installed
+01:35 - on every node that are used to schedule
+01:38 - and manage those pots so nodes are the
+01:41 - cluster servers that actually do the
+01:43 - work that's why sometimes also called
+01:45 - worker nodes so the first process that
+01:49 - needs to run on every node is the
+01:51 - container runtime in my example I have
+01:54 - docker but it could be some other
+01:55 - technology as well so because
+01:57 - application pods have containers running
+01:59 - inside a container runtime needs to be
+02:01 - installed on every node but the process
+02:05 - that actually schedules those can those
+02:08 - pots and the containers then underneath
+02:10 - is cubelet which is a process of
+02:13 - kubernetes itself unlike container
+02:16 - runtime that has interface with both
+02:19 - container runtime and the machine the
+02:22 - node itself because at the end of the
+02:25 - day cubelet is responsible for taking
+02:27 - that configuration and actually running
+02:30 - a pod or starting a pod with a container
+02:33 - inside and then assigning resources from
+02:36 - that node to the container like CPU RAM
+02:39 - and storage resources
+02:41 - so usually kubernetes cluster is made up
+02:44 - of multiple nodes which also must have
+02:46 - container runtime and cubelet services
+02:49 - installed and you can have hundreds of
+02:51 - those worker nodes which will run other
+02:53 - pots and containers and replicas of the
+02:56 - existing pots like my app and database
+02:59 - pots in this example and the way that
+03:02 - communication between them works is
+03:04 - using services which is sort of a load
+03:08 - balancer that basically catches the
+03:10 - requests directed to the pot or the
+03:13 - application like database for example
+03:15 - and then forwards it to the respective
+03:18 - pot and the third process that is
+03:20 - responsible for forwarding requests from
+03:23 - services to pots is actually cute proxy
+03:26 - that also must be installed on every
+03:29 - node and queue proxy has actually
+03:32 - intelligent forwarding logic inside that
+03:35 - makes sure that the communication also
+03:37 - works in a performant way with low
+03:40 - overhead for example if an application
+03:43 - my app replica is making a request
+03:46 - database instead of service just
+03:48 - randomly forwarding the request to any
+03:51 - replica it will actually forward it to
+03:54 - the replica that is running on the same
+03:56 - node as the pot that initiated the
+03:59 - request
+03:59 - thus this way avoiding the network
+04:02 - overhead of sending the request to
+04:05 - another machine
+04:06 - so to summarize to kubernetes processes
+04:09 - cubelet and queue proxy must be
+04:13 - installed on every kubernetes worker
+04:16 - node along with an independent container
+04:19 - runtime in order for kubernetes cluster
+04:21 - to function properly but now the
+04:23 - question is how do you interact with
+04:25 - this cluster or do you decide on which
+04:28 - node a new application pod or database
+04:32 - pot should be scheduled or if replica
+04:35 - pod dies what process actually monitors
+04:38 - it and then reschedules it or restarts
+04:40 - it again or when we add another server
+04:43 - how does he own the cluster to become
+04:45 - another node and get pods and other
+04:47 - components created on it and the answer
+04:50 - is all these managing processes are done
+04:53 - by master nodes
+04:56 - so master servers or master notes have
+04:59 - completely different processes running
+05:02 - inside and these are four processes that
+05:04 - run on every master node that control
+05:07 - the cluster state and the worker nodes
+05:10 - as well so the first service is API
+05:13 - server so when you as a user want to
+05:16 - deploy a new application in a kubernetes
+05:19 - cluster you interact with the API server
+05:22 - using some client it could be a UI like
+05:25 - kubernetes dashboard could be command
+05:27 - line tool like cubelet or acuminate this
+05:29 - API so API server is like a cluster
+05:33 - gateway which gets the initial requests
+05:37 - of any updates into the cluster or even
+05:40 - the queries from the cluster and it also
+05:42 - acts as a gatekeeper for authentication
+05:46 - to make sure that only authenticated and
+05:49 - authorized requests get through to the
+05:52 - cluster that means whenever you want to
+05:54 - schedule new pods deploy new
+05:56 - applications create new service or any
+05:59 - other components you have to talk to the
+06:01 - API server on the master node and the
+06:04 - API server then validate your request
+06:07 - and if everything is fine then it will
+06:10 - forward your request to other processes
+06:14 - in order to schedule the pod or create
+06:17 - this component that you requested and
+06:19 - also if you want to query the status of
+06:22 - your deployment or the cluster health
+06:24 - etc you make a request of the API server
+06:27 - and it gives you the response which is
+06:29 - good for security because you just have
+06:31 - one entry point into the cluster another
+06:34 - master process is a scheduler so as I
+06:36 - mentioned if you send an API server a
+06:39 - request to schedule a new pod API server
+06:43 - after it's validates your request will
+06:46 - actually hand it over to the scheduler
+06:48 - in order to start the application pod on
+06:51 - one of the worker nodes and of course
+06:54 - instead of just randomly assigning to
+06:56 - any node schedule has this whole
+06:59 - intelligent way of deciding on which
+07:02 - specific worker node the next pod will
+07:06 - be scheduled or next component will be
+07:09 - scheduled
+07:10 - so first it will look at your request
+07:11 - and see how much resources the
+07:15 - application that you want to schedule
+07:17 - will need how much CPU how much RAM and
+07:19 - then it's gonna look at and it's going
+07:22 - to go through the worker notes and see
+07:25 - the available resources on each one of
+07:27 - them and if it sees that one note is the
+07:33 - least busy or has the most resources
+07:35 - available it will schedule the new pod
+07:38 - on that note an important point here is
+07:41 - that scheduler just decides on which
+07:44 - note a new pod will be scheduled the
+07:46 - process that actually does the
+07:49 - scheduling that actually starts that pod
+07:51 - with a container is the cubelet so it
+07:54 - gets the request from the scheduler and
+07:56 - execute the request on that note the
+08:00 - next component is controller manager
+08:03 - which is another crucial component
+08:05 - because what happens when pods die on
+08:09 - any note there must be a way to detect
+08:12 - that notes died and then reschedule
+08:15 - those pods as soon as possible so what
+08:18 - controller manager does is detect state
+08:22 - changes like crashing of pods for
+08:25 - example so when pods die controller
+08:27 - manager detects that and tries to
+08:30 - recover the cluster state as soon as
+08:34 - possible and for that it makes a request
+08:36 - to the scheduler to reschedule those
+08:38 - dead parts in the same cycle happens
+08:40 - here where the scheduler decides based
+08:43 - on the resource calculation which worker
+08:46 - notes should restart those pots again
+08:49 - and makes requests so the corresponding
+08:52 - cubelets on those worker notes to
+08:55 - actually restart the pods and finally
+08:58 - the last master process is set CD which
+09:01 - is a key value store of a cluster state
+09:05 - you can think of it as a cluster brain
+09:07 - actually which means that every change
+09:10 - in the cluster for example when a new
+09:13 - pod gets scheduled when a pod dies all
+09:15 - of these changes get saved or updated
+09:18 - into this key value store of Ed CD and
+09:21 - the reason why at CD store is a cluster
+09:24 - brain is because all of these mechanism
+09:27 - with scheduler controller manager etc
+09:29 - works because of its data so for example
+09:34 - how to scheduler know what resources are
+09:37 - available on on each worker node or how
+09:41 - does controller manager know that a
+09:43 - cluster state changed in some way for
+09:45 - example pots diet or that cubelet
+09:47 - restarted new pots upon the request of a
+09:50 - scheduler or when you make a query
+09:53 - request to API server about the cluster
+09:55 - health or for example your application
+09:58 - deployment state where as API server get
+10:01 - all this state information from so all
+10:04 - of this information is stored in its D
+10:07 - cluster what is not stored in its D key
+10:10 - value store is the actual application
+10:12 - data for example if you have a database
+10:15 - application running inside of the
+10:17 - cluster the data will be stored
+10:20 - somewhere else not in the ED CD this is
+10:23 - just a cluster state information which
+10:25 - is used for master processes to
+10:28 - communicate with them work processes and
+10:30 - vice versa
+10:32 - so now you probably already see that
+10:34 - master processes are absolutely crucial
+10:36 - for the cluster operation especially the
+10:40 - H CD store which contains some data must
+10:43 - be reliably stored or replicated so in
+10:46 - practice communities cluster is usually
+10:49 - made up of multiple masters where each
+10:51 - master node runs its master processes
+10:55 - where of course the API server is load
+10:57 - balanced and the Etsy store forms a
+11:00 - distributed storage across all the
+11:02 - master notes
+11:05 - so now that we saw what processes run on
+11:09 - worker notes and master notes let's
+11:12 - actually have a look at a realistic
+11:14 - example of a cluster setup so in a very
+11:17 - small cluster you'd probably have two
+11:19 - master notes and three worker notes also
+11:23 - to note here the hardware resources of
+11:25 - master and note servers actually differ
+11:28 - master processes are more important but
+11:30 - they actually have less load of work so
+11:33 - they need less resources like CPU RAM
+11:36 - and storage whereas the worker nodes do
+11:39 - the actual job of running those thoughts
+11:41 - with containers inside therefore they
+11:43 - need more resources and as your
+11:45 - application complexity and its demand of
+11:48 - resources increases you may actually add
+11:51 - more master and note servers to your
+11:54 - cluster and thus forming a more powerful
+11:58 - and robust cluster to meet your
+12:01 - application resource requirements so in
+12:04 - an existing kubernetes cluster you can
+12:06 - actually add new master or node servers
+12:09 - pretty easily so if you want to add a
+12:11 - master server you just get a new bear
+12:13 - server you install all the master
+12:15 - processes on it and edit to the
+12:17 - communities cluster same way if you need
+12:20 - to worker nodes you get their servers
+12:22 - you install all the worker node
+12:25 - processes like container runtime cubelet
+12:28 - and key proxy on it and add it to the
+12:30 - Covenant is cluster that's it and this
+12:32 - way you can infinitely increase the
+12:35 - power and resources of your communities
+12:38 - cluster is a replication complexity and
+12:40 - it's resource demand increases thanks
+12:43 - for watching the video I hope it was
+12:45 - helpful and if it was don't forget to
+12:47 - like it this is a video series so I will
+12:49 - create a new one every week so if you
+12:52 - want to be notified whenever a new video
+12:54 - comes out then subscribe to my channel
+12:56 - if you have any questions if something
+12:59 - wasn't clear in the video please post
+13:00 - them in the comment section below and I
+13:02 - will try to answer them so thank you and
+13:05 - see you in the next video

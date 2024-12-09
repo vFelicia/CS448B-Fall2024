@@ -1,0 +1,255 @@
+00:00 - welcome back this is part two of the
+00:01 - dungeon generation tutorial if you
+00:04 - haven't watched part 1 I highly
+00:06 - recommend you go back and watch that one
+00:07 - first
+00:08 - because we're gonna be starting where we
+00:11 - left off in part 1 where we've already
+00:13 - created the rooms and we're gonna be
+00:15 - starting to talk about how to create the
+00:17 - path through the dungeon alright let's
+00:19 - get started so in the previous video we
+00:22 - made our room generator that spawned the
+00:25 - rooms and distributed them around using
+00:27 - the physics engine but now we need to
+00:30 - connect these rooms together so that we
+00:32 - have a path between them now to do this
+00:34 - we're going to use something called a
+00:36 - minimum spanning tree and that might
+00:40 - sound complicated but what it really
+00:41 - means is that given a graph which is a
+00:43 - collection of points it finds the
+00:45 - minimum number of connections to visit
+00:48 - all of them so for example if you have a
+00:51 - few points then in a line like this then
+00:56 - the straight line is going to be the
+00:58 - shortest path that connects all of them
+01:00 - so this is a minimum spanning tree of
+01:02 - this graph of 4 nodes but as soon as I
+01:05 - add some other connections you'll start
+01:09 - to see that the path gets a little more
+01:14 - convoluted right and so by minimum
+01:19 - spanning tree what we mean is a spanning
+01:22 - tree means it visits every single node
+01:23 - so everyone is connected there's no
+01:25 - nodes that aren't connected and minimum
+01:28 - means that the path lengths are kept to
+01:31 - the minimum possible value and so if
+01:36 - each one of these points in the graph
+01:38 - were to represent one of our rooms then
+01:41 - a minimum spanning tree is going to give
+01:43 - us a path that goes through and visits
+01:45 - every single room the algorithm we're
+01:48 - going to be using which you saw in that
+01:49 - demo is called prims algorithm and you
+01:52 - can look this up on Wikipedia I'll
+01:53 - include the link below if you want more
+01:56 - of the details of where this comes from
+01:57 - it also has this nice animation of a
+02:01 - demo of the algorithm as it runs as it
+02:05 - goes through the nodes and finds from
+02:07 - whatever starting point each for each
+02:11 - node it finds the next nearest node and
+02:13 - just
+02:13 - it's connecting them up and you can see
+02:15 - how it grows and finds its path through
+02:17 - the whole graph to store our data we can
+02:21 - use Godot is built in a star node which
+02:24 - is designed to hold a graph with
+02:27 - connections so it's perfect for our use
+02:30 - case here all right so it's good going
+02:32 - so starting with the code that we did in
+02:34 - the previous version which generates the
+02:36 - room we're gonna add a variable called
+02:39 - path that's gonna hold our this is gonna
+02:41 - hold our minimum spanning trees this is
+02:43 - this is gonna be an a star that funding
+02:48 - object and now in our coloring section
+02:55 - here where we go through and we after
+02:58 - we've spread out all the rooms and put
+03:00 - them in their places we go through and
+03:01 - delete some of them to make it a little
+03:03 - more sparse what we want to do is we
+03:06 - want to collect a list of all of the
+03:08 - room positions that we can pass to our
+03:11 - minimum spanning tree algorithm so we're
+03:14 - gonna make a variable here called room
+03:16 - positions
+03:17 - it's just gonna be an array to hold all
+03:19 - of the room coordinates and if we call
+03:23 - the room we don't want to put it in the
+03:25 - list but if we do call the room then
+03:28 - we're gonna append the room position to
+03:33 - that array now here's one little gotcha
+03:37 - the a-star node that we use stores the
+03:44 - positions of the nodes as vectors and
+03:46 - that's fine except it uses vector threes
+03:50 - because it's designed to be used in both
+03:52 - 2d and 3d it uses vector threes for all
+03:54 - of its positions that means we can't
+03:56 - just insert the rooms position because
+03:58 - that's going to be in our case a vector
+04:00 - two so we have to convert our vector two
+04:03 - into a vector three and we're just going
+04:05 - to leave all of the Z coordinates as 0
+04:08 - so we're going to insert a vector 3 of
+04:10 - our room
+04:12 - position X the next line here our room
+04:17 - position dot Y comma 0 and so that's our
+04:22 - 3d representation of our 2d vector
+04:27 - now we have we want to give this I'm
+04:33 - gonna put a little delay in here and
+04:44 - what we're gonna do here is we're just
+04:45 - gonna have it pause briefly to finish
+04:48 - this room calculation changing all the
+04:51 - rooms to static before we calculate the
+04:55 - MST or the positions might not be quite
+04:58 - correct but now we're ready to generate
+05:03 - a minimum spanning tree connecting the
+05:10 - rooms and we'll do that by and we'll
+05:13 - store it in our path variable we'll call
+05:16 - a function find MST using those room
+05:20 - positions all right so now it's time for
+05:26 - the magic so we're gonna define that
+05:30 - find MST function and that's going to be
+05:34 - given a list of nodes like that's gonna
+05:37 - be the array that we're passing in is a
+05:40 - list of nodes and this is going to
+05:43 - implement prims algorithm and I'll add
+05:48 - some more comments in here for the
+05:50 - version that I upload but I'm just gonna
+05:52 - talk through it now as we're typing it
+05:55 - so we're gonna be returning an a star
+05:58 - path so we need to create a new a star
+06:02 - object and we need to add the first
+06:08 - point to it and the way we add a point
+06:11 - to and to an a star is each point gets a
+06:15 - unique point ID and a vector3 and so to
+06:22 - get the available point IDs we know 0 is
+06:25 - available but you can also use get
+06:28 - available point ID and it will guarantee
+06:33 - to return you one that works because it
+06:36 - doesn't matter what IDs they're assigned
+06:37 - they just have to be unique
+06:38 - and then what we want to add to it here
+06:42 - let's do this let's do in here let's do
+06:56 - this let's zoom in here so that we can
+06:58 - see more of the code and we want to
+07:01 - insert the first we're just going to
+07:03 - insert the first node from the array so
+07:07 - pop front we'll take off the first node
+07:10 - so now our path has one node in it and
+07:14 - we're going to repeat this algorithm
+07:19 - until no more nodes remain so just want
+07:24 - to keep going through our list of nodes
+07:25 - until we've looked at them all so we do
+07:29 - that with saying while nodes write and
+07:31 - array returns false if it's empty so
+07:34 - we're gonna need a couple of variables
+07:36 - here to track because we're trying to
+07:38 - find for each node we look at we're
+07:39 - trying to find the closest one so the
+07:43 - minimum distance is the closest one we
+07:47 - found so far and that's going to start
+07:49 - out at infinity this is the minimum
+07:53 - [Music]
+07:55 - distance so far and this one then we're
+08:02 - going to also store the position this is
+08:07 - the position of that node and P is going
+08:15 - to be our current position that we are
+08:20 - looking at so now we need to loop
+08:25 - through all the points in the path
+08:37 - okay so we're gonna go through a path
+08:39 - remember our path at the beginning -
+08:41 - only has one node in it so that's the
+08:42 - one we're gonna start with but
+08:43 - eventually we'll be adding more and more
+08:45 - of them and I'm gonna convert this
+08:49 - variable so get points is going to get
+08:51 - the ID so we want to say get point
+08:56 - position of that and I'm just gonna
+09:01 - reuse the variable since I don't want to
+09:02 - create another one for this then we need
+09:05 - to loop through the remaining nodes in
+09:10 - there in the array so we'll call this P
+09:14 - - you go through each of those now for
+09:18 - each for each combination of these we
+09:21 - just have to see if it's closer than the
+09:23 - minimum distance we've found so far so
+09:26 - if p1 distance to p2 is less than the
+09:32 - minimum distance we've snapped found so
+09:33 - far then that becomes the minimum
+09:35 - distance we've found so far and then min
+09:45 - P is going to be that position and our
+09:49 - current node becomes that one that we're
+09:53 - looking at now when this loop finishes
+09:57 - when this outer loop finishes we've gone
+09:59 - through for the for each path and for
+10:02 - each node in the path and found its next
+10:05 - closest neighbor so we can insert that
+10:08 - into we can insert that into the path so
+10:13 - let's get the next available point ID so
+10:18 - that we can insert it and add it to the
+10:21 - path the path that add point takes two
+10:25 - arguments and and min P and then we need
+10:31 - to make that connection the path dot
+10:35 - connect points
+10:39 - get closest point to P and n so now we
+10:46 - have the connection and we need to
+10:49 - remove that node from the array because
+10:51 - we've now added it's a nodes dot erase
+10:54 - that min okay and that's it when this
+10:59 - while loop ends we will have visited
+11:02 - every single node they'll all be
+11:04 - connected so we can return the path and
+11:06 - that is prims algorithm alright man we
+11:11 - have a path our last step is going to be
+11:14 - to draw it so that we can see it on the
+11:18 - screen so in our draw some section here
+11:20 - we're just going to say if there's a
+11:23 - path then we want to go through each
+11:26 - position in the path we want to get each
+11:32 - connection for that position we want to
+11:41 - connect the two positions so let's dump
+11:45 - those in some temporary variables and we
+12:00 - get the two positions and we'll do draw
+12:02 - line draw a line we need vector twos
+12:06 - remember we're getting back vector three
+12:08 - positions so it's the vector two of just
+12:12 - the x and y cp x + CP dot y and then
+12:23 - i'll go to the next line here color will
+12:26 - do that yellow and then we'll set a
+12:35 - width and we'll use anti-aliasing
+12:38 - because that will look cleaner and so
+12:40 - now we should have if we run it our path
+12:45 - get drawn
+12:49 - okay so we just need to erase it when we
+12:52 - reset right so over here and to do to
+12:57 - input when we make the rooms our sorry
+13:02 - when we press space and we delete all of
+13:05 - the rooms we should also set path to
+13:09 - null there we go all right so now we
+13:18 - have our minimum spanning tree working
+13:20 - its connect finding a connection for all
+13:21 - the rooms now a couple things you might
+13:24 - notice if we get here let's get a nice
+13:27 - twisty one yeah
+13:32 - so the path likes say this was the
+13:35 - starting room and this was the ending
+13:37 - room right you have a path with some
+13:39 - branches but it means if you were to go
+13:41 - down this branch you know and explore
+13:44 - you're gonna have to do a lot of
+13:45 - backtracking to get back to the kind of
+13:48 - main central path and we'll talk about
+13:51 - that maybe in a in a future video for
+13:56 - now the next step that we want to do is
+13:58 - convert this now into a tile map so that
+14:01 - each of these rooms will be an open area
+14:05 - with walls and there will be these lines
+14:08 - will turn into corridors connecting the
+14:11 - various rooms together so that we can
+14:13 - walk around on them and that will be
+14:15 - what we do in the next step thanks for
+14:18 - watching
+14:25 - you

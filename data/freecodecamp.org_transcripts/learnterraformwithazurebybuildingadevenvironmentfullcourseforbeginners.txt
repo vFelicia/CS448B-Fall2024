@@ -1,0 +1,825 @@
+00:00 - Learn how to use Terraform with Azure in this course from Derek Morgan.
+00:04 - Derek is an excellent teacher and he has created many popular courses.
+00:10 - Hello and welcome to the Build a Development Environment with Terraform and
+00:15 - Azure Resume Foundations Project course. Now you might be wondering what exactly a
+00:21 - resume foundations project is. Well, a resume foundations project is a project built to help
+00:28 - you learn the fundamentals of a technology to create your own projects that you can use
+00:34 - on your resume. So let's take a look at what we're going to build in this course.
+00:42 - In this two-hour project centered around Terraform, you're going to use VS Code and deploy an
+00:48 - Azure Linux machine along with virtual network, subnet, security groups, etc. that will serve as
+00:55 - a remote development environment that you can log into directly from VS Code. We'll utilize
+01:02 - several Terraform tools and functions such as Terraform State, Format, Replace, Console,
+01:08 - Variables, Conditionals, and more. We'll also use Azure custom data and a provisioner to bootstrap
+01:16 - the virtual machine with Docker and add its connection information to your VS Code SSH
+01:22 - configuration file, allowing you to modify it for your own projects. Since we'll make heavy use of
+01:29 - documentation and highlight the process behind developing a brand new Terraform deployment,
+01:35 - you'll have the skills you need to dive deeper into Terraform and add this extremely in-demand
+01:40 - skill to your resume. So what are you waiting for? Go ahead and roll in the course. Let's start
+01:47 - building so that you can Terraform apply yourself. We're going to open a new project in VS Code,
+01:55 - install the Azure CLI, connect to our Azure account, and install a Terraform extension.
+02:02 - So let's get started. First things first, what we want to do is we want to install the Azure CLI.
+02:10 - This is going to allow Terraform to authenticate and access the Azure API. So let's go ahead and
+02:16 - knock that out. Now I am on a Windows computer. And if we head over here to this link, which is
+02:24 - provided in the resources, you'll see we have installation instructions for Windows, Mac OS,
+02:29 - and Linux. So go ahead and choose the operating system you're using and go ahead and install.
+02:36 - Now I'm going to be installing on Windows and I'll go ahead and show that process. It's not
+02:42 - too complicated for Windows. We just need to download this file and run it. So I'm going to
+02:48 - do that. All right, and I'm going to run that file now. All right, all set. Of course, if you're not
+02:59 - done, go ahead and pause the video while your installer finishes up. I'm going to go ahead
+03:04 - and click Finish. And now since I already have VS Code open, I'm just going to close it and reopen
+03:11 - it. All right, VS Code has been restarted. I'm going to go ahead and open a terminal.
+03:18 - All right, so now what I'm going to do is just run az login to get logged into my account.
+03:26 - Now for you, you can choose a browser to open and you will log into Azure and get all signed up.
+03:33 - I'm actually going to show the alternate route just in case you have a problem with the browser.
+03:38 - So what you can do is use a az login, dash dash use device code. So I'm going to control C out of
+03:45 - this. And again, you don't have to do this if everything worked fine. I just wanted to make
+03:49 - sure that we cover all the avenues here. So az login, use device code, just like so.
+03:59 - And as you can see, we've got a link right here. So I'm going to paste that link in just like so.
+04:05 - And as you can see, I'm already logged into Azure. And then I just need to grab this code
+04:15 - and paste it in.
+04:18 - There we go. And continue.
+04:24 - All right, it says we've signed in. Let's verify. There we go. And you can also validate by running
+04:31 - az account show, just like so. All right, so now that we've done that,
+04:38 - let's go ahead and add the Terraform extension. Now you can use the official one, but honestly,
+04:46 - the official one has some pretty terrible reviews. So I've been using this one here.
+04:53 - Let's go ahead and choose that extension and install it. But again, you're more than welcome
+04:58 - to use any extension you'd like here. And then what we need to do is open a new folder where
+05:05 - we'll store our files. So let's go ahead and file, open folder. And I'm just going to hop into my
+05:12 - documents. And I'm going to create a new folder. And we'll just call that Terraform Azure, just like
+05:21 - so. Go ahead and open that, select folder, and all set. And once again, I'll just make sure that
+05:30 - everything is set up for Azure, az account show. Still logged in, everything looks good to go.
+05:39 - First thing I'm going to do is just create a new file. And we're going to call that main.tf,
+05:46 - just like so. Go ahead and open that. And now I'm just going to pull that out of the way. And let's
+05:52 - take a look at the Azure docs. Now, as you can see here, we've got our Azure provider. And what this
+05:59 - provider does is allows Terraform to communicate with the Azure API. That's how Terraform knows
+06:06 - how to deploy resources. So as you can see, if you look down, you'll see authenticating to Azure.
+06:12 - And the way we're doing it is with the Azure CLI. Of course, you can feel free to read these other
+06:19 - options here. Those may work better for your organization. But for us, the Azure CLI works
+06:24 - perfectly fine. So this is our configuration that we're going to use for the provider.
+06:30 - There's some more stuff down here. We'll get into that very soon. But we're going to start here. Now,
+06:34 - as you can see, we've got Terraform, and then we've got required providers. So any of the
+06:38 - providers we're going to use are specified in this block. So we've got the Azure RM provider.
+06:44 - The source here is HashiCorp Azure RM. And then we've got a version. Now, this is actually freezing
+06:51 - this version to 2.97.0. Your version may be different, and that's perfectly fine. Of course,
+06:57 - if something does break, you can always revert to this version. And please let me know so that I can
+07:03 - update the course. Now, below that, we then actually specify the provider. Up here is indicating
+07:11 - which providers we'll be using within Terraform. And then here is actually how we will do the
+07:17 - connection and specify any other options that we may want to specify. Now, as you can see,
+07:22 - if you scroll down, we've got all of these arguments. And one of them is features, which
+07:27 - is required. So even if we don't use anything within the features block because it's required,
+07:34 - we still need to include it. As you can see here, it's included with an open set of curly braces.
+07:40 - So basically, it's an empty map. So as you can see, there are lots of other options that you can use.
+07:47 - Feel free to peruse that. But let's go ahead and get coding.
+07:52 - Now, you can just copy and paste that in. I'm just going to type it out just to get a little
+07:58 - practice going. So we're going to start with a Terraform block, open and close some braces,
+08:06 - required providers, open and close some braces again. Azure RM is our provider.
+08:14 - Azure RM is our provider. And then let's provide the source, which equals HashiCorp
+08:23 - slash Azure RM. And then version equals, again, in my case, 2.91.0. Now, you don't necessarily
+08:33 - need to specify this, but it's a good way to ensure that the code always works. So after that,
+08:39 - we just provide that configuration block, provider, Azure RM, and that open features block there.
+08:51 - So this is all we need here. And of course, you can provide more providers. You can even provide
+08:57 - two Azure providers if you want. You'll just need to name them differently. And that's how you can
+09:02 - potentially use different accounts or different regions or something like that. But in this case,
+09:06 - we're going to keep it simple. So now that we've done that, let's go ahead and run a,
+09:13 - first we'll run a Terraform FMT. And that stands for Terraform Format. And as you can see,
+09:20 - that kind of cleaned up our code a little bit, removed some indentations, things like that.
+09:25 - So it's a good habit to run Terraform Format anytime you are working with any type of files,
+09:31 - especially before you commit to your repositories. All right. So now that we've done that,
+09:36 - let's go to the next step and that is a Terraform init, just like so. As you can see,
+09:43 - we're initializing the backend and the backend is a local backend, which means that our Terraform
+09:48 - state where everything is stored will be stored here. All right. Everything is successfully
+09:54 - initialized. Let's take a look at what we've got. We've got the.terraform directory here.
+10:00 - This is actually where the provider is stored. And this is a compiled file. So this is actually
+10:07 - a compiled go file or in Windows case, an exe file, as you can see. And that is what is used
+10:14 - to communicate with the API of Azure. And then what we have is our Terraform lock.hcl. And as
+10:21 - you can see, this can constrain the version that we use. You typically want to commit this to your
+10:28 - repository. So even if this version isn't set, this lock.hcl will maintain that version to ensure
+10:37 - that your code always runs. Now, if you decide to upgrade that provider, you may want to just
+10:43 - delete this file or modify the version. So just keep that in mind. Now, if you were paying
+10:51 - attention, you may have noticed I accidentally left an S off the end of features. So I want to
+10:58 - illustrate a point here. Terraform init is not interested in anything else except for
+11:06 - provider-related stuff. So basically, I could put whatever I want to down here.
+11:12 - And if I run a Terraform init, it has no problems whatsoever. But if I change the provider and
+11:21 - accidentally use the wrong provider name or a wrong resource name, which we will look into,
+11:28 - it will fail. So do keep that in mind. Init is not sufficient to test your code. You will need to
+11:35 - run a plan, which we will cover soon. So fix this provider. Let's go ahead and make sure that's fixed
+11:42 - and make sure that feature is plural, just like so. Features. Perfect. So that should be good to go.
+11:49 - So now let's take a look at the resource group documentation. Now, as you can see, we've got some
+11:55 - notes here. None of these are going to affect us, but do be aware that whenever you see notes in the
+12:00 - documentation like this, it's probably a great idea to read them, as sometimes they will indicate
+12:07 - some very, very big issues that you might encounter and how to solve them. So now let's scroll down
+12:12 - here. We've got our example usage. As you can see, we've got a resource here. So just like we have
+12:18 - provider here, this is a resource. And this resource is Azure RM underscore resource group.
+12:27 - Now, this cannot change. This indicates the type of resource that you are deploying.
+12:33 - So you want to make sure you use the right name for that resource as Terraform will have no idea
+12:38 - what you're trying to deploy if you don't use the right name. Now, this is an alias. The following
+12:45 - here can be anything you want. For the most part, you have to adhere to some grammar rules, but for
+12:51 - the most part, it can be just about anything you want. So let's go ahead and go ahead and
+12:57 - create this. And this is how you will reference this resource within Terraform. Now, Azure doesn't
+13:04 - know anything about this alias, but Terraform does. This is how it's stored in the state.
+13:09 - So after that, we've got our arguments. We've got a name. And then this is Azure specific location,
+13:15 - Azure specific. And then also we can pass in some tags, Azure specific. And now once you create this,
+13:23 - you can actually go into the state using several different methods it will cover. And you can also
+13:28 - attain the ID of the resource once it's deployed. There will be no ID that you can find until, of
+13:35 - course, it is deployed within Azure. So let's bring the code back over here and let's go ahead and
+13:41 - start coding. In fact, what I'm going to do, scroll up and let's just copy this block right here.
+13:47 - And we'll paste it in just to help prevent any type of typos, since I am very prone to those.
+13:53 - So we've got a resource, Azure RM resource group. And let's just call that MTC dash RG,
+14:00 - just like so. Now the name, since this is actually in Azure, we're going to make that a little more
+14:06 - specific in this case. We'll just call it MTC dash resources. And this is also to illustrate that
+14:12 - these can be different. Now the location I'm going to use is going to be East, US, just like so.
+14:20 - And then below that, I'm going to specify some tags. So tags equals, open and close some curly
+14:27 - braces, and let's just give it an environment tag. So the environment equals dev. We're not really
+14:34 - going to be doing much with these tags in this course, but of course, for billing purposes or
+14:40 - any type of other resource management, it's nice to know what environment your resources are
+14:44 - deployed to. So now that we've done that, let's go ahead and control S. Now let's run a Terraform
+14:52 - FMT once again, clean things up. As you can see, it kind of pulled that environment back a little
+14:57 - bit. And then let's run a Terraform plan, just like so. All right, so that was a successful plan.
+15:06 - And what this is doing is showing us what is going to be built if we run a Terraform apply.
+15:13 - So as you can see, we've got our plus signs for create. There are other signs, but right now,
+15:19 - we're not changing anything. So you can see that we're creating this new resource. And then under
+15:25 - that, you've got the arguments that we're passing in. And as you can see, we've got the ID known
+15:31 - after apply, which means we will know that as soon as this is deployed to Azure. So let's go ahead
+15:38 - and deploy that. Let's go ahead and run a Terraform apply and hit enter. All right, as you can see,
+15:47 - it ran a plan again. And then it asks us if we would like to perform these actions, if we'd like
+15:54 - to continue. So yes, we would definitely like to continue. Now in the future, we would like to
+16:00 - continue. Now in the future, we will use the auto approve flag just to skip that because we are
+16:05 - running a plan between all of this. So we don't need to get another confirmation. But generally
+16:11 - speaking, when running from the CLI in production, it's probably a good idea to have this extra step
+16:17 - just to ensure you don't make any mistakes. So we'll go ahead, enter that yes and hit enter
+16:23 - and give that a little bit of time and it should be deployed here shortly. All right, apply complete
+16:31 - resources, one added, zero changed, zero destroyed. Perfect. Let's go take a look in the Azure console.
+16:40 - Going to refresh here. Just going to click up here to the left and I'm going to click on resource
+16:47 - groups. All right, and this is the first time I've logged in this account. So we've got a lot of
+16:54 - pop-ups here. Let's get rid of those. As you can see, sometimes resource groups take a little bit
+16:59 - of time to show up. But once I refresh, here they are, MTC dash resources. So we open it,
+17:07 - we can see all sorts of other information about it. So that is excellent. We're going to set the
+17:13 - groundwork for our deployment by deploying a virtual network. In order to do that, we'll also
+17:20 - need to learn how to reference attributes of other resources. So let's get started. All right, so
+17:27 - we've got the documentation, which is where we always start, right here. Now there are some notes
+17:32 - here and eventually these may be deprecated, but for right now they are fairly important.
+17:36 - Some of the demos and examples are going to show inline subnets. We're actually not going to do
+17:43 - that. We're going to specify our subnet as a separate resource. That gives us more control
+17:49 - over the resource itself, how it relates to things, its dependencies, and lots of other little
+17:54 - benefits that you'll see as you start to build your own larger deployments. So as you can see
+18:00 - here, this note covers that standalone subnet resource and some of the pitfalls. So let's get
+18:06 - scroll down to this example here. Now we're not going to use a lot of this. As you know, as I just
+18:12 - mentioned, the subnets are inline, so we're not going to do that. We're not going to worry about
+18:16 - the DNS servers. We're going to keep it pretty simple with just name, resource group name,
+18:21 - location, address space, and tags. Now one thing you can take a look at here, the resource group
+18:27 - name references the resource group. As you can see, azurermresourcegroup.example.name. So it is
+18:37 - resource azurermresourcegroup.example.name. So we've got the resource type, the resource alias that
+18:48 - we provided to it, and then one of the attributes, all using a dot syntax. And then the same thing
+18:55 - is specified with location. So let's go ahead and do this ourselves. So I'm going to roll this back
+19:04 - over and let's get to coding. So we will specify a resource just like so. Once again, end quotes for
+19:11 - the resource type, azurermvirtualnetwork, just like so. And I'm just going to give it an alias of
+19:21 - mtc-vn, and then open and close our braces. Then within here, we need to specify a name,
+19:31 - and that we'll just call mtc-network. Again, I'm being a little more detailed with my name within
+19:36 - the resource itself, but the alias doesn't need to be as long. So the name, mtc-network. Then we
+19:44 - provide the resource group name, just like so. So that's going to be Azure RM. And we can actually
+19:53 - take a shortcut. I'm just going to press down and tab right there to tab complete that. So
+19:59 - azurermresourcegroup, just like this, azurermresourcegroup.mtc-rg, which is this
+20:07 - here, dot name. Now you could also just specify mtc resources if you wanted to, but you don't want
+20:15 - to define the same thing in multiple places, because if we were to change mtc resources,
+20:21 - we'd have to change it in every resource that references it. Now, another reason why it's
+20:27 - important to reference resources by their resource address instead of by hard coding them is because
+20:34 - this creates an implicit dependency. Basically, now this network will not deploy before this
+20:44 - resource group has been created, and the same whenever we destroy. It will not destroy this
+20:50 - resource group until this virtual network is destroyed. So by referencing this resource group
+20:56 - from the virtual network, we tell Terraform that this virtual network is dependent on this resource
+21:02 - group. So now let's specify a location, and that's going to be very similar to this. So I'm actually
+21:11 - just going to copy this, paste it down here, and add dot location, which again is defined here as
+21:19 - East US. And then what we want to do is specify the address space, also known as a citer block.
+21:27 - The address space is, and this is actually a list. You can specify multiple address spaces here,
+21:35 - but we're just going to use one. We're going to use 10.123.0.0.16. And if you're not familiar
+21:43 - with subnets, I strongly recommend you review them. Feel free to reach out if you'd like any tips
+21:49 - or where to start. And then under that, let's add some tags. I'm actually going to give a little
+21:54 - bit of space between my details in the tags here. And once again, environment equals dev. And you
+22:02 - could copy and paste that too if you want to. All right, I think that's everything. Let's go ahead
+22:06 - and run our Terraform format. And after that, let's run our Terraform plan. Okay, we're seeing a lot
+22:16 - of green here. That is good. We've got one resource to add. Looks like every resource group is
+22:22 - added. Looks like everything we specified. As you can see, we'll also have access to information
+22:29 - about the DNS servers after apply, the GUID, the ID, and the subnets here, but possibly
+22:38 - after you apply. So that's great. Let's go ahead and get this network deployed. So Terraform apply.
+22:45 - And as I said, we're just going to use a dash auto approve here. And if you want to see everything
+22:50 - else, you can actually do a dash help. And you can see lots of great options here. But right now,
+22:56 - we're just going to focus on applying. So Terraform apply dash auto approve. Feel free to pause the
+23:05 - video while yours is applying and then come on back whenever it is finished. All right, one added,
+23:11 - zero change, zero destroyed. Let's go take a look. Here I am in my resources group here.
+23:19 - I'm actually just going to go back to home real quick. Click over here to the left,
+23:24 - just so we can see how to get to it the long way. I'm going to click on virtual networks.
+23:30 - And there it is, MTC dash network. Everything looks like it's here. We've got our address space,
+23:38 - DNS servers, location. Everything looks great. So wonderful. We're going to take a slight detour
+23:46 - from building to dive into probably one of the most important Terraform concepts,
+23:52 - the Terraform state. So let's go ahead and get stated. I mean, let's get started. All right.
+23:59 - So here we are. As you can see, we've got all of our resources that we've deployed so far.
+24:04 - And you may have noticed this Terraform.state file and this Terraform.tfstate backup file.
+24:12 - Let's take a look in them and see what we're looking at. So if you open it up, and let me
+24:18 - go ahead and preface with under very, very, very few circumstances should you ever modify
+24:25 - this state manually. There are specialized commands for making state changes and things.
+24:31 - So for the most part, one, you probably shouldn't have direct access to it. It should be stored
+24:36 - remotely. But two, don't go around and start changing things in this state. It's not the
+24:42 - right way to manage your resources. With that being said, let's take a look. As you can see,
+24:48 - each state has a version. It specifies the Terraform version. It's got a serial number,
+24:54 - a lineage, a lot of really good information to help you understand which state you're dealing
+24:59 - with. And every time the state is modified, it actually creates a backup. As you can see here,
+25:05 - it's got a serial of one. So once we run a Terraform apply or destroy again, the Terraform
+25:12 - state will be backed up with this Terraform state information and a new Terraform.tfstate will be
+25:18 - created. So as you look through our state here, you can see a lot of very familiar attributes.
+25:25 - Right here, we've got our Azure RM resource group with a name. Then you've got the provider there
+25:32 - also. Then under that, we've got ID, location, name, tags, et cetera, et cetera. And as you scroll
+25:39 - down, you'll see we also have our virtual network here. So that's pretty cool. And all of that,
+25:44 - of course, is exactly what was deployed within Azure. So let's take a look at a better way to
+25:50 - see what we need to see in our state. Because again, typically speaking, you're not going to
+25:55 - store your state locally. You're going to send it off to some sort of other storage. Some people
+26:00 - with AWS store it in S3. You can store it in Terraform's cloud. You can store it in services
+26:06 - such as Spacelift and more. So let's go ahead. I'm going to close this file. Let's bring this
+26:13 - up just a little bit. And let's go ahead and run a Terraform state list. All right. So that's an
+26:21 - easy way to see all of the resources we have. And then if we want more details about what's
+26:27 - in those resources, we can run a Terraform state show. And then we just utilize one of these
+26:34 - resources. So I can just copy this, paste it in, and hit enter. And there we go. So now we get the
+26:41 - information from that resource. And now if we want to see the entire state, we actually just run a
+26:48 - Terraform show. So keep that in mind. Terraform show will show you all of the state, as you can
+26:55 - see here. And then Terraform state show is how you view specific resources, just like so.
+27:07 - So if we take a look at the docs here, there's actually a good bit that you can read through.
+27:13 - I strongly suggest you get very, very familiar with it. We're actually going to be going through
+27:20 - a few of the other features of the state throughout the course. But this was a good,
+27:25 - quick run through of how to utilize a state. And once again, we'll be checking in every so often
+27:31 - to make some modifications to that state. And we're going to check out a command almost as
+27:36 - fun to use as Terraform apply, but much more fun to say. Now that command is Terraform destroy.
+27:44 - Now, if we take a look at the docs, we can actually see that a few things have changed
+27:49 - since Terraform came out. Originally, Terraform destroy was the proper way to do this. And it
+27:55 - still works. As you can see Terraform destroy followed by options. This is an alias for Terraform
+28:02 - apply dash destroy. Now you can also run a Terraform plan dash destroy, which of course will not
+28:09 - perform the destruction. It will just let you know what it's going to do. So let's go ahead and take
+28:15 - a look. Now, of course, what Terraform destroy does here is destroy everything that you've created.
+28:21 - But let's take a look at a few things first. First, what I'm going to do is just run a Terraform
+28:26 - state list. Let's just take a look. We have two objects here. As you know, we've deployed both of
+28:32 - those. And then if I run a Terraform plan dash destroy, as you can see, we've got zero to add,
+28:42 - zero to change, and two to destroy. And if you scroll up, you can see that everything has this
+28:48 - little red dash next to it indicating that it's going to be deleted. So if you ever see that red
+28:55 - dash, that means that that resource is going to be deleted. All right. So let's go ahead and take a
+29:00 - quick look. Let's look at our Terraform.tf state, just like so. As you can see, we've got a serial
+29:06 - of three here, version of four. We've got a lineage and all of this good stuff. Let's take a look at
+29:11 - the tfstate.backup. Serial is one there, version is four. Let's run this Terraform destroy and see
+29:20 - what changes. So I'm going to run Terraform apply dash destroy, or you can just run Terraform destroy
+29:27 - if you'd like. Let's go ahead and run that. I'm going to pull this up a little bit.
+29:33 - All right. And just like Terraform apply, it's asking for a yes or no here. You can also use
+29:39 - an auto approve. So I'm just going to type yes to destroy everything.
+29:49 - All right. All set. As you can see, it took it a while to delete that resource group.
+29:54 - Let's take a look at the tfstate and tfstate.backup again. Here is the tfstate. As you can see,
+30:01 - there is nothing in here anymore. And the serial has incremented to six. Now if we take a look at
+30:08 - the tfstate.backup, here you go. This was our old tfstate. So now if you ever needed to replace the
+30:20 - state or you made a big mistake or something went wrong with the state, somehow the state got
+30:25 - corrupted, you have this backup right here. You can delete this tfstate and rename this one
+30:31 - to continue utilizing what you had before. All right. So that's all for this lesson.
+30:37 - Go ahead if you'd like and run that Terraform apply auto approve real quick to put everything
+30:43 - back to where it was. And we're going to deploy a subnet into our virtual network. This way we have
+30:50 - an IP address space that can be used by our virtual machines. So let's get started. So as usual,
+30:57 - let's take a peek at our Azure RM subnet resource here. It's got a very similar note here that we
+31:05 - saw on our virtual network resource that indicated that these subnets can be deployed in line with
+31:11 - the virtual network, but in our case and most other cases, it's better to deploy it separately
+31:17 - from the virtual network. Now, as you can see here, it's actually listing our resource group
+31:23 - and virtual network, which we've already done. So all we need to do is deploy the Azure RM subnet
+31:30 - just like this. Now, as you can see, there are several arguments here. We're not going to use
+31:35 - all of them. And if you continue scrolling, you've got all sorts of great little notes here,
+31:40 - most of which do not pertain to us and this deployment. But again, it's very important to
+31:46 - read those and understand what you might need to know for future deployments. All right. So now that
+31:51 - we've taken a look at that, these are the following attributes that will be exported. ID name,
+31:58 - resource group name, name, prefix, prefixes. And again, right now we don't need most of that,
+32:03 - but some of this we're going to be reaching out to later. So anyway, let's get building.
+32:09 - All right. So back in the terminal, we'll start a new resource. And that's going to be an Azure RM
+32:17 - subnet, just like so. And we'll just call that MTC dash subnet. Keep it nice and simple. And then the
+32:27 - name, we'll just call this MTC subnet. But I will say that in future deployments, you might want to
+32:34 - add a one or a random string to that. But in this case, we're going to still keep it simple.
+32:42 - And then resource group name is what we need to supply second. And that's going to be our
+32:48 - Azure RM resource group, which I'm going to tab to complete dot MTC dash RG dot name, just like so.
+32:58 - Now, after that, we need to provide a virtual network name, just like so. And that's going to be
+33:07 - our virtual network, which is going to be Azure RM. And if you just scroll down here, you can see
+33:14 - the virtual network. And of course, you can also see it and copy paste from right here, if you'd like.
+33:20 - Virtual network dot MTC dash VN. And we're going after the name here, which is MTC network,
+33:28 - as you can see there. And we're just going to use name. So this name here references the MTC dash
+33:35 - network. Perfect. And then after that, we need to provide the address prefixes. And that just like
+33:43 - above is actually going to be in a list, which means there are brackets on the side, and it can
+33:49 - accept multiple arguments. Now, we're only going to use one prefix here. But of course, if you
+33:56 - needed to provide multiple, you'd be able to. Generally speaking, if you see a plural name here
+34:02 - for the argument, that's expecting a list. So you will be using these brackets. So that's going to
+34:08 - be 10.123. And we'll just use.1.0 slash 24, just like so. All right. So that's all we've got to do
+34:20 - for this subnet. Let's go ahead and make sure that I coded everything out right. We'll run a Terraform
+34:26 - FMT, which aligns some things for us. And then we're going to run a Terraform plan.
+34:32 - I'll drag this up some. All right. One to add, zero to change, zero to destroy. It looks like
+34:38 - everything we asked for is there. The ID, of course, will be known after apply, just as it has been
+34:44 - before. The name, MTC subnet, resource group name, MTC resources, and virtual network name, MTC
+34:53 - network. As you can see, those were populated just fine by referencing the name of the subnet.
+35:01 - Referencing the name of these resources. All right. Perfect. So go ahead and run a Terraform apply dash
+35:11 - auto approve. All right. Apply complete. Everything is looking good. If we run a Terraform state list,
+35:21 - we can see that our subnet dot MTC subnet has now been deployed.
+35:28 - And of course, you can also go to your Azure portal.
+35:35 - I'll go home. Going to click into my MTC resources, just like so. Then we'll click on the network.
+35:43 - And within here, you can see subnets on the left. And there is our MTC subnet.
+35:50 - All right. Perfect. We're going to add a very important resource to our deployment,
+35:55 - the security group. So let's get started. First, let's take a look at the docs over here.
+36:03 - And as you can see, we have another note. Now with the security group, you can actually define
+36:09 - your security group rules in line, just like this, or as separate resources. Now to keep things
+36:16 - consistent, we're going to deploy our security group rule as a separate resource, instead of
+36:23 - adding it in line. This will make maintaining our security group rules a lot easier and allow us to
+36:30 - make deploys and changes without any real unexpected consequences. If you scroll down,
+36:36 - you can actually see a security group rule can be configured both in line and via the separate
+36:42 - resource. We have to explicitly set it to an empty slice to remove it. Honestly, that's just a little
+36:48 - bit weird. I don't like that. I'd much rather just remove the rule entirely as a separate resource
+36:55 - versus having to manipulate our whole security group. So this is going to make things a lot
+37:01 - cleaner and easier to manage. So let's go ahead and get started with that. As you can see,
+37:07 - the security group is actually pretty simple. Name, location, resource group name, and some tags.
+37:14 - So let's go ahead and get that done, and then we will add the separate rule.
+37:20 - So I'll bring the code back over. Let's go ahead and get that going. Resource, Azure,
+37:29 - RM, network, security, group, MTC, and we'll just go SG, just like that.
+37:37 - Open and close our braces. Name equals MTCSG. Location equals Azure, RM.
+37:49 - And we're going to be using the location in our resource group. So I'll just select that.
+37:57 - Dot MTCRG dot location. Once again, remember, in our resource group, we have the location right here.
+38:06 - So we're just using Azure RM resource group, MTC dash RG location to get our proper location.
+38:14 - And after that, we've got a resource group name. And that's going to be Azure RM. Select that
+38:22 - resource group there. Dot MTCRG dot name, just like so. And then after that, let's add a tag.
+38:34 - Tags equals environment. Need to spell that right. Environment equals dev. All right, perfect.
+38:44 - I'm going to control S to save that. And then let's go ahead and add our resource group there.
+38:51 - Add our resource group rule. So I'll move this code out of the way. And I'm going to select the
+38:59 - Azure RM network security rule resource. And if you take a look,
+39:04 - Azure RM network security rule example, you've got all of these items here that need to be filled in.
+39:11 - And then you reference the resource group name and the network security group name.
+39:15 - So I'm going to cheat just a little bit here and copy this. So we're not typing this whole thing.
+39:21 - I typed fast, but not that fast. Let's go ahead and bring it back over. Let's paste that in.
+39:30 - And now take a look at the things that need to change. First, using example is not very descriptive.
+39:37 - Let's go ahead and call this MTC dash dev dash rule. Basically indicating this allows for developer
+39:44 - access. And then the name, I'm just going to call MTC dev rule, just like so. Priority at 100 is
+39:56 - fine. Obviously, if you start adding more rules, you might need to change those priorities. All
+40:01 - right. And then of course, direction here, we are not worried about outbound. Outbound is going to
+40:07 - work for us. We need to set inbound because right now we're trying to allow access to our
+40:14 - to our instances and subnets, not out from it. Access allow. Now the protocol is currently TCP,
+40:20 - which actually would work for most of our cases. I'm just going to go ahead and replace that with
+40:25 - an asterisk to allow for ICMP or anything else we need. And the same with source port range,
+40:31 - destination port range, source address prefix. Now this right now is allowing anyone. Quite
+40:38 - frankly, I don't want anyone seeing my IP address. It doesn't change enough for me to want to do that,
+40:43 - but I would definitely recommend you add your IP address here. And to do that, you can go to any IP
+40:50 - address finding website or just check your router or whatever you need to do to get your public IP
+40:55 - address and just add that here. And you would do it with this syntax ending with a slash 32.
+41:04 - But once again, I'm going to leave this as an asterisk. And then as far as resource group name,
+41:10 - that would be MTC-RG. And network security group name. As you remember, we made that up here.
+41:20 - MTC-SG. Just like so. All right, that was a lot of stuff there. Let's go ahead and run a Terraform
+41:31 - FMT. Let's run a Terraform plan and see how many typos I made. All right, fantastic. That's actually
+41:42 - kind of impressive. Everything looks like it's ready to deploy. We've got our security group
+41:47 - and our security group rule. So let's go ahead and run a Terraform apply dash auto approve.
+41:54 - All right, everything applied successfully. We can run a Terraform state list.
+42:01 - And we see all of our fun new resources there. Everything is good to go. We're going to associate
+42:07 - our brand new security group with our subnet so it can be actually used to protect it. So
+42:14 - let's get started. As you can see here, we have our Azure RM subnet network security group
+42:20 - association. Quite a mouthful. Luckily, it's not that long of a resource. It's actually very,
+42:27 - very straightforward and very simple. So let's go ahead and just knock that out. I'm actually
+42:33 - going to copy right here from the docs. Of course, if you don't have the page open, feel
+42:38 - free to just type it in or pull it from the code downloaded from the official repository of this
+42:44 - course. And I am going to paste that in. So we have our resource Azure RM subnet network security
+42:51 - group association. And we'll just call that something like MTC dash SGA. Nice and simple to
+43:00 - say. And then here we have our Azure RM subnet. And that was MTC dash subnet dot ID. And let's
+43:12 - call that ID. Then here we need to specify our network security group ID. And that was
+43:20 - MTC dash SG. If I remember correctly, let me scroll up to verify. Yes, right here. MTC dash SG.
+43:30 - All right, perfect. And we are referencing the IDs of both, as you can see, ID and ID.
+43:35 - And that is literally all we have to do. I know that is a relief coming from the last few longer
+43:42 - lessons. Let's go ahead and run our Terraform FMT. Let's run a Terraform plan. All right,
+43:52 - as you can see, one to add. Everything is looking good. ID known after apply, network security group
+44:00 - ID, which it found, and subnet ID, which it found. And that will allow our network security group
+44:07 - to protect our subnet. So let's go ahead and run our Terraform apply, auto approve.
+44:15 - All right, everything applied successfully. We're going to give our future virtual machine
+44:20 - a way to the internet by creating a public IP. So let's get started. All right, so here we are
+44:29 - with the Azure RM public IP. Pretty straightforward. We've got a name, a resource group name,
+44:36 - location, allocation method. Here you'll see static. We're going to be using dynamic and then
+44:42 - some tags. You scroll down, you can see we've got a lot of different options here. But the only one
+44:49 - we're really concerned with is the allocation method since we're going to be using dynamic
+44:54 - instead of static. All right, feel free to peruse those a little bit, but let's go ahead and get
+45:01 - started with our coding. So I'm actually going to just copy this here. Let's go ahead and add that.
+45:10 - Just like so Azure RM public IP. In our case, we're going to name this MTC-IP. We'll keep it
+45:18 - very simple. And then the name, once again, let's keep it simple with MTC-IP. And I do want to call
+45:26 - attention to this again. In the case of this deployment, it is a very, very static deployment.
+45:32 - There's not going to be a lot changing, not going to be a lot adding. This is really just a way for
+45:37 - us to deploy a simple and quick development environment. So we're not going to have multiple
+45:42 - IPs necessarily or multiple security groups or whatever. Now, if you do anticipate adding things,
+45:48 - you're going to want to make sure you add either a number to this or some other string or even use
+45:54 - a random ID resource, which Terraform offers to append some sort of random string to the end of
+46:02 - these so that if you do deploy multiple, you don't have overlaps. So just keep that in mind. But in
+46:08 - our case, we're going to keep it simple. Then for the resource group name, let's go ahead and
+46:14 - add our MTC-RG like we have before. And of course the location MTC-RG. And we're going to change
+46:23 - this allocation method to dynamic, just as we saw. And for tags, let's go ahead and just set it to
+46:31 - dev. All right. Perfect. I think that should be everything. Let's go ahead and run our Terraform
+46:39 - FMT. Then let's run our Terraform plan. All right. Everything looks good. As you can see,
+46:45 - we've got our dynamic there. MTC-IP, everything is looking correct as far as I can tell.
+46:53 - Now, one thing to note, even though it says there's an IP address known after apply,
+46:58 - it will not be known after apply. This is kind of a strange thing about the way Azure works.
+47:04 - The public IP, when set as dynamic, will not show up until it's attached to something
+47:11 - and used. So just keep that in mind. All right. I'm going to run our Terraform apply, auto approve.
+47:20 - All right. Apply complete. Perfect. Go ahead and run our Terraform state list.
+47:26 - And then what I'm going to do is grab this IP right here, and I'm going to copy that. Control
+47:31 - C for me. Let's run a Terraform state show and paste that in. There we go. And as you can see,
+47:44 - we do not have an IP address here. But once we deploy our other resources,
+47:50 - we will be able to extract that IP address and use it in the future. We're going to create the
+47:57 - network interface that we will attach to our virtual machine in order to provide network
+48:03 - connectivity. This NIC will receive its public IP address from the IP address we just created.
+48:10 - So let's get started. All right. So here is our network interface. We scroll down, we can see it
+48:18 - right here. As you can see, it kind of gets our usual suspects, the name, location, resource group
+48:25 - name. We then get the IP configuration under that. And we've got a name for that, subnet ID and
+48:32 - private IP address allocation. But as you can see, we don't have public IP address listed here,
+48:39 - which is something that is very important to us. So if you scroll down, you can actually see a
+48:46 - public IP address dot ID right here. So we're going to add that and reference our public IP
+48:54 - with that attribute. So let's go ahead and get started. All right. We're going to type this one
+49:00 - out again, just to give us a little more practice typing this. We'll use a resource, Azure RM,
+49:08 - underscore network, underscore interface. And let's go ahead and call that MTC NIC, just like so.
+49:18 - Then under that, let's give it that name. That's just going to be MTC NIC, location equals
+49:28 - Azure RM. We're starting to get a lot of resources here as you can see, but let's scroll down and
+49:33 - find that resource group and tab that in dot MTC dash RG dot location, just like so. Then under that,
+49:44 - we've got our resource group name. And that's going to be Azure RM. Once again, resource group
+49:53 - dot name. All right. And now we need to provide that IP configuration block. So IP underscore
+50:04 - configuration, open and close those braces, name, and we'll just call that internal,
+50:12 - just like the docs say, subnet ID equals Azure RM subnet dot MTC dash subnet dot ID. Under that,
+50:28 - we then provide our private IP address allocation. And that's going to be dynamic. We're not really
+50:36 - worried about it in this case, what the private IP address is that our instance gets. And then we
+50:42 - provide the public IP address ID. And that is Azure RM public IP dot MTC dash IP dot ID. And then
+50:58 - let's add a tag down here for good measure. Tags equals environment equals dev. Just like that.
+51:10 - All right. Everything is looking good at first glance. Let's run a Terraform FMT.
+51:17 - Everything's good so far. Let's run that Terraform plan. All right. As you can see on the resource
+51:24 - group, I actually left out a very important part of that dot MTC dash RG dot name. As you can see,
+51:36 - it gave me the line number and everything pretty easy to find where the error was and how to
+51:42 - troubleshoot it. All right. So let's run that Terraform plan again. Excellent. Everything is
+51:55 - looking good. We've got a lot of green plus signs here. These network interface cards are a little
+52:04 - bit complicated, but that all looks great. So let's go ahead and run a Terraform apply
+52:11 - and auto approve. Apply complete. Resources one added, zero changed, zero destroyed.
+52:22 - So if we run a Terraform state list, we've got our nick there. And if we run a Terraform state show,
+52:33 - add that to the end. As you can see, we have a private IP address right there,
+52:39 - but I'm not seeing a public IP address yet. Let's go ahead and run a Terraform state list
+52:46 - once again. Let's grab that MTC IP public IP, run another Terraform state show, add that.
+53:00 - And still no IP address. We're going to create an SSH key pair. This will be used by the Linux
+53:08 - VM resource we created so that we can SSH into it later. So let's get started. All right. As
+53:15 - you can remember from the docs, we've got the admin SSH key right here. So that's all we have
+53:22 - to do. We just have to create the key first. So let's head back into our terminal actually.
+53:29 - Let's go ahead and run an SSH key gen dash T RSA. We're going to create an RSA key pair.
+53:39 - All right. And I want to save this users, Derek dot SSH. And again, this is Windows,
+53:48 - which is why this might look a little bit different, but you'll want to just save it
+53:52 - in the same path that's illustrated here. We're just going to rename it. So slash, I'll just name
+53:59 - mine MTC Azure key, just like so. Not going to bother with the passphrase there. And we're all
+54:08 - set. So if I run an LS home slash dot SSH, you can see my MTC Azure key and MTC Azure key dot pub
+54:20 - are there ready to go. Perfect. So go ahead and clear my screen there. And then what I want to do
+54:28 - is add that key pair. And I'm actually going to put that above this OS disk just to keep it
+54:34 - consistent with the documentation, but it really doesn't matter as long as what's within the MTC
+54:40 - VM block. So admin SSH key username equals admin user as we remembered before and public key equals.
+54:55 - And now we're going to use a terraform function. So just like any other programming construct,
+55:01 - it basically is the name of the function followed by parentheses. So we're going to use the file
+55:08 - function and what the file function does is reads a file and substitutes its contents for the value
+55:15 - here. So what we'll use is we'll use our MTC Azure key dot pub, since it wants the public key
+55:26 - right here. And we're going to read that using the file function. Make sure you wrap that in quotes.
+55:31 - So file is going to pull the contents out of this MTC Azure key dot pub and insert those into this
+55:41 - argument here. So it's going to fill this out for us. Now, if you want to check out the docs,
+55:47 - you can check them out here pretty straightforward. As you can see, you basically just pass the path
+55:53 - into the file function. And there are also some other functions, file base 64, which we may look
+56:00 - into very soon, file exists and template file. All right, so now that we have done that, we now
+56:06 - have a way into our instance. So now let's go ahead and apply and make sure that we can log into our
+56:14 - instance. So I'm going to run my terraform format once again, to clean all of that up.
+56:23 - Then I'm going to run terraform plan. Let's make sure everything is looking good.
+56:27 - All right, beautiful. As you can see, one to add, everything is looking good. As you can see here,
+56:33 - the file function did exactly what it was supposed to do and added this here doc syntax to the
+56:39 - beginning and end of it. So that is great. Everything is looking good. So let's go ahead
+56:45 - and run a terraform apply auto approve. All right, all set. Everything applied correctly.
+56:55 - Everything applied correctly, which is just wonderful. So now let's go and see if we can
+57:03 - find that IP address. Let's just run once again, a terraform state list. And we've got our brand new
+57:12 - virtual machine right here. Go ahead and copy that. Then terraform state show and paste that in.
+57:20 - And if we scroll up here, we can see we've got our public IP address for our instance right here.
+57:28 - Perfect. Go ahead and copy that. Let's clear the screen and then let's SSH dash I and pass in that
+57:39 - MTC Azure key that we had. Admin user was the username we specified at and paste that IP address
+57:48 - at and paste that IP address in. All right, you may have had a confirmation screen. Go ahead and
+57:56 - click yes if you did. Otherwise, here we are all logged in. And if I run an LSB underscore release
+58:04 - dash a, we can see we are now within our Ubuntu instance. All right, perfect. So I'm going to exit
+58:13 - out of that. We're going to utilize the custom data argument to bootstrap our instance and install
+58:20 - the Docker engine. This will allow us to have a Linux VM instance deployed with Docker ready to go
+58:27 - for all of our development needs. So let's get started. All right, first of all, what I want to
+58:33 - do is create a new file. And we're just going to call that custom data dot TPL. Now TPL is the
+58:44 - extension we typically use for template files. We're not going to make this necessarily a template
+58:50 - file, but just for consistency sake, we're going to use that here just in case you'd like to
+58:55 - eventually add some variables. But for right now, let's go ahead and paste in the code provided in
+59:02 - the lesson. Should be a bash script, just like so. And what this is going to do is install all of
+59:10 - the dependencies necessary to install Docker on our machine. So go ahead and save that and feel
+59:16 - free to close that tab. And then what I want to do is add the custom data argument. And I'm just
+59:22 - going to go ahead and put that up here near the top. So custom data equals, now remember how I
+59:30 - said we'd be using the file base 64 function soon? Well, this is where we're going to use it.
+59:37 - As you can see, the file base 64 function is very much like the file function. But what it does is
+59:44 - it encodes it in base 64, which is what the custom data field for Azure is expecting.
+59:50 - So let's go ahead and file base 64, open and close some parents there. And we're going to pass in
+59:58 - custom data dot TPL, just like so. And of course, if this was not in this directory,
+60:05 - you would specify the directory where it could be found. But since it's in this directory,
+60:11 - we don't need to specify any slashes or anything like that. All right, perfect. So that's actually
+60:18 - all we've got to do there. As far as coding goes, let's go ahead and run our Terraform FMT.
+60:25 - And then let's run a Terraform plan. All right, perfect. Now we've got something a little bit
+60:31 - different this time around. We've got one to add, zero to change, one to destroy. So this isn't
+60:38 - changed because custom data requires the VM to be redeployed for it to be read. So it's going to
+60:44 - destroy our instance and replace it with a new one. As you can see here, custom data forces
+60:51 - replacement. Now, another cool thing you can see is sensitive value. Certain arguments can be
+60:58 - dedicated as sensitive and custom data is one of those. This way it does not show up here. Now it
+61:05 - can still show up in your state. And that data, of course, is still in this file. But it's not going
+61:12 - to show up right here for everyone to see in your terminal. All right, so perfect. This is exactly
+61:18 - what we want. Let's go ahead and run a Terraform apply, auto approve, just like so. All right,
+61:26 - apply complete. As you saw, there was a pretty long destruction process, but everything looks to be
+61:33 - up. Let's go ahead and see if we can log in now. So we're going to need to get that IP
+61:40 - address again. So let's run our Terraform state list. And we'll just grab that virtual machine
+61:48 - right there and Terraform state show, paste that in. I'll scroll up a bit and there it is a brand
+61:58 - new fresh IP address. So let's go ahead. And I just ran a control R there and I'm going to start
+62:07 - typing SSH. That saves me a lot of typing right there. If you press control R and search for that
+62:13 - SSH command, that should help you out. Otherwise, feel free to type it out manually again, paste in
+62:20 - that new IP address and type yes. All right, we are in our brand new VM. Let's see what happens.
+62:28 - Let's go ahead and run a Docker dash dash version. Bam. Perfect. So now we have Docker installed on
+62:38 - our brand new VM, ready to go. We're going to install the remote SSH extension in VS code,
+62:45 - which will allow VS code to open a remote terminal in our VM. And then we're going to take a look at
+62:52 - the configuration scripts we're going to use to insert the VM host information into our VM.
+62:58 - The VM host information such as the IP address into our SSH config file that VS code uses to
+63:06 - connect to those instances. So let's get started. So first up, I'm going to click on extensions here.
+63:14 - And I'm going to type remote SSH, just like so. And I'm going to click install. All right,
+63:24 - all installed for me. Perfect. So then let's take a quick look at it. So open the command palette.
+63:31 - And as you can see, mine's already there, but you can also start typing remote SSH. And just to see
+63:38 - how things work. If you click on add new SSH host, and let's just say SSH admin at admin.com or
+63:49 - whatever. Let's go ahead and hit enter. You can see you've actually got options potentially to
+63:55 - configure different files. Go ahead and click on this first one. We want this location to be within
+64:02 - our SSH directory. So click on that. And if you open the config, you can see I've actually got a
+64:10 - lot here. You can see the format we're looking at. We're looking at a host, host name, user,
+64:16 - and identity file, just like so. So what we're going to want to do is extract that information
+64:24 - from our instance and insert it into this configuration file. So let's take a look at
+64:30 - how our script is going to do that. Let's go ahead and create a new file. And depending on
+64:39 - which operating system you're using, let's go ahead and create the file necessary. So since
+64:45 - I'm on Windows, I will use windows-ssh-script.tpl, just like so. And within that file, I'm going to
+64:55 - copy in the script you can find in the course resources. So what this is going to do is add
+65:03 - the host, host name, user, and identity file to that file that we specify. Now, as you can see,
+65:09 - you've got this interpolation syntax here. And what this is doing is essentially dictating that
+65:15 - these are variables. And those variables will be passed in using the template file function,
+65:21 - which we're going to cover very, very soon. So go ahead and save that. And then I'm also going to
+65:28 - create the Linux one so you can see that. So linux-ssh-script.tpl. And of course, this also
+65:39 - works for Mac as well. So the Linux script is just like this. You're basically padding in
+65:46 - the same type of stuff to our ssh-config location. All right, so perfect. So now we see exactly what's
+65:55 - going to be used to add the information to that script. We've seen the script and we've installed
+66:01 - our ssh extension. So coming up, we're going to start prepping our code to add this information
+66:10 - so that we can connect to our host using VS code. We're going to utilize a provisioner to configure
+66:18 - the VS code on our local terminal to be able to ssh into our remote VM. Now, a provisioner is not
+66:26 - something you want to use for every deployment. Unlike other resources, a provisioner's success
+66:32 - or failure will not be recorded or managed by state. So if something goes wrong, that's just
+66:38 - too bad. There is no rollback or any other way to manage it other than just running it again.
+66:44 - While this is not great for configuring remote instances, it's perfectly fine for something like
+66:50 - this. Just adding information to a config file on our local terminal. This is a lightweight operation
+66:57 - that doesn't affect the overall success of the deployment if something were to go wrong. So
+67:03 - generally speaking, if you need something simple to do, use a provisioner. If you are configuring
+67:08 - a remote instance, it's usually best to either use user data, custom data, or another type of
+67:15 - application such as Ansible. But anyway, let's get started. So let's take a look over here. First up,
+67:22 - we've got our provisioners. And as you can see here, as I was hinting at, provisioners are a last
+67:28 - resort. Now, if you scroll down, you can see there's a lot of stuff that you can do other
+67:36 - than provisioners. And one of those is what we did, custom data. But if you keep scrolling down,
+67:42 - there's actually a lot of great information about using provisioners. And one of the most important
+67:48 - things here is the usage of self. Within a provisioner, you can just specify self and that
+67:55 - will extract whatever attribute you need from what you're deploying. So if you need a private IP or
+68:02 - a public IP, you just specify self, which simplifies the code. And then of course, you've also got
+68:10 - creation time provisioners, which is the default. And then you've got destroy time provisioners as
+68:16 - well. Destroy time provisioners will perform an action whenever you destroy the script. So just
+68:23 - keep that in mind. Definitely read over this as provisioners can be very useful as long as you
+68:28 - use them sparingly and with caution. So let's go ahead and set up that provisioner. Now that
+68:33 - provisioner is going to be set up within the Azure RM Linux virtual machine block. So let's just head
+68:40 - down here above the tags. I just like having the tags last for some reason. You specify provisioner
+68:47 - and then you need to specify the type of provisioner and you have local exec and remote exec. Again,
+68:53 - remote exec I would use very sparingly, better to use user data or to use Ansible or some other
+68:59 - better tool. But this is a local exec provisioner, which means it'll be running locally. And again,
+69:06 - lightweight doesn't cause any disaster if something goes wrong with this provisioner.
+69:11 - So then what we need to do is provide a command. So let's go ahead and provide that command. That
+69:17 - command is actually going to be one of these scripts. And to specify one of these scripts
+69:22 - and pass in the variables, we're going to use what's called a template file function.
+69:26 - So if you check out the template file function here, you specify template file, just like you
+69:31 - did the file function, pass in the path to the file, and then you pass in the variables. So
+69:38 - there's a lot of good stuff here that kind of dives into that. Let's go ahead and see how that's
+69:43 - going to look for our deployment. So we're going to use the template file function, just like so.
+69:49 - And then we need to pass in for me, the windows dash SSH dash script dot TPL. And then I need to
+69:57 - pass in the variables. And that's going to be in a block of curly braces. So what we want to pass
+70:04 - in is the host name. And that's going to be self dot public underscore IP underscore address,
+70:12 - which is how you access the public IP address of this instance within state. So we're going to
+70:18 - take a look at the Terraform TF state. And as you can see here, public underscore IP underscore
+70:24 - address. So that's what we want. So self dot public underscore IP underscore address is going
+70:30 - to give us that. And then the user is going to be admin user, just like so in quotes. We then
+70:38 - need to pass in our identity file. And that is going to be located in that home directory,
+70:46 - SSH slash in my case, MTC Azure key. And of course, that is our private key. So do keep that in mind.
+70:56 - And then after that, what we need to do is specify an interpreter. So what the interpreter is doing
+71:04 - is basically dictating whether we're using PowerShell or bash or whatever shell we're using
+71:10 - to run this script. In our case, we're using PowerShell if you're using Windows. So for me,
+71:17 - it will be PowerShell and then comma dash command. All in quotes. Now, if you're using Linux or a
+71:28 - Mac, your interpreter will be bash comma dash C, just like so. So this is your interpreter. If you
+71:40 - were using Linux or Mac, but I'm going to delete that for mine. All right, that should be everything.
+71:46 - Let me take a look at my script here. Host name, user identity file,
+71:52 - host name, user identity file, host name, user identity file all have been defined.
+72:02 - So everything looks good there. So now let's see if this works. So what I want to do and remember
+72:10 - everything right now has been deployed. If you want the same result I get, which is going to hit
+72:15 - a little snack, go ahead and deploy before you do this. Otherwise just watch and you'll see how I
+72:21 - handle it. All right. And before we go further, as you can see, I've actually made a couple of
+72:26 - typos. Unfortunately, this keyboard seems to be failing on me. So I've gone ahead and corrected
+72:33 - those. Let's go ahead and run a Terraform plan and see if I missed anything else.
+72:40 - All right. So here is the snag I anticipated. As you can see, no changes, but we made a pretty
+72:47 - big change. That's a lot of typing in our resource here. A provisioner does not get picked up by the
+72:54 - state, remember. So it doesn't know that anything has changed. So what we need to do is we need to
+73:03 - get rid of this instance. We need to destroy it and reapply it. And there are a lot of ways to
+73:09 - do that, but the best way to do it is just to replace it. This used to be called tainting a
+73:14 - resource and I guess HashiCorp didn't like that word. So they've changed it to the replace flag.
+73:21 - So let's go ahead and utilize that. So first Terraform state list. Let's go ahead and copy
+73:30 - our MTCVM right there and then run a Terraform apply dash replace, and then paste in that resource.
+73:41 - All right. So as you can see, using that replace flag replaces our virtual machine,
+73:48 - which will then run our provisioner. So let's go ahead and say yes to this. All right. So we have
+73:55 - an apply complete. Let's go ahead and see if this worked. So I'm going to head up to view,
+74:04 - command palette, and I'm going to select remote SSH connect to host. Of course, if you don't have
+74:10 - that, go ahead and start typing remote SSH. And if we scroll down here, 20.121.205.65,
+74:20 - let's see if that is it. So I clicked on it. We're going to select Linux. I would like to continue.
+74:29 - This is a very good sign. All right. We're logged into something MTCVM. Now I've only spun up one
+74:39 - VM. So this has got to be it. Let's Docker version does not appear to have been installed yet.
+74:48 - So we'll give it a little bit of time and then we will see. All right. It took a little bit of time,
+74:53 - but guess what? Docker is now installed. Everything is working perfectly. And we now have an awesome
+75:02 - little remote terminal directly to our instance so we can start developing. And we're going to take
+75:10 - a look at Terraform data sources. Now data sources are ways that we can query items from the provider,
+75:17 - in this case, Azure API, and utilize it within our code. Although we don't really need it,
+75:24 - since it's already available in our state file, we're going to query the public IP we're using
+75:30 - just to illustrate how data sources work. So let's get started. So if you take a look,
+75:35 - we've got the data source documentation, not too incredibly complicated. Basically,
+75:41 - we just specify data instead of resource. We then pass in the data source we want to use,
+75:48 - give it a name, and then pass in any of the expected arguments. And if you scroll down,
+75:54 - you'll see there are several different types, but we're going to keep it very, very simple.
+75:59 - So what we want here is we want the public IPs available to us to be released. So we want to be
+76:07 - able to see these and access them from within our state and eventually pipe those to an output.
+76:13 - So let's go ahead real quick and see how this works. So here I am back in my console. I've
+76:19 - actually closed out of the one connected to my instance. And let's go ahead and add this data
+76:25 - source here down at the bottom. So we're just going to specify data, Azure RM underscore public,
+76:33 - underscore IP, MTC, IP data is what we'll call it. That sounds good. Open and close some braces.
+76:42 - Then the name equals Azure RM, underscore public, underscore IP, dot MTC dash IP dot name. So what
+76:52 - we're doing is we are querying the IP address we created up here. As you remember, this is the
+77:01 - name MTC IP. We are querying that to get its IP address. Now, once again, we don't really need
+77:08 - to do that because we're using the same state file. We just access it however we want or just access
+77:14 - it just using our resource names. But if you, for instance, had another Terraform deployment
+77:21 - without access to that state, then this is a way that we could do it. We could actually use a data
+77:27 - source to access that IP within Azure without having to dig through the state file. So after
+77:34 - that, it just wants a resource group name. And of course, that's going to be Azure RM underscore
+77:42 - resource, underscore group dot MTC dash RG dot name, just as we've used many times before. So
+77:51 - what this is going to do is find the IP address that matches these conditions. So now let's go
+77:59 - ahead and see what this looks like in our state. And what I'm going to do, we actually don't need
+78:04 - to apply again because this data source is not a resource. It doesn't need to be applied. All we
+78:11 - need to do is a refresh. So we're still going to use the apply keyword, but we're not going to
+78:17 - actually apply anything to Azure at all. So we'll run Terraform apply dash refresh only.
+78:27 - And as you can see, there are no changes, but we know we have made a change at least to our
+78:33 - configuration file. So we do want to apply, apply complete. Let's now take a look in our state.
+78:42 - Open that state up. You can see we actually have our new data source here.
+78:48 - If you scroll down, we've got the IP right there, right at the top, very easy to find. So if I run
+78:54 - a Terraform state list, as you can see, we now have our data dot Azure RM public IP dot MTC dash
+79:04 - IP dash data, which reflects this. So once we need to access that, we can access it using that.
+79:13 - Alright, so that's all for this lesson. Go ahead and market complete. Come on back to the next one
+79:18 - and let's continue the course. We're going to add a nice little convenience feature to our script
+79:24 - by utilizing outputs to display information that we need. As you well know, we've been manually
+79:31 - finding the public IP address of our instance to verify it. Well, that is incredibly inefficient.
+79:38 - So let's add an output to make that a lot easier. So as you can see here in the docs, we have output
+79:45 - values and basically all we need to do is say output, give that output a name and then specify
+79:53 - a value. It's pretty straightforward. Now, keep in mind, outputs are only rendered when Terraform
+80:01 - applies the plan. So just running a plan is not going to work. We do need to apply it. So let's go
+80:08 - ahead and take a look at this. Alright, so what I want is just an output to get our IP address and
+80:16 - instead of referencing the instance, I'm going to reference that nice little data source we created
+80:22 - to keep things very simple. So output and we'll just call that public underscore IP underscore
+80:29 - address, just like so open and close those braces. And then we need to give that a value. Now, what
+80:38 - I'm going to do is use interpolation syntax and we're actually going to take a look at the
+80:44 - different little features here. So first up, all of this will be in quotes. And what I want is I
+80:51 - want the name of our MTC VM. So if that is MTC VM, I want MTC dash VM, colon IP address, whatever that
+81:08 - be. So to get that, what we're going to do is use interpolation syntax. Once again, I said dollar
+81:16 - sign in these curly braces, which allows us to utilize variables and reserved keywords within
+81:23 - a quoted string. So what we're going to use is Azure RM underscore Linux virtual machine.
+81:31 - Go ahead and tab through that dot MTC dash VM dot name, just like so. So that's going to give us our
+81:38 - name. Now, after that, we're going to add a colon and a space. And since those are outside of the
+81:48 - interpolation syntax, as you can see, they are brown on my screen, which means they are part of
+81:53 - the string. So once we've done that, of course, we could just use the same exact string dot public
+81:59 - IP address, but we're going to use our data source, as I said. So for that, we'll use data
+82:06 - dot Azure RM underscore public IP dot MTC IP dash data dot IP underscore address. All right.
+82:20 - And as you can see, if I run a terraform state show and just pass this in this first part,
+82:33 - you can see IP address is the attribute that we want. All right. So let's go ahead and run
+82:40 - our terraform apply dash refresh only. And let's see what happens here.
+82:47 - All right. As you can see, there have been changes to outputs. And here's what we're going to get.
+82:53 - Absolutely. We would love to do that. So yes, apply complete. So now what I can do is just
+83:00 - run terraform output. That gives us all of our outputs. If there are multiple, you can also
+83:08 - ask for that output specifically. Just like so. All right. Perfect. So now every time we apply,
+83:19 - we're going to get our MTC VM or the name of the VM that we've got, colon IP address. We're going
+83:28 - to start optimizing our script and making it more dynamic by adding variables. So let's get started.
+83:35 - Now, so far we have been hard coding everything. As you know, our windows SSH script that is hard
+83:42 - coded in, and then we've also got our interpreter here. Now, one thing that might change a lot as we
+83:48 - move from station to station, computer to computer, Starbucks to Starbucks is that we may be changing
+83:55 - different operating systems. So it would be a lot nicer if we could dynamically choose which
+84:01 - operating system to use based on which terminal we're using. So let's go ahead and take a look
+84:06 - at that. As you know, we've got windows SSH script and Linux SSH script. And then we've also got the
+84:13 - windows interpreter and the Linux interpreter. So let's go ahead and change this. And what I'm
+84:19 - going to do is use interpolation again. And we're going to add var.host.com. We're going to add
+84:29 - var.host.os right here. So now what's going to happen is this is going to insert the value
+84:38 - of whatever this variable is once we set it. So let's do that. And now let's go and define
+84:45 - this variable for us. So now we could just add a variable right here in the same file,
+84:52 - but let's go ahead and split off the variables file. So we're going to create a new file called
+84:57 - variables.tf just like so. And any tf file is going to be considered by Terraform on any apply
+85:06 - as long as they're in the same directory. So I could have 27 different tf files or a tf file
+85:12 - for every single resource output and everything else I want in their own separate files and
+85:18 - Terraform would consider them all the same deployment. So we've got our variables.tf here.
+85:24 - Let's go ahead and create that variable. So variable host underscore os just like so.
+85:34 - Now let's open and close some braces there. And then we just need to provide a type.
+85:39 - Now this is not required, but it's very friendly to your coworkers. This way they know what type
+85:47 - of variable they need to specify. So that could be a map, a string, a number, just any other type
+85:53 - that Terraform recognizes, you can specify here to help guide your coworkers to understand what
+86:00 - variables should be set. So let's go ahead and save this. We have our variable declaration here.
+86:07 - It is initialized, but it's not defined. And then let's go ahead and run a Terraform destroy.
+86:14 - So Terraform destroy dash auto approve. And as you can see, it's asking me for that variable now.
+86:22 - So any type of Terraform destroy, plan or apply anything that modifies the state is going to ask
+86:30 - for that variable if it is not defined anywhere. And we will look at more of that in the coming
+86:36 - lessons. So let's go ahead and since I'm on a Windows machine, I'm just going to say Windows
+86:41 - and hit enter. And everything was destroyed successfully. So now let's just run a Terraform
+86:51 - plan, just to show, and it asks once again for the variable. We've now seen how to initialize
+87:00 - a variable and how to define it at the command line. But as we saw, that is not a great way to
+87:06 - define variables when in automation as it requires dynamic input, which is the opposite of automated.
+87:13 - So in this lesson, we're going to look at a few other ways to define variables and which of those
+87:18 - ways take precedence over the others. So let's get started. All right, so the first thing I'm going
+87:25 - to do is head into my variables.tf and we're going to add a default value. Now go ahead and add that
+87:33 - default to whatever operating system you're using. I'm going to use Windows and anytime I say Windows,
+87:39 - you can use Linux and anytime I say Linux, you can use Windows just to stay consistent. So I'm going
+87:44 - to go ahead and save that. So right now, that means that it will always use Windows or at least fall
+87:50 - back to Windows. So what I'm going to do, because it's actually a little bit quicker, is I'm just
+87:55 - going to use Terraform console. And then what I'm going to do is type var and I'm going to
+88:02 - type var dot host underscore os. All right, and as you can see Terraform console is a very handy
+88:12 - tool that allows you to access anything within the state that you need. So now I'm going to exit out
+88:17 - of that, going to head back to my variables.tf and let's remove that default and run Terraform console
+88:26 - var dot host os. And as you can see, it says known after apply. And that's because you will need to
+88:34 - specify that variable when you apply Terraform console isn't going to ask you. So now what we
+88:40 - want to do, we want to define that another way. Let's go and add another file called Terraform
+88:48 - dot tf.vars. Now what this is, is a way to define our variables. And it's also generally considered
+88:59 - to be a sensitive file. You usually will not send this to your repository, but there are several
+89:05 - cases where you will. So just keep that in mind. So within this, we can just define the host os
+89:12 - equals windows just like so. So now if I run Terraform console and run var dot host os,
+89:24 - it's defined once again. Perfect. So as you see Terraform dot tf.vars is another way to define
+89:32 - our variables. So now I'm going to exit out of there again, clear that. Now let's take a look at
+89:39 - another way to define our variables. If we run a Terraform console dash var equals host underscore
+89:48 - os equals Linux. Let's see what happens. Var dot host underscore os is now Linux. So if the variable
+89:59 - is defined on the command line, and you can use this dash var with Terraform plan or Terraform
+90:06 - apply or even Terraform destroy, then it will override whatever is set on Terraform dot tf.vars
+90:14 - and Terraform dot tf.vars will override what's set within variables dot tf as the default. So let's
+90:21 - go ahead and see another example real quick. Let's create another file. And I'm just going
+90:28 - to call that let's just say osx dot tf.vars. And even though that isn't one of our host os's,
+90:37 - let's go ahead and do that anyway. So we're going to say host underscore os equals osx just like so
+90:45 - and save that. And then let's run Terraform console dash var dash file equals osx dot tf.vars.
+90:59 - Var dot host underscore os is now osx. So as you can see, we can utilize the var file argument here
+91:08 - to override Terraform dot tf.vars, which then overrides variables dot tf with the default
+91:17 - setting. All right, so that is everything. We now have a general idea of how variable precedence
+91:24 - works within Terraform and different ways to specify those variables. So now that we've
+91:29 - managed to choose our SSH config file dynamically based on the definition of our host os, we now
+91:37 - need to make our interpreter dynamic. Unfortunately, this isn't as easy as interpolation
+91:44 - syntax replacement. So we need to look at a better way. In this lesson, we're going to utilize
+91:50 - conditional expressions to choose the interpreter we need dynamically based on the definition of
+91:56 - the host os variable. So let's get started. So as you know, now we are able to specify our host os
+92:03 - as a variable, which will then replace this and allow us to dynamically choose the SSH script that
+92:10 - we use. Now we haven't applied this yet, but this works. So now let's see how to specify the
+92:17 - interpreter appropriately, which again, our other interpreter, which you may have if you're on mac
+92:23 - os or Linux, and that's bash comma dash c, just like so. So if we're on Windows, we need to use
+92:31 - this one. And if we're on Linux or mac os, we need to use this one here. So let's see how we can do
+92:37 - that. So we take a look in the docs. You can see essentially what we want is a condition question
+92:45 - mark true value or false value. It's essentially a ternary expression. So if we specify a variable,
+92:54 - we then decide based on what that variable's definition is, whether it's going to be one item
+93:00 - or a different item. And the second one is going to be the default. So let's just take a look at
+93:05 - this in the console. And by console, I mean terraform console. This is going to be a lot easier
+93:13 - than trying to dig through and explain by dragging the mouse around on some documentation.
+93:18 - So let's just say var dot host underscore os equals two equal signs there, Windows,
+93:26 - which it does for me. And of course, if you're on mac os or Linux, use Linux there. We use our
+93:31 - question mark. We're going to say PowerShell or bash, just like so. Let's go ahead and hit enter.
+93:41 - All right. Since our host to os is set to Windows, it's reporting PowerShell. So now let's see what
+93:48 - happens if we need to choose between these two. So all we need to do is var dot host underscore os
+93:54 - equals Windows. Choose between PowerShell command, just like so, or bash dash c.
+94:10 - And if we hit enter, as you can see, it reports PowerShell dash command. Now, if you wanted to
+94:17 - invert that, you could actually do a var dot host os. If it does not equal Windows,
+94:27 - then return bash or return PowerShell. So as you can see, this is how you can invert that,
+94:35 - but we don't need to invert it. We're actually going to use this one right here.
+94:39 - So go ahead and copy that because we're going to need it very soon.
+94:43 - Let's head up to our interpreter and let's actually paste that in now, just like so.
+94:50 - All right. Let's save that. Let's exit out of here. And then let's run our Terraform plan.
+94:59 - And remember in my Terraform.tfrs, I had my host os defined there as Windows. All right. So everything
+95:08 - is looking pretty good so far. So let's go ahead and run our Terraform apply auto approve.
+95:17 - And let's make sure we get a new IP address and a machine to which we can log in. All right. All
+95:26 - applied. As you can see, the public IP address actually did not get populated by the time this
+95:32 - was done. I'm imagining that is some sort of a glitch here because it worked earlier.
+95:38 - We've got our host IP address that actually shows up in our local exec provisioner here.
+95:45 - So as you can see, everything looks like it went well, except for that one output.
+95:51 - So let's go ahead. We can see this here, this IP. Let's run up to view and command palette.
+95:57 - SSH connect to host. Scroll down to the bottom. And well, that worked perfectly fine. We've got
+96:04 - our IP address there. Let's log into it. That is a Linux machine. Continue.
+96:15 - All right. And we are in. So as usual, let's see if Docker version is good to go yet.
+96:23 - Docker is installed. It went a lot faster this time. So that is awesome. We can then open a
+96:28 - folder if we'd like. We can open our home directory. Just like so. Trust folder and continue.
+96:41 - Run a terminal. And now we have a full VS code environment within our brand new virtual machine.
+96:48 - So that is awesome. We can just go ahead and move that out of the way. Let's take a look here.
+96:55 - And now that some time has passed, let's run Terraform apply refresh only. And let's see if
+97:01 - we can get that output to work. Remember, this is a data source. And what that means is that it is
+97:08 - reaching to the Azure API. And there's a good chance that that IP address just went through
+97:14 - Azure API. And there's a good chance that that IP address just wasn't quite available within the
+97:20 - API yet. So let's go ahead and run Terraform apply refresh only. And this is a great way to
+97:28 - troubleshoot things like this because this type of stuff happens all the time. Bam. Look at that.
+97:34 - So it looks like we are going to have an IP address after we have this refresh finished.
+97:40 - So we're going to choose yes. And now it works. So if I type Terraform output,
+97:48 - we've got our IP address. And then back over here, we also have our terminal ready to go.
+97:56 - So now you have a reproducible development environment within Azure that you can deploy
+98:01 - anytime you want, use for whatever you need, commit to a code repository or whatever and
+98:07 - destroy it. All right. So go ahead and you can close that. And if you are finished, run a Terraform
+98:14 - destroy, auto approve. And that's everything. I hope you enjoyed the course. Feel free to reach
+98:22 - out to me for any questions you may have. And don't forget to Terraform apply yourself.

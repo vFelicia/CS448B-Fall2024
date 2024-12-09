@@ -1,0 +1,617 @@
+With timestamps:
+
+00:01 - hey folks
+00:02 - so building interactive experiences on
+00:05 - the web today usually involves sending
+00:07 - some javascript down to your users often
+00:09 - quite a lot of it today we're going to
+00:11 - talk about some strategies you can use
+00:12 - to deliver that javascript efficiently
+00:14 - while still giving users a really great
+00:16 - experience
+00:17 - so
+00:19 - i work on a web browser called chrome
+00:21 - and when users access your site you're
+00:23 - probably sending down a lot of files
+00:26 - from a web browser's perspective this
+00:27 - looks a little bit like this
+00:32 - it gets even worse with h2 multiplexing
+00:35 - so my perspective is that as much as i
+00:37 - love javascript
+00:39 - it may be the most expensive part of
+00:41 - your site buy for byte javascript is
+00:44 - probably the most expensive resource
+00:45 - you're shipping down to your users today
+00:47 - and i'd like to explain why i feel like
+00:50 - that
+00:50 - so the median web page today is
+00:52 - currently shipping down about 350
+00:54 - kilobytes of minified and compressed
+00:57 - javascript uncompressed that bloats up
+00:59 - to about a megabyte of script
+01:01 - now the experiences that are shipping
+01:03 - down this much javascript are taking
+01:05 - anywhere between 15 to 36 seconds to get
+01:08 - interactive on mobile devices
+01:11 - now although i've said 350 kilobytes
+01:13 - here the reality is that if we take a
+01:15 - look at popular sites they're actually
+01:16 - shipping down a lot more script than
+01:18 - this we're hitting this ceiling across
+01:20 - both desktop and mobile web where sites
+01:22 - are often shipping multiple megabytes
+01:24 - worth of code that a browser then needs
+01:26 - to process
+01:28 - now the impact of this can have on
+01:30 - loading a web page is some weird and
+01:33 - wonderful quirks
+01:34 - so the way that we take a look at
+01:36 - loading a web page today is that it's a
+01:38 - little bit of a journey it's kind of
+01:39 - like a film strip that has three key
+01:41 - moments in it there's is it happening
+01:44 - is it useful and is it usable is it
+01:47 - happening is the moment where you're
+01:48 - able to deliver some painted content to
+01:50 - the screen so the user can actually tell
+01:52 - well hey this web page is loading up
+01:54 - is it useful is the point where you've
+01:56 - painted contentful text or something
+01:58 - that allows the user to drive value from
+02:00 - the experience
+02:01 - and then is it usable is the moment when
+02:02 - a user can actually start tapping around
+02:04 - the experience and having something
+02:06 - happening
+02:07 - so i mentioned this term interactive
+02:09 - earlier but what does that actually mean
+02:10 - well for a page to be interactive it has
+02:12 - to be capable of responding quickly to
+02:15 - user input whether a user is clicking on
+02:17 - a link or scrolling through a page they
+02:20 - need to be able to see that something's
+02:21 - actually happening in response to those
+02:23 - taps and those actions that they're
+02:25 - making
+02:26 - an experience that isn't able to deliver
+02:27 - on this is going to frustrate your users
+02:30 - now one place where this can commonly
+02:32 - happen is when folks are server-side
+02:34 - rendering their experiences and then
+02:36 - shipping a whole bundle of javascript
+02:38 - down right after to populate and hydrate
+02:40 - that experience out
+02:42 - now when a browser needs to run many of
+02:44 - the events that you're probably going to
+02:45 - need it's probably going to do it on the
+02:47 - same thread that handles user input now
+02:49 - that thread is called the main thread or
+02:51 - the ui thread if you happen to be
+02:53 - shipping down lots of expensive
+02:55 - javascript that can end up blocking the
+02:57 - main thread so let's take a look at what
+02:58 - you expect will probably happen so
+03:00 - here's an example where you know maybe
+03:03 - you're going to go and tap around the ui
+03:05 - you might check a check box or click a
+03:07 - link and everything's going to work
+03:08 - perfectly fine but if we simulate
+03:10 - blocking the main thread nothing's able
+03:12 - to happen at the moment we're not able
+03:13 - to check that checkbox any links that we
+03:15 - click are not necessarily going to do
+03:17 - what we expect because we're blocking
+03:18 - that thread so we want to start moving
+03:20 - away from doing those types of things
+03:23 - now this idea of javascript impacting
+03:25 - interactivity is something we're seeing
+03:27 - across lots of different types of sites
+03:29 - too much javascript in general can
+03:31 - actually delay interactivity for visible
+03:34 - elements and this is a problem for many
+03:35 - sites including google so we run into
+03:38 - this in sites like google search so here
+03:40 - are a few examples where you know you
+03:42 - could start tapping around the ui but if
+03:44 - we're shipping too much javascript down
+03:46 - there could be some delay in there
+03:47 - before something actually happens
+03:49 - and the user may end up feeling a little
+03:51 - bit frustrated
+03:52 - so that's an experience that we want to
+03:54 - move away from
+03:56 - when it comes to time to interactive we
+03:58 - feel that you should probably be getting
+03:59 - interactive in about under five seconds
+04:02 - there's nothing actually on this
+04:04 - person's screen here so they may be
+04:05 - going through withdrawal symptoms of
+04:07 - some sort
+04:10 - ideally we'd love to shift the web to a
+04:12 - position where we're designing a little
+04:14 - bit more for resilience interactivity
+04:17 - can heavily impact a lot of things it
+04:19 - can be impacted by a person loading your
+04:22 - website on a mobile data plan or coffee
+04:25 - shop wi-fi or just them being on the go
+04:28 - and not necessarily having a consistent
+04:29 - network connection now when this happens
+04:32 - and you have a large payload of
+04:33 - javascript that needs to be processed
+04:35 - they can end up waiting for the site to
+04:37 - actually render anything or if something
+04:39 - does render they can be waiting a long
+04:40 - time before they can actually tap around
+04:42 - and have something happen ideally
+04:44 - shipping less javascript would lead to a
+04:46 - point where they're not necessarily
+04:48 - running into those cases
+04:49 - now to explain why javascript is such a
+04:51 - big deal and why it can have such a
+04:53 - large cost i'd like to walk you through
+04:55 - what happens when you send content down
+04:58 - to a browser
+04:59 - so
+05:00 - a user goes and they types in an address
+05:02 - bar and types an address into their
+05:04 - omnibox their address bar a request is
+05:06 - made out to a server which will then
+05:09 - have to return some markup the browser
+05:11 - needs to parse that markup and get out
+05:13 - the css the javascript the images that
+05:15 - are necessary and then the browser
+05:17 - actually has to process all of those
+05:18 - resources this is actually a an accurate
+05:21 - depiction of what happens in chrome when
+05:23 - we're trying to process everything that
+05:24 - you send down
+05:26 - now although this looks great
+05:29 - one of the challenges here is that
+05:30 - javascript can actually end up being a
+05:32 - bottleneck so ideally we want to be able
+05:34 - to paint pixels quickly and then have
+05:36 - the page interactive but if javascript's
+05:38 - a bottleneck you can end up just looking
+05:39 - at something that you can't actually tap
+05:41 - around with and experience so we want to
+05:43 - move away from javascript itself being a
+05:45 - bottleneck to modern experiences
+05:48 - one thing to keep in mind as an industry
+05:50 - is that if we want to be fast at
+05:52 - javascript we actually have to be fast
+05:55 - at
+05:55 - downloading that script parsing it and
+05:58 - compiling it that means that we have to
+06:00 - be fast at the network transmission side
+06:02 - of things but also the processing side
+06:04 - of things for our scripts because if
+06:06 - you're spending a long time parsing and
+06:08 - compiling script in a javascript engine
+06:10 - that can delay how soon a user can
+06:12 - interact with your experience
+06:14 - now to provide some data about this here
+06:16 - is a breakdown of where v8 the
+06:19 - javascript engine in chrome actually
+06:21 - spends its time while it's trying to
+06:22 - load up the page containing script so in
+06:25 - the orange we have all the time being
+06:27 - spent parsing the javascript the popular
+06:29 - sites are sending down and yellow is the
+06:31 - time we spent compiling and together
+06:33 - these take up anywhere up to 30 percent
+06:35 - of the time it takes us to load up the
+06:37 - javascript for your page this is a real
+06:40 - cost
+06:41 - now another thing to keep in mind with
+06:42 - javascript is that all bytes are not
+06:45 - equal when it comes to the web 200
+06:47 - kilobytes of script and 200 kilobytes
+06:50 - worth of image have very different
+06:51 - weights they might take the same amount
+06:53 - of time to download but when it comes to
+06:55 - processing we're dealing with very
+06:57 - different amounts of costs a jpeg image
+06:59 - needs to be decoded rasterized
+07:01 - eventually get painted on the screen a
+07:03 - javascript bundle needs to be downloaded
+07:05 - and then parsed compiled executed there
+07:08 - are a number of other steps that an
+07:09 - engine needs to complete
+07:11 - just be aware that these costs are not
+07:12 - quite equivalent
+07:14 - now one of the reasons why these costs
+07:16 - start to add up and matter is mobile so
+07:19 - mobile itself is a spectrum many of us
+07:22 - here today probably have a high-end or
+07:25 - median end phone
+07:26 - and the reality is that our users may
+07:28 - not necessarily have those device
+07:30 - classes they may be on a low end phone
+07:31 - they may be on a median phone and the
+07:34 - disparity between these multiple classes
+07:37 - of devices can be quite stark
+07:39 - due to thermal throttling difference in
+07:41 - cache sizes cpu gpu you can end up
+07:44 - experiencing quite different processing
+07:46 - times for resources like javascript
+07:48 - depending on the device you're using
+07:50 - so here's a breakdown of how long it
+07:52 - takes to parse javascript from a range
+07:54 - of different types of devices at the
+07:56 - very top we have high-end devices which
+07:59 - generally process it pretty quickly the
+08:01 - very bottom we've got our low end
+08:02 - devices and in the middle we've got our
+08:04 - average phones so things like the moto
+08:06 - g4 or the moto g5
+08:08 - now take a look at how much longer that
+08:10 - script takes to process
+08:12 - we can we can actually try to look at a
+08:14 - more practical version of this so here
+08:15 - is the javascript startup time and
+08:17 - processing time for cnn.com javascript
+08:21 - on an iphone 8 using the a11 processing
+08:23 - chip that they have it takes nine
+08:26 - seconds less to process javascript than
+08:28 - it does an average phone nine seconds
+08:31 - that's nine seconds quicker that that
+08:33 - experience would be loading and
+08:34 - interactive on an iphone than something
+08:37 - more average
+08:38 - this hints at another thing that maybe
+08:41 - we need to stop necessarily taking fast
+08:44 - networks and cpu and high ram for
+08:47 - granted
+08:48 - fast devices can actually sometimes be
+08:50 - slow you can be running multiple things
+08:52 - on there fast networks can be slow
+08:55 - variability can end up making absolutely
+08:57 - everything slow
+08:58 - you may have users that you know are not
+09:01 - going to have the the latest and
+09:02 - greatest phone they might have something
+09:03 - more average and so it becomes really
+09:06 - important for us to start testing on
+09:08 - real phones and real networks
+09:11 - so if your team were able to take a look
+09:13 - at their analytics and understand
+09:14 - exactly what devices your users are
+09:16 - actually accessing your site with
+09:18 - that'll give you a hint at what devices
+09:20 - you should probably have in the office
+09:21 - to test out your experiences using if
+09:24 - you're not able to afford those you just
+09:26 - can't get approval for it check out
+09:28 - webpagetest easy we have a number of
+09:30 - profiles set up there that you can go
+09:32 - and use today that already have popular
+09:34 - devices can pre-configured we've got
+09:36 - some median mobile devices like the moto
+09:38 - g4 already in there
+09:40 - and it's also really important to test
+09:41 - on representative networks now
+09:44 - although i've been talking about you
+09:45 - know the notion of low end and median
+09:48 - phones being important brian holt made
+09:50 - this really great point yesterday which
+09:51 - is it's really important to know your
+09:53 - audience not every single site it needs
+09:56 - to work great on 2g on a low end phone
+10:00 - you may well have a wide range of users
+10:02 - on sort of the higher end of the
+10:03 - spectrum or in a different part of the
+10:05 - spectrum so just be aware of the data
+10:08 - behind your site so that you can make a
+10:09 - reasonable call on how much all of this
+10:11 - matters
+10:12 - so if you want to be fast at javascript
+10:14 - download times are going to be pretty
+10:15 - critical for low-end networks the things
+10:18 - you can do there are just ship less code
+10:20 - minify your source
+10:22 - take advantage of compression so gzip
+10:24 - broadly zotfly
+10:27 - take advantage of caching for repeat
+10:28 - visits
+10:30 - parse times are pretty critical for
+10:31 - phones that have a slower cpu
+10:34 - now on the server if you're sort of a
+10:36 - back end developer or full stack
+10:37 - developer you know that you kind of get
+10:39 - what you pay for with respect to cpu
+10:41 - disk network
+10:43 - as we build sites that are increasingly
+10:45 - more reliant on javascript we sometimes
+10:47 - pay for what we send down in ways that
+10:49 - we don't always easily see
+10:51 - so the shape of success there is what
+10:53 - can we do to send the least amount of
+10:55 - script to our users while still giving
+10:57 - them a useful experience
+10:59 - now one of the useful things that you
+11:01 - can do to accomplish that today one of
+11:02 - the greatest tools in your tool belt is
+11:04 - code splitting so code splitting is this
+11:07 - idea that instead of shipping down your
+11:09 - users a massive javascript monolithic
+11:12 - bundle
+11:13 - sort of like a massive full pizza what
+11:15 - if we were to just send them one slices
+11:16 - at a time so the smallest amount of
+11:18 - script that they need just to get the
+11:20 - current page useful enough for them to
+11:22 - use now code splitting can be done at a
+11:24 - page level at a route level at a
+11:26 - component level and this is something
+11:28 - that's well supported by many modern
+11:29 - libraries and frameworks it's well
+11:31 - supported in webpack
+11:33 - so consider code splitting it's not this
+11:35 - sort of you know theoretical thing
+11:37 - either many large teams have been seeing
+11:40 - really great wins off the back of
+11:41 - investing in code splitting recently so
+11:43 - both twitter and tinder as part of
+11:46 - rewriting their mobile web experiences
+11:47 - and trying to make sure that users are
+11:49 - able to interact with their sites as
+11:51 - soon as possible so anywhere up to a 50
+11:54 - improvement in their time to interactive
+11:56 - just by adopting aggressive code
+11:58 - splitting inside their experiences
+12:00 - another thing that many of these sites
+12:02 - have done is adopted auditing as part of
+12:05 - their workflow
+12:06 - thankfully the javascript eco his system
+12:08 - has got a number of great tools here so
+12:10 - things like webpack bundle analyzer
+12:12 - which allows you to scan using the
+12:14 - source maps of your scripts all of your
+12:16 - dependencies that you're including in
+12:17 - your bundle and it helps you identify
+12:20 - sort of those places where you have
+12:21 - libraries that are perhaps larger than
+12:23 - you thought they might be you might have
+12:25 - npm installed yourself into some
+12:26 - performance problems just because you
+12:28 - know you needed to ship something and
+12:30 - include a date library or a ui library
+12:32 - that was a little larger than you
+12:33 - thought it might be also great for
+12:34 - spotting places where you're including
+12:36 - duplicate code so just take advantage of
+12:39 - you know some of these tools for
+12:40 - auditing if you're really unsure whether
+12:42 - you have any issues with javascript
+12:44 - performance in general check out
+12:46 - lighthouse so lighthouse is one of those
+12:48 - tools by the chrome team that we've
+12:50 - baked in chrome developer tools it's
+12:51 - also available as a chrome extension and
+12:54 - the idea here is that it gives you this
+12:55 - really in-depth performance analysis
+12:58 - engine that will highlight places where
+13:00 - you can be doing better one of the
+13:01 - things we recently shipped in lighthouse
+13:03 - is a feature called javascript's boot up
+13:06 - time this allows you to highlight places
+13:08 - where scripts might be spending quite a
+13:10 - long time in parsing and compiling and
+13:12 - executing so you can try to look at
+13:14 - opportunities to either you know split
+13:16 - up those scripts or just be doing a
+13:18 - little bit less work there
+13:20 - another thing you can do is try to make
+13:22 - sure that you're not shipping unused
+13:24 - code down to your users
+13:26 - something that's also baked into chrome
+13:28 - developer tools is code coverage code
+13:30 - coverage is really useful because it
+13:32 - allows you to just load up your site
+13:34 - inside of chrome
+13:35 - and then you can start interacting with
+13:37 - your pages and it'll highlight all of
+13:40 - the
+13:41 - code that's actually been used or unused
+13:43 - on a per script level and as you start
+13:45 - interacting it'll actually update in
+13:47 - real time those different bars to show
+13:49 - you know in red versus green how much is
+13:51 - unused versus used this can be really
+13:54 - great for identifying opportunities to
+13:55 - split up your scripts or in some cases
+13:57 - maybe you know not even load them up
+14:00 - on initial load maybe they could be
+14:01 - deferred to a later point in time
+14:04 - so taking a look at production examples
+14:06 - where some of these ideas have been
+14:08 - useful um i was talking to the netflix
+14:10 - team last week and they mentioned that
+14:12 - there was this point where
+14:14 - when you landed on netflix.com they had
+14:16 - a non-member landing page flow that they
+14:18 - wanted to optimize uh they were
+14:20 - initially using react on both the server
+14:22 - side and the client side but they wanted
+14:24 - to make sure that their time to
+14:25 - interactive was as good as possible and
+14:28 - so what they ended up doing was actually
+14:30 - dropping react just for the client side
+14:32 - portion they're still using it on the
+14:33 - server side but they pre-fetched it for
+14:35 - subsequent navigations deeper into the
+14:37 - user experience this improved their time
+14:40 - to interactive by 50
+14:42 - which is huge it meant that users could
+14:44 - sign up a little bit quicker and it was
+14:46 - worth the time investment here
+14:48 - another thing that netflix mentioned was
+14:50 - that there was a point where they were
+14:52 - trying to move their video playback
+14:54 - component so the component that you see
+14:55 - whenever you're trying to play anything
+14:57 - on netflix from vanilla javascript over
+14:59 - to react
+15:01 - so this was the identical ui you know
+15:03 - for both versions of this thing and they
+15:05 - experienced some negative results
+15:06 - initially they found that the extra
+15:09 - javascript costs for downloading parsing
+15:11 - evaluating and the runtime costs for
+15:14 - using virtual dom diffing were quite
+15:16 - high and they ended up causing a few
+15:19 - negative results so
+15:21 - reductions in play hours reductions in
+15:23 - usage and so they ended up needing to
+15:25 - spend a little while actually reducing
+15:27 - these costs to enable them to finally
+15:29 - roll out react for the video player too
+15:32 - i wanted to highlight what this actually
+15:33 - looked like so here we have an example
+15:36 - using vanilla javascript where there was
+15:38 - no interference on the main thread so
+15:39 - you're interactive pretty quickly and
+15:41 - then we have a busy main thread example
+15:43 - where all of that javascript processing
+15:45 - meant that it took a few seconds before
+15:46 - the user could actually start
+15:47 - interacting with the video player as i
+15:50 - mentioned they're thankfully in a much
+15:51 - better place now and they've been able
+15:52 - to ship out this experience to users but
+15:55 - keeping an eye on their time to
+15:56 - interactive and their javascript costs
+15:58 - was critical to them enabling future
+16:00 - experimentation that used react
+16:03 - now if you're looking for a pattern for
+16:06 - serving javascript efficiently to your
+16:07 - users i heavily recommend checking out
+16:10 - purple or prpl so purple is a pattern
+16:13 - that stands for push render precache and
+16:15 - lazy load and it's a pattern for
+16:16 - aggressively code splitting where you
+16:19 - just ship down the code a user needs for
+16:21 - every single route and then you take
+16:23 - advantage of service worker for
+16:25 - pre-caching the javascript and logic
+16:28 - needed for future routes and lazy load
+16:30 - it as needed what this means is that
+16:32 - when a user ends up navigating to other
+16:34 - views and the experience there's a good
+16:36 - chance it's already in the cache and so
+16:38 - they experience much much reduced costs
+16:40 - in terms of booting this up and getting
+16:42 - interactive
+16:43 - so
+16:44 - we've talked about a few ideas uh you
+16:46 - know if if you care about performance if
+16:48 - you've ever you know worked on a web
+16:50 - perf patch for your site you know that
+16:52 - sometimes you could end up working on a
+16:54 - fix coming back a few weeks later and
+16:56 - someone on your team may have been
+16:57 - working on a feature or unintentionally
+17:00 - you know broken the experience you know
+17:02 - you could be in a position where you
+17:03 - just fixed the site and someone comes
+17:05 - along you're like why why why did you
+17:07 - ruin it why
+17:09 - um thankfully there are ways that we can
+17:11 - we can try to work around this uh and
+17:14 - one way is having a performance budget
+17:16 - in place so performance budgets are
+17:18 - great because they keep everybody on the
+17:20 - same page it creates a culture of shared
+17:22 - enthusiasm for constantly improving the
+17:25 - user experience and it holds the team
+17:27 - accountable
+17:28 - performance budgets can be employed at
+17:30 - sort of a file size level so you could
+17:32 - have you know
+17:34 - budgets based on javascript chunks you
+17:36 - could have budgets around speed metrics
+17:38 - so timed interactive or other metrics
+17:40 - like first contentful paint this is a
+17:42 - feature this is an idea that is well
+17:44 - supported in tools like speed curve or
+17:47 - caliber
+17:48 - and so if you're interested in trying to
+17:50 - get performance budgets set up there are
+17:51 - a number of tools you can try out just
+17:53 - to roll this out for your team i heavily
+17:55 - recommend it
+17:56 - uh if you're interested in trying to
+17:58 - track the cost of javascript in
+17:59 - production for your real users there are
+18:01 - two things i'd recommend checking out
+18:03 - the first is the long tasks api so this
+18:05 - is an api that we recently shipped in
+18:07 - chrome allows you to gather real world
+18:09 - telemetry on parse and compile as well
+18:11 - as culprits basically long tasks are any
+18:14 - task that lasts longer than 50
+18:16 - milliseconds that could be problematic
+18:18 - on the main thread and you can record
+18:19 - that and log it back to your google
+18:21 - analytics another thing to check out is
+18:23 - first input delay now this is a metric
+18:25 - that measures the time from a user first
+18:27 - trying to interact with the experience
+18:29 - and the browser actually responding with
+18:31 - something so
+18:33 - this is still an early metric we
+18:34 - actually have a polyfill available for
+18:36 - it today that you can go and check out
+18:38 - but between these two you should
+18:39 - hopefully be able to get enough
+18:40 - telemetry from real users to understand
+18:42 - what javascript performance problems
+18:44 - they're running into
+18:46 - so
+18:48 - improving performance is a journey it's
+18:51 - generally not something you're just
+18:52 - going to do you know all in one go and
+18:54 - be done with it's usually a journey
+18:56 - where a lot of small changes can
+18:58 - actually lead to pretty big gains
+19:01 - i don't you know i don't expect most
+19:03 - people especially if they have
+19:04 - javascript performance problems to go
+19:05 - out and fix everything tonight
+19:07 - um
+19:08 - you know the i i try to compare this to
+19:10 - the experience that you might have if
+19:12 - someone asked you to learn how to sketch
+19:14 - out something like a baby for example if
+19:16 - someone told you to go and learn how to
+19:18 - draw a baby you'd probably look up the
+19:19 - tutorial and maybe the first step would
+19:21 - be drawing you know the outline the
+19:23 - second step is probably drawing the rest
+19:25 - of the baby
+19:26 - but
+19:28 - that's not the expectation i have of
+19:30 - everybody here
+19:31 - what you probably will do is you know
+19:34 - make a few incremental improvements to
+19:36 - your experience maybe you'll chip away a
+19:37 - little bit at the javascript and you may
+19:40 - end up
+19:41 - here which is actually you know not a
+19:44 - bad place to be it's a little bit better
+19:45 - on the first one
+19:47 - but over time if you're able to continue
+19:49 - investing in improving the javascript
+19:51 - performance of your sites making sure
+19:52 - that you're able to get interactive
+19:53 - really quickly your users will thank you
+19:56 - because they're actually going to be
+19:57 - able to do things much much more quickly
+19:59 - so i hope some of that was useful that's
+20:01 - it for me thank you
+20:03 - [Applause]
+20:07 - you
+
+Cleaned transcript:
+
+hey folks so building interactive experiences on the web today usually involves sending some javascript down to your users often quite a lot of it today we're going to talk about some strategies you can use to deliver that javascript efficiently while still giving users a really great experience so i work on a web browser called chrome and when users access your site you're probably sending down a lot of files from a web browser's perspective this looks a little bit like this it gets even worse with h2 multiplexing so my perspective is that as much as i love javascript it may be the most expensive part of your site buy for byte javascript is probably the most expensive resource you're shipping down to your users today and i'd like to explain why i feel like that so the median web page today is currently shipping down about 350 kilobytes of minified and compressed javascript uncompressed that bloats up to about a megabyte of script now the experiences that are shipping down this much javascript are taking anywhere between 15 to 36 seconds to get interactive on mobile devices now although i've said 350 kilobytes here the reality is that if we take a look at popular sites they're actually shipping down a lot more script than this we're hitting this ceiling across both desktop and mobile web where sites are often shipping multiple megabytes worth of code that a browser then needs to process now the impact of this can have on loading a web page is some weird and wonderful quirks so the way that we take a look at loading a web page today is that it's a little bit of a journey it's kind of like a film strip that has three key moments in it there's is it happening is it useful and is it usable is it happening is the moment where you're able to deliver some painted content to the screen so the user can actually tell well hey this web page is loading up is it useful is the point where you've painted contentful text or something that allows the user to drive value from the experience and then is it usable is the moment when a user can actually start tapping around the experience and having something happening so i mentioned this term interactive earlier but what does that actually mean well for a page to be interactive it has to be capable of responding quickly to user input whether a user is clicking on a link or scrolling through a page they need to be able to see that something's actually happening in response to those taps and those actions that they're making an experience that isn't able to deliver on this is going to frustrate your users now one place where this can commonly happen is when folks are serverside rendering their experiences and then shipping a whole bundle of javascript down right after to populate and hydrate that experience out now when a browser needs to run many of the events that you're probably going to need it's probably going to do it on the same thread that handles user input now that thread is called the main thread or the ui thread if you happen to be shipping down lots of expensive javascript that can end up blocking the main thread so let's take a look at what you expect will probably happen so here's an example where you know maybe you're going to go and tap around the ui you might check a check box or click a link and everything's going to work perfectly fine but if we simulate blocking the main thread nothing's able to happen at the moment we're not able to check that checkbox any links that we click are not necessarily going to do what we expect because we're blocking that thread so we want to start moving away from doing those types of things now this idea of javascript impacting interactivity is something we're seeing across lots of different types of sites too much javascript in general can actually delay interactivity for visible elements and this is a problem for many sites including google so we run into this in sites like google search so here are a few examples where you know you could start tapping around the ui but if we're shipping too much javascript down there could be some delay in there before something actually happens and the user may end up feeling a little bit frustrated so that's an experience that we want to move away from when it comes to time to interactive we feel that you should probably be getting interactive in about under five seconds there's nothing actually on this person's screen here so they may be going through withdrawal symptoms of some sort ideally we'd love to shift the web to a position where we're designing a little bit more for resilience interactivity can heavily impact a lot of things it can be impacted by a person loading your website on a mobile data plan or coffee shop wifi or just them being on the go and not necessarily having a consistent network connection now when this happens and you have a large payload of javascript that needs to be processed they can end up waiting for the site to actually render anything or if something does render they can be waiting a long time before they can actually tap around and have something happen ideally shipping less javascript would lead to a point where they're not necessarily running into those cases now to explain why javascript is such a big deal and why it can have such a large cost i'd like to walk you through what happens when you send content down to a browser so a user goes and they types in an address bar and types an address into their omnibox their address bar a request is made out to a server which will then have to return some markup the browser needs to parse that markup and get out the css the javascript the images that are necessary and then the browser actually has to process all of those resources this is actually a an accurate depiction of what happens in chrome when we're trying to process everything that you send down now although this looks great one of the challenges here is that javascript can actually end up being a bottleneck so ideally we want to be able to paint pixels quickly and then have the page interactive but if javascript's a bottleneck you can end up just looking at something that you can't actually tap around with and experience so we want to move away from javascript itself being a bottleneck to modern experiences one thing to keep in mind as an industry is that if we want to be fast at javascript we actually have to be fast at downloading that script parsing it and compiling it that means that we have to be fast at the network transmission side of things but also the processing side of things for our scripts because if you're spending a long time parsing and compiling script in a javascript engine that can delay how soon a user can interact with your experience now to provide some data about this here is a breakdown of where v8 the javascript engine in chrome actually spends its time while it's trying to load up the page containing script so in the orange we have all the time being spent parsing the javascript the popular sites are sending down and yellow is the time we spent compiling and together these take up anywhere up to 30 percent of the time it takes us to load up the javascript for your page this is a real cost now another thing to keep in mind with javascript is that all bytes are not equal when it comes to the web 200 kilobytes of script and 200 kilobytes worth of image have very different weights they might take the same amount of time to download but when it comes to processing we're dealing with very different amounts of costs a jpeg image needs to be decoded rasterized eventually get painted on the screen a javascript bundle needs to be downloaded and then parsed compiled executed there are a number of other steps that an engine needs to complete just be aware that these costs are not quite equivalent now one of the reasons why these costs start to add up and matter is mobile so mobile itself is a spectrum many of us here today probably have a highend or median end phone and the reality is that our users may not necessarily have those device classes they may be on a low end phone they may be on a median phone and the disparity between these multiple classes of devices can be quite stark due to thermal throttling difference in cache sizes cpu gpu you can end up experiencing quite different processing times for resources like javascript depending on the device you're using so here's a breakdown of how long it takes to parse javascript from a range of different types of devices at the very top we have highend devices which generally process it pretty quickly the very bottom we've got our low end devices and in the middle we've got our average phones so things like the moto g4 or the moto g5 now take a look at how much longer that script takes to process we can we can actually try to look at a more practical version of this so here is the javascript startup time and processing time for cnn.com javascript on an iphone 8 using the a11 processing chip that they have it takes nine seconds less to process javascript than it does an average phone nine seconds that's nine seconds quicker that that experience would be loading and interactive on an iphone than something more average this hints at another thing that maybe we need to stop necessarily taking fast networks and cpu and high ram for granted fast devices can actually sometimes be slow you can be running multiple things on there fast networks can be slow variability can end up making absolutely everything slow you may have users that you know are not going to have the the latest and greatest phone they might have something more average and so it becomes really important for us to start testing on real phones and real networks so if your team were able to take a look at their analytics and understand exactly what devices your users are actually accessing your site with that'll give you a hint at what devices you should probably have in the office to test out your experiences using if you're not able to afford those you just can't get approval for it check out webpagetest easy we have a number of profiles set up there that you can go and use today that already have popular devices can preconfigured we've got some median mobile devices like the moto g4 already in there and it's also really important to test on representative networks now although i've been talking about you know the notion of low end and median phones being important brian holt made this really great point yesterday which is it's really important to know your audience not every single site it needs to work great on 2g on a low end phone you may well have a wide range of users on sort of the higher end of the spectrum or in a different part of the spectrum so just be aware of the data behind your site so that you can make a reasonable call on how much all of this matters so if you want to be fast at javascript download times are going to be pretty critical for lowend networks the things you can do there are just ship less code minify your source take advantage of compression so gzip broadly zotfly take advantage of caching for repeat visits parse times are pretty critical for phones that have a slower cpu now on the server if you're sort of a back end developer or full stack developer you know that you kind of get what you pay for with respect to cpu disk network as we build sites that are increasingly more reliant on javascript we sometimes pay for what we send down in ways that we don't always easily see so the shape of success there is what can we do to send the least amount of script to our users while still giving them a useful experience now one of the useful things that you can do to accomplish that today one of the greatest tools in your tool belt is code splitting so code splitting is this idea that instead of shipping down your users a massive javascript monolithic bundle sort of like a massive full pizza what if we were to just send them one slices at a time so the smallest amount of script that they need just to get the current page useful enough for them to use now code splitting can be done at a page level at a route level at a component level and this is something that's well supported by many modern libraries and frameworks it's well supported in webpack so consider code splitting it's not this sort of you know theoretical thing either many large teams have been seeing really great wins off the back of investing in code splitting recently so both twitter and tinder as part of rewriting their mobile web experiences and trying to make sure that users are able to interact with their sites as soon as possible so anywhere up to a 50 improvement in their time to interactive just by adopting aggressive code splitting inside their experiences another thing that many of these sites have done is adopted auditing as part of their workflow thankfully the javascript eco his system has got a number of great tools here so things like webpack bundle analyzer which allows you to scan using the source maps of your scripts all of your dependencies that you're including in your bundle and it helps you identify sort of those places where you have libraries that are perhaps larger than you thought they might be you might have npm installed yourself into some performance problems just because you know you needed to ship something and include a date library or a ui library that was a little larger than you thought it might be also great for spotting places where you're including duplicate code so just take advantage of you know some of these tools for auditing if you're really unsure whether you have any issues with javascript performance in general check out lighthouse so lighthouse is one of those tools by the chrome team that we've baked in chrome developer tools it's also available as a chrome extension and the idea here is that it gives you this really indepth performance analysis engine that will highlight places where you can be doing better one of the things we recently shipped in lighthouse is a feature called javascript's boot up time this allows you to highlight places where scripts might be spending quite a long time in parsing and compiling and executing so you can try to look at opportunities to either you know split up those scripts or just be doing a little bit less work there another thing you can do is try to make sure that you're not shipping unused code down to your users something that's also baked into chrome developer tools is code coverage code coverage is really useful because it allows you to just load up your site inside of chrome and then you can start interacting with your pages and it'll highlight all of the code that's actually been used or unused on a per script level and as you start interacting it'll actually update in real time those different bars to show you know in red versus green how much is unused versus used this can be really great for identifying opportunities to split up your scripts or in some cases maybe you know not even load them up on initial load maybe they could be deferred to a later point in time so taking a look at production examples where some of these ideas have been useful um i was talking to the netflix team last week and they mentioned that there was this point where when you landed on netflix.com they had a nonmember landing page flow that they wanted to optimize uh they were initially using react on both the server side and the client side but they wanted to make sure that their time to interactive was as good as possible and so what they ended up doing was actually dropping react just for the client side portion they're still using it on the server side but they prefetched it for subsequent navigations deeper into the user experience this improved their time to interactive by 50 which is huge it meant that users could sign up a little bit quicker and it was worth the time investment here another thing that netflix mentioned was that there was a point where they were trying to move their video playback component so the component that you see whenever you're trying to play anything on netflix from vanilla javascript over to react so this was the identical ui you know for both versions of this thing and they experienced some negative results initially they found that the extra javascript costs for downloading parsing evaluating and the runtime costs for using virtual dom diffing were quite high and they ended up causing a few negative results so reductions in play hours reductions in usage and so they ended up needing to spend a little while actually reducing these costs to enable them to finally roll out react for the video player too i wanted to highlight what this actually looked like so here we have an example using vanilla javascript where there was no interference on the main thread so you're interactive pretty quickly and then we have a busy main thread example where all of that javascript processing meant that it took a few seconds before the user could actually start interacting with the video player as i mentioned they're thankfully in a much better place now and they've been able to ship out this experience to users but keeping an eye on their time to interactive and their javascript costs was critical to them enabling future experimentation that used react now if you're looking for a pattern for serving javascript efficiently to your users i heavily recommend checking out purple or prpl so purple is a pattern that stands for push render precache and lazy load and it's a pattern for aggressively code splitting where you just ship down the code a user needs for every single route and then you take advantage of service worker for precaching the javascript and logic needed for future routes and lazy load it as needed what this means is that when a user ends up navigating to other views and the experience there's a good chance it's already in the cache and so they experience much much reduced costs in terms of booting this up and getting interactive so we've talked about a few ideas uh you know if if you care about performance if you've ever you know worked on a web perf patch for your site you know that sometimes you could end up working on a fix coming back a few weeks later and someone on your team may have been working on a feature or unintentionally you know broken the experience you know you could be in a position where you just fixed the site and someone comes along you're like why why why did you ruin it why um thankfully there are ways that we can we can try to work around this uh and one way is having a performance budget in place so performance budgets are great because they keep everybody on the same page it creates a culture of shared enthusiasm for constantly improving the user experience and it holds the team accountable performance budgets can be employed at sort of a file size level so you could have you know budgets based on javascript chunks you could have budgets around speed metrics so timed interactive or other metrics like first contentful paint this is a feature this is an idea that is well supported in tools like speed curve or caliber and so if you're interested in trying to get performance budgets set up there are a number of tools you can try out just to roll this out for your team i heavily recommend it uh if you're interested in trying to track the cost of javascript in production for your real users there are two things i'd recommend checking out the first is the long tasks api so this is an api that we recently shipped in chrome allows you to gather real world telemetry on parse and compile as well as culprits basically long tasks are any task that lasts longer than 50 milliseconds that could be problematic on the main thread and you can record that and log it back to your google analytics another thing to check out is first input delay now this is a metric that measures the time from a user first trying to interact with the experience and the browser actually responding with something so this is still an early metric we actually have a polyfill available for it today that you can go and check out but between these two you should hopefully be able to get enough telemetry from real users to understand what javascript performance problems they're running into so improving performance is a journey it's generally not something you're just going to do you know all in one go and be done with it's usually a journey where a lot of small changes can actually lead to pretty big gains i don't you know i don't expect most people especially if they have javascript performance problems to go out and fix everything tonight um you know the i i try to compare this to the experience that you might have if someone asked you to learn how to sketch out something like a baby for example if someone told you to go and learn how to draw a baby you'd probably look up the tutorial and maybe the first step would be drawing you know the outline the second step is probably drawing the rest of the baby but that's not the expectation i have of everybody here what you probably will do is you know make a few incremental improvements to your experience maybe you'll chip away a little bit at the javascript and you may end up here which is actually you know not a bad place to be it's a little bit better on the first one but over time if you're able to continue investing in improving the javascript performance of your sites making sure that you're able to get interactive really quickly your users will thank you because they're actually going to be able to do things much much more quickly so i hope some of that was useful that's it for me thank you you

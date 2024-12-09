@@ -1,0 +1,254 @@
+00:01 - okay so phase one is done we've created
+00:03 - our core os cluster and if these are
+00:05 - pretty big machines we can actually run
+00:07 - a lot of applications we have a decent
+00:09 - bit of computing power i did the smaller
+00:11 - machines uh your your choice on whether
+00:13 - you want to do a lot of smaller machines
+00:15 - or less large machines it's really up to
+00:17 - you
+00:18 - but we've got four machines running so
+00:19 - the next thing we're going to do is
+00:20 - we're going to run some instances
+00:22 - of web apps now we don't want more than
+00:25 - one web app running on each machine at
+00:27 - least not at first depends on how
+00:28 - powerful those machines are we might be
+00:30 - able to run four
+00:31 - of each web app on there and load
+00:33 - balance between them
+00:34 - but for redundancy sake you at least
+00:37 - want different copies of web app running
+00:39 - on different machines that way if
+00:40 - they're all running on this machine and
+00:42 - this machine goes down well that's a bad
+00:44 - idea we want some running on different
+00:46 - machines
+00:47 - so let's go ahead and get to how to run
+00:49 - fleet services
+00:51 - now if you remember from my diagram
+00:53 - here's kind of here's the holy grail
+00:55 - this is what we're going for this whole
+00:56 - core os cluster is hidden behind our
+00:58 - private network nobody can access this
+01:01 - from the outside world
+01:03 - at all and then
+01:06 - you
+01:07 - want to have your one public facing
+01:10 - your one public public-facing server
+01:12 - that outside world does have access to
+01:15 - and he's also on the network and can
+01:18 - proxy into all the ip addresses within
+01:21 - your coreos cluster now in digitalocean
+01:24 - you don't have true private networking
+01:26 - because every one of these has a public
+01:27 - ip address but you can set up iptables
+01:30 - to block pretty much all access so
+01:32 - that's if you want to research that it's
+01:34 - very simple to do just look up you know
+01:36 - coreos iptables uh digitalocean and
+01:38 - you'll you'll have all the information
+01:40 - on that amazon aws rackspace lots of
+01:42 - these places will give you true private
+01:44 - networking
+01:45 - so we are ssh in that's excellent let's
+01:48 - go ahead and exit out of that coreos
+01:49 - machine
+01:51 - and so now we just need to get fleet
+01:53 - control installed on our com on our
+01:55 - machine so we can actually talk to fleet
+01:57 - the fleet cluster the coreos cluster
+02:00 - from our computer so i'm on my computer
+02:02 - now and you can just if you have
+02:03 - homebrew you can just go brew install
+02:06 - fleet control so that's going to get
+02:07 - fleet control installed and then you
+02:09 - just have to do one thing you have to
+02:10 - snatch any one of these ip addresses and
+02:12 - you need to create
+02:14 - a fleet tunnel
+02:16 - environment key so export
+02:19 - fleet
+02:20 - ctl
+02:22 - tunnel
+02:23 - equals um did that not copy okay let's
+02:26 - copy
+02:27 - and paste there we go so export fleet
+02:30 - control tunnel equals and then one of
+02:31 - those ip addresses they're all going to
+02:33 - work and now i can go fleet control
+02:38 - uh fleet control list of machines just
+02:40 - like i did when i was on the coreos
+02:42 - cluster
+02:45 - there we go so there's all four of my
+02:47 - machines so what fleet's gonna do for us
+02:51 - is
+02:51 - i don't want to have to think about
+02:53 - which machine to run a service on i just
+02:55 - want to say hey run three services and
+02:58 - be done with it so fleet is going to all
+03:00 - handle that so i'm going to say hey run
+03:02 - three web services it's gonna go one two
+03:04 - three
+03:05 - and then it fleet's also gonna mail it
+03:07 - manage failover so if this if this
+03:10 - machine goes down fleet's gonna notice
+03:12 - hey web 3's machine went down let's
+03:14 - rerun web3 over here and if there's
+03:17 - other things running on this machine
+03:18 - it's also going to rerun them on
+03:20 - different machines so the fleet is going
+03:21 - to handle both scheduling and failover
+03:23 - force which is great
+03:26 - let me show you what a fleet service
+03:27 - file actually looks like let's go some
+03:30 - app
+03:31 - ampersand dot service that's the name of
+03:33 - my file and the ampersand means that i
+03:35 - can run copies of it any service that
+03:37 - you want to run multiple copies of
+03:39 - you're going to want to put an ampersand
+03:40 - at the end i know that's really small on
+03:42 - my screen so you might not be able to
+03:44 - see it well
+03:45 - and so basically here you got your
+03:47 - description and because it's an
+03:48 - ampersand service i can run copies so
+03:50 - every percentage i is going to get a
+03:52 - number so when i want to run this
+03:55 - service i'll say hey run some app web
+03:57 - one two three four and five and they're
+03:58 - all going to run this exact same file
+04:01 - and then this will turn into 1 2 3 4 or
+04:03 - 5. so that's kind of what that percent i
+04:05 - is there
+04:06 - so it has a description it's running
+04:08 - after docker
+04:09 - and this is pretty much my docker
+04:11 - command i'm going to do docker run
+04:14 - and then here's the name of my docker
+04:16 - command
+04:17 - my docker image so this should look
+04:19 - pretty familiar if you're familiar with
+04:21 - docker
+04:22 - before we start the service we want to
+04:23 - kill any existing version of some app
+04:26 - one
+04:27 - and then we want to remove some app one
+04:29 - and we want to pull my
+04:31 - image the latest of willstern node
+04:34 - sample this is a basic node.js
+04:36 - application
+04:37 - and then we want to go ahead and run it
+04:39 - and we want to inject the app name in
+04:41 - there and stuff like that so
+04:44 - uh and then also we want to stop our app
+04:47 - whenever the service stops we're going
+04:49 - to go ahead and stop our docker
+04:50 - container so that's a service file it's
+04:52 - very simple
+04:53 - i'm in the folder with this service
+04:55 - right now i can go ls
+04:57 - you can see there's my some app at
+04:59 - service so i want to actually push this
+05:01 - up to fleet right now so i just go fleet
+05:04 - control submit
+05:06 - some app at or i could do at service
+05:09 - it's smart enough to know that dot
+05:10 - service is the default so there we go
+05:13 - now it's in there so if i go fleet
+05:15 - control
+05:16 - list
+05:17 - unit files
+05:20 - so i have a unit called sum app that
+05:23 - it's now aware of so now i can run this
+05:25 - so i can go fleet control
+05:27 - run or start
+05:29 - some app at one
+05:33 - sorry
+05:34 - mr t in there
+05:36 - fleet control starts sumap at one so
+05:38 - there we go now it's running some app
+05:41 - one somewhere on one of my core os nodes
+05:44 - awesome uh let's go ahead and run two
+05:46 - more let's go some app two
+05:49 - actually let's do this 2.4 so i'm gonna
+05:52 - run between two and four so now i'm
+05:53 - going to actually boot up two three and
+05:54 - four
+05:57 - uh that's a way to do multiple things i
+05:59 - can also go
+06:00 - i mean every once in a while fleet gives
+06:02 - you this error i need to look into what
+06:04 - exactly that is
+06:05 - let's go ahead and clear this out fleet
+06:07 - control
+06:09 - you can also do start
+06:11 - some app at one some app at two some app
+06:15 - you can do it like that as well
+06:17 - so let's do list units now
+06:23 - so you see that it's activating all four
+06:25 - of them so what it activating means is
+06:27 - that it's allocating the resources it's
+06:29 - kind of figuring out hmm shall i put it
+06:31 - here here here okay let's do one two
+06:33 - three and four there and then it's going
+06:35 - to start running uh there you go running
+06:37 - start pre is where it's at so start pre
+06:40 - means that it's killing
+06:42 - that it's removing and then it's pulling
+06:44 - that's probably what it's doing right
+06:45 - now is doing that initial docker pull
+06:47 - which you remember that first docker
+06:49 - pull takes some time because it's get
+06:50 - because it's getting all the base images
+06:52 - that your docker image is built on so
+06:54 - this will probably run for about i'd say
+06:56 - 30 seconds total and then you're going
+06:58 - to start noticing that some services
+07:00 - have started
+07:02 - i will keep doing this in
+07:05 - an inpatient way
+07:07 - and also shows you the ip addresses
+07:10 - that it's going to be starting them on
+07:14 - come on
+07:15 - still activating
+07:18 - still activating come on
+07:24 - there we go got one active so
+07:27 - i can actually ssh into this now i can
+07:29 - either grab this ipad address in ssh in
+07:32 - or i can use fleet control and let it
+07:35 - ssh in for me
+07:38 - fleet control ssh into some app 4's box
+07:41 - so now i'm actually into the
+07:44 - box that some app is on
+07:46 - i can run docker ps and see there we go
+07:48 - i've got some app for running
+07:50 - so i could actually take that ip address
+07:52 - what is it three two seven six eight
+07:55 - and which one are we on
+07:58 - there's my p address
+07:59 - so let's go take this what is that again
+08:02 - three two seven six eight let's go to
+08:05 - three two seven six eight
+08:09 - there you go i'm now viewing some app
+08:11 - four okay another cool thing i can do is
+08:13 - i can actually journal the logs of that
+08:15 - so i can go fleet control
+08:17 - journal
+08:19 - some app add four
+08:21 - that's going to give me some of that
+08:23 - log output so you can see there we are
+08:26 - i've there's my log output from my web
+08:28 - app let's go ahead and hit up a few more
+08:32 - i just refreshed a couple more times
+08:37 - you can see there's all my latest log
+08:39 - information i can change how much you
+08:41 - know log how many entries i want to see
+08:43 - here but that's really nice so i can get
+08:45 - logs from any service real time
+08:48 - so that's basically how fleet works
+08:51 - and then in the next video let's go
+08:53 - ahead and look into flannel and how
+08:56 - these things are going to talk to each
+08:58 - other

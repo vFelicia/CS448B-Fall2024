@@ -1,0 +1,969 @@
+With timestamps:
+
+00:00 - everybody
+00:02 - let's give a warm pycon welcome to adam
+00:05 - fletcher and jonathan mortensen
+00:08 - thank you
+00:09 - all right
+00:12 - a little bit of technical devil let's uh
+00:14 - all right great our slides sorry that
+00:16 - they're not completely full screen
+00:17 - that's okay so hi i'm adam fletcher and
+00:19 - with me is jonathan martinson hi
+00:22 - so we ran a company called gyroscope
+00:24 - software and we made developer tools
+00:26 - powered by ai
+00:27 - and last year we got an invite to the
+00:29 - samsung developer conference and we
+00:31 - weren't really sure what to do about it
+00:34 - right as a developer tool
+00:36 - we wanted the press and we wanted the
+00:37 - exposure from the conference but also as
+00:39 - a developer tool our booth was destined
+00:41 - to be super boring right like we'd give
+00:43 - you a free t-shirt and maybe you'd watch
+00:45 - like a looping video of our software in
+00:47 - action and
+00:48 - that's not good so we look for something
+00:50 - more exciting
+00:52 - one thing that is obviously more
+00:53 - exciting than a conference booth is
+00:55 - blood sport style underground street
+00:57 - fighting
+00:58 - starring ideally starring the muscles
+01:00 - from brussels jean-claude van damme
+01:03 - seeking revenge for the death of his
+01:04 - brother
+01:05 - that is i think you'll agree that is
+01:07 - clearly more exciting than a conference
+01:09 - booth
+01:10 - but we are nerds
+01:13 - and as you can see from our physique we
+01:14 - are not jean-claude van damme yet
+01:19 - it's common so instead we decided to see
+01:21 - if we could train an ai to play street
+01:23 - fighter 2 on the s-ness and then run an
+01:25 - ai versus ai final four style tournament
+01:28 - during the conference
+01:30 - and today we're going to talk about how
+01:31 - we used python to do just that
+01:34 - so first let's start with the overview
+01:36 - of what the technologies we use this is
+01:38 - useful so
+01:39 - uh super street fighter 2 turbo runs on
+01:41 - the super nintendo but in order to gain
+01:44 - the control and speed necessary to do
+01:46 - good ai to to train the ai we couldn't
+01:48 - use the actual nintendo hardware so we
+01:50 - used an emulator called sns-9x and then
+01:52 - we used an emulator environment
+01:55 - that let us program the emulator from
+01:57 - afar this is a tool called biz hawk that
+01:59 - the tool assisted speedrun community
+02:01 - builds
+02:02 - right bizhack is written in c sharp and
+02:04 - we had to add some code to that which
+02:05 - we'll talk about in a second
+02:07 - um and then we used python to use jim a
+02:10 - package from openai and jim used some
+02:12 - python code by the agent code that we
+02:14 - wrote that uses krsrl and tensorflow and
+02:18 - so we're just going to dive straight
+02:19 - into these elements
+02:21 - and i'll describe the results at the end
+02:22 - and what follows is the story of how it
+02:24 - actually happened in terms of code and
+02:25 - data science and so if it's going to
+02:27 - seem a little disjointed that's because
+02:28 - we were on a voyage of discovery as well
+02:30 - and that's the nature of the story
+02:33 - first the gym package right so this
+02:35 - makes sense as a starting point jim lets
+02:37 - us create a representation in python
+02:39 - about what's happening in the game and
+02:41 - lets our agent interact with that
+02:42 - representation
+02:44 - we're using a technique called
+02:45 - reinforcement learning and this is kind
+02:47 - of the simplified diagram of what
+02:48 - reinforcement learning is
+02:50 - right
+02:51 - in reinforcement learning you have a
+02:53 - continuous cycle of reinforcement by
+02:54 - having an agent examine the state of
+02:56 - environment then take an action and
+02:58 - seeing if the reward the result of that
+03:00 - action is maximized we're going to talk
+03:02 - more in depth about this but it's useful
+03:04 - to kind of keep this in your head as we
+03:05 - go and the openai gym project provides
+03:08 - the environment portion of this
+03:10 - and in gym
+03:12 - the environment is what you're doing
+03:13 - reinforcement learning on and open ai
+03:15 - has actually built a number of good
+03:17 - environments for retro gaming including
+03:18 - for the atari games and i think they
+03:20 - recently had a retro gaming competition
+03:22 - that might still be going on but they
+03:24 - did not provide an environment for
+03:25 - street fighter 2.
+03:27 - and another big thing that jim provides
+03:29 - is a very clean abstraction that can be
+03:30 - used for doing this sort of machine
+03:32 - learning right and i'll talk about the
+03:34 - key elements of this abstraction the
+03:35 - action the observation reward and the
+03:38 - two functions step and reset and we'll
+03:40 - go into each one of these each one of
+03:41 - these in some detail
+03:44 - first interesting one is the observation
+03:45 - that is the data that represents the
+03:47 - world the agent will learn about and in
+03:49 - our case it's pretty straightforward
+03:51 - it's
+03:52 - street fighter 2 just as a human would
+03:54 - see it right it's everything a human
+03:56 - knows it's the timer it's the health
+03:57 - bars it's what your opponent is doing
+04:00 - right and each environment needs you to
+04:02 - define this observation it gives you
+04:04 - gives you uh jim gives you tools for
+04:05 - doing that and on the right-hand side is
+04:07 - code you don't have to read you
+04:08 - shouldn't care about is just basically
+04:09 - look these are all the things we tracked
+04:11 - this is all the dictionary of all the
+04:12 - things we tracked that represent our
+04:14 - observation
+04:17 - right and there's a few ways to get this
+04:18 - so you can get this
+04:20 - in in some some papers you read on this
+04:22 - sort of thing you'll get this from image
+04:23 - recognition people will train
+04:25 - uh image recognizers to see where our
+04:27 - characters are and where points are we
+04:28 - actually had the advantage of using an
+04:30 - environment that gave us direct access
+04:32 - to the memory of the game and so we
+04:33 - actually just extracted these values out
+04:35 - of memory but we didn't do anything that
+04:37 - a human wouldn't do so we didn't we
+04:39 - didn't cheat in any way shape or form we
+04:40 - just you know you can see the health a
+04:42 - human can see the health so we read the
+04:43 - health right just a different way to get
+04:45 - access to it
+04:47 - and not always but in general
+04:49 - the larger the observation space you
+04:50 - have the more training that will be
+04:52 - required
+04:54 - and that that is important because
+04:56 - training costs money and time
+04:59 - so the next critical piece is the action
+05:01 - and actions are the abstraction of what
+05:02 - you can do to change the state right you
+05:05 - send an action to an environment and the
+05:07 - environment will create a new
+05:08 - observation of the state after that
+05:10 - action has occurred practically for us
+05:13 - that's when you press a button on a
+05:14 - controller an action is a button press
+05:16 - on a controller and that changes the
+05:17 - game right you jump you kick et cetera
+05:20 - right thus our actions are button
+05:22 - presses
+05:24 - and the action space for street fighter
+05:26 - is interesting it's not actually all of
+05:27 - the possible combinations of buttons on
+05:29 - an sns controller
+05:31 - right but rather all the possible valid
+05:32 - combinations of buttons eg you can't
+05:34 - press left and right at the same time
+05:37 - the emulators let you but we can't
+05:40 - um and then we had to simplify this
+05:42 - action space a little bit too because
+05:44 - the the more because like the
+05:45 - observation space the more actions you
+05:47 - have available to you the longer the
+05:49 - training time will take
+05:50 - right and here is an example on the
+05:52 - bottom of sort of how we defined our
+05:53 - action space and a multi-discrete for
+05:55 - those who want to know says like you can
+05:56 - do just one of these and just one of
+05:58 - those right so you can you can press up
+06:00 - and a or up and nothing but you can't do
+06:03 - up a and b
+06:07 - fine after the action you change your
+06:09 - observation you get a reward
+06:11 - for that action and reward is what the
+06:13 - agent will try to maximize in our case
+06:15 - we spent a lot of time refining the
+06:16 - reward and what it meant to be rewarded
+06:18 - rewards are sort of where the actual
+06:20 - interesting part of ml is
+06:23 - so here's some code and again reading it
+06:25 - is not that important but it just to
+06:27 - tell you that the code for the various
+06:28 - reward functions we tried is not much
+06:30 - code and a lot of it is actually a lot
+06:32 - like what a human would think about it's
+06:34 - like did i win the game like you know
+06:36 - naively you're playing street fighter
+06:38 - against like your little sister and
+06:40 - they're mashing buttons and beating you
+06:41 - and you're sad and you're like i want to
+06:42 - win right so you optimize for winning
+06:45 - the game or maybe
+06:46 - you know we in this case we wanted to
+06:49 - optimize for maybe trying the health the
+06:52 - net health change or
+06:53 - you know the health difference right
+06:54 - like these are different things that you
+06:56 - might think about and and often you're
+06:58 - you want a short-term reward because
+06:59 - it's per observation not per game but
+07:01 - you want to maximize this like long-term
+07:03 - goal of winning the game right and we
+07:05 - tried a number of these
+07:07 - and what we ended up settling on after a
+07:09 - lot of work is the simply the delta of
+07:11 - health between the player and their
+07:12 - opponent at each frame right we wanted
+07:14 - to reward the agent for keeping that gap
+07:16 - high
+07:17 - and so here's a plot of reward over
+07:19 - episode
+07:20 - and episode in this game in this case is
+07:22 - a game there's 3 000 games on this plot
+07:25 - right so you can see that speed of
+07:26 - training matters in fact one of the
+07:28 - reasons we didn't use just win loss the
+07:31 - binary win loss as a reward function is
+07:33 - that it takes too long to train based on
+07:34 - that reward
+07:37 - finally there are two functions the gym
+07:38 - environment step and reset and these are
+07:40 - used we use these to control the
+07:42 - emulator one step means kind of move
+07:43 - forward to the next frame and that's
+07:44 - where you send all your commands to the
+07:46 - emulator right and then reset is how you
+07:49 - reload the save state and so these
+07:50 - functions can from the ai worlds to the
+07:52 - emulators world right and jonathan's
+07:54 - actually going to go into some detail
+07:55 - about the ai
+07:59 - all right so i'm going to talk a little
+08:01 - bit about the agent side of things um so
+08:04 - we have an environment thanks to jim and
+08:06 - now we need an agent to maximize the
+08:07 - reward from that environment so another
+08:10 - way is we want agents to take in these
+08:11 - observations as input and output actions
+08:14 - that it believes are optimal
+08:16 - so for this we use a package called
+08:18 - kerasrl
+08:19 - let's just talk about ksrl and the
+08:21 - abstract briefly caresrl provides a
+08:23 - simple framework for making agents um
+08:25 - the code that i'm showing on the right
+08:26 - here is essentially a random agent again
+08:28 - you have to look at the exact specifics
+08:30 - but it's super super nice interface um
+08:33 - so what i'm showing here is something
+08:35 - that does behaves randomly that's kind
+08:36 - of like the base agent you would ever
+08:38 - have and random is actually a really
+08:39 - good test case um lets you make sure
+08:42 - that you know all the pipeline is
+08:43 - running and that you can perform better
+08:45 - than random
+08:46 - enzo keras gives you a set of pre-built
+08:48 - agents a base class
+08:51 - you know training testing logging
+08:52 - plotting maybe um all those types of
+08:55 - things
+08:56 - um and the two functions that we really
+08:58 - care about in this abstraction is the
+09:00 - forward function so this says like if i
+09:02 - give you an action
+09:04 - i'm sorry i return an action given an
+09:05 - observation right so
+09:07 - the agent is essentially reading the
+09:09 - observation space and does a forward and
+09:11 - then the forward produces an action that
+09:13 - it should be sent to the emulator to do
+09:16 - and then the second thing is the
+09:17 - backward function the backward
+09:18 - essentially says hey what reward did i
+09:20 - just get for taking that action and then
+09:22 - how should i change my understanding of
+09:24 - the world and update my model so that i
+09:26 - can do a better job next time
+09:30 - so the environment from jim works with
+09:31 - keras in the following way essentially
+09:33 - you create the street fighter
+09:34 - environment right this is what we use
+09:35 - jim to create
+09:36 - and then you just create
+09:37 - the random agent and then pass in the
+09:40 - environment and then the most important
+09:42 - line here is the agent.fitline this is
+09:43 - effectively kicks off the main loop
+09:46 - where the agent is taking observations
+09:48 - and sending actions and then learning
+09:50 - and getting better over time
+09:53 - so
+09:55 - we actually ended up using the dqn agent
+09:58 - in the kerasrl library
+10:00 - and so
+10:02 - we talked pretty extensively about the
+10:03 - environment i'm going to briefly go into
+10:05 - what dq n is deep q agent um just so
+10:09 - you're going to get a sense for that
+10:10 - essentially i'm going to go into the
+10:11 - details of what's happening inside
+10:12 - agent.fit
+10:14 - i'm less funnier i'm not as funny as you
+10:16 - it's just not even okay anyhow um before
+10:19 - we start talking about deep q learning
+10:20 - let's start out with what q learning is
+10:22 - uh the caveat here is that in this
+10:24 - discussion i'm going to be focusing on
+10:25 - the intuition and so there's a lot of
+10:27 - bookkeeping and math that i'm going to
+10:28 - leave out
+10:29 - so let's drop this complex figure and
+10:31 - stay at the intuitive level so i'm going
+10:33 - to describe q learning essentially by
+10:35 - way of an example
+10:37 - this is a 5x5 grid let's say it
+10:39 - represents a game of going from room to
+10:41 - room each edge here is a
+10:43 - doorway to another room and when i'm in
+10:45 - one room i have a set of actions between
+10:48 - one and four or two and four actions
+10:50 - that allow me to go to another room
+10:52 - so suppose you enter a room and then you
+10:54 - get you find cash in that room and
+10:56 - that's your reward so if we map it all
+10:58 - back right in the reinforcement learning
+11:00 - paradigm adam talked about the location
+11:02 - on the grid is my observation the xy
+11:03 - coordinate
+11:04 - moving from run one room to an adjacent
+11:06 - room essentially opening the door is
+11:07 - your set your action and then the cache
+11:09 - is your reward
+11:11 - so the arrows here then represent
+11:12 - essentially a path of actions taken and
+11:14 - reward c for that action and the key key
+11:17 - thing that q learning does
+11:20 - essentially the the q learning part
+11:21 - before we talk about the deep part
+11:23 - is that it keeps a lookup table of
+11:25 - essentially given every state that i'm
+11:27 - in and every action that i took what was
+11:29 - the reward that i received so then when
+11:31 - i get back to that same state later or
+11:33 - the same observation later i can go to
+11:35 - the lookup table pull out the answer and
+11:37 - say like oh i'm going to take this one
+11:38 - because that will give me the most
+11:39 - reward
+11:42 - so that kind of maps to the three lines
+11:44 - of code i put down here is essentially i
+11:46 - select my best action
+11:48 - r is this lookup table i'm talking about
+11:50 - um i send that action to the environment
+11:53 - the environment turns a new reward and
+11:55 - the most important component is then i
+11:57 - update that lookup table with the state
+11:59 - and the action with the new reward value
+12:01 - so sometimes the reward value changes
+12:03 - over time and so you want to keep that
+12:05 - knowledge in this lookup table
+12:08 - so the big takeaway is that to get to
+12:11 - complete that entire lookup table i have
+12:13 - to explore the entire space not just
+12:14 - this one path but every possible path
+12:16 - through the whole thing
+12:17 - uh and so that's essentially brute force
+12:19 - we have to explore all possible actions
+12:21 - in all possible states uh
+12:24 - and so that's a problem uh brute force
+12:27 - is bad generally although i mean
+12:29 - whatever gets the job done but q
+12:30 - learning is basically brute force uh and
+12:33 - so
+12:34 - it's great if we have an infinite amount
+12:35 - of time or if we have tiny problems but
+12:37 - that's usually not the case and that's
+12:38 - definitely not the case here in street
+12:40 - fighter instead of having just 25 states
+12:42 - we have 10 to the 25 states and 24
+12:45 - actions
+12:46 - it's essentially you just multiply all
+12:48 - the possible states in that
+12:49 - huge dick that adam showed earlier and
+12:52 - so it's effectively infinite so brute
+12:54 - force is too costly to do this
+12:56 - so deep learning essentially or
+12:58 - essentially yeah i'd say deep learning
+13:00 - allows us to overcome that huge state
+13:01 - base so the twist that deep cue learning
+13:04 - lets you do is that instead of trying
+13:06 - all possible actions and figuring out
+13:07 - the reward for each action we try and
+13:09 - predict the reward even if we haven't
+13:11 - seen it and we do that prediction using
+13:13 - a neural network
+13:15 - so for example
+13:17 - say i decided to go on this path
+13:19 - starting in the lower right and just go
+13:20 - straight up i might predict that going
+13:23 - straight up yields a reward of two that
+13:25 - might not actually be the case but i can
+13:26 - predict that without not ac without
+13:28 - having to actually do it
+13:30 - and so another way to think about it is
+13:32 - that again at the intuitive level the
+13:33 - neural network is interpolating and
+13:35 - extrapolating using simple math rather
+13:37 - than just being the look being a lookup
+13:39 - table so that's essentially what happens
+13:41 - we replace the neural net the lookup
+13:43 - table with a neural network and the
+13:45 - neural network gives back actions that
+13:47 - should be taken
+13:48 - and then learns over time based on what
+13:50 - actually happens so in this case if i
+13:52 - went up and i got a zero then i tell the
+13:54 - neural network hey i got a zero you
+13:55 - should do a better job interpolating
+13:57 - extrapolating
+13:59 - so that's a brief
+14:00 - digression into the deep cue learning
+14:02 - approach and how the agent works the
+14:04 - last key part of the architecture is the
+14:06 - controller so this is the thing that
+14:08 - translates actions to the environment to
+14:10 - actual commands that the game
+14:11 - manipulator runs and adam's going to
+14:13 - talk about that
+14:14 - thanks jonathan
+14:16 - great so first of all look how great is
+14:19 - the python 3 standard library like come
+14:21 - on it's really great right like we we
+14:24 - had to come up with a system for
+14:25 - communicating back and forth between
+14:26 - this emulator and what we just found was
+14:29 - like okay we'll just use tcp socket
+14:31 - server and that just worked and then
+14:33 - we're like okay well we need some state
+14:35 - management some thread management the
+14:36 - threading module that just worked and
+14:38 - then the signa the primitives inside the
+14:40 - threading module for signaling between
+14:41 - threads also just worked right this is
+14:44 - great so you're not meant to read this
+14:45 - code but it's more a sense of
+14:47 - how much code we actually had to write
+14:49 - just to communicate back and forth and
+14:51 - is not very much and it controls it
+14:53 - contains the entirety of our protocol
+14:55 - between the emulator and our ai right
+14:57 - and we just sent json back and forth
+14:59 - between the emulator i mean it's it's
+15:01 - really nice right and that's one of the
+15:03 - beautiful things about python this was
+15:04 - super fast to do
+15:06 - and then so when did the command go
+15:08 - right so we sent these json commands
+15:11 - somewhere well we sent them to a thing
+15:13 - called the biz hawk and that's what
+15:14 - controlled the emulator right and biz
+15:16 - hawk we had to add support for tcp
+15:18 - sockets to biz hack it didn't have that
+15:20 - and then we had to write the code needed
+15:22 - to read from street fighter memory we
+15:24 - needed to write the code to push the
+15:26 - buttons we got from json that the python
+15:27 - sent over also we had to learn c sharp
+15:30 - which we didn't know before we did this
+15:32 - i got to say c sharp pretty nice
+15:33 - language i was i was surprised at how
+15:35 - easy this was all to do and i have to
+15:36 - thank the bit sock developers for the
+15:38 - just general cleanliness and
+15:39 - organization of their code
+15:40 - um we have open source the uh the code
+15:43 - we used in here it's i just don't go
+15:46 - read it unless you're gonna make a pull
+15:47 - request
+15:49 - we did it fast um and so the limitations
+15:51 - of the emulator code actually meant that
+15:53 - we had to try a bunch of
+15:55 - techniques before settling on the socket
+15:56 - code we just showed you so biz hawk
+15:58 - actually contains a lua interpreter in
+16:01 - it which is great but the lua
+16:03 - interpreter they have doesn't support
+16:04 - network i o it does support file i o and
+16:07 - sqlite so we did try to shove all this
+16:10 - together via like writing to a file
+16:12 - reading from a file or writing to a
+16:14 - database row reading from it that's a
+16:15 - terrible idea don't do that um it was
+16:17 - also very slow um
+16:20 - it we were able to run the emulator
+16:22 - basically at 60 frames a second using
+16:23 - file io 120 using sql lite and then
+16:25 - finally when we switched to python
+16:27 - socket server we got 450 frames per
+16:29 - second
+16:30 - um in
+16:31 - while we could run three training of
+16:33 - training uh we could do three three
+16:36 - games training at a time on a windows
+16:38 - machine in google cloud
+16:40 - this actually saved us a ton of money so
+16:41 - because we're training in the cloud
+16:43 - right that's money and time performance
+16:45 - is a huge feature right and python was
+16:47 - able to get a significant performance
+16:49 - gains
+16:50 - now
+16:51 - great we have 450 frames per second we
+16:54 - have a
+16:54 - fast performing system we had a good
+16:56 - architecture but now we actually have to
+16:57 - train like we have to do that part of ai
+16:59 - where you teach it things
+17:01 - here's a tiny snippet and i cannot
+17:03 - emphasize the tininess of it of the
+17:05 - results of the actual training we spent
+17:07 - hundreds of cloud compute hours and
+17:08 - human hours tweaking all of these
+17:10 - parameters it's just like a matrix of
+17:11 - all the parameters we messed with
+17:13 - uh and and to figure out what works well
+17:16 - like deep learning is great but it is
+17:18 - also sometimes alchemy right which is
+17:20 - unfortunate and we tried to you know we
+17:22 - tweaked the neural network parameters we
+17:24 - treat the environment we tweaked the
+17:25 - number of games tweaked feature
+17:27 - representation training parameters etc
+17:30 - etc we tried to be relatively scientific
+17:32 - about it changing one thing at time
+17:34 - but in the end you know we were wrong
+17:36 - about pretty much every assumption we
+17:37 - made to start right
+17:39 - it's fine that's what this is how it
+17:41 - goes
+17:42 - but we did build a system that let us
+17:44 - iterate incredibly fast on being wrong
+17:46 - and that actually was a really helpful
+17:47 - thing to have done
+17:49 - so about three days before the
+17:50 - conference to our relief we finally got
+17:52 - an agent trained that did well
+17:55 - and you'll see on the screen if the
+17:57 - video loads we get to watch some awesome
+17:59 - street fighter stuff so this is after
+18:00 - 3000 games we have an 80 win rate the ai
+18:03 - is on the left it's dalson
+18:06 - and what you'll see here is some
+18:07 - interesting stuff dodging blocking
+18:09 - special moves
+18:10 - uh backing away you know avoiding damage
+18:14 - winning the game with the fireball it's
+18:16 - pretty dope right it's it's pretty cool
+18:20 - we were very excited when that happened
+18:24 - and now here's our non-boring booth with
+18:27 - all of our homemade signs look we were a
+18:28 - startup right the laptop actually that
+18:30 - you see here is actually training agents
+18:32 - uh the display is showing the training
+18:34 - of four agents at a time so people can
+18:35 - watch it happen
+18:36 - the way we initially trained our agents
+18:38 - actually against the super nintendo cpu
+18:40 - and three star difficulty um and then
+18:42 - later we trained them against each other
+18:45 - at the conference we ran a final four
+18:47 - style tournament like i said and to see
+18:49 - which bots we trained was best we had a
+18:51 - competition inside this if you if you
+18:52 - guessed which which agent was going to
+18:54 - win you could win a super nintendo
+18:55 - classic
+18:56 - um for those super street voter fans out
+18:58 - there you'll notice that m bison is not
+19:00 - on this bracket
+19:03 - that's because he's op he's totally
+19:05 - overpowered right and our ai figured
+19:07 - this out really fast like it was like
+19:10 - it's like right away and then we watched
+19:11 - the first tournament we're like oh this
+19:12 - is just not good like it was just a
+19:14 - clear sweep and uh so we banned him from
+19:16 - the second tournament we ran uh due to
+19:18 - performance enhancing drugs aka his code
+19:23 - so the second and the second tournament
+19:24 - we ran actually ended up going to sagat
+19:26 - and if you want to know who the best
+19:27 - character plays well if you are an ai
+19:30 - uh it's m bison
+19:32 - i don't know if you're human i'm i am
+19:33 - terrible at this game
+19:35 - um and i have to say like for those of
+19:36 - you who might have to do this sort of
+19:38 - thing in the future people loved this
+19:39 - idea right they loved watching all these
+19:42 - matches this little kid over on the
+19:43 - right hand kind with his like hand over
+19:45 - his heart like he was
+19:46 - like crying when he lost when his
+19:48 - character lost in the tournament he we
+19:51 - were so sad but he loved every minute he
+19:53 - would just come and watch the booth when
+19:55 - we weren't even having the tournament
+19:56 - just to see the characters fighting we
+19:58 - had about 80 people just kind of
+19:59 - screaming and yelling during the whole
+20:00 - tournament i mean it's a great way to do
+20:02 - it and so much better than a t-shirt and
+20:05 - like a video of our software
+20:10 - there's a lot to love about python in
+20:12 - artificial intelligence and machine
+20:13 - learning i mean there's lots about
+20:15 - python in general we know the the
+20:16 - iteration speed the battery's included
+20:18 - in nature of it right the standard
+20:19 - library good abstractions like we're all
+20:21 - here for that reason but
+20:23 - keras jim tensorflow scipy these are
+20:27 - world-class tools that are easy to use
+20:29 - they're free they're community supported
+20:31 - it's amazing right it's great
+20:34 - and it's actually not just python that
+20:37 - we love it's programming in general and
+20:39 - one thing i in particular love about
+20:40 - programming is sometimes i make really
+20:41 - hilarious mistakes
+20:43 - right so this is our this is a chart of
+20:45 - our ai
+20:46 - win rate playing against a literally
+20:48 - motionless opponent
+20:49 - right
+20:51 - so it's we start out really strong like
+20:53 - we win a bunch of the first couple
+20:54 - hundred games but then how do we lose i
+20:56 - don't even know how we end up losing i
+20:57 - think we just ran into the opponent
+21:00 - and we died over and over again
+21:02 - right but but but actually it's a great
+21:05 - outcome right it's scientific it's an
+21:07 - important one and we learned from it and
+21:09 - it and it was pretty funny and we all
+21:10 - learned sort of from funny failures like
+21:12 - this
+21:13 - and so like i want to help new and
+21:14 - experienced programmers understand that
+21:16 - it's okay and normal to make mistakes
+21:18 - like this so i'm asking you guys some of
+21:20 - you experienced people or the new people
+21:21 - to tweet out your funniest programming
+21:22 - fails right like with hashtag
+21:25 - pycon 2018 and then hashtag reward
+21:27 - function this is my joke on us giving
+21:28 - you a prize for this so
+21:30 - uh and by the end of the weekend like
+21:32 - the person with the most retweets we'll
+21:33 - find we'll we'll track you down and send
+21:35 - you a super nintendo classic because i
+21:36 - think that'd be pretty fun you can tweet
+21:38 - we're at blue voyage but just tweet
+21:39 - about it and uh tell us about the times
+21:41 - you've made mistakes make sure they're
+21:43 - yours not someone else's make sure
+21:45 - they're educational and funny right
+21:47 - because we want to teach people it's
+21:48 - fine like yeah you're going to screw it
+21:49 - up and that's the best part about
+21:50 - programming it's completely safe and you
+21:52 - get to learn that way
+21:54 - so thank you if you have any questions
+21:57 - we hope our story was interesting in
+21:58 - fact uh we have another one so the
+22:00 - company we were talking about gyroscope
+22:01 - we got acquired by an amazing security
+22:03 - firm called blue voyant i would be
+22:04 - remiss to say we are hiring if i didn't
+22:07 - say that um come talk to us about this
+22:09 - come talk to us ask us questions right
+22:10 - after during this talk
+22:12 - and then we're around all weekend you
+22:14 - can come find us at lunch tomorrow if
+22:16 - you want to talk about ai in general
+22:18 - and yeah thank you very much
+22:24 - we're happy to take questions
+22:26 - [Applause]
+22:30 - thank you so much guys uh we've got a
+22:32 - few minutes for questions so please come
+22:34 - to the microphone if you've got one
+22:35 - there's one frightened front and center
+22:37 - here
+22:38 - i would ask you this time only for
+22:40 - questions directed at the speakers if
+22:41 - you want to talk about anything longer
+22:43 - have specific add-on comments feel free
+22:44 - to catch them in the hall after the talk
+22:46 - thank you
+22:48 - hey
+22:49 - quick question uh when you guys
+22:52 - made all this did you guys account for
+22:54 - like say peak human performance in peak
+22:56 - human reactions like in a 60 fps game i
+22:59 - understand it to be like a 15 frame 15
+23:02 - frame delay between an action and
+23:04 - someone being able to react to that
+23:06 - great question and the answer is yes we
+23:07 - did so
+23:08 - the ai actually only acts every 20
+23:10 - frames um because uh actually for for a
+23:13 - number of reasons one is that the
+23:15 - training would have taken too long if we
+23:16 - acted every frame so that's important
+23:18 - but also against humans it's it's pretty
+23:19 - much only fair to fair to do that this
+23:21 - would just i think over time if we just
+23:23 - train this it would just destroy every
+23:24 - human like it just it wouldn't even be
+23:26 - close if we if we enabled like every
+23:27 - frame that's a good question
+23:31 - so
+23:33 - so the question i had was about like a
+23:34 - time delayed attack you know so if ryu
+23:36 - like throws a fireball from the other
+23:38 - side of the screen
+23:39 - and then coincidentally ducks you know
+23:41 - when it hits the opponent if you're only
+23:43 - just considering that one frame
+23:46 - could your ai not learn that you know
+23:48 - ducking equals damage to the opponent
+23:51 - uh so the the essentially the rewards
+23:54 - and the failures are propagated back um
+23:56 - so you there's a it's kind of like an
+23:58 - exponential curve but yeah it will
+24:00 - eventually figure out that like this
+24:02 - this observation that it made like 10
+24:03 - frames in the future will then like
+24:05 - suffer the actual consequence okay
+24:07 - thanks yep
+24:10 - all right uh do they learn special moves
+24:12 - on their own or did you intentionally do
+24:14 - anything with them they learn special
+24:15 - moves on their own so they just have the
+24:17 - key presses right and they like they
+24:19 - have every 20 frames they can insert
+24:21 - like a key press pair essentially one
+24:23 - joy pad and one button and so they
+24:25 - actually like that that um
+24:27 - move that i shot at the end just started
+24:29 - with like key presses and you figured
+24:30 - out how to shoot the fireball thank you
+24:34 - hey two cool questions uh did you if you
+24:36 - considered hurt boxes or hitboxes in in
+24:38 - the machine learning
+24:40 - no okay and then second have you
+24:42 - considered challenging any professional
+24:43 - players with your bot
+24:44 - yes uh let me let me answer that
+24:47 - question uh so
+24:49 - the we were able to know the x and y
+24:51 - coordinate of every player uh and so
+24:53 - that was like a way for them to figure
+24:54 - out how close they were to each other
+24:55 - and when they should be doing moves or
+24:56 - not um and i think they also knew what
+24:58 - who their opponent was so they're kind
+25:00 - of indirectly learning where the hitbox
+25:01 - is
+25:02 - um and then we yeah we've actually
+25:04 - talked to one of the top five players
+25:05 - after we did this and had a fun blog
+25:07 - post um he wanted to
+25:10 - uh compete against it so we need to set
+25:11 - up a tournament was it tiger
+25:13 - there's actually a whole another funny
+25:15 - story about potentially doing a
+25:16 - marketing campaign for l'oreal
+25:18 - by making an ai bot anyhow again come
+25:20 - talk to us okay company come talk to us
+25:23 - that doesn't do anything for me
+25:27 - [Applause]
+25:31 - how much did the training cost like
+25:32 - could i do it on my own computer
+25:35 - yeah sure so actually we did a bunch of
+25:37 - it on our own computer with a
+25:40 - we we initially didn't even do it with
+25:42 - gpu optimized we just did it on like a
+25:43 - local windows machine um which it was a
+25:46 - fairly powerful gaming machine but we
+25:47 - actually didn't even use the gpu in the
+25:49 - end we did use google cloud compute so
+25:51 - that we could have lots of computers
+25:52 - going to train
+25:54 - all the agents all in parallel
+25:56 - but you could do the training on on your
+25:58 - own computer and it wouldn't cost you
+26:00 - cost that much we really just paid so
+26:02 - that we could do it in parallel you know
+26:03 - if we had like 40 windows machines at
+26:05 - home we would have done it that way too
+26:07 - and how much did the cloud cost
+26:09 - i mean i think we use the free
+26:10 - subscription yeah
+26:12 - so
+26:13 - there's the there's you know there's the
+26:15 - first you know 720 hours free or
+26:17 - whatever um and then adam used to work
+26:19 - at google so maybe we got a little extra
+26:21 - uh
+26:23 - but
+26:25 - they're essentially each game took about
+26:26 - three hours to train at 450 frames per
+26:28 - second and then you could train
+26:30 - essentially three or four games in
+26:31 - parallel on the same computer
+26:33 - um so thanks
+26:36 - um
+26:37 - i'm i'd like to ask about uh sort of
+26:39 - what your your guys's backgrounds are
+26:41 - like like your academic backgrounds
+26:43 - because i've noticed that a lot of
+26:45 - machine learning and ai jobs seem to
+26:47 - require phds
+26:49 - okay so i'll answer it first um and i
+26:52 - will answer it for him too uh
+26:54 - so my background is uh i actually have a
+26:57 - business degree um and uh but i was a
+27:00 - site reliability engineer at google for
+27:01 - many years um and ran very large scale
+27:03 - systems and i software engineer for a
+27:05 - long long time so um and and still do
+27:08 - some of those things when i'm not in
+27:09 - meetings um and however jonathan
+27:11 - mortensen over here is better known as
+27:13 - doctor jonathan mortensen and he has a
+27:15 - phd from stanford um
+27:17 - he never talked about it but you should
+27:19 - when you see him tomorrow or ask him
+27:20 - questions address him as doctor he
+27:22 - really likes that
+27:23 - i i don't think that you need phd to be
+27:26 - my phd was like in biomedicine doing
+27:28 - like
+27:29 - you know ehr analysis so like
+27:32 - you don't need it just to be clear i
+27:35 - don't think that there's any gate there
+27:37 - one interesting thing that happened to
+27:38 - us we got an email from some students in
+27:40 - pakistan who used our code to do this as
+27:42 - their one of their undergraduate
+27:43 - projects they just kind of redid our
+27:44 - work and um and they you know they don't
+27:47 - have phds though but they were able to
+27:48 - figure out different techniques and
+27:49 - different reward functions and things
+27:51 - like that
+27:52 - cool thank you
+27:56 - hi there so one of the things that's
+27:58 - been taking like the retro gaming
+27:59 - community by storm is randomized games
+28:01 - so things like super mario brothers 3
+28:03 - randomizer link to the past randomizer
+28:05 - so what i'm wondering is how might ai
+28:07 - adapt to games where
+28:10 - some of the underlying parts of it is
+28:11 - randomized but the rules remain the same
+28:16 - i think it's a really a
+28:18 - question about how well characterized
+28:20 - the observations are
+28:22 - and so what can what can happen when
+28:24 - you're doing machine learning right is
+28:26 - like you kind of learn
+28:28 - you overfit right you kind of learn
+28:29 - exactly how the game plays like even if
+28:31 - you know the rules that you're like oh i
+28:32 - saw this frame and i know that if i see
+28:33 - this room i just have to do this thing
+28:34 - next instead of actually interpreting
+28:36 - what's going on in the frame but i think
+28:38 - if you have a good representation of
+28:39 - that state space i think uh it should as
+28:41 - long as the rules are consistent i
+28:42 - should learn thank you
+28:47 - i have a question about uh how you chose
+28:49 - the hyper parameters you showed us that
+28:51 - spreadsheet it sounded like there was a
+28:53 - lot of hand tuning to kind of get the
+28:54 - magic
+28:55 - combination
+28:58 - just generally what are your thoughts on
+29:00 - on i guess algorithmic or more automated
+29:02 - ways of finding hyper parameters whether
+29:04 - it's genetic algorithms or something
+29:06 - else and and and generally speaking when
+29:09 - do you feel
+29:10 - those types of methods are going to be
+29:12 - successful versus when you kind of have
+29:14 - to tweak numbers by hand
+29:18 - that's a complicated question uh
+29:21 - [Music]
+29:22 - i think yes you want to use some
+29:24 - heuristics to do essentially a grid
+29:26 - search you can't do often times you can
+29:28 - do a full brute force grid search
+29:32 - but
+29:32 - using some heuristics which say oh if i
+29:34 - make this tweak the performance goes up
+29:36 - i mean essentially it's not really
+29:38 - maybe sometimes parameter optimization
+29:40 - is a convex problem but it's usually not
+29:42 - so you got to kind of explore the space
+29:44 - hand tuning there's still a place for
+29:46 - that and there was a place here which
+29:47 - was that you know one of the things that
+29:49 - we were tuning was frame skip
+29:51 - and
+29:52 - that required some intuition about how
+29:53 - you play the game and making sure that
+29:54 - that lines up all together so i mean i
+29:56 - think that
+29:59 - machine learning isn't a silver bullet
+30:00 - you still need to understand the domain
+30:01 - that you're trying to model and behave
+30:03 - in and so there's a place for both um
+30:06 - but using grid search is almost great as
+30:08 - well i mean if you can do things in
+30:09 - compute that's cheaper than like your
+30:11 - time then you should do it that way and
+30:13 - if you can also add some of your
+30:14 - intuitions you should too so it's kind
+30:16 - of a non-answer answer
+30:21 - yes thank you that's all the time we
+30:22 - have for questions now if you'd like to
+30:24 - meet with the speakers in the hall
+30:25 - afterwards feel free to do so thank you
+30:27 - very much everyone appreciate it
+30:37 - you
+
+Cleaned transcript:
+
+everybody let's give a warm pycon welcome to adam fletcher and jonathan mortensen thank you all right a little bit of technical devil let's uh all right great our slides sorry that they're not completely full screen that's okay so hi i'm adam fletcher and with me is jonathan martinson hi so we ran a company called gyroscope software and we made developer tools powered by ai and last year we got an invite to the samsung developer conference and we weren't really sure what to do about it right as a developer tool we wanted the press and we wanted the exposure from the conference but also as a developer tool our booth was destined to be super boring right like we'd give you a free tshirt and maybe you'd watch like a looping video of our software in action and that's not good so we look for something more exciting one thing that is obviously more exciting than a conference booth is blood sport style underground street fighting starring ideally starring the muscles from brussels jeanclaude van damme seeking revenge for the death of his brother that is i think you'll agree that is clearly more exciting than a conference booth but we are nerds and as you can see from our physique we are not jeanclaude van damme yet it's common so instead we decided to see if we could train an ai to play street fighter 2 on the sness and then run an ai versus ai final four style tournament during the conference and today we're going to talk about how we used python to do just that so first let's start with the overview of what the technologies we use this is useful so uh super street fighter 2 turbo runs on the super nintendo but in order to gain the control and speed necessary to do good ai to to train the ai we couldn't use the actual nintendo hardware so we used an emulator called sns9x and then we used an emulator environment that let us program the emulator from afar this is a tool called biz hawk that the tool assisted speedrun community builds right bizhack is written in c sharp and we had to add some code to that which we'll talk about in a second um and then we used python to use jim a package from openai and jim used some python code by the agent code that we wrote that uses krsrl and tensorflow and so we're just going to dive straight into these elements and i'll describe the results at the end and what follows is the story of how it actually happened in terms of code and data science and so if it's going to seem a little disjointed that's because we were on a voyage of discovery as well and that's the nature of the story first the gym package right so this makes sense as a starting point jim lets us create a representation in python about what's happening in the game and lets our agent interact with that representation we're using a technique called reinforcement learning and this is kind of the simplified diagram of what reinforcement learning is right in reinforcement learning you have a continuous cycle of reinforcement by having an agent examine the state of environment then take an action and seeing if the reward the result of that action is maximized we're going to talk more in depth about this but it's useful to kind of keep this in your head as we go and the openai gym project provides the environment portion of this and in gym the environment is what you're doing reinforcement learning on and open ai has actually built a number of good environments for retro gaming including for the atari games and i think they recently had a retro gaming competition that might still be going on but they did not provide an environment for street fighter 2. and another big thing that jim provides is a very clean abstraction that can be used for doing this sort of machine learning right and i'll talk about the key elements of this abstraction the action the observation reward and the two functions step and reset and we'll go into each one of these each one of these in some detail first interesting one is the observation that is the data that represents the world the agent will learn about and in our case it's pretty straightforward it's street fighter 2 just as a human would see it right it's everything a human knows it's the timer it's the health bars it's what your opponent is doing right and each environment needs you to define this observation it gives you gives you uh jim gives you tools for doing that and on the righthand side is code you don't have to read you shouldn't care about is just basically look these are all the things we tracked this is all the dictionary of all the things we tracked that represent our observation right and there's a few ways to get this so you can get this in in some some papers you read on this sort of thing you'll get this from image recognition people will train uh image recognizers to see where our characters are and where points are we actually had the advantage of using an environment that gave us direct access to the memory of the game and so we actually just extracted these values out of memory but we didn't do anything that a human wouldn't do so we didn't we didn't cheat in any way shape or form we just you know you can see the health a human can see the health so we read the health right just a different way to get access to it and not always but in general the larger the observation space you have the more training that will be required and that that is important because training costs money and time so the next critical piece is the action and actions are the abstraction of what you can do to change the state right you send an action to an environment and the environment will create a new observation of the state after that action has occurred practically for us that's when you press a button on a controller an action is a button press on a controller and that changes the game right you jump you kick et cetera right thus our actions are button presses and the action space for street fighter is interesting it's not actually all of the possible combinations of buttons on an sns controller right but rather all the possible valid combinations of buttons eg you can't press left and right at the same time the emulators let you but we can't um and then we had to simplify this action space a little bit too because the the more because like the observation space the more actions you have available to you the longer the training time will take right and here is an example on the bottom of sort of how we defined our action space and a multidiscrete for those who want to know says like you can do just one of these and just one of those right so you can you can press up and a or up and nothing but you can't do up a and b fine after the action you change your observation you get a reward for that action and reward is what the agent will try to maximize in our case we spent a lot of time refining the reward and what it meant to be rewarded rewards are sort of where the actual interesting part of ml is so here's some code and again reading it is not that important but it just to tell you that the code for the various reward functions we tried is not much code and a lot of it is actually a lot like what a human would think about it's like did i win the game like you know naively you're playing street fighter against like your little sister and they're mashing buttons and beating you and you're sad and you're like i want to win right so you optimize for winning the game or maybe you know we in this case we wanted to optimize for maybe trying the health the net health change or you know the health difference right like these are different things that you might think about and and often you're you want a shortterm reward because it's per observation not per game but you want to maximize this like longterm goal of winning the game right and we tried a number of these and what we ended up settling on after a lot of work is the simply the delta of health between the player and their opponent at each frame right we wanted to reward the agent for keeping that gap high and so here's a plot of reward over episode and episode in this game in this case is a game there's 3 000 games on this plot right so you can see that speed of training matters in fact one of the reasons we didn't use just win loss the binary win loss as a reward function is that it takes too long to train based on that reward finally there are two functions the gym environment step and reset and these are used we use these to control the emulator one step means kind of move forward to the next frame and that's where you send all your commands to the emulator right and then reset is how you reload the save state and so these functions can from the ai worlds to the emulators world right and jonathan's actually going to go into some detail about the ai all right so i'm going to talk a little bit about the agent side of things um so we have an environment thanks to jim and now we need an agent to maximize the reward from that environment so another way is we want agents to take in these observations as input and output actions that it believes are optimal so for this we use a package called kerasrl let's just talk about ksrl and the abstract briefly caresrl provides a simple framework for making agents um the code that i'm showing on the right here is essentially a random agent again you have to look at the exact specifics but it's super super nice interface um so what i'm showing here is something that does behaves randomly that's kind of like the base agent you would ever have and random is actually a really good test case um lets you make sure that you know all the pipeline is running and that you can perform better than random enzo keras gives you a set of prebuilt agents a base class you know training testing logging plotting maybe um all those types of things um and the two functions that we really care about in this abstraction is the forward function so this says like if i give you an action i'm sorry i return an action given an observation right so the agent is essentially reading the observation space and does a forward and then the forward produces an action that it should be sent to the emulator to do and then the second thing is the backward function the backward essentially says hey what reward did i just get for taking that action and then how should i change my understanding of the world and update my model so that i can do a better job next time so the environment from jim works with keras in the following way essentially you create the street fighter environment right this is what we use jim to create and then you just create the random agent and then pass in the environment and then the most important line here is the agent.fitline this is effectively kicks off the main loop where the agent is taking observations and sending actions and then learning and getting better over time so we actually ended up using the dqn agent in the kerasrl library and so we talked pretty extensively about the environment i'm going to briefly go into what dq n is deep q agent um just so you're going to get a sense for that essentially i'm going to go into the details of what's happening inside agent.fit i'm less funnier i'm not as funny as you it's just not even okay anyhow um before we start talking about deep q learning let's start out with what q learning is uh the caveat here is that in this discussion i'm going to be focusing on the intuition and so there's a lot of bookkeeping and math that i'm going to leave out so let's drop this complex figure and stay at the intuitive level so i'm going to describe q learning essentially by way of an example this is a 5x5 grid let's say it represents a game of going from room to room each edge here is a doorway to another room and when i'm in one room i have a set of actions between one and four or two and four actions that allow me to go to another room so suppose you enter a room and then you get you find cash in that room and that's your reward so if we map it all back right in the reinforcement learning paradigm adam talked about the location on the grid is my observation the xy coordinate moving from run one room to an adjacent room essentially opening the door is your set your action and then the cache is your reward so the arrows here then represent essentially a path of actions taken and reward c for that action and the key key thing that q learning does essentially the the q learning part before we talk about the deep part is that it keeps a lookup table of essentially given every state that i'm in and every action that i took what was the reward that i received so then when i get back to that same state later or the same observation later i can go to the lookup table pull out the answer and say like oh i'm going to take this one because that will give me the most reward so that kind of maps to the three lines of code i put down here is essentially i select my best action r is this lookup table i'm talking about um i send that action to the environment the environment turns a new reward and the most important component is then i update that lookup table with the state and the action with the new reward value so sometimes the reward value changes over time and so you want to keep that knowledge in this lookup table so the big takeaway is that to get to complete that entire lookup table i have to explore the entire space not just this one path but every possible path through the whole thing uh and so that's essentially brute force we have to explore all possible actions in all possible states uh and so that's a problem uh brute force is bad generally although i mean whatever gets the job done but q learning is basically brute force uh and so it's great if we have an infinite amount of time or if we have tiny problems but that's usually not the case and that's definitely not the case here in street fighter instead of having just 25 states we have 10 to the 25 states and 24 actions it's essentially you just multiply all the possible states in that huge dick that adam showed earlier and so it's effectively infinite so brute force is too costly to do this so deep learning essentially or essentially yeah i'd say deep learning allows us to overcome that huge state base so the twist that deep cue learning lets you do is that instead of trying all possible actions and figuring out the reward for each action we try and predict the reward even if we haven't seen it and we do that prediction using a neural network so for example say i decided to go on this path starting in the lower right and just go straight up i might predict that going straight up yields a reward of two that might not actually be the case but i can predict that without not ac without having to actually do it and so another way to think about it is that again at the intuitive level the neural network is interpolating and extrapolating using simple math rather than just being the look being a lookup table so that's essentially what happens we replace the neural net the lookup table with a neural network and the neural network gives back actions that should be taken and then learns over time based on what actually happens so in this case if i went up and i got a zero then i tell the neural network hey i got a zero you should do a better job interpolating extrapolating so that's a brief digression into the deep cue learning approach and how the agent works the last key part of the architecture is the controller so this is the thing that translates actions to the environment to actual commands that the game manipulator runs and adam's going to talk about that thanks jonathan great so first of all look how great is the python 3 standard library like come on it's really great right like we we had to come up with a system for communicating back and forth between this emulator and what we just found was like okay we'll just use tcp socket server and that just worked and then we're like okay well we need some state management some thread management the threading module that just worked and then the signa the primitives inside the threading module for signaling between threads also just worked right this is great so you're not meant to read this code but it's more a sense of how much code we actually had to write just to communicate back and forth and is not very much and it controls it contains the entirety of our protocol between the emulator and our ai right and we just sent json back and forth between the emulator i mean it's it's really nice right and that's one of the beautiful things about python this was super fast to do and then so when did the command go right so we sent these json commands somewhere well we sent them to a thing called the biz hawk and that's what controlled the emulator right and biz hawk we had to add support for tcp sockets to biz hack it didn't have that and then we had to write the code needed to read from street fighter memory we needed to write the code to push the buttons we got from json that the python sent over also we had to learn c sharp which we didn't know before we did this i got to say c sharp pretty nice language i was i was surprised at how easy this was all to do and i have to thank the bit sock developers for the just general cleanliness and organization of their code um we have open source the uh the code we used in here it's i just don't go read it unless you're gonna make a pull request we did it fast um and so the limitations of the emulator code actually meant that we had to try a bunch of techniques before settling on the socket code we just showed you so biz hawk actually contains a lua interpreter in it which is great but the lua interpreter they have doesn't support network i o it does support file i o and sqlite so we did try to shove all this together via like writing to a file reading from a file or writing to a database row reading from it that's a terrible idea don't do that um it was also very slow um it we were able to run the emulator basically at 60 frames a second using file io 120 using sql lite and then finally when we switched to python socket server we got 450 frames per second um in while we could run three training of training uh we could do three three games training at a time on a windows machine in google cloud this actually saved us a ton of money so because we're training in the cloud right that's money and time performance is a huge feature right and python was able to get a significant performance gains now great we have 450 frames per second we have a fast performing system we had a good architecture but now we actually have to train like we have to do that part of ai where you teach it things here's a tiny snippet and i cannot emphasize the tininess of it of the results of the actual training we spent hundreds of cloud compute hours and human hours tweaking all of these parameters it's just like a matrix of all the parameters we messed with uh and and to figure out what works well like deep learning is great but it is also sometimes alchemy right which is unfortunate and we tried to you know we tweaked the neural network parameters we treat the environment we tweaked the number of games tweaked feature representation training parameters etc etc we tried to be relatively scientific about it changing one thing at time but in the end you know we were wrong about pretty much every assumption we made to start right it's fine that's what this is how it goes but we did build a system that let us iterate incredibly fast on being wrong and that actually was a really helpful thing to have done so about three days before the conference to our relief we finally got an agent trained that did well and you'll see on the screen if the video loads we get to watch some awesome street fighter stuff so this is after 3000 games we have an 80 win rate the ai is on the left it's dalson and what you'll see here is some interesting stuff dodging blocking special moves uh backing away you know avoiding damage winning the game with the fireball it's pretty dope right it's it's pretty cool we were very excited when that happened and now here's our nonboring booth with all of our homemade signs look we were a startup right the laptop actually that you see here is actually training agents uh the display is showing the training of four agents at a time so people can watch it happen the way we initially trained our agents actually against the super nintendo cpu and three star difficulty um and then later we trained them against each other at the conference we ran a final four style tournament like i said and to see which bots we trained was best we had a competition inside this if you if you guessed which which agent was going to win you could win a super nintendo classic um for those super street voter fans out there you'll notice that m bison is not on this bracket that's because he's op he's totally overpowered right and our ai figured this out really fast like it was like it's like right away and then we watched the first tournament we're like oh this is just not good like it was just a clear sweep and uh so we banned him from the second tournament we ran uh due to performance enhancing drugs aka his code so the second and the second tournament we ran actually ended up going to sagat and if you want to know who the best character plays well if you are an ai uh it's m bison i don't know if you're human i'm i am terrible at this game um and i have to say like for those of you who might have to do this sort of thing in the future people loved this idea right they loved watching all these matches this little kid over on the right hand kind with his like hand over his heart like he was like crying when he lost when his character lost in the tournament he we were so sad but he loved every minute he would just come and watch the booth when we weren't even having the tournament just to see the characters fighting we had about 80 people just kind of screaming and yelling during the whole tournament i mean it's a great way to do it and so much better than a tshirt and like a video of our software there's a lot to love about python in artificial intelligence and machine learning i mean there's lots about python in general we know the the iteration speed the battery's included in nature of it right the standard library good abstractions like we're all here for that reason but keras jim tensorflow scipy these are worldclass tools that are easy to use they're free they're community supported it's amazing right it's great and it's actually not just python that we love it's programming in general and one thing i in particular love about programming is sometimes i make really hilarious mistakes right so this is our this is a chart of our ai win rate playing against a literally motionless opponent right so it's we start out really strong like we win a bunch of the first couple hundred games but then how do we lose i don't even know how we end up losing i think we just ran into the opponent and we died over and over again right but but but actually it's a great outcome right it's scientific it's an important one and we learned from it and it and it was pretty funny and we all learned sort of from funny failures like this and so like i want to help new and experienced programmers understand that it's okay and normal to make mistakes like this so i'm asking you guys some of you experienced people or the new people to tweet out your funniest programming fails right like with hashtag pycon 2018 and then hashtag reward function this is my joke on us giving you a prize for this so uh and by the end of the weekend like the person with the most retweets we'll find we'll we'll track you down and send you a super nintendo classic because i think that'd be pretty fun you can tweet we're at blue voyage but just tweet about it and uh tell us about the times you've made mistakes make sure they're yours not someone else's make sure they're educational and funny right because we want to teach people it's fine like yeah you're going to screw it up and that's the best part about programming it's completely safe and you get to learn that way so thank you if you have any questions we hope our story was interesting in fact uh we have another one so the company we were talking about gyroscope we got acquired by an amazing security firm called blue voyant i would be remiss to say we are hiring if i didn't say that um come talk to us about this come talk to us ask us questions right after during this talk and then we're around all weekend you can come find us at lunch tomorrow if you want to talk about ai in general and yeah thank you very much we're happy to take questions thank you so much guys uh we've got a few minutes for questions so please come to the microphone if you've got one there's one frightened front and center here i would ask you this time only for questions directed at the speakers if you want to talk about anything longer have specific addon comments feel free to catch them in the hall after the talk thank you hey quick question uh when you guys made all this did you guys account for like say peak human performance in peak human reactions like in a 60 fps game i understand it to be like a 15 frame 15 frame delay between an action and someone being able to react to that great question and the answer is yes we did so the ai actually only acts every 20 frames um because uh actually for for a number of reasons one is that the training would have taken too long if we acted every frame so that's important but also against humans it's it's pretty much only fair to fair to do that this would just i think over time if we just train this it would just destroy every human like it just it wouldn't even be close if we if we enabled like every frame that's a good question so so the question i had was about like a time delayed attack you know so if ryu like throws a fireball from the other side of the screen and then coincidentally ducks you know when it hits the opponent if you're only just considering that one frame could your ai not learn that you know ducking equals damage to the opponent uh so the the essentially the rewards and the failures are propagated back um so you there's a it's kind of like an exponential curve but yeah it will eventually figure out that like this this observation that it made like 10 frames in the future will then like suffer the actual consequence okay thanks yep all right uh do they learn special moves on their own or did you intentionally do anything with them they learn special moves on their own so they just have the key presses right and they like they have every 20 frames they can insert like a key press pair essentially one joy pad and one button and so they actually like that that um move that i shot at the end just started with like key presses and you figured out how to shoot the fireball thank you hey two cool questions uh did you if you considered hurt boxes or hitboxes in in the machine learning no okay and then second have you considered challenging any professional players with your bot yes uh let me let me answer that question uh so the we were able to know the x and y coordinate of every player uh and so that was like a way for them to figure out how close they were to each other and when they should be doing moves or not um and i think they also knew what who their opponent was so they're kind of indirectly learning where the hitbox is um and then we yeah we've actually talked to one of the top five players after we did this and had a fun blog post um he wanted to uh compete against it so we need to set up a tournament was it tiger there's actually a whole another funny story about potentially doing a marketing campaign for l'oreal by making an ai bot anyhow again come talk to us okay company come talk to us that doesn't do anything for me how much did the training cost like could i do it on my own computer yeah sure so actually we did a bunch of it on our own computer with a we we initially didn't even do it with gpu optimized we just did it on like a local windows machine um which it was a fairly powerful gaming machine but we actually didn't even use the gpu in the end we did use google cloud compute so that we could have lots of computers going to train all the agents all in parallel but you could do the training on on your own computer and it wouldn't cost you cost that much we really just paid so that we could do it in parallel you know if we had like 40 windows machines at home we would have done it that way too and how much did the cloud cost i mean i think we use the free subscription yeah so there's the there's you know there's the first you know 720 hours free or whatever um and then adam used to work at google so maybe we got a little extra uh but they're essentially each game took about three hours to train at 450 frames per second and then you could train essentially three or four games in parallel on the same computer um so thanks um i'm i'd like to ask about uh sort of what your your guys's backgrounds are like like your academic backgrounds because i've noticed that a lot of machine learning and ai jobs seem to require phds okay so i'll answer it first um and i will answer it for him too uh so my background is uh i actually have a business degree um and uh but i was a site reliability engineer at google for many years um and ran very large scale systems and i software engineer for a long long time so um and and still do some of those things when i'm not in meetings um and however jonathan mortensen over here is better known as doctor jonathan mortensen and he has a phd from stanford um he never talked about it but you should when you see him tomorrow or ask him questions address him as doctor he really likes that i i don't think that you need phd to be my phd was like in biomedicine doing like you know ehr analysis so like you don't need it just to be clear i don't think that there's any gate there one interesting thing that happened to us we got an email from some students in pakistan who used our code to do this as their one of their undergraduate projects they just kind of redid our work and um and they you know they don't have phds though but they were able to figure out different techniques and different reward functions and things like that cool thank you hi there so one of the things that's been taking like the retro gaming community by storm is randomized games so things like super mario brothers 3 randomizer link to the past randomizer so what i'm wondering is how might ai adapt to games where some of the underlying parts of it is randomized but the rules remain the same i think it's a really a question about how well characterized the observations are and so what can what can happen when you're doing machine learning right is like you kind of learn you overfit right you kind of learn exactly how the game plays like even if you know the rules that you're like oh i saw this frame and i know that if i see this room i just have to do this thing next instead of actually interpreting what's going on in the frame but i think if you have a good representation of that state space i think uh it should as long as the rules are consistent i should learn thank you i have a question about uh how you chose the hyper parameters you showed us that spreadsheet it sounded like there was a lot of hand tuning to kind of get the magic combination just generally what are your thoughts on on i guess algorithmic or more automated ways of finding hyper parameters whether it's genetic algorithms or something else and and and generally speaking when do you feel those types of methods are going to be successful versus when you kind of have to tweak numbers by hand that's a complicated question uh i think yes you want to use some heuristics to do essentially a grid search you can't do often times you can do a full brute force grid search but using some heuristics which say oh if i make this tweak the performance goes up i mean essentially it's not really maybe sometimes parameter optimization is a convex problem but it's usually not so you got to kind of explore the space hand tuning there's still a place for that and there was a place here which was that you know one of the things that we were tuning was frame skip and that required some intuition about how you play the game and making sure that that lines up all together so i mean i think that machine learning isn't a silver bullet you still need to understand the domain that you're trying to model and behave in and so there's a place for both um but using grid search is almost great as well i mean if you can do things in compute that's cheaper than like your time then you should do it that way and if you can also add some of your intuitions you should too so it's kind of a nonanswer answer yes thank you that's all the time we have for questions now if you'd like to meet with the speakers in the hall afterwards feel free to do so thank you very much everyone appreciate it you

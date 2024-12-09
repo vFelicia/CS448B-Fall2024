@@ -1,0 +1,893 @@
+With timestamps:
+
+00:01 - in this video you're going to learn
+00:02 - about docker compose so by the end of
+00:04 - this video you'll be able to use darker
+00:06 - commands with confidence hi i'm adani
+00:09 - and i've taught millions of people how
+00:11 - to code through this channel at my
+00:13 - online school codewithmash.com this
+00:15 - video is part of my ultimate docker
+00:17 - course so once you finish this video if
+00:20 - you want to learn more you may want to
+00:21 - look at the complete course now let's
+00:23 - jump in and get started
+00:25 - [Music]
+00:29 - welcome back to another section of the
+00:31 - ultimate docker course in this section
+00:33 - we're going to talk about running
+00:34 - multi-container applications so i'm
+00:36 - going to give you a real-world
+00:37 - application with three building blocks a
+00:40 - front-end built with react a back-end
+00:42 - built with node and a mongodb database
+00:45 - once again you don't need to be familiar
+00:47 - or use any of these tools our focus here
+00:49 - is on docker and not on development
+00:51 - tools i think this is the most exciting
+00:54 - part of this course where you can see
+00:55 - everything coming together we'll talk
+00:57 - about docker compose for building and
+00:59 - running multi-container applications
+01:01 - we'll also talk about docker networking
+01:04 - database migration and running automated
+01:06 - tests so let's jump in and get started
+01:11 - [Music]
+01:20 - in this section we're going to use a
+01:21 - tool called docker compose which is
+01:23 - built on top of docker engine it makes
+01:25 - it incredibly easy to start applications
+01:27 - with multiple containers
+01:29 - so google docker compose install you
+01:32 - will find this page docs.docker.com
+01:35 - compose slash install on this page you
+01:38 - can see the installation instructions
+01:40 - now at the time of recording this docker
+01:42 - compose is shipped with docker desktop
+01:45 - for mac and windows so if you're on mac
+01:47 - or windows you don't have to do anything
+01:49 - extra you already have docker compose to
+01:52 - verify it just go to the terminal window
+01:54 - and type docker compose dash dash
+01:57 - version
+01:58 - so i'm running docker compose version
+02:00 - 1.28.5
+02:03 - make sure your version is the same or
+02:05 - newer now if you're using an older
+02:07 - version again google upgrade docker
+02:09 - compose or you might just install the
+02:12 - latest version of docker
+02:14 - now back to this page if you're using
+02:16 - windows server or linux there are
+02:18 - specific instructions you have to follow
+02:20 - to install docker compose
+02:22 - so go ahead and install docker compose
+02:24 - and i'll see you in the next lesson
+02:28 - [Music]
+02:32 - before we get started i want to show you
+02:34 - a couple of techniques for cleaning up
+02:36 - our workspace so on this machine we have
+02:39 - a bunch of images and some running
+02:41 - containers they're getting in the way i
+02:43 - want to get rid of them all
+02:44 - how do we do this well
+02:46 - you know that we can remove images using
+02:48 - docker image remove command and here we
+02:50 - can type one or more image ids now how
+02:54 - can we get all image ids and pass them
+02:56 - here let me show you a cool trick
+02:58 - so we can run docker image ls
+03:01 - we see all the images right but if we
+03:03 - pass dash q at the end we only get image
+03:06 - ids
+03:07 - now we can pass this as an argument to
+03:10 - docker image remove so docker image
+03:13 - remove
+03:14 - then here we add a dollar sign
+03:16 - and in parenthesis we type that other
+03:18 - command so docker image ls dash queue
+03:23 - now if we run this we're going to get an
+03:24 - error because some of these images are
+03:26 - already in running containers or stopped
+03:29 - containers so we should always remove
+03:31 - containers first we're going to do that
+03:32 - using the same technique so i'm going to
+03:35 - replace image with container so we get
+03:39 - all container ids
+03:40 - and then
+03:42 - we're going to remove them
+03:44 - all in one go also i would like to add
+03:47 - dash a here as well this will bring
+03:50 - stopped containers as well okay we can
+03:53 - also combine switches that's another
+03:55 - technique let's go ahead
+03:58 - all right we get an error saying you
+04:00 - cannot remove a running container
+04:02 - because i forgot to pass the force
+04:03 - option
+04:04 - so let's bring this up one more time
+04:07 - when removing
+04:09 - we're going to use dash f okay
+04:12 - great so all these containers are
+04:14 - removed
+04:16 - now let's remove the images so
+04:18 - docker image ls and docker
+04:22 - image
+04:23 - remove
+04:26 - great
+04:27 - now take a look
+04:28 - we don't have any images here
+04:31 - and no containers including stopped
+04:33 - containers so we have a clean workspace
+04:36 - that's one way there is a shortcut for
+04:38 - this as well
+04:39 - if you're on mac you can find the docker
+04:41 - icon on the top status bar if you're on
+04:43 - windows you will find it in your
+04:45 - notification tray
+04:46 - let's click on this
+04:48 - and then go to preferences
+04:50 - now on this page let's click on the
+04:52 - troubleshoot icon
+04:54 - on this page we have a bunch of useful
+04:56 - utilities for example we can restart
+04:58 - docker desktop we can also clean and
+05:01 - purge data this will essentially remove
+05:03 - everything in docker your images your
+05:06 - containers your volumes and so on now be
+05:09 - aware that if you click on this
+05:11 - this is going to restart docker engine
+05:13 - so on the top look you can see this
+05:16 - animation showing that the docker engine
+05:18 - is not started yet so at this point if
+05:20 - you go to the terminal window and
+05:22 - execute any of docker commands you're
+05:24 - going to get an error so you'll have to
+05:25 - wait about half a minute for the docker
+05:28 - engine to start that's another way so
+05:30 - now that we have a clean workspace next
+05:32 - we're going to talk about our
+05:33 - application
+05:37 - [Music]
+05:41 - so in this section we're going to look
+05:42 - at a real world application with
+05:43 - multiple building blocks a front end a
+05:46 - back end and a database so below this
+05:48 - video i've attached a z file go ahead
+05:51 - and download it inside that zip file
+05:53 - you're going to find this folder
+05:54 - structure we have this back end folder
+05:56 - which is our node project this is a
+05:58 - basic node project that starts a web
+06:01 - server on port 3001. once again you
+06:04 - don't need to know node to go through
+06:06 - this section
+06:07 - then we have the frontend project
+06:09 - which is a react application that talks
+06:11 - to the backend now if you want to run
+06:13 - this application outside of docker there
+06:16 - are a number of steps we have to follow
+06:17 - let's say we just check this out from a
+06:19 - github repository
+06:22 - first we have to go to our backend
+06:23 - project
+06:24 - install all dependencies and then start
+06:26 - the web server now at the same time we
+06:29 - have to open up another terminal window
+06:31 - and do the same steps with our frontend
+06:33 - project so we have to go to the frontend
+06:36 - project install all the dependencies and
+06:38 - then start the web server and of course
+06:41 - we need two more terminal windows for
+06:42 - running our front-end and back-end tests
+06:45 - and not to mention that we should also
+06:47 - download and install mongodb on this
+06:49 - machine so there are so many steps we
+06:51 - have to follow the moment we check out
+06:53 - the source code from our github
+06:54 - repository now with docker we don't have
+06:57 - to do any of these things all we have to
+06:59 - do is run a single command let me show
+07:02 - you so
+07:03 - i'm going to get outside of the frontend
+07:05 - folder now we are in the root of this
+07:07 - project if you look here we have a file
+07:10 - called docker compose which is used for
+07:12 - composing a multi-container application
+07:15 - we're going to talk about that in detail
+07:16 - soon now once we have this file in our
+07:19 - project
+07:20 - we can simply run docker compose up
+07:24 - that's all we have to do
+07:26 - now docker is automatically downloading
+07:29 - this particular version of mongodb so
+07:31 - it's downloading all these layers then
+07:33 - at the same time it's going to install
+07:35 - all the dependencies for our front-end
+07:37 - and back-end project it will start web
+07:39 - servers and run automated tests all in
+07:41 - this window now this is going to take a
+07:43 - little while so i'll be right back
+07:47 - all right our application is up and
+07:49 - running and we can access it at
+07:51 - localhost port 3000 so
+07:54 - here's what we get we have a mini
+07:56 - application for managing a list of
+07:58 - movies now you know what's the beauty
+08:00 - here the beauty is that our database is
+08:02 - populated with these movies as part of
+08:04 - bringing up our application i didn't
+08:06 - have to manually insert these movies in
+08:08 - our database so we have a migration
+08:10 - script for populating our database and
+08:13 - docker automatically executed our
+08:15 - migration script as part of bringing up
+08:17 - this application this is a very common
+08:19 - real-world scenario now here we can add
+08:21 - new movies movie one movie two whatever
+08:25 - and we can also
+08:26 - delete these movies so we brought up
+08:29 - this application using a single command
+08:31 - now i briefly mentioned this file docker
+08:34 - compose.yaml before we talk about this
+08:36 - file first you need to understand the
+08:38 - yaml format this is a format that a lot
+08:40 - of people are not familiar with so in
+08:42 - the next lesson we're going to talk
+08:43 - about json and yaml formats
+08:47 - [Music]
+08:51 - let's talk about json and yaml formats
+08:54 - if you know this form as well feel free
+08:56 - to skip this lesson
+08:58 - so in the root of this project we're
+08:59 - going to add a new file called data.json
+09:03 - now json as you probably know is a
+09:05 - language it's a human readable language
+09:08 - for representing data so in this json
+09:10 - file we can have an object or an array
+09:12 - let's say we want to represent a course
+09:14 - a course can have properties like name
+09:17 - price and so on so in this object we can
+09:19 - add one or more key value pairs our keys
+09:22 - should always be surrounded in double
+09:24 - quotes so we can add a key called name
+09:26 - and set its value to we can use the
+09:28 - string
+09:29 - the ultimate docker course
+09:32 - then we add a comma to define the next
+09:34 - key value pair
+09:35 - so we can say price
+09:37 - we can set this to a number
+09:40 - now the value can also be a boolean so
+09:42 - we can define another key value pair
+09:45 - and set the value to true or false
+09:48 - we can define another key value pair and
+09:49 - set the value to an array so we define
+09:52 - an array using square brackets now in
+09:55 - this array we can have any valid objects
+09:57 - so we can have strings numbers booleans
+10:00 - or other objects
+10:01 - so i'm going to add a couple of strings
+10:03 - let's say software and devops
+10:07 - and one last key value pair author i'm
+10:10 - going to make this an object so once
+10:12 - again we use curly braces to define an
+10:14 - object
+10:15 - in this object we add a couple key value
+10:17 - pairs first name
+10:19 - is mosh
+10:20 - and
+10:22 - last name is what
+10:24 - hamadani and yes i am iranian i get that
+10:27 - question all the time
+10:29 - all right so here we have a json file
+10:31 - now let's see how we can convert this to
+10:33 - yaml yaml is another language for
+10:35 - presenting data but it has less clutter
+10:38 - than json it's easier to read
+10:40 - so
+10:40 - i'm going to copy all this code
+10:43 - here in the project we're going to add a
+10:45 - new file called data the dml the
+10:48 - extension can be yaml or yml
+10:52 - now
+10:53 - on the top we have three hyphens to
+10:55 - indicate the beginning of a yaml file
+10:58 - then we paste our code now in yaml we
+11:01 - don't use curly braces to indicate
+11:03 - hierarchy this idea has come from python
+11:05 - if you have programmed in python you
+11:07 - know that in python we use indentation
+11:09 - to represent hierarchy so we don't have
+11:11 - curly braces
+11:13 - so let's get rid of these braces
+11:15 - and
+11:16 - remove the indentation good
+11:19 - now the next thing you need to know
+11:20 - about yaml is that we don't have to use
+11:22 - quote so we can bring up the replace
+11:24 - dialog and replace all these double
+11:26 - quotes with nothing
+11:29 - that immediately takes a lot of clutter
+11:32 - away
+11:33 - also we're not going to use commas
+11:35 - to separate key value pairs
+11:39 - so on the top we have name price is
+11:41 - published
+11:42 - how do we represent a list or an array
+11:44 - we use hyphens so i'm going to remove
+11:47 - this we press enter
+11:49 - at a tab on a new line
+11:51 - we type hyphen to define the first item
+11:54 - in the list software then at the same
+11:57 - indentation we add the next item
+11:59 - devops
+12:00 - now author is an object but as we told
+12:03 - you we don't use curly braces we use
+12:05 - indentation so because these two
+12:07 - properties are indented they belong to
+12:09 - the author property okay
+12:11 - so this is our yaml file let's compare
+12:14 - this with json
+12:16 - as you can see
+12:17 - yaml is easier to read and understand
+12:20 - now why don't we use yaml all the time
+12:22 - well because parsing yaml files is a
+12:24 - little bit slower than parsing json
+12:26 - files because the parser doesn't know if
+12:29 - this is a string or a number so it has
+12:31 - to read everything as a string and then
+12:33 - try to evaluate it
+12:35 - in contrast in json strings are
+12:38 - represented using quotes and more
+12:39 - specifically double quotes so the parser
+12:41 - knows that this is a string and it
+12:43 - shouldn't evaluate it okay
+12:45 - so quite often we use yaml files for
+12:47 - configuration files and json for
+12:50 - exchanging data between multiple
+12:51 - computers like a client and a server
+12:53 - so now that you understand these formats
+12:55 - next we're going to talk about compose
+12:57 - files
+13:00 - [Music]
+13:04 - all right let's see how we can create a
+13:06 - compose file from scratch
+13:08 - so for this lesson
+13:09 - i'm going to rename this file
+13:11 - to
+13:13 - underline docker compose we want to set
+13:15 - it aside and create a new compose file
+13:17 - from scratch so here we add a new file
+13:21 - called docker dash compose all in lower
+13:24 - case make sure to spell it properly
+13:26 - otherwise docker compose is not going to
+13:28 - find this file because this is the
+13:29 - default name that docker compose assumes
+13:32 - okay
+13:33 - so yaml
+13:35 - now the first thing that we need to set
+13:36 - here
+13:37 - is the version property
+13:39 - what version should we use well
+13:41 - let's search for docker compose file
+13:44 - on this page
+13:47 - you can see various compose file formats
+13:49 - and their compatibility with docker
+13:51 - engine we are using the latest version
+13:53 - of docker engine so i want to use the
+13:55 - latest compose file format so we have
+13:58 - access to the latest features
+14:00 - so we're going to set this to 3.8 now
+14:03 - here we need to wrap this number with
+14:05 - double quotes otherwise it will be
+14:07 - evaluated as a number but docker compose
+14:10 - expects this value to be a string why i
+14:12 - have no clue
+14:14 - so here's the version now in this file
+14:16 - we define various building blocks or
+14:19 - services of our application so we have a
+14:21 - property called services
+14:23 - now what services do we need here well
+14:26 - our application has a front end
+14:28 - a backend and a database now your
+14:31 - application might have other moving
+14:33 - parts so you can define them here
+14:35 - now these names are arbitrary so we can
+14:37 - call them anything we can change this to
+14:39 - db
+14:40 - we can change the backend to api and
+14:43 - the front-end to well
+14:46 - the idea here is that we're defining
+14:48 - various services and telling docker how
+14:50 - to build images for each service and how
+14:53 - to run these images so here we're going
+14:55 - to have properties
+14:57 - and the value of these properties will
+14:59 - eventually be used when running our
+15:00 - containers so in the previous section we
+15:03 - had to manually run our containers using
+15:06 - docker run and here we used parameters
+15:08 - like dash p for port mapping or dash v
+15:11 - for volume mapping we also had to
+15:13 - specify an image like react app all
+15:16 - these values can be defined
+15:18 - in our compose file so we don't have to
+15:20 - manually start our containers docker
+15:22 - compose will take care of starting our
+15:24 - containers under the hood okay
+15:26 - so for each service we need to tell
+15:28 - docker how to build an image for that
+15:30 - service so here we can use the build
+15:32 - property until docker compose where it
+15:35 - can find a docker file
+15:37 - so if you look at this project
+15:40 - you can see that in our backend and
+15:42 - front-end folders
+15:44 - we have a docker file
+15:46 - this docker file is almost identical to
+15:48 - the one we created in the previous
+15:49 - section
+15:50 - so we start from a node image we create
+15:53 - a user we set our working directory copy
+15:56 - all the files and install the
+15:57 - dependencies then expose port 3001 and
+16:01 - start the web server
+16:03 - we have a similar docker file in our
+16:05 - frontend project let's have a quick look
+16:07 - so that was the back end here's the
+16:09 - front end and here we have a docker file
+16:12 - almost identical but the front-end
+16:14 - application or the front-end server
+16:16 - starts on a different part that is the
+16:18 - only difference
+16:20 - so each service should have its own
+16:22 - docker file okay
+16:24 - now
+16:25 - back to our compose file
+16:27 - for our web or front-end we're going to
+16:29 - set the build property to period meaning
+16:32 - current folder slash front-end this is
+16:35 - where we have a docker file
+16:37 - for our api
+16:38 - we're going to set build to
+16:40 - back-end
+16:42 - now for our database we're not going to
+16:43 - build an image we're going to pull an
+16:45 - image from docker hop
+16:47 - so instead of the build property we're
+16:49 - going to use the image property
+16:51 - now for this application i'm going to
+16:52 - use
+16:54 - version 4.0 dash
+16:56 - xeno so that is version 4 built on
+16:59 - top of xenial which is ubuntu version
+17:01 - 16.
+17:02 - if you look at docker hub you can see
+17:04 - that also has images built on top
+17:07 - of windows but windows images are very
+17:09 - large over 2 gigabytes so that's why i
+17:12 - prefer to use linux images so for any of
+17:15 - these services we can either build an
+17:17 - image or pull it down
+17:19 - now here we also have port mappings so
+17:22 - we set ports to
+17:23 - now because we can have multiple port
+17:25 - mappings here we need to use the array
+17:27 - or list syntax so we use a hyphen and
+17:30 - then define a port mapping so our
+17:32 - frontend application starts on port 3000
+17:35 - so i want to map for 3000 of the host
+17:37 - to poor 3000 of the container running
+17:40 - this image now similarly for our api
+17:44 - we're going to define a port mapping
+17:46 - this one is going to be 3001 to 3001.
+17:50 - now
+17:51 - mongodb by default
+17:53 - listens
+17:55 - on port
+17:56 - 27017
+17:59 - so i want to map the same port
+18:01 - so we can access mongodb using a mongodb
+18:04 - client like mongodb compass now if you
+18:07 - don't use mongodb you have the same
+18:09 - concept with other database engines all
+18:11 - these database engines listed on a
+18:13 - default port you want to map that port
+18:16 - so you can connect your database engine
+18:18 - using your favorite database client okay
+18:21 - what else do we have here
+18:23 - back to this page for compose file if
+18:25 - you look at version 3
+18:27 - on the right you can see all valid
+18:30 - properties now a lot of these are for
+18:32 - really special cases so you don't need
+18:34 - to use them all the time but the ones
+18:35 - that we use most of the time are build
+18:37 - or image you also use ports volumes
+18:40 - environment and so on
+18:42 - so our api project needs an environment
+18:45 - variable that tells where our database
+18:48 - is so
+18:49 - here we set
+18:50 - environment
+18:52 - now here we can use the list syntax
+18:53 - because we can have multiple environment
+18:55 - variables so we said db underline url 2
+19:00 - here we need to type a mongodb
+19:01 - connection string these connection
+19:03 - strings always start with mongodb colon
+19:07 - two forward slashes
+19:08 - here we need to type the name of a host
+19:10 - so as i will show you later in this
+19:12 - section when we start an application
+19:14 - with docker compose under the hood a
+19:16 - network is created on this network we're
+19:19 - going to have three hosts the name of
+19:21 - these hosts are equal to the names we
+19:24 - have defined here so we're going to have
+19:25 - a host called db so that is the
+19:28 - connection string to our mongodb server
+19:31 - now on this server we can have multiple
+19:33 - databases so we're going to specify the
+19:35 - database name
+19:36 - and the connection string as well
+19:38 - so this is one way
+19:40 - to set an environment variable but
+19:42 - instead of using the list syntax we can
+19:44 - also use the object or property value
+19:47 - syntax so we get rid of the hyphen
+19:50 - we say db url is a property
+19:52 - and
+19:53 - this is the value of that property i
+19:56 - find the syntax more readable because we
+19:58 - get color coding and it's just cleaner
+20:00 - that similarly we can add additional
+20:02 - environment variables now we're almost
+20:04 - there the last thing we want to add here
+20:06 - is a volume because we don't want
+20:08 - mongodb to rate data to the temporary
+20:11 - file system of the container
+20:13 - so
+20:14 - here we set
+20:16 - volumes
+20:19 - and again we can have one or more volume
+20:21 - mappings
+20:22 - so we had a hyphen we're going to map a
+20:25 - volume called whitley and of course we
+20:27 - can call it anything really is the name
+20:29 - of this application in case you didn't
+20:31 - notice
+20:32 - so we're going to map this volume to
+20:34 - a directory inside the container
+20:37 - now if you look at the documentation of
+20:39 - mongodb on docker hub or just a typical
+20:43 - mongodb documentation you know that by
+20:45 - default mongodb stores this data in
+20:48 - slash data
+20:50 - db
+20:51 - so we want to map this volume to this
+20:53 - directory so whatever that is written
+20:56 - inside this directory is actually
+20:58 - outside of this container it's somewhere
+21:00 - else in our volume
+21:03 - now because we have used this volume
+21:04 - here we have to define it in our compose
+21:06 - file so we press enter remove all the
+21:09 - indentations so now we are
+21:12 - at the same level as services
+21:15 - here we're going to define
+21:16 - another property called volumes
+21:20 - and here we're going to add another
+21:21 - property called vidly with no value i
+21:24 - know this looks a little bit weird but
+21:26 - this is the syntax we have to follow we
+21:28 - just have to define the volume first
+21:30 - before we can use it
+21:32 - so this is our compose file now we can
+21:35 - make this more readable by adding line
+21:37 - breaks in between
+21:38 - these properties
+21:40 - we can also order these services any way
+21:42 - we want so currently i'm ordering them
+21:44 - from front to back we can also order
+21:46 - them from back to front so we will put
+21:48 - database first then api and then web
+21:52 - so we're done with our compose file next
+21:54 - i'm going to show you how to build the
+21:55 - images
+21:58 - [Music]
+22:02 - earlier i told you that docker compose
+22:05 - is built on top of docker engine so
+22:07 - everything we have done with docker
+22:09 - engine like building images listing them
+22:11 - starting containers and so on all of
+22:13 - these operations are also available
+22:15 - using docker compose let me show you so
+22:18 - we type docker compose without any
+22:20 - arguments enter
+22:22 - look
+22:23 - we have all these sub commands like we
+22:25 - have rm for removing stopped containers
+22:28 - we have run we have push pull and so on
+22:31 - the difference is that any of these
+22:33 - commands will apply to our application
+22:35 - as a whole so most of these commands
+22:37 - will impact multiple services or
+22:40 - multiple containers in our application
+22:42 - so
+22:43 - let's look at docker compose build
+22:46 - and also use the help option
+22:49 - so we have a bunch of options here a
+22:51 - couple of them i want to point out that
+22:52 - are useful to know is
+22:54 - no cache with this we can prevent
+22:56 - caching when building the image
+22:58 - sometimes you encounter weird issues and
+23:00 - you want to make sure that cache is not
+23:02 - used in that case you use this option
+23:05 - another useful option is dash pool with
+23:08 - this we can always
+23:10 - pull a newer version of the image that
+23:12 - is also good to know
+23:13 - so in this lesson i'm not going to use
+23:15 - any of this we're just going to run
+23:17 - docker compose built
+23:20 - this built our web and api services and
+23:23 - as you noticed our build was super fast
+23:26 - because pretty much everything came from
+23:28 - the cache so let's run darker
+23:31 - images
+23:32 - so i have five images on this machine
+23:34 - bitly front-end with the web build the
+23:37 - api really back-end and
+23:40 - obviously came from docker hub
+23:42 - now as part of this build process in
+23:44 - this lesson we built weedly web and
+23:47 - video api
+23:48 - these two other images with the front
+23:50 - end and back end were built when we
+23:52 - started this application earlier
+23:54 - so back to our project
+23:56 - in this original compose file that i
+23:58 - included in this project look i call
+24:01 - this services front end and backhand
+24:04 - instead of web and api that is why
+24:07 - we have these two images with the front
+24:09 - end and with the backend
+24:11 - also as you have noticed when building
+24:13 - images with docker compose our images
+24:16 - are prefixed with the name of our
+24:18 - application now where does this come
+24:20 - from it is the name of the directory so
+24:22 - currently we are inside a directory
+24:24 - called whitley and that is why all these
+24:26 - images are prefixed with whitley i think
+24:28 - this is a great convention i got the
+24:31 - question for you if you look at the
+24:32 - created column you can see all these
+24:34 - images were created an hour ago but
+24:37 - didn't we just build the web and api
+24:39 - images why do you think this happened
+24:41 - here's the answer
+24:42 - because i built this images front end
+24:44 - and backhand an hour ago when i was
+24:46 - recording the first lesson in this
+24:47 - section now when building these new
+24:50 - images docker used everything in the
+24:52 - cache because all those files were
+24:54 - already available all those layers were
+24:56 - there so docker didn't have to do a full
+24:59 - rebuild that is why we are still using
+25:01 - the build from an hour ago okay
+25:04 - now if you want to force a full rebuild
+25:06 - we can say docker compose build dash
+25:10 - dash no
+25:12 - cache
+25:14 - all right it's going to take a few
+25:15 - seconds so i'll be right back
+25:19 - all right our images are built so let's
+25:21 - run docker images
+25:24 - there you go look at the first two
+25:25 - images api and web were built less than
+25:28 - a minute ago
+25:29 - so that's all about building images next
+25:31 - we're going to talk about starting the
+25:33 - application
+25:36 - [Music]
+25:40 - you briefly saw how we can start an
+25:42 - application with docker compose we just
+25:44 - type docker compose up
+25:47 - now if the images are ready docker
+25:49 - compose will run them inside containers
+25:51 - otherwise it's going to build the images
+25:53 - automatically now before executing this
+25:56 - let's look at the available options
+25:58 - so here we have a ton of options a
+26:01 - couple of them that are useful are built
+26:04 - with this we can force them rebuild
+26:05 - every time we want to start our
+26:06 - application so we don't have to
+26:08 - explicitly
+26:10 - run docker compose build and then up
+26:14 - we can combine the two
+26:16 - using the build option the other useful
+26:18 - option is dash d for detached mode so we
+26:21 - will start these containers in the
+26:23 - background so
+26:25 - take a look
+26:26 - alright now if we run
+26:28 - docker compose ps
+26:31 - we can see all the containers relevant
+26:34 - to this application
+26:35 - in contrast if you type docker ps we can
+26:38 - see all the running containers across
+26:40 - all applications okay
+26:42 - so here we have three containers vidly
+26:46 - api one bitly db1 and web1 now what is
+26:49 - this one well we can start multiple
+26:52 - containers from the same image and this
+26:54 - is used for high availability and
+26:55 - scalability it's something we'll look at
+26:57 - in the future
+26:58 - so here you can see the container you
+27:00 - can see what command started that
+27:02 - container so for our api that was npm
+27:06 - start for our database that was mongod
+27:09 - or daemon process
+27:11 - and for our web front end
+27:13 - that was npm start as well you can see
+27:16 - all these containers are up and running
+27:18 - and over here you can see port mappings
+27:21 - so now if we go to localhost port 3000
+27:24 - we can see our application beautiful
+27:26 - now how do we take this down let's say
+27:28 - we're done with this application and we
+27:30 - want to free up resources
+27:32 - back to the terminal we type docker
+27:34 - compose down
+27:36 - this will stop and remove these
+27:38 - containers but the images are still
+27:40 - there so next time we want to start the
+27:42 - application our application will start
+27:44 - pretty quickly
+27:47 - [Music]
+27:51 - let's talk about networking in docker
+27:53 - when we run our application with docker
+27:55 - compose docker compose will
+27:57 - automatically create a network and add
+27:59 - our containers on that network so these
+28:01 - containers can talk to each other let's
+28:03 - see this in action so i'm going to bring
+28:05 - up the application one more time
+28:07 - in the detach mode
+28:09 - good now look at the first line
+28:12 - creating network with the default so
+28:16 - we can run docker network ls
+28:19 - here we can see all the networks on this
+28:21 - machine i think every docker
+28:23 - installation has three networks bridge
+28:26 - host and none honestly i'm not sure what
+28:28 - these networks are for but what matters
+28:30 - here is that we have a network called
+28:32 - whitley default the driver for this
+28:35 - network is bridge on linux or not on
+28:38 - windows
+28:39 - now this network contains three hosts or
+28:42 - three containers web
+28:44 - api and db so these hosts or these
+28:48 - containers can talk to each other using
+28:50 - their name let's see this in action so
+28:53 - back to the terminal let's look at the
+28:55 - running containers
+28:57 - so we have web and api
+29:00 - now we're going to start a shell session
+29:02 - on the web container and ping the api
+29:04 - container take a look so
+29:07 - we're going to execute in the
+29:08 - interactive mode
+29:09 - the container id is 8 cs6
+29:13 - and we're going to run shell
+29:15 - so let's paint api
+29:17 - look at the permission error because we
+29:19 - have logged in with the app user that
+29:21 - comes from our docker file remember so
+29:23 - we have logged in with the app user and
+29:25 - this user doesn't have pink permission
+29:27 - so let's exit
+29:30 - i'm going to bring up the last command
+29:32 - now here we have to use an extra option
+29:34 - for setting the user
+29:36 - we're going to log in as the root user
+29:39 - good now look at the shell prompt we
+29:42 - have a pound sign which means we have
+29:43 - the highest privileges so here we can
+29:46 - ping api
+29:48 - now look we're getting responses
+29:50 - from a machine
+29:52 - with this ip address now your machine
+29:54 - this ip might be different now let's
+29:56 - press ctrl c to get out of this
+29:58 - so this is what happens under the hood
+30:01 - docker comes with an embedded dns server
+30:03 - that contains the name and ip of these
+30:06 - containers now inside each container we
+30:08 - have a component called the dns resolver
+30:11 - this dns resolver talks to the dns
+30:14 - server to find the ip address of the
+30:16 - target container so when we ping the api
+30:18 - container this dns resolver asks the
+30:22 - server what is the ip address of the api
+30:24 - machine or api container the dns server
+30:27 - returns the ip address and then the web
+30:30 - container can directly talk to the api
+30:32 - container using its ip address so each
+30:35 - container has an ip address and it's
+30:37 - part of a network
+30:38 - let me show you one more thing so back
+30:40 - to the terminal here we can run ifconfig
+30:44 - to see the ip address of this container
+30:46 - take a look so this container has two
+30:49 - network adapters
+30:51 - one of them is ethernet 0 and over here
+30:55 - you can see the ip address of this
+30:56 - container
+30:58 - so 172
+30:59 - 2102 is the ip address of the web
+31:02 - container
+31:04 - now back to our compose file earlier
+31:06 - when we defined the api service we added
+31:09 - an environment variable that contains a
+31:11 - database connection string
+31:13 - in this connection string we have db
+31:15 - which is the name of the host that is
+31:17 - the db host or the db container you saw
+31:20 - that our api container can talk to this
+31:22 - container because both these containers
+31:24 - or all containers in this application
+31:27 - are part of the same network now one
+31:29 - thing i want you to understand here is
+31:30 - that this host is only available
+31:33 - inside the docker environment so if i
+31:36 - open up my browser and go to localhost
+31:40 - db i'm not going to get anything so the
+31:42 - api container can directly talk to the
+31:45 - db container but if you want to access
+31:47 - this container we need port mappings and
+31:50 - that is why we have this port mapping
+31:53 - over here
+31:54 - so this port on the host is mapped to
+31:56 - this port on the container
+31:58 - so if you open up mongodb compass which
+32:01 - is a popular mongodb client we can
+32:04 - establish a connection to localhost port
+32:07 - 27017
+32:09 - because this port is mapped to our
+32:10 - container let's verify this real quick
+32:13 - so connect great so here we can see all
+32:16 - our databases here's our fiddly database
+32:18 - and in this database we have a
+32:19 - collection called movies with four
+32:21 - documents
+32:22 - so
+32:23 - here are the movies that we currently
+32:25 - have in the database
+32:26 - so this is all about docker networking
+32:28 - next we're going to talk about viewing
+32:30 - logs
+32:33 - thank you so much for watching this
+32:35 - video as i said this video is part of my
+32:37 - ultimate docker course that teaches you
+32:40 - everything you need to know about docker
+32:41 - from the basics to more advanced
+32:43 - concepts so if you want to learn more i
+32:45 - highly encourage you to take a full
+32:47 - course it's much faster and better than
+32:49 - jumping from one tutorial to another if
+32:51 - you're interested the link is below this
+32:53 - video thank you and have a great day
+32:59 - [Music]
+
+Cleaned transcript:
+
+in this video you're going to learn about docker compose so by the end of this video you'll be able to use darker commands with confidence hi i'm adani and i've taught millions of people how to code through this channel at my online school codewithmash.com this video is part of my ultimate docker course so once you finish this video if you want to learn more you may want to look at the complete course now let's jump in and get started welcome back to another section of the ultimate docker course in this section we're going to talk about running multicontainer applications so i'm going to give you a realworld application with three building blocks a frontend built with react a backend built with node and a mongodb database once again you don't need to be familiar or use any of these tools our focus here is on docker and not on development tools i think this is the most exciting part of this course where you can see everything coming together we'll talk about docker compose for building and running multicontainer applications we'll also talk about docker networking database migration and running automated tests so let's jump in and get started in this section we're going to use a tool called docker compose which is built on top of docker engine it makes it incredibly easy to start applications with multiple containers so google docker compose install you will find this page docs.docker.com compose slash install on this page you can see the installation instructions now at the time of recording this docker compose is shipped with docker desktop for mac and windows so if you're on mac or windows you don't have to do anything extra you already have docker compose to verify it just go to the terminal window and type docker compose dash dash version so i'm running docker compose version 1.28.5 make sure your version is the same or newer now if you're using an older version again google upgrade docker compose or you might just install the latest version of docker now back to this page if you're using windows server or linux there are specific instructions you have to follow to install docker compose so go ahead and install docker compose and i'll see you in the next lesson before we get started i want to show you a couple of techniques for cleaning up our workspace so on this machine we have a bunch of images and some running containers they're getting in the way i want to get rid of them all how do we do this well you know that we can remove images using docker image remove command and here we can type one or more image ids now how can we get all image ids and pass them here let me show you a cool trick so we can run docker image ls we see all the images right but if we pass dash q at the end we only get image ids now we can pass this as an argument to docker image remove so docker image remove then here we add a dollar sign and in parenthesis we type that other command so docker image ls dash queue now if we run this we're going to get an error because some of these images are already in running containers or stopped containers so we should always remove containers first we're going to do that using the same technique so i'm going to replace image with container so we get all container ids and then we're going to remove them all in one go also i would like to add dash a here as well this will bring stopped containers as well okay we can also combine switches that's another technique let's go ahead all right we get an error saying you cannot remove a running container because i forgot to pass the force option so let's bring this up one more time when removing we're going to use dash f okay great so all these containers are removed now let's remove the images so docker image ls and docker image remove great now take a look we don't have any images here and no containers including stopped containers so we have a clean workspace that's one way there is a shortcut for this as well if you're on mac you can find the docker icon on the top status bar if you're on windows you will find it in your notification tray let's click on this and then go to preferences now on this page let's click on the troubleshoot icon on this page we have a bunch of useful utilities for example we can restart docker desktop we can also clean and purge data this will essentially remove everything in docker your images your containers your volumes and so on now be aware that if you click on this this is going to restart docker engine so on the top look you can see this animation showing that the docker engine is not started yet so at this point if you go to the terminal window and execute any of docker commands you're going to get an error so you'll have to wait about half a minute for the docker engine to start that's another way so now that we have a clean workspace next we're going to talk about our application so in this section we're going to look at a real world application with multiple building blocks a front end a back end and a database so below this video i've attached a z file go ahead and download it inside that zip file you're going to find this folder structure we have this back end folder which is our node project this is a basic node project that starts a web server on port 3001. once again you don't need to know node to go through this section then we have the frontend project which is a react application that talks to the backend now if you want to run this application outside of docker there are a number of steps we have to follow let's say we just check this out from a github repository first we have to go to our backend project install all dependencies and then start the web server now at the same time we have to open up another terminal window and do the same steps with our frontend project so we have to go to the frontend project install all the dependencies and then start the web server and of course we need two more terminal windows for running our frontend and backend tests and not to mention that we should also download and install mongodb on this machine so there are so many steps we have to follow the moment we check out the source code from our github repository now with docker we don't have to do any of these things all we have to do is run a single command let me show you so i'm going to get outside of the frontend folder now we are in the root of this project if you look here we have a file called docker compose which is used for composing a multicontainer application we're going to talk about that in detail soon now once we have this file in our project we can simply run docker compose up that's all we have to do now docker is automatically downloading this particular version of mongodb so it's downloading all these layers then at the same time it's going to install all the dependencies for our frontend and backend project it will start web servers and run automated tests all in this window now this is going to take a little while so i'll be right back all right our application is up and running and we can access it at localhost port 3000 so here's what we get we have a mini application for managing a list of movies now you know what's the beauty here the beauty is that our database is populated with these movies as part of bringing up our application i didn't have to manually insert these movies in our database so we have a migration script for populating our database and docker automatically executed our migration script as part of bringing up this application this is a very common realworld scenario now here we can add new movies movie one movie two whatever and we can also delete these movies so we brought up this application using a single command now i briefly mentioned this file docker compose.yaml before we talk about this file first you need to understand the yaml format this is a format that a lot of people are not familiar with so in the next lesson we're going to talk about json and yaml formats let's talk about json and yaml formats if you know this form as well feel free to skip this lesson so in the root of this project we're going to add a new file called data.json now json as you probably know is a language it's a human readable language for representing data so in this json file we can have an object or an array let's say we want to represent a course a course can have properties like name price and so on so in this object we can add one or more key value pairs our keys should always be surrounded in double quotes so we can add a key called name and set its value to we can use the string the ultimate docker course then we add a comma to define the next key value pair so we can say price we can set this to a number now the value can also be a boolean so we can define another key value pair and set the value to true or false we can define another key value pair and set the value to an array so we define an array using square brackets now in this array we can have any valid objects so we can have strings numbers booleans or other objects so i'm going to add a couple of strings let's say software and devops and one last key value pair author i'm going to make this an object so once again we use curly braces to define an object in this object we add a couple key value pairs first name is mosh and last name is what hamadani and yes i am iranian i get that question all the time all right so here we have a json file now let's see how we can convert this to yaml yaml is another language for presenting data but it has less clutter than json it's easier to read so i'm going to copy all this code here in the project we're going to add a new file called data the dml the extension can be yaml or yml now on the top we have three hyphens to indicate the beginning of a yaml file then we paste our code now in yaml we don't use curly braces to indicate hierarchy this idea has come from python if you have programmed in python you know that in python we use indentation to represent hierarchy so we don't have curly braces so let's get rid of these braces and remove the indentation good now the next thing you need to know about yaml is that we don't have to use quote so we can bring up the replace dialog and replace all these double quotes with nothing that immediately takes a lot of clutter away also we're not going to use commas to separate key value pairs so on the top we have name price is published how do we represent a list or an array we use hyphens so i'm going to remove this we press enter at a tab on a new line we type hyphen to define the first item in the list software then at the same indentation we add the next item devops now author is an object but as we told you we don't use curly braces we use indentation so because these two properties are indented they belong to the author property okay so this is our yaml file let's compare this with json as you can see yaml is easier to read and understand now why don't we use yaml all the time well because parsing yaml files is a little bit slower than parsing json files because the parser doesn't know if this is a string or a number so it has to read everything as a string and then try to evaluate it in contrast in json strings are represented using quotes and more specifically double quotes so the parser knows that this is a string and it shouldn't evaluate it okay so quite often we use yaml files for configuration files and json for exchanging data between multiple computers like a client and a server so now that you understand these formats next we're going to talk about compose files all right let's see how we can create a compose file from scratch so for this lesson i'm going to rename this file to underline docker compose we want to set it aside and create a new compose file from scratch so here we add a new file called docker dash compose all in lower case make sure to spell it properly otherwise docker compose is not going to find this file because this is the default name that docker compose assumes okay so yaml now the first thing that we need to set here is the version property what version should we use well let's search for docker compose file on this page you can see various compose file formats and their compatibility with docker engine we are using the latest version of docker engine so i want to use the latest compose file format so we have access to the latest features so we're going to set this to 3.8 now here we need to wrap this number with double quotes otherwise it will be evaluated as a number but docker compose expects this value to be a string why i have no clue so here's the version now in this file we define various building blocks or services of our application so we have a property called services now what services do we need here well our application has a front end a backend and a database now your application might have other moving parts so you can define them here now these names are arbitrary so we can call them anything we can change this to db we can change the backend to api and the frontend to well the idea here is that we're defining various services and telling docker how to build images for each service and how to run these images so here we're going to have properties and the value of these properties will eventually be used when running our containers so in the previous section we had to manually run our containers using docker run and here we used parameters like dash p for port mapping or dash v for volume mapping we also had to specify an image like react app all these values can be defined in our compose file so we don't have to manually start our containers docker compose will take care of starting our containers under the hood okay so for each service we need to tell docker how to build an image for that service so here we can use the build property until docker compose where it can find a docker file so if you look at this project you can see that in our backend and frontend folders we have a docker file this docker file is almost identical to the one we created in the previous section so we start from a node image we create a user we set our working directory copy all the files and install the dependencies then expose port 3001 and start the web server we have a similar docker file in our frontend project let's have a quick look so that was the back end here's the front end and here we have a docker file almost identical but the frontend application or the frontend server starts on a different part that is the only difference so each service should have its own docker file okay now back to our compose file for our web or frontend we're going to set the build property to period meaning current folder slash frontend this is where we have a docker file for our api we're going to set build to backend now for our database we're not going to build an image we're going to pull an image from docker hop so instead of the build property we're going to use the image property now for this application i'm going to use version 4.0 dash xeno so that is version 4 built on top of xenial which is ubuntu version 16. if you look at docker hub you can see that also has images built on top of windows but windows images are very large over 2 gigabytes so that's why i prefer to use linux images so for any of these services we can either build an image or pull it down now here we also have port mappings so we set ports to now because we can have multiple port mappings here we need to use the array or list syntax so we use a hyphen and then define a port mapping so our frontend application starts on port 3000 so i want to map for 3000 of the host to poor 3000 of the container running this image now similarly for our api we're going to define a port mapping this one is going to be 3001 to 3001. now mongodb by default listens on port 27017 so i want to map the same port so we can access mongodb using a mongodb client like mongodb compass now if you don't use mongodb you have the same concept with other database engines all these database engines listed on a default port you want to map that port so you can connect your database engine using your favorite database client okay what else do we have here back to this page for compose file if you look at version 3 on the right you can see all valid properties now a lot of these are for really special cases so you don't need to use them all the time but the ones that we use most of the time are build or image you also use ports volumes environment and so on so our api project needs an environment variable that tells where our database is so here we set environment now here we can use the list syntax because we can have multiple environment variables so we said db underline url 2 here we need to type a mongodb connection string these connection strings always start with mongodb colon two forward slashes here we need to type the name of a host so as i will show you later in this section when we start an application with docker compose under the hood a network is created on this network we're going to have three hosts the name of these hosts are equal to the names we have defined here so we're going to have a host called db so that is the connection string to our mongodb server now on this server we can have multiple databases so we're going to specify the database name and the connection string as well so this is one way to set an environment variable but instead of using the list syntax we can also use the object or property value syntax so we get rid of the hyphen we say db url is a property and this is the value of that property i find the syntax more readable because we get color coding and it's just cleaner that similarly we can add additional environment variables now we're almost there the last thing we want to add here is a volume because we don't want mongodb to rate data to the temporary file system of the container so here we set volumes and again we can have one or more volume mappings so we had a hyphen we're going to map a volume called whitley and of course we can call it anything really is the name of this application in case you didn't notice so we're going to map this volume to a directory inside the container now if you look at the documentation of mongodb on docker hub or just a typical mongodb documentation you know that by default mongodb stores this data in slash data db so we want to map this volume to this directory so whatever that is written inside this directory is actually outside of this container it's somewhere else in our volume now because we have used this volume here we have to define it in our compose file so we press enter remove all the indentations so now we are at the same level as services here we're going to define another property called volumes and here we're going to add another property called vidly with no value i know this looks a little bit weird but this is the syntax we have to follow we just have to define the volume first before we can use it so this is our compose file now we can make this more readable by adding line breaks in between these properties we can also order these services any way we want so currently i'm ordering them from front to back we can also order them from back to front so we will put database first then api and then web so we're done with our compose file next i'm going to show you how to build the images earlier i told you that docker compose is built on top of docker engine so everything we have done with docker engine like building images listing them starting containers and so on all of these operations are also available using docker compose let me show you so we type docker compose without any arguments enter look we have all these sub commands like we have rm for removing stopped containers we have run we have push pull and so on the difference is that any of these commands will apply to our application as a whole so most of these commands will impact multiple services or multiple containers in our application so let's look at docker compose build and also use the help option so we have a bunch of options here a couple of them i want to point out that are useful to know is no cache with this we can prevent caching when building the image sometimes you encounter weird issues and you want to make sure that cache is not used in that case you use this option another useful option is dash pool with this we can always pull a newer version of the image that is also good to know so in this lesson i'm not going to use any of this we're just going to run docker compose built this built our web and api services and as you noticed our build was super fast because pretty much everything came from the cache so let's run darker images so i have five images on this machine bitly frontend with the web build the api really backend and obviously came from docker hub now as part of this build process in this lesson we built weedly web and video api these two other images with the front end and back end were built when we started this application earlier so back to our project in this original compose file that i included in this project look i call this services front end and backhand instead of web and api that is why we have these two images with the front end and with the backend also as you have noticed when building images with docker compose our images are prefixed with the name of our application now where does this come from it is the name of the directory so currently we are inside a directory called whitley and that is why all these images are prefixed with whitley i think this is a great convention i got the question for you if you look at the created column you can see all these images were created an hour ago but didn't we just build the web and api images why do you think this happened here's the answer because i built this images front end and backhand an hour ago when i was recording the first lesson in this section now when building these new images docker used everything in the cache because all those files were already available all those layers were there so docker didn't have to do a full rebuild that is why we are still using the build from an hour ago okay now if you want to force a full rebuild we can say docker compose build dash dash no cache all right it's going to take a few seconds so i'll be right back all right our images are built so let's run docker images there you go look at the first two images api and web were built less than a minute ago so that's all about building images next we're going to talk about starting the application you briefly saw how we can start an application with docker compose we just type docker compose up now if the images are ready docker compose will run them inside containers otherwise it's going to build the images automatically now before executing this let's look at the available options so here we have a ton of options a couple of them that are useful are built with this we can force them rebuild every time we want to start our application so we don't have to explicitly run docker compose build and then up we can combine the two using the build option the other useful option is dash d for detached mode so we will start these containers in the background so take a look alright now if we run docker compose ps we can see all the containers relevant to this application in contrast if you type docker ps we can see all the running containers across all applications okay so here we have three containers vidly api one bitly db1 and web1 now what is this one well we can start multiple containers from the same image and this is used for high availability and scalability it's something we'll look at in the future so here you can see the container you can see what command started that container so for our api that was npm start for our database that was mongod or daemon process and for our web front end that was npm start as well you can see all these containers are up and running and over here you can see port mappings so now if we go to localhost port 3000 we can see our application beautiful now how do we take this down let's say we're done with this application and we want to free up resources back to the terminal we type docker compose down this will stop and remove these containers but the images are still there so next time we want to start the application our application will start pretty quickly let's talk about networking in docker when we run our application with docker compose docker compose will automatically create a network and add our containers on that network so these containers can talk to each other let's see this in action so i'm going to bring up the application one more time in the detach mode good now look at the first line creating network with the default so we can run docker network ls here we can see all the networks on this machine i think every docker installation has three networks bridge host and none honestly i'm not sure what these networks are for but what matters here is that we have a network called whitley default the driver for this network is bridge on linux or not on windows now this network contains three hosts or three containers web api and db so these hosts or these containers can talk to each other using their name let's see this in action so back to the terminal let's look at the running containers so we have web and api now we're going to start a shell session on the web container and ping the api container take a look so we're going to execute in the interactive mode the container id is 8 cs6 and we're going to run shell so let's paint api look at the permission error because we have logged in with the app user that comes from our docker file remember so we have logged in with the app user and this user doesn't have pink permission so let's exit i'm going to bring up the last command now here we have to use an extra option for setting the user we're going to log in as the root user good now look at the shell prompt we have a pound sign which means we have the highest privileges so here we can ping api now look we're getting responses from a machine with this ip address now your machine this ip might be different now let's press ctrl c to get out of this so this is what happens under the hood docker comes with an embedded dns server that contains the name and ip of these containers now inside each container we have a component called the dns resolver this dns resolver talks to the dns server to find the ip address of the target container so when we ping the api container this dns resolver asks the server what is the ip address of the api machine or api container the dns server returns the ip address and then the web container can directly talk to the api container using its ip address so each container has an ip address and it's part of a network let me show you one more thing so back to the terminal here we can run ifconfig to see the ip address of this container take a look so this container has two network adapters one of them is ethernet 0 and over here you can see the ip address of this container so 172 2102 is the ip address of the web container now back to our compose file earlier when we defined the api service we added an environment variable that contains a database connection string in this connection string we have db which is the name of the host that is the db host or the db container you saw that our api container can talk to this container because both these containers or all containers in this application are part of the same network now one thing i want you to understand here is that this host is only available inside the docker environment so if i open up my browser and go to localhost db i'm not going to get anything so the api container can directly talk to the db container but if you want to access this container we need port mappings and that is why we have this port mapping over here so this port on the host is mapped to this port on the container so if you open up mongodb compass which is a popular mongodb client we can establish a connection to localhost port 27017 because this port is mapped to our container let's verify this real quick so connect great so here we can see all our databases here's our fiddly database and in this database we have a collection called movies with four documents so here are the movies that we currently have in the database so this is all about docker networking next we're going to talk about viewing logs thank you so much for watching this video as i said this video is part of my ultimate docker course that teaches you everything you need to know about docker from the basics to more advanced concepts so if you want to learn more i highly encourage you to take a full course it's much faster and better than jumping from one tutorial to another if you're interested the link is below this video thank you and have a great day

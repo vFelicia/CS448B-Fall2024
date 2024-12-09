@@ -1,0 +1,2209 @@
+00:00 - learn about event driven architecture
+00:02 - with this comprehensive course event
+00:05 - driven architecture is a software design
+00:08 - pattern where the flow of the program is
+00:11 - determined by events such as user
+00:14 - actions sensor outputs or messages
+00:17 - passing between processes join Matt
+00:20 - Marts and Matt Morgan as they unravel
+00:23 - the secrets of transforming traditional
+00:25 - apps into Cutting Edge event-driven
+00:27 - powerhouses Welcome to our Deep dive
+00:30 - into event driven architecture on AWS in
+00:33 - this course we'll be going over what
+00:35 - event-driven architecture is along with
+00:38 - migrating an example Inventory
+00:39 - management app to event driven
+00:41 - architecture we also have a companion
+00:43 - blog post that is linked throughout the
+00:45 - course at mars.
+00:50 - codde I'm Matt Marts I've been an AWS
+00:53 - Community Builder since the first cohort
+00:55 - in October of
+00:56 - 2020 the AWS Community Builder program
+00:59 - is an incred incredible platform for
+01:00 - networking with AWS professionals both
+01:03 - inside and outside of AWS along with a
+01:06 - few other perks if that sounds
+01:08 - interesting to you their application
+01:10 - cycle tends to open at the beginning of
+01:11 - the calendar year so keep an eye out for
+01:14 - that I'm also a principal software
+01:16 - architect at definitive at definitive we
+01:19 - have an event-driven architecture backed
+01:21 - IOS app called Savvy spin smart that
+01:24 - helps people save
+01:25 - money in this course we'll dive into
+01:28 - Hands-On coding for event driven
+01:30 - architecture using AWS cdk if you're new
+01:33 - to cdk you might find my cdk crash
+01:36 - course with free code Camp particularly
+01:39 - useful for deeper insights into Dev
+01:41 - tools event driven architecture and
+01:43 - server lless you could also check out my
+01:45 - blog at matt. mars. codes where I share
+01:48 - Advanced knowledge and
+01:51 - tips uh thanks Matt I'm also Matt I'm
+01:53 - Matt Morgan I'm also AWS Community
+01:56 - Builder joined at the same time as Matt
+01:58 - Mart I've been in the program for about
+02:00 - three years uh I'm currently employed as
+02:02 - a director of engineering at comold
+02:04 - which is a multi Channel live selling
+02:06 - platform uh I've done a lot of writing
+02:08 - uh I co-authored a book called the
+02:10 - typescript workshop and uh I have a lot
+02:12 - of other blog posts and things and
+02:13 - everything is linked uh as well as some
+02:16 - talks linked from my website which is at
+02:19 - Matt morgan.
+02:21 - Cloud over the course of this video
+02:24 - we'll take a look at Eda Basics such as
+02:26 - terminology item potency and why you
+02:29 - need to car about it and synchronous and
+02:31 - asynchronous response
+02:33 - models then we'll build an Eda app using
+02:36 - cdk making sure to add in observability
+02:39 - and things like
+02:40 - that and we'll wrap the course up by
+02:42 - going over some Advanced practices such
+02:44 - as considerations for how to format your
+02:46 - events along with some neat tools that
+02:48 - AWS
+02:49 - provides so to help demonstrate the
+02:52 - value of event rate architecture we came
+02:54 - up with a little sample
+02:56 - application uh and a problem to solve in
+02:59 - the application so so the application is
+03:02 - a warehouse Inventory management system
+03:04 - called whims because we've got a
+03:05 - warehouse full of McGuffin and the
+03:07 - McGuffin is a very popular item and so
+03:09 - we need software to help us manage uh
+03:12 - things like Inventory management uh
+03:14 - fulfillment uh Payment Processing all
+03:17 - those kinds of things whims is was V1 is
+03:21 - built as uh a microservice uh rest API
+03:26 - systems everything is a synchronous rest
+03:27 - API call um and this is uh this is fine
+03:31 - at a smaller scale but as as uh the
+03:33 - system begins to grow up we find that um
+03:36 - some of the
+03:39 - uh some of the Lambda functions inside
+03:42 - the architecture uh are doing too many
+03:44 - different things and we start to see
+03:46 - some some weaknesses in the architecture
+03:48 - so we're going to go into um into this
+03:52 - application get a little bit deeper into
+03:53 - it and uh examine some of those problems
+03:56 - and then examine the solution uh that we
+03:58 - solved with event DP
+04:01 - so let's look ahead at what we're going
+04:02 - to be building by the end of this course
+04:05 - uh what we want to do is we want to take
+04:07 - our a tightly coupled uh entirely rest
+04:10 - based microservice and change it into an
+04:13 - Aventure an architecture where uh things
+04:16 - happen are eventually consistent and
+04:19 - have a single responsibility for
+04:21 - component uh the way this will work is
+04:24 - that um when an order is submitted via
+04:28 - the API Gateway that's going to be
+04:30 - persisted in a dynb table and then we'll
+04:33 - use Dynamo DB
+04:34 - streams and event Bridge pipes in order
+04:38 - to transform that to transform that
+04:41 - event uh and then uh and then emit it
+04:44 - across event bridge where we can create
+04:46 - rules to capture the events and then
+04:48 - trigger other things so in the diagram
+04:51 - you can see that we're triggering a
+04:52 - number of things off the event Bridge
+04:54 - rule uh we can have our low inventory
+04:56 - warning there uh we can eventually build
+04:59 - an external fulfillment system off of
+05:01 - that we have event logs and we're going
+05:03 - to trigger a step function that is going
+05:06 - to handle things like adjusting
+05:08 - inventory and processing payments and we
+05:11 - know that one of the weaknesses of our
+05:13 - payment system is that we sometimes get
+05:15 - rate limited uh by the payment system so
+05:17 - we're going to use sqs to slow down uh
+05:21 - the rate of uh events going into the
+05:23 - payment system so that everything can be
+05:25 - processed in due
+05:28 - time a few reminders before we get
+05:30 - started there's a companion blog post
+05:33 - that reinforces what we'll be going over
+05:35 - here the video is split up into chapters
+05:38 - and we'll have timestamped links in the
+05:39 - description and the sections are
+05:41 - colorcoded the intro and outro are blue
+05:44 - the Eda basic section will be green the
+05:47 - demo will be orange and the advanced or
+05:49 - best practices section will be purple
+05:52 - now that that's out of the way let's get
+05:54 - some backend on what event driven
+05:55 - architecture
+05:57 - is Eric Johnson is a renowned principal
+06:01 - developer Advocate at AWS he's widely
+06:04 - recognized for his expertise and
+06:05 - insightful talks on a venten
+06:07 - architecture in his various
+06:09 - presentations Eric distills Eda to its
+06:13 - core and he simp simplifies it
+06:15 - brilliantly as something happens and
+06:19 - then you
+06:20 - react this succinct phrase captures the
+06:23 - essence of event driven architecture but
+06:25 - what does it mean in
+06:27 - practice it's helpful to think of in
+06:29 - terms of our daily
+06:31 - experiences as humans we're surrounded
+06:33 - by a continuous stream of events these
+06:36 - could be anything from a phone
+06:38 - notification to a sudden change in the
+06:40 - weather interestingly we don't respond
+06:43 - to every single event we selectively
+06:46 - react based on relevancy urgency or our
+06:50 - current focus and this selective
+06:52 - reaction is a key aspect of event driven
+06:55 - architecture it's about systems
+06:57 - intelligently responding to specific
+06:59 - events events that
+07:00 - matter in the realm of software and
+07:03 - Cloud architecture this translates to
+07:05 - applications and services reacting to
+07:07 - certain triggers or changes in the
+07:09 - environment just like us these systems
+07:12 - are designed to respond selectively
+07:14 - ensuring efficiency and relevance in
+07:16 - their
+07:18 - operations Eric Johnson's analogy
+07:20 - beautifully aligns with this principle
+07:22 - making Eda not just a technical concept
+07:25 - but a relatable natural
+07:28 - process so
+07:30 - why do you think Eda is becoming so
+07:33 - popular well I think that uh you know in
+07:38 - many of the tools that we like to work
+07:39 - with increase developer productivity
+07:41 - when you increase developer productivity
+07:43 - uh you build more and when you build
+07:46 - more you end up with more features and
+07:48 - when you end up with more features then
+07:51 - uh you start complexity really starts to
+07:53 - creep into the system uh and um we've
+07:57 - all seen like um you know a thousand
+07:59 - functions that try to do way too many
+08:01 - things and uh are really hard to to
+08:04 - modify so I think it's natural to say um
+08:08 - that my system is getting really big and
+08:10 - complex so I want to start to make it
+08:12 - into a distributed system I want to
+08:14 - start to to break Services out I want to
+08:16 - start having things happen uh when
+08:18 - something else happens and decouple uh
+08:22 - these services in a way that uh makes it
+08:25 - easier to build a wide broad system that
+08:28 - has lots of complexity but that the
+08:30 - complexity can be siloed and contained
+08:33 - within
+08:34 - Services yeah that plus like fa
+08:36 - tolerance and you get a highly reactive
+08:38 - system that it's easy to extend like as
+08:41 - a you can throw an intern at a problem
+08:43 - and say Hey you know add this feature to
+08:45 - it you don't have to worry about the
+08:47 - intern breaking the entire monolith
+08:49 - Lambda that's handling your order system
+08:51 - right yeah I mean if if the intern is
+08:54 - breaking it that's probably my fault
+08:55 - anyway for um asking someone like that
+08:58 - but but yeah I mean it's um I think that
+09:01 - isolating failure to one service as
+09:03 - opposed to my whole system Falls over is
+09:06 - a really really important design
+09:08 - consideration I also think that um you
+09:10 - know we we find uh opportunities where
+09:13 - we want systems to scale
+09:15 - independently uh one system uh you know
+09:18 - maybe uh can't take too much traffic and
+09:21 - another system can can go very quickly
+09:23 - we have different levels of importance
+09:25 - on on some of the capabilities that we
+09:27 - do some some some capabilties we might
+09:29 - say oh eventually consistency is fine
+09:31 - like that can happen overnight or you
+09:33 - know it can happen later other things we
+09:35 - may need an immediate response it's very
+09:37 - hard to build systems that way when
+09:40 - everything is sort of contained within
+09:42 - one function everything just has to kind
+09:44 - of happen see synchronously one after
+09:46 - another but if you can emit an event
+09:50 - that says uh you know something that an
+09:53 - order has come in or a new customer
+09:56 - signed up or a payment is whatever it is
+09:58 - and and then uh hook into that and say
+10:02 - okay and then I want this to happen uh
+10:05 - that can be a really powerful way to
+10:06 - build and the other thing that I think
+10:08 - um is really important here is that a
+10:10 - lot of us who've been in the business
+10:12 - for a while have seen systems that sort
+10:14 - of start with you know lots of rest
+10:18 - interactions and things like that and
+10:19 - then eventually we
+10:21 - say we can't do everything inside of uh
+10:24 - one rest call so we need something that
+10:26 - happens some kind of process that will
+10:28 - happen
+10:29 - offline or in the background and often
+10:32 - the solution to that has been CW so like
+10:35 - every five minutes a process wakes up
+10:36 - and says do I have anything to do and
+10:38 - maybe it has to query a database to do
+10:40 - that uh or maybe there's you know some
+10:42 - other way that that it can do that and
+10:44 - and that kind of system can be um you
+10:47 - know it's first of all if uh if it wakes
+10:50 - up and says any work to do right now oh
+10:54 - there isn't and then a job comes in
+10:56 - right after that it's going to wait
+10:57 - until the next interval so it's slower
+10:59 - uh also it's frequently waking up and
+11:01 - saying do I have any work to do and
+11:03 - finding out the answer is no so it's
+11:05 - inefficient uh if you can instead say uh
+11:08 - here's an event react to the event and
+11:10 - then have a system that's kind of
+11:12 - standing by ready to do that uh you're
+11:15 - going to be in a much better place and
+11:16 - and the tools that we have now to do
+11:17 - that build that kind of architecture uh
+11:20 - things like Lambda step functions event
+11:22 - Bridge those are great tools and they do
+11:24 - a really good job for it so by switching
+11:26 - to from like a cron based server full
+11:29 - like Legacy PHP system running once a
+11:31 - day or something like that to more of an
+11:34 - event-driven architecture it enables
+11:36 - your teams to more quickly react to
+11:39 - things and actually process data closer
+11:41 - to On
+11:42 - Demand that's right yeah and and um I
+11:45 - think that um part of this is is that
+11:48 - it's important to embrace eventual
+11:50 - consistency and to say that things are
+11:52 - not happening within that um you know
+11:55 - the the 29 second API Gateway uh timeout
+11:58 - or or um whatever it is you're working
+12:01 - with um but on the other hand if you
+12:04 - build uh event driven architecture in a
+12:07 - really good way that you can often find
+12:09 - that things are happening very quickly
+12:11 - uh and and it almost seems like it's
+12:13 - happening in real time yeah that's a
+12:16 - good point and I don't think we haven't
+12:17 - gone over eventual consistency yet in
+12:20 - this course and maybe maybe editor match
+12:22 - should go back and add some slides on it
+12:25 - but uh what what is involved in getting
+12:28 - into that eventual consistency
+12:31 - mindset you know I don't think I think I
+12:34 - think it's just just thinking about it
+12:35 - really because um because the web is
+12:37 - already prepped us for that in fact even
+12:39 - before the web was um such a big part of
+12:42 - our Lives we were um you know it was
+12:45 - part of our lot it was part of
+12:48 - um it was part of culture it it was
+12:51 - something it was understood I'm waiting
+12:52 - for a check to clear for example right
+12:55 - uh I received a payment but that payment
+12:56 - is eventually consistent and the funds
+12:58 - are not available for me to use I mean
+13:01 - that's that's been uh you know around
+13:03 - longer than I have uh so you know and I
+13:07 - think that um I think payments are a
+13:09 - great example of that but but I also
+13:10 - feel
+13:12 - like if you just understand that that
+13:14 - the web is by by its nature eventually
+13:17 - consistent of course you can you can
+13:18 - contrive of of uh uh conditions where uh
+13:22 - you don't want that eventual consistency
+13:24 - and there are tools for that too but but
+13:26 - as by taking uh eventual consistency I
+13:29 - know you we're also talking about item
+13:30 - potency here which I think I think kind
+13:32 - of goes along with that uh and saying
+13:34 - that that's the default starting place
+13:35 - that's where I want to be uh when I'm
+13:37 - designing my system and anything uh that
+13:41 - uh isn't uh living up to those
+13:43 - principles is an
+13:44 - exception do you find it difficult to
+13:48 - maybe do you have to push back on maybe
+13:50 - product people about the whole eventual
+13:52 - consistency aspect I've never really had
+13:55 - a problem with that um I think that uh
+14:00 - I I I don't I don't want to I don't want
+14:03 - to beat up on devs at all really uh
+14:06 - because devs are great people but most
+14:08 - of the time in my career I found that
+14:10 - the reason that a system is uh was built
+14:12 - in immediately consistent way it's just
+14:14 - because of we just built it as rest and
+14:17 - then that became of the expectation um
+14:21 - when I when I go and say um you know hey
+14:24 - we're going to put a spinner on the page
+14:25 - and then then poll until this report is
+14:27 - ready or something like that to a
+14:29 - product person I've never had any push
+14:30 - back on that I I think that um you know
+14:34 - as I said in the first place uh it's
+14:37 - it's very normal for uh many things in
+14:41 - our lives to have that kind of eventual
+14:42 - consistency mailing a letter I mean like
+14:45 - uh you know that's that's been around
+14:48 - for hundreds of years and uh and
+14:50 - everyone's had that expectation and I
+14:53 - think that um you know that that should
+14:55 - just be part of our uh expectation when
+14:58 - it comes to development
+15:00 - too great all right let's uh let's move
+15:04 - on and start talking about uh what an
+15:06 - actual event is and item potency and all
+15:08 - those things we just discussed all
+15:11 - right thanks Matt to fully grasp
+15:15 - event-driven architecture it's essential
+15:17 - to understand its core components so
+15:19 - let's dive into four key terms that are
+15:21 - fundamental to event Ren
+15:24 - architecture first up an event you can
+15:27 - think of an event as a record of
+15:29 - something that has already happened it's
+15:32 - a historical fact immutable and
+15:35 - unchangeable an event is not about the
+15:37 - current state of the system but rather a
+15:39 - specific occurrence or action that has
+15:41 - taken place in the
+15:44 - past next we have a producer a producer
+15:48 - is the source of events it generates and
+15:51 - sends out events to signify that
+15:53 - something has
+15:55 - happened this could be anything from a
+15:57 - user action like clicking a button to a
+15:59 - system change like a completed
+16:03 - transaction now let's talk about the
+16:05 - consumer a consumer is the recipient of
+16:08 - events it's designed to react or respond
+16:11 - to the event it receives this reaction
+16:14 - could be anything from updating a
+16:15 - database sending a notification or
+16:18 - triggering a new process or
+16:20 - workflow finally we have the
+16:23 - channel this is the conduit through
+16:26 - which events are transmitted from
+16:28 - producer users to
+16:30 - Consumers the channel ensures that
+16:32 - events reach their intended destinations
+16:34 - and it's the infrastructure that
+16:36 - supports the flow and management of
+16:38 - events acting like a bridge between
+16:40 - producers and
+16:42 - consumers now let's unpack the concept
+16:44 - of item potency in event driven
+16:47 - architecture item potency ensures that
+16:49 - we that even if the same event is
+16:51 - processed multiple times it won't lead
+16:54 - to duplicate or unintended effects on
+16:56 - the
+16:57 - system this characteristic is crucial
+17:00 - for preventing creation of duplicate
+17:02 - records or actions which can occur in
+17:05 - complex
+17:06 - systems item potency also enhances the
+17:09 - overall reliability of the system by
+17:11 - ensuring consistent outcomes regardless
+17:14 - of the number of times an event is
+17:17 - processed typically item potency is
+17:20 - implemented using unique identifiers for
+17:22 - each event ensuring each event is
+17:24 - recognized and processed only once in a
+17:26 - meaningful way
+17:29 - a real world analogy for item potent
+17:31 - systems is pressing an elevator button
+17:34 - once you press an elevator button once
+17:36 - you press an unlit elevator button it
+17:38 - changes its state if you press it a
+17:40 - second time it doesn't unpress itself
+17:43 - nor can it do anything to speed the
+17:44 - system up so building on our
+17:48 - understanding of Eda terminology let's
+17:50 - now look at five key response models
+17:53 - these models dictate how systems
+17:55 - communicate and handle
+17:57 - Events first first we'll go through the
+17:59 - synchronous model familiar in
+18:01 - traditional apis where responses are
+18:03 - immediate and direct and essential for
+18:05 - real-time
+18:06 - interactions then the async Q where
+18:09 - events are queed for later processing
+18:11 - allowing the producer to move on without
+18:13 - waiting for the consumer's
+18:16 - response the broadcast model
+18:18 - disseminates events to multiple
+18:20 - consumers at once ideal for widespread
+18:23 - event
+18:24 - notification next the async bus Which
+18:28 - acts like a central Highway for events
+18:30 - supporting flexible multi-point
+18:32 - Communication in complex
+18:34 - systems and finally we have the async
+18:37 - router which intelligently directs
+18:39 - events based on specific rules inside of
+18:42 - the producer's code ensuring they reach
+18:44 - the appropriate
+18:46 - [Music]
+18:48 - destination the synchronous response
+18:50 - model is more like a traditional API
+18:53 - interaction a sender emits a request
+18:56 - which is received and process by the
+18:59 - receiver which then sends the response
+19:00 - back to the
+19:02 - sender this model is widely used and
+19:05 - understood in traditional application
+19:07 - architectures making it a familiar
+19:09 - choice for many
+19:11 - developers it allows for immediate error
+19:14 - detection as the sender can quickly know
+19:16 - if something goes wrong thanks to the
+19:18 - immediate
+19:19 - response the direct back and forth
+19:21 - communication typically ensures low
+19:23 - latency which is crucial for real-time
+19:26 - processing needs but in case in cases of
+19:31 - long processing times there's a risk of
+19:34 - timeout which can disrupt the flow of
+19:36 - information as the system scales
+19:39 - managing and balancing the load across
+19:41 - servers can become increasingly complex
+19:44 - this model often leads to tight coupling
+19:47 - making the system Le less flexible and
+19:49 - more prone to failure if any single
+19:51 - component
+19:53 - fails ensuring that operations can
+19:55 - safely can be safely repeated without
+19:57 - Crea in duplicates falls on the receiver
+20:01 - adding complexity to its
+20:04 - design a very common channel for
+20:07 - synchronous response model is the API
+20:09 - Gateway with an HTTP connection this is
+20:12 - a pivotal component in managing
+20:14 - synchronous
+20:15 - interactions API Gateway seamlessly
+20:18 - integrates with various AWS services and
+20:21 - it supports multiple authorization
+20:24 - mechanisms because of this even in the
+20:27 - subsequent asyn response models that
+20:29 - will go through more often than not
+20:31 - you'll still be proxying those requests
+20:32 - via API Gateway because of the multiple
+20:35 - authorization mechanisms and the service
+20:37 - Integrations that it
+20:40 - provides for synchronous responses the
+20:43 - channel also allows for request and
+20:45 - response
+20:46 - Transformations this feature is crucial
+20:48 - for adapting and formatting the data as
+20:51 - needed integration with Cloud watch also
+20:54 - enables real-time
+20:56 - monitoring a critical as aspect to note
+20:58 - is that the channel requires responses
+21:01 - within 30 seconds this constraint is
+21:04 - essential for maintaining system
+21:05 - efficiency and
+21:07 - reliability while the synchronous model
+21:10 - offers familiarity and immediate
+21:11 - feedback its limitations and scalability
+21:14 - and flexibility and complexity are
+21:17 - important considerations in your system
+21:21 - design to put this into the context of
+21:24 - our upcoming demo app let's talk about a
+21:26 - real world scenario
+21:28 - imagine a customer walks into a store to
+21:30 - check if our McGuffin is in
+21:32 - stock this customer represents the
+21:34 - sender in our model the store worker
+21:38 - akin to the API Gateway is approached
+21:40 - with the
+21:42 - query this worker has the responsibility
+21:44 - to provide immediate information just as
+21:46 - the API Gateway handles and routes the
+21:49 - requests so the warehouse worker checks
+21:51 - the inventory system and provides an
+21:53 - immediate response to the customer about
+21:55 - the items
+21:56 - availability this interaction is
+21:58 - synchronous mirroring the direct and
+22:00 - immediately response expected in the
+22:01 - synchronous
+22:03 - model however if the warehouse is huge
+22:06 - or the worker is busy it may take time
+22:08 - to get the response highlighting the
+22:10 - synchronous model's potential for
+22:12 - timeouts and real world
+22:14 - scenarios next let's discuss the async Q
+22:17 - response model here a producer sends
+22:21 - messages to a que and receives an
+22:23 - acknowledgement in return separately a
+22:26 - consumer pulls this Q to ret retrieve
+22:29 - messages also acknowledging once the
+22:31 - messages are
+22:33 - processed this model allows the receiver
+22:35 - to control the rate at which it
+22:37 - processes messages preventing
+22:40 - overload it accommodates processes
+22:42 - requiring longer compute times as
+22:45 - messages can wait in the
+22:46 - queue in the case of failures the model
+22:50 - also facilitates recovery as messages
+22:52 - remain in the queue until successfully
+22:55 - processed services like Amazon sqs can
+22:58 - offer item potency preventing duplicate
+23:00 - processing of messages
+23:02 - too but the model only provides
+23:04 - acknowledgement of responses which can
+23:07 - limit the information available about
+23:09 - message processing and while it Rec
+23:12 - while it enables recovery the time to
+23:14 - recover can be significant depending on
+23:17 - the Q size and processing
+23:19 - speed typically a single consumer
+23:22 - processes the que which can be a
+23:25 - bottleneck in high volume scenarios this
+23:28 - could be a single Lambda function spread
+23:30 - across multiple parallel
+23:32 - invocations but you would not have
+23:34 - different Lambda functions reading from
+23:36 - a
+23:37 - que despite being asynchronous there's
+23:40 - still a degree of tight coupling as the
+23:42 - consumer is directly dependent on the
+23:44 - q's structure and format it has to be
+23:47 - created and
+23:51 - exist in the context of async Q's our
+23:55 - main channel is sqs or simple Q
+23:58 - service simple Q service plays a crucial
+24:01 - role in scaling and fortifying the
+24:03 - architecture efficiently managing
+24:05 - message q and ensuring smooth
+24:09 - processing however with standard cues be
+24:12 - mindful of potential duplication and
+24:14 - ordering issues where messages might not
+24:16 - always be processed in the order they
+24:18 - were
+24:19 - sent sqs uses a polling model which can
+24:23 - introduce latency as consumers
+24:25 - periodically check for messages instead
+24:27 - of receiving them in real
+24:28 - time also there's a size limitation to
+24:31 - consider each message in sqs can be up
+24:34 - to 256
+24:37 - kiloby monitoring sqs is relying on
+24:39 - cloudwatch which provides insights into
+24:42 - the q's performance and message
+24:44 - flow now talking about a real world
+24:47 - analogy let's imagine our fictional apps
+24:49 - Warehouse has to send out a
+24:51 - McGuffin the warehouse producer sends
+24:55 - the McGuffin the message to the shipping
+24:57 - company
+24:58 - the Q from there the shipping company
+25:01 - manages the storage and eventual
+25:03 - delivery to the destination it receives
+25:06 - one McGuffin and delivers one McGuffin
+25:08 - it doesn't copy the McGuffin it's one:
+25:12 - one next we'll explore the broadcast
+25:15 - response model also known as publish
+25:17 - subscribe PBS
+25:19 - up the arc diagram here illustrates a
+25:22 - producer sending a message to a topic
+25:25 - and receiving an acknowledgement in
+25:26 - return this message is then
+25:29 - distributed from the topic to two
+25:32 - separate consumers showcasing the multi-
+25:34 - receiver capability of this model in
+25:37 - this case one message is copied and sent
+25:39 - to each
+25:41 - consumer in advantage of this model is
+25:44 - its ability to handle processes that
+25:47 - require extended computation without
+25:49 - burdening the
+25:51 - producer the model excels in scenarios
+25:54 - where one event needs to reach multiple
+25:56 - consumers as demonstrated in the
+25:59 - diagram it supports a variety of
+26:01 - communication protocols offering
+26:03 - adaptability to diverse system
+26:06 - requirements a challenge in this model
+26:09 - though is the potential for receiver
+26:11 - failure if a consumer fails it might
+26:14 - miss out on important broadcasted
+26:16 - events despite its broadcast nature
+26:19 - there's a level of tight coupling as
+26:21 - consumers need to to subscribe to
+26:23 - specific topics to receive
+26:25 - messages ensuring that a are processed
+26:28 - uniquely and not duplicated falls on the
+26:31 - consumer adding an extra layer of
+26:35 - complexity in the broadcast response
+26:37 - model our main channel is SNS or simple
+26:40 - notification
+26:42 - service SNS excels in one Dem many
+26:45 - messaging enabling a single message to
+26:48 - reach a wide array of recipients
+26:51 - simultaneously it operates on realtime
+26:54 - push base notifications ensuring
+26:56 - immediate dissemination of
+26:59 - information SNS uses a topic based Pub
+27:03 - sub model where messages are published
+27:05 - to topics and then pushed to
+27:09 - subscribers the service supports a
+27:11 - variety of subscribers in communication
+27:13 - protocols catering to different system
+27:15 - needs however it's important to note
+27:17 - that SNS does not inherently provide
+27:19 - message ordering or duplication handling
+27:22 - which might require additional handling
+27:24 - in the consumer's
+27:26 - logic for a real world analogy consider
+27:30 - our McGuffin Warehouse Inventory
+27:32 - management suppose the warehouse must
+27:34 - quickly update various departments sales
+27:37 - shipping customer service about changes
+27:40 - in the MCU and stock
+27:41 - levels when a new match of McGuffin
+27:44 - arrives or stock levels change a single
+27:46 - announcement is broadcasted to all
+27:48 - relevant
+27:51 - departments for event bus routing our
+27:54 - architecture diagram has a producer that
+27:56 - emits two typ types of messages new me
+27:59 - new user and updated
+28:02 - user these messages are sent to the
+28:04 - event Bridge bus where rules on each of
+28:07 - the types forward them to their type
+28:09 - specific
+28:10 - consumers there could potentially be a
+28:12 - third rule that forwards both event
+28:14 - types to another Lambda similar to SNS
+28:17 - this is a many to many situation where
+28:19 - many types of events can go on the bus
+28:22 - and each of those events can be D
+28:24 - directed to multiple
+28:26 - consumers a key advantage of this model
+28:29 - is its loose coupling producers and
+28:32 - consumers operate independently
+28:35 - enhancing system flexibility and
+28:38 - maintainability it's well suited for
+28:40 - processes requiring extended computation
+28:43 - as message processing is not tied to the
+28:45 - producer's
+28:47 - timeline like other async response
+28:50 - models one limitation is that the
+28:52 - response model primarily provides
+28:54 - acknowledgement responses which might
+28:56 - not offer detailed feedback on the
+28:57 - message
+28:59 - processing recovery from failures or
+29:02 - message losses is managed by the
+29:04 - consumer adding complexity to its
+29:07 - design and ensuring item potency or
+29:10 - preventing duplicate processing is also
+29:11 - up to the receiver which can be
+29:14 - challenging in complex event
+29:17 - scenarios for the async bust response
+29:20 - model our primary channel is Amazon
+29:22 - event
+29:23 - Bridge event Bridge excels in handling
+29:26 - complex event routing directing specific
+29:28 - events to the right destinations based
+29:30 - on detailed
+29:31 - criteria it offers seamless integration
+29:34 - with a wide range of AWS Services
+29:37 - enhancing the model's connectivity and
+29:40 - utility users can create custom event
+29:43 - buses tailored to their specific
+29:45 - application events offering greater
+29:47 - control and
+29:50 - customization the schema registry
+29:52 - feature AIDS in managing event models
+29:54 - ensuring consistency and Clarity in
+29:56 - event handling
+29:59 - one notable limitation is the lack of
+30:01 - direct support for message queuing
+30:02 - within eventbridge which may require
+30:05 - additional considerations for message
+30:08 - handling a real world analogy for the
+30:11 - async bus is very similar to the
+30:12 - broadcast scenario for stock levels
+30:15 - event Bridge routes specific events
+30:18 - based on Def defined criteria when stock
+30:21 - levels change in event could trigger
+30:23 - updates to the inventory team sales
+30:25 - department but not the sh shipping dock
+30:28 - because it didn't hit their the
+30:30 - threshold in their
+30:32 - rule each department is a consumer that
+30:35 - receives events based on their own set
+30:36 - of rules so it's a much more flexible
+30:39 - system than
+30:42 - SNS finally we have the async router a
+30:46 - multimodel event routing approach the
+30:48 - architecture diagram here illustrates a
+30:51 - producer that's not just emitting events
+30:53 - but also handling the routing logic it
+30:56 - routes events to the various response
+30:58 - models we've been discussing based on
+31:00 - its own internal business
+31:02 - logic a significant advantage of this
+31:04 - model is the greater control it provides
+31:07 - over the event
+31:08 - routing the producer directly manages
+31:11 - where and how events are routed allowing
+31:14 - for specific event
+31:16 - handling having said that its Advantage
+31:19 - is also a sign significant disadvantage
+31:21 - due to the extra complexity that you
+31:23 - have to add to the producer's code base
+31:25 - the model also introduced is tight
+31:27 - coupling as the producer is in
+31:30 - intricately linked with the routing
+31:32 - logic this type of system could be
+31:34 - exceptionally difficult to
+31:36 - maintain so Matt after having gone
+31:39 - through those the five different
+31:40 - response models like I don't know we've
+31:44 - already discussed going from kind of the
+31:47 - the synchronous mindset we've talked
+31:49 - about the flexibility moving to
+31:50 - Adventure bin architecture like should
+31:52 - teams just use event bridge by default
+31:54 - for everything as their starting point
+31:56 - in Eda or what what do you
+31:58 - think uh well I think event Bridge is a
+32:02 - fantastic service and I'm a huge fan of
+32:05 - uh it's many capabilities uh I I was a
+32:07 - little bit late to the pipes game
+32:09 - actually and and I'm now I'm just really
+32:10 - impressed with what you can do with
+32:12 - pipes and I can't wait to see what else
+32:14 - you can do with that in the future uh
+32:17 - that said uh there are number of other
+32:19 - tools that I think are really useful
+32:20 - here too and um so to say Let's uh throw
+32:25 - everything over event Bridge I think
+32:27 - sometimes um
+32:29 - what's so so definitely do use a vent
+32:33 - Bridge people should use a vent Bridge
+32:35 - uh when building a vent driven
+32:37 - architecture uh it's right there in the
+32:39 - name but but more than that it's it's a
+32:40 - really great service uh I think that
+32:43 - that
+32:44 - um there needs to be room here for step
+32:47 - functions as well uh step functions can
+32:50 - be a target for an event Bridge pipe or
+32:52 - just just a rule uh and uh but sometimes
+32:55 - you've got things that you want to
+32:56 - happen
+32:57 - in a certain sequence and if you're just
+32:59 - firing Events off uh you're just saying
+33:02 - here are here here's an event and then
+33:04 - I've got seven different listeners and
+33:07 - uh you know all those listeners are
+33:10 - going to do their own work right but
+33:12 - maybe I want to know when are all those
+33:14 - listeners done right well they can all
+33:15 - fire events too but that doesn't it
+33:19 - doesn't kind of come back together and
+33:21 - say okay everyone's done here is the uh
+33:25 - you know uh top level completionist I
+33:28 - would have to build something to do that
+33:29 - right I would have to track all of those
+33:31 - events coming back in the end and then
+33:34 - saying okay now I'm finally done I
+33:36 - finally reached the end of this uh it's
+33:38 - much easier to do something like that
+33:40 - with step function so you can fire the
+33:42 - event you can have a step function that
+33:44 - says okay I'm going to do all these
+33:45 - different things uh but I'm going to do
+33:48 - it within a container and then I'm going
+33:50 - to understand that that job has finished
+33:53 - and that then I can have my reporting I
+33:55 - can have my final status whatever
+33:57 - whatever needs to be done at the end of
+33:58 - that so I think those two things uh they
+34:01 - work really great together so I always
+34:02 - think about event Bridge as being like
+34:05 - if I if if system a needs to talk to
+34:07 - system B uh or something like that or
+34:09 - system a just needs to say hey something
+34:12 - happened who cares and then you can have
+34:14 - rules that that pick that up and do
+34:16 - things with that but if you've got uh I
+34:19 - need these seven things to happen and I
+34:21 - need them to happen in a certain
+34:22 - sequence I wouldn't just build that over
+34:24 - vent bridge I would definitely leverage
+34:26 - step functions for
+34:27 - yeah that's a good point and that
+34:29 - reminds me of uh like a Blog series or a
+34:32 - blog post by yanu the burning monk about
+34:34 - orchestration versus choreography which
+34:36 - basically covers the whole like should
+34:39 - you use event Bridge or should you use
+34:40 - step functions to depending on the task
+34:44 - yeah that's a great look at the
+34:46 - question I think you can mix and match
+34:48 - the two and I've written about this too
+34:50 - and I think Yan has also but uh like you
+34:53 - can combine the two by adding put event
+34:55 - notifications as part of your stuff step
+34:57 - functions flow too so you understand as
+35:00 - certain sections of the step function
+35:02 - completes you can maybe trigger things
+35:06 - yeah I don't I don't think we're getting
+35:07 - into that in this course uh maybe a
+35:09 - future one but but uh using past tokens
+35:12 - and stuff functions and sending uh those
+35:14 - out of vent bridge and then eventually
+35:16 - getting uh a response back to restart
+35:18 - your state machine uh it's a great
+35:20 - pattern I love using that yeah
+35:23 - awesome okay so uh our next section
+35:26 - we're going to switch over to demo mode
+35:27 - so we're going to go over uh migrating
+35:30 - our Legacy app into uh cdk well not into
+35:34 - cdk into event driven architecture all
+35:36 - right let's do
+35:38 - it so now that we know a bit more about
+35:41 - event driven architecture Basics let's
+35:43 - get into the actual
+35:45 - demonstration to do that we're going to
+35:47 - be using AWS cdk AWS cdk is a cloud
+35:51 - development kit it's an open-source
+35:53 - software it it's where you can write
+35:55 - imperative code to to generate
+35:57 - declarative cloud formation templates
+36:00 - now we just learned about the concept of
+36:01 - item potency and cdk is item potent the
+36:05 - same inputs that you give to a cdk stack
+36:08 - will yield the same exact cloud
+36:09 - formation yl if you somehow get into a
+36:12 - scenario where it's not and it's not
+36:14 - deterministic then you're doing
+36:16 - something wrong with cdk so you should
+36:17 - take a look at that um if you'd like to
+36:20 - if you haven't been exposed to cdk
+36:22 - before I've made the cdk crash course
+36:25 - for free code Camp before and linked at
+36:27 - mar.
+36:28 - codv
+36:31 - cdk all right so let's get back to our
+36:33 - whim system and look at uh the version
+36:37 - one of that system and the kinds of
+36:39 - problems that we had with it so uh so it
+36:42 - is a API Gateway Lambda Dynamo DB system
+36:46 - uh we got a couple of Lambda functions
+36:49 - here just just two for for demo purposes
+36:52 - but in the real world example you
+36:53 - probably have more uh and um we got to
+36:56 - check inventory function which is you
+36:58 - know pretty straightforward uh that
+37:00 - one's probably fine but but our um our
+37:03 - create order lamba function um it has a
+37:07 - few problems and the problems it um
+37:10 - really is is that it's trying to do too
+37:12 - much it's trying to do too much and it's
+37:14 - got um of course Lambda has a 15 minute
+37:16 - timeout nobody wants to wait 15 minutes
+37:19 - but we can anyway because um uh API
+37:21 - Gateway has a 29se second timeout so
+37:24 - that means that it has to do all of its
+37:26 - work within
+37:27 - window uh or that the user is going to
+37:29 - get a like a 504 error back so um it has
+37:35 - a couple of things that it's doing uh in
+37:37 - a Dynamo DB table it's saving in order
+37:39 - and it's updating the inventory uh and
+37:42 - those those ones are probably okay um
+37:46 - we'll come back to that in a second like
+37:48 - you can probably do do uh two um updates
+37:52 - to uh
+37:55 - um calls to Dynamo DB inside the Lambda
+37:58 - function uh but the the process payment
+38:01 - one is one one that we're really
+38:02 - concerned about so let's say our system
+38:04 - you know it it it does this thing it is
+38:07 - um uh we are calling our payment
+38:10 - microservice which is a separate service
+38:12 - that you know maybe another team
+38:14 - maintains and uh we know we understand
+38:17 - that that's an eventually consistent
+38:19 - thing it's not going to do all the the
+38:21 - the payment processing uh within the uh
+38:25 - uh request that the Lambda function is
+38:27 - making to it but uh it is uh let's say
+38:32 - it's uh not a a perfect uh microservice
+38:35 - it's a little bit slow sometimes uh and
+38:38 - sometimes we get rate limited sometimes
+38:40 - it just can't handle that the uh amount
+38:42 - of traffic that we send to it so this is
+38:44 - a really big problem now because our
+38:47 - Lambda function is going to try to call
+38:50 - the payment processing system and
+38:52 - sometimes it'll get rate limited so what
+38:53 - can we do we could we can do some
+38:55 - retries within the Lambda function we
+38:57 - have a very limited time window for
+38:58 - those retries and if we can't complete
+39:00 - the retries within the 30 seconds then
+39:03 - what's going to happen is that that our
+39:04 - user is going to get an error and
+39:05 - they're not going to know that this was
+39:07 - successful okay so that's a big problem
+39:09 - we have to fix that problem there's a
+39:10 - lot of different ways to fix that
+39:11 - problem uh but it is a it is a big
+39:14 - problem the other problem that we're
+39:15 - facing here is that um we're saving the
+39:17 - order we're updating inventory and then
+39:19 - we get a requirement that you
+39:21 - know uh we didn't restock our inventory
+39:24 - in time uh because we did know how low
+39:27 - it gotten because we had you know just a
+39:30 - door buster of a day of um selling the
+39:34 - guffins uh so what can we do we need
+39:37 - some kind of notification system that
+39:39 - lets us know when our inventory gets low
+39:41 - well one way we could do that is we
+39:42 - could say um after we do the adjustment
+39:45 - we could check the current level against
+39:47 - whatever you know our water mark is for
+39:50 - low inventory and if it were below that
+39:53 - we could uh post a message to SNS that's
+39:56 - going to send us an email to let us know
+39:58 - that our inventory is
+40:00 - low that's
+40:02 - um we it could work but our Lambda
+40:06 - function was doing three things now it's
+40:08 - going to be doing five things uh which
+40:10 - just means that there's more things that
+40:13 - could go wrong but the other problem
+40:15 - that H is what if our inventory gets
+40:19 - adjusted by something else maybe there's
+40:21 - like an admin override or something like
+40:23 - that or maybe uh there's other sales
+40:26 - channels or or something like that and
+40:29 - if the logic to send that notification
+40:32 - that we're low on inventor is only in
+40:34 - this function then any of those other
+40:37 - channels that that uh take our inventory
+40:39 - to that low level are not going to send
+40:42 - the notification so so basically that's
+40:44 - just really not a good solution and then
+40:47 - finally if you see the bottom of the the
+40:49 - diagram here uh we're thinking about
+40:52 - building this fulfillment
+40:54 - system um
+40:57 - but how do we know when there's a new
+40:58 - order uh based on the system we're going
+41:00 - to send another uh request out um you
+41:05 - know to notify that we're gonna have a
+41:07 - six thing that this Lambda function does
+41:09 - we're we're kind of um collapsing under
+41:12 - the weight of all the different things
+41:13 - that we're expecting to do here and we
+41:15 - really need to start sending us some
+41:16 - events because having an event that says
+41:19 - hey there's a new
+41:20 - order you want to do something with that
+41:23 - is going to be much more robust
+41:25 - architecture
+41:26 - all right so let's look at the uh at at
+41:30 - the adventure of inversion of this so we
+41:33 - made a few changes here first of all um
+41:35 - and we'll see this when we look at the
+41:37 - code uh we've gotten rid of some Lambda
+41:39 - functions we brought in another Lambda
+41:41 - function because you know we kind of
+41:43 - needed to
+41:45 - um we we switched to some uh direct
+41:48 - Integrations between API Gateway and
+41:50 - Dynamo DB and that's really because uh
+41:53 - the uh putting a Dynamo
+41:57 - put statement or or a a get item
+42:00 - statement or something like that in um
+42:04 - in an API Gateway uh template is really
+42:07 - pretty easy and it's not very much
+42:09 - different from putting it in land that
+42:10 - you avoid the cold starts uh and um you
+42:14 - know we we're we're basically stripping
+42:16 - down our system to make it much simpler
+42:18 - some people may not be comfortable with
+42:19 - that you can still use Lambda it's not
+42:21 - like a bad solution or something like
+42:23 - that but here we're just trying to strip
+42:25 - it down to the the uh bare minimum
+42:28 - now what we're doing is when we create
+42:31 - an order the first thing that we do is
+42:32 - we're going to persist that in the
+42:33 - database this is a little bit flipped
+42:35 - around from the way um many systems work
+42:39 - which is which is that okay an order
+42:41 - comes in uh we have a bunch of business
+42:43 - logic that we need to execute against it
+42:45 - and then we finally save it uh in a
+42:47 - table somewhere uh here what we're going
+42:50 - to do is we're going to say Okay order
+42:52 - comes in we immediately save it so we're
+42:55 - basically capturing ing the uh the user
+42:58 - intent in in what needs to happen later
+43:01 - on and then we're going to emit events
+43:03 - based on that right we don't have any
+43:04 - any additional logic at that stage we
+43:06 - just say store it send the event okay so
+43:10 - Dynamo DB streams are are a great
+43:12 - solution to this and a lot of this
+43:14 - architecture is based off that if you
+43:16 - happen to be using Dynamo DB uh it's a
+43:18 - good way to go um if you're not using
+43:22 - Dynamo DB you know you can emit events
+43:24 - in many other ways this is just a great
+43:26 - way to get started
+43:29 - so those who have used Dynamo DB streams
+43:33 - before know that uh it's recommended
+43:36 - that you only have two consumers of a
+43:37 - stream um and that has to do with
+43:39 - polling and and some some internal
+43:41 - concerns there uh a good solution to uh
+43:45 - or I guess a good pairing with Dynamo D
+43:48 - streams is to use a vent Bridge pipes
+43:50 - because you can subscribe the pipe to
+43:52 - the
+43:53 - stream and then from there you can you
+43:55 - can the the data that's coming through
+43:57 - you can you can transform it in
+43:59 - different ways you can do that with a
+44:00 - Lambda function or a step function you
+44:02 - can do that with um just a a very simple
+44:05 - mapping template if your need isn't that
+44:08 - complex and then uh that can be reposted
+44:12 - to event bridge and now you can create
+44:13 - rules to send it different places so in
+44:14 - our architecture uh we have the stream
+44:17 - coming through we're going to enrich the
+44:19 - the data in that stream so basically
+44:21 - what we're going to do is we're going to
+44:22 - um unmarshal the uh Dynamo DB tax to
+44:26 - make it a little bit easier to work with
+44:28 - later in the uh process um and then
+44:31 - we're going to repost that event back to
+44:33 - to uh event
+44:35 - Bridge from there we can create a rule
+44:38 - that is going to give us that low
+44:39 - inventory notification we'll show how
+44:41 - that works a little bit later it's very
+44:42 - cool I think uh we're going to store
+44:44 - event logs this is kind of a new thing
+44:46 - that wasn't in the old system but
+44:48 - anytime we have a change we're just
+44:50 - going to throw that into cloudwatch so
+44:51 - that we can uh see what are all the
+44:53 - different change events that are coming
+44:55 - through uh and of course Very
+44:57 - importantly here we still need to adjust
+44:59 - inventory and we still need to process
+45:01 - the payment we're going to use a step
+45:03 - function for that uh because we want
+45:05 - both of those things to happen and
+45:06 - they're kind of related U you know
+45:08 - pertinent to the order so uh the uh step
+45:12 - function is going to directly uh again
+45:14 - with with just a direct integration it's
+45:16 - going to make the uh inventory
+45:18 - adjustment um into Dynamo DB you can do
+45:20 - that with a condition statement to make
+45:22 - sure we don't end up with negative
+45:23 - inventory or something like that and um
+45:27 - and notice that that feeds back in we
+45:29 - get another change uh event which is
+45:31 - going to then uh be um encounter that
+45:36 - rule that will notify us if their
+45:38 - inventory got too low the last piece of
+45:41 - this uh is that we have put an uh sqsq
+45:45 - in between uh our order process and the
+45:49 - payment processing so that uh if uh if
+45:52 - we get rate limited uh the message
+45:54 - should stay on the Queue and and then
+45:56 - then getss consumed a little bit later
+45:58 - uh that's that's done by means of
+46:00 - another event Bridge pipe one thing I'll
+46:02 - mention is that that particular piece of
+46:04 - this architecture of of saying my
+46:06 - Downstream service might be rate
+46:07 - limiting me so let me uh put sqs and
+46:11 - aent Bridge pipes in between that it's
+46:13 - not something I've done production
+46:14 - before we might find that that doesn't
+46:16 - work as well as we thought it might we
+46:20 - might need a more robust solution that
+46:22 - could be swapped for a step function
+46:23 - later on and the rest of the
+46:24 - architecture doesn't have to change so
+46:26 - that's that's a really great thing about
+46:28 - uh uh event driven architecture is that
+46:32 - you can uh replace components that
+46:34 - aren't quite living up to what you
+46:35 - expected them to do and the rest of the
+46:37 - the architecture doesn't have to
+46:40 - change on this diagram just wanted to
+46:43 - show uh that um you know the motion here
+46:47 - where we had a Lambda function that was
+46:49 - doing uh check inventory in the V1
+46:53 - architecture in V2 uh we're doing that
+46:56 - as a direct integration it's almost the
+46:58 - same thing uh but that save order it was
+47:01 - doing multiple things before now we have
+47:03 - single responsibility components so we
+47:06 - have a direct integration that that
+47:08 - processs the order in our table uh and
+47:11 - then we've got the Dynamo stream that
+47:13 - eventually uh eventually but very
+47:16 - quickly actually uh uh will trigger that
+47:19 - stuff function that is going to do the
+47:20 - inventory
+47:22 - adjustment um that we've got a um some
+47:25 - new features here we got we got our low
+47:27 - inventory notification that's very easy
+47:29 - to implement uh and uh we can build that
+47:33 - external a fulfillment system based on
+47:35 - the um on the event we've got event logs
+47:38 - uh and we've got that cue for our
+47:40 - payment
+47:41 - processing and while we're at it we
+47:43 - could think about additional events that
+47:45 - we could add to this system what if we
+47:47 - wanted a high inventory warning that
+47:49 - that says that we've overstocked and our
+47:51 - sales team needs to get active what if
+47:53 - we want an out of stock uh notific if
+47:56 - that that then can can flag that in our
+47:58 - catalog is uh on back order there
+48:01 - there's lots of different uh things that
+48:03 - we could conceive of and they're all
+48:05 - going to be fairly easy to implement and
+48:08 - um and and fit this
+48:10 - model all right everybody let's look at
+48:12 - some code so what I have here is the uh
+48:15 - whims V1 system that's the the rest API
+48:19 - based system uh and um this is the cdk
+48:23 - code so I'm just going to walk through
+48:24 - this really quickly there's not a lot
+48:26 - here um and you'll be able to do the
+48:28 - GitHub later on I suggest you check that
+48:30 - out might a little bit different by then
+48:33 - but it's going to be mostly the same
+48:34 - thing so uh we've got a table construct
+48:36 - we're going to create uh our Dynamo DB
+48:38 - table uh that's that's pretty
+48:41 - straightforward
+48:43 - um i' I've uh winged and moaned a little
+48:46 - bit about the payments API uh for demo
+48:49 - purposes what I did is I just created a
+48:50 - lock integration in a separate rest API
+48:54 - uh that always returns a 200 uh actually
+48:57 - that seems like a pretty nice service
+49:00 - but it doesn't actually do a lot I I
+49:02 - added some throttling to that just for
+49:03 - fun uh so we can Benchmark that um then
+49:07 - I created a couple Lambda functions
+49:09 - there's the one to get inventory and the
+49:10 - one to uh create orders we look at the
+49:13 - source for those get inventory um is
+49:16 - super
+49:17 - simple um so I'm using the uh Dynamo DB
+49:22 - document client and um I'm just going
+49:26 - and getting a specific item so there's
+49:27 - one item in the table uh for each
+49:31 - inventory now probably I would do
+49:33 - something a little we probably have more
+49:34 - than one thing that we can sell uh and
+49:37 - there'd probably be some kind of uh
+49:38 - query pram or something like that that
+49:41 - includes the the um skew or something
+49:45 - and we we use that to uh actually
+49:48 - generate a query but in this case just
+49:50 - to keep it really simple there's exactly
+49:52 - one thing and so we're just going to go
+49:53 - get that and it's going to tell us what
+49:54 - that inventory number is all right uh
+49:58 - create ORD is a little bit more complex
+50:00 - um we still got Dynamo DB document
+50:02 - client here and uh first of all we're
+50:05 - going to toss that guy in our table uh
+50:07 - we're going to generate a uh um
+50:11 - partition key and sort key for that
+50:12 - we're also going to set the status of it
+50:14 - to pending uh you won't actually see
+50:16 - that status change in this demo but you
+50:18 - can imagine that some other system later
+50:20 - on would update that then we also have
+50:23 - to have an update command uh that's
+50:25 - going to go and uh reduce the inventory
+50:28 - for that
+50:31 - um and finally we're going to make a uh
+50:34 - fetch call uh using native node fetch to
+50:38 - uh post our order over to the payment
+50:41 - system and uh and and get that payment
+50:44 - process started then we return order
+50:47 - created and uh everybody's happy right
+50:51 - uh the only other things that you would
+50:52 - see in this stack are uh just a couple
+50:55 - really quick things we've got our our
+50:56 - rest API for the orders API uh we've got
+51:00 - a couple of resources there to connect
+51:02 - to the Lambda integration and then
+51:04 - finally there's this AWS custom resource
+51:06 - which is uh is just to seed the database
+51:09 - so that when I deploy my stack I'm going
+51:11 - to have it preceded with that LX model
+51:14 - McGuffin uh with a quantity of 1 million
+51:18 - items all right so let's walk through
+51:20 - the modern architecture uh it's going to
+51:22 - be pretty different here um first of all
+51:25 - what I did is um the V1 version of whims
+51:29 - uh had everything just inside of that
+51:31 - whims stack class uh our V2 version has
+51:35 - a few more things going on and so what I
+51:37 - did is I I built some L3 constructs uh
+51:40 - L3 constructs um combine uh various
+51:44 - things uh other resources that I want to
+51:47 - create uh and and kind of put them
+51:49 - behind my own uh vision of of what the
+51:52 - application actually looks like so the
+51:54 - the so those are just really in this
+51:56 - case uh I'm not anticipating any reuse
+51:59 - it's just sort of an
+52:00 - organizational uh construct so I still
+52:03 - left the um the table here I could have
+52:07 - created uh an L3 construct just for the
+52:10 - table but it would really be exactly the
+52:12 - same as this L2 construct so it's just
+52:14 - fine to do that the only thing I might
+52:16 - uh save a few lines here of uh of config
+52:20 - hardly worth it as um you can see that
+52:23 - I've only got a little over 40 lines of
+52:25 - uh total code here so let's look at some
+52:28 - of these individual um sections of it
+52:30 - the first is CDC which is uh course
+52:33 - stands for change data
+52:36 - capture and we've got several things
+52:39 - happening here um I'm declaring a
+52:42 - node.js
+52:43 - function uh which is called CDC
+52:45 - enrichment let's just check that one out
+52:48 - uh really quickly and um basically what
+52:52 - this is doing is it's um we're borrowing
+52:54 - the um unmarshal utility from util
+52:57 - Dynamo DB and we're using that to uh to
+53:03 - transform our Dynamo DB record into
+53:06 - something that's a little bit easy into
+53:08 - pure Json because Dynamo DB always
+53:11 - specifies the type uh in a way that is a
+53:14 - little obtuse to work with later on so
+53:17 - that's that's really all this is doing
+53:19 - we could do other things here if we
+53:20 - wanted to this is just code and we could
+53:22 - do anything that we want uh um we are uh
+53:28 - adding a meta tag that that lets us know
+53:30 - what process this um we're adding this
+53:32 - data key and so then we're kind of
+53:34 - putting this in in a a format that's
+53:37 - going to make sense to us in a schema
+53:38 - that will uh be happening later on so
+53:41 - that's um that's the function that is
+53:44 - going to be enriching what happens in
+53:47 - the pipe let's let's look at what the
+53:48 - pipe is here so so um Matt for the
+53:52 - enrichment function is that what's the
+53:55 - output of that going to like what is so
+53:58 - it's outputting a list right it's
+54:00 - processing a bunch of
+54:01 - Records what does that list end up
+54:05 - becoming uh so the output of the
+54:07 - enrichment function uh is sent to the
+54:11 - Target of the
+54:13 - pipe and for this specific pipe the
+54:15 - target's event Bridge right so the the
+54:18 - response list is going to end up being
+54:21 - the details of all the events that will
+54:22 - be going out that's right that's a
+54:25 - really good point to
+54:29 - make all right so let's go back and look
+54:31 - at our pipe construct uh at the time
+54:33 - that we're making this
+54:35 - recording uh there is not an L2 pipe
+54:37 - construct so we are forced to fall back
+54:40 - to CFM we're not actually forc because
+54:42 - there is an RFC for an L2 pipe construct
+54:45 - it's still in uh RFC status uh you can
+54:49 - use it uh I have used it it's it's kind
+54:52 - of good uh I went with CFM pipe um just
+54:55 - because it's not actually part of the
+54:57 - cdk just yet uh and CFN pipe is okay to
+55:02 - use you have to do a little bit more
+55:04 - manual stuff for example I have to
+55:06 - create a role explicitly uh because CFN
+55:09 - pipe is going to want the Arn of that
+55:11 - role just the thing that it does uh I
+55:14 - added a bunch of log configuration here
+55:16 - it's a little bit optional but it's
+55:18 - really good especially when it comes to
+55:19 - debugging as I had to do uh to do that
+55:23 - um you can see that there's an
+55:24 - enrichment key here um which that's
+55:27 - going to expect uh the function Arn um
+55:31 - the L2 construct would just take a
+55:32 - function as an argument in this case
+55:34 - because this is uh the uh corresponds
+55:38 - directly to Cloud information it's going
+55:40 - to want the Arn
+55:42 - um we set the source here so the source
+55:46 - is going to be that table stream uh this
+55:48 - subscribes the pipe to the Dynamo DB
+55:51 - stream uh which is configured
+55:56 - here in our table V2
+56:01 - construct we're setting some parameters
+56:03 - here a batch size of 10 which means that
+56:06 - we'll we will not process more than 10
+56:08 - times uh 10 items at a time and our
+56:10 - starting position will be the most
+56:12 - recent change uh we are targeting this
+56:15 - back to the same uh event bus which is
+56:18 - going to be our default
+56:19 - bus uh as discussed
+56:22 - previously and uh we're adding some
+56:25 - additional parameters that this will
+56:28 - help us to Route the event when we
+56:29 - create a rule for this our change data
+56:32 - capture all it's doing is it's it's
+56:34 - saying there's a stream of data coming
+56:35 - in it could be uh a um a creation event
+56:39 - it could be an update it could be a
+56:42 - deletion uh and um we're going to use
+56:45 - our Lambda function to enrich that just
+56:47 - because the uh the uh transform
+56:50 - capabilities and the vent Bridge pipes
+56:52 - isn't really up to what we wanted to do
+56:53 - for this uh for our purposes here and
+56:56 - then we're going to send that back to to
+56:58 - uh event bridge if we never created a
+57:00 - rule for it it would just kind of never
+57:03 - go anywhere from here but our other
+57:05 - components can start to build those
+57:06 - rules so let's look at
+57:11 - those here we have the our order
+57:13 - processor construct um we're going to
+57:16 - grab that uh default event
+57:20 - bu and
+57:23 - um we're declaring a machine I kind of
+57:26 - um there's a few different ways to do
+57:27 - this in in cdk I I like to use the
+57:30 - constructs uh and um so we've got a
+57:33 - parallel construct here not much to say
+57:35 - about it and then we've got an update uh
+57:38 - Dynamo update item construct here now
+57:40 - this is really not very different from
+57:42 - uh using the SDK and typescript so I'm
+57:44 - pretty comfortable doing it this could
+57:46 - be a Lambda function that does this
+57:47 - instead uh and um in this case uh this
+57:52 - was actually missing from the V1
+57:54 - architecture so uh that's another little
+57:56 - Improvement that you get here there's a
+57:58 - condition expression here that makes
+57:59 - sure that we're not uh uh committing
+58:01 - more quantity than we actually have uh
+58:04 - so this would fail if we had 99 stock
+58:07 - and tried to sell 100 uh and um assuming
+58:11 - that condition is successful then we are
+58:13 - going to reduce uh the
+58:15 - quantity uh our other Branch here is
+58:19 - that is is basically we're just going to
+58:20 - take that uh that message body that came
+58:22 - in and we're going to replay that on SQ
+58:25 - we're going to stick stick that in the
+58:26 - queue whoever subscribes to that queue
+58:29 - we don't know at this point uh we're
+58:31 - just um sending it off and then
+58:34 - uh how does this thing get triggered in
+58:36 - the first place well here's the rule
+58:37 - that does that now we're uh we've got
+58:39 - that source and event type that we set
+58:42 - uh in our CDC construct and here we are
+58:46 - going to um uh create this rule uh make
+58:50 - sure that we're only getting insert uh
+58:53 - event types and that our comption key
+58:55 - begins with customer uh and uh we could
+58:59 - we could uh further refine that if we
+59:01 - wanted to and then we're going to Target
+59:02 - our state machine so the event now
+59:05 - becomes the input to the state
+59:10 - machine let's look at the our payments
+59:12 - API so I moved that
+59:16 - um I moved that mocked integration API
+59:19 - here um as as well as the uh the
+59:22 - throttle plan
+59:25 - this is really unchanged uh just wanted
+59:28 - to make sure that it had its own
+59:29 - construct the payments process there is
+59:31 - the
+59:33 - um piece that's a little bit more
+59:35 - interesting
+59:36 - here uh because we got another CFN pipe
+59:40 - uh with its own role and its own uh
+59:42 - logging
+59:43 - solution
+59:47 - uh this is this is the queue that uh is
+59:50 - going to um consume
+59:53 - messages uh the messages go into the uh
+59:57 - into the
+59:58 - pipe uh but this pipe instead of
+60:00 - replaying an event over event Bridge
+60:02 - which actually come to think of it is
+60:05 - probably the way I would like for uh our
+60:07 - payment system to work but somebody else
+60:10 - is working on that or nobody's working
+60:11 - on that so it's payment system isn't
+60:13 - going to change much uh in this cut so
+60:16 - what we're going to do is we're going to
+60:17 - Target that API Gateway uh with this so
+60:21 - we can actually have our pipe connect
+60:23 - sqs messages come off the queue and we
+60:26 - we pull them in we're going to replay
+60:29 - that to API Gateway and uh that way we
+60:32 - can manage our our rate limit
+60:34 - of couple more constructs here to go
+60:37 - through uh our inventory monitor uh this
+60:41 - one is is uh is really nice so all we
+60:43 - have to do is is um we're grabbing our
+60:45 - bus again uh it's just the default bus
+60:49 - that uh already exists in the account we
+60:51 - are
+60:53 - um creating
+60:55 - SNS topic with an email subscription so
+60:59 - that our team can be notified when when
+61:01 - this event goes out and then we're going
+61:02 - to create another rule here but this
+61:04 - rule has a numeric uh comparator so we
+61:08 - say if our inventory is is less than or
+61:11 - equal to 100 items 100 units uh then
+61:16 - we're going to trigger this
+61:18 - rule finally we've got uh
+61:22 - this observability construct and um this
+61:26 - creates another event rule uh event
+61:29 - Bridge rule uh that is going to um store
+61:34 - all of our events in uh a cloudwatch log
+61:37 - group and it's going to create an event
+61:39 - Bridge
+61:41 - archive uh and
+61:44 - um uh and schema registry for all the
+61:47 - events that we're sending yes so I just
+61:49 - want to um I've got the view here of my
+61:52 - Dynamo DB table in my account where I've
+61:54 - deployed the whim system and I just want
+61:57 - to kind of give a really quick demo here
+62:00 - of how it can work so
+62:04 - um uh you can see that I have uh
+62:06 - preseeded my database I've got I've got
+62:08 - my LX McGuffin uh ready to roll and I've
+62:11 - got a thousand uh items in
+62:15 - stock over here is um my so here over
+62:19 - here in Postman I'm
+62:21 - um going to uh create a post uh to the
+62:26 - orders API in order to create uh a new
+62:29 - order so I've got set my customer ID to
+62:31 - 123 and the quantity is three and
+62:34 - presumably there' be some more
+62:35 - interesting information here um so if I
+62:38 - send that
+62:39 - over and then I flip back to my table
+62:44 - you can see that
+62:45 - um I have uh registered my order and my
+62:49 - quantity has already been decremented so
+62:50 - so it was that quickly it was even
+62:52 - faster than that that that um my state
+62:55 - machine ran and all the other pieces uh
+62:59 - uh happened and uh so it almost seems
+63:01 - like it's uh probably even as fast as it
+63:04 - was before so what happened behind the
+63:07 - scenes well one of the things we know it
+63:09 - was uh that my my step function ran um
+63:13 - and so this is this is the step function
+63:15 - you can see that it's um got uh parallel
+63:18 - two branches in the parallel step here
+63:21 - one of them is adjust inventory and the
+63:23 - other one's in key payment
+63:24 - uh they were both successful um what I
+63:27 - think is really cool about this is is is
+63:30 - look at how fast uh this thing was it
+63:33 - was uh 136 milliseconds uh from start to
+63:38 - end uh and this thing just just really
+63:41 - blazed uh it it got the work done very
+63:43 - very quickly and um because this is an
+63:46 - Express uh step machine step function uh
+63:50 - that means that it's going to be very
+63:52 - very cheap in fact really the
+63:54 - um unless I'm I'm doing this quite a lot
+63:57 - which would be a good problem to have
+63:59 - let's face it because that means I'm
+64:01 - selling quite a lot it's the the cost of
+64:03 - running this is going to be
+64:04 - negligible an x-ray uh we have a little
+64:09 - bit of a problem here which I hope is is
+64:11 - a problem that service teams ultimately
+64:14 - solve for us and that is that uh you
+64:17 - actually don't get to trace over a
+64:19 - Dynamo DB stream so um in this case you
+64:23 - can you can do traces over event Bridge
+64:27 - um but the the stream kind of ends the
+64:29 - trace so so we see the initial Trace
+64:31 - here which is that our client has placed
+64:34 - an order and that's going to hit the
+64:35 - Dynamo DB we'd really love to see a line
+64:38 - that comes from Dynamo DB over to the uh
+64:41 - which really the stream and the pipe
+64:44 - here is is the client we triggering the
+64:45 - state machine and we can see that we're
+64:49 - um uh doing another operation on our
+64:52 - whims table uh we're putting something
+64:54 - in
+64:55 - sqs uh but there's obviously some
+64:57 - missing pieces here so that means that
+64:59 - uh really it uh in the end here we're
+65:02 - going to have to kind of uh put together
+65:05 - some uh some kind of additional
+65:07 - observability elements that will let us
+65:09 - know hey we had uh you know X orders
+65:13 - come in and uh y ended up in this status
+65:17 - and and Z ended up in this status
+65:19 - because we don't get the full Trace here
+65:21 - uh we do get good traces for you know if
+65:23 - we want to
+65:24 - uh uh do it dive down and uh look at
+65:29 - okay just just that initial save or or
+65:31 - something like that like if we start
+65:32 - seeing error or something in this area
+65:35 - this is a great tool for that but
+65:37 - unfortunately it doesn't yet give us the
+65:39 - whole end end
+65:40 - view so Matt if I was a team
+65:43 - implementing this what approach should
+65:45 - we take to iteratively do it should we
+65:47 - maybe start with the observability
+65:49 - construct and the change data capture or
+65:51 - is there a better
+65:53 - approach so those are both uh you know
+65:57 - the great thing about those constructs
+65:59 - is that they're completely
+65:59 - non-destructive right they're just
+66:01 - adding additional information the
+66:02 - observability construct is going to
+66:04 - start registering events and and uh give
+66:07 - you some additional logging and and the
+66:09 - CDC right until you subscribe to that
+66:12 - event and do something meaningful with
+66:13 - it uh you could you could Implement that
+66:16 - and then just see what it does and see
+66:18 - how you like it and see whether it makes
+66:19 - sense to you you data capture stuff uh
+66:23 - independently of everything get this get
+66:25 - those events flowing and then even skip
+66:28 - the stuff and like automate the
+66:29 - Fulfillment part or automate the low
+66:32 - inventory notification part without even
+66:34 - touching the existing V1 code and then
+66:38 - absolutely or you spread it out and have
+66:41 - multiple teams you know one adding the
+66:42 - Fulfillment one adding the inventory
+66:44 - another an intern you know adding the
+66:46 - step function or whatever that's
+66:50 - correct I guess calling out one more
+66:52 - thing the the distributed nature the
+66:54 - like decoupled nature of this if
+66:56 - ultimately business comes back and
+66:58 - doesn't want to know about low inv low
+67:01 - inventory notifications for example you
+67:03 - can just delete that construct and you
+67:05 - don't have to go in and modify the
+67:08 - original Lambda the order processing
+67:10 - Lambda like that
+67:12 - it's right right I mean I think I think
+67:15 - that's
+67:17 - um you know to to think of your overall
+67:20 - application platform as a a series of
+67:23 - components all of which are are
+67:25 - replaceable is a great architectural
+67:28 - mindset to have because it just makes it
+67:30 - makes pivots it makes new requirements
+67:32 - it makes you know maybe the the state of
+67:35 - play has changed in some way uh and it's
+67:39 - and you know you have to respond to uh
+67:41 - new new business pressures and if your
+67:44 - architecture is uh is modular enough
+67:49 - then that's going to be a lot easier to
+67:50 - do than if uh you've just got sort of
+67:53 - like this
+67:54 - uh you know sprawling classes and
+67:56 - functions uh that are much harder to
+67:59 - iterate
+68:01 - on now let's move on to Advanced
+68:04 - practices for event
+68:07 - architecture proper event formatting is
+68:09 - crucial for maintaining system integrity
+68:12 - scalability and
+68:13 - interoperability enforce strict backward
+68:16 - compatibility in your event structures
+68:19 - this approach reduces the risk of
+68:20 - breaking changes and ensures smoother
+68:23 - evolution of your
+68:24 - systems keep your event properties
+68:27 - consistent across all events consistency
+68:31 - AIDS in predictability and eases
+68:33 - integration across different parts of
+68:35 - the
+68:36 - system avoid optional properties in your
+68:39 - event schemas ensuring that all
+68:42 - properties are mandatory simplifies
+68:44 - processing logic and reduces
+68:49 - ambiguity ensure that event sources are
+68:52 - consistent within a single code
+68:53 - Repository
+68:56 - this consistency is key to traceability
+68:59 - and manageability of
+69:01 - events different code repositories
+69:04 - should not emit the same Event Source
+69:06 - unique sources prevents conflicts and
+69:09 - improves Clarity in event
+69:13 - handling build a standard metadata
+69:15 - object for all events this metadata
+69:18 - should include essential information
+69:20 - like the event type the Tim stamp and
+69:23 - source
+69:24 - providing a uniform context for each
+69:26 - event place your actual event payload
+69:29 - under a dedicated data object this
+69:32 - separation ensures that the payload is
+69:34 - clearly distinguishable from the
+69:37 - metadata let's talk about what should be
+69:39 - in the metadata of an event
+69:42 - detail include item potency IDs in the
+69:45 - metadata these unique identifiers ensure
+69:48 - that each event is processed only once
+69:50 - preventing duplicate processing and
+69:52 - enhancing reliability
+69:54 - it's essential to track where events
+69:56 - originate you can use identifiers like
+69:59 - the default Lambda environment variables
+70:01 - the AWS lamed a function name or things
+70:03 - like the step function execution ID and
+70:06 - store those in the metadata object this
+70:09 - tracking provides Clarity on the event
+70:11 - journey and AIDS in debugging and
+70:14 - monitoring for more insights into
+70:16 - effective event payload patterns you
+70:18 - could check out David Bo's blog post
+70:21 - which offers valuable perspectives I
+70:24 - also wrote a blog post not long ago
+70:25 - delving into inferring architecture by
+70:28 - using the metadata from event
+70:31 - details a as an example of a well
+70:34 - structured detail object The Meta object
+70:37 - here includes incoming details like the
+70:40 - account source and detail type as well
+70:43 - as the function name and state machine
+70:45 - or job
+70:47 - identifiers this structure AIDS in
+70:49 - tracking The Event Source and
+70:51 - path under the data object we would
+70:54 - place the actual payload of the event
+70:57 - and this clear separation between the
+70:58 - metadata and the payload simplifies
+71:00 - processing and
+71:05 - interpretation when producing events
+71:08 - there are two primary types full and
+71:11 - sparse understanding the differences in
+71:13 - applications of each is key to efficient
+71:16 - event
+71:17 - management sparse events carry minimal
+71:20 - information about what occurred they're
+71:22 - lightweight and typically include just
+71:24 - enough data to identify the event and
+71:26 - its basic
+71:27 - context the advantage of sparse events
+71:30 - is their Simplicity and reduce load on
+71:32 - the system making them efficient for
+71:34 - high volume or real-time
+71:37 - scenarios in contrast full events are
+71:40 - more detailed including extra
+71:42 - information that might minimize the need
+71:45 - for subsequent
+71:46 - queries while they can be more
+71:48 - convenient by providing comprehensive
+71:50 - data up front they can also increase the
+71:53 - computation burden on the producer and
+71:56 - can be heavier on the
+71:57 - network there's a spectrum between full
+71:59 - and sparse events the choice of which
+72:02 - you to use uh depends on the specific
+72:06 - requirements of your
+72:08 - system such as response time Network
+72:10 - bandwidth and data processing
+72:13 - needs remember with extra information
+72:16 - comes more risk more data can lead to
+72:19 - increased complexity potential privacy
+72:22 - concerns and a higher chance of data
+72:23 - becoming stale or or
+72:27 - irrelevant regardless of the type chosen
+72:30 - it's crucial to avoid breaking changes
+72:31 - in your event schema ensure backward
+72:34 - compatibility to maintain system
+72:35 - stability and
+72:38 - reliability when designing events in
+72:40 - event driven architecture it's crucial
+72:42 - to
+72:43 - consider the nature and handling of the
+72:45 - data within your
+72:47 - payloads as a general rule avoid
+72:50 - including sensitive information in event
+72:52 - payloads exposing such data can pose
+72:55 - security risks and compliance
+72:58 - issues if sensitive data must be
+73:00 - included consider encrypting it at the
+73:03 - field level this approach helps preserve
+73:06 - the ability to perform pattern matching
+73:08 - while safeguarding the sensitive
+73:11 - data be mindful of payload limits for
+73:15 - instance Amazon event Bridge has a
+73:17 - payload limit of 256
+73:21 - kiloby if your event data exed ceeds
+73:23 - this limit an alternative strategy is to
+73:26 - upload the larger data to S3 and then
+73:28 - emit an event containing the bucket and
+73:30 - key
+73:31 - combination this method not only
+73:34 - circumvents the payload limit but also
+73:36 - leverages the robust storage
+73:38 - capabilities of
+73:40 - S3 remember if you're using S3 buckets
+73:43 - consumers of your events will need
+73:45 - independent access permissions to read
+73:47 - from these buckets ensuring appropriate
+73:50 - access controls and permissions is
+73:52 - critical to maintain security and
+73:58 - functionality change data capture events
+74:00 - are a pivotal aspect of event driven
+74:03 - architecture particularly when dealing
+74:05 - with database
+74:06 - changes these events are produced in
+74:09 - response to modifications in a database
+74:12 - providing a real-time data stream
+74:14 - reflecting these
+74:15 - changes key to change data capture is
+74:19 - creating a consistent event
+74:21 - interface these interfaces typically
+74:23 - include information like the columns
+74:25 - that were changed and stringified
+74:27 - representations of data values before
+74:30 - and after the change the
+74:32 - diffs such structured information helps
+74:34 - in understanding the nature and impact
+74:36 - of changes made to the
+74:38 - database I've written some blog posts
+74:41 - that can help with this on Aurora if you
+74:43 - have an aurora mySQL database you could
+74:45 - use binlog streaming as a source for
+74:47 - your change data capture events or for
+74:50 - MySQL or postgress you could also use
+74:53 - the database migration service and pipe
+74:55 - the events to Kinesis and from there go
+74:57 - to event Bridge or
+74:59 - wherever fortunately Dynamo DB is much
+75:02 - simpler and you can just leverage Dynamo
+75:04 - DB streams to create events these can be
+75:08 - efficiently integrated with event Bridge
+75:09 - pipes for seamless event
+75:13 - handling to the right is is an example
+75:16 - of a change data capture
+75:18 - structure in my example I made the
+75:20 - detail type CDC update and in the
+75:24 - details data portion I included the
+75:26 - information about the source of the
+75:28 - change the database and table along with
+75:31 - a list of columns
+75:33 - changed and before and after attributes
+75:36 - with stringified
+75:38 - Json we use stringified Json for the
+75:41 - before and after fields to keep the
+75:44 - interface
+75:45 - consistent if the event bus has schema
+75:47 - registry enabled and the before and
+75:50 - after Fields were not strings a new
+75:52 - version in the schema registry would get
+75:54 - created for every combination of field
+75:57 - change but with the stringified format
+76:00 - we have the information we need between
+76:01 - the combination of columns changed and
+76:03 - before and after and we maintain a a
+76:06 - common
+76:08 - interface I'll note that a CDC insert
+76:11 - event would not have the before
+76:13 - attribute and a CDC delete event would
+76:15 - not have an after attribute they aren't
+76:18 - optional in these cases because they are
+76:20 - different detail types they're different
+76:22 - interfaces
+76:25 - hey editor Matt here I just want to
+76:27 - point out that stringified before and
+76:30 - after bodies aren't necessarily for
+76:32 - everyone it's a consideration if you
+76:35 - want to have maintained consistent
+76:37 - interfaces but what it does do is it
+76:39 - breaks event pattern matching inside of
+76:43 - the Deltas so for example in our demo
+76:46 - app we actually didn't stringify the
+76:48 - data and we used the change values
+76:51 - inside of the change data cap capture
+76:53 - event to do the low inventory
+76:55 - notification so that's an important
+76:57 - consideration for how you want to manage
+77:01 - your change data capture events and
+77:03 - whether or not you care about the schema
+77:06 - registry schema registry incrementing
+77:08 - the version every time at the end of the
+77:11 - day it's probably not a big deal I I did
+77:13 - want to point it
+77:15 - out event pattern filtering plays a
+77:18 - critical role in efficiently routing and
+77:20 - handling events event Bridge off highly
+77:23 - flexible event pattern rules these can
+77:26 - be these can include various patterns
+77:28 - such as using a prefix suffix Wild Card
+77:30 - anything but in numeric and
+77:33 - others such versatility allows for
+77:35 - precise event matching according to
+77:37 - specific
+77:40 - criteria best practices indicate that
+77:43 - you should be cautious to avoid writing
+77:44 - patterns that could create infinite
+77:46 - Loops in event triggering another event
+77:48 - in a cyclical manner that could lead uh
+77:51 - to system overload and unpredict ible
+77:54 - changes you also want to make sure your
+77:56 - event patterns are as precise as
+77:58 - possible vague patterns may lead to
+78:00 - unintentional matching causing noise and
+78:03 - inefficiencies in event
+78:05 - processing always specify the Event
+78:07 - Source and detail type in your filters
+78:10 - this practice Narrows down the event
+78:12 - scope ensuring only relevant events are
+78:15 - processed include the account and region
+78:18 - as filters for enhanced security too
+78:21 - utilize Conta filters to further refine
+78:25 - event selection focusing on specific
+78:27 - event attributes or values within the
+78:30 - event
+78:31 - payload a schema registry can play an
+78:34 - important role in managing and
+78:36 - maintaining the structure of event data
+78:38 - in event driven
+78:40 - architectures it ensures a consistency
+78:43 - Clarity and compatibility across
+78:44 - different parts of the
+78:46 - system start by defining clear and
+78:49 - concise schemas at the beginning of your
+78:51 - project early definition helps in
+78:54 - establishing a strong foundation for
+78:55 - your event your event data
+78:58 - structures an Implement Version Control
+79:00 - for your schemas as your system evolves
+79:03 - Version Control ensures that changes are
+79:06 - tracked and managed
+79:09 - systematically regularly enforce schema
+79:12 - validation this practice helps in
+79:14 - Catching inconsistencies and errors
+79:16 - early maintaining the Integrity of your
+79:21 - data keep a detailed record of any
+79:23 - changes made to your
+79:25 - schemas proper documentation is crucial
+79:28 - for understanding the evolution of your
+79:30 - event structures and for
+79:33 - troubleshooting Implement notifications
+79:35 - for schema changes this keeps all the
+79:38 - stakeholders informed about
+79:39 - modifications ensuring that everyone is
+79:41 - aligned with the latest schema
+79:44 - updates and finally consider using tools
+79:47 - like event catalog by David Bo for
+79:49 - managing your event schemas the async
+79:52 - API initiative is another valuable
+79:54 - resource resource it provides tools and
+79:57 - standards for managing asynchronous
+80:03 - apis many AWS Services emit events to
+80:06 - your account's default event bus and
+80:08 - event
+80:09 - Bridge these events can range from
+80:12 - changes in service states to specific
+80:15 - actions executed within the
+80:17 - services you can create powerful
+80:20 - automation within your AWS accounts
+80:22 - tapping into these default events this
+80:25 - enables real-time responsive actions
+80:28 - based on service
+80:31 - activities to effectively document and
+80:33 - manage these previously I wrote a
+80:36 - three-part blog series on event driven
+80:39 - documentation where I tied into these
+80:41 - AWS Service events to automatically
+80:43 - update my org's documentation anytime a
+80:46 - cloud information stack deployed with
+80:48 - event Bridge rules or API
+80:51 - gateways
+80:55 - in event Bridge there are two types of
+80:57 - buses the default bus that is included
+81:00 - in every AWS account and custom named
+81:04 - buses understanding their difference is
+81:06 - key to effective event
+81:09 - management the default bus is always
+81:12 - available ensuring a foundation for
+81:14 - loose coupling and better collaboration
+81:17 - it receives AWS Service events
+81:19 - automatically making it ideal for
+81:22 - integration across multiple services and
+81:25 - teams Custom Custom named buses offer
+81:29 - more control tailored to specific
+81:32 - requirements while they provide tighter
+81:35 - Access Control they are more challenging
+81:37 - to share making them better suited for
+81:40 - single teams or projects with specific
+81:42 - access
+81:44 - needs while custom named buses have
+81:47 - their place I recommend prioritizing the
+81:49 - use of the default bus wherever possible
+81:51 - for its EAS of collaboration and Broad
+81:54 - integration
+81:58 - capabilities event Bridge pipes is a
+82:01 - feature in AWS that simplifies
+82:03 - point-to-point
+82:04 - Integrations between event sources and
+82:08 - targets it is designed to reduce the
+82:10 - complexity and coding requirements in
+82:12 - developing event-driven
+82:15 - architectures you can create a pipe to
+82:17 - receive events from supported sources
+82:20 - and optionally add filters for specific
+82:23 - event processing further you can Define
+82:26 - enrichments to enhance event Data before
+82:29 - sending it to your chosen
+82:31 - Target pipes support various
+82:33 - Integrations including Lambda functions
+82:35 - step functions and API calls allowing
+82:38 - for versatile and dynamic event
+82:40 - handling for example a pipe can link an
+82:44 - Amazon sqs message CU to an AWS step
+82:48 - function State machine with an event
+82:50 - Bridge API destination for data
+82:52 - enrichment
+82:53 - this setup exemplifies efficient
+82:55 - Automation in a e e-commerce
+83:00 - context so Matt now that we've come to
+83:02 - the end and learned so much about event
+83:04 - driven architecture what's next how do
+83:07 - people get started doing
+83:08 - this so I I think uh kind of as we
+83:12 - talked about it in the demo a little bit
+83:13 - like an easy way is to just start
+83:16 - producing events even if you don't have
+83:18 - consumers to to use them um you can do
+83:22 - that by adding and change data capture
+83:24 - depending on what system your your
+83:25 - database is on or you could if you have
+83:28 - uh a server full or a server L system
+83:31 - both could just start putting events on
+83:33 - the event rout bus right um and I think
+83:37 - it Segways really easily uh to once you
+83:41 - get towards like decoupling your system
+83:43 - by emitting events like you can really
+83:45 - segue into domain driven development and
+83:47 - really break things up into like
+83:50 - teens um there's the there's a concept
+83:54 - called event storming also that you
+83:55 - could kind of approach with your team to
+83:58 - see how you can break things up into
+84:00 - domain driven
+84:01 - development have have you used uh event
+84:04 - storming or domain driven development in
+84:06 - your workplaces sure yeah um I mean I
+84:12 - think we we definitely uh you know need
+84:16 - to think about the the business
+84:19 - domains uh that drive our applications
+84:21 - in order to to make sure that we're
+84:23 - working on the most important uh things
+84:26 - so um so so considering uh the business
+84:31 - domains that we have to work with you
+84:34 - know like
+84:35 - oftentimes uh that becomes a discussion
+84:37 - about microservices or uh banded
+84:41 - contexts but I think that um you know
+84:45 - thinking thinking that in terms of
+84:46 - events
+84:49 - because whether or not we're using event
+84:51 - Bridge whether or not we're using event
+84:52 - driven architecture of course we have
+84:54 - lots of events right like uh you know
+84:57 - click streams like you know different
+85:00 - things that happen in the system
+85:02 - identifying and naming business events
+85:05 - that we care about as things that uh you
+85:07 - know become features of the system as
+85:10 - opposed to sort of like a side effect uh
+85:13 - that of some code I think is a really
+85:16 - strong pattern uh to start to make sense
+85:18 - of your system like some of us uh have
+85:23 - uh work on systems that have been around
+85:24 - for a little while and and sometimes
+85:26 - they sort of grow up in strange
+85:28 - different ways and you end up with
+85:29 - feature sets that uh don't exactly make
+85:32 - perfect sense if you start creating
+85:34 - events and you start saying this is an
+85:37 - order event or or this is a uh you know
+85:40 - application submission event or whatever
+85:42 - your business may be uh that um I I
+85:47 - think that's a great way to start making
+85:48 - sense of things and then you can start
+85:51 - pulling you know you may have had a
+85:53 - function that does nine different things
+85:55 - uh because that's the way the system was
+85:56 - built once you have that event you can
+85:59 - start taking some of those things out of
+86:02 - that big
+86:04 - function and have them instead triggered
+86:06 - by the
+86:07 - event awesome but it also sounds like
+86:10 - we're touching on our next uh free code
+86:11 - Camp course if we make a domain driven
+86:14 - one all right let's do
+86:18 - it and I think that about wraps it up so
+86:22 - again uh We've linked it throughout the
+86:24 - course but there's a companion blog post
+86:26 - at mars.
+86:29 - codde um there's also a lot of really
+86:32 - great resources at serverless land.com
+86:34 - including different serverless patterns
+86:36 - that you can use with event-driven
+86:37 - architecture and other serverless
+86:39 - concept Concepts event driven
+86:41 - architecture isn't specific to
+86:42 - serverless but it certainly helps uh
+86:46 - there's an awesome talk from Eric
+86:48 - Johnson at rein from from reinvent and
+86:50 - this short code links to that march. Cod
+86:55 - EJ and David Bo does a lot of blog posts
+86:58 - about avender and architecture he has
+87:00 - some really awesome stuff about like
+87:02 - different patterns with it and different
+87:04 - tool sets he's made things like the
+87:06 - event catalog to help with documentation
+87:08 - and the event the event Cannon um that
+87:11 - can help you you know test your own
+87:12 - event structures and everything like
+87:14 - that so he also has a reinvent talk
+87:16 - about his journey to event driven
+87:18 - architecture and that's I have a short
+87:20 - link to that at mar. codes SL DB and
+87:24 - then my own blog is at matt. mars. codes
+87:28 - and Matt Morgan's links to his talks and
+87:30 - all his blog posts and everything is at
+87:32 - Matt morgan.
+87:35 - Cloud so thanks to free code Camp uh for
+87:39 - hosting uh this video and um and thanks
+87:43 - to you Matt Mars for inviting me to join
+87:45 - you uh and especially thanks for doing
+87:47 - all the editing because I would be bad
+87:49 - at that it would take me a really long
+87:51 - time so I'm glad else is doing that uh
+87:53 - it's been fun um uh anyone who enjoyed
+87:57 - this and wants to continue your learning
+87:59 - find me on LinkedIn uh find my website
+88:03 - uh happy to engage with you and uh help
+88:06 - continue your
+88:07 - learning yeah likewise everything Matt
+88:10 - said uh I'm on socials I'm Mart's codes
+88:13 - on pretty much most of them including
+88:15 - LinkedIn so feel free to reach out to me
+88:17 - there I think we'll try to monitor the
+88:19 - comments once the video is out and
+88:20 - definitely check out the companion blog
+88:22 - post that we'll be hosting alongside
+88:25 - this U that will also have the code
+88:27 - references and everything too so yeah
+88:29 - thanks Matt thanks for code Camp hope
+88:32 - everyone uh learned a bit about event
+88:34 - driven
+88:35 - architecture bye
+88:51 - bye
+90:18 - and and learn so much about event Bridge
+90:20 - driven architecture
+90:23 - that was stupid I said event Bridge
+90:25 - driven
+90:27 - architecture you should see my blooper
+90:29 - real for enhanced security and context
+90:34 - specific
+90:38 - specif Eric Johnson is a renowned
+90:41 - principal developer
+90:43 - at Eric Johnson is a renowned principal
+90:47 - developer advate wow I can't say
+90:50 - that Eric Johnson is a renowned
+90:54 - prent bloop
+90:56 - real Eric Johnson is a renowned look at
+91:00 - the
+91:02 - camera Eric Johnson is a renowned
+91:06 - P all
+91:09 - right it's just the producer directly
+91:12 - manages where and how events are routed
+91:15 - allowing
+91:20 - for
+91:24 - specific event handling let's see if I
+91:26 - can edit
+91:28 - that a signic
+91:31 - uh
+91:35 - okay here Postman I'm going to make a uh
+91:39 - a post to my API Gateway uh to create a
+91:43 - new
+91:44 - payment
+91:46 - and
+91:48 - sorry cut
+91:50 - that event Bridge
+92:00 - offers not sure what that's supposed to
+92:20 - say

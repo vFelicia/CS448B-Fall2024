@@ -1,0 +1,1507 @@
+With timestamps:
+
+00:00 - in this mongodb with python tutorial
+00:02 - i'll be continuing from where i left off
+00:04 - in video 1 and showing you some advanced
+00:06 - mongodb features specifically i will
+00:09 - discuss schema validation bulk inserting
+00:12 - data modeling advanced queries and
+00:14 - introduce you to a great module called
+00:16 - pie era if you've not yet watched
+00:18 - the first video in the series please do
+00:20 - so by clicking the link in the
+00:21 - description or the card in the top right
+00:23 - of your screen now i will mention that
+00:25 - mongodb is the sponsor of this video and
+00:27 - their team has helped me come up with
+00:29 - this fully guided tutorial for all of
+00:31 - you lastly if you haven't already
+00:33 - claimed your 25 dollars in free mongodb
+00:35 - atlas credits you can do so by clicking
+00:37 - the link in the description and using
+00:39 - code mkt tim without further ado let's
+00:42 - get into the video and learn about some
+00:44 - more advanced features of mongodb
+00:49 - [Music]
+00:55 - alright so i'm here in visual studio
+00:57 - code i have my mongodb extension
+00:59 - installed highly recommend you install
+01:01 - that if you don't have it and i have
+01:03 - some code here that we wrote in the
+01:04 - previous video that just connects me to
+01:06 - my mongodb cluster now the database i'm
+01:09 - going to use here is production and
+01:10 - again if you haven't watched that
+01:11 - previous video please go back and watch
+01:13 - that it's going to give you some
+01:14 - fundamentals and kind of a basis for
+01:16 - what i'm going to explain here now for
+01:18 - this video i need some kind of example
+01:20 - and some data to work with so the
+01:22 - example i want to create is something
+01:24 - where we have books so those will be
+01:25 - stored in one collection and then we
+01:27 - have authors those those will be stored
+01:28 - in another collection and then we'll
+01:30 - have a reference between the book and
+01:32 - the author so we know which authors
+01:34 - wrote which book and this way we can
+01:36 - have one author writing multiple books
+01:38 - without replicating that data and i'll
+01:39 - talk about why we actually made that
+01:41 - kind of design decision as we start
+01:43 - creating this however the first thing i
+01:45 - want to do here is talk to you about
+01:47 - something known as schema validation and
+01:49 - how that works in mongodb so let me open
+01:51 - up the documentation i will reference
+01:53 - quite a bit of documentation here as we
+01:55 - go through this video i'll leave it in
+01:57 - the description and you can feel free to
+01:58 - read through and get some more details
+01:59 - if you'd like
+02:00 - all right so we have schema validation
+02:02 - now essentially what this is is a way of
+02:04 - creating some type of structure in your
+02:06 - mongodb database so typically when you
+02:09 - insert a document into a collection
+02:12 - there's nothing that enforces it has to
+02:13 - have a specific field and when you
+02:15 - create a new collection you don't have
+02:16 - to specify what columns you're going to
+02:18 - have what's required what the type of
+02:20 - everything is you literally just create
+02:22 - the collection and allows you to insert
+02:24 - any type of document that you want the
+02:25 - documents you insert could be completely
+02:27 - different that's one of the great
+02:28 - benefits of mongodb however sometimes
+02:31 - you want to use mongodb and you also
+02:33 - want to have some type of enforcement on
+02:35 - the data that's being inserted in a
+02:37 - collection and this is where schema
+02:39 - validation comes in so what this allows
+02:41 - you to do is similarly to a sql database
+02:44 - set up some predefined columns or in
+02:46 - this case fields and require those
+02:48 - whenever you insert a new document so
+02:50 - when we're talking about our book for
+02:52 - example we may require that you have a
+02:54 - title you have an author you have a
+02:56 - published date all of these fields must
+02:59 - be on the document to insert it
+03:00 - otherwise it won't actually let you
+03:02 - insert that so you can read through this
+03:04 - documentation if you'd like to see
+03:05 - exactly how this works you can see here
+03:07 - that when you create a collection you
+03:09 - have the option to actually pass a
+03:10 - validator and this validator
+03:13 - allows you to specify the schema here of
+03:16 - the collection so we can have things
+03:18 - like different properties so the
+03:19 - properties would really be the required
+03:21 - fields here we have a name year major
+03:24 - gpa address etc so we specify all of the
+03:27 - different types here by using bsun type
+03:29 - we specify our descriptions there's all
+03:31 - kinds of other stuff that we can do and
+03:33 - yeah we set up our schema validation so
+03:36 - let's actually do this here in mongodb
+03:38 - i'm going to just copy in a validator
+03:41 - because i don't need to write all of
+03:42 - this out it's not really that helpful
+03:44 - for the video here so this is one we
+03:46 - have a book validator so we start with a
+03:48 - json schema we say the bson type of the
+03:51 - schema right is going to be an object
+03:53 - and then we have our required now for
+03:56 - required these are going to be the
+03:58 - fields that we need to pass or that we
+04:00 - need to have on our documents and for
+04:02 - properties these are all of the fields
+04:04 - and their corresponding types so i have
+04:06 - my title it's type string it has a
+04:08 - description we have our authors this is
+04:10 - going to be a type array and since it's
+04:12 - an array we need to specify the type of
+04:14 - the items so i'm saying the items in
+04:16 - this array are going to be of type
+04:17 - object id so this is going to reference
+04:20 - an object from the the author collection
+04:24 - we then have our description we then
+04:26 - have a publish date type date we have
+04:28 - type and this is a field which is a
+04:30 - value enum which means we can either
+04:32 - have fiction or non-fiction as the two
+04:35 - allowable values here and then we have
+04:37 - copies minimum value of zero the type is
+04:40 - int and then we have our description if
+04:41 - you want to write a more advanced schema
+04:43 - validator again reference that
+04:45 - documentation there of course i can't go
+04:47 - through everything you can possibly do
+04:48 - and if you want the bson types you can
+04:50 - find those again from the documentation
+04:52 - but anything that you would think is a
+04:54 - type is probably one and you can likely
+04:56 - guess what the types are of course that
+04:58 - you can check from the documentation
+05:00 - okay so now that we have our validator
+05:02 - though how do we actually use this well
+05:04 - the first thing we need to do is create
+05:05 - a collection called book and then once
+05:07 - we've created that collection we can
+05:09 - actually modify it and kind of add this
+05:11 - validator to it so what i'm going to do
+05:13 - here is say db and actually it's not
+05:15 - going to be db it's going to be
+05:16 - production because that's the name of my
+05:18 - database
+05:19 - and then i will create a new collection
+05:21 - and i can do that using the create
+05:23 - collection function like this i also
+05:25 - could just write dot and whatever the
+05:27 - name of the collection is but i would
+05:28 - need to insert something in there then
+05:30 - for that to be created so this way i can
+05:32 - just specify what i want to call this so
+05:34 - i will call this a book and i'm just
+05:36 - going to put this in a tri-except block
+05:38 - just to ensure that if i run this code
+05:39 - multiple times i don't get an error
+05:41 - where i try to create a collection that
+05:43 - already exists so i'm going to say
+05:44 - accept exception as e
+05:46 - print e
+05:48 - okay so now that i've done that i can
+05:49 - actually modify this collection using
+05:51 - the following command i can say
+05:53 - production and that's not what it is
+05:55 - it's going to be dot and command like
+05:58 - that and then i can pass a mongodb
+06:01 - command this command is going to be call
+06:03 - mod like that i'm going to pass the
+06:05 - collection that i want to modify which
+06:07 - is going to be book and i'm going to
+06:09 - pass a validator equal to the book
+06:11 - validator and that's going to add that
+06:13 - and then when we insert documents our
+06:16 - schema will be enforced so let's
+06:18 - actually just try running this code
+06:19 - right now
+06:20 - and see if this works so let's run and
+06:23 - let's see what we get
+06:25 - and we get an error so let me have a
+06:26 - look here what this area is and we'll be
+06:28 - right back all right so as you saw we
+06:30 - were getting this error here it's saying
+06:31 - user is not allowed to do action
+06:33 - actually good error to run into i can
+06:34 - show you how we can fix this so it's
+06:36 - kind of two steps to do this we need to
+06:38 - go to mongodb atlas here which i already
+06:40 - have open we need to click on database
+06:43 - access once we're in our project then we
+06:45 - need to go to our user we need to change
+06:47 - its permissions so it has access to the
+06:49 - admin permissions so what we do that is
+06:51 - we click on edit we go here to database
+06:53 - user privileges select on built-in role
+06:56 - and then change this to be atlas admin
+06:58 - so to perform the command that we're
+06:59 - trying to perform you need to be an
+07:01 - admin user makes sense so we need to do
+07:03 - this now we also create a new user we
+07:06 - can you know set up custom roles all
+07:07 - kinds of stuff we can do in here for now
+07:09 - though that's all we need to do for our
+07:11 - current user okay so i've changed that
+07:13 - for our user now that we've done that
+07:14 - there's only one more step and it
+07:16 - involves this connection string right
+07:18 - here we just need to make sure that when
+07:20 - we're authenticating we're
+07:21 - authenticating as an admin this doesn't
+07:23 - happen by default so we need to add the
+07:26 - following line here at the end or the
+07:27 - following i guess query parameter we're
+07:29 - going to put an ampersand because we
+07:30 - have an additional parameter here and
+07:32 - then we're going to say auth source is
+07:34 - equal to admin again that's going to
+07:36 - sign us in as the admin and give us
+07:38 - access to this command that we're trying
+07:39 - to use so let's now save and re-run this
+07:42 - let's clear the screen and hopefully
+07:44 - this will work for us this time and this
+07:46 - is collection book already exists okay
+07:48 - so that means i've already created the
+07:49 - collection that's fine however the uh
+07:52 - the production command here should
+07:54 - actually be working right we should now
+07:55 - have modified this wasn't giving us an
+07:57 - error and that is all good now if we
+07:59 - want to verify this is indeed working
+08:01 - let's go
+08:02 - to mongodb compass let me go to
+08:05 - refresh here we should have a production
+08:07 - database which we do and if i go inside
+08:09 - of here you can see that i have my book
+08:11 - database
+08:12 - awesome uh we can go to validation and
+08:15 - when we go to validation we can see that
+08:16 - we have these json schema here or the
+08:19 - schema validation actually set and we
+08:22 - can change the action as well as the
+08:23 - level here for validating the schema
+08:26 - okay so that is good for now we've
+08:27 - created our book collection however now
+08:30 - that we've done that we want to create
+08:32 - our author collection as well
+08:34 - so i'm going to put this inside of a
+08:36 - function here i'm going to say define
+08:38 - and this is going to be
+08:40 - create
+08:41 - book
+08:42 - underscore collection
+08:44 - and we'll indent all of this just so we
+08:46 - don't repeat this code multiple times
+08:48 - and now we can make a new function i'm
+08:49 - going to say
+08:50 - this is going to be create the author
+08:52 - collection
+08:54 - and after we do this we'll insert some
+08:56 - sample data so for now let's copy our
+08:58 - author validator i'm going to put it
+09:00 - right here okay so we have our json
+09:03 - schema bson type same thing as before i
+09:05 - won't go through this again and now that
+09:07 - we've done that we want to create the
+09:09 - author collection and then add this
+09:11 - schema to it
+09:12 - so we're going to say try
+09:14 - and this is going to be not db but this
+09:16 - will be production
+09:17 - dot create collection we're going to
+09:18 - create author we'll say accept exception
+09:21 - as e
+09:22 - print e and then we'll run that same
+09:24 - command that we did before so this is
+09:26 - going to be production
+09:28 - dot command call mod author and then the
+09:30 - author underscore validator like that
+09:33 - okay so i think that's the exact same as
+09:35 - this just want to make sure everything
+09:36 - looks good
+09:37 - looks good to me so now we can call this
+09:40 - function so create
+09:42 - the author collection
+09:44 - and let's run this and hopefully
+09:46 - everything will work fine
+09:48 - i don't get any errors no output that is
+09:50 - good if we want to verify this is
+09:52 - working we can go back here to atlas and
+09:55 - now we see that we have author and if we
+09:56 - go to validation we can see that we have
+09:59 - this now i guess we could have a look at
+10:00 - schema as well or there's nothing in
+10:02 - here so we can't really see anything
+10:03 - right now okay so that is all good to me
+10:06 - we have author we have book now that
+10:08 - we've done that we need to add some
+10:09 - sample data so let me stop this function
+10:12 - call let's create a new function here
+10:14 - let's say
+10:15 - create
+10:16 - underscore data and in here we need to
+10:19 - add a bunch of books and then we need to
+10:21 - add a bunch of authors or i guess we're
+10:23 - going to add our authors first actually
+10:24 - and then our books because our books
+10:26 - rely on the authors right
+10:28 - so let's do this i'm just going to copy
+10:30 - in some sample data here that i have for
+10:32 - authors and now i can show you
+10:34 - how we perform a bulk insert
+10:36 - now i believe that we saw this in the
+10:38 - last video but it's important to mention
+10:40 - again because this is a more efficient
+10:42 - way to insert data rather than
+10:44 - individually insert every single one of
+10:46 - these entries so let me slow down for a
+10:49 - second here and really go through what
+10:50 - we're about to do first of all we have
+10:52 - this dt now that is actually imported
+10:54 - from date time so i need to import that
+10:56 - at the top here i'm going to say from
+10:59 - date time
+11:00 - import date time as dt just so i can get
+11:03 - a date time object very easily okay so
+11:05 - now we have that so that's what we're
+11:06 - doing with our dates and time we then
+11:08 - have our first name last name and date
+11:10 - of birth and if we go back here to our
+11:12 - author schema we notice those are the
+11:14 - only three required fields
+11:15 - so it's fine for us to insert those what
+11:18 - i'm doing again is i'm going to insert
+11:19 - all of my authors once the authors are
+11:21 - inserted i'm going to grab the ids of
+11:24 - these authors and i'm then going to use
+11:26 - them to create my books because the
+11:28 - books rely on what authors are
+11:31 - well writing them and we're going to use
+11:33 - again this reference type relationship
+11:36 - as opposed to the embedded documents and
+11:39 - i'll talk about that more in a second
+11:40 - for now though let's insert this data so
+11:42 - what we can do is say
+11:44 - i guess we'll go
+11:46 - the author underscore collection is
+11:48 - equal to and this will be production
+11:50 - and dot
+11:52 - author and then we already know how to
+11:54 - do the bulk insert but it's going to be
+11:55 - author collection dot insert underscore
+11:59 - many and we can just pass a list here of
+12:02 - the authors that we want to insert
+12:04 - then what i'm going to do though is get
+12:05 - all of the ids of this these insert
+12:08 - authors so i'm going to say inserted
+12:09 - underscore ids is equal to this and then
+12:12 - this is going to be dot inserted ids and
+12:15 - actually let's just call this
+12:18 - author underscore ids like that
+12:21 - actually we can just call it authors for
+12:22 - now that's fine even though this is
+12:24 - called authors we'll just override it so
+12:25 - now we'll store a list of all of the
+12:27 - inserted ids
+12:29 - of all of these elements okay so that's
+12:31 - how you do the bulk insert again much
+12:32 - more efficient than individually
+12:34 - inserting so make sure if you are
+12:35 - inserting a lot of stuff you use insert
+12:37 - many as opposed to insert one okay now
+12:40 - that we have done that we need to create
+12:42 - the sample data for our books again that
+12:44 - relied on the authors so let me copy in
+12:46 - this
+12:48 - okay so this is our books let's make
+12:50 - sure the indentation looks good
+12:52 - and what i'm doing is just accessing the
+12:54 - indices of the insert ids from my
+12:57 - authors for what author wrote what book
+13:00 - right so for here i have one mongodb
+13:02 - advanced tutorial this one we're going
+13:03 - to say is written by me so i'm grabbing
+13:06 - author 0 which is going to be the id of
+13:08 - this inserted document so that's what
+13:11 - i'm doing here i'm putting this inside
+13:12 - of an array or a list because i could
+13:14 - have multiple authors i then have the
+13:16 - publish date i'm just saying well that's
+13:18 - today so datetime.today type nonfiction
+13:21 - copies 5
+13:22 - and all of these here have the fields
+13:25 - that are specified in our schema
+13:27 - validation
+13:28 - hopefully that makes a bit of sense uh
+13:30 - not super important those are just what
+13:31 - our books are and now we need to insert
+13:33 - our books so to do this we're going to
+13:34 - say the book
+13:36 - underscore collection
+13:38 - is equal to and then this will be
+13:39 - production
+13:40 - dot book
+13:42 - okay
+13:43 - then we need to insert all of these i
+13:44 - don't really care about the ids this
+13:46 - time so i can simply say book collection
+13:50 - and not update but dot insert underscore
+13:52 - many and i'm just going to insert my
+13:55 - books like that
+13:56 - okay so that's it for creating our
+13:57 - sample data and that gave you a little
+13:59 - bit of taste of the bulk insert and now
+14:02 - what i can do is say create
+14:04 - data like that i think that's what i
+14:05 - called the function and when i run this
+14:08 - everything should be good so let's run
+14:10 - the code
+14:12 - notice here that i don't get any errors
+14:14 - and if i go back to mongodb atlas i give
+14:17 - a little bit of a refresh here we can
+14:18 - see that we have our different books and
+14:20 - we have an array of authors which are
+14:22 - referencing object ids of the authors
+14:25 - from the author collection
+14:27 - okay so now that we've done this let's
+14:28 - take a quick pause let's talk about data
+14:31 - modeling in mongodb and why i made the
+14:34 - decision here to actually put the
+14:36 - authors in a separate collection because
+14:39 - there's arguments to be made for
+14:40 - embedding them versus having a separate
+14:42 - collection so i'm here again on the
+14:44 - mongodb documentation i'm just looking
+14:47 - at data modeling examples and patterns
+14:49 - and i want to quickly go through how you
+14:51 - kind of make a decision on if you prefer
+14:53 - to have embedded documents or references
+14:56 - because that can be difficult to figure
+14:57 - out and that can have a large impact on
+14:59 - performance so typically speaking when
+15:01 - you have a one-to-one relationship that
+15:04 - means maybe i have say in this example
+15:07 - one address for one person it's totally
+15:09 - fine to store that address as an
+15:11 - embedded document
+15:13 - inside of the person now that makes
+15:15 - sense because typically when you're
+15:17 - retrieving the person you're going to be
+15:18 - retrieving the address
+15:20 - only one address per person or maybe
+15:22 - multiple addresses per person but
+15:23 - they're specific to that person
+15:25 - makes sense to store it inside however
+15:28 - if you were to have one address that was
+15:30 - associated with say five people six
+15:32 - people or one object for that matter
+15:34 - that multiple people are going to have a
+15:36 - relationship with so you have kind of a
+15:37 - one-to-many or many-to-many type
+15:39 - relationship
+15:40 - then what you usually want to do is take
+15:43 - that document so let's just use address
+15:45 - for this this example here store it in a
+15:48 - separate collection and then make a
+15:50 - reference to that address from all of
+15:52 - the different documents that reference
+15:53 - it so all of the people that share an
+15:54 - address they would have a reference to
+15:56 - that address now the reason why you may
+15:58 - prefer to do this is because it's going
+15:59 - to take less space it's going to take
+16:01 - less space because now you don't need to
+16:03 - duplicate it on multiple people it's in
+16:05 - a separate collection and also means
+16:07 - when you make a modification to this
+16:09 - address since it will be stored in a
+16:10 - separate collection so like this anyone
+16:12 - referencing it will automatically have
+16:14 - that update made or that modification
+16:16 - made whereas if you were storing this
+16:19 - address and you had it embedded in four
+16:21 - five six different documents you would
+16:23 - need to change it in every single one of
+16:25 - those documents to make sure you have
+16:26 - consistent data so those are two of the
+16:29 - main things you kind of want to keep in
+16:30 - mind is the document that i'm embedding
+16:33 - going to be referenced by multiple
+16:34 - different documents or is it only
+16:36 - referenced by one if it's only
+16:37 - referenced by one totally fine go ahead
+16:39 - and embed it if it's referenced by
+16:41 - multiple you still can make an argument
+16:43 - to embed it but you definitely want to
+16:45 - consider the two things that i just
+16:46 - talked about before so hopefully this is
+16:48 - giving you a little bit of a sense of
+16:50 - why this can be a difficult decision but
+16:52 - now i want to talk about something here
+16:54 - called the subset pattern so often times
+16:56 - when you're retrieving a document
+16:58 - there's other documents either embedded
+17:00 - or referenced that you want to have a
+17:02 - look at now it can be very time
+17:05 - consuming and slow down your server if
+17:07 - you're grabbing say
+17:08 - every single reference for a specific
+17:11 - document every time you grab it or every
+17:13 - single embedded document for a document
+17:16 - every time you retrieve that document so
+17:18 - this example here they have a bunch of
+17:19 - movies and it can be very time consuming
+17:21 - to grab every single piece of detail
+17:23 - about all of these movies every time so
+17:26 - the subset pattern here is saying well
+17:28 - what you should do is store a subset of
+17:31 - the information that is important and
+17:32 - that you're frequently retrieving in a
+17:34 - document as opposed to storing all of it
+17:37 - and store the additional data somewhere
+17:39 - else which can be retrieved when you
+17:41 - need it that's essentially the premise
+17:42 - you can read through here and see
+17:44 - exactly how they would implement that
+17:45 - but the idea is that if you store kind
+17:47 - of a slimmer version of a document it's
+17:49 - much faster to retrieve you can get all
+17:51 - of the data that you need very quickly
+17:53 - and if you do require the additional
+17:55 - data then you can always grab that and
+17:56 - ask for it as opposed to always grabbing
+17:59 - every single piece of data which again
+18:01 - can be slow and time consuming
+18:04 - so i mean if we read through this here
+18:05 - it says here currently the movie
+18:07 - collection contains several fields the
+18:08 - application does not need to show a
+18:10 - simple overview of the movie such as
+18:12 - full plot rating information etc so
+18:14 - instead of storing all of the movie data
+18:16 - in a single collection you can split the
+18:17 - collection into two collections you have
+18:20 - movie and movie details and then you
+18:22 - only grab the movie details when you
+18:24 - actually need that right so that's kind
+18:26 - of the subset pattern and what's this is
+18:28 - talking about here
+18:29 - now there is some trade-offs on using
+18:31 - the subset pattern this can require
+18:33 - multiple calls right or multiple kind of
+18:36 - query operations it can require you to
+18:37 - do some type of join operations which
+18:39 - i'll show you how to do later on and
+18:41 - something you just need to consider when
+18:43 - you're kind of making this design design
+18:44 - decision sort
+18:46 - now this was more on one-to-one
+18:47 - relationships okay so when you have one
+18:49 - document referencing another document in
+18:51 - some way however now we have one-to-many
+18:54 - relationships so in a one-to-many
+18:56 - relationship you're going to have one
+18:58 - document that references many different
+19:00 - possible things right now in this case
+19:03 - we have the embedded document pattern we
+19:05 - have the subset pattern
+19:07 - and we also should have here the
+19:09 - reference pattern all right so here on
+19:11 - this page we're looking at modeling
+19:12 - one-to-many relationships with embedded
+19:14 - documents now this is going to be
+19:16 - similar to what i talked about before
+19:18 - but i just want to quickly read this to
+19:20 - you here it says embedding connected
+19:22 - data in a single document can reduce the
+19:23 - number of read operations required to
+19:25 - obtain data in general you should
+19:27 - structure your schema so the application
+19:28 - receives all of its required information
+19:30 - in a single read operation so that is
+19:33 - for efficiency purposes and this is kind
+19:35 - of stating why you would use this
+19:36 - embedded document pattern where when you
+19:38 - have again say multiple addresses as
+19:41 - i've talked about you store them in an
+19:43 - array here of addresses this is totally
+19:45 - fine it's going to make it very quick to
+19:46 - retrieve the addresses however again if
+19:49 - you were sharing these addresses with
+19:50 - other people it might make sense to put
+19:52 - them in a separate collection because of
+19:54 - the reasons i stated
+19:56 - now though we also have the subset
+19:57 - pattern so same thing can happen here as
+19:59 - with before when you have a ton of
+20:02 - nested documents that leads to a large
+20:05 - document in general that you need to
+20:06 - retrieve because that's to retrieve all
+20:08 - of the embedded or nested ones and
+20:10 - sometimes it can be common uh to just
+20:12 - store a subset of in this case say
+20:14 - reviews as opposed to every single
+20:16 - review and then grab all of the reviews
+20:18 - when require so i won't go through this
+20:20 - we already kind of talked about this
+20:21 - before this is just more specific here
+20:24 - to a one-to-many relationship okay let's
+20:26 - move on to the next one again you can
+20:27 - read all this from the description so
+20:29 - continuing here i'm looking at model
+20:31 - one-to-many relationships with document
+20:33 - references
+20:34 - now this is a great example of again why
+20:36 - we want a reference when we have a
+20:38 - publisher
+20:39 - and we're treating this as an embedded
+20:41 - document
+20:42 - this publisher likely is going to
+20:43 - publish multiple books and that means
+20:45 - that i'm going to have this publisher
+20:47 - embedded in multiple documents and i'm
+20:49 - going to continue to repeat it and
+20:51 - duplicate it when i really don't need to
+20:53 - do that so rather than doing it like
+20:55 - this we're going to create a reference
+20:57 - now they've done it in the opposite way
+20:58 - that i did in our example but they've
+21:00 - made a reference here of books and books
+21:02 - is essentially an array that has all the
+21:05 - ids of the books that this publisher has
+21:08 - published now we did it the other way
+21:10 - where we had an id on our book that
+21:12 - pointed to the authors or we had ids
+21:15 - because it was an array
+21:16 - either way it's fine but again this
+21:18 - avoids this
+21:19 - kind of duplication that we had before
+21:22 - and makes it easier for us to say modify
+21:24 - the founded date or the location or add
+21:26 - a field to our publisher without having
+21:28 - to do it in a ton of different places so
+21:30 - that's really all to show you here
+21:32 - that's kind of an introduction to data
+21:34 - modeling of course as your database
+21:36 - grows larger there's more design
+21:38 - decisions that you have to make but this
+21:40 - gives you kind of the
+21:41 - core i guess choices that you have you
+21:44 - can use embedded documents you can use
+21:45 - the sub sub pattern you can use a
+21:48 - reference and that's what you're going
+21:49 - to be using in mongodb you have to make
+21:51 - your decision and kind of lay out your
+21:52 - arguments on which one you would prefer
+21:54 - to use based on the type of program you
+21:56 - have and how you're retrieving
+21:58 - information with that said though let's
+22:00 - go back now and actually start writing
+22:02 - some advanced queries in mongodb and use
+22:04 - some of the sample data that we created
+22:06 - alright so for a majority of the rest of
+22:08 - this video what i'm gonna do is just
+22:10 - write some advanced queries and
+22:12 - demonstrate how we perform kind of
+22:14 - multiple operations and do just a lot
+22:16 - more advanced stuff that we haven't yet
+22:18 - seen now what you can do if you're
+22:20 - really kind of a beginner and you don't
+22:21 - want to write these super advanced
+22:22 - queries is you can always just grab all
+22:24 - of the documents from a collection for
+22:26 - example and then you can use python to
+22:28 - parse through them so you can you know
+22:30 - look at the fields manually write your
+22:31 - python code now that's not the optimal
+22:34 - way that's not going to be very
+22:35 - efficient and you're going to be
+22:36 - retrieving a ton of data that you don't
+22:38 - need which obviously is not ideal but i
+22:40 - just want to mention that there is times
+22:42 - where maybe it's way too challenging or
+22:44 - difficult for you to come up with the
+22:45 - query
+22:46 - on your own using kind of the mongodb
+22:48 - language if that's the case write as
+22:51 - good of a query as you can and then use
+22:53 - python to kind of parse and modify the
+22:54 - results as you see fit anyways though i
+22:57 - will show you some advanced queries of
+22:58 - course there's a ton more everything
+23:00 - will be available from the links in the
+23:02 - description and the documentation
+23:04 - however what i want to do now is i want
+23:06 - to retrieve all of the books that
+23:08 - contain the letter a so kind of a random
+23:11 - thing but something you may want to do
+23:12 - especially if you were say searching for
+23:14 - something or you got a search string
+23:15 - that needed to return some books
+23:17 - and i'm going to show you how we use
+23:18 - regular expressions here so i'm going to
+23:20 - just write a variable called books
+23:23 - containing and then this is going to be
+23:25 - a and this is going to be our production
+23:28 - dot book dot find and for the query here
+23:31 - we need to put the field that we want to
+23:33 - do the query on so this is going to be
+23:34 - title because i want to see if a is
+23:36 - contained in the title
+23:38 - and then
+23:39 - i'm going to use this operator here
+23:40 - called
+23:42 - dollar sign and then regex so standing
+23:44 - for regular expression now for the
+23:46 - regular expression i can just use a
+23:49 - and then inside of curly braces just put
+23:51 - a one and this specifies that we're
+23:53 - looking for something that contains at
+23:54 - least one a
+23:56 - okay so now that i've done that i can
+23:58 - just print this out so i can say
+24:00 - printer
+24:01 - actually i don't know if i have that
+24:02 - defined but we'll look at that in a
+24:04 - second dot p print
+24:06 - and i can print the list
+24:08 - of books containing a now let me just
+24:10 - come up here
+24:11 - so i need to import p print which i have
+24:14 - and i'm just going to create my pretty
+24:15 - printer here so printer is equal to and
+24:18 - then this will be print dot pretty
+24:20 - printer
+24:21 - so now i can use that to get a nicely
+24:23 - formatted output okay so let's run this
+24:25 - here
+24:26 - and see if we get what we're looking for
+24:29 - and when i do this notice i get a list
+24:30 - containing books that have the letter a
+24:32 - and the title so of course we have
+24:33 - advanced here
+24:35 - and we have the gray gas b of course we
+24:37 - have an a we have another a here
+24:39 - great so there we go that was the first
+24:41 - query now these operators that i'm going
+24:44 - to use there's an entire list in the
+24:46 - documentation
+24:47 - i'll go through a bunch of them but
+24:49 - quickly let's bring up a list of some
+24:51 - different operators just so that we can
+24:53 - have a look at some that we can use okay
+24:55 - so i've just clicked into operators here
+24:57 - from the side and we have some options
+24:59 - so we have aggregation update and then
+25:01 - query and projection right now we can
+25:03 - look at query and projection where we
+25:05 - have like equals greater than greater
+25:07 - than or equal to in less than
+25:09 - we have logical operators
+25:11 - element operators evaluation operators
+25:14 - geospatial array bitwise projection all
+25:17 - kinds of different ones and then we can
+25:19 - even continue down here right and go to
+25:20 - like update operators where we have ones
+25:23 - like current date increment min max i
+25:25 - just want to show you this so you know
+25:26 - that there is a lot more and anything
+25:28 - you want to do you can likely do by
+25:30 - using these type of operators
+25:32 - okay back to this though
+25:34 - let's write another query the next query
+25:36 - is going to be a join operation where
+25:39 - what i want to do is essentially grab
+25:40 - every single one of my authors but i
+25:42 - want to have a field on my authors that
+25:44 - contains all of the books that they
+25:46 - wrote so how do we actually join these
+25:48 - two collections together and get our
+25:50 - data kind of aggregated so this is going
+25:52 - to be authors and
+25:54 - books is equal to and this will be
+25:57 - production dot authors not dot find but
+26:00 - dot aggregate and what dot aggregate
+26:03 - allows us to do is essentially pass a
+26:05 - pipeline of different operations that we
+26:08 - want to perform in sequence so what you
+26:11 - can do is perform one operation that
+26:12 - will give you a result and then the next
+26:14 - operation you perform will be performed
+26:16 - on that result so you can kind of chain
+26:18 - or aggregate multiple operations
+26:20 - together and that allows you to get you
+26:23 - know more advanced queries and write
+26:24 - some more advanced stuff however
+26:26 - aggregate also allows you to use
+26:27 - specific operators that can only be used
+26:30 - in the aggregation so that's why we have
+26:32 - to use this here so in this case what i
+26:34 - want to do is use lookup now i'll go to
+26:37 - the documentation and show you what this
+26:38 - does so let's go here all right so i've
+26:41 - just pulled up look up here just took me
+26:42 - a second to find this but it says the
+26:44 - definition is performs a left outer join
+26:46 - to an unsharded collection in the same
+26:49 - database to filter in documents from the
+26:51 - join collection for processing so
+26:52 - obviously a bit of a mouthful here but
+26:54 - essentially this allows us to join two
+26:55 - tables together uh the left outer join
+26:58 - is exactly what we want so we'll grab
+27:00 - every single element
+27:01 - from the original collection which will
+27:03 - be author and then any matches if there
+27:05 - is matches okay so let's have a look at
+27:08 - how we use lookup so in lookup we start
+27:10 - with from
+27:11 - not form but from this is going to be
+27:13 - the collection that we want to look up
+27:15 - in or that we want to perform the join
+27:16 - with so this is going to be book we'll
+27:18 - do book because sorry this needs to be
+27:20 - author because we're doing author here
+27:22 - if we add book here then we would have
+27:23 - done author here okay
+27:25 - after the from
+27:27 - we need to have our local field
+27:29 - and this is going to contain kind of the
+27:31 - id or what we want to match with the
+27:33 - foreign field
+27:35 - from our author collection so the local
+27:37 - field is the field on author that we're
+27:39 - going to look at to perform the join so
+27:41 - this is going to be underscore id
+27:43 - and then the foreign field is not going
+27:46 - to be id but this is going to be authors
+27:48 - right
+27:49 - now mongodb will automatically handle
+27:52 - the array for us so we don't need to
+27:54 - worry about that but again for the
+27:56 - foreign field we go with authors because
+27:57 - on the book collection the authors field
+28:00 - is what contains the ids of the authors
+28:02 - and then id is well the id of the author
+28:05 - that we're looking for
+28:06 - in the foreign field
+28:08 - hopefully that makes a bit more sense
+28:09 - can't really explain it more than that
+28:10 - and then lastly we have we have as
+28:13 - which is going to be the name of the
+28:14 - field that's added to our author
+28:17 - documents here that are returned that
+28:19 - contains all of the books so it's
+28:21 - actually all we need to perform the join
+28:23 - so let's just print this out i'll just
+28:25 - copy this line here we can comment those
+28:27 - out for now we no longer need that and
+28:30 - this will be authors and books
+28:32 - okay
+28:33 - and let's run the code here and see the
+28:35 - result that we get let me clear the
+28:36 - screen
+28:38 - and notice that i get all of my authors
+28:41 - so i have the id of my authors and then
+28:43 - i have books and this contains embedded
+28:46 - documents of all of the books and that's
+28:48 - what our aggregation operation did so we
+28:50 - have this book another book that tim
+28:52 - wrote
+28:54 - date of birth first name last name etc
+28:56 - continuing we have the next books date
+28:59 - of birth first name last name
+29:01 - you get the idea there you go that is
+29:03 - how you perform a join operation in
+29:04 - mongodb
+29:06 - using lookup actually fairly
+29:07 - straightforward and again mongodb
+29:09 - handles the array for us so if there was
+29:11 - multiple authors then it would give this
+29:14 - field on all of the authors that wrote a
+29:16 - specific book
+29:18 - okay
+29:19 - let's comment that out and let's
+29:21 - continue now and write another query now
+29:23 - this query actually i shouldn't comment
+29:25 - this out is going to be the same as this
+29:27 - but we're going to perform some more
+29:29 - steps in the aggregation so let's put
+29:32 - this down here and rather than authors
+29:34 - and books we are going to get authors
+29:37 - and account of how many books it is that
+29:39 - they wrote so we're going to say author
+29:41 - book underscore count so the first step
+29:44 - in my aggregation here and there's
+29:45 - multiple ways to do this this is just
+29:47 - one method is i want to join the two
+29:49 - tables together so for every author i
+29:50 - want to get a list or an array
+29:52 - containing all of the books that they
+29:54 - wrote that's great that's the first
+29:55 - operation that we perform now let's just
+29:58 - make this look a little bit cleaner so
+30:00 - it's a bit easier to write in okay so
+30:02 - this needs to get indented
+30:04 - and now we can put our next aggregation
+30:07 - operation here
+30:08 - okay so this is the first operation that
+30:10 - we perform the next operation that we
+30:12 - perform is going to be add
+30:15 - and then fields like that i think this
+30:17 - is intuitive as to what this is going to
+30:18 - do but it's going to add a new field and
+30:21 - the new field that i want to add to all
+30:22 - of my results here so all of the
+30:24 - documents from this is going to be total
+30:27 - underscore books
+30:28 - and i'm simply going to say here
+30:31 - that this is going to be the operation
+30:33 - of dollar sign size and then i'm going
+30:35 - to reference and this is going to be
+30:38 - books like that and i need to make sure
+30:39 - i have my dollar sign here so i'm adding
+30:42 - fields i could add multiple fields in
+30:43 - this case i'm just adding one
+30:45 - the field is total books and the value
+30:47 - of this field is going to be the size of
+30:50 - whatever the value of books is for each
+30:52 - author that we're adding the field for
+30:55 - that's how that works that's how you add
+30:56 - fields now after we add fields though i
+30:59 - want to perform a projection so i only
+31:01 - get specific fields in my return values
+31:04 - because i don't need everything
+31:05 - so for here i'm going to do an operation
+31:08 - this operation is going to be project so
+31:10 - in the aggregation pipeline this is how
+31:12 - you pick specific fields that you want
+31:13 - returned and then i'm going to specify
+31:15 - all the fields that i want for my author
+31:18 - so the field i want is first name
+31:20 - i want the last name as well so this
+31:22 - will be a one i want to get my total
+31:24 - books field which i just created in the
+31:26 - last step so i'm going to say total
+31:27 - books equal to one and i'll grab the
+31:30 - underscore id and i'm just going to
+31:31 - manually set this to be zero so that we
+31:33 - don't get the id
+31:35 - okay now that we have that we have an
+31:36 - aggregation pipeline that does three
+31:38 - operations so we look up we add a field
+31:41 - and then we project and again this will
+31:43 - be performed on kind of the last result
+31:46 - so we have this result this gets
+31:48 - performed on that and then this
+31:49 - projection gets performed on all of this
+31:51 - or whatever was returned i guess from
+31:53 - this step
+31:54 - then what we can do is simply print this
+31:55 - out so i guess i can just copy this
+31:57 - again
+31:58 - and rather than authors and books this
+32:00 - will be author
+32:02 - is it authors yeah authors book
+32:04 - count
+32:05 - okay so let's run that
+32:08 - and let's see what we get here and
+32:09 - notice that we have our author total
+32:12 - books author total books author total
+32:14 - books and the final author and their
+32:16 - final number of total books
+32:18 - okay
+32:19 - awesome so now that we have done that
+32:21 - let's go and do some more advanced
+32:23 - queries so we just got the authors and
+32:26 - their number of books the next thing
+32:28 - that we can do is grab all of the
+32:31 - authors uh and their books but only for
+32:34 - authors that are a certain age so in
+32:36 - this case let's do it so that we're
+32:37 - grabbing authors that are between the
+32:39 - age of say 50 and 150 years old you'll
+32:42 - notice that if we go back to our authors
+32:44 - here we have some that were born quite a
+32:46 - while ago so they would be quite old and
+32:47 - we're not going to retrieve those
+32:49 - so again what we want to do is grab the
+32:50 - authors and all of their books but only
+32:52 - authors that are within a certain age
+32:54 - range this is actually much more
+32:56 - difficult than it looks but of course i
+32:57 - will show you so i'm just going to grab
+33:00 - this query that we wrote already
+33:02 - i'm going to paste it here
+33:04 - uncomment it and change it a little bit
+33:06 - but we will start with this lookup
+33:08 - operation so actually i lied we're going
+33:10 - to start from scratch here and i'm just
+33:11 - going to say books with old
+33:14 - authors is equal to production dot we're
+33:16 - going to use book this time and then not
+33:18 - find but of course dot aggregate and
+33:21 - inside of here we're going to have a
+33:22 - list of the operations now the first
+33:24 - thing i need to do is for every one of
+33:26 - my books
+33:27 - i need to find their authors and i need
+33:29 - to determine the age of the authors
+33:31 - because what i want to do here is
+33:32 - essentially filter and only return books
+33:35 - that have an author that's within the
+33:37 - age of 50 to 150 years old so this is
+33:39 - fairly complicated because if we go and
+33:41 - we look at our
+33:44 - authors here we notice that we don't
+33:45 - have an age field we have a date of
+33:47 - birth so we actually need to perform a
+33:49 - calculation to determine what the age is
+33:51 - we then need to know the age of all of
+33:53 - our authors and we need to only select
+33:56 - books that have authors that are within
+33:58 - that age range so the first thing we
+34:00 - need to do is join our books with the
+34:02 - authors that we have the author data
+34:04 - then we need to essentially loop through
+34:06 - the authors set the age of those authors
+34:08 - and then we need to filter so we only
+34:10 - have the correct books with authors that
+34:13 - match the age range hopefully that makes
+34:15 - a bit of sense but let's go through this
+34:17 - so let's go with
+34:19 - lookup as our operation because we're
+34:21 - going to perform a join
+34:23 - and notice this time we're looking up
+34:25 - from the author
+34:26 - collection because we are querying from
+34:28 - book
+34:29 - so we're going to say from and then
+34:31 - author i don't know why it keeps giving
+34:33 - me validator but that's fine and then
+34:35 - we'll go with our local field
+34:38 - and the local field is going to be
+34:41 - the authors
+34:43 - okay because we're talking about the
+34:44 - local field on the book so we have
+34:46 - authors and then the foreign field
+34:48 - will actually be the id of the author so
+34:50 - underscore id kind of the opposite of
+34:52 - what we had previously and then as
+34:55 - well this time it's not going to be
+34:57 - books it's going to be authors because
+34:58 - we're adding this to our books
+35:00 - okay so now we have our lookup operation
+35:02 - done the next thing that we need to do
+35:04 - is set the ages of our authors
+35:07 - so i have this authors field now and
+35:09 - actually what i'm going to do is replace
+35:10 - the values in this author's array
+35:13 - because we could have multiple authors
+35:15 - with the age of the authors so this will
+35:17 - look a little intimidating but i will
+35:19 - explain what we're doing we're going to
+35:21 - start with the operator set now this
+35:23 - actually replaces the value of an
+35:26 - existing field so we're going to change
+35:29 - in this case the authors field and the
+35:31 - issue here with authors or i guess a
+35:34 - fact about authors is that this is an
+35:35 - array so it's not as simple as me just
+35:38 - grabbing the date time uh that the
+35:40 - author was born and doing the math with
+35:42 - that i need to do this for every value
+35:45 - in this array so this is where we're
+35:47 - going to use the map operator
+35:49 - and we're going to map
+35:51 - essentially some operation to every
+35:54 - element inside of this array so i'm
+35:56 - going to say map and i need to pick the
+35:58 - input for the map so for the input we're
+36:00 - going to use and this is going to be
+36:02 - dollar sign authors we're referencing
+36:04 - the field authors
+36:06 - now i'm going to have in here and what
+36:07 - in is going to specify is all of the
+36:09 - fields that i want to have in the array
+36:12 - and it will fill those in for every
+36:14 - element for my author so i know this is
+36:16 - a little bit confusing but you need to
+36:18 - specify inside of in what you want to
+36:20 - have in the array for each author so i'm
+36:23 - going to put an age a first name and a
+36:25 - last name because those are the three
+36:26 - values that i want so just follow along
+36:28 - here we're going to start with age now
+36:30 - to calculate the age we need to use
+36:32 - another operator and this operator is
+36:35 - going to be a date difference operator
+36:36 - so it's going to be date diff like that
+36:39 - but of course with our dollar sign
+36:40 - because it's an operator
+36:43 - and for date diff
+36:45 - we need to pass a start date
+36:47 - and for the start date we're going to do
+36:48 - two dollar signs
+36:50 - and we're going to say this
+36:52 - date of underscore birth
+36:54 - now this is referencing the current
+36:56 - element and that's going to be the
+36:58 - current element that we're looping
+36:59 - through while we're performing this map
+37:00 - operation so you kind of have to
+37:02 - visualize this in your head as soon as
+37:04 - we see map that means we're iterating
+37:06 - over every element inside of this array
+37:09 - the input array is well this because
+37:10 - that's what the map operation is doing
+37:12 - and then in is saying okay well this is
+37:14 - what we want to have in the array for
+37:16 - each element so i want to have my age my
+37:18 - age is equal to the date difference i
+37:20 - need to pass my start date which is
+37:22 - going to be whatever the date of birth
+37:23 - is of the current author that i'm on
+37:25 - right now and then again i keep opening
+37:28 - this domain to do that
+37:29 - we're going to pass the end date and the
+37:32 - end date is just going to be the dollar
+37:33 - sign dollar sign now this just
+37:35 - references the current date kind of a
+37:37 - nice easy variable to use and we want to
+37:39 - have a unit here for the calculation and
+37:42 - the unit will just be year that's the
+37:44 - level of precision that i want right i
+37:46 - just need to know how old they are so
+37:47 - i'm going to get year and that's
+37:48 - calculating the difference between the
+37:50 - start date and the end date just looking
+37:52 - at the year if we wanted to be more
+37:53 - precise we could go with month day et
+37:55 - cetera but i don't care for now we'll
+37:56 - just go with year that should give us
+37:58 - the approximate age and then we add that
+38:00 - as the age field
+38:01 - okay so after age though we need to have
+38:04 - our first underscore name
+38:07 - and the first name here is just going to
+38:09 - be this dot
+38:11 - and then first underscore name and then
+38:13 - we need the same thing for the last name
+38:15 - so we'll say
+38:17 - last name like that and then of course
+38:19 - that's going to be equal to last name
+38:20 - and if you wanted more fields then you
+38:22 - could access them with this or you could
+38:24 - do the calculation like i did inside of
+38:27 - here
+38:28 - okay so that's it for this operation
+38:31 - again i know that looks fairly
+38:32 - complicated it is but i wanted to show
+38:34 - you some more advanced stuff so i
+38:35 - figured i'd throw it in now that we've
+38:37 - done that we should have the age for
+38:38 - every single one of our authors the next
+38:40 - thing that we want to do is filter it so
+38:42 - that we only get books that are written
+38:44 - by authors within a certain age
+38:46 - so to do this we use match
+38:48 - and essentially what match will do
+38:51 - is it will have some query and if this
+38:53 - query is true for an element it will
+38:55 - keep it so it'll run all of our
+38:57 - documents kind of through uh the
+38:59 - condition that we're about to put here
+39:01 - if the document is true for whatever we
+39:03 - put here it keeps it if it's false it
+39:05 - doesn't keep it just like when we write
+39:06 - a query when we're finding documents
+39:08 - okay so i have match here
+39:10 - and then inside of here we're going to
+39:11 - put and because there's two things that
+39:13 - we want to check
+39:14 - inside of the list here the first thing
+39:16 - that we want to do is we want to say
+39:17 - authors and then since this is going to
+39:19 - contain multiple things inside of it
+39:22 - i'm going to say dot h now by default
+39:24 - since this is an array and i'm accessing
+39:26 - a value from an embedded document inside
+39:29 - of this array it will loop through and
+39:31 - look at all of them so i'm going to say
+39:32 - authors.age again that's referencing the
+39:34 - age attribute of each of the authors or
+39:37 - any of the authors that we have inside
+39:38 - of that array and i want to verify
+39:41 - that this is going to be
+39:43 - if we go like this
+39:45 - greater than or equal to and then i'll
+39:47 - just hard code in 50.
+39:49 - so the minimum age is 50. and then the
+39:51 - next one that we want to have here again
+39:53 - is authors.age but this will be less
+39:55 - than or equal to
+39:57 - 150. so if you're greater than or equal
+39:58 - to 50 less than or equal to 150 you are
+40:01 - all good and the last thing we will do
+40:03 - here just to throw in a nice touch is
+40:04 - we'll perform a sort
+40:06 - so i'll say the last operation i want to
+40:08 - do is sort and i want to sort by what
+40:10 - fields well i just want to sort by the
+40:12 - age when i do one that stands for
+40:14 - ascending so i'm going to sort an
+40:16 - ascending order
+40:17 - okay
+40:18 - now that we have that let's print this
+40:20 - out
+40:21 - so printer
+40:23 - dot print
+40:24 - the list
+40:25 - of books with old authors
+40:28 - i believe that's what i called it
+40:30 - i'll zoom out so you guys can read
+40:34 - all of this at once if you want if
+40:35 - you're going to pause the video and have
+40:36 - a look at it
+40:37 - do that if you'd like
+40:39 - let's zoom back in
+40:40 - and let's run this code and see what our
+40:42 - result is
+40:43 - okay so when i run here
+40:45 - we do get everything that i expected we
+40:47 - get our authors or we get our books
+40:49 - written by authors that have uh you know
+40:51 - the specified h
+40:53 - so first book
+40:54 - 1984 age of 119 for george orwell
+40:59 - and then lastly here we have our age of
+41:02 - 126
+41:03 - and this is the great gatsby and the
+41:05 - other books that were written by younger
+41:07 - or older authors are not returned
+41:09 - because while they they weren't
+41:10 - specified right and you can see that we
+41:11 - get the age field for each author uh as
+41:14 - i requested or as i wrote in the
+41:16 - aggregation operation all right so that
+41:18 - has been it for the advanced query
+41:20 - section of this video hopefully that
+41:22 - gave you an idea of what's possible in
+41:23 - mongodb showed you some of the different
+41:26 - operators gave you a decent example to
+41:28 - run through here obviously you're not
+41:29 - going to have this memorized there's a
+41:31 - lot of stuff you need to look up from
+41:32 - the documentation but i wanted to give
+41:34 - you kind of a good in-depth example and
+41:36 - some different examples so you could see
+41:38 - how you perform some common operations
+41:40 - here and do some more advanced stuff now
+41:42 - what i want to end you with here is kind
+41:44 - of a quick demo of this awesome library
+41:46 - slash module that mongodb has made
+41:49 - called pi arrow or pi era now what
+41:52 - this allows you to do is essentially
+41:54 - take mongodb data and read this in as
+41:58 - either a data frame so a pandas data
+42:00 - frame a numpy array you can also read
+42:02 - this in as an arrow table or an arrow
+42:05 - object if you're familiar with what that
+42:07 - is this is super useful for different
+42:08 - data scientists specifically machine
+42:10 - learning people or really just anyone
+42:12 - using python that wants these specific
+42:15 - formats because a lot of times you want
+42:16 - to take data and read it in in a
+42:18 - specific format right you want a numpy
+42:20 - array you want a pandas data frame
+42:21 - whatever so this module you do need to
+42:23 - install now the command to install it is
+42:25 - the following it's going to be pip
+42:27 - install and then you need to install all
+42:29 - of these dependencies some may already
+42:31 - be installed but i just want to run
+42:32 - through them to make sure you don't miss
+42:33 - any
+42:34 - so you're going to install jupiter
+42:36 - you're going to install pi arrow
+42:38 - like that
+42:39 - inside of quotations here i'm going to
+42:40 - have pi and then srv although you
+42:43 - should have installed that in the
+42:44 - previous video
+42:45 - and then we want pandas as well if we're
+42:47 - going to be using pandas now i guess we
+42:49 - might as well do numpy while we're at it
+42:51 - just use numpy so run this command
+42:53 - should install everything you need i
+42:54 - already ran it so i'm not going to go
+42:56 - through it again if this command does
+42:57 - not work you can try doing a pip 3. if
+43:01 - that doesn't work you can do python
+43:02 - hyphen m pip install or you can do
+43:05 - python 3 hyphen m pip install and one of
+43:08 - those should work for you so i'm going
+43:10 - to assume that that has worked and that
+43:11 - you've installed that module and now we
+43:13 - can start working with it
+43:14 - so i'm going to say import
+43:16 - and this is going to be pi arrow like
+43:19 - this
+43:20 - while we're here let's do our other
+43:21 - imports so i'm going to say from pi
+43:23 - arrow and this is actually going to be
+43:26 - pi arrow sorry my arrow dot
+43:29 - api
+43:30 - i want to import a schema
+43:33 - i'm going to say from
+43:34 - pi
+43:35 - if we could spell that correctly pi
+43:38 -  arrow dot and then monkey we're
+43:41 - going to import patch underscore all
+43:44 - and then i'm going to say
+43:45 - import
+43:47 - pi arrow as pma
+43:50 - okay so those are the four imports that
+43:52 - i need for right now again i'm not going
+43:54 - to give you a full tutorial here i'll
+43:55 - leave the documentation in the
+43:56 - description so you can have a look but
+43:58 - the first thing we're going to do is
+43:59 - we're going to call patch underscore all
+44:02 - okay so patch underscore all like that
+44:05 - if i could type that correctly and then
+44:07 - we're going to specify our schema so
+44:09 - quickly though let me just describe what
+44:10 - this actually does so patch all
+44:12 - essentially makes it so whenever we deal
+44:14 - with a collection object here in mongodb
+44:17 - is that it has access to all of the api
+44:19 - features we need for pi arrow to
+44:21 - read this in as a specific object like a
+44:24 - data frame numpy array etc so don't
+44:26 - worry too much about it but just run
+44:27 - patch all to make sure you don't get any
+44:28 - errors here and then as i was saying we
+44:30 - need to specify a schema so what we do
+44:33 - is we specify a schema we then can load
+44:35 - our data using this schema and that's
+44:37 - what allows us to load it in as a pandas
+44:39 - data frame as a numpy array whatever
+44:42 - because it can be very difficult if you
+44:43 - take data directly from mongodb
+44:46 - and try to read it in as one of these
+44:47 - formats you usually have to write some
+44:49 - custom python code which can be time
+44:51 - consuming and not necessarily intuitive
+44:53 - to write so this is a really quick
+44:55 - shortcut very easy to use so for now i'm
+44:58 - going to say author is equal to and this
+45:00 - is going to be schema again we imported
+45:01 - that up here and i need to specify as
+45:04 - kind of a json or python dictionary here
+45:06 - the values that i want in their
+45:08 - corresponding types so i'm going to say
+45:10 - id
+45:11 - and this is going to be object id but i
+45:13 - need to import that from bson so i'm
+45:15 - going to say from
+45:16 - bson import object id
+45:20 - okay continuing here i'm going to say my
+45:22 - first underscore name and this is going
+45:24 - to be pi arrow dot string
+45:28 - now you don't need to install that it
+45:29 - should just be installed for you by
+45:31 - default pi pi arrow is a module in
+45:33 - python that defines some specific types
+45:35 - for you a few other things as well
+45:37 - and this allows you to grab kind of the
+45:39 - string type right from pire so
+45:41 - pyro.string you're then going to say
+45:43 - last name and this will be pi
+45:45 - arrow.string as well we then want to get
+45:48 - the date of birth so i'm going to say
+45:50 - date
+45:51 - of birth like that and the type for this
+45:54 - i'm going to say is dt so date time
+45:57 - remember i imported that all the way up
+45:59 - here so i have from date time import
+46:01 - date time as dt okay so that's my schema
+46:03 - for now if you have some more advanced
+46:05 - types you will have to look those up
+46:07 - from the documentation for now though
+46:09 - let me show you how easy it is to read
+46:11 - in our data as a data frame from our
+46:13 - database also all my imports sorry they
+46:15 - would have just gone to the top because
+46:16 - i saved
+46:17 - my auto formatter does that for now
+46:19 - though let's say our data frame so a
+46:21 - panda's data frame is equal to and then
+46:23 - this will be production
+46:25 - dot and we'll go with author and we'll
+46:27 - just say dot find
+46:29 - pandas all like that and then we can
+46:32 - pass a query just like we would when
+46:33 - we're finding data normally and i'm just
+46:36 - going to leave it empty so we get all of
+46:37 - them i'm going to say schema is equal to
+46:39 - author then i can do something like
+46:41 - print df
+46:42 - dot head and this will give me a pandas
+46:44 - data frame that contains all of my
+46:47 - item sorry from the author collection
+46:50 - based on this schema now any fields that
+46:53 - i have not specified here automatically
+46:55 - will just not be included we'll just
+46:56 - leave them out and if i've specified a
+46:58 - field here that's not in any of my
+47:00 - author documents it will just have a
+47:01 - default value of none or no so let's run
+47:04 - this though and see what we get
+47:06 - and if we get our pandas data frame
+47:09 - and it says it's not recognized sorry
+47:11 - let me run this again
+47:14 - and notice here that we get our data
+47:16 - frame now it's a little bit messed up
+47:17 - just because we're reading some stuff in
+47:18 - as binary the id specifically is kind of
+47:21 - a binary object we get the point this is
+47:23 - our pandas data frame we can treat this
+47:24 - as a pandas object and i guess it was
+47:26 - running my previous
+47:28 - query as well so that's why we're
+47:30 - getting that information
+47:31 - let's just comment this out for now
+47:34 - and continue and look at the other ways
+47:35 - that we can read this in so rather than
+47:37 - just a data frame we can read this in as
+47:39 - an arrow table
+47:41 - so i'm going to say arrow table is equal
+47:43 - to and then this is going to again be
+47:45 - production.author
+47:47 - dot and then find underscore arrow
+47:49 - underscore all
+47:51 - and we'll say schemas equal to author
+47:53 - and then i can print my arrow table
+47:56 - so let's run that
+47:59 - and when i have a look at my arrow table
+48:00 - here you see i get the arrow table if
+48:02 - you're familiar with pi arrow then you
+48:04 - know what this means otherwise i guess
+48:06 - it's not of concern to you
+48:08 - consider uh continuing story we have our
+48:10 - numpy array so i'm going to say nd
+48:12 - arrays like that
+48:14 - is equal to and this is going to be
+48:15 - production dot author
+48:18 - dot find underscore numpy underscore all
+48:21 - pass our query pass our schema and then
+48:25 - we can print the nd arrays like that and
+48:28 - we will get our numpy race so let's
+48:30 - clear
+48:31 - let us
+48:32 - run and you notice here that we get our
+48:36 - numpy arrays again this is kind of a
+48:37 - binary object you would need to deal
+48:39 - with that
+48:40 - won't show you that right now but you
+48:41 - can see we get all the numpy arrays that
+48:43 - we request alright so has been a short
+48:45 - demo of the pi aero library slash
+48:48 - module hopefully you guys found this
+48:50 - helpful and you can see yourself using
+48:52 - maybe some of these features
+48:54 - specifically if you're going to be
+48:55 - reading in or trying to convert mongodb
+48:58 - data to a data frame arrow table or
+49:00 - numpy arrays with that said i will wrap
+49:03 - up the video here another massive thank
+49:04 - you to mongodb for sponsoring this make
+49:07 - sure you guys get your free credit from
+49:08 - the link in the description using code
+49:10 - mkt hyphen tim with that said again hope
+49:14 - you enjoyed if you did leave a like
+49:15 - subscribe to the channel and i will see
+49:17 - you in another one
+49:20 - [Music]
+
+Cleaned transcript:
+
+in this mongodb with python tutorial i'll be continuing from where i left off in video 1 and showing you some advanced mongodb features specifically i will discuss schema validation bulk inserting data modeling advanced queries and introduce you to a great module called pie era if you've not yet watched the first video in the series please do so by clicking the link in the description or the card in the top right of your screen now i will mention that mongodb is the sponsor of this video and their team has helped me come up with this fully guided tutorial for all of you lastly if you haven't already claimed your 25 dollars in free mongodb atlas credits you can do so by clicking the link in the description and using code mkt tim without further ado let's get into the video and learn about some more advanced features of mongodb alright so i'm here in visual studio code i have my mongodb extension installed highly recommend you install that if you don't have it and i have some code here that we wrote in the previous video that just connects me to my mongodb cluster now the database i'm going to use here is production and again if you haven't watched that previous video please go back and watch that it's going to give you some fundamentals and kind of a basis for what i'm going to explain here now for this video i need some kind of example and some data to work with so the example i want to create is something where we have books so those will be stored in one collection and then we have authors those those will be stored in another collection and then we'll have a reference between the book and the author so we know which authors wrote which book and this way we can have one author writing multiple books without replicating that data and i'll talk about why we actually made that kind of design decision as we start creating this however the first thing i want to do here is talk to you about something known as schema validation and how that works in mongodb so let me open up the documentation i will reference quite a bit of documentation here as we go through this video i'll leave it in the description and you can feel free to read through and get some more details if you'd like all right so we have schema validation now essentially what this is is a way of creating some type of structure in your mongodb database so typically when you insert a document into a collection there's nothing that enforces it has to have a specific field and when you create a new collection you don't have to specify what columns you're going to have what's required what the type of everything is you literally just create the collection and allows you to insert any type of document that you want the documents you insert could be completely different that's one of the great benefits of mongodb however sometimes you want to use mongodb and you also want to have some type of enforcement on the data that's being inserted in a collection and this is where schema validation comes in so what this allows you to do is similarly to a sql database set up some predefined columns or in this case fields and require those whenever you insert a new document so when we're talking about our book for example we may require that you have a title you have an author you have a published date all of these fields must be on the document to insert it otherwise it won't actually let you insert that so you can read through this documentation if you'd like to see exactly how this works you can see here that when you create a collection you have the option to actually pass a validator and this validator allows you to specify the schema here of the collection so we can have things like different properties so the properties would really be the required fields here we have a name year major gpa address etc so we specify all of the different types here by using bsun type we specify our descriptions there's all kinds of other stuff that we can do and yeah we set up our schema validation so let's actually do this here in mongodb i'm going to just copy in a validator because i don't need to write all of this out it's not really that helpful for the video here so this is one we have a book validator so we start with a json schema we say the bson type of the schema right is going to be an object and then we have our required now for required these are going to be the fields that we need to pass or that we need to have on our documents and for properties these are all of the fields and their corresponding types so i have my title it's type string it has a description we have our authors this is going to be a type array and since it's an array we need to specify the type of the items so i'm saying the items in this array are going to be of type object id so this is going to reference an object from the the author collection we then have our description we then have a publish date type date we have type and this is a field which is a value enum which means we can either have fiction or nonfiction as the two allowable values here and then we have copies minimum value of zero the type is int and then we have our description if you want to write a more advanced schema validator again reference that documentation there of course i can't go through everything you can possibly do and if you want the bson types you can find those again from the documentation but anything that you would think is a type is probably one and you can likely guess what the types are of course that you can check from the documentation okay so now that we have our validator though how do we actually use this well the first thing we need to do is create a collection called book and then once we've created that collection we can actually modify it and kind of add this validator to it so what i'm going to do here is say db and actually it's not going to be db it's going to be production because that's the name of my database and then i will create a new collection and i can do that using the create collection function like this i also could just write dot and whatever the name of the collection is but i would need to insert something in there then for that to be created so this way i can just specify what i want to call this so i will call this a book and i'm just going to put this in a triexcept block just to ensure that if i run this code multiple times i don't get an error where i try to create a collection that already exists so i'm going to say accept exception as e print e okay so now that i've done that i can actually modify this collection using the following command i can say production and that's not what it is it's going to be dot and command like that and then i can pass a mongodb command this command is going to be call mod like that i'm going to pass the collection that i want to modify which is going to be book and i'm going to pass a validator equal to the book validator and that's going to add that and then when we insert documents our schema will be enforced so let's actually just try running this code right now and see if this works so let's run and let's see what we get and we get an error so let me have a look here what this area is and we'll be right back all right so as you saw we were getting this error here it's saying user is not allowed to do action actually good error to run into i can show you how we can fix this so it's kind of two steps to do this we need to go to mongodb atlas here which i already have open we need to click on database access once we're in our project then we need to go to our user we need to change its permissions so it has access to the admin permissions so what we do that is we click on edit we go here to database user privileges select on builtin role and then change this to be atlas admin so to perform the command that we're trying to perform you need to be an admin user makes sense so we need to do this now we also create a new user we can you know set up custom roles all kinds of stuff we can do in here for now though that's all we need to do for our current user okay so i've changed that for our user now that we've done that there's only one more step and it involves this connection string right here we just need to make sure that when we're authenticating we're authenticating as an admin this doesn't happen by default so we need to add the following line here at the end or the following i guess query parameter we're going to put an ampersand because we have an additional parameter here and then we're going to say auth source is equal to admin again that's going to sign us in as the admin and give us access to this command that we're trying to use so let's now save and rerun this let's clear the screen and hopefully this will work for us this time and this is collection book already exists okay so that means i've already created the collection that's fine however the uh the production command here should actually be working right we should now have modified this wasn't giving us an error and that is all good now if we want to verify this is indeed working let's go to mongodb compass let me go to refresh here we should have a production database which we do and if i go inside of here you can see that i have my book database awesome uh we can go to validation and when we go to validation we can see that we have these json schema here or the schema validation actually set and we can change the action as well as the level here for validating the schema okay so that is good for now we've created our book collection however now that we've done that we want to create our author collection as well so i'm going to put this inside of a function here i'm going to say define and this is going to be create book underscore collection and we'll indent all of this just so we don't repeat this code multiple times and now we can make a new function i'm going to say this is going to be create the author collection and after we do this we'll insert some sample data so for now let's copy our author validator i'm going to put it right here okay so we have our json schema bson type same thing as before i won't go through this again and now that we've done that we want to create the author collection and then add this schema to it so we're going to say try and this is going to be not db but this will be production dot create collection we're going to create author we'll say accept exception as e print e and then we'll run that same command that we did before so this is going to be production dot command call mod author and then the author underscore validator like that okay so i think that's the exact same as this just want to make sure everything looks good looks good to me so now we can call this function so create the author collection and let's run this and hopefully everything will work fine i don't get any errors no output that is good if we want to verify this is working we can go back here to atlas and now we see that we have author and if we go to validation we can see that we have this now i guess we could have a look at schema as well or there's nothing in here so we can't really see anything right now okay so that is all good to me we have author we have book now that we've done that we need to add some sample data so let me stop this function call let's create a new function here let's say create underscore data and in here we need to add a bunch of books and then we need to add a bunch of authors or i guess we're going to add our authors first actually and then our books because our books rely on the authors right so let's do this i'm just going to copy in some sample data here that i have for authors and now i can show you how we perform a bulk insert now i believe that we saw this in the last video but it's important to mention again because this is a more efficient way to insert data rather than individually insert every single one of these entries so let me slow down for a second here and really go through what we're about to do first of all we have this dt now that is actually imported from date time so i need to import that at the top here i'm going to say from date time import date time as dt just so i can get a date time object very easily okay so now we have that so that's what we're doing with our dates and time we then have our first name last name and date of birth and if we go back here to our author schema we notice those are the only three required fields so it's fine for us to insert those what i'm doing again is i'm going to insert all of my authors once the authors are inserted i'm going to grab the ids of these authors and i'm then going to use them to create my books because the books rely on what authors are well writing them and we're going to use again this reference type relationship as opposed to the embedded documents and i'll talk about that more in a second for now though let's insert this data so what we can do is say i guess we'll go the author underscore collection is equal to and this will be production and dot author and then we already know how to do the bulk insert but it's going to be author collection dot insert underscore many and we can just pass a list here of the authors that we want to insert then what i'm going to do though is get all of the ids of this these insert authors so i'm going to say inserted underscore ids is equal to this and then this is going to be dot inserted ids and actually let's just call this author underscore ids like that actually we can just call it authors for now that's fine even though this is called authors we'll just override it so now we'll store a list of all of the inserted ids of all of these elements okay so that's how you do the bulk insert again much more efficient than individually inserting so make sure if you are inserting a lot of stuff you use insert many as opposed to insert one okay now that we have done that we need to create the sample data for our books again that relied on the authors so let me copy in this okay so this is our books let's make sure the indentation looks good and what i'm doing is just accessing the indices of the insert ids from my authors for what author wrote what book right so for here i have one mongodb advanced tutorial this one we're going to say is written by me so i'm grabbing author 0 which is going to be the id of this inserted document so that's what i'm doing here i'm putting this inside of an array or a list because i could have multiple authors i then have the publish date i'm just saying well that's today so datetime.today type nonfiction copies 5 and all of these here have the fields that are specified in our schema validation hopefully that makes a bit of sense uh not super important those are just what our books are and now we need to insert our books so to do this we're going to say the book underscore collection is equal to and then this will be production dot book okay then we need to insert all of these i don't really care about the ids this time so i can simply say book collection and not update but dot insert underscore many and i'm just going to insert my books like that okay so that's it for creating our sample data and that gave you a little bit of taste of the bulk insert and now what i can do is say create data like that i think that's what i called the function and when i run this everything should be good so let's run the code notice here that i don't get any errors and if i go back to mongodb atlas i give a little bit of a refresh here we can see that we have our different books and we have an array of authors which are referencing object ids of the authors from the author collection okay so now that we've done this let's take a quick pause let's talk about data modeling in mongodb and why i made the decision here to actually put the authors in a separate collection because there's arguments to be made for embedding them versus having a separate collection so i'm here again on the mongodb documentation i'm just looking at data modeling examples and patterns and i want to quickly go through how you kind of make a decision on if you prefer to have embedded documents or references because that can be difficult to figure out and that can have a large impact on performance so typically speaking when you have a onetoone relationship that means maybe i have say in this example one address for one person it's totally fine to store that address as an embedded document inside of the person now that makes sense because typically when you're retrieving the person you're going to be retrieving the address only one address per person or maybe multiple addresses per person but they're specific to that person makes sense to store it inside however if you were to have one address that was associated with say five people six people or one object for that matter that multiple people are going to have a relationship with so you have kind of a onetomany or manytomany type relationship then what you usually want to do is take that document so let's just use address for this this example here store it in a separate collection and then make a reference to that address from all of the different documents that reference it so all of the people that share an address they would have a reference to that address now the reason why you may prefer to do this is because it's going to take less space it's going to take less space because now you don't need to duplicate it on multiple people it's in a separate collection and also means when you make a modification to this address since it will be stored in a separate collection so like this anyone referencing it will automatically have that update made or that modification made whereas if you were storing this address and you had it embedded in four five six different documents you would need to change it in every single one of those documents to make sure you have consistent data so those are two of the main things you kind of want to keep in mind is the document that i'm embedding going to be referenced by multiple different documents or is it only referenced by one if it's only referenced by one totally fine go ahead and embed it if it's referenced by multiple you still can make an argument to embed it but you definitely want to consider the two things that i just talked about before so hopefully this is giving you a little bit of a sense of why this can be a difficult decision but now i want to talk about something here called the subset pattern so often times when you're retrieving a document there's other documents either embedded or referenced that you want to have a look at now it can be very time consuming and slow down your server if you're grabbing say every single reference for a specific document every time you grab it or every single embedded document for a document every time you retrieve that document so this example here they have a bunch of movies and it can be very time consuming to grab every single piece of detail about all of these movies every time so the subset pattern here is saying well what you should do is store a subset of the information that is important and that you're frequently retrieving in a document as opposed to storing all of it and store the additional data somewhere else which can be retrieved when you need it that's essentially the premise you can read through here and see exactly how they would implement that but the idea is that if you store kind of a slimmer version of a document it's much faster to retrieve you can get all of the data that you need very quickly and if you do require the additional data then you can always grab that and ask for it as opposed to always grabbing every single piece of data which again can be slow and time consuming so i mean if we read through this here it says here currently the movie collection contains several fields the application does not need to show a simple overview of the movie such as full plot rating information etc so instead of storing all of the movie data in a single collection you can split the collection into two collections you have movie and movie details and then you only grab the movie details when you actually need that right so that's kind of the subset pattern and what's this is talking about here now there is some tradeoffs on using the subset pattern this can require multiple calls right or multiple kind of query operations it can require you to do some type of join operations which i'll show you how to do later on and something you just need to consider when you're kind of making this design design decision sort now this was more on onetoone relationships okay so when you have one document referencing another document in some way however now we have onetomany relationships so in a onetomany relationship you're going to have one document that references many different possible things right now in this case we have the embedded document pattern we have the subset pattern and we also should have here the reference pattern all right so here on this page we're looking at modeling onetomany relationships with embedded documents now this is going to be similar to what i talked about before but i just want to quickly read this to you here it says embedding connected data in a single document can reduce the number of read operations required to obtain data in general you should structure your schema so the application receives all of its required information in a single read operation so that is for efficiency purposes and this is kind of stating why you would use this embedded document pattern where when you have again say multiple addresses as i've talked about you store them in an array here of addresses this is totally fine it's going to make it very quick to retrieve the addresses however again if you were sharing these addresses with other people it might make sense to put them in a separate collection because of the reasons i stated now though we also have the subset pattern so same thing can happen here as with before when you have a ton of nested documents that leads to a large document in general that you need to retrieve because that's to retrieve all of the embedded or nested ones and sometimes it can be common uh to just store a subset of in this case say reviews as opposed to every single review and then grab all of the reviews when require so i won't go through this we already kind of talked about this before this is just more specific here to a onetomany relationship okay let's move on to the next one again you can read all this from the description so continuing here i'm looking at model onetomany relationships with document references now this is a great example of again why we want a reference when we have a publisher and we're treating this as an embedded document this publisher likely is going to publish multiple books and that means that i'm going to have this publisher embedded in multiple documents and i'm going to continue to repeat it and duplicate it when i really don't need to do that so rather than doing it like this we're going to create a reference now they've done it in the opposite way that i did in our example but they've made a reference here of books and books is essentially an array that has all the ids of the books that this publisher has published now we did it the other way where we had an id on our book that pointed to the authors or we had ids because it was an array either way it's fine but again this avoids this kind of duplication that we had before and makes it easier for us to say modify the founded date or the location or add a field to our publisher without having to do it in a ton of different places so that's really all to show you here that's kind of an introduction to data modeling of course as your database grows larger there's more design decisions that you have to make but this gives you kind of the core i guess choices that you have you can use embedded documents you can use the sub sub pattern you can use a reference and that's what you're going to be using in mongodb you have to make your decision and kind of lay out your arguments on which one you would prefer to use based on the type of program you have and how you're retrieving information with that said though let's go back now and actually start writing some advanced queries in mongodb and use some of the sample data that we created alright so for a majority of the rest of this video what i'm gonna do is just write some advanced queries and demonstrate how we perform kind of multiple operations and do just a lot more advanced stuff that we haven't yet seen now what you can do if you're really kind of a beginner and you don't want to write these super advanced queries is you can always just grab all of the documents from a collection for example and then you can use python to parse through them so you can you know look at the fields manually write your python code now that's not the optimal way that's not going to be very efficient and you're going to be retrieving a ton of data that you don't need which obviously is not ideal but i just want to mention that there is times where maybe it's way too challenging or difficult for you to come up with the query on your own using kind of the mongodb language if that's the case write as good of a query as you can and then use python to kind of parse and modify the results as you see fit anyways though i will show you some advanced queries of course there's a ton more everything will be available from the links in the description and the documentation however what i want to do now is i want to retrieve all of the books that contain the letter a so kind of a random thing but something you may want to do especially if you were say searching for something or you got a search string that needed to return some books and i'm going to show you how we use regular expressions here so i'm going to just write a variable called books containing and then this is going to be a and this is going to be our production dot book dot find and for the query here we need to put the field that we want to do the query on so this is going to be title because i want to see if a is contained in the title and then i'm going to use this operator here called dollar sign and then regex so standing for regular expression now for the regular expression i can just use a and then inside of curly braces just put a one and this specifies that we're looking for something that contains at least one a okay so now that i've done that i can just print this out so i can say printer actually i don't know if i have that defined but we'll look at that in a second dot p print and i can print the list of books containing a now let me just come up here so i need to import p print which i have and i'm just going to create my pretty printer here so printer is equal to and then this will be print dot pretty printer so now i can use that to get a nicely formatted output okay so let's run this here and see if we get what we're looking for and when i do this notice i get a list containing books that have the letter a and the title so of course we have advanced here and we have the gray gas b of course we have an a we have another a here great so there we go that was the first query now these operators that i'm going to use there's an entire list in the documentation i'll go through a bunch of them but quickly let's bring up a list of some different operators just so that we can have a look at some that we can use okay so i've just clicked into operators here from the side and we have some options so we have aggregation update and then query and projection right now we can look at query and projection where we have like equals greater than greater than or equal to in less than we have logical operators element operators evaluation operators geospatial array bitwise projection all kinds of different ones and then we can even continue down here right and go to like update operators where we have ones like current date increment min max i just want to show you this so you know that there is a lot more and anything you want to do you can likely do by using these type of operators okay back to this though let's write another query the next query is going to be a join operation where what i want to do is essentially grab every single one of my authors but i want to have a field on my authors that contains all of the books that they wrote so how do we actually join these two collections together and get our data kind of aggregated so this is going to be authors and books is equal to and this will be production dot authors not dot find but dot aggregate and what dot aggregate allows us to do is essentially pass a pipeline of different operations that we want to perform in sequence so what you can do is perform one operation that will give you a result and then the next operation you perform will be performed on that result so you can kind of chain or aggregate multiple operations together and that allows you to get you know more advanced queries and write some more advanced stuff however aggregate also allows you to use specific operators that can only be used in the aggregation so that's why we have to use this here so in this case what i want to do is use lookup now i'll go to the documentation and show you what this does so let's go here all right so i've just pulled up look up here just took me a second to find this but it says the definition is performs a left outer join to an unsharded collection in the same database to filter in documents from the join collection for processing so obviously a bit of a mouthful here but essentially this allows us to join two tables together uh the left outer join is exactly what we want so we'll grab every single element from the original collection which will be author and then any matches if there is matches okay so let's have a look at how we use lookup so in lookup we start with from not form but from this is going to be the collection that we want to look up in or that we want to perform the join with so this is going to be book we'll do book because sorry this needs to be author because we're doing author here if we add book here then we would have done author here okay after the from we need to have our local field and this is going to contain kind of the id or what we want to match with the foreign field from our author collection so the local field is the field on author that we're going to look at to perform the join so this is going to be underscore id and then the foreign field is not going to be id but this is going to be authors right now mongodb will automatically handle the array for us so we don't need to worry about that but again for the foreign field we go with authors because on the book collection the authors field is what contains the ids of the authors and then id is well the id of the author that we're looking for in the foreign field hopefully that makes a bit more sense can't really explain it more than that and then lastly we have we have as which is going to be the name of the field that's added to our author documents here that are returned that contains all of the books so it's actually all we need to perform the join so let's just print this out i'll just copy this line here we can comment those out for now we no longer need that and this will be authors and books okay and let's run the code here and see the result that we get let me clear the screen and notice that i get all of my authors so i have the id of my authors and then i have books and this contains embedded documents of all of the books and that's what our aggregation operation did so we have this book another book that tim wrote date of birth first name last name etc continuing we have the next books date of birth first name last name you get the idea there you go that is how you perform a join operation in mongodb using lookup actually fairly straightforward and again mongodb handles the array for us so if there was multiple authors then it would give this field on all of the authors that wrote a specific book okay let's comment that out and let's continue now and write another query now this query actually i shouldn't comment this out is going to be the same as this but we're going to perform some more steps in the aggregation so let's put this down here and rather than authors and books we are going to get authors and account of how many books it is that they wrote so we're going to say author book underscore count so the first step in my aggregation here and there's multiple ways to do this this is just one method is i want to join the two tables together so for every author i want to get a list or an array containing all of the books that they wrote that's great that's the first operation that we perform now let's just make this look a little bit cleaner so it's a bit easier to write in okay so this needs to get indented and now we can put our next aggregation operation here okay so this is the first operation that we perform the next operation that we perform is going to be add and then fields like that i think this is intuitive as to what this is going to do but it's going to add a new field and the new field that i want to add to all of my results here so all of the documents from this is going to be total underscore books and i'm simply going to say here that this is going to be the operation of dollar sign size and then i'm going to reference and this is going to be books like that and i need to make sure i have my dollar sign here so i'm adding fields i could add multiple fields in this case i'm just adding one the field is total books and the value of this field is going to be the size of whatever the value of books is for each author that we're adding the field for that's how that works that's how you add fields now after we add fields though i want to perform a projection so i only get specific fields in my return values because i don't need everything so for here i'm going to do an operation this operation is going to be project so in the aggregation pipeline this is how you pick specific fields that you want returned and then i'm going to specify all the fields that i want for my author so the field i want is first name i want the last name as well so this will be a one i want to get my total books field which i just created in the last step so i'm going to say total books equal to one and i'll grab the underscore id and i'm just going to manually set this to be zero so that we don't get the id okay now that we have that we have an aggregation pipeline that does three operations so we look up we add a field and then we project and again this will be performed on kind of the last result so we have this result this gets performed on that and then this projection gets performed on all of this or whatever was returned i guess from this step then what we can do is simply print this out so i guess i can just copy this again and rather than authors and books this will be author is it authors yeah authors book count okay so let's run that and let's see what we get here and notice that we have our author total books author total books author total books and the final author and their final number of total books okay awesome so now that we have done that let's go and do some more advanced queries so we just got the authors and their number of books the next thing that we can do is grab all of the authors uh and their books but only for authors that are a certain age so in this case let's do it so that we're grabbing authors that are between the age of say 50 and 150 years old you'll notice that if we go back to our authors here we have some that were born quite a while ago so they would be quite old and we're not going to retrieve those so again what we want to do is grab the authors and all of their books but only authors that are within a certain age range this is actually much more difficult than it looks but of course i will show you so i'm just going to grab this query that we wrote already i'm going to paste it here uncomment it and change it a little bit but we will start with this lookup operation so actually i lied we're going to start from scratch here and i'm just going to say books with old authors is equal to production dot we're going to use book this time and then not find but of course dot aggregate and inside of here we're going to have a list of the operations now the first thing i need to do is for every one of my books i need to find their authors and i need to determine the age of the authors because what i want to do here is essentially filter and only return books that have an author that's within the age of 50 to 150 years old so this is fairly complicated because if we go and we look at our authors here we notice that we don't have an age field we have a date of birth so we actually need to perform a calculation to determine what the age is we then need to know the age of all of our authors and we need to only select books that have authors that are within that age range so the first thing we need to do is join our books with the authors that we have the author data then we need to essentially loop through the authors set the age of those authors and then we need to filter so we only have the correct books with authors that match the age range hopefully that makes a bit of sense but let's go through this so let's go with lookup as our operation because we're going to perform a join and notice this time we're looking up from the author collection because we are querying from book so we're going to say from and then author i don't know why it keeps giving me validator but that's fine and then we'll go with our local field and the local field is going to be the authors okay because we're talking about the local field on the book so we have authors and then the foreign field will actually be the id of the author so underscore id kind of the opposite of what we had previously and then as well this time it's not going to be books it's going to be authors because we're adding this to our books okay so now we have our lookup operation done the next thing that we need to do is set the ages of our authors so i have this authors field now and actually what i'm going to do is replace the values in this author's array because we could have multiple authors with the age of the authors so this will look a little intimidating but i will explain what we're doing we're going to start with the operator set now this actually replaces the value of an existing field so we're going to change in this case the authors field and the issue here with authors or i guess a fact about authors is that this is an array so it's not as simple as me just grabbing the date time uh that the author was born and doing the math with that i need to do this for every value in this array so this is where we're going to use the map operator and we're going to map essentially some operation to every element inside of this array so i'm going to say map and i need to pick the input for the map so for the input we're going to use and this is going to be dollar sign authors we're referencing the field authors now i'm going to have in here and what in is going to specify is all of the fields that i want to have in the array and it will fill those in for every element for my author so i know this is a little bit confusing but you need to specify inside of in what you want to have in the array for each author so i'm going to put an age a first name and a last name because those are the three values that i want so just follow along here we're going to start with age now to calculate the age we need to use another operator and this operator is going to be a date difference operator so it's going to be date diff like that but of course with our dollar sign because it's an operator and for date diff we need to pass a start date and for the start date we're going to do two dollar signs and we're going to say this date of underscore birth now this is referencing the current element and that's going to be the current element that we're looping through while we're performing this map operation so you kind of have to visualize this in your head as soon as we see map that means we're iterating over every element inside of this array the input array is well this because that's what the map operation is doing and then in is saying okay well this is what we want to have in the array for each element so i want to have my age my age is equal to the date difference i need to pass my start date which is going to be whatever the date of birth is of the current author that i'm on right now and then again i keep opening this domain to do that we're going to pass the end date and the end date is just going to be the dollar sign dollar sign now this just references the current date kind of a nice easy variable to use and we want to have a unit here for the calculation and the unit will just be year that's the level of precision that i want right i just need to know how old they are so i'm going to get year and that's calculating the difference between the start date and the end date just looking at the year if we wanted to be more precise we could go with month day et cetera but i don't care for now we'll just go with year that should give us the approximate age and then we add that as the age field okay so after age though we need to have our first underscore name and the first name here is just going to be this dot and then first underscore name and then we need the same thing for the last name so we'll say last name like that and then of course that's going to be equal to last name and if you wanted more fields then you could access them with this or you could do the calculation like i did inside of here okay so that's it for this operation again i know that looks fairly complicated it is but i wanted to show you some more advanced stuff so i figured i'd throw it in now that we've done that we should have the age for every single one of our authors the next thing that we want to do is filter it so that we only get books that are written by authors within a certain age so to do this we use match and essentially what match will do is it will have some query and if this query is true for an element it will keep it so it'll run all of our documents kind of through uh the condition that we're about to put here if the document is true for whatever we put here it keeps it if it's false it doesn't keep it just like when we write a query when we're finding documents okay so i have match here and then inside of here we're going to put and because there's two things that we want to check inside of the list here the first thing that we want to do is we want to say authors and then since this is going to contain multiple things inside of it i'm going to say dot h now by default since this is an array and i'm accessing a value from an embedded document inside of this array it will loop through and look at all of them so i'm going to say authors.age again that's referencing the age attribute of each of the authors or any of the authors that we have inside of that array and i want to verify that this is going to be if we go like this greater than or equal to and then i'll just hard code in 50. so the minimum age is 50. and then the next one that we want to have here again is authors.age but this will be less than or equal to 150. so if you're greater than or equal to 50 less than or equal to 150 you are all good and the last thing we will do here just to throw in a nice touch is we'll perform a sort so i'll say the last operation i want to do is sort and i want to sort by what fields well i just want to sort by the age when i do one that stands for ascending so i'm going to sort an ascending order okay now that we have that let's print this out so printer dot print the list of books with old authors i believe that's what i called it i'll zoom out so you guys can read all of this at once if you want if you're going to pause the video and have a look at it do that if you'd like let's zoom back in and let's run this code and see what our result is okay so when i run here we do get everything that i expected we get our authors or we get our books written by authors that have uh you know the specified h so first book 1984 age of 119 for george orwell and then lastly here we have our age of 126 and this is the great gatsby and the other books that were written by younger or older authors are not returned because while they they weren't specified right and you can see that we get the age field for each author uh as i requested or as i wrote in the aggregation operation all right so that has been it for the advanced query section of this video hopefully that gave you an idea of what's possible in mongodb showed you some of the different operators gave you a decent example to run through here obviously you're not going to have this memorized there's a lot of stuff you need to look up from the documentation but i wanted to give you kind of a good indepth example and some different examples so you could see how you perform some common operations here and do some more advanced stuff now what i want to end you with here is kind of a quick demo of this awesome library slash module that mongodb has made called pi arrow or pi era now what this allows you to do is essentially take mongodb data and read this in as either a data frame so a pandas data frame a numpy array you can also read this in as an arrow table or an arrow object if you're familiar with what that is this is super useful for different data scientists specifically machine learning people or really just anyone using python that wants these specific formats because a lot of times you want to take data and read it in in a specific format right you want a numpy array you want a pandas data frame whatever so this module you do need to install now the command to install it is the following it's going to be pip install and then you need to install all of these dependencies some may already be installed but i just want to run through them to make sure you don't miss any so you're going to install jupiter you're going to install pi arrow like that inside of quotations here i'm going to have pi and then srv although you should have installed that in the previous video and then we want pandas as well if we're going to be using pandas now i guess we might as well do numpy while we're at it just use numpy so run this command should install everything you need i already ran it so i'm not going to go through it again if this command does not work you can try doing a pip 3. if that doesn't work you can do python hyphen m pip install or you can do python 3 hyphen m pip install and one of those should work for you so i'm going to assume that that has worked and that you've installed that module and now we can start working with it so i'm going to say import and this is going to be pi arrow like this while we're here let's do our other imports so i'm going to say from pi arrow and this is actually going to be pi arrow sorry my arrow dot api i want to import a schema i'm going to say from pi if we could spell that correctly pi arrow dot and then monkey we're going to import patch underscore all and then i'm going to say import pi arrow as pma okay so those are the four imports that i need for right now again i'm not going to give you a full tutorial here i'll leave the documentation in the description so you can have a look but the first thing we're going to do is we're going to call patch underscore all okay so patch underscore all like that if i could type that correctly and then we're going to specify our schema so quickly though let me just describe what this actually does so patch all essentially makes it so whenever we deal with a collection object here in mongodb is that it has access to all of the api features we need for pi arrow to read this in as a specific object like a data frame numpy array etc so don't worry too much about it but just run patch all to make sure you don't get any errors here and then as i was saying we need to specify a schema so what we do is we specify a schema we then can load our data using this schema and that's what allows us to load it in as a pandas data frame as a numpy array whatever because it can be very difficult if you take data directly from mongodb and try to read it in as one of these formats you usually have to write some custom python code which can be time consuming and not necessarily intuitive to write so this is a really quick shortcut very easy to use so for now i'm going to say author is equal to and this is going to be schema again we imported that up here and i need to specify as kind of a json or python dictionary here the values that i want in their corresponding types so i'm going to say id and this is going to be object id but i need to import that from bson so i'm going to say from bson import object id okay continuing here i'm going to say my first underscore name and this is going to be pi arrow dot string now you don't need to install that it should just be installed for you by default pi pi arrow is a module in python that defines some specific types for you a few other things as well and this allows you to grab kind of the string type right from pire so pyro.string you're then going to say last name and this will be pi arrow.string as well we then want to get the date of birth so i'm going to say date of birth like that and the type for this i'm going to say is dt so date time remember i imported that all the way up here so i have from date time import date time as dt okay so that's my schema for now if you have some more advanced types you will have to look those up from the documentation for now though let me show you how easy it is to read in our data as a data frame from our database also all my imports sorry they would have just gone to the top because i saved my auto formatter does that for now though let's say our data frame so a panda's data frame is equal to and then this will be production dot and we'll go with author and we'll just say dot find pandas all like that and then we can pass a query just like we would when we're finding data normally and i'm just going to leave it empty so we get all of them i'm going to say schema is equal to author then i can do something like print df dot head and this will give me a pandas data frame that contains all of my item sorry from the author collection based on this schema now any fields that i have not specified here automatically will just not be included we'll just leave them out and if i've specified a field here that's not in any of my author documents it will just have a default value of none or no so let's run this though and see what we get and if we get our pandas data frame and it says it's not recognized sorry let me run this again and notice here that we get our data frame now it's a little bit messed up just because we're reading some stuff in as binary the id specifically is kind of a binary object we get the point this is our pandas data frame we can treat this as a pandas object and i guess it was running my previous query as well so that's why we're getting that information let's just comment this out for now and continue and look at the other ways that we can read this in so rather than just a data frame we can read this in as an arrow table so i'm going to say arrow table is equal to and then this is going to again be production.author dot and then find underscore arrow underscore all and we'll say schemas equal to author and then i can print my arrow table so let's run that and when i have a look at my arrow table here you see i get the arrow table if you're familiar with pi arrow then you know what this means otherwise i guess it's not of concern to you consider uh continuing story we have our numpy array so i'm going to say nd arrays like that is equal to and this is going to be production dot author dot find underscore numpy underscore all pass our query pass our schema and then we can print the nd arrays like that and we will get our numpy race so let's clear let us run and you notice here that we get our numpy arrays again this is kind of a binary object you would need to deal with that won't show you that right now but you can see we get all the numpy arrays that we request alright so has been a short demo of the pi aero library slash module hopefully you guys found this helpful and you can see yourself using maybe some of these features specifically if you're going to be reading in or trying to convert mongodb data to a data frame arrow table or numpy arrays with that said i will wrap up the video here another massive thank you to mongodb for sponsoring this make sure you guys get your free credit from the link in the description using code mkt hyphen tim with that said again hope you enjoyed if you did leave a like subscribe to the channel and i will see you in another one

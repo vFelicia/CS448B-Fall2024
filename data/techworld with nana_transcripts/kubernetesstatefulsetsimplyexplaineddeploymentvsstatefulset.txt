@@ -1,0 +1,368 @@
+00:00 - in this video we're gonna talk about
+00:01 - what stateful studies in kubernetes and
+00:04 - what purpose it has so what a stateful
+00:07 - set
+00:08 - it's a criminales component that is used
+00:10 - specifically for stateful applications
+00:13 - so in order to understand that first you
+00:15 - need to understand what a stateful
+00:17 - application is examples of stateful
+00:20 - applications are all databases like my
+00:23 - sequel elasticsearch MongoDB etc or any
+00:27 - application that stores data to keep
+00:29 - track of its state in other words these
+00:32 - are applications that track state by
+00:35 - saving that information in some storage
+00:37 - stateless applications on the other hand
+00:40 - do not keep records of previous
+00:42 - interaction in each request or
+00:45 - interaction is handled as a completely
+00:48 - new isolated interaction based entirely
+00:51 - on the information that comes with it
+00:53 - and sometimes stateless applications
+00:56 - connect to the stateful application to
+00:58 - forward those requests so imagine a
+01:01 - simple setup of a node.js application
+01:03 - that is connected to MongoDB database
+01:06 - when a request comes in to the node.js
+01:09 - application it doesn't depend on any
+01:12 - previous data to handle this incoming
+01:14 - request it can handle it based on the
+01:17 - payload in the request itself now a
+01:20 - typical such request
+01:22 - will additionally need to update some
+01:25 - data in the database or query the data
+01:28 - that's where MongoDB comes in so when no
+01:32 - J's forwards that request in MongoDB
+01:34 - MongoDB will update the data based on
+01:37 - its previous state or query the data
+01:40 - from its storage so for each request it
+01:43 - needs to handle data and obviously
+01:45 - always depends on the most up-to-date
+01:47 - data or state to be available while
+01:50 - node.js is just a pass-through for data
+01:52 - updates or queries and it just processes
+01:55 - code now because of this difference
+01:58 - between stateful and stateless
+02:00 - applications
+02:01 - they're both deployed in different ways
+02:04 - using different components in kubernetes
+02:08 - stateless applications are deployed
+02:10 - using deployment component or deployment
+02:13 - is an
+02:13 - abstraction of pots and allows you to
+02:17 - replicate that application meaning run
+02:20 - to five ten identical parts of the same
+02:22 - stateless application in the cluster if
+02:25 - you want to know exactly how deployments
+02:27 - manage parts and why this abstraction is
+02:29 - needed check out my other video about
+02:31 - that where I already covered this in
+02:34 - detail also I make these kind of videos
+02:36 - every week about kubernetes and other
+02:39 - DevOps technologies so if you don't want
+02:41 - to miss out on those either you can
+02:43 - subscribe and click the notification
+02:45 - bell to be notified when the next video
+02:48 - is out
+02:48 - so while stateless applications are
+02:51 - deployed using deployment stateful
+02:54 - applications in kubernetes are deployed
+02:56 - using stateful set components and just
+03:01 - like deployment stateful set makes it
+03:02 - possible to replicate the stateful app
+03:04 - pots or to run multiple replicas of it
+03:08 - in other words they both manage parts
+03:11 - that are based on an identical container
+03:14 - specification and you can also configure
+03:17 - storage with both of them equally in the
+03:21 - same way so if both manage the
+03:25 - replication of pots and also
+03:27 - configuration of data persistence in the
+03:30 - same way the question is what a lot of
+03:33 - people ask and are also often confused
+03:35 - about what is the difference between
+03:37 - those two components why we use
+03:39 - different ones for each type of
+03:41 - application so in the next section we're
+03:44 - gonna talk about the differences now
+03:46 - replicating stateful application is more
+03:49 - difficult and has a couple of
+03:51 - requirements that stateless applications
+03:53 - do not have so let's look at this first
+03:56 - with the example of a my sequel database
+03:59 - let's say you have one my sequel
+04:01 - database pod that handles requests from
+04:04 - a java application which is deployed
+04:06 - using a deployment component and let's
+04:09 - say you scale the java application to
+04:11 - three parts so they can handle more
+04:14 - client requests in parallel you want to
+04:17 - scale my sequel app so it can handle
+04:19 - more Java requests as well scaling your
+04:22 - java application here is pre
+04:24 - straightforward java applications
+04:26 - replica
+04:27 - pots will be identical and
+04:29 - interchangeable so you can scale it
+04:32 - using a deployment pretty easily
+04:35 - deployment will create the pots in any
+04:37 - order in any random order they will get
+04:40 - random hashes at the end of the pod name
+04:42 - they will get one service that load
+04:45 - balances to any one of the replica pots
+04:47 - for any requests and also when you
+04:49 - delete them they get deleted in a random
+04:52 - order or at the same time right or when
+04:55 - you scaled them down from three to two
+04:57 - replicas for example one random replica
+05:00 - pot gets chosen to be deleted so no
+05:03 - complications there on the other hand my
+05:06 - sickle pod replicas cannot be created
+05:09 - and deleted at the same time in any
+05:12 - order and they can't be randomly
+05:14 - addressed and the reason for that is
+05:16 - because the replica pots are not
+05:19 - identical in fact they each have their
+05:22 - own additional identity on top of the
+05:25 - common blueprint of the pot that they
+05:28 - get created from and giving each pot its
+05:32 - own required individual identity is
+05:35 - actually what stateful set does
+05:37 - different from deployment it maintains a
+05:41 - sticky identity for each of its pots and
+05:44 - as I said these pots are created from
+05:46 - the same specification but they're not
+05:48 - interchangeable each has a persistent
+05:51 - identifier that it maintains across in a
+05:54 - rescheduling so meaning when pot dies in
+05:57 - it gets replaced by a new pot it keeps
+06:00 - that identity so the question you may be
+06:03 - asking now is why do these pots need
+06:06 - their own identities why they can't be
+06:09 - interchangeable just like with
+06:10 - deployment so why is that and this is a
+06:13 - concept that you need to understand
+06:14 - about scaling database applications in
+06:17 - general when you start with a single my
+06:20 - sickle pod it will be used for both
+06:22 - reading and writing data but when you
+06:26 - add a second one it cannot act the same
+06:28 - way because if you allow two independent
+06:31 - instances of my sequel to change the
+06:33 - same data you will end up with data
+06:35 - inconsistency so instead there is a
+06:38 - mechanism that decides that only
+06:41 - one poll is allowed to write or change
+06:44 - the data which is shared reading at the
+06:47 - same time by multiple parts my sickle
+06:50 - instances from the same data is
+06:52 - completely fine and the pot that is
+06:54 - allowed to update the data is called the
+06:57 - master the others are called slaves so
+07:00 - this is the first thing that
+07:02 - differentiates these pots from each
+07:03 - other
+07:04 - so not all pots are same or identical
+07:06 - but there is a must pot and there the
+07:09 - slave pots right and there is also
+07:11 - difference between those slave pots in
+07:13 - terms of storage which is the next point
+07:16 - so the thing is that these pots do not
+07:19 - have access to the same physical storage
+07:22 - even though they use the same data
+07:24 - they're not using the same physical
+07:26 - storage of the data they each have their
+07:29 - own replicas of the storage that each
+07:32 - one of them can access for itself and
+07:34 - this means that each pot replicas at any
+07:37 - time must have the same data as the
+07:40 - other ones and in order to achieve that
+07:42 - they have to continuously synchronize
+07:44 - their data and since master is the only
+07:47 - one allowed to change data and the
+07:49 - slaves need to take care of their own
+07:51 - data storage obviously the slaves must
+07:54 - know about each such change so they can
+07:58 - update their own data storage to be up
+08:01 - to date for the next query requests and
+08:04 - there is a mechanism in such clustered
+08:06 - database setup that allows for
+08:09 - continuous data synchronization master
+08:12 - changes data and all slaves update their
+08:15 - own data storage to keep in sync and to
+08:17 - make sure that each pod has the same
+08:21 - state now let's say you have one master
+08:23 - in two slave parts of my sequel now what
+08:26 - happens when a new pod replica joins the
+08:29 - existing setup because now that new part
+08:32 - also needs to create its own storage and
+08:35 - then take care of synchronizing it what
+08:38 - happens is that it first clones the data
+08:40 - from the previous part not just any part
+08:43 - in the in the setup but always from the
+08:45 - previous part and once it has the
+08:48 - up-to-date data cloned it starts
+08:50 - continuous synchronization as well to
+08:53 - listen for any updates by
+08:55 - master pot and this also means and I
+08:57 - want to point this out since it's pretty
+08:59 - interesting point it means that you can
+09:01 - actually have a temporary storage for a
+09:04 - stateful application and not persist the
+09:06 - data at all since the data gets
+09:08 - replicated between the pots so
+09:10 - theoretically it is possible to just
+09:13 - rely on data replication between the
+09:15 - pots but this will also mean that the
+09:18 - whole data will be lost when all the
+09:21 - pots die so for example if stateful set
+09:24 - gets deleted or the cluster crashes or
+09:27 - all the nodes where these pod replicas
+09:29 - are running crash and every pod dies at
+09:32 - the same time the data will be gone and
+09:34 - therefore it's still a best practice to
+09:36 - use data persistence for stateful
+09:39 - applications if losing the data will be
+09:41 - unacceptable which is the case in most
+09:44 - database applications and with
+09:46 - persistent storage data will survive
+09:48 - even if all the parts of the state full
+09:51 - set die or even if you delete the
+09:54 - complete stateful set component and all
+09:56 - the parts get wiped out as well the
+09:59 - persistent storage and the data will
+10:02 - still remain because persistent volume
+10:05 - lifecycle isn't connected or isn't tied
+10:08 - to a life cycle of other components like
+10:12 - deployment or stateful set and the way
+10:16 - to do this is configuring persistent
+10:19 - volumes for your stateful set and since
+10:21 - each pod has its own data storage
+10:24 - meaning it's the own persistent volume
+10:27 - that is then backed up by its own
+10:29 - physical storage which includes the
+10:31 - synchronized data or the replicated
+10:33 - database data but also the state of the
+10:37 - pod so each pod has its own state which
+10:40 - has information about whether it's a
+10:43 - master pod or a slave or other
+10:45 - individual characteristics and all of
+10:48 - this gets stored in the pods own storage
+10:51 - and that means when a pod dies and gets
+10:55 - replaced the persistent pod identifiers
+10:58 - make sure that the storage volume gets
+11:02 - reattached to the replacement pod is a
+11:05 - set because that storage has the state
+11:08 - of the pod
+11:09 - in addition to that replicated data I
+11:11 - mean you can clone the data again there
+11:14 - will be no problem but it shouldn't lose
+11:16 - its state or identity states are the
+11:19 - same and for these reattachment to work
+11:22 - it's important to use a remote storage
+11:24 - because if the pod gets rescheduled from
+11:28 - one node to another node the previous
+11:30 - storage must be available on the other
+11:33 - node as well and you cannot do that
+11:35 - using local volume storage because they
+11:37 - are usually tied to a specific node and
+11:39 - the last difference between deployment
+11:42 - and stateful set is something that I
+11:46 - mentioned before is the pod identifier
+11:49 - meaning that every pod has its own
+11:51 - identifier so unlike deployment where
+11:54 - pods get random hashes at the end
+11:56 - stateful set pots get fixed ordered
+11:59 - names which is made up of the stateful
+12:02 - set name and ordinal it starts from zero
+12:05 - and each additional pod will get the
+12:08 - next numeral so if we create a safe
+12:10 - we'll set called my sequel with three
+12:12 - replicas you'll have pots with names MS
+12:15 - equals zero one and two the first one is
+12:18 - the master and then comes the slaves in
+12:20 - the order of startup an important note
+12:23 - here is that the stateful set will not
+12:25 - create the next pod in the replicas if
+12:29 - the previous one isn't already up and
+12:32 - running the first pod creation for
+12:35 - example failed or if it was pending the
+12:38 - next one won't get created at all it
+12:40 - will just wait and the same order is
+12:43 - held deletion but in reverse order so
+12:46 - for example if you delete a the stateful
+12:48 - set or if you scaled it down to 1 for
+12:51 - example from 3 the deletion will start
+12:54 - from the last pot so my simple 2 will
+12:56 - delete it first it will wait until that
+13:00 - pod is successfully deleted and then it
+13:03 - will delete my second one and then it
+13:06 - will delete my sequel 0 and again all
+13:08 - these mechanisms are in place in order
+13:11 - to protect the data in the state that
+13:14 - the state phone application depends on
+13:17 - in addition to these fixed predictable
+13:19 - names each pod in a state will say
+13:22 - gets its own DNS endpoint from a service
+13:25 - so there's a service name for the
+13:26 - stateful application just like for
+13:28 - deployment for example that will address
+13:30 - any replica pot and plus in addition to
+13:35 - that there is individual DNS name for
+13:37 - each pot which deployment pots do not
+13:40 - have the individual DNS names are made
+13:43 - up of pod name and the manager or the
+13:46 - governing service name which is
+13:48 - basically a service name that you define
+13:51 - inside the stateful set so these two
+13:55 - characteristics meaning having a
+13:57 - predictable or fixed name as well as
+14:00 - it's fixed individual DNS name means
+14:03 - that when pot restarts the IP address
+14:07 - will change the name an endpoint will
+14:10 - stay the same that's why I said pods get
+14:12 - sticky identities so it gets stuck to it
+14:15 - even between the restarts and the sticky
+14:18 - identity make sure that each replica pod
+14:21 - can retain its state and its role even
+14:24 - when it dies and gets recreated and
+14:27 - finally I want to mention an important
+14:29 - point here is you see replicating
+14:31 - stateful apps like databases with its
+14:34 - persistent storage requires a complex
+14:36 - mechanism and kubernetes helps you and
+14:39 - supports you to set this whole thing up
+14:41 - but you still need to do a lot by
+14:44 - yourself where kubernetes doesn't
+14:46 - actually help you or doesn't provide you
+14:48 - out-of-the-box solutions for example you
+14:50 - need to configure the cloning and data
+14:52 - synchronization inside the stage full
+14:54 - set and also make the remote storage
+14:56 - available as well as take care of
+14:58 - managing and backing it up all of these
+15:01 - you have to do yourself and the reason
+15:04 - is that stateful applications are not a
+15:07 - perfect candidate for containerized
+15:09 - environments in fact docker kubernetes
+15:11 - in generally containerization is
+15:14 - perfectly fitting for stateless
+15:16 - applications that do not have any state
+15:19 - and data dependency and only process
+15:21 - code so scaling and replicating them in
+15:24 - containers is super easy so this covers
+15:27 - all the main concepts in order to
+15:29 - understand stateful said and how to use
+15:31 - them in later videos I will show you how
+15:34 - to create a stateful set
+15:36 - so we'll go through the stateful set
+15:38 - configuration file in detail what are
+15:41 - some additional attributes they're
+15:42 - specific to stateful set and we'll also
+15:45 - see all the other stuff that I mentioned
+15:48 - here in practice so again click the
+15:51 - notification bell if you don't want to
+15:53 - miss out on the next videos so thank you
+15:56 - for watching and see you in the next
+15:58 - video

@@ -1,0 +1,312 @@
+With timestamps:
+
+00:00 - in kubernetes the smallest unit or
+00:03 - component is a pot and not a container
+00:06 - and considering that pot always contains
+00:09 - one main container for example you might
+00:11 - have a pot with post Chris container or
+00:14 - elasticsearch container or your own
+00:16 - application some people may be asking
+00:19 - why the need for abstracting the
+00:21 - container with a pot if there is any way
+00:24 - it's just one main application running
+00:26 - inside so in this video I'm gonna
+00:28 - explain to you why having a pot is an
+00:30 - abstraction over container is such an
+00:33 - important concept in kubernetes I'm
+00:34 - gonna give you a comparison between pod
+00:37 - and container and I will show you in
+00:39 - which cases you would need to have
+00:41 - multiple containers inside one pot and
+00:43 - how these containers then will
+00:45 - communicate with each other and its core
+00:47 - kubernetes networking has one important
+00:49 - fundamental concept which is that every
+00:52 - pot has a unique IP address and that IP
+00:55 - address is reachable from all the other
+00:57 - pots in the cluster so that's the main
+00:59 - concept now why is it important and
+01:01 - valuable to have this pod component with
+01:04 - its own IP address you see one main
+01:06 - challenge on distributed infrastructure
+01:08 - with multiple servers is how to allocate
+01:10 - ports to services and applications
+01:13 - running on servers without getting
+01:15 - conflicts since obviously you can only
+01:18 - allocate one port once on a single host
+01:21 - with containers you would soon face this
+01:24 - challenge because this is how container
+01:27 - port mapping works let's say for example
+01:29 - a PostgreSQL container where inside the
+01:32 - container the Postgres application
+01:35 - starts at port 5 4 3 2
+01:37 - now when you start containers directly
+01:40 - on your machine what you do is you bind
+01:42 - your host port to the application port
+01:45 - in the container and you see that in
+01:47 - practice we can start post-race docker
+01:49 - container so this is the part where we
+01:52 - map or we bind the port on the host to
+01:56 - the port of the application running
+01:58 - inside the docker container so it
+02:01 - doesn't have to be the same port I can
+02:02 - also give it a completely different one
+02:04 - so let's write 5,000 and if I execute
+02:07 - this command
+02:11 - Postgres container started and if we
+02:14 - check here with dr. PS I will see that
+02:17 - port 5000 on the host machine is mapped
+02:22 - to this one here so now the application
+02:24 - is reachable by the host port now that I
+02:29 - have one Postgres already running I
+02:32 - could start another post-course
+02:35 - container that will also run at the same
+02:37 - port but bind it on a different port on
+02:41 - my host so this will work as well so if
+02:46 - I go here now and say dr. PS I will see
+02:50 - two possible applications bound to
+02:53 - different ports on the host and this is
+02:56 - how containers work the problem with
+02:58 - this is when you have hundreds of
+03:00 - containers running on your servers how
+03:03 - can you keep track of what ports are
+03:05 - still free on the host to bind them so
+03:09 - soon enough with this type of port
+03:11 - allocation it will become difficult to
+03:13 - have an overview and the way kubernetes
+03:16 - solves this problem is by abstracting
+03:18 - the containers using pots where pot is
+03:21 - like its own small machine with its own
+03:24 - IP address usually with one main
+03:26 - container running inside for example you
+03:29 - might have a pot where Postgres
+03:31 - container is running when a pot is
+03:34 - created on a node it gets its own
+03:37 - network namespace and a virtual Ethernet
+03:39 - connection to connect it to the
+03:42 - underlying infrastructure network so a
+03:44 - pot is a host just like your laptop both
+03:47 - have IP addresses and a range of ports
+03:50 - they can allocate to its containers this
+03:52 - means you don't have to worry about port
+03:54 - mappings on the server where pot is
+03:56 - running and all inside the pot itself
+03:59 - but since you anyways usually have just
+04:01 - one main container or sometimes maybe
+04:03 - maximum up to six containers inside a
+04:05 - pot you won't get conflicts there
+04:07 - because you have a pretty good overview
+04:09 - of what containers are running inside
+04:11 - this means that on one server you can
+04:14 - have for example 10 micro service
+04:16 - applications that all run on port 8080
+04:19 - inside 10 different pots and you won't
+04:23 - have any conflicts because they all
+04:25 - run on self-contained isolated machines
+04:28 - which are pots so to also see that in
+04:32 - practice I have a mini Q cluster running
+04:35 - so I'm gonna create a pod that's gonna
+04:37 - run a Postgres container inside so this
+04:40 - is the pods yamo file that I'm gonna
+04:43 - execute this is the same image the same
+04:46 - environmental variable and this is the
+04:47 - port here so I'm just defining the
+04:50 - container port which is where the
+04:53 - application inside the container is
+04:55 - gonna start it so I'm gonna go and
+04:58 - execute this file and by the way if you
+05:01 - want to learn how to setup and use mini
+05:03 - Cube on your laptop I have a separate
+05:06 - video about that where I explain all the
+05:08 - details of how to set it up together
+05:09 - with the cube CTL command lines so you
+05:12 - can check that out and the pod was
+05:17 - created and the Postgres is running so
+05:23 - now if I wanted to run multiple Postgres
+05:27 - pots on one node I can I can do that too
+05:30 - so I'm gonna change name here so I'm
+05:33 - gonna say Postgres to this and we'll
+05:38 - leave the container name we're just
+05:40 - going to change the pod name and
+05:41 - everything else stays the same so I'm
+05:44 - gonna apply that again and Postgres to
+05:46 - was created so now I'll have two pots
+05:50 - running the same application and I can
+05:52 - create tens of those and this is a
+05:54 - normal case for example we have a
+05:56 - multiple replicas of the same
+05:58 - application running on your server and
+06:01 - there's no problem of port mapping here
+06:04 - another reason why pod abstraction over
+06:06 - container is useful is that you can
+06:09 - easily replace the container runtime in
+06:11 - kubernetes so for example if you replace
+06:14 - docker run time with another container
+06:16 - runtime like vagrant for example
+06:17 - kubernetes configuration will stay the
+06:20 - same because it's all on the pod level
+06:23 - it means that kubernetes isn't tied up
+06:25 - to any particular container runtime
+06:27 - implementation now as I mentioned at the
+06:30 - beginning sometimes pod might have two
+06:33 - or more containers inside this is a case
+06:36 - when you need to run a helper or side
+06:38 - application
+06:39 - to your main application like for
+06:42 - example for synchronizing when you have
+06:45 - multiple database pots or for baking up
+06:48 - your application it certain intervals so
+06:51 - would have this back up side car
+06:53 - container within your application
+06:54 - container or it could be a scheduler or
+06:57 - maybe authentication gateway so there
+07:00 - are many use cases where you might end
+07:03 - up having more than one containers
+07:05 - inside a pod now the question is how do
+07:08 - these containers communicate with each
+07:10 - other inside the pot remember pod is an
+07:13 - isolated virtual host with its own
+07:16 - network namespace and containers inside
+07:19 - all run in this network namespace this
+07:22 - means that containers can talk to each
+07:24 - other via localhost and a port number
+07:27 - just like when you're running multiple
+07:29 - applications on your own laptop so let's
+07:32 - also see that in practice so I'm gonna
+07:35 - head over to my mini cube cluster and
+07:37 - create a pod with two containers so I'm
+07:40 - gonna take nginx for that so that we can
+07:43 - curl the endpoint so I'm gonna have one
+07:46 - nginx container and inside that in the
+07:49 - containers part I'm gonna add another
+07:51 - container and this is going to be just a
+07:53 - simple curl image because this one has
+07:56 - curl inside and also netstat because
+07:59 - most of the images do not come with curl
+08:01 - or netstat and these kind of tools to
+08:03 - keep them as lightweight as possible and
+08:05 - this is just gonna print out something
+08:08 - and then wait for 300 seconds so that we
+08:11 - have enough time to check the endpoint
+08:13 - so I'm gonna save that you can find the
+08:16 - link to the yellow file in the
+08:18 - description so that you can try it out
+08:20 - yourself and let's create that pod
+08:21 - Phoenix well and pod gets created so
+08:26 - let's check that and both of the
+08:29 - containers are running and now I'm going
+08:31 - to enter into curl container so I'm
+08:34 - gonna do that
+08:36 - pod name and now because I have two
+08:39 - containers I have to specify the
+08:41 - container name where I want to enter so
+08:45 - it's gonna be sidecar container
+08:50 - so I'm inside the curl container so what
+08:53 - I'm gonna do here is I'm gonna check
+08:55 - first with net stud and this is the port
+09:01 - where nginx is running so this is the 80
+09:04 - port and I can also curl localhost 80
+09:10 - and I'll get this
+09:13 - welcome to nginx index.html page and if
+09:17 - I check the nginx logs I'm gonna see the
+09:24 - those curl requests coming also from
+09:26 - localhost from the curl container also
+09:30 - having notice that in the kubernetes
+09:32 - cluster when you run docker containers
+09:34 - there is this post container always per
+09:37 - each pot these are called send box
+09:40 - containers whose only job is to reserve
+09:43 - and hold the pots network namespace
+09:45 - that's shared by all the containers in a
+09:47 - pot so post container makes it possible
+09:50 - for the containers to communicate with
+09:52 - each other and also if a container dies
+09:55 - and a new one gets created pot will stay
+09:58 - and keep its IP address but know that if
+10:01 - the pot itself dies it gets recreated
+10:04 - and a new pot will get assigned a
+10:06 - different IP address so to see that
+10:09 - pulse container let's go back to the
+10:11 - mini cube cluster however note that mini
+10:14 - cube runs in a virtual machine so if I
+10:18 - do docker PS here I won't see any
+10:21 - containers running inside the mini cube
+10:23 - cluster because it's not on my hosts
+10:26 - it's running in its own virtual host so
+10:29 - in order to connect to it from my hosts
+10:31 - what I have to do is tell my daugher to
+10:34 - execute docker commands on a remote host
+10:36 - which is gonna be my mini cube and for
+10:38 - that there is this compact comments so
+10:41 - if I echo this which is mini cube docker
+10:43 - and you see that I set a docker host
+10:45 - which basically sets a remote host
+10:48 - address for my daugher client and this
+10:50 - is the IP address of the mini cube you
+10:52 - can check that address by the way if you
+10:54 - for example describe a pod
+11:00 - here you see in this meta information
+11:03 - note is set mini cube and this is the IP
+11:08 - address that I have here and it also
+11:11 - sets a certificate so that you can
+11:13 - access that so now if I do this and then
+11:19 - dr. PS I will be able to see all the
+11:22 - docker containers that are running in
+11:24 - the mini cube so here even though I just
+11:26 - created one engine X pod with two
+11:28 - containers in it I get a whole list of
+11:31 - containers so where this come from is
+11:34 - basically in my mini cube I have this
+11:37 - default namespaces as well that have
+11:40 - their own containers running if you want
+11:42 - to learn about namespaces I have a
+11:44 - separate video about that so you can
+11:46 - check that out so let's go back here
+11:48 - notice they're a bunch of post
+11:50 - containers here and if I grab that based
+11:55 - using these prefix I see the list of
+12:01 - post containers and in the name they all
+12:04 - have pod name that they belong to so
+12:06 - let's let's clear this up and let's
+12:09 - check for nginx pod and here it is this
+12:13 - is our nginx pot this is nginx ingress
+12:17 - controller that is also running in a
+12:19 - different namespace so this is our pod
+12:21 - right here and it has its pause
+12:23 - container so every pod has its own pause
+12:27 - container now this video just showed one
+12:30 - part of the whole kubernetes networking
+12:32 - which is a much broader topic so for
+12:35 - example other concepts would include
+12:37 - things like how pots themselves
+12:38 - communicate with each other across
+12:40 - hundreds of servers regardless of which
+12:43 - nodes they are on also the concept of
+12:46 - how the outside world communicates with
+12:48 - communities cluster as well as how
+12:50 - kubernetes plugs into the underlying
+12:52 - infrastructure network which can be a
+12:55 - cloud platform or a bare-metal
+12:57 - infrastructure and in addition to that I
+13:00 - believe that learning about docker
+13:02 - container networking will really help in
+13:05 - understanding how kubernetes networking
+13:07 - works because then you have a good
+13:09 - comparison so because there are so many
+13:11 - concepts there
+13:12 - I'm creating a complete kubernetes
+13:14 - networking course where I explain all
+13:16 - these concepts with real-life example
+13:19 - demos and once I release that course I
+13:21 - will announce it on my channel so stay
+13:23 - tuned for that if you liked this video
+13:25 - and got some valuable information out of
+13:27 - it then please like and subscribe for
+13:29 - more videos like this and also click the
+13:32 - notification bell if you don't want to
+13:34 - miss new video uploads thanks for
+13:37 - watching and see you in the next video
+
+Cleaned transcript:
+
+in kubernetes the smallest unit or component is a pot and not a container and considering that pot always contains one main container for example you might have a pot with post Chris container or elasticsearch container or your own application some people may be asking why the need for abstracting the container with a pot if there is any way it's just one main application running inside so in this video I'm gonna explain to you why having a pot is an abstraction over container is such an important concept in kubernetes I'm gonna give you a comparison between pod and container and I will show you in which cases you would need to have multiple containers inside one pot and how these containers then will communicate with each other and its core kubernetes networking has one important fundamental concept which is that every pot has a unique IP address and that IP address is reachable from all the other pots in the cluster so that's the main concept now why is it important and valuable to have this pod component with its own IP address you see one main challenge on distributed infrastructure with multiple servers is how to allocate ports to services and applications running on servers without getting conflicts since obviously you can only allocate one port once on a single host with containers you would soon face this challenge because this is how container port mapping works let's say for example a PostgreSQL container where inside the container the Postgres application starts at port 5 4 3 2 now when you start containers directly on your machine what you do is you bind your host port to the application port in the container and you see that in practice we can start postrace docker container so this is the part where we map or we bind the port on the host to the port of the application running inside the docker container so it doesn't have to be the same port I can also give it a completely different one so let's write 5,000 and if I execute this command Postgres container started and if we check here with dr. PS I will see that port 5000 on the host machine is mapped to this one here so now the application is reachable by the host port now that I have one Postgres already running I could start another postcourse container that will also run at the same port but bind it on a different port on my host so this will work as well so if I go here now and say dr. PS I will see two possible applications bound to different ports on the host and this is how containers work the problem with this is when you have hundreds of containers running on your servers how can you keep track of what ports are still free on the host to bind them so soon enough with this type of port allocation it will become difficult to have an overview and the way kubernetes solves this problem is by abstracting the containers using pots where pot is like its own small machine with its own IP address usually with one main container running inside for example you might have a pot where Postgres container is running when a pot is created on a node it gets its own network namespace and a virtual Ethernet connection to connect it to the underlying infrastructure network so a pot is a host just like your laptop both have IP addresses and a range of ports they can allocate to its containers this means you don't have to worry about port mappings on the server where pot is running and all inside the pot itself but since you anyways usually have just one main container or sometimes maybe maximum up to six containers inside a pot you won't get conflicts there because you have a pretty good overview of what containers are running inside this means that on one server you can have for example 10 micro service applications that all run on port 8080 inside 10 different pots and you won't have any conflicts because they all run on selfcontained isolated machines which are pots so to also see that in practice I have a mini Q cluster running so I'm gonna create a pod that's gonna run a Postgres container inside so this is the pods yamo file that I'm gonna execute this is the same image the same environmental variable and this is the port here so I'm just defining the container port which is where the application inside the container is gonna start it so I'm gonna go and execute this file and by the way if you want to learn how to setup and use mini Cube on your laptop I have a separate video about that where I explain all the details of how to set it up together with the cube CTL command lines so you can check that out and the pod was created and the Postgres is running so now if I wanted to run multiple Postgres pots on one node I can I can do that too so I'm gonna change name here so I'm gonna say Postgres to this and we'll leave the container name we're just going to change the pod name and everything else stays the same so I'm gonna apply that again and Postgres to was created so now I'll have two pots running the same application and I can create tens of those and this is a normal case for example we have a multiple replicas of the same application running on your server and there's no problem of port mapping here another reason why pod abstraction over container is useful is that you can easily replace the container runtime in kubernetes so for example if you replace docker run time with another container runtime like vagrant for example kubernetes configuration will stay the same because it's all on the pod level it means that kubernetes isn't tied up to any particular container runtime implementation now as I mentioned at the beginning sometimes pod might have two or more containers inside this is a case when you need to run a helper or side application to your main application like for example for synchronizing when you have multiple database pots or for baking up your application it certain intervals so would have this back up side car container within your application container or it could be a scheduler or maybe authentication gateway so there are many use cases where you might end up having more than one containers inside a pod now the question is how do these containers communicate with each other inside the pot remember pod is an isolated virtual host with its own network namespace and containers inside all run in this network namespace this means that containers can talk to each other via localhost and a port number just like when you're running multiple applications on your own laptop so let's also see that in practice so I'm gonna head over to my mini cube cluster and create a pod with two containers so I'm gonna take nginx for that so that we can curl the endpoint so I'm gonna have one nginx container and inside that in the containers part I'm gonna add another container and this is going to be just a simple curl image because this one has curl inside and also netstat because most of the images do not come with curl or netstat and these kind of tools to keep them as lightweight as possible and this is just gonna print out something and then wait for 300 seconds so that we have enough time to check the endpoint so I'm gonna save that you can find the link to the yellow file in the description so that you can try it out yourself and let's create that pod Phoenix well and pod gets created so let's check that and both of the containers are running and now I'm going to enter into curl container so I'm gonna do that pod name and now because I have two containers I have to specify the container name where I want to enter so it's gonna be sidecar container so I'm inside the curl container so what I'm gonna do here is I'm gonna check first with net stud and this is the port where nginx is running so this is the 80 port and I can also curl localhost 80 and I'll get this welcome to nginx index.html page and if I check the nginx logs I'm gonna see the those curl requests coming also from localhost from the curl container also having notice that in the kubernetes cluster when you run docker containers there is this post container always per each pot these are called send box containers whose only job is to reserve and hold the pots network namespace that's shared by all the containers in a pot so post container makes it possible for the containers to communicate with each other and also if a container dies and a new one gets created pot will stay and keep its IP address but know that if the pot itself dies it gets recreated and a new pot will get assigned a different IP address so to see that pulse container let's go back to the mini cube cluster however note that mini cube runs in a virtual machine so if I do docker PS here I won't see any containers running inside the mini cube cluster because it's not on my hosts it's running in its own virtual host so in order to connect to it from my hosts what I have to do is tell my daugher to execute docker commands on a remote host which is gonna be my mini cube and for that there is this compact comments so if I echo this which is mini cube docker and you see that I set a docker host which basically sets a remote host address for my daugher client and this is the IP address of the mini cube you can check that address by the way if you for example describe a pod here you see in this meta information note is set mini cube and this is the IP address that I have here and it also sets a certificate so that you can access that so now if I do this and then dr. PS I will be able to see all the docker containers that are running in the mini cube so here even though I just created one engine X pod with two containers in it I get a whole list of containers so where this come from is basically in my mini cube I have this default namespaces as well that have their own containers running if you want to learn about namespaces I have a separate video about that so you can check that out so let's go back here notice they're a bunch of post containers here and if I grab that based using these prefix I see the list of post containers and in the name they all have pod name that they belong to so let's let's clear this up and let's check for nginx pod and here it is this is our nginx pot this is nginx ingress controller that is also running in a different namespace so this is our pod right here and it has its pause container so every pod has its own pause container now this video just showed one part of the whole kubernetes networking which is a much broader topic so for example other concepts would include things like how pots themselves communicate with each other across hundreds of servers regardless of which nodes they are on also the concept of how the outside world communicates with communities cluster as well as how kubernetes plugs into the underlying infrastructure network which can be a cloud platform or a baremetal infrastructure and in addition to that I believe that learning about docker container networking will really help in understanding how kubernetes networking works because then you have a good comparison so because there are so many concepts there I'm creating a complete kubernetes networking course where I explain all these concepts with reallife example demos and once I release that course I will announce it on my channel so stay tuned for that if you liked this video and got some valuable information out of it then please like and subscribe for more videos like this and also click the notification bell if you don't want to miss new video uploads thanks for watching and see you in the next video

@@ -1,0 +1,602 @@
+00:00 - hello welcome to today's coding
+00:01 - challenge today's : challenge is to
+00:03 - implement Floyd Steinberg dithering
+00:06 - dithering dithering dithering and I'm
+00:08 - going to do this dithering which is the
+00:11 - thing that I actually spend most of my
+00:12 - day just differing about I'm gonna do
+00:15 - this dithering in processing which is a
+00:18 - Java based programming environment works
+00:20 - great for graphics I can load images I
+00:22 - can relate pixels which is what I need
+00:23 - to do now the reason why I'm doing this
+00:25 - is because I'm interested in this
+00:27 - overall topic of image stippling which
+00:29 - is a way of making an image basically
+00:31 - out of dots and just as one reference
+00:34 - for this I'm going to show you the work
+00:35 - of Robert Haugen did some interesting
+00:38 - attempts to do image stippling using
+00:40 - like particle systems moving around and
+00:42 - forces between the particles and I'd
+00:44 - love to think about that as a follow up
+00:46 - but I'm going to in this video look at a
+00:49 - particular dithering algorithm a way of
+00:52 - quantizing an image and looking at
+00:54 - errors and I'll kind of get to that as I
+00:56 - go through it to get this type of look
+00:59 - for an image but I do want to think of
+01:02 - this for at least for you as a beginning
+01:04 - step because if I could make this what
+01:06 - if I consider all these dots to be
+01:08 - particles that can move and experience
+01:10 - physics and go and find another place
+01:13 - for another image there's a lot of
+01:15 - possibilities there so let's get started
+01:17 - so I have a blank processing sketch and
+01:20 - in the folder I have a data folder and I
+01:22 - have this image of a kitten which is 512
+01:26 - by 512 pixels so the first thing that I
+01:28 - want to do is I just want to write a
+01:31 - simple sketch where I have ap image
+01:37 - object called kitten and then I say
+01:40 - kitten equals load image and the name of
+01:42 - the file is kitten dot JPEG and I am
+01:47 - going to make a window that is 1024 by
+01:51 - 512 so that I can draw the image of the
+01:57 - kitten at on the left hand side and if I
+02:01 - run this there we go so what I want is I
+02:04 - want to be able to look and see see it
+02:06 - do you see the original kitten here and
+02:08 - that I want to see the did kitten on the
+02:10 - other side so how does this algorithm
+02:13 - work
+02:13 - fortunately for me among this Wikipedia
+02:16 - page which explains it and it's got it
+02:18 - right here but before I get to that
+02:21 - let's talk a little bit about some of
+02:24 - the things that have to happen for
+02:26 - example in the pseudocode there's like
+02:28 - this lancets find closest palette color
+02:31 - what's that mean and then there's like
+02:34 - this quant error thing so let's discuss
+02:38 - sort of on the whiteboard what some of
+02:41 - these pieces are so if I have an image
+02:43 - an image is just a grid of pixels any
+02:50 - given pixel having a column row location
+02:55 - and I might think of that as X comma Y
+02:59 - right it's in the X column 0 1 2 it's in
+03:04 - the Y row 0 1 2 amazingly I picked the
+03:08 - pixel 2 comma 2 and it has a color
+03:12 - typically that color is going to be an
+03:14 - RGB color meaning it's going to have
+03:16 - some red value some green value and some
+03:19 - blue value the idea of quantizing an
+03:24 - image so typically speaking if I'm using
+03:27 - the full range of digital color I have a
+03:31 - lot of possibilities I have 0 to 255 256
+03:35 - possible Reds 256 possible greens and
+03:37 - 256 possible blues but what if I wanted
+03:41 - to reduce the number of possibilities
+03:42 - what if there are only 4 Reds 0 1 2 & 3
+03:46 - 4 greens I would have and I take an
+03:50 - image of an original color take an image
+03:54 - of that has the original full colors and
+03:57 - I reduce it to a smaller subset of
+03:59 - colors and this kind of process is
+04:01 - applied to to make images most smaller
+04:05 - file sizes and to do various kinds of
+04:07 - effects so actually let's just do that
+04:08 - first and actually what I'm going to do
+04:10 - is quantize this image so that there's
+04:13 - only two possible colors there's
+04:15 - basically zero red or 255 red 0 green or
+04:19 - 255 green and 0 blue or 255 blue so
+04:23 - there's really two times
+04:25 - two times two possible colors eight
+04:27 - possible colors so instead of 256 to the
+04:30 - third power colors I want to see what
+04:32 - does this image look like with just
+04:33 - eight possible colors let's make that
+04:35 - happen first and we'll see later why
+04:39 - that's part of this algorithm so the way
+04:42 - I'm going to do that is I'm gonna
+04:44 - operate on the same kitten image so I'm
+04:46 - gonna do is load the original image and
+04:48 - display the original image and set up
+04:50 - then operate in on it and display the
+04:53 - new image and draw you know there could
+04:56 - be some animation stuff that I do or a
+04:57 - different order but I'm gonna do that as
+04:58 - a simple thing for right now okay so
+05:02 - let's the first thing that I need to do
+05:04 - is I need to look at all of the pixels
+05:06 - and here's the thing even though I could
+05:08 - just the pixels are stored in a one
+05:10 - dimensional array so but I do want to
+05:13 - say look at all the X values kitten and
+05:19 - and based on that images with sorry I
+05:22 - lost my what I was doing here for a
+05:25 - second so I need a nested loop to look
+05:26 - at every pixel for every X and for every
+05:30 - Y so this is going to allow me to look
+05:34 - at a given pixel from the kitten the
+05:43 - problem is the pixels are actually
+05:46 - stored into one dimensional array and I
+05:49 - need and I want to think about the
+05:53 - pixels as their XY positions come and
+05:55 - need that later
+05:56 - luckily for us there's a very simple
+05:59 - formula X plus y times kitten dot with
+06:03 - and I go through this formula in another
+06:05 - video that I will link to from this
+06:06 - video's description if you want to
+06:08 - understand why this formula takes an X Y
+06:10 - position and gives me the one
+06:11 - dimensional location in the pixel
+06:13 - already so here's the thing in order to
+06:16 - quantize this image this color this
+06:19 - color variable is actually just a big
+06:21 - integer and I need to pull out the red
+06:25 - value of the pixel the green value of
+06:30 - the pixel and processing has these nice
+06:33 - helper functions that if I just pass an
+06:35 - RGB color to the red function I get the
+06:37 - red
+06:37 - value and the blue value of the pixel
+06:40 - now how can i quantize the image
+06:43 - basically what I want to say it's kind
+06:45 - of like a threshold effect I want to say
+06:47 - if if the range of college between 0 and
+06:50 - 255 if I'm above 127 just make it 255 if
+06:55 - I'm below 127 just make it zero and so I
+06:58 - could use it if statement for that but
+06:59 - there's actually kind of a fancy way I
+07:01 - could do this let's say I take so I'm
+07:04 - gonna say the new R is going to be equal
+07:08 - to let's say I take the current R value
+07:12 - and divide it by 255 what does that give
+07:15 - me that gives me a number between 0 & 1
+07:18 - well what if I just round that number so
+07:21 - if that number is 0.5 it'll be 1 if that
+07:23 - number is 0 the low point 5 it'll be 0
+07:27 - so I can actually use the round function
+07:28 - and then I could just multiply it by 255
+07:32 - so this is basically giving me two only
+07:36 - two possible numbers no matter what R is
+07:38 - I'm either gonna get 0 or 255 and I
+07:42 - could do the same exact thing for G and
+07:45 - the same exact thing for B and now what
+07:53 - am I going to do I want to say kitten
+07:55 - dot pixels index equals a new color with
+07:59 - those values so this is me just saying
+08:02 - pull the RGB values out quantize them to
+08:06 - a smaller number of possibilities and
+08:08 - make a new color and set it back to the
+08:11 - pixels okay so and you know I've
+08:15 - forgotten something kind of important
+08:16 - which is that when I operate on an image
+08:18 - in processing before app and operate on
+08:21 - the pixels I should say kitten dot
+08:22 - update pixels and then when I'm done I
+08:24 - should say kitten dot no no update
+08:27 - pixels is when I'm done and before I
+08:29 - operate on the pixels I need to say load
+08:31 - pixels like low picks are the same like
+08:33 - hey hey you I want to work on the pixels
+08:35 - right now update pixels thing done but
+08:41 - I'm done I'm done
+08:43 - so now image kitten 512 comma 0 so
+08:51 - I should see the quantized version on
+08:53 - the right and the original image on the
+08:55 - left let's see this looks pretty good
+08:58 - right this kind of makes sense like if I
+09:00 - only have a certain number of
+09:02 - possibilities this is what I'm left left
+09:04 - over with we can you know let's well
+09:07 - interestingly enough what happens if I
+09:09 - already right before I do any of this
+09:12 - make it grayscale so I can just quickly
+09:16 - filter that image and make a grayscale
+09:18 - with a filter function and processing we
+09:20 - can run it again and we can see you can
+09:22 - see how this is working now there's only
+09:24 - two possibilities
+09:25 - it's either white or black and so this
+09:26 - is identical to a threshold effect and
+09:29 - here whoops let's let's leave that in
+09:34 - but comment it out because we'll come
+09:36 - back to it later now interestingly
+09:39 - enough what if I want to have more
+09:43 - possibilities what if I actually want to
+09:45 - have instead of just two possibilities
+09:48 - for each color four possibilities for
+09:50 - each color well I can do something
+09:53 - similar for example what I could do I
+09:57 - think this would work right what if I
+09:59 - multiply this by 4 and then divide it by
+10:08 - this and divide 255 by 4 let me just put
+10:12 - this in here usually don't like to do
+10:13 - this and then let me explain it think
+10:17 - about this what I'm going to get now is
+10:21 - if I'm multiplying this number that's a
+10:24 - floating point number between 0 and 1 by
+10:25 - 4 and I around it I'm gonna get a 0 1 2
+10:29 - or 3 right those are the only things I'm
+10:32 - gonna get 0 1 2 or 3 now I want to scale
+10:36 - that up to basically like what are 4
+10:40 - possible colors in between 0 and 255 so
+10:44 - this also and this I was going to say I
+10:46 - have to put floor here but luckily I
+10:48 - don't and this is gonna really trip us
+10:50 - up later if I'm not careful
+10:53 - RGB our floats so this is going to turn
+10:55 - into a float round will turn the result
+10:57 - back into an integer 0 1 2 or 3
+11:00 - can I get 4
+11:03 - yeah I could get for this is actually
+11:06 - giving me five possibilities right
+11:07 - because if R is zero
+11:10 - I'm gonna get zero so this is actually
+11:12 - interesting enough giving me five
+11:13 - possibilities zero one two three four
+11:15 - four five possibilities just like
+11:18 - multiplying it by one gave me two
+11:20 - possibilities zero or one so I actually
+11:22 - have five possibilities here and then I
+11:24 - want to scale that up this though this
+11:26 - is an integer this is an integer it's
+11:27 - going to give me an integer back so and
+11:30 - what I might like to do here just to be
+11:33 - like protect myself here a little bit is
+11:35 - I might want to say nu nu R and I want
+11:39 - these to be sure that these are integers
+11:40 - because I'm quantizing to just a few
+11:43 - sets of possibilities so this is indeed
+11:45 - an integer and so now so now I'm going
+11:51 - to say a new r nu g newby newby so let's
+11:58 - now run this and see what happens there
+12:03 - you can see how now I have more color
+12:05 - possibilities but still I've reduced the
+12:07 - image to a smaller number of colors five
+12:10 - five this was actually five times five
+12:13 - times five so 125 possible colors I
+12:18 - think not very many colors okay I should
+12:21 - probably make this a variable I'll call
+12:24 - it like factor and I'll set that equal
+12:28 - to four and put this in here and the
+12:33 - same number goes here if I've done this
+12:34 - correctly and if we run this it looks
+12:38 - like this if I set this to be one it
+12:42 - looks like this so this makes her if I
+12:44 - wouldn't do something interactive here I
+12:45 - wouldn't want to operate on the original
+12:47 - Khitan image I won't have a separate
+12:48 - image so I could like change it on the
+12:50 - fly but I don't need that for right now
+12:51 - okay so we've done the quantizing part
+12:54 - now the other thing that I need to
+12:56 - understand is the quantization error is
+13:00 - that the right way to say that I'm not
+13:01 - entirely sure but what I mean by that is
+13:04 - let's say the actual let's look at a
+13:06 - particular example the actual color is
+13:09 - 255 comma 100
+13:12 - ten what does one person this is an
+13:14 - actual color or if I were to reduce this
+13:17 - color with one with two levels with a
+13:21 - factor of one two levels I would get to
+13:25 - 5500 right because this would round up
+13:30 - to 255 this would round down to zero and
+13:33 - this would round down to zero so the
+13:35 - error is the difference between these
+13:39 - two this minus this is 0 this minus this
+13:42 - is 100 and this minus this is 10 that's
+13:46 - the actual error let's let's let's do
+13:48 - this a little bit differently let's make
+13:50 - this one 50 just so we can see so this
+13:52 - would then be 10 but this would round up
+13:55 - to 255 so the error would be negative
+13:59 - 105 right so you can see this is
+14:03 - calculating the error the reason why I
+14:05 - need to work with this error and let's
+14:09 - put this into the code real quick so I'm
+14:12 - gonna say here err err err r equals nu r
+14:21 - minus nu r error G equals G minus nu G
+14:28 - and error B equals B minus newby newby
+14:33 - okay so so the reason why I need this
+14:38 - error is let's go back to that Wikipedia
+14:39 - page basically this algorithm achieves
+14:44 - dithering tillering using error
+14:47 - diffusion meaning it pushes the residual
+14:50 - quantization error of a pixel on to its
+14:52 - neighboring pixels to be dealt with
+14:54 - later so in other words it just keeps ah
+14:57 - it's so different put it on it's kind of
+14:59 - it keeps pushing the colors further
+15:01 - further apart away from each other kind
+15:03 - of based on the error and so the pixel
+15:05 - indicated with a star indicate to the
+15:07 - pixel currently being scanned and this
+15:09 - is the amount of error it passes to its
+15:11 - neighbors so in this case oh and what's
+15:15 - kind of the order of matters here for
+15:17 - each y from top to bottom for each X
+15:20 - because I'm actually pushing the error
+15:22 - based on pixels to the right
+15:26 - so actually so the pixels that I'm using
+15:31 - are pixels this is a pixel to the right
+15:32 - this is a pixel to the left and down
+15:34 - this is a pixel down it's kind of like
+15:36 - the pixels on the bottom right of the
+15:37 - image so let's check this out for each Y
+15:41 - from top to bottom no I have X so I need
+15:45 - to do Y first that's going to make a
+15:48 - difference so right now let's just make
+15:51 - sure this still works it still works
+15:53 - but now I need to start doing this error
+15:55 - thing so for each so now this is what
+15:58 - I've done already
+15:59 - right I've gotten the the quantized
+16:03 - pixel like I've done this part I
+16:05 - calculated the error so all I need to do
+16:07 - is start like funneling the error off
+16:11 - okay so how do I do that let's actually
+16:14 - grab this and put it in our code right
+16:23 - here and let's comment it out comment
+16:30 - that out and let's put this up here
+16:33 - right this in fact is that whole first
+16:36 - part of the algorithm this whole first
+16:38 - part of the algorithm matches exactly
+16:40 - with these three lines of code right
+16:44 - here right I look at the old pixel I get
+16:47 - a new pixel and I set it and then I find
+16:50 - the error so I've done that already now
+16:51 - I just need to do this part so doing
+16:54 - this part is hmm so first I need to say
+16:58 - okay so here's the thing let's you know
+17:00 - how I have this formula here X plus y
+17:03 - times kitten dot with let's make that
+17:04 - actually a function I'm going to call
+17:06 - the function index and it just takes an
+17:09 - int an integer éxito Y should probably
+17:12 - take a whiff too but I'm gonna be sort
+17:14 - of silly about it and it's just going to
+17:16 - return because I'm going to need to do
+17:20 - this a lot X plus y times kitten dot
+17:23 - with Y oh and it's not a void function
+17:25 - it returns an integer and then I'm gonna
+17:29 - do this index X comma Y so what I'm
+17:32 - going to do is like whenever I have an X
+17:34 - Y I can just quickly get the index and
+17:36 - we're
+17:37 - and that will be the correct index into
+17:39 - the pixels array I could have made this
+17:40 - two lines of code but I think I think we
+17:42 - can follow this I could follow this
+17:44 - hopefully you can follow this because
+17:46 - the reason why I just did that is
+17:47 - because I need to say kitten dot pixels
+17:53 - index X plus one comma Y right I am
+17:57 - rewriting exactly this pseudo code right
+18:00 - here and why okay so that's so I need to
+18:03 - do this 2x plus one comma Y I need to do
+18:10 - this 2x minus 1 y plus one I need to do
+18:16 - this 2x y plus one and I'm sure I could
+18:23 - do this in some kind of like loop or
+18:24 - something but I'm just going to write it
+18:25 - all out right now just to know that it
+18:27 - works x plus 1 y plus 1 so and like if I
+18:31 - just for a second put zeros here just so
+18:34 - I don't have any syntax errors and put a
+18:37 - semicolon here semicolon let's just see
+18:41 - okay great so this is what I'm doing and
+18:44 - I'm gonna be kind of anal retentive
+18:46 - about this and add some extra spaces
+18:48 - just so it all lines up so I know I need
+18:52 - to operate on these 4 pixels that's what
+18:54 - it's telling you down here and what do I
+18:57 - need to do this is the important part
+18:59 - ah so this gets the the if you can see
+19:04 - that these are all getting parts of the
+19:05 - error seven plus three plus five plus
+19:07 - six is 16 so this is getting like you
+19:10 - know almost half the error like forty
+19:12 - high 40s percent this is getting like a
+19:15 - little bit of around a little less than
+19:16 - a quarter of the error so okay so this
+19:17 - amount is important so for each one of
+19:20 - these I actually need to make a new
+19:21 - color so I need to say so I need to
+19:29 - mmm-hmm I'm gonna have to do this with
+19:32 - our I have to for everything have to do
+19:35 - this with an R a G and a B so when this
+19:39 - is going to be index XY here as well so
+19:43 - now what I need to do is let's think
+19:45 - about this I want to get a another new
+19:50 - are
+19:51 - I already used the variable name you are
+19:55 - and I already called it an integer so ah
+19:58 - let's okay let's say I'm gonna okay
+20:02 - let's I'm gonna have a color called see
+20:04 - I have an idea now I'm gonna rename just
+20:07 - so I have different variable names I'd
+20:09 - make this old are old G old be sorry for
+20:13 - all this variable naming Oh old are old
+20:19 - G old B and then old old old okay so the
+20:31 - reason why I'm doing that is because
+20:32 - this is what I want to do I'm gonna
+20:36 - actually say int index equals this index
+20:40 - then color is kitten dot pixels that
+20:45 - index now kitten dot pixels that index
+20:51 - should now equal R equals red see red of
+20:56 - C G equals green of C B equals blue of
+21:01 - see it should equal and that our
+21:05 - shouldn't how equal that I got it I got
+21:06 - it I got it
+21:07 - r should equal itself plus error R times
+21:18 - 7/16 times 7/16 do you see why this is
+21:26 - so what I need to do is I need to do
+21:27 - this for our G and B G B G B G B so what
+21:35 - and I have a mistake here but for each
+21:37 - one of these and now I set it back to
+21:42 - the color I'm passing the error so let
+21:44 - me look at that color get its RGB passed
+21:47 - part of the error on to it and then set
+21:49 - that new color okay so the thing that's
+21:53 - wrong with this is 7 divided by 16 is
+21:56 - what I said it was like almost 50%
+21:58 - almost point five but it's actually zero
+22:00 - because both of those are integers so I
+22:02 - need to be very careful and say 16
+22:05 - points
+22:05 - I need to at least explicitly in Java
+22:08 - and JavaScript I wouldn't have this
+22:09 - problem
+22:09 - and you'd explicitly say point zero
+22:11 - because I want that to be a float so now
+22:13 - I just need to do this with every single
+22:16 - one of these so I need to do this over
+22:19 - and over again four times and each time
+22:25 - I do it I'm going to just use the same
+22:27 - variable names but not read eclair them
+22:29 - I don't love this style but it will do
+22:32 - so now I need the next one is X minus 1
+22:37 - y plus 1 and the next amount of error I
+22:42 - want is 3 comma 16 3/16 so 3 so I'm
+22:46 - going to do that then I'm going to do
+22:50 - what the next one is X Y plus 1 X Y plus
+22:56 - 1 and the amount of error is 5/16 X Y
+23:00 - plus 1 is 5/16 then the last one and I
+23:09 - can get rid of all my notes here from
+23:10 - the pseudocode the last one is X plus 1
+23:14 - y plus 1 X plus 1 y plus 1 and 1/16 of
+23:21 - the error okay I think yes yes I could
+23:27 - make a function there's so many ways
+23:29 - this could be cleaned up and I
+23:31 - appreciate people who are watching this
+23:32 - live do you see good feedback I'm gonna
+23:34 - leave that as an exercise to the viewer
+23:35 - I just want to run this right now ok so
+23:39 - I have an array and there's Oh what is
+23:42 - my problem here look at this I am
+23:44 - looking at every single pixel but for
+23:49 - every single pixel I'm dealing with
+23:50 - neighboring pixels right I'm dealing
+23:54 - with things like for this pixels XY I'm
+23:57 - dealing with X plus 1 comma Y which is
+23:59 - this pixel it's one over an X the same Y
+24:02 - but when I do this there's no pixel over
+24:05 - here so I need to deal with the edges
+24:08 - and I could be thoughtful about this but
+24:11 - just to get this algorithm to work let's
+24:13 - look at these I am going to the right
+24:17 - and the left but only to the right
+24:19 - why only down why why's why wise so I
+24:23 - can start x1 if I start at one I'll
+24:26 - always have a neighbor to the left and I
+24:28 - can go all the way up to minus one
+24:30 - meaning I always have a neighbor to the
+24:31 - right and four why I can I can start at
+24:34 - zero because I never look up and I can
+24:36 - go over this way so now let's run this
+24:40 - and I really should I've learned my
+24:43 - lesson so many times to not use this
+24:45 - from roll effect so I usually have some
+24:47 - mistakes but imma try it right now hey I
+24:53 - think I kind of got this yeah look it's
+24:58 - sort of hard to see cuz there's so much
+25:00 - crazy detail in the outside here but I
+25:03 - think did I leave the factor as one I
+25:06 - think this is right
+25:07 - you don't ease your way for me able to
+25:08 - see if this is right is let's filter out
+25:10 - let's juice the grayscale one and look
+25:12 - at it yeah it's definitely right so you
+25:15 - can see this image is now kind of
+25:17 - dithered so to speak you could qu4 ask
+25:20 - the question uses a lot of white dots is
+25:24 - it a lot of white dots on a black
+25:25 - background or is it a lot of black dots
+25:26 - on a white background the truth of the
+25:28 - matter it's neither
+25:29 - all I've done is set every pixel to
+25:31 - either white or black but I've made it
+25:33 - have this appearance of being like a lot
+25:35 - of dots next to each other and so the
+25:37 - question here is how might I take this
+25:39 - like if I used a lower resolution image
+25:41 - drew the dots as ellipses and then blew
+25:44 - it up what kind of other visual effects
+25:47 - could I get here and we could see this
+25:48 - we could kind of look you know if I
+25:50 - change the factor to four and ran it
+25:53 - again you know you can see that it's the
+25:56 - same sort of thing is happening it's
+25:58 - dithered but I'm only now I have I think
+26:01 - five different gray possibilities it's a
+26:03 - white white dark dark gray light gray
+26:08 - medium gray no dark bright great gray I
+26:12 - don't know what didn't you get the idea
+26:14 - so I think a bit rate is an issue here
+26:17 - so ah I think I've done something which
+26:20 - is that this video is not going to work
+26:23 - very well on YouTube because you're not
+26:26 - really gonna be able to see this detail
+26:28 - but I think if i zoom in right I think
+26:30 - you can you can kind of see
+26:32 - hopefully you can see see this detail
+26:34 - alright so what could you do with this
+26:36 - I'm gonna stop here I'm gonna go back to
+26:40 - taking out gray let's look at it with
+26:42 - mmm so you can see here this is dithered
+26:45 - but now many different RGB colors maybe
+26:49 - 125 RGB possibilities I think so what
+26:54 - could you do with this I'm and I'm gonna
+26:57 - actually leave the code with one and
+26:59 - leave the grayscale in what I think
+27:02 - could be interesting is number one work
+27:04 - with a much lower resolution image but
+27:06 - display it at much higher resolution and
+27:08 - maybe draw ellipses or particles as each
+27:10 - one of these dots whether it's a black
+27:12 - dot or a white dot draw it with some
+27:14 - texture some image or something what if
+27:17 - those dots somehow are the seeds of a
+27:19 - particle system and then I think
+27:21 - eventually I want to come back maybe
+27:22 - I'll do a follow up challenge like that
+27:23 - but those would be some exercises that I
+27:25 - would try you can read over a link also
+27:27 - to Robert Hodgins description of this
+27:29 - stippling you can see the particle
+27:32 - checks the pixel array to see what shade
+27:34 - of grey needs to represent if it shows
+27:36 - blackness it grows smaller and it's
+27:37 - magnetic charge diminishes if it's white
+27:40 - it grows larger as it's charged so this
+27:42 - is kind of like a force directed
+27:44 - self-organizing physics based system
+27:46 - that creates these white and black dots
+27:49 - to represent an image you know and
+27:50 - certainly I will try I will create or
+27:53 - somebody will pull requests for me a
+27:55 - JavaScript version of this so that you
+27:56 - can also see a version that runs in the
+27:58 - browser
+27:58 - although the pixel array works
+28:00 - differently in html5 canvas and in p5.js
+28:03 - and pixel operations in the browser
+28:06 - unless you're using shaders or some kind
+28:07 - of advanced technique often are very
+28:09 - very slow whereas in Java and processing
+28:11 - that can operate quite quickly alright
+28:14 - thank you everybody
+28:16 - oh if I stop moving I'm told just to
+28:19 - show this to you I'm told that if i zoom
+28:21 - into it and then I stop moving it will
+28:27 - resolve this will be the thumbnail
+28:31 - let's get that mouse out of there this
+28:34 - will be my thumbnail okay
+28:38 - thanks for watching
+28:45 - [Music]

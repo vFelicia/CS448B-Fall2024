@@ -1,0 +1,420 @@
+With timestamps:
+
+00:00 - Hi.
+My name is Stewart Lynch,
+00:02 - and this is the fourth of six videos
+in the iOS concurrency series.
+00:06 - At the end of the third video,
+we had our completed application and it
+00:10 - was using a result based completion
+handler for our API services.
+00:14 - Get JSON file function
+in this video we're going to be
+00:17 - implementing the new Asynchronous
+methods introduced in iOS 15.
+00:22 - This will introduce you to new terms such
+as async and await main actor,
+00:29 - and then asynchronous unit
+of work called the task.
+00:33 - Now if you're just jumping into the start
+00:34 - of this series,
+you can download the completed code
+00:37 - from the third video in this series
+from the link in the description below.
+00:41 - The first thing we should do since we're
+00:43 - going to be experimenting with a new
+feature is create a new branch for our
+00:47 - project so that if things go right,
+we can always roll back to that one
+00:51 - that we completed in the last video,
+and that's a fully working app.
+00:55 - So switch to the source code Navigator.
+00:59 - Then select the Repositories
+tab and expand the application.
+01:05 - You'll notice that the current branch is
+01:07 - the one that's called main,
+and if you expand the branches section,
+01:11 - you'll see it
+right click on Main and choose new branch
+01:16 - from Main and call it
+async and await no spaces.
+01:22 - It should automatically check
+that branch out and switch to it.
+01:26 - But if it doesn't like mine doesn't.
+01:28 - I'll right click on the branch
+and choose check out.
+01:32 - That means I'm leaving the old main branch
+01:35 - behind and that code is
+safe and won't be touched.
+01:39 - And you'll always know what branch you're
+01:40 - on because you'll see
+that in the title bar.
+01:45 - Now within the API service struct.
+01:48 - I want to create a new function and I'm
+01:50 - going to use the same name and this is
+going to be allowed because I'm going
+01:54 - to be giving this function
+different parameters.
+01:57 - Instead of providing a completion handler.
+02:00 - I'm going to do what I used to do when I
+02:02 - knew nothing about asynchronous nature
+of network calls, and in fact,
+02:05 - I was bitten by this when
+I first started coding.
+02:08 - I thought every line of code waited
+02:10 - until the previous line of code
+completed before moving on.
+02:14 - So I would call getJSON and then just
+02:17 - return my array of objects from the call
+so I can copy everything except
+02:21 - the completion handler from this method,
+then close it off
+02:26 - and then return that decodeable object,
+which in our case is either an array
+02:31 - of user or an array of posts,
+but we're using generic, so it's just T.
+02:38 - Now.
+This means within my view model,
+02:40 - I expect to get my array of user or post
+back immediately so that I can assign it
+02:46 - to my published property,
+and that's what I would have thought.
+02:51 - Well, let's try and fix this function
+up so that we can actually do that.
+02:55 - Let me start the same way as before.
+02:57 - I'm going to copy the pasted code,
+but since there's no completion handler.
+03:02 - Let's just rule that out and just return.
+03:06 - Now this isn't really good,
+03:08 - because remember,
+we want to pass that error on up to our
+03:11 - calling view so that we can present
+it to the user in an alert.
+03:15 - So we can designate this function as being
+03:18 - a throwing function, one that might
+throw an error or cause an error.
+03:23 - And we do that by typing
+throws before the return.
+03:28 - Then you can throw the error
+rather than returning.
+03:33 - And what kind of error do we have?
+03:35 - We have an Invalid URL error,
+03:38 - so we can just throw the API
+errors Invalid URL case
+03:46 - by designating a function as
+being a throwing function.
+03:49 - Every time you call the function,
+03:51 - you're going to have to at some point
+catch the errors that were thrown by it.
+03:55 - So this means we'll be passing the error
+higher up the calling hierarchy.
+03:59 - This function could have been called
+by another function that was itself called
+04:04 - by another one, and at some point then you
+need to catch and deal with that error,
+04:09 - or maybe translate that error
+into a different type of error.
+04:13 - And that's where a do try catch block
+04:17 - comes in and you'll see
+that in just a second.
+04:23 - So here's where I ran into a roadblock
+when I'm fetching from a network.
+04:28 - It's not asynchronous normally.
+04:30 - We have to wait until I get that response
+04:32 - before I can move on to
+the decoding the data,
+04:36 - and this is the equivalent
+to a completion handler.
+04:39 - We wait for it to complete processing
+04:42 - before we pass it back as the argument
+for our completion function.
+04:47 - Now, though, instead of using our previous
+04:49 - Urlsession's data task with URL function,
+we're going to use a different version
+04:56 - when we start typing Urlsession
+shared data.
+05:02 - I see that there are a number of options
+05:04 - and I can scroll down and there are
+some grayed out ones.
+05:07 - And the one that I'm looking for is this
+05:10 - one here,
+and you'll see why it's grayed out in just
+05:14 - a minute, we see that it's
+marked with async throws.
+05:19 - The throws means what
+we've just experienced.
+05:21 - If we run into an error, we can
+throw that error back to the caller.
+05:25 - But what about async well?
+05:28 - I'll get to that in just a minute.
+05:30 - We do see, however,
+that it will return both a data
+05:34 - and a URL response, and this function
+itself has been designated as throwing.
+05:41 - So here's what I talked about.
+05:42 - Somewhere on down the chain.
+05:44 - We have a throwing function and we're
+05:46 - going to have to deal
+with it at some point.
+05:48 - So let's deal with it here and convert
+that error into our own API error.
+05:54 - So we'll catch that error and then
+pass it on up to our caller.
+06:00 - Now the dialogue is optional so we can
+remove that and the URL is just our URL.
+06:07 - So let's just use it.
+06:10 - Remember, that function does
+return data and response.
+06:13 - So we'll create a tuple of our
+own to assign those return values
+06:19 - now Xcode is going to help us here.
+06:22 - It generates an error,
+06:23 - and it says that this function can throw,
+but it's not marked with try.
+06:27 - So anytime a function throws,
+you have to use try.
+06:32 - So that URL session function.
+06:35 - It was a throwing function.
+06:36 - So we'll have to try.
+06:39 - Now this creates a new error,
+which is the async call in the function
+06:43 - does not support concurrency,
+and that's when our function was
+06:47 - designated as an async throwing function,
+and this is new for us.
+06:52 - It means that that getJSON function
+needs to support concurrency.
+06:57 - So we'll need to have to go back up
+06:59 - to where we define our function
+and make it an async throwing function.
+07:07 - Now we're not out of the water yet,
+though, because we're told now
+07:10 - that the expression is async,
+but it's not marked with a weight,
+07:15 - and that's because the function is
+asynchronous one, and we have no idea how
+07:20 - long it's going to take for our
+data and response to come back.
+07:23 - So we must wait for it before
+we move on in our code.
+07:27 - And we do this by specifying that we await
+07:30 - for that tuple before assigning it
+to our constant and the order matters.
+07:35 - We first try and then we await
+for the result from our call.
+07:41 - Now what if that data from the URL
+07:43 - function actually produces an error
+that try through an error?
+07:48 - Well, by using a simple try,
+we're saying that we want the error
+07:52 - to bubble up to whatever ViewModel is
+calling that function,
+07:56 - but I want to handle all my errors here in
+the same way right here in this function.
+08:01 - So I'm going to catch that error
+08:03 - and change it to one of my ATI
+error types and throw it.
+08:09 - So for this, what I'll do is use a do
+catch block and in the catch block.
+08:14 - Then I can throw our API services API
+08:19 - error, which is the data task error case,
+and it needs an associated value,
+08:25 - which is the localized description
+of the error that one level up through.
+08:32 - So now we have data and response,
+08:34 - so we can check exactly
+the same way as we did before.
+08:38 - First for the response, we need to check
+that it's a code of 200 or throw,
+08:44 - so we can do this inside a do catch
+block just like we did before.
+08:49 - Only we have a completion
+handler to pass our error with.
+08:53 - We don't have one anymore.
+08:55 - So instead we're just going to throw
+08:57 - an API error, which is the case
+Invalid response status.
+09:02 - Still within the do block,
+09:03 - we have that data and the data task
+error will have thrown an error.
+09:07 - There been one.
+09:08 - So now we can decode and return
+09:11 - the decoded data
+now, unless there is an error decoding
+09:15 - data, in which case, again,
+no completion handler,
+09:17 - we'll need to throw the decoding error
+using that errors localized description as
+09:23 - the associated value
+for our API error type.
+09:30 - Well, that's it.
+09:31 - We're done.
+09:36 - Our app would still build and run because
+we're still calling that original
+09:40 - function, though I haven't
+deleted it, at least not yet.
+09:44 - Let's return now to our users list
+view model and change that call.
+09:50 - We'll still need that instance of API
+09:52 - service and the is Loading toggle
+function, but this getJSON function needs
+09:57 - to be commented out for now,
+but I'll keep it here just for reference.
+10:01 - Instead, we can use our new
+Apiservice get JSON function.
+10:06 - Now we know that it's going to return our
+10:08 - users, so let's assign the return value
+to users and we'll call that function.
+10:14 - Now.
+Notice there are two of them.
+10:16 - We want the async throws one.
+10:20 - Now this generates an error call can
+10:22 - throw, but it's not marked with try
+and the error is not handled.
+10:26 - In fact, the order in which the error
+occurs as there are going to be three
+10:30 - of them may be different from you, but the
+errors are the same as we saw earlier.
+10:36 - First we'll need H Fry
+10:41 - and we'll need to designate
+that function as being asynchronous.
+10:47 - Then we'll need to await the result,
+10:51 - but we're at the end of the line now.
+10:53 - If we encountered any errors,
+we'll need to set our shoulder
+10:58 - to true and set the error message so
+that the localized description is used
+11:03 - for the message body so we can do that do
+catch block right now to handle that.
+11:12 - Well, we're going to do it the same way
+11:14 - that we did before by saying the show
+error alert to true and setting the error
+11:18 - message to that errors localized
+description and we don't even need self.
+11:28 - We no longer need this commented out code
+11:30 - here for reference,
+so let's just delete it.
+11:34 - Our is Loading property has been toggle
+to true, but we've never turned it off.
+11:39 - Well, since this entire function is
+asynchronous we can place our defer block
+11:43 - right after it and it won't be toggled or
+called if the execution is going to be
+11:48 - deferred until the function
+exits its scope
+11:54 - so we can just use defer is Loading
+toggle right after we assign it.
+11:59 - Isn't this nice and clean so
+much easier to read and follow?
+12:04 - Now users is a published property and this
+12:07 - function is executing on a background
+thread, so we'll get that severe warning
+12:11 - if we don't do something to fix
+that and set it back on the main thread.
+12:17 - If I try to enclose this with a dispatchq
+main asyncblock I get an error
+12:25 - in Swift five five,
+12:27 - there is a new attribute called main actor
+that we can use to decorate the entire
+12:31 - function and it will then dispatch
+this task onto the main thread.
+12:40 - When we build we get an error though
+in the users list view because it's now
+12:44 - calling that new get users function
+and that's an asynchronous function.
+12:52 - So what we have to do is make sure
+that our on up here is asynchronous and so
+12:58 - what we can do is we can within
+that on a peer function,
+13:01 - create an asynchronous unit of work,
+which we'll call a task,
+13:07 - and since that's asynchronous,
+we need to await the result.
+13:13 - No try here, though,
+13:14 - because we've caught any errors
+back in that fetch users function
+13:20 - well.
+13:20 - In iOS 15, we can go one
+step further than this.
+13:23 - We can combine both on appear and task
+13:27 - into a new asynchronous task method that
+adds an asynchronous task to perform.
+13:33 - When this view appears.
+13:37 - This code is much easier
+to follow and work with.
+13:40 - When I make that call to fetch users,
+13:43 - I'm either going to be successful
+or it'll throw an error.
+13:47 - If successful, we assign the decoded
+data to our published property.
+13:53 - Since this is our calling point of our
+13:55 - throwing functions,
+we need to deal with any errors that were
+13:58 - thrown earlier in the process,
+and therefore the do catch block.
+14:03 - It all compiles properly.
+Now.
+14:05 - No errors, but our posts are still using
+that old API service Get JSON function,
+14:12 - so we want to fix that before
+we can remove it.
+14:16 - So let's do that.
+14:17 - Let's return to the user's list view model
+14:20 - and we'll copy everything
+from the defer on down.
+14:26 - Then in post list view.
+14:27 - In the Fetch post function,
+14:29 - we'll replace the old getJSON
+function with this new code.
+14:33 - We just have to change our users to posts.
+14:39 - It's complaining, however,
+14:40 - because it's an async call in a function
+that doesn't support concurrency.
+14:45 - Remember, anytime we've got concurrency,
+14:47 - we need to specify that our
+function is asynchronous
+14:53 - and also don't forget that we need
+to dispatch that task back onto the main
+14:58 - queue, so we decorate the function
+with the main actor attribute.
+15:06 - This requires one more change in the post
+15:08 - list view as well,
+because we are now calling an asynchronous
+15:12 - task, so we'll need to create that unit
+of work,
+15:16 - which means we'll change a peer to task
+and then await the return of our posts.
+15:24 - We can test now in the simulator and we'll
+15:27 - see that it all works just as before,
+but with much more readable code.
+15:39 - After having done all of that work,
+15:41 - we want to make sure that you commit
+the changes to your Git repository.
+15:45 - This is so much cleaner.
+15:47 - Now
+15:50 - in the fifth video in this series,
+we're going to take this even further.
+15:54 - We are currently fetching all of our users
+at once, and then at one time we're
+15:59 - fetching an individual user's post as
+needed,
+16:02 - and we'll do that every time that we click
+on one of the rows in our users list.
+16:08 - That's a lot of network calls if we're
+viewing a lot of different users posts.
+16:12 - So what we'll do in the next video is
+16:14 - retrieve all of the users and all
+of the posts in parallel so that they are
+16:19 - all in memory and then filter the posts
+for each individual user as we need them
+16:24 - a maximum of two network calls
+anytime we launch our application.
+16:29 - So be sure you subscribe to the code
+16:31 - with Chrischannel to get notification
+of new videos and I'll see you next week.
+16:36 - Thanks for watching.
+16:39 - Bye.
+
+Cleaned transcript:
+
+Hi. My name is Stewart Lynch, and this is the fourth of six videos in the iOS concurrency series. At the end of the third video, we had our completed application and it was using a result based completion handler for our API services. Get JSON file function in this video we're going to be implementing the new Asynchronous methods introduced in iOS 15. This will introduce you to new terms such as async and await main actor, and then asynchronous unit of work called the task. Now if you're just jumping into the start of this series, you can download the completed code from the third video in this series from the link in the description below. The first thing we should do since we're going to be experimenting with a new feature is create a new branch for our project so that if things go right, we can always roll back to that one that we completed in the last video, and that's a fully working app. So switch to the source code Navigator. Then select the Repositories tab and expand the application. You'll notice that the current branch is the one that's called main, and if you expand the branches section, you'll see it right click on Main and choose new branch from Main and call it async and await no spaces. It should automatically check that branch out and switch to it. But if it doesn't like mine doesn't. I'll right click on the branch and choose check out. That means I'm leaving the old main branch behind and that code is safe and won't be touched. And you'll always know what branch you're on because you'll see that in the title bar. Now within the API service struct. I want to create a new function and I'm going to use the same name and this is going to be allowed because I'm going to be giving this function different parameters. Instead of providing a completion handler. I'm going to do what I used to do when I knew nothing about asynchronous nature of network calls, and in fact, I was bitten by this when I first started coding. I thought every line of code waited until the previous line of code completed before moving on. So I would call getJSON and then just return my array of objects from the call so I can copy everything except the completion handler from this method, then close it off and then return that decodeable object, which in our case is either an array of user or an array of posts, but we're using generic, so it's just T. Now. This means within my view model, I expect to get my array of user or post back immediately so that I can assign it to my published property, and that's what I would have thought. Well, let's try and fix this function up so that we can actually do that. Let me start the same way as before. I'm going to copy the pasted code, but since there's no completion handler. Let's just rule that out and just return. Now this isn't really good, because remember, we want to pass that error on up to our calling view so that we can present it to the user in an alert. So we can designate this function as being a throwing function, one that might throw an error or cause an error. And we do that by typing throws before the return. Then you can throw the error rather than returning. And what kind of error do we have? We have an Invalid URL error, so we can just throw the API errors Invalid URL case by designating a function as being a throwing function. Every time you call the function, you're going to have to at some point catch the errors that were thrown by it. So this means we'll be passing the error higher up the calling hierarchy. This function could have been called by another function that was itself called by another one, and at some point then you need to catch and deal with that error, or maybe translate that error into a different type of error. And that's where a do try catch block comes in and you'll see that in just a second. So here's where I ran into a roadblock when I'm fetching from a network. It's not asynchronous normally. We have to wait until I get that response before I can move on to the decoding the data, and this is the equivalent to a completion handler. We wait for it to complete processing before we pass it back as the argument for our completion function. Now, though, instead of using our previous Urlsession's data task with URL function, we're going to use a different version when we start typing Urlsession shared data. I see that there are a number of options and I can scroll down and there are some grayed out ones. And the one that I'm looking for is this one here, and you'll see why it's grayed out in just a minute, we see that it's marked with async throws. The throws means what we've just experienced. If we run into an error, we can throw that error back to the caller. But what about async well? I'll get to that in just a minute. We do see, however, that it will return both a data and a URL response, and this function itself has been designated as throwing. So here's what I talked about. Somewhere on down the chain. We have a throwing function and we're going to have to deal with it at some point. So let's deal with it here and convert that error into our own API error. So we'll catch that error and then pass it on up to our caller. Now the dialogue is optional so we can remove that and the URL is just our URL. So let's just use it. Remember, that function does return data and response. So we'll create a tuple of our own to assign those return values now Xcode is going to help us here. It generates an error, and it says that this function can throw, but it's not marked with try. So anytime a function throws, you have to use try. So that URL session function. It was a throwing function. So we'll have to try. Now this creates a new error, which is the async call in the function does not support concurrency, and that's when our function was designated as an async throwing function, and this is new for us. It means that that getJSON function needs to support concurrency. So we'll need to have to go back up to where we define our function and make it an async throwing function. Now we're not out of the water yet, though, because we're told now that the expression is async, but it's not marked with a weight, and that's because the function is asynchronous one, and we have no idea how long it's going to take for our data and response to come back. So we must wait for it before we move on in our code. And we do this by specifying that we await for that tuple before assigning it to our constant and the order matters. We first try and then we await for the result from our call. Now what if that data from the URL function actually produces an error that try through an error? Well, by using a simple try, we're saying that we want the error to bubble up to whatever ViewModel is calling that function, but I want to handle all my errors here in the same way right here in this function. So I'm going to catch that error and change it to one of my ATI error types and throw it. So for this, what I'll do is use a do catch block and in the catch block. Then I can throw our API services API error, which is the data task error case, and it needs an associated value, which is the localized description of the error that one level up through. So now we have data and response, so we can check exactly the same way as we did before. First for the response, we need to check that it's a code of 200 or throw, so we can do this inside a do catch block just like we did before. Only we have a completion handler to pass our error with. We don't have one anymore. So instead we're just going to throw an API error, which is the case Invalid response status. Still within the do block, we have that data and the data task error will have thrown an error. There been one. So now we can decode and return the decoded data now, unless there is an error decoding data, in which case, again, no completion handler, we'll need to throw the decoding error using that errors localized description as the associated value for our API error type. Well, that's it. We're done. Our app would still build and run because we're still calling that original function, though I haven't deleted it, at least not yet. Let's return now to our users list view model and change that call. We'll still need that instance of API service and the is Loading toggle function, but this getJSON function needs to be commented out for now, but I'll keep it here just for reference. Instead, we can use our new Apiservice get JSON function. Now we know that it's going to return our users, so let's assign the return value to users and we'll call that function. Now. Notice there are two of them. We want the async throws one. Now this generates an error call can throw, but it's not marked with try and the error is not handled. In fact, the order in which the error occurs as there are going to be three of them may be different from you, but the errors are the same as we saw earlier. First we'll need H Fry and we'll need to designate that function as being asynchronous. Then we'll need to await the result, but we're at the end of the line now. If we encountered any errors, we'll need to set our shoulder to true and set the error message so that the localized description is used for the message body so we can do that do catch block right now to handle that. Well, we're going to do it the same way that we did before by saying the show error alert to true and setting the error message to that errors localized description and we don't even need self. We no longer need this commented out code here for reference, so let's just delete it. Our is Loading property has been toggle to true, but we've never turned it off. Well, since this entire function is asynchronous we can place our defer block right after it and it won't be toggled or called if the execution is going to be deferred until the function exits its scope so we can just use defer is Loading toggle right after we assign it. Isn't this nice and clean so much easier to read and follow? Now users is a published property and this function is executing on a background thread, so we'll get that severe warning if we don't do something to fix that and set it back on the main thread. If I try to enclose this with a dispatchq main asyncblock I get an error in Swift five five, there is a new attribute called main actor that we can use to decorate the entire function and it will then dispatch this task onto the main thread. When we build we get an error though in the users list view because it's now calling that new get users function and that's an asynchronous function. So what we have to do is make sure that our on up here is asynchronous and so what we can do is we can within that on a peer function, create an asynchronous unit of work, which we'll call a task, and since that's asynchronous, we need to await the result. No try here, though, because we've caught any errors back in that fetch users function well. In iOS 15, we can go one step further than this. We can combine both on appear and task into a new asynchronous task method that adds an asynchronous task to perform. When this view appears. This code is much easier to follow and work with. When I make that call to fetch users, I'm either going to be successful or it'll throw an error. If successful, we assign the decoded data to our published property. Since this is our calling point of our throwing functions, we need to deal with any errors that were thrown earlier in the process, and therefore the do catch block. It all compiles properly. Now. No errors, but our posts are still using that old API service Get JSON function, so we want to fix that before we can remove it. So let's do that. Let's return to the user's list view model and we'll copy everything from the defer on down. Then in post list view. In the Fetch post function, we'll replace the old getJSON function with this new code. We just have to change our users to posts. It's complaining, however, because it's an async call in a function that doesn't support concurrency. Remember, anytime we've got concurrency, we need to specify that our function is asynchronous and also don't forget that we need to dispatch that task back onto the main queue, so we decorate the function with the main actor attribute. This requires one more change in the post list view as well, because we are now calling an asynchronous task, so we'll need to create that unit of work, which means we'll change a peer to task and then await the return of our posts. We can test now in the simulator and we'll see that it all works just as before, but with much more readable code. After having done all of that work, we want to make sure that you commit the changes to your Git repository. This is so much cleaner. Now in the fifth video in this series, we're going to take this even further. We are currently fetching all of our users at once, and then at one time we're fetching an individual user's post as needed, and we'll do that every time that we click on one of the rows in our users list. That's a lot of network calls if we're viewing a lot of different users posts. So what we'll do in the next video is retrieve all of the users and all of the posts in parallel so that they are all in memory and then filter the posts for each individual user as we need them a maximum of two network calls anytime we launch our application. So be sure you subscribe to the code with Chrischannel to get notification of new videos and I'll see you next week. Thanks for watching. Bye.

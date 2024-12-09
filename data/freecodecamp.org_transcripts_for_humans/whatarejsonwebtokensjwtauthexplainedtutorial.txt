@@ -1,0 +1,2378 @@
+With timestamps:
+
+00:00 - hello and welcome to this tutorial i've
+00:02 - actually added this part after i
+00:03 - finished the tutorial of course i
+00:05 - realized you may be completely beginner
+00:08 - at json web tokens and i didn't talk
+00:10 - anything about what a jwt token is
+00:13 - so i'm going to do that shortly before
+00:15 - we start creating stuff in this tutorial
+00:18 - i recommend you to check out jwt dot io
+00:22 - slash introduction on that page they'll
+00:24 - describe everything that you need to
+00:26 - know about json web tokens and we can
+00:28 - check out the first part here what is
+00:30 - json web token json web token is an open
+00:33 - standard that defines a compact
+00:35 - self-contained way for securely
+00:36 - transmitting information between parties
+00:39 - as a json object so that's what we're
+00:41 - going to do we're going to build this in
+00:43 - our application
+00:44 - and send along a json web token and that
+00:47 - is a json object
+00:48 - and also this information can be
+00:50 - verified and trusted because it is
+00:52 - digitally signed and the token can be
+00:54 - signed using a secret or you can encrypt
+00:57 - it we are going to use a secret meaning
+00:59 - that on our server part we are going to
+01:02 - have a secret that will sign or json web
+01:04 - tokens with so a json web token is a
+01:08 - json object that we can use to transmit
+01:10 - information between our server and our
+01:12 - application in the client and you can
+01:15 - also read down below here they tell you
+01:17 - why you should use it and when you
+01:19 - should use it in our case we're going to
+01:21 - use it for authentication and
+01:22 - authorization
+01:24 - and i think as they say this is the most
+01:26 - common use case because when using a jwt
+01:29 - token we don't have to send along our
+01:31 - login and password on each request we
+01:34 - can just send the token and the token
+01:36 - can guarantee that it's the correct user
+01:38 - that sends the request so that's the
+01:41 - main advantage of using a token we don't
+01:44 - have to send along the login and the
+01:45 - password on each request we can just
+01:48 - send along the token and we will know
+01:50 - that the user is legit and they also
+01:52 - mention that the overhead is small and
+01:55 - it has the ability to be easily used
+01:57 - across different domains so that's the
+01:59 - main advantages of using a jw token in
+02:02 - your authentication and authorization
+02:04 - system so in our case we're building
+02:07 - this very lightweight server and from
+02:09 - this server we're also going to generate
+02:11 - this token and send it along to the
+02:13 - client when the user logs in all right
+02:16 - we can continue to scroll down here they
+02:18 - also describe what parts there is in a
+02:20 - json web token and you have a header a
+02:23 - payload and the signature and here is
+02:25 - how it looks first you have the header
+02:27 - then you have a dot and then the payload
+02:29 - a dot and a signature
+02:32 - so the header will mostly contain data
+02:34 - about that this is a jwt and also the
+02:37 - signing algorithm for the token
+02:40 - and then we have our payload we can send
+02:42 - along what we want here in our case
+02:44 - we're going to send the user and we're
+02:46 - going to have the email address in this
+02:48 - very very basic example that we're going
+02:51 - to build so the user can log in and we
+02:53 - send along the email address to the
+02:55 - client so the email is going to be the
+02:57 - username in our case but you can put
+03:00 - some other data here also of course and
+03:02 - in this case i think they yeah they had
+03:03 - a name and they have if this one is
+03:05 - admin and other stuff here okay and then
+03:07 - we have the last part that's the
+03:09 - signature and we're going to sign our
+03:11 - token with a secret that we set on our
+03:13 - server that way we know that this token
+03:16 - is guaranteed to be generated from our
+03:19 - server because we're always going to
+03:20 - verify that it's signed correctly all
+03:23 - right so i think that's about it that's
+03:24 - a very short introduction to jwt tokens
+03:28 - and we can get started to create our
+03:30 - application and our server
+03:33 - i'm going to talk a little about json
+03:35 - web tokens and how you can authenticate
+03:37 - your application with refresh tokens and
+03:40 - access tokens and there's actually
+03:43 - a few good tutorials out there but they
+03:45 - are using a lot of stuff that you don't
+03:47 - need to understand the concept of json
+03:50 - web tokens so my take on this is that i
+03:53 - create a very simple express server
+03:55 - where we set up our endpoints or just
+03:58 - regular rest endpoints and i won't even
+04:00 - use a database we're just going to use a
+04:03 - fake database object for this one so it
+04:06 - won't persist the data of course you
+04:08 - don't need that if you're just learning
+04:09 - the basics all right
+04:11 - so nothing fancy in the server in the
+04:13 - back end and i'm just going to use react
+04:16 - for the front-end and you're going to
+04:18 - fetch the endpoints with no external
+04:20 - library or anything like that so
+04:22 - hopefully this will be a good way for
+04:24 - you to learn about json web tokens if
+04:27 - you're new to the subject and also i
+04:30 - will say this that i'm not a security
+04:32 - expert i'm mostly a front-end developer
+04:34 - but i do some back-end stuff also so
+04:37 - this is not in any way any code you
+04:39 - should use in production
+04:41 - and the code may also be a little bit
+04:43 - verbose because i want to show you all
+04:46 - the details on how this work
+04:48 - my main goal with this tutorial is to
+04:51 - show you how the json web token flow
+04:53 - works between the server and your
+04:55 - application and how you can use it it's
+04:58 - not to create a very secure api that you
+05:01 - can use in production all right so let's
+05:03 - get started first of all create the
+05:06 - folder of your choice i call mine jwt
+05:09 - auth and inside of this we're going to
+05:11 - create another folder that's called
+05:15 - server
+05:16 - we're going to have two folders for this
+05:18 - one one is the server and one is for the
+05:20 - front
+05:21 - so first we set up all the routes all
+05:23 - the rest and points for us that we can
+05:25 - use in our application all right and we
+05:28 - are going to use express for this one
+05:37 - first we have to type npm init to create
+05:40 - our project yeah and it will give us
+05:42 - some defaults here this one will call it
+05:44 - jwt auth and that's fine
+05:46 - version is one description you can have
+05:49 - a description here if you want
+05:51 - api server
+05:53 - or entry point it's going to be the
+05:55 - index.js file so that's fine
+05:58 - and test command we're not going to do
+05:59 - any tests here
+06:01 - and git repository none keywords none
+06:04 - you can just press enter here is this
+06:07 - okay yes enter
+06:09 - all right so it's created a package.json
+06:12 - file for us
+06:13 - and let's go inside of our code editor
+06:20 - and we can have a look at that file
+06:23 - and as you can see
+06:26 - it created this stuff for us here all
+06:28 - right then we have to install some
+06:30 - packages we're just going to use express
+06:32 - but there's some packages that are going
+06:33 - to help us in the creation of our api
+06:37 - so we are going to install something
+06:39 - that's called bcrypt.js and with this
+06:41 - one we can hash our password because you
+06:44 - don't want to store your password in the
+06:46 - database or in our case a fake database
+06:49 - we have to hash it and also sort it you
+06:51 - can read about bcrypt at this page here
+06:54 - or you can yeah i'm not going to go
+06:57 - through it in detail here then we're
+06:58 - going to install something that's called
+07:00 - cookie parser and this will help us to
+07:02 - get the cookies from the request so what
+07:05 - it will do is to create an object that's
+07:07 - called cookies where we just can grab
+07:09 - our cookie that we're going to use for
+07:11 - the refresh token then we're going to
+07:13 - install a package that's called course
+07:15 - because we don't want to have any cross
+07:17 - origin issues here so we're going to
+07:20 - install this and configure it
+07:22 - and we're going to use environmental
+07:24 - variables for this one so we install the
+07:26 - package.n and i'm going to show you this
+07:28 - in a second and of course we have
+07:30 - express that we're going to use
+07:33 - and then we're going to create json web
+07:34 - tokens so we have a package for this
+07:36 - also and lastly we are going to use
+07:39 - something that's called nodemon and this
+07:41 - one will yeah it will make our
+07:43 - development a little bit easier because
+07:45 - it will restart the node server as soon
+07:47 - as we make any changes and we don't have
+07:49 - to do that ourself manually okay and
+07:52 - then i'm using postman to test our
+07:54 - endpoints it's free so i think postman
+07:57 - is very good to use for this all right
+08:00 - so let's get back into our terminal and
+08:02 - install these packages so we type npm
+08:06 - i
+08:07 - and we have bcrypt
+08:09 - js we have our cookie
+08:12 - dash parser we have our course
+08:16 - or doten
+08:17 - and we have express we have our json web
+08:20 - token
+08:21 - and the nodemon is actually going to be
+08:24 - a dev dependency so we install that one
+08:26 - after this one
+08:29 - okay let's take a look inside of our
+08:31 - code it installed here as we can see
+08:33 - that's good
+08:37 - and the nodemon we just install it like
+08:39 - a dev dependency here
+08:43 - so we have npm by nodemon
+08:46 - dash dash save dash dev
+08:50 - and it will install it for us as a dev
+08:52 - dependency
+08:55 - okay you can see that it added it here
+08:57 - as a dev dependency and that's great so
+08:59 - that's all that we need for this
+09:01 - api to work and we're going to start
+09:04 - coding it now
+09:06 - first we can create a new file that we
+09:08 - call dot n because we're going to create
+09:10 - some environmental variables here
+09:14 - and the first one is going to be called
+09:16 - access underscore token
+09:19 - underscore secret
+09:21 - and it's going to equal you can select
+09:23 - whatever you want here i will of course
+09:25 - use weben rules
+09:28 - yeah
+09:29 - okay maybe i should spell this correctly
+09:32 - also to see synaxis
+09:35 - okay then we have a refresh underscore
+09:38 - token underscore secret
+09:41 - and this one is going to be web and
+09:43 - rules
+09:44 - even more
+09:46 - and then we have the port it's going to
+09:48 - be on port 4000
+09:50 - all right so we just save this one
+09:52 - then we're going to create a new folder
+09:54 - here that we call
+09:56 - src
+09:58 - and inside of the src we can create a
+10:00 - new file that's called
+10:03 - dot index.js
+10:04 - okay so we're going to start importing
+10:06 - some stuff here first of all we're going
+10:08 - to require
+10:12 - dot n forward slash config
+10:15 - and this one will make sure that we can
+10:17 - use the environmental variables here
+10:19 - then we create a const named express and
+10:22 - we require
+10:26 - express
+10:27 - we are not using es6 imports here
+10:29 - because this is node and this is the
+10:32 - standard as you do it in node you can do
+10:34 - it with es6 imports if you install some
+10:36 - packages but we're not going to do that
+10:38 - here
+10:39 - so we import express
+10:41 - then we have our cookie parser
+10:46 - require
+10:50 - cookie dash parser
+10:54 - we have our course
+11:02 - and we have
+11:04 - or verify that we're going to grab from
+11:13 - the json web token library
+11:16 - and make sure you have these curly
+11:18 - braces here because we're just importing
+11:20 - the verify from that one
+11:24 - then we're going to grab
+11:26 - hash
+11:28 - and compare
+11:32 - require
+11:36 - bcrypt
+11:38 - js
+11:40 - right so that's all what we need for now
+11:42 - we're going to do a little bit more
+11:43 - imports here later on when we create
+11:46 - more files and stuff here
+11:48 - so what are we going to do now we have a
+11:51 - few steps here
+11:53 - one we're going to create an endpoint
+11:55 - where we can register a user
+12:00 - to
+12:02 - we're going to have an endpoint for
+12:03 - login user
+12:06 - 3
+12:08 - we also want to be able to log out the
+12:10 - user
+12:13 - for
+12:14 - we're going to set up a protected route
+12:20 - and five
+12:22 - get the new access token
+12:25 - with a refresh token
+12:29 - and of course you should have something
+12:31 - that you can revoke the refresh tokens
+12:33 - with but i'm not going to go through
+12:35 - that in this tutorial because i want to
+12:37 - focus on the most basic stuff here just
+12:40 - to show you how json web tokens work
+12:44 - okay
+12:45 - first we create our express server
+12:48 - const server equals express
+12:51 - that's the one we imported up here
+12:54 - so that will create the server for us
+12:57 - and then we want to use express
+12:59 - middleware
+13:03 - for
+13:04 - easier cookie handling
+13:09 - so server dot use
+13:12 - and we call our cookie parser
+13:16 - and this will make sure that we can
+13:17 - handle the cookies a lot more easier
+13:20 - then we're going to set up our course
+13:22 - because we don't want to have issues
+13:23 - with that later server.use
+13:26 - and we have a course that is going to
+13:29 - take in an object
+13:31 - we have an organ http colon forward
+13:34 - slash forward slash
+13:36 - localhost
+13:37 - and we are going to have our frontend on
+13:40 - port 3000 because we're going to use
+13:42 - create react app and that one is default
+13:45 - port 3000 then we're going to set the
+13:48 - credentials to true
+13:51 - okay so this will make sure that our
+13:53 - front-end and our server can communicate
+13:55 - with each other
+13:57 - then we need to have a couple of rows
+13:59 - here so we can read our body data and we
+14:02 - can actually
+14:04 - type out the comment here
+14:06 - needed to be able to read body data
+14:10 - okay
+14:11 - we grab a server and use
+14:13 - and from our express we can just call
+14:16 - express.json
+14:18 - like this and this will make sure that
+14:20 - we support json encoded bodies i can
+14:23 - make a quick comment here also to
+14:25 - support
+14:27 - json
+14:29 - and encoded
+14:32 - bodies
+14:34 - then
+14:35 - server.use
+14:38 - from express yet again this is built-in
+14:41 - express
+14:42 - url encoded
+14:45 - for this one we sent in an object with
+14:47 - extended
+14:49 - the set that wanted true
+14:56 - and this one support
+14:58 - url
+15:00 - encoded bodies
+15:03 - all right
+15:05 - so this is our configuration for our
+15:08 - express server and we can actually get
+15:10 - it up and running also and then we're
+15:11 - going to create our endpoints and to get
+15:14 - it up and running we can just
+15:15 - server.listen
+15:18 - and from our process dot
+15:21 - n
+15:22 - we have our environmental variable
+15:24 - called port inside of here so we just
+15:28 - grab this one with this
+15:32 - now we have an inline arrow function
+15:34 - here
+15:35 - and we can just console log out
+15:38 - something here
+15:40 - server listening
+15:43 - on port
+15:45 - this is a template literals we can just
+15:47 - grab process dot n
+15:50 - dot port
+15:53 - and we end it with another backtick
+15:58 - and i should of course remove this one
+16:04 - you can save it and then go inside our
+16:06 - terminal
+16:08 - clear it
+16:10 - and we actually don't have a start
+16:12 - script for this one so we can create
+16:13 - this one also
+16:15 - so let's go back inside of our
+16:17 - package.json file
+16:19 - and where you see this property named
+16:21 - scripts
+16:23 - we can create another one here that's
+16:26 - called start
+16:29 - and we are using nodemon for this one as
+16:32 - i said this one is going to make sure
+16:34 - that we don't have to restart the server
+16:36 - every time we change something in our
+16:38 - code
+16:39 - so we just
+16:42 - call our index
+16:44 - dot js file here
+16:47 - and this is an object so make sure you
+16:49 - have a comma there also
+16:51 - so we save this one go back inside of
+16:53 - our terminal and type npm start
+16:56 - and as you can see it's starting up our
+16:58 - server here and that's good
+17:00 - so we know that it's working and then we
+17:02 - can create our endpoints and i'm
+17:04 - actually going to go through this quite
+17:07 - fast because i think this course is more
+17:09 - focused on front-end developer that want
+17:12 - to learn about json web tokens and not
+17:14 - how to create the back-end itself but i
+17:17 - have to create it here to be able to
+17:19 - show you how the json web token and the
+17:22 - flow between the front end and the
+17:24 - server will work so that's why i create
+17:26 - the back end here also and you probably
+17:29 - will learn something about it even if
+17:30 - you're not a back-end developer at all
+17:33 - so back into our code
+17:35 - and inside our index.js file
+17:38 - so first of all we're going to create an
+17:40 - endpoint for register user
+17:44 - so we have a server and this is going to
+17:46 - be a post request and we're going to
+17:49 - have register in our endpoint url so
+17:52 - it's basically going to be our server
+17:54 - that's localhost and then forward slash
+17:56 - register for this endpoint
+18:01 - this one is going to be async
+18:03 - we have our request
+18:05 - and our response
+18:09 - and we're going to send in the email and
+18:11 - the password with the body so we can
+18:13 - grab these ones from the body
+18:16 - with the structure them out
+18:18 - email and password
+18:22 - from the request body
+18:26 - and we have to do a few things here now
+18:29 - we're going to
+18:30 - type our code inside our try block
+18:33 - and then we have our catch
+18:34 - that is going to catch the error for us
+18:38 - so inside of here we're going to do a
+18:40 - lot of stuff
+18:42 - first we're going to check if the user
+18:44 - exists
+18:47 - and we're going to do that from our fake
+18:49 - database but i want to populate the fake
+18:52 - database with a user so i'm going to
+18:54 - need a hash password for that one so
+18:57 - that's why i'm going to create a hash
+18:58 - password and console log it out and then
+19:01 - i can just copy and paste it inside of
+19:03 - my fake database that i'm going to
+19:05 - create
+19:06 - so const
+19:08 - password
+19:13 - we await hash
+19:16 - and we have our password that's the one
+19:18 - we got up here
+19:20 - and we're going to sort it and this is
+19:22 - how many times you want to calculate the
+19:24 - salt
+19:25 - so i think 10 times maybe
+19:28 - something like that so this will give us
+19:30 - a hash password and we can console log
+19:32 - this out
+19:38 - and save it
+19:41 - i'm going to start up the server again
+19:43 - and i'm going to go inside of postman
+19:45 - now and use that one
+19:47 - so i have this endpoint that's called
+19:49 - register
+19:52 - and i actually have it up here on our
+19:55 - localhost and port 4000 we have the
+19:58 - register endpoint and i've attached an
+20:01 - email and a password to the body
+20:04 - so it was send this one hopefully it
+20:06 - will cause log out a hash password for
+20:09 - us and it did so i'm just going to grab
+20:12 - this one from the console
+20:14 - copy it
+20:16 - go back inside of my code create a new
+20:18 - file inside of the source
+20:20 - folder here
+20:23 - and call it fake db.js
+20:26 - then i'm going to export
+20:29 - fake db and it's going to be an array
+20:31 - that's going to have different objects
+20:33 - with the different users so we create an
+20:35 - object
+20:37 - we set the id to zero
+20:40 - the email is going to be my mail you can
+20:43 - of course use your own here
+20:49 - like this
+20:50 - and then we have the password
+20:53 - and inside of this string i just pasted
+20:55 - in this password can also make a note
+20:58 - here
+20:59 - the password
+21:01 - is test
+21:03 - so this is a fake database that we're
+21:05 - going to use
+21:08 - save this one
+21:10 - can go back inside of our index.js file
+21:13 - and we can finish this register endpoint
+21:16 - so first of all we're going to check if
+21:18 - the user exists
+21:19 - const user
+21:22 - from the fake db of course we also have
+21:24 - to import it up here
+21:27 - so const
+21:29 - fake db
+21:31 - equals
+21:32 - require
+21:34 - and we grab it from dot forward slash
+21:37 - fake db
+21:38 - dot js
+21:42 - okay
+21:44 - in our fake db this is just an array so
+21:47 - we can just use the array method find
+21:50 - and we have our user
+21:53 - we check if our user email equals
+21:57 - or email
+22:00 - so we check if this email exists in our
+22:02 - database and this one here is the one
+22:04 - that we got from the body and of course
+22:07 - in the real world here you should do
+22:09 - some connection to a real database and
+22:11 - check for that there so this is a fake
+22:14 - db this is just an array with javascript
+22:17 - objects but you're going to use a real
+22:19 - database here in the real world in
+22:22 - production but for now this will do for
+22:24 - us
+22:26 - okay
+22:27 - then if we have a user
+22:30 - we're actually going to throw an error
+22:31 - here because if the user exists we
+22:33 - shouldn't be able to register a new user
+22:36 - with the same email
+22:37 - so we throw
+22:40 - new error
+22:44 - user already
+22:46 - exist
+22:48 - if not user exists
+22:51 - hash the password
+22:54 - and we've already done that here so we
+22:55 - don't have to do that again we have it
+22:57 - stored in the password const so three
+23:01 - insert
+23:03 - the user
+23:04 - in and i'm going to put this inside of
+23:06 - quotes because this is not a database
+23:09 - this is just a fake database but you
+23:11 - insert the user in your database and we
+23:14 - can just push the user inside a fake db
+23:17 - array
+23:18 - fake db push so we create an object we
+23:21 - have an id
+23:22 - fake db
+23:24 - dot length the length is always going to
+23:26 - be larger than the index so that's why
+23:29 - we can use the length here because if we
+23:31 - have one post in our database as we have
+23:33 - now this is the index zero but the
+23:36 - length is going to be one so that's why
+23:38 - we can use the length here
+23:42 - then we have our email
+23:44 - and we have our password and this one is
+23:46 - going to be the hash password
+23:50 - and we have a coma there of course
+23:53 - okay
+23:55 - so we have stored the user in the
+23:57 - database so we can send back your
+23:59 - response to the client res dot send
+24:04 - and we have an object with a message of
+24:07 - user created
+24:12 - like so
+24:14 - instead of console.log out the hash
+24:16 - password here we can actually console
+24:18 - log out the fake db
+24:22 - all right
+24:24 - then we also have to catch if we have
+24:26 - some errors
+24:27 - so we send back your response
+24:33 - with an error
+24:35 - and we just send the error message
+24:38 - air dot message
+24:44 - all right and do a little bit of auto
+24:46 - formatting there so this should be it
+24:48 - for the register endpoint so we try it
+24:51 - out in postman
+24:55 - and i created this once now so i have to
+24:59 - actually kill the server now
+25:01 - and start it again because i want to
+25:03 - clean up my fake database
+25:06 - so i go back in postman i put the email
+25:09 - and the password in the body that's my
+25:12 - email address with three and also the
+25:14 - test as password
+25:16 - so i send this one
+25:18 - used to create it that's great
+25:22 - and as you can see we are console
+25:23 - logging out the database we have two
+25:25 - users here now and that's great go back
+25:28 - inside of postman i try to register the
+25:30 - exact same user
+25:32 - and it tells me that the user already
+25:34 - exists and that's great so we can't
+25:36 - register the same user twice
+25:39 - so we know that it's working
+25:42 - that's our register endpoint now we're
+25:44 - going to create our login endpoint
+25:50 - yeah and i should of course
+25:53 - move this one to the bottom
+26:00 - like this
+26:03 - log in a user
+26:05 - all right
+26:06 - yet again we have a server.post we
+26:09 - create a post request and it's going to
+26:11 - be login
+26:13 - we have an async inline function here
+26:17 - we have the request and the response
+26:20 - and an error function and yet again from
+26:23 - our body we want to grab our email
+26:26 - and our password so we destructure them
+26:28 - out
+26:31 - from our request dot body
+26:33 - then we have a try
+26:36 - and the catch
+26:39 - with the error
+26:41 - like so and inside the try block we're
+26:44 - going to type out our code so first
+26:48 - find user in array
+26:50 - or in or in database
+26:55 - if not exist
+26:57 - send error
+27:01 - right
+27:02 - const user
+27:04 - fake db
+27:05 - dot find
+27:07 - this is the exact same step as we did
+27:09 - before
+27:10 - so just check if the user email
+27:13 - equals
+27:14 - the email
+27:19 - and now we check if not user if we don't
+27:21 - have a user
+27:23 - throw new error
+27:27 - user does not exist
+27:30 - all right
+27:32 - so if we don't have a user we cannot log
+27:34 - in
+27:36 - to
+27:37 - compare encrypted password
+27:41 - and see if it checks out
+27:45 - send error if not
+27:48 - so create a new const that's called
+27:50 - valid
+27:51 - we await and we have this compare
+27:54 - function from the decrypt library so we
+27:57 - compare our password
+27:59 - that's the one we got up here from the
+28:01 - body
+28:02 - and then we have a password stored in
+28:04 - our database from the user password
+28:07 - so we compare these two and see if they
+28:09 - are the same
+28:10 - so if
+28:12 - not valid
+28:15 - throw new error
+28:20 - password not correct
+28:24 - so if it not checks out we just send an
+28:26 - error and tell the user that the
+28:28 - password is wrong but if it's correct
+28:32 - we can create a refresh and access token
+28:40 - like this and the id today is to have a
+28:43 - refresh token and an access token your
+28:46 - access token should have a really short
+28:48 - lifetime and the refresh token should
+28:50 - have a longer lifetime and stored for
+28:52 - example as a protected cookie that you
+28:55 - cannot use from inside of the javascript
+28:58 - in your client we're going to create two
+29:00 - tokens one refresh and one access token
+29:04 - so first we have our access token
+29:07 - and we're going to have to create this
+29:09 - somehow
+29:10 - and we have a refresh token
+29:13 - that we also need to create somehow i'm
+29:15 - actually going to create a new file here
+29:18 - just call it tokens.js
+29:21 - and inside of this file
+29:24 - we first import sign
+29:28 - require
+29:30 - we require it from json web token
+29:35 - then we create the function here create
+29:37 - access token
+29:40 - we're going to send in the user id as a
+29:42 - parameter
+29:44 - and from this one we're going to return
+29:45 - something and we're going to return
+29:48 - sign we call that sign that we imported
+29:51 - up here
+29:53 - we give it an object with the user id
+29:56 - and then from our process dot n
+29:58 - dot access
+30:02 - underscore token
+30:03 - secret
+30:05 - so we sign it with that secret and we
+30:08 - also include our user id
+30:11 - then we have an object
+30:12 - where we can set the expiry time
+30:15 - expires
+30:17 - in
+30:18 - now for this one we're going to set the
+30:20 - 15 minutes so this is how we create the
+30:22 - access token and we can just copy this
+30:25 - one
+30:27 - and paste it in
+30:28 - and we can rename it to create refresh
+30:31 - token and we change this one to refresh
+30:36 - underscore token underscore secret and
+30:39 - it expires in
+30:42 - seven days that's a week
+30:45 - okay and for now we just model
+30:49 - export
+30:52 - and we export our create access token
+30:55 - and or create refresh tokens so we can
+30:57 - use them in our index.js file
+31:01 - so of course we have to import them up
+31:03 - here at the top first
+31:06 - const
+31:08 - create
+31:10 - access token
+31:14 - and create
+31:16 - refresh token
+31:21 - require
+31:23 - and it's going to be
+31:25 - from dot forward slash tokens
+31:28 - dot js
+31:30 - all right we're good to go we can use
+31:33 - these ones inside of this file now
+31:36 - so first we create an access token
+31:38 - create access token
+31:41 - we send in the user.id that's the one
+31:43 - that we got from the database
+31:46 - and here we create the refresh token and
+31:49 - we also send in the user.id
+31:51 - and in the real world in the real life
+31:54 - you could also create different versions
+31:56 - of the refresh token and store it in
+31:58 - your database or just store a version
+32:00 - number if you don't want to store the
+32:02 - complete refresh token and you can
+32:05 - compare it you can sign it as we do here
+32:08 - you can also sign it here with the uh
+32:11 - that's the access token the refresh
+32:12 - token you can have a version number here
+32:15 - and then you can check the version
+32:16 - number and when you revoke the refresh
+32:18 - token you just increase the version
+32:21 - number and that way that token could
+32:23 - never be used again but for the sake of
+32:25 - the simplicity of this tutorial i'm not
+32:28 - going to do anything of this i've just
+32:29 - created one refresh token so if you want
+32:32 - to make some function to revoke it you
+32:34 - just can delete this one from the fake
+32:36 - db but keep in mind that you can have
+32:38 - different versions of refresh tokens
+32:42 - so for now
+32:44 - put
+32:46 - the refresh token
+32:50 - in the database
+32:53 - and we already have our user here
+32:56 - so we can just mutate this one
+32:58 - we create a new property that's called
+33:00 - refresh token
+33:03 - and we just give it the refresh token so
+33:05 - we save that one inside of the database
+33:07 - there
+33:09 - and if we want we can also console log
+33:11 - out
+33:12 - the fake db here
+33:14 - so we can see that this actually gets
+33:16 - created
+33:18 - all right so we have our access token
+33:20 - and our refresh token created that we
+33:22 - have to send them to the client somehow
+33:26 - so five
+33:27 - send token refresh token
+33:31 - as a cookie
+33:33 - and access token
+33:36 - as a regular response
+33:42 - all right
+33:43 - and we're going back inside our
+33:45 - tokens.js because i'm going to create
+33:47 - two functions for us that is going to
+33:49 - handle the send of the tokens so just
+33:52 - below here we create another function
+33:55 - send
+33:56 - access token
+33:59 - and we have the response the request and
+34:01 - the access token
+34:06 - and we just do a response send
+34:10 - you could of course do this inside of
+34:12 - the index
+34:13 - file also but i did this to yeah kind of
+34:16 - structure it a little bit
+34:19 - so we send the access token
+34:21 - and we can also yeah we can send the
+34:23 - email also
+34:25 - from the request body dot email
+34:31 - right
+34:33 - and then we have a const send refresh
+34:35 - token
+34:38 - for this one we are going to have the
+34:39 - response and the token
+34:42 - we can call it refresh token
+34:48 - all right and for this one we're selling
+34:50 - a cookie instead we don't want to send
+34:52 - it with a regular response so we have
+34:54 - rest cookie
+34:57 - we're going to call the cookie refresh
+34:59 - token you can of course call it
+35:02 - something more secret because now you
+35:03 - can just check the cookie and see that
+35:05 - this is a refresh token but i do it like
+35:07 - this so we easily can track this token
+35:10 - that's why
+35:11 - then we have our token
+35:14 - and we have an object
+35:16 - we're going to set it to http only
+35:20 - and this makes sure that we can't access
+35:22 - this cookie from our client
+35:25 - you can't modify the cookie with
+35:27 - javascript and we're also going to set a
+35:29 - path because we don't want to send this
+35:31 - cookie along with each request we just
+35:34 - do it when we're on
+35:35 - the refresh underscore token endpoint
+35:38 - this is the endpoint we're going to use
+35:40 - when we want to get a new access token
+35:42 - with our refresh token and i'm going to
+35:44 - come back to that later
+35:46 - all right we also have to export this
+35:49 - once
+35:50 - send access token and send refresh token
+35:54 - like this so that's all for our
+35:56 - tokens.js file
+35:58 - let's go back inside of index.js
+36:01 - and inside our
+36:03 - login user function here
+36:05 - of course we first have to import them
+36:07 - up here
+36:14 - so we import send access token
+36:17 - and send refresh token
+36:25 - all right now we can go back inside of
+36:27 - this one here
+36:31 - just below here
+36:33 - we first send a refresh token
+36:36 - we have the response
+36:37 - and the refresh token itself
+36:40 - and then we call send access token
+36:43 - we have the response
+36:45 - the request
+36:46 - and the access token
+36:52 - maybe they should be the other way
+36:54 - around here maybe have the request first
+36:56 - and the response
+36:57 - as the second parameter but yeah hey
+37:00 - it's like this now okay
+37:02 - all right so that's it we just have to
+37:04 - catch any errors if we get that here so
+37:08 - where rest.send
+37:10 - just as we did before we have an object
+37:12 - and an error message
+37:14 - backticks it's a template literal we
+37:17 - grab the error dot message
+37:19 - and end it with a backtick like this
+37:22 - order format it and save it
+37:25 - so we can go back inside of postman
+37:29 - and we can try to log in here
+37:31 - as you can see in the body i send the
+37:33 - email and the password so we try to send
+37:36 - it okay we have some error here create
+37:40 - access token is not a function all right
+37:43 - yeah i know why it should be exports
+37:46 - here not export
+37:49 - so make sure you have an s there also if
+37:51 - you also miss that one
+37:53 - so save it
+37:55 - and go back inside of postman and we try
+37:58 - this again
+37:59 - then we have another error here
+38:01 - token is not defined
+38:03 - all right
+38:06 - yeah of course i renamed this one here
+38:08 - inside of tokens.js it should be refresh
+38:12 - token
+38:13 - and save this one i actually called it
+38:16 - token first but i changed it now when i
+38:18 - record this to refresh token because it
+38:20 - makes more sense
+38:22 - so it should be refresh token and back
+38:24 - again inside of postman we try it again
+38:27 - and as you can see we get an access
+38:29 - token back and we also get our email
+38:31 - back and did we get something inside of
+38:34 - the database yeah
+38:36 - you can see i constantly logged out the
+38:37 - database here and the refresh token has
+38:39 - been created and it's now in the
+38:41 - database
+38:44 - so we can try to
+38:46 - register a new user here i have this one
+38:49 - with a three in my email
+38:51 - so i'll just create that user
+38:55 - and as you can see that one is created
+38:56 - but it don't have a refresh token now we
+38:59 - haven't logged in and got the refresh
+39:01 - token
+39:03 - so it seems to be working now that's
+39:04 - great
+39:05 - so let's get on with it
+39:08 - we also want to be able to log out to
+39:10 - user
+39:12 - three
+39:13 - log out a user
+39:15 - this one is going to be see we have the
+39:17 - server dot post
+39:20 - and we're going to have
+39:21 - log out as the endpoint
+39:24 - we have the
+39:26 - request we're not going to use that one
+39:27 - so i mark it with this underscore
+39:30 - and we have the response
+39:34 - so when we log out we just clear the
+39:36 - cookie
+39:38 - rest.clear cookie
+39:40 - and we call it refresh token
+39:43 - that will make sure that we
+39:45 - wipe out the refresh token from the
+39:47 - cookie
+39:49 - and we also have to clear the access
+39:51 - token from the client of course when we
+39:53 - log out but with no refresh token we
+39:56 - can't get a new access token before we
+39:58 - log in
+40:00 - and then we just return the
+40:01 - response.send
+40:04 - and a message
+40:07 - logged out
+40:12 - that's our logout
+40:14 - then number four
+40:17 - we are going to create a protected route
+40:21 - just to show you an example of how you
+40:24 - can do this
+40:25 - authorization with the token
+40:28 - so we have server.post
+40:31 - we can just call it forward slash
+40:33 - protected
+40:36 - this is an async function so we mark it
+40:39 - with async and we have the request the
+40:42 - response and an inline arrow function
+40:46 - then we try
+40:48 - we catch
+40:50 - the error
+40:54 - now we have a const user id
+40:58 - is auth
+41:00 - and we send in the request we are going
+41:02 - to create this one now so we create a
+41:04 - new file inside of this source that's
+41:06 - the last file we're going to create here
+41:08 - we call it is auth
+41:12 - dot js
+41:14 - and first we are going to import verify
+41:19 - we require it
+41:20 - from json web token and that's the way
+41:23 - we can verify the token
+41:25 - that we have in our header
+41:27 - then we create the function called is
+41:29 - auth
+41:32 - we have the request
+41:34 - an error function
+41:36 - const authorization
+41:41 - and from our request and the headers
+41:45 - we are going to grab the one that's
+41:47 - called authorization
+41:49 - and this will give us our token
+41:52 - if we don't have any token if not
+41:55 - authorization
+41:56 - then we throw new error
+42:00 - you need to log in
+42:02 - because if we're not sending a token we
+42:04 - know that the user isn't logged in so
+42:07 - that's why we can throw this error and
+42:09 - tell them that they need to log in
+42:11 - otherwise we can get the token
+42:14 - so from authorization we split that one
+42:20 - like this
+42:21 - and we grab from index one in the array
+42:25 - and this is because
+42:27 - the authorization in the header is going
+42:29 - to look something like
+42:32 - this
+42:33 - beer
+42:34 - and then you have the token here this is
+42:36 - a string so we just strip out bearer and
+42:39 - we just grab this one and that's what we
+42:41 - do in here so that's how we get the
+42:43 - token
+42:44 - so this is the standard as you use beer
+42:47 - and then have the token after that word
+42:49 - that's called bearer
+42:51 - yeah that's very difficult for me to say
+42:53 - because i'm not
+42:55 - used to that smooth rs r
+42:58 - are
+43:00 - yeah yeah you know it's it's tough to be
+43:02 - from sweden and try to speak english
+43:05 - all right so we have our token
+43:08 - then we're going to grab our user id
+43:13 - and we get it from verify
+43:15 - and that's from json web token we have
+43:17 - our token and we verify it with the
+43:21 - process
+43:22 - dot n dot
+43:24 - access underscore token secret
+43:29 - so this way we make sure that this is a
+43:31 - legit token
+43:34 - and then we just return the user id
+43:38 - okay module dot exports equals
+43:47 - is off
+43:49 - or you could of course just
+43:51 - export it as we did with a fake db
+43:53 - exports dot fake
+43:55 - db instead if you want to do that
+43:57 - all right back inside of index
+44:00 - we need to import is off
+44:06 - const is auth
+44:10 - equals require
+44:13 - dot forward slash is auth.js
+44:17 - and now we can use it here
+44:20 - this is getting a little bit messy here
+44:22 - i i know that um as i said the code is
+44:24 - going to be a bit verbose and there's a
+44:27 - lot of code here maybe but i think it's
+44:29 - necessary to fully understand something
+44:31 - when explaining advanced stuff like this
+44:36 - if the user id
+44:38 - doesn't equal null
+44:40 - and that's because we could just do it
+44:42 - like this but that will give us a false
+44:44 - answer if the id is zero
+44:47 - so that's why i'm doing this
+44:52 - we have res send
+44:56 - the data
+44:58 - and we can just type this is protected
+45:00 - data
+45:04 - all right
+45:06 - and then inside of catch just as before
+45:09 - rest send
+45:11 - we send an error message
+45:19 - like so
+45:22 - so we save this one and we can see if
+45:24 - the protected route works you can log in
+45:26 - again
+45:29 - protected
+45:30 - and as you can see
+45:32 - in the authorization here
+45:36 - we can just grab the access token that
+45:38 - we get here
+45:42 - and this is actually an old token also
+45:44 - it shouldn't work now
+45:46 - it says that you need to log in so if i
+45:49 - just paste in the new token here it
+45:51 - hopefully should work
+45:53 - and it doesn't
+45:56 - all right
+45:59 - yeah and of course i can see now i
+46:01 - forgot an s here it should be headers
+46:04 - it's very easy to forget something like
+46:06 - that
+46:07 - so i save it and then we can try it
+46:08 - again
+46:10 - yes you can see this is protected data
+46:12 - so now we're accessing it with our token
+46:15 - and that's great
+46:18 - really really easy to do something
+46:21 - stupid like this and forget an s
+46:24 - i hope you didn't do that that's the
+46:26 - second time in this tutorial i did
+46:28 - something like this
+46:29 - right
+46:31 - i have to slap myself in the face
+46:33 - because i'm that bad at typing this
+46:35 - stuff out right
+46:38 - back inside of index we know that this
+46:41 - one is working and we just have one more
+46:43 - route to create and then our api will be
+46:46 - finished
+46:47 - and that's the route for getting a new
+46:49 - access token
+46:51 - so five get a new access token
+46:56 - with a refresh token
+46:59 - all right
+47:00 - we have server dot post
+47:03 - forward slash refresh
+47:05 - underscore token
+47:07 - we have our request and a response
+47:10 - and an inline arrow function
+47:13 - we have our token
+47:16 - and now we can just grab it from the
+47:18 - request cookies
+47:21 - refresh token that's why we installed
+47:23 - the library that's called cookie parser
+47:28 - and
+47:30 - if we don't
+47:33 - have a token in our request
+47:39 - if not token
+47:42 - return
+47:43 - response dot send
+47:48 - the access token we just clear it out so
+47:50 - we just send an empty access token you
+47:52 - could also send a message here also to
+47:55 - the client of course
+47:58 - otherwise we have a token
+48:01 - let's verify it
+48:04 - so we let we create payload
+48:08 - and we set that one to null for starters
+48:11 - and we have a try
+48:13 - and a catch
+48:15 - with the error
+48:17 - inside of our try we set the payload
+48:21 - we're going to verify
+48:24 - we have the token
+48:25 - that's the one that we grabbed from the
+48:27 - cookies
+48:28 - and we have our process
+48:31 - dot n
+48:32 - dot refresh token
+48:35 - refresh underscore token underscore
+48:38 - secret we verify that our token is legit
+48:42 - error is return
+48:44 - response dot send
+48:47 - and yet again we just send an empty
+48:49 - access token
+48:52 - we know that the token is valid
+48:55 - so check if user exists
+49:00 - const user we go inside our fake db and
+49:04 - find
+49:06 - user
+49:08 - we check if our user id equals to the
+49:10 - payload id
+49:13 - the payload user id
+49:15 - because we signed or token
+49:19 - with the user id we get that one when we
+49:22 - verify it if this verify it will give us
+49:24 - the id so we can just compare this one
+49:26 - with the one in the database and see if
+49:28 - it exists there
+49:30 - the
+49:31 - lid it should say
+49:35 - if not user
+49:39 - return response send
+49:42 - yet again we send an empty access token
+49:46 - because the user didn't exist in the
+49:48 - database
+49:51 - user exists
+49:54 - check if refresh token
+49:58 - exists on user
+50:01 - if user dot refresh token
+50:06 - not equals token
+50:08 - if we have another token registered to
+50:09 - the user
+50:11 - we don't want
+50:12 - to send a new access token so we just
+50:14 - return response send
+50:17 - and we set the access token to an empty
+50:20 - string again
+50:23 - whoa there's many steps here whoa whoa
+50:28 - token exists
+50:32 - create new refresh
+50:36 - and access token
+50:40 - so again we create
+50:43 - our access token
+50:45 - create access token
+50:49 - send in our user id as you can see here
+50:51 - this is repetitive code we did this up
+50:54 - here before
+50:55 - so as i told you before this code is
+50:58 - very verbose you can refactor it to make
+51:01 - it more effective and look a lot more
+51:03 - cleaner
+51:06 - but it's good to have it here now so
+51:08 - easily can understand every step and how
+51:10 - this works
+51:12 - then we create the refresh token
+51:14 - also with the user.id
+51:18 - then we need to update the refresh token
+51:20 - in the database and as i also told you
+51:23 - before you could have different versions
+51:25 - here instead of the refresh token but i
+51:27 - will just grab the user and refresh
+51:30 - token and mutate this property here with
+51:33 - a new refresh token so this will update
+51:35 - it in our temporary database object
+51:39 - all good to go
+51:41 - send new refresh token
+51:44 - and access token
+51:48 - so we send the refresh token
+51:51 - we have the response and the refresh
+51:53 - token
+51:55 - and then we return
+51:58 - rest.send
+52:01 - and the access token
+52:05 - whoa that was a lot but hopefully you'll
+52:08 - understand all the steps needed here
+52:11 - and
+52:12 - you can also see that you need to have
+52:14 - some connection to a real database and
+52:17 - users that you save somewhere because
+52:19 - this is just fake so let's save this one
+52:22 - see if it works no errors that's good we
+52:25 - can try this out now first of all we can
+52:27 - log in
+52:29 - we have the refresh token so we try this
+52:33 - and as you can see we get a new access
+52:34 - token back
+52:36 - that's because our refresh token is
+52:38 - saved in um is saved in the cookies
+52:42 - i think we should be able to see it
+52:44 - somewhere yeah here you can see the
+52:46 - refresh token
+52:48 - that is being sent
+52:50 - but we won't be able to grab it in our
+52:53 - javascript from the client and then if
+52:55 - we log out
+52:57 - like this
+53:08 - we shouldn't be able to get a new access
+53:11 - token obviously it has not cleared it
+53:14 - from here
+53:19 - yeah and i think i know what's wrong we
+53:21 - have to set the path here also
+53:25 - it has to have the same path
+53:29 - refresh underscore token
+53:33 - like this
+53:37 - because we told it to just send this
+53:39 - cookie on this path so when we clear it
+53:44 - we just make sure to include this path
+53:46 - here also so i save this one
+53:49 - and go back inside of postman
+53:54 - and hopefully this will work now
+53:59 - i'll log out
+54:05 - yeah and as you can see it won't give us
+54:06 - an access token now and then we can also
+54:09 - try out
+54:10 - we try to login
+54:15 - then a new cookie should be set
+54:18 - so i try this route again
+54:20 - and as you can see we get a new access
+54:22 - token so it's working now make sure that
+54:25 - you include the path here otherwise it
+54:27 - won't work
+54:29 - all right so that concludes the server
+54:31 - in the next part we're going to create a
+54:32 - front-end with react and use this
+54:36 - api okay this is the second part in this
+54:39 - tutorial and we're going to build the
+54:41 - front one in this one and as you can see
+54:43 - i'm inside the jwt auth folder now that
+54:46 - i created in the last part and i also
+54:49 - have this server folder and i hope you
+54:51 - didn't make the same mistake as i did
+54:53 - because i didn't navigate inside of this
+54:56 - folder when i created the api so i had
+54:58 - to move all the files manually inside of
+55:01 - the server folder
+55:02 - so
+55:04 - i navigate inside of that one and all
+55:06 - our files are here for the api and also
+55:10 - we can open up the code
+55:12 - it can always be good to have it here if
+55:14 - there's something that we need to change
+55:16 - in our api and actually i had this typo
+55:19 - again
+55:21 - i had forgotten i in the origin in the
+55:23 - course in the index.js file i hope you
+55:26 - didn't do that mistake also so make sure
+55:28 - that it says origin here otherwise it
+55:30 - won't work okay so back inside of the
+55:33 - terminal we can just npn start and fire
+55:36 - up our server then i have another tab
+55:39 - here in my console and i'm going to
+55:41 - create a react application for a
+55:43 - frontner now i assume that you know
+55:45 - react i'm not going to teach you react
+55:47 - or css or anything in this course i'm
+55:50 - just going to very quickly create this
+55:52 - little application that we can use to
+55:54 - communicate with our server to get our
+55:56 - json web tokens and show you how json
+55:58 - web tokens work
+56:00 - all right we're going to create this
+56:02 - application with create react app so we
+56:04 - type npx create
+56:06 - dash react dash app and we're going to
+56:10 - call it frontend and this will create a
+56:12 - folder here that's called frontend and
+56:14 - it's going to put all the code inside of
+56:16 - that one
+56:20 - so just have to wait a little bit now
+56:23 - so that's it we navigate inside the
+56:25 - front-end folder
+56:28 - and open up our code editor
+56:34 - so this is what we've got here we have a
+56:36 - package.json it's installed everything
+56:38 - for us and we also have this src folder
+56:41 - with different components that it
+56:43 - created for us
+56:45 - and we can actually remove some of them
+56:47 - here
+56:48 - we can remove the service worker
+56:51 - we can remove the logo
+56:57 - we can remove the app test
+57:02 - and the app.css
+57:04 - we're going to create some css in this
+57:06 - index.css file and we also have to go
+57:09 - inside index.js
+57:11 - so we remove
+57:13 - the service worker and remove all of
+57:15 - this stuff here and just save it and
+57:18 - inside our app.js remove the app
+57:22 - dot css import and the import of the
+57:24 - logo
+57:26 - and for now we can just remove
+57:28 - everything of this
+57:29 - and just type out app
+57:33 - and then we can go back inside our
+57:35 - console that we're going to install
+57:37 - to dependencies so mpmi
+57:40 - we're going to need the reach router for
+57:43 - this one at reach forward slash router
+57:46 - and also i think we're going to need a
+57:48 - es
+57:50 - lint dash plugin
+57:53 - react hooks
+57:58 - and while this installs i can grab some
+58:00 - coffee here
+58:03 - that's always a good idea
+58:06 - and as you can see i'm getting these
+58:07 - errors here they started to appear just
+58:09 - recently i think it is because i'm using
+58:12 - both yarn and npm
+58:15 - they create react app create the app
+58:17 - with yarn and now i'm using mpm but i'm
+58:19 - going to show you how to get rid of
+58:21 - these
+58:22 - if you get these errors
+58:25 - so just wait for it to finish here
+58:27 - so what you can do is
+58:30 - you go inside of your code just remove
+58:32 - the node modules folder and also the
+58:35 - package lock file
+58:41 - and go inside of the terminal and type
+58:43 - mpm install i haven't got time yet to
+58:45 - dive deep in this and see what's causing
+58:48 - this so i don't really know actually but
+58:50 - i know that this works
+58:52 - so that's it
+58:54 - we can try mpm start
+58:57 - and we navigate to localhost 3000 and as
+59:01 - you can see we're showing up here so we
+59:03 - know that it's working
+59:04 - that's good so back inside our code
+59:06 - editor
+59:08 - and we're going to create a new folder
+59:09 - here inside of our src folder create a
+59:12 - new folder name components
+59:16 - and we're going to scaffold out five
+59:18 - components
+59:19 - we have one that's called content dot js
+59:24 - one that's called login.js
+59:28 - and navigation
+59:30 - dot js
+59:34 - protected
+59:36 - dot js
+59:38 - and
+59:39 - register.js
+59:41 - now we can just scaffold out them now
+59:43 - and we'll come back to them later so we
+59:45 - import react from react
+59:49 - we create a functional component called
+59:51 - content
+59:54 - equals an error function and for now we
+59:56 - just return a div that says content
+60:01 - and we export default
+60:04 - content
+60:05 - all right so we can just copy this one
+60:07 - now make sure you save it also of course
+60:10 - and go inside login
+60:12 - and change this content to login
+60:16 - and save it
+60:17 - move on to the navigation
+60:22 - change content to navigation
+60:26 - save it and inside protected the same
+60:29 - thing
+60:33 - protected
+60:37 - and the register
+60:42 - register
+60:43 - so this is just the scaffolding of this
+60:45 - we'll come back to them later and i can
+60:47 - also say that this application will also
+60:49 - be a bit verbose in the code and has a
+60:52 - yeah maybe a lot of redundant code for
+60:54 - example the login and the register
+60:56 - component will have almost the same code
+60:58 - inside of them that's actually
+61:00 - intentionally because i think that i
+61:02 - will make this as easy as possible for
+61:04 - you but this is not in any way just as
+61:07 - with the api a production finished
+61:09 - application we're just creating it in
+61:11 - educational purpose so bear with me with
+61:14 - that one
+61:15 - okay
+61:16 - and we have to create some css for this
+61:18 - one also so we can do that right now
+61:21 - when we're at it so inside of the
+61:24 - index.css file
+61:26 - we have this body we can actually remove
+61:28 - this code
+61:30 - and up here we can add the background
+61:36 - and it's going to be steel blue
+61:38 - just keep everything else here it
+61:40 - doesn't really matter then we have the
+61:42 - dot app class
+61:45 - and with text align
+61:48 - we set at the center
+61:50 - we set a min height
+61:53 - of 100 viewport height
+61:56 - we display
+61:57 - flex
+61:59 - we set the flex direction
+62:03 - to column
+62:05 - we align items
+62:08 - to center
+62:11 - and also justify content
+62:14 - to center
+62:15 - we set the color to white
+62:18 - fff and the font size
+62:21 - to 16 pixels
+62:24 - okay
+62:27 - then we have a class that's called login
+62:29 - dash wrapper
+62:33 - we set the min height
+62:35 - to 200 pixels
+62:40 - we set the min width
+62:43 - to 300 pixels
+62:45 - we set the
+62:46 - background to white
+62:50 - the padding to 20 pixels
+62:53 - the border dash top
+62:55 - to 5 pixels
+62:57 - and light blue
+62:59 - and solid
+63:01 - set the color
+63:03 - to black
+63:04 - zero zero zero
+63:07 - okay that's our login wrapper
+63:10 - and we are of course going to use these
+63:12 - classes in our components in a
+63:14 - production app i would use style
+63:16 - components but in this case we're just
+63:17 - importing a regular css file and yeah
+63:20 - that's no good to do it like that but it
+63:23 - it'll work for us in this application
+63:26 - then we have dot login dash input and
+63:29 - we're going to have a button in that one
+63:32 - so we set the background on the button
+63:34 - to light blue
+63:37 - we display blocked
+63:40 - we set the width
+63:42 - to 100 percent
+63:44 - the height to 50 pixels
+63:47 - yeah and that's it for that one
+63:51 - then on the same class login dash input
+63:54 - we're going to have our input fields
+63:57 - and we can display block
+64:03 - we set the padding to 20 pixels
+64:06 - the width is going to be 100 percent
+64:10 - the height is going to be 50 pixels
+64:13 - and the margin
+64:15 - 10 pixels zero
+64:22 - we set the box sizing
+64:26 - to border box
+64:28 - okay just a few more we have to style
+64:30 - our unordered list that we're going to
+64:32 - have for our navigation so we have our
+64:34 - ul
+64:36 - list dash style dash type we set that
+64:40 - one to none set the margin to 40 pixels
+64:43 - auto
+64:45 - we set the width
+64:47 - to 300 pixels and the padding to zero
+64:52 - then we have the uli element
+64:59 - we display
+65:01 - inline dash block
+65:04 - and set the margin to 10 pixels
+65:07 - right and then the last one
+65:10 - and that's the link that's the a tag we
+65:12 - set the color to white
+65:15 - fff and text decoration
+65:21 - to none
+65:23 - so that's our css
+65:25 - and we can already see that it's
+65:27 - changing here
+65:28 - and that's good
+65:30 - okay we can move inside our app.js file
+65:33 - now and we're going to create this one
+65:37 - first we're going to add some imports
+65:39 - here we're going to use state
+65:43 - and also use effect for this one
+65:46 - and then we import
+65:48 - router
+65:50 - and navigate
+65:54 - from at reach router
+65:57 - okay
+65:58 - then we import all our components so we
+66:00 - import navigation from
+66:03 - dot forward slash components
+66:05 - forward slash navigation
+66:07 - we can just copy this one
+66:10 - paste it in four times
+66:13 - and we change these ones here
+66:16 - this one is going to be the
+66:18 - login
+66:21 - this one
+66:24 - register
+66:28 - protected
+66:30 - as you can see i'm changing it in two
+66:32 - places at the same time here so make
+66:34 - sure you also change the path here
+66:38 - and the last one is going to be our
+66:40 - content
+66:41 - all right so that's our component then
+66:43 - we're going to create a context that
+66:45 - we're going to use for yeah
+66:46 - almost like a global state here by
+66:49 - creating a context we can access the
+66:51 - state inside of all our components in
+66:53 - the application
+66:55 - so we export const
+66:57 - user context
+67:00 - and react dot
+67:02 - create context and for now it can just
+67:05 - be an empty array
+67:07 - so that is going to be our context
+67:09 - and inside of our app component we are
+67:12 - going to create some local state first
+67:14 - we have our const with our user and set
+67:17 - user
+67:18 - that is going to hold our access token
+67:21 - so use state
+67:22 - and it's going to be an empty object for
+67:24 - now
+67:25 - let me create another one loading and
+67:28 - set loading
+67:30 - and you stay and we set that one to true
+67:34 - because when this application run we're
+67:36 - going to have a use effect that will
+67:38 - fire off and send or refresh token to
+67:40 - get a new access token if we have a
+67:42 - refresh token
+67:44 - so that way we don't have to log in yeah
+67:46 - in a production app you wouldn't do it
+67:48 - this way you probably will have a
+67:50 - library for example apollo or something
+67:52 - that will handle this for you when you
+67:54 - have a real database to connect to but
+67:56 - for now for this tutorial as i said i
+67:58 - will do this as simple as possible so
+68:00 - we're just using the thing we got in
+68:03 - react and we're going to grab it with a
+68:04 - use effect
+68:07 - we're also going to have a couple of
+68:08 - functions in this one so we have const
+68:11 - log out callback
+68:13 - and this one is obviously going to be
+68:15 - for our
+68:16 - logout button and it's going to be a
+68:19 - sync
+68:21 - and we leave it empty for now then we're
+68:23 - going to have our use effect
+68:26 - and that one is also going to be empty
+68:28 - for now
+68:30 - we give it an empty array here also as a
+68:33 - dependency so then we can create our jsx
+68:36 - for this one so we have this div with
+68:38 - the class name of app we're going to
+68:39 - wrap it with our context so we have our
+68:42 - user context dot provider
+68:46 - and the value is going to be
+68:49 - an array with our user and set user so
+68:53 - this is the way we can pass this state
+68:56 - down to all our components we close it
+68:59 - move this one inside of that one
+69:05 - all right then we have our app and then
+69:07 - we're going to have our navigation
+69:11 - the navigation is going to have a logout
+69:13 - callback
+69:14 - logout callback
+69:16 - so this is a prop so we send in our
+69:18 - logout callback function
+69:21 - so that one
+69:26 - then we're going to have our router
+69:28 - we're going to change routes here
+69:29 - depending on what page we're on so we
+69:32 - have an id of router
+69:36 - and then we just have our components
+69:38 - here we have our login component that's
+69:40 - going to have a path
+69:42 - of login
+69:45 - then we have our register that's going
+69:48 - to have a path of register
+69:54 - and or protected
+69:58 - that has the path of protected
+70:04 - whoops
+70:06 - it should self-close like this
+70:10 - and then we have our content
+70:12 - and this one is going to have the path
+70:15 - of a forward slash because that's our
+70:17 - main landing page
+70:19 - that's our home page
+70:21 - and i think this is it for this
+70:22 - component actually for now of course
+70:24 - we're going to fill this out with more
+70:26 - code later
+70:28 - but we can save it let's see what we've
+70:30 - got so we've got the navigation and
+70:31 - content here and that's great so we can
+70:33 - actually create our navigation now so
+70:35 - make sure you navigate inside of your
+70:37 - navigation.js file
+70:41 - so we're already importing react we're
+70:43 - also going to import link
+70:47 - from at reach router
+70:50 - okay then we've got our navigation here
+70:53 - we're going to destructure out our prop
+70:55 - or logout
+70:57 - callback
+71:00 - and here we create parentheses
+71:03 - and actually you can remove this one
+71:04 - because we're going to have an unordered
+71:06 - list here
+71:08 - and then we create our menu items
+71:10 - so we have a an ally element
+71:13 - we have a link
+71:15 - and it's going to link to
+71:17 - a forward slash that's our home page
+71:20 - so we name it home
+71:22 - and we can actually
+71:25 - copy this one and paste it in three
+71:27 - times and this link is going to go to
+71:30 - protected
+71:34 - and
+71:35 - we type out protected and this one
+71:38 - is going to go to register
+71:42 - and
+71:43 - register and the last one is not going
+71:46 - to have a link actually
+71:48 - it's going to have a button
+71:49 - so we have a button with an on click
+71:52 - handler that's going to be our prop
+71:55 - logout callback
+72:00 - and we can just type out log out so this
+72:03 - is it for a navigation we save this one
+72:05 - and see what we've got yeah we have our
+72:08 - navigation here and as you can see it
+72:10 - changed routes here and that's good
+72:13 - and it also changed component here
+72:16 - so our navigation is working and our
+72:19 - routing is working
+72:21 - that's nice okay so we can move on to
+72:23 - create our content component
+72:26 - so inside the content.js file
+72:29 - up here we're also going to import
+72:33 - use context that's a hook that we'll use
+72:35 - to grab our context
+72:37 - then we import
+72:39 - a component that's named redirect from
+72:43 - at reach router
+72:46 - and we also import our user context
+72:50 - we grab that from dot dot forward slash
+72:52 - and it's in our app
+72:55 - all right now we have our content
+72:57 - component
+72:58 - we can remove this one and create curly
+73:00 - braces because inside of here we're
+73:03 - going to check if our context if our
+73:05 - state in the context the user contain
+73:07 - our access token
+73:09 - so we can grab that one first const
+73:12 - user
+73:15 - we use context that's the context hook
+73:17 - that we imported up here
+73:19 - then we send in our user context and
+73:21 - this will give us our user so if we not
+73:25 - have a user.access token
+73:29 - we just return
+73:30 - and we have the redirect component from
+73:32 - the reach router library
+73:34 - from
+73:36 - we set that one to an empty string
+73:38 - two
+73:39 - and we're going to redirect them to the
+73:41 - login because if we don't have an access
+73:43 - token we want them to log in and we
+73:45 - don't want to show the content here and
+73:47 - we can also have no throw
+73:51 - like this otherwise if we have an access
+73:54 - token we return a div
+73:56 - and here we can have our content so this
+73:59 - is the content
+74:02 - okay so this is it if you're using
+74:04 - something like as i said apollo or
+74:06 - something you should have that one to
+74:08 - check if the access token has expired or
+74:11 - not or and if it has expired you can
+74:13 - automatically in the background grab a
+74:15 - new access token if you still have a
+74:17 - valid refresh token but i won't go
+74:19 - through that here i'm not doing that
+74:21 - here so if the access token expire it
+74:24 - won't grab a new one from the refresh
+74:26 - token endpoint automatically okay
+74:29 - we save it and we can go to our start
+74:31 - page
+74:34 - and as you can see it's showing us the
+74:35 - login page we don't have an access token
+74:38 - so that's why it's redirecting us to the
+74:40 - login page and that's great
+74:43 - so we can actually create our login page
+74:45 - now so make sure you're in the login.js
+74:48 - file
+74:50 - up here we're going to import some more
+74:52 - stuff from react we're going to use
+74:53 - state
+74:55 - use context
+74:57 - and use effect
+75:00 - and we're also going to import navigate
+75:04 - from at reach router
+75:08 - and we import our user context
+75:12 - from dot dot forward slash app
+75:15 - all right
+75:16 - and then we have our component here we
+75:18 - can remove this one and create curly
+75:20 - braces first we grab our context const
+75:24 - user and set user
+75:27 - equals use context
+75:29 - and we send in our user context
+75:32 - then we're going to have two local
+75:34 - states for this one it's going to be one
+75:36 - for the email and one for the password
+75:38 - that's the input fields that we're going
+75:40 - to have in this one so we create
+75:43 - a const email
+75:46 - and set email
+75:49 - use date
+75:51 - and it's going to be an empty string for
+75:53 - now and then we have the password
+75:55 - and set password
+75:59 - equals you stayed
+76:02 - and an empty string
+76:04 - like so
+76:06 - then we're going to have two functions
+76:08 - in this one
+76:09 - we're going to have one that's called
+76:10 - handle
+76:11 - submit and it's obviously going to
+76:13 - handle the submit of the form it's going
+76:16 - to be async and we have the event and an
+76:19 - error function and we leave it empty for
+76:21 - now
+76:23 - then we're going to have one that's
+76:25 - called
+76:26 - handles change and this one is going to
+76:29 - be when we type something in the input
+76:31 - boxes and we have the event and an error
+76:33 - function for this one also so we can
+76:36 - start typing out our jsx that we're
+76:38 - going to return for this one so return
+76:40 - parenthesis we have a div with a class
+76:42 - name of login dash wrapper
+76:48 - we have our form
+76:51 - that is going to have an on submit and
+76:53 - we just call our handle submit function
+76:56 - on that one
+76:59 - and inside of our form we're going to
+77:01 - have our inputs fields but first we're
+77:03 - going to have a div
+77:05 - with a header or maybe yeah
+77:08 - we can actually have an h2 tag
+77:11 - that says login and then we have an
+77:13 - input
+77:16 - it's going to have a value we grab that
+77:18 - from our state email this is going to be
+77:20 - a control component
+77:22 - so on change
+77:27 - we call our handles change
+77:30 - it's going to be the type
+77:32 - text
+77:34 - name is going to be email
+77:38 - the placeholder
+77:41 - is going to be
+77:42 - email and i think we need to have
+77:45 - something that's called autocomplete
+77:47 - email
+77:53 - and we can copy all of this
+77:55 - and paste it in below all of these will
+77:57 - change to password
+78:04 - play so maybe a capital p and this one i
+78:06 - think
+78:08 - should say current dash password so make
+78:11 - sure you change all of these here
+78:15 - then we of course need a submit button
+78:17 - so below here we create a button type
+78:20 - submit
+78:24 - and it can say login yeah
+78:32 - yeah and
+78:33 - we also have to wrap these inputs
+78:36 - in a div that's called class name
+78:41 - login dash input
+78:45 - so move this everything here
+78:51 - inside of this div
+79:00 - something like this
+79:04 - the order formatting isn't working here
+79:06 - now for me
+79:07 - so i have to do it manually
+79:10 - okay we save that one and we can see
+79:12 - what we've got so far
+79:16 - yeah this one shouldn't be all the way
+79:18 - out to the edges i don't know why we
+79:20 - look into that later okay so let's get
+79:23 - back inside of our login.js file so
+79:26 - first we have this handle change because
+79:28 - when we type something here it doesn't
+79:30 - show anything now at all
+79:34 - so we have to hook this up to our state
+79:36 - so we'll show the values so we have
+79:38 - these handles change we got the event
+79:40 - here so we can just check if the event
+79:42 - dot
+79:44 - current target
+79:46 - dot name equals email then we can set
+79:49 - email
+79:51 - e dot current target
+79:54 - dot value
+79:56 - all right we just have two input fields
+79:58 - in this one so we can just
+80:00 - make an else here
+80:02 - we know that otherwise it's the set
+80:04 - password we should call
+80:06 - e dot current target dot value
+80:10 - so we save this one and we can see if it
+80:12 - works
+80:13 - and as you can see we can type something
+80:15 - here now and that's great it works
+80:18 - all right
+80:20 - then we have our handle submit and this
+80:22 - one is going to do all the job for us to
+80:24 - grab the token
+80:26 - from our api
+80:28 - so the first thing we have to do inside
+80:30 - of here is to prevent default
+80:35 - we don't want to send the form because
+80:38 - we want to handle this ourself
+80:40 - then we have const result
+80:43 - we're going to
+80:44 - await
+80:46 - and we await again
+80:50 - we fetch from http colon forward slash
+80:54 - forward slash localhost
+80:57 - and our server is at port 4000
+81:00 - and we're going to hit the endpoint
+81:02 - login then we have a coma and an object
+81:05 - because we need to send in some stuff
+81:07 - here also we set the method
+81:10 - to post
+81:14 - we set credentials
+81:17 - to include
+81:19 - then we have our headers
+81:22 - and our headers is going to be
+81:25 - content dash
+81:26 - type
+81:29 - application forward slash json all right
+81:33 - so we're setting the type of our headers
+81:35 - here and then we have our body
+81:38 - and that is going to be json.stringify
+81:42 - we have to make it a string
+81:45 - and we have our email
+81:47 - actually as it's the same here we can
+81:50 - just type out email and the same with
+81:52 - password
+81:53 - and here we have dot json
+81:58 - we call that one that's why we wait two
+82:00 - times here first we await the fetch and
+82:02 - then we await when we convert it to json
+82:05 - so that will give us the result in this
+82:08 - const here so if result dot access token
+82:15 - if we've got an access token we can set
+82:17 - the user
+82:20 - so we set the access token
+82:23 - and we grab that from the result.access
+82:25 - token then when we have set the access
+82:27 - token we want to navigate
+82:30 - back to the home page
+82:32 - else if we don't got an access token
+82:36 - we can just console.log
+82:38 - the result.error
+82:43 - all right
+82:47 - and if we want we can also create the
+82:49 - use effect here
+82:52 - when the users change we create a
+82:55 - dependency array with the user
+82:57 - and we can just console log
+82:59 - out the user so we see what's changed
+83:02 - inside of that one
+83:04 - all right so we save this one
+83:06 - and we can try it out so let's go to our
+83:09 - application and
+83:12 - inspect
+83:15 - i want to look in the console
+83:18 - we reload it you can see we have an
+83:20 - empty object here to start with because
+83:21 - we console log out our user state or
+83:24 - access token state
+83:27 - we can try to log in here
+83:31 - then you can see we can't log out the
+83:33 - error here and it tells us that we're
+83:34 - not sent along a valid password and my
+83:38 - password is going to be test
+83:40 - and as you can see we got the access
+83:43 - token here and now we redirected to the
+83:45 - start page and it's showing us the
+83:47 - content
+83:52 - so that's good
+83:55 - but we're not grabbing a new access
+83:57 - token now
+83:58 - as you can see here so it will wipe out
+84:00 - the state every time we reload this but
+84:02 - we'll fix this later
+84:05 - so we store the access token in our
+84:07 - state in the application we're not
+84:09 - storing it in local storage or anything
+84:11 - like that we're just having it in our
+84:13 - application and the refresh token is
+84:16 - being sent to the client as a protected
+84:18 - cookie so we can't really do anything
+84:20 - with that cookie with our javascript
+84:22 - code so back inside our code
+84:27 - and we can actually go inside of the
+84:29 - app.js file
+84:31 - and in our use effect here
+84:33 - i can make some comment
+84:35 - first thing
+84:37 - get a new access token
+84:40 - if a refresh token exists
+84:45 - right so inside of reduce effect
+84:49 - we're going to create an async function
+84:56 - check
+84:57 - refresh token
+85:01 - so we yet again have cons result
+85:04 - and we await
+85:06 - and we await again
+85:08 - fetch
+85:09 - and this time we're going to hit our
+85:11 - endpoint for the refresh token
+85:15 - so localhost
+85:19 - port 4000 forward slash
+85:21 - refresh
+85:23 - underscore token
+85:28 - coma and we have an object here
+85:32 - method
+85:34 - post
+85:36 - credentials
+85:39 - this one has to be include otherwise the
+85:41 - cookie won't be included and it won't
+85:43 - work
+85:46 - so
+85:47 - needed
+85:48 - to include
+85:51 - the cookie
+85:52 - we have our headers
+85:55 - we set the content type
+86:00 - to application
+86:02 - forward slash
+86:03 - json i actually think that this is the
+86:06 - default
+86:07 - but it won't hurt to have it here and
+86:09 - then here dot json
+86:12 - so we can set the user
+86:15 - the access token
+86:18 - we grab it from result access token so
+86:21 - this will set it
+86:23 - in either case because either we got an
+86:25 - empty access token or we got the access
+86:27 - token so it will set it to an empty
+86:30 - string or we set it to the actual access
+86:32 - token that we got now we can set the
+86:34 - loading to false
+86:36 - all right
+86:39 - and just below here
+86:41 - we call
+86:42 - the check refresh token and we have to
+86:45 - do it like this because you can't have
+86:46 - an async use effect so you just create
+86:49 - an async function inside of the use
+86:51 - effect and call it like this
+86:54 - and this
+86:55 - means that it will just fire off this
+86:57 - when we mount the application so this
+86:59 - will just run one time
+87:02 - and we can actually before we return our
+87:04 - jsx we can actually check if loading
+87:08 - then we just return
+87:10 - a div ah
+87:13 - we return a div that says loading
+87:18 - so we save this one
+87:20 - and we can try it out
+87:22 - as you can see here now as i reload the
+87:24 - page you can see that it loading flashes
+87:27 - here
+87:28 - so it grabs the new access token from
+87:30 - our refresh token endpoint so that's
+87:33 - good
+87:34 - we don't have to log in as long as we
+87:36 - have a valid refresh token
+87:38 - so that's how a refresh token works as
+87:41 - long as it's valid you can just call
+87:43 - that endpoint with the refresh token and
+87:45 - it will send back a valid access token
+87:48 - for you to use in your application so
+87:50 - that's very convenient to have that one
+87:52 - and don't need to log in every time
+87:55 - then we can create our logout function
+87:57 - here as we're in this component now
+88:01 - so we have this logout callback for this
+88:03 - one we can just await fetch
+88:08 - and from our localhost
+88:11 - port 4000 we have this endpoint that's
+88:14 - called logout
+88:18 - and we set the method to post
+88:23 - and we can also include the credentials
+88:28 - like so
+88:30 - and then
+88:31 - this will wipe out the cookie but we
+88:33 - also want to reset our application on
+88:35 - the front end clear user from context
+88:40 - set user and we just give it an empty
+88:42 - object for this one
+88:44 - and then we also want to navigate
+88:48 - back to start page
+88:51 - so navigate
+88:55 - and forward slash
+88:59 - right we save it and we can see if it
+89:00 - works we log out
+89:03 - and you can see we go to start page
+89:05 - you can see that it redirect us to the
+89:07 - login that means that we don't have a
+89:09 - refresh token now because we logged out
+89:12 - so we log in again
+89:14 - and it's showing us the content
+89:20 - and that's great and if we'll reload it
+89:23 - it will grab a new access token as long
+89:25 - as we don't log out but if we log out
+89:30 - it wipe out the refresh token so we have
+89:32 - to log in again
+89:35 - all right great it works
+89:38 - you can also see here in the console.log
+89:40 - that the access token is just an empty
+89:42 - string
+89:43 - okay we can create the register
+89:45 - component also and we can actually
+89:47 - just copy all the code from the login
+89:50 - component and paste it in the register
+89:52 - component
+89:54 - of course we're going to rename this
+89:58 - to register
+90:01 - and also export default
+90:04 - register
+90:07 - and we have to change a few things here
+90:09 - now
+90:10 - we're not going to need the context for
+90:12 - this one or the use effect
+90:15 - just to use state
+90:18 - so we can delete these ones here
+90:21 - and delete the context we are going to
+90:23 - use the email and the password local
+90:25 - state
+90:27 - and this one we change this to register
+90:30 - so we hit the register endpoint instead
+90:32 - the method is going to be post
+90:34 - credentials yeah we can try it we don't
+90:36 - need to include the credentials here
+90:37 - because we won't send along the cookie
+90:41 - the headers can stay the same the body
+90:45 - the same
+90:46 - everything is the same here
+90:49 - and we're not setting a user here
+90:52 - so we can just remove this one and if
+90:57 - result.error
+91:00 - we can just console.log
+91:03 - we want to know the
+91:05 - error so console.log result message
+91:11 - no this is actually if we don't have an
+91:13 - error so we just can console.log out the
+91:15 - message we get back and then we want to
+91:17 - navigate to the front page to the home
+91:20 - page
+91:22 - else
+91:24 - then we console logout the result.error
+91:28 - all right
+91:29 - we can remove the use effect
+91:33 - the handles change is going to be the
+91:35 - same
+91:39 - and we can change this one to register
+91:42 - instead
+91:45 - everything else is going to be the same
+91:49 - yeah and also this one here should say
+91:52 - register
+91:55 - and we save it and we can see if it
+91:57 - works so we go to the register and you
+92:00 - can see it changes here it's the exact
+92:02 - same otherwise but we just changed this
+92:04 - once here so we can just try to register
+92:07 - without
+92:09 - the user as you can see we can now
+92:11 - create this is a bug here actually we
+92:13 - can create an empty user and that
+92:15 - shouldn't be possible so we have to
+92:17 - check that in our api also of course but
+92:19 - not for this tutorial
+92:21 - okay so we just created an empty user
+92:24 - and we can see in our console if we go
+92:26 - to our our
+92:27 - api here you can see that we created
+92:29 - this one
+92:30 - with an empty email and this password
+92:32 - that gets generated is from an empty
+92:35 - string
+92:36 - and that's no good of course
+92:39 - but if we try to create a user that's
+92:41 - the same as already in the database it
+92:44 - should warn us yeah user already exist
+92:47 - and it doesn't matter
+92:49 - if we write another password here or
+92:51 - something but we can create maybe put a
+92:54 - 2 there
+92:56 - every register and you can see the user
+92:58 - is created
+93:00 - and we console log it out here so we can
+93:02 - see that it gets created and is put in
+93:04 - the
+93:05 - database that's not the database that's
+93:08 - our fake database
+93:11 - maybe you should get logged in
+93:12 - automatically when you create a user and
+93:15 - we're actually logged in as another user
+93:17 - now
+93:18 - because yeah this is not a production
+93:20 - app and i just want to show you how this
+93:22 - stuff works now so yeah
+93:25 - we just created the user but we logged
+93:27 - in as another user and that's no good of
+93:29 - course
+93:31 - but it works we can register user and we
+93:33 - can log in and we can log out so if we
+93:36 - log in
+93:38 - with the new user we created
+93:41 - you can see first yeah it says that the
+93:43 - password is not correct and i had the
+93:45 - same password we can log in with that
+93:48 - user instead
+93:49 - so that's great okay
+93:51 - it's working so this is how the flow is
+93:54 - when you send tokens to your client and
+93:57 - to your api
+93:58 - and
+93:59 - yeah it's very convenient that you don't
+94:01 - have to log in all the time and you can
+94:03 - just have these tokens that will
+94:05 - simplify everything for you
+94:08 - that will simplify everything for your
+94:09 - user it's not simple to do this stuff
+94:12 - actually
+94:13 - okay so we have one more thing to do we
+94:14 - have to create a protected route to show
+94:16 - you how you can protect data and use
+94:18 - your token to get that data
+94:21 - yeah and i just realized why our css
+94:24 - isn't working as it should and that's
+94:26 - because if we move inside of the app.js
+94:30 - file the class name is a capital a here
+94:33 - on app so just change that one to a
+94:35 - lowercase a and save it
+94:38 - and it should work
+94:40 - yeah it's a little bit nicer now you can
+94:42 - see it looks more like a regular login
+94:44 - form now and yeah it's centered and the
+94:46 - nice stuff like that so yeah
+94:49 - that's great
+94:50 - move back inside of the protected.js
+94:53 - file
+94:54 - for this one we are going to need the
+94:56 - use effect
+94:59 - the use state
+95:01 - and the use context
+95:04 - we're also going to import the user
+95:07 - context
+95:11 - from
+95:12 - dot dot forward slash app and we can
+95:14 - remove this one and create curly braces
+95:21 - so we have the const user
+95:24 - and we use context
+95:26 - and send in our user context
+95:28 - then we create the local state
+95:32 - content and set content
+95:37 - you state
+95:38 - and we give it an initial string of you
+95:40 - need to login
+95:43 - and of course there's many ways of doing
+95:45 - this so this is just one way to show you
+95:47 - a simple solution how we can get the
+95:49 - protected data and show it in our
+95:51 - component
+95:53 - then we're going to have a use effect
+96:01 - and this one is going to
+96:03 - fire off when the user changes
+96:07 - so we create an async function
+96:12 - that's called fetch protected
+96:17 - we have yet again the constant result
+96:21 - we await
+96:23 - and we await again
+96:25 - the fetch
+96:29 - and
+96:31 - from our localhost forward slash
+96:34 - protected
+96:37 - we are going to grab our data
+96:40 - we have a method
+96:42 - of post
+96:45 - the headers are going to be
+96:48 - content
+96:49 - type
+96:52 - application
+96:54 - forward slash json
+96:58 - then we have authorization
+97:01 - and this is really important here
+97:04 - we stand along this property here that's
+97:06 - called authorization
+97:08 - we give it a string we have backticks
+97:10 - here now
+97:12 - with a beer
+97:15 - and then
+97:17 - we give it the user access token
+97:23 - and it with the backtick so this is the
+97:25 - standard of sending your access token
+97:27 - you have this bearer in front of the
+97:29 - access token so that's what we stripped
+97:32 - away in our api when we get the access
+97:34 - token
+97:36 - and we actually can look at it here
+97:39 - [Music]
+97:40 - up here you see
+97:42 - we get the token by splitting
+97:44 - authorization and we get an array with
+97:47 - the values and the value at the index
+97:49 - one is going to be our access token so
+97:52 - we remove the bearer this way or the
+97:54 - bearer
+97:55 - beer beer yeah i really don't know how
+97:58 - you pronounce that um yeah
+98:01 - so yeah it may be wrong but i hope you
+98:04 - understand what i mean
+98:08 - so that's how we send along the access
+98:10 - token and down below here we just
+98:13 - convert it to json
+98:17 - and then if
+98:19 - result.data if we get some data back
+98:22 - we set the content
+98:24 - with result.data
+98:27 - and here we have to call or fetch
+98:30 - protected
+98:32 - down below here we just return a div
+98:36 - with the content
+98:40 - so obviously this is not going to change
+98:43 - if we don't get any data we're just
+98:45 - displaying you need to log in otherwise
+98:47 - we display the data we get back
+98:49 - so we can save this one now and see if
+98:51 - it works
+98:54 - yeah you see we could log in now with
+98:57 - not a user or a password because we
+98:59 - created a completely empty user and you
+99:01 - shouldn't be able to do that but we
+99:03 - logged in now and we can see if the
+99:05 - protected works
+99:06 - no it doesn't work actually
+99:09 - so we have to
+99:10 - figure out why
+99:12 - yeah and i've done it again i can see
+99:15 - here now there should be an s there i
+99:18 - missed that again i think that's the
+99:19 - third or fourth time in this tutorial
+99:23 - so
+99:23 - it's really easy to do something like
+99:25 - this especially when you sit there and
+99:27 - record everything and i'm going to show
+99:29 - you this stuff so yeah make sure you
+99:32 - have an s on the headers
+99:40 - so i try to log in
+99:44 - and i go to the protected route
+99:47 - and it says this is protected data so
+99:49 - that's good
+99:51 - that's fine it was just that little s
+99:53 - that messed everything up here that's
+99:55 - the beauty of coding one little small
+99:58 - typo can ruin everything for you so
+100:02 - as you can see we're getting the
+100:03 - protected data because we send along the
+100:05 - access token here
+100:07 - so that's how you protect data with your
+100:10 - api and you need a user to send along
+100:12 - the access token to get the data
+100:15 - so this is it actually maybe it seems a
+100:18 - little bit much and yeah it is
+100:20 - authorization and authentication is
+100:22 - really advanced stuff so it should be a
+100:24 - lot i think
+100:26 - i actually find it a bit hard to explain
+100:28 - also because it's a very advanced topic
+100:31 - and
+100:31 - i hope you learned something from it i
+100:34 - will appreciate if you want to subscribe
+100:36 - to my youtube channel and you can also
+100:38 - add me at twitter at wabenfalk i also
+100:41 - got a few premium courses in react out
+100:43 - there they're on my own platform
+100:45 - www.webenfarc.com
+100:48 - and i have a few on udemy also now but
+100:51 - i'm going to move them to my own
+100:52 - platform in the future
+100:55 - so hope you enjoyed it see you in
+100:57 - another one
+
+Cleaned transcript:
+
+hello and welcome to this tutorial i've actually added this part after i finished the tutorial of course i realized you may be completely beginner at json web tokens and i didn't talk anything about what a jwt token is so i'm going to do that shortly before we start creating stuff in this tutorial i recommend you to check out jwt dot io slash introduction on that page they'll describe everything that you need to know about json web tokens and we can check out the first part here what is json web token json web token is an open standard that defines a compact selfcontained way for securely transmitting information between parties as a json object so that's what we're going to do we're going to build this in our application and send along a json web token and that is a json object and also this information can be verified and trusted because it is digitally signed and the token can be signed using a secret or you can encrypt it we are going to use a secret meaning that on our server part we are going to have a secret that will sign or json web tokens with so a json web token is a json object that we can use to transmit information between our server and our application in the client and you can also read down below here they tell you why you should use it and when you should use it in our case we're going to use it for authentication and authorization and i think as they say this is the most common use case because when using a jwt token we don't have to send along our login and password on each request we can just send the token and the token can guarantee that it's the correct user that sends the request so that's the main advantage of using a token we don't have to send along the login and the password on each request we can just send along the token and we will know that the user is legit and they also mention that the overhead is small and it has the ability to be easily used across different domains so that's the main advantages of using a jw token in your authentication and authorization system so in our case we're building this very lightweight server and from this server we're also going to generate this token and send it along to the client when the user logs in all right we can continue to scroll down here they also describe what parts there is in a json web token and you have a header a payload and the signature and here is how it looks first you have the header then you have a dot and then the payload a dot and a signature so the header will mostly contain data about that this is a jwt and also the signing algorithm for the token and then we have our payload we can send along what we want here in our case we're going to send the user and we're going to have the email address in this very very basic example that we're going to build so the user can log in and we send along the email address to the client so the email is going to be the username in our case but you can put some other data here also of course and in this case i think they yeah they had a name and they have if this one is admin and other stuff here okay and then we have the last part that's the signature and we're going to sign our token with a secret that we set on our server that way we know that this token is guaranteed to be generated from our server because we're always going to verify that it's signed correctly all right so i think that's about it that's a very short introduction to jwt tokens and we can get started to create our application and our server i'm going to talk a little about json web tokens and how you can authenticate your application with refresh tokens and access tokens and there's actually a few good tutorials out there but they are using a lot of stuff that you don't need to understand the concept of json web tokens so my take on this is that i create a very simple express server where we set up our endpoints or just regular rest endpoints and i won't even use a database we're just going to use a fake database object for this one so it won't persist the data of course you don't need that if you're just learning the basics all right so nothing fancy in the server in the back end and i'm just going to use react for the frontend and you're going to fetch the endpoints with no external library or anything like that so hopefully this will be a good way for you to learn about json web tokens if you're new to the subject and also i will say this that i'm not a security expert i'm mostly a frontend developer but i do some backend stuff also so this is not in any way any code you should use in production and the code may also be a little bit verbose because i want to show you all the details on how this work my main goal with this tutorial is to show you how the json web token flow works between the server and your application and how you can use it it's not to create a very secure api that you can use in production all right so let's get started first of all create the folder of your choice i call mine jwt auth and inside of this we're going to create another folder that's called server we're going to have two folders for this one one is the server and one is for the front so first we set up all the routes all the rest and points for us that we can use in our application all right and we are going to use express for this one first we have to type npm init to create our project yeah and it will give us some defaults here this one will call it jwt auth and that's fine version is one description you can have a description here if you want api server or entry point it's going to be the index.js file so that's fine and test command we're not going to do any tests here and git repository none keywords none you can just press enter here is this okay yes enter all right so it's created a package.json file for us and let's go inside of our code editor and we can have a look at that file and as you can see it created this stuff for us here all right then we have to install some packages we're just going to use express but there's some packages that are going to help us in the creation of our api so we are going to install something that's called bcrypt.js and with this one we can hash our password because you don't want to store your password in the database or in our case a fake database we have to hash it and also sort it you can read about bcrypt at this page here or you can yeah i'm not going to go through it in detail here then we're going to install something that's called cookie parser and this will help us to get the cookies from the request so what it will do is to create an object that's called cookies where we just can grab our cookie that we're going to use for the refresh token then we're going to install a package that's called course because we don't want to have any cross origin issues here so we're going to install this and configure it and we're going to use environmental variables for this one so we install the package.n and i'm going to show you this in a second and of course we have express that we're going to use and then we're going to create json web tokens so we have a package for this also and lastly we are going to use something that's called nodemon and this one will yeah it will make our development a little bit easier because it will restart the node server as soon as we make any changes and we don't have to do that ourself manually okay and then i'm using postman to test our endpoints it's free so i think postman is very good to use for this all right so let's get back into our terminal and install these packages so we type npm i and we have bcrypt js we have our cookie dash parser we have our course or doten and we have express we have our json web token and the nodemon is actually going to be a dev dependency so we install that one after this one okay let's take a look inside of our code it installed here as we can see that's good and the nodemon we just install it like a dev dependency here so we have npm by nodemon dash dash save dash dev and it will install it for us as a dev dependency okay you can see that it added it here as a dev dependency and that's great so that's all that we need for this api to work and we're going to start coding it now first we can create a new file that we call dot n because we're going to create some environmental variables here and the first one is going to be called access underscore token underscore secret and it's going to equal you can select whatever you want here i will of course use weben rules yeah okay maybe i should spell this correctly also to see synaxis okay then we have a refresh underscore token underscore secret and this one is going to be web and rules even more and then we have the port it's going to be on port 4000 all right so we just save this one then we're going to create a new folder here that we call src and inside of the src we can create a new file that's called dot index.js okay so we're going to start importing some stuff here first of all we're going to require dot n forward slash config and this one will make sure that we can use the environmental variables here then we create a const named express and we require express we are not using es6 imports here because this is node and this is the standard as you do it in node you can do it with es6 imports if you install some packages but we're not going to do that here so we import express then we have our cookie parser require cookie dash parser we have our course and we have or verify that we're going to grab from the json web token library and make sure you have these curly braces here because we're just importing the verify from that one then we're going to grab hash and compare require bcrypt js right so that's all what we need for now we're going to do a little bit more imports here later on when we create more files and stuff here so what are we going to do now we have a few steps here one we're going to create an endpoint where we can register a user to we're going to have an endpoint for login user 3 we also want to be able to log out the user for we're going to set up a protected route and five get the new access token with a refresh token and of course you should have something that you can revoke the refresh tokens with but i'm not going to go through that in this tutorial because i want to focus on the most basic stuff here just to show you how json web tokens work okay first we create our express server const server equals express that's the one we imported up here so that will create the server for us and then we want to use express middleware for easier cookie handling so server dot use and we call our cookie parser and this will make sure that we can handle the cookies a lot more easier then we're going to set up our course because we don't want to have issues with that later server.use and we have a course that is going to take in an object we have an organ http colon forward slash forward slash localhost and we are going to have our frontend on port 3000 because we're going to use create react app and that one is default port 3000 then we're going to set the credentials to true okay so this will make sure that our frontend and our server can communicate with each other then we need to have a couple of rows here so we can read our body data and we can actually type out the comment here needed to be able to read body data okay we grab a server and use and from our express we can just call express.json like this and this will make sure that we support json encoded bodies i can make a quick comment here also to support json and encoded bodies then server.use from express yet again this is builtin express url encoded for this one we sent in an object with extended the set that wanted true and this one support url encoded bodies all right so this is our configuration for our express server and we can actually get it up and running also and then we're going to create our endpoints and to get it up and running we can just server.listen and from our process dot n we have our environmental variable called port inside of here so we just grab this one with this now we have an inline arrow function here and we can just console log out something here server listening on port this is a template literals we can just grab process dot n dot port and we end it with another backtick and i should of course remove this one you can save it and then go inside our terminal clear it and we actually don't have a start script for this one so we can create this one also so let's go back inside of our package.json file and where you see this property named scripts we can create another one here that's called start and we are using nodemon for this one as i said this one is going to make sure that we don't have to restart the server every time we change something in our code so we just call our index dot js file here and this is an object so make sure you have a comma there also so we save this one go back inside of our terminal and type npm start and as you can see it's starting up our server here and that's good so we know that it's working and then we can create our endpoints and i'm actually going to go through this quite fast because i think this course is more focused on frontend developer that want to learn about json web tokens and not how to create the backend itself but i have to create it here to be able to show you how the json web token and the flow between the front end and the server will work so that's why i create the back end here also and you probably will learn something about it even if you're not a backend developer at all so back into our code and inside our index.js file so first of all we're going to create an endpoint for register user so we have a server and this is going to be a post request and we're going to have register in our endpoint url so it's basically going to be our server that's localhost and then forward slash register for this endpoint this one is going to be async we have our request and our response and we're going to send in the email and the password with the body so we can grab these ones from the body with the structure them out email and password from the request body and we have to do a few things here now we're going to type our code inside our try block and then we have our catch that is going to catch the error for us so inside of here we're going to do a lot of stuff first we're going to check if the user exists and we're going to do that from our fake database but i want to populate the fake database with a user so i'm going to need a hash password for that one so that's why i'm going to create a hash password and console log it out and then i can just copy and paste it inside of my fake database that i'm going to create so const password we await hash and we have our password that's the one we got up here and we're going to sort it and this is how many times you want to calculate the salt so i think 10 times maybe something like that so this will give us a hash password and we can console log this out and save it i'm going to start up the server again and i'm going to go inside of postman now and use that one so i have this endpoint that's called register and i actually have it up here on our localhost and port 4000 we have the register endpoint and i've attached an email and a password to the body so it was send this one hopefully it will cause log out a hash password for us and it did so i'm just going to grab this one from the console copy it go back inside of my code create a new file inside of the source folder here and call it fake db.js then i'm going to export fake db and it's going to be an array that's going to have different objects with the different users so we create an object we set the id to zero the email is going to be my mail you can of course use your own here like this and then we have the password and inside of this string i just pasted in this password can also make a note here the password is test so this is a fake database that we're going to use save this one can go back inside of our index.js file and we can finish this register endpoint so first of all we're going to check if the user exists const user from the fake db of course we also have to import it up here so const fake db equals require and we grab it from dot forward slash fake db dot js okay in our fake db this is just an array so we can just use the array method find and we have our user we check if our user email equals or email so we check if this email exists in our database and this one here is the one that we got from the body and of course in the real world here you should do some connection to a real database and check for that there so this is a fake db this is just an array with javascript objects but you're going to use a real database here in the real world in production but for now this will do for us okay then if we have a user we're actually going to throw an error here because if the user exists we shouldn't be able to register a new user with the same email so we throw new error user already exist if not user exists hash the password and we've already done that here so we don't have to do that again we have it stored in the password const so three insert the user in and i'm going to put this inside of quotes because this is not a database this is just a fake database but you insert the user in your database and we can just push the user inside a fake db array fake db push so we create an object we have an id fake db dot length the length is always going to be larger than the index so that's why we can use the length here because if we have one post in our database as we have now this is the index zero but the length is going to be one so that's why we can use the length here then we have our email and we have our password and this one is going to be the hash password and we have a coma there of course okay so we have stored the user in the database so we can send back your response to the client res dot send and we have an object with a message of user created like so instead of console.log out the hash password here we can actually console log out the fake db all right then we also have to catch if we have some errors so we send back your response with an error and we just send the error message air dot message all right and do a little bit of auto formatting there so this should be it for the register endpoint so we try it out in postman and i created this once now so i have to actually kill the server now and start it again because i want to clean up my fake database so i go back in postman i put the email and the password in the body that's my email address with three and also the test as password so i send this one used to create it that's great and as you can see we are console logging out the database we have two users here now and that's great go back inside of postman i try to register the exact same user and it tells me that the user already exists and that's great so we can't register the same user twice so we know that it's working that's our register endpoint now we're going to create our login endpoint yeah and i should of course move this one to the bottom like this log in a user all right yet again we have a server.post we create a post request and it's going to be login we have an async inline function here we have the request and the response and an error function and yet again from our body we want to grab our email and our password so we destructure them out from our request dot body then we have a try and the catch with the error like so and inside the try block we're going to type out our code so first find user in array or in or in database if not exist send error right const user fake db dot find this is the exact same step as we did before so just check if the user email equals the email and now we check if not user if we don't have a user throw new error user does not exist all right so if we don't have a user we cannot log in to compare encrypted password and see if it checks out send error if not so create a new const that's called valid we await and we have this compare function from the decrypt library so we compare our password that's the one we got up here from the body and then we have a password stored in our database from the user password so we compare these two and see if they are the same so if not valid throw new error password not correct so if it not checks out we just send an error and tell the user that the password is wrong but if it's correct we can create a refresh and access token like this and the id today is to have a refresh token and an access token your access token should have a really short lifetime and the refresh token should have a longer lifetime and stored for example as a protected cookie that you cannot use from inside of the javascript in your client we're going to create two tokens one refresh and one access token so first we have our access token and we're going to have to create this somehow and we have a refresh token that we also need to create somehow i'm actually going to create a new file here just call it tokens.js and inside of this file we first import sign require we require it from json web token then we create the function here create access token we're going to send in the user id as a parameter and from this one we're going to return something and we're going to return sign we call that sign that we imported up here we give it an object with the user id and then from our process dot n dot access underscore token secret so we sign it with that secret and we also include our user id then we have an object where we can set the expiry time expires in now for this one we're going to set the 15 minutes so this is how we create the access token and we can just copy this one and paste it in and we can rename it to create refresh token and we change this one to refresh underscore token underscore secret and it expires in seven days that's a week okay and for now we just model export and we export our create access token and or create refresh tokens so we can use them in our index.js file so of course we have to import them up here at the top first const create access token and create refresh token require and it's going to be from dot forward slash tokens dot js all right we're good to go we can use these ones inside of this file now so first we create an access token create access token we send in the user.id that's the one that we got from the database and here we create the refresh token and we also send in the user.id and in the real world in the real life you could also create different versions of the refresh token and store it in your database or just store a version number if you don't want to store the complete refresh token and you can compare it you can sign it as we do here you can also sign it here with the uh that's the access token the refresh token you can have a version number here and then you can check the version number and when you revoke the refresh token you just increase the version number and that way that token could never be used again but for the sake of the simplicity of this tutorial i'm not going to do anything of this i've just created one refresh token so if you want to make some function to revoke it you just can delete this one from the fake db but keep in mind that you can have different versions of refresh tokens so for now put the refresh token in the database and we already have our user here so we can just mutate this one we create a new property that's called refresh token and we just give it the refresh token so we save that one inside of the database there and if we want we can also console log out the fake db here so we can see that this actually gets created all right so we have our access token and our refresh token created that we have to send them to the client somehow so five send token refresh token as a cookie and access token as a regular response all right and we're going back inside our tokens.js because i'm going to create two functions for us that is going to handle the send of the tokens so just below here we create another function send access token and we have the response the request and the access token and we just do a response send you could of course do this inside of the index file also but i did this to yeah kind of structure it a little bit so we send the access token and we can also yeah we can send the email also from the request body dot email right and then we have a const send refresh token for this one we are going to have the response and the token we can call it refresh token all right and for this one we're selling a cookie instead we don't want to send it with a regular response so we have rest cookie we're going to call the cookie refresh token you can of course call it something more secret because now you can just check the cookie and see that this is a refresh token but i do it like this so we easily can track this token that's why then we have our token and we have an object we're going to set it to http only and this makes sure that we can't access this cookie from our client you can't modify the cookie with javascript and we're also going to set a path because we don't want to send this cookie along with each request we just do it when we're on the refresh underscore token endpoint this is the endpoint we're going to use when we want to get a new access token with our refresh token and i'm going to come back to that later all right we also have to export this once send access token and send refresh token like this so that's all for our tokens.js file let's go back inside of index.js and inside our login user function here of course we first have to import them up here so we import send access token and send refresh token all right now we can go back inside of this one here just below here we first send a refresh token we have the response and the refresh token itself and then we call send access token we have the response the request and the access token maybe they should be the other way around here maybe have the request first and the response as the second parameter but yeah hey it's like this now okay all right so that's it we just have to catch any errors if we get that here so where rest.send just as we did before we have an object and an error message backticks it's a template literal we grab the error dot message and end it with a backtick like this order format it and save it so we can go back inside of postman and we can try to log in here as you can see in the body i send the email and the password so we try to send it okay we have some error here create access token is not a function all right yeah i know why it should be exports here not export so make sure you have an s there also if you also miss that one so save it and go back inside of postman and we try this again then we have another error here token is not defined all right yeah of course i renamed this one here inside of tokens.js it should be refresh token and save this one i actually called it token first but i changed it now when i record this to refresh token because it makes more sense so it should be refresh token and back again inside of postman we try it again and as you can see we get an access token back and we also get our email back and did we get something inside of the database yeah you can see i constantly logged out the database here and the refresh token has been created and it's now in the database so we can try to register a new user here i have this one with a three in my email so i'll just create that user and as you can see that one is created but it don't have a refresh token now we haven't logged in and got the refresh token so it seems to be working now that's great so let's get on with it we also want to be able to log out to user three log out a user this one is going to be see we have the server dot post and we're going to have log out as the endpoint we have the request we're not going to use that one so i mark it with this underscore and we have the response so when we log out we just clear the cookie rest.clear cookie and we call it refresh token that will make sure that we wipe out the refresh token from the cookie and we also have to clear the access token from the client of course when we log out but with no refresh token we can't get a new access token before we log in and then we just return the response.send and a message logged out that's our logout then number four we are going to create a protected route just to show you an example of how you can do this authorization with the token so we have server.post we can just call it forward slash protected this is an async function so we mark it with async and we have the request the response and an inline arrow function then we try we catch the error now we have a const user id is auth and we send in the request we are going to create this one now so we create a new file inside of this source that's the last file we're going to create here we call it is auth dot js and first we are going to import verify we require it from json web token and that's the way we can verify the token that we have in our header then we create the function called is auth we have the request an error function const authorization and from our request and the headers we are going to grab the one that's called authorization and this will give us our token if we don't have any token if not authorization then we throw new error you need to log in because if we're not sending a token we know that the user isn't logged in so that's why we can throw this error and tell them that they need to log in otherwise we can get the token so from authorization we split that one like this and we grab from index one in the array and this is because the authorization in the header is going to look something like this beer and then you have the token here this is a string so we just strip out bearer and we just grab this one and that's what we do in here so that's how we get the token so this is the standard as you use beer and then have the token after that word that's called bearer yeah that's very difficult for me to say because i'm not used to that smooth rs r are yeah yeah you know it's it's tough to be from sweden and try to speak english all right so we have our token then we're going to grab our user id and we get it from verify and that's from json web token we have our token and we verify it with the process dot n dot access underscore token secret so this way we make sure that this is a legit token and then we just return the user id okay module dot exports equals is off or you could of course just export it as we did with a fake db exports dot fake db instead if you want to do that all right back inside of index we need to import is off const is auth equals require dot forward slash is auth.js and now we can use it here this is getting a little bit messy here i i know that um as i said the code is going to be a bit verbose and there's a lot of code here maybe but i think it's necessary to fully understand something when explaining advanced stuff like this if the user id doesn't equal null and that's because we could just do it like this but that will give us a false answer if the id is zero so that's why i'm doing this we have res send the data and we can just type this is protected data all right and then inside of catch just as before rest send we send an error message like so so we save this one and we can see if the protected route works you can log in again protected and as you can see in the authorization here we can just grab the access token that we get here and this is actually an old token also it shouldn't work now it says that you need to log in so if i just paste in the new token here it hopefully should work and it doesn't all right yeah and of course i can see now i forgot an s here it should be headers it's very easy to forget something like that so i save it and then we can try it again yes you can see this is protected data so now we're accessing it with our token and that's great really really easy to do something stupid like this and forget an s i hope you didn't do that that's the second time in this tutorial i did something like this right i have to slap myself in the face because i'm that bad at typing this stuff out right back inside of index we know that this one is working and we just have one more route to create and then our api will be finished and that's the route for getting a new access token so five get a new access token with a refresh token all right we have server dot post forward slash refresh underscore token we have our request and a response and an inline arrow function we have our token and now we can just grab it from the request cookies refresh token that's why we installed the library that's called cookie parser and if we don't have a token in our request if not token return response dot send the access token we just clear it out so we just send an empty access token you could also send a message here also to the client of course otherwise we have a token let's verify it so we let we create payload and we set that one to null for starters and we have a try and a catch with the error inside of our try we set the payload we're going to verify we have the token that's the one that we grabbed from the cookies and we have our process dot n dot refresh token refresh underscore token underscore secret we verify that our token is legit error is return response dot send and yet again we just send an empty access token we know that the token is valid so check if user exists const user we go inside our fake db and find user we check if our user id equals to the payload id the payload user id because we signed or token with the user id we get that one when we verify it if this verify it will give us the id so we can just compare this one with the one in the database and see if it exists there the lid it should say if not user return response send yet again we send an empty access token because the user didn't exist in the database user exists check if refresh token exists on user if user dot refresh token not equals token if we have another token registered to the user we don't want to send a new access token so we just return response send and we set the access token to an empty string again whoa there's many steps here whoa whoa token exists create new refresh and access token so again we create our access token create access token send in our user id as you can see here this is repetitive code we did this up here before so as i told you before this code is very verbose you can refactor it to make it more effective and look a lot more cleaner but it's good to have it here now so easily can understand every step and how this works then we create the refresh token also with the user.id then we need to update the refresh token in the database and as i also told you before you could have different versions here instead of the refresh token but i will just grab the user and refresh token and mutate this property here with a new refresh token so this will update it in our temporary database object all good to go send new refresh token and access token so we send the refresh token we have the response and the refresh token and then we return rest.send and the access token whoa that was a lot but hopefully you'll understand all the steps needed here and you can also see that you need to have some connection to a real database and users that you save somewhere because this is just fake so let's save this one see if it works no errors that's good we can try this out now first of all we can log in we have the refresh token so we try this and as you can see we get a new access token back that's because our refresh token is saved in um is saved in the cookies i think we should be able to see it somewhere yeah here you can see the refresh token that is being sent but we won't be able to grab it in our javascript from the client and then if we log out like this we shouldn't be able to get a new access token obviously it has not cleared it from here yeah and i think i know what's wrong we have to set the path here also it has to have the same path refresh underscore token like this because we told it to just send this cookie on this path so when we clear it we just make sure to include this path here also so i save this one and go back inside of postman and hopefully this will work now i'll log out yeah and as you can see it won't give us an access token now and then we can also try out we try to login then a new cookie should be set so i try this route again and as you can see we get a new access token so it's working now make sure that you include the path here otherwise it won't work all right so that concludes the server in the next part we're going to create a frontend with react and use this api okay this is the second part in this tutorial and we're going to build the front one in this one and as you can see i'm inside the jwt auth folder now that i created in the last part and i also have this server folder and i hope you didn't make the same mistake as i did because i didn't navigate inside of this folder when i created the api so i had to move all the files manually inside of the server folder so i navigate inside of that one and all our files are here for the api and also we can open up the code it can always be good to have it here if there's something that we need to change in our api and actually i had this typo again i had forgotten i in the origin in the course in the index.js file i hope you didn't do that mistake also so make sure that it says origin here otherwise it won't work okay so back inside of the terminal we can just npn start and fire up our server then i have another tab here in my console and i'm going to create a react application for a frontner now i assume that you know react i'm not going to teach you react or css or anything in this course i'm just going to very quickly create this little application that we can use to communicate with our server to get our json web tokens and show you how json web tokens work all right we're going to create this application with create react app so we type npx create dash react dash app and we're going to call it frontend and this will create a folder here that's called frontend and it's going to put all the code inside of that one so just have to wait a little bit now so that's it we navigate inside the frontend folder and open up our code editor so this is what we've got here we have a package.json it's installed everything for us and we also have this src folder with different components that it created for us and we can actually remove some of them here we can remove the service worker we can remove the logo we can remove the app test and the app.css we're going to create some css in this index.css file and we also have to go inside index.js so we remove the service worker and remove all of this stuff here and just save it and inside our app.js remove the app dot css import and the import of the logo and for now we can just remove everything of this and just type out app and then we can go back inside our console that we're going to install to dependencies so mpmi we're going to need the reach router for this one at reach forward slash router and also i think we're going to need a es lint dash plugin react hooks and while this installs i can grab some coffee here that's always a good idea and as you can see i'm getting these errors here they started to appear just recently i think it is because i'm using both yarn and npm they create react app create the app with yarn and now i'm using mpm but i'm going to show you how to get rid of these if you get these errors so just wait for it to finish here so what you can do is you go inside of your code just remove the node modules folder and also the package lock file and go inside of the terminal and type mpm install i haven't got time yet to dive deep in this and see what's causing this so i don't really know actually but i know that this works so that's it we can try mpm start and we navigate to localhost 3000 and as you can see we're showing up here so we know that it's working that's good so back inside our code editor and we're going to create a new folder here inside of our src folder create a new folder name components and we're going to scaffold out five components we have one that's called content dot js one that's called login.js and navigation dot js protected dot js and register.js now we can just scaffold out them now and we'll come back to them later so we import react from react we create a functional component called content equals an error function and for now we just return a div that says content and we export default content all right so we can just copy this one now make sure you save it also of course and go inside login and change this content to login and save it move on to the navigation change content to navigation save it and inside protected the same thing protected and the register register so this is just the scaffolding of this we'll come back to them later and i can also say that this application will also be a bit verbose in the code and has a yeah maybe a lot of redundant code for example the login and the register component will have almost the same code inside of them that's actually intentionally because i think that i will make this as easy as possible for you but this is not in any way just as with the api a production finished application we're just creating it in educational purpose so bear with me with that one okay and we have to create some css for this one also so we can do that right now when we're at it so inside of the index.css file we have this body we can actually remove this code and up here we can add the background and it's going to be steel blue just keep everything else here it doesn't really matter then we have the dot app class and with text align we set at the center we set a min height of 100 viewport height we display flex we set the flex direction to column we align items to center and also justify content to center we set the color to white fff and the font size to 16 pixels okay then we have a class that's called login dash wrapper we set the min height to 200 pixels we set the min width to 300 pixels we set the background to white the padding to 20 pixels the border dash top to 5 pixels and light blue and solid set the color to black zero zero zero okay that's our login wrapper and we are of course going to use these classes in our components in a production app i would use style components but in this case we're just importing a regular css file and yeah that's no good to do it like that but it it'll work for us in this application then we have dot login dash input and we're going to have a button in that one so we set the background on the button to light blue we display blocked we set the width to 100 percent the height to 50 pixels yeah and that's it for that one then on the same class login dash input we're going to have our input fields and we can display block we set the padding to 20 pixels the width is going to be 100 percent the height is going to be 50 pixels and the margin 10 pixels zero we set the box sizing to border box okay just a few more we have to style our unordered list that we're going to have for our navigation so we have our ul list dash style dash type we set that one to none set the margin to 40 pixels auto we set the width to 300 pixels and the padding to zero then we have the uli element we display inline dash block and set the margin to 10 pixels right and then the last one and that's the link that's the a tag we set the color to white fff and text decoration to none so that's our css and we can already see that it's changing here and that's good okay we can move inside our app.js file now and we're going to create this one first we're going to add some imports here we're going to use state and also use effect for this one and then we import router and navigate from at reach router okay then we import all our components so we import navigation from dot forward slash components forward slash navigation we can just copy this one paste it in four times and we change these ones here this one is going to be the login this one register protected as you can see i'm changing it in two places at the same time here so make sure you also change the path here and the last one is going to be our content all right so that's our component then we're going to create a context that we're going to use for yeah almost like a global state here by creating a context we can access the state inside of all our components in the application so we export const user context and react dot create context and for now it can just be an empty array so that is going to be our context and inside of our app component we are going to create some local state first we have our const with our user and set user that is going to hold our access token so use state and it's going to be an empty object for now let me create another one loading and set loading and you stay and we set that one to true because when this application run we're going to have a use effect that will fire off and send or refresh token to get a new access token if we have a refresh token so that way we don't have to log in yeah in a production app you wouldn't do it this way you probably will have a library for example apollo or something that will handle this for you when you have a real database to connect to but for now for this tutorial as i said i will do this as simple as possible so we're just using the thing we got in react and we're going to grab it with a use effect we're also going to have a couple of functions in this one so we have const log out callback and this one is obviously going to be for our logout button and it's going to be a sync and we leave it empty for now then we're going to have our use effect and that one is also going to be empty for now we give it an empty array here also as a dependency so then we can create our jsx for this one so we have this div with the class name of app we're going to wrap it with our context so we have our user context dot provider and the value is going to be an array with our user and set user so this is the way we can pass this state down to all our components we close it move this one inside of that one all right then we have our app and then we're going to have our navigation the navigation is going to have a logout callback logout callback so this is a prop so we send in our logout callback function so that one then we're going to have our router we're going to change routes here depending on what page we're on so we have an id of router and then we just have our components here we have our login component that's going to have a path of login then we have our register that's going to have a path of register and or protected that has the path of protected whoops it should selfclose like this and then we have our content and this one is going to have the path of a forward slash because that's our main landing page that's our home page and i think this is it for this component actually for now of course we're going to fill this out with more code later but we can save it let's see what we've got so we've got the navigation and content here and that's great so we can actually create our navigation now so make sure you navigate inside of your navigation.js file so we're already importing react we're also going to import link from at reach router okay then we've got our navigation here we're going to destructure out our prop or logout callback and here we create parentheses and actually you can remove this one because we're going to have an unordered list here and then we create our menu items so we have a an ally element we have a link and it's going to link to a forward slash that's our home page so we name it home and we can actually copy this one and paste it in three times and this link is going to go to protected and we type out protected and this one is going to go to register and register and the last one is not going to have a link actually it's going to have a button so we have a button with an on click handler that's going to be our prop logout callback and we can just type out log out so this is it for a navigation we save this one and see what we've got yeah we have our navigation here and as you can see it changed routes here and that's good and it also changed component here so our navigation is working and our routing is working that's nice okay so we can move on to create our content component so inside the content.js file up here we're also going to import use context that's a hook that we'll use to grab our context then we import a component that's named redirect from at reach router and we also import our user context we grab that from dot dot forward slash and it's in our app all right now we have our content component we can remove this one and create curly braces because inside of here we're going to check if our context if our state in the context the user contain our access token so we can grab that one first const user we use context that's the context hook that we imported up here then we send in our user context and this will give us our user so if we not have a user.access token we just return and we have the redirect component from the reach router library from we set that one to an empty string two and we're going to redirect them to the login because if we don't have an access token we want them to log in and we don't want to show the content here and we can also have no throw like this otherwise if we have an access token we return a div and here we can have our content so this is the content okay so this is it if you're using something like as i said apollo or something you should have that one to check if the access token has expired or not or and if it has expired you can automatically in the background grab a new access token if you still have a valid refresh token but i won't go through that here i'm not doing that here so if the access token expire it won't grab a new one from the refresh token endpoint automatically okay we save it and we can go to our start page and as you can see it's showing us the login page we don't have an access token so that's why it's redirecting us to the login page and that's great so we can actually create our login page now so make sure you're in the login.js file up here we're going to import some more stuff from react we're going to use state use context and use effect and we're also going to import navigate from at reach router and we import our user context from dot dot forward slash app all right and then we have our component here we can remove this one and create curly braces first we grab our context const user and set user equals use context and we send in our user context then we're going to have two local states for this one it's going to be one for the email and one for the password that's the input fields that we're going to have in this one so we create a const email and set email use date and it's going to be an empty string for now and then we have the password and set password equals you stayed and an empty string like so then we're going to have two functions in this one we're going to have one that's called handle submit and it's obviously going to handle the submit of the form it's going to be async and we have the event and an error function and we leave it empty for now then we're going to have one that's called handles change and this one is going to be when we type something in the input boxes and we have the event and an error function for this one also so we can start typing out our jsx that we're going to return for this one so return parenthesis we have a div with a class name of login dash wrapper we have our form that is going to have an on submit and we just call our handle submit function on that one and inside of our form we're going to have our inputs fields but first we're going to have a div with a header or maybe yeah we can actually have an h2 tag that says login and then we have an input it's going to have a value we grab that from our state email this is going to be a control component so on change we call our handles change it's going to be the type text name is going to be email the placeholder is going to be email and i think we need to have something that's called autocomplete email and we can copy all of this and paste it in below all of these will change to password play so maybe a capital p and this one i think should say current dash password so make sure you change all of these here then we of course need a submit button so below here we create a button type submit and it can say login yeah yeah and we also have to wrap these inputs in a div that's called class name login dash input so move this everything here inside of this div something like this the order formatting isn't working here now for me so i have to do it manually okay we save that one and we can see what we've got so far yeah this one shouldn't be all the way out to the edges i don't know why we look into that later okay so let's get back inside of our login.js file so first we have this handle change because when we type something here it doesn't show anything now at all so we have to hook this up to our state so we'll show the values so we have these handles change we got the event here so we can just check if the event dot current target dot name equals email then we can set email e dot current target dot value all right we just have two input fields in this one so we can just make an else here we know that otherwise it's the set password we should call e dot current target dot value so we save this one and we can see if it works and as you can see we can type something here now and that's great it works all right then we have our handle submit and this one is going to do all the job for us to grab the token from our api so the first thing we have to do inside of here is to prevent default we don't want to send the form because we want to handle this ourself then we have const result we're going to await and we await again we fetch from http colon forward slash forward slash localhost and our server is at port 4000 and we're going to hit the endpoint login then we have a coma and an object because we need to send in some stuff here also we set the method to post we set credentials to include then we have our headers and our headers is going to be content dash type application forward slash json all right so we're setting the type of our headers here and then we have our body and that is going to be json.stringify we have to make it a string and we have our email actually as it's the same here we can just type out email and the same with password and here we have dot json we call that one that's why we wait two times here first we await the fetch and then we await when we convert it to json so that will give us the result in this const here so if result dot access token if we've got an access token we can set the user so we set the access token and we grab that from the result.access token then when we have set the access token we want to navigate back to the home page else if we don't got an access token we can just console.log the result.error all right and if we want we can also create the use effect here when the users change we create a dependency array with the user and we can just console log out the user so we see what's changed inside of that one all right so we save this one and we can try it out so let's go to our application and inspect i want to look in the console we reload it you can see we have an empty object here to start with because we console log out our user state or access token state we can try to log in here then you can see we can't log out the error here and it tells us that we're not sent along a valid password and my password is going to be test and as you can see we got the access token here and now we redirected to the start page and it's showing us the content so that's good but we're not grabbing a new access token now as you can see here so it will wipe out the state every time we reload this but we'll fix this later so we store the access token in our state in the application we're not storing it in local storage or anything like that we're just having it in our application and the refresh token is being sent to the client as a protected cookie so we can't really do anything with that cookie with our javascript code so back inside our code and we can actually go inside of the app.js file and in our use effect here i can make some comment first thing get a new access token if a refresh token exists right so inside of reduce effect we're going to create an async function check refresh token so we yet again have cons result and we await and we await again fetch and this time we're going to hit our endpoint for the refresh token so localhost port 4000 forward slash refresh underscore token coma and we have an object here method post credentials this one has to be include otherwise the cookie won't be included and it won't work so needed to include the cookie we have our headers we set the content type to application forward slash json i actually think that this is the default but it won't hurt to have it here and then here dot json so we can set the user the access token we grab it from result access token so this will set it in either case because either we got an empty access token or we got the access token so it will set it to an empty string or we set it to the actual access token that we got now we can set the loading to false all right and just below here we call the check refresh token and we have to do it like this because you can't have an async use effect so you just create an async function inside of the use effect and call it like this and this means that it will just fire off this when we mount the application so this will just run one time and we can actually before we return our jsx we can actually check if loading then we just return a div ah we return a div that says loading so we save this one and we can try it out as you can see here now as i reload the page you can see that it loading flashes here so it grabs the new access token from our refresh token endpoint so that's good we don't have to log in as long as we have a valid refresh token so that's how a refresh token works as long as it's valid you can just call that endpoint with the refresh token and it will send back a valid access token for you to use in your application so that's very convenient to have that one and don't need to log in every time then we can create our logout function here as we're in this component now so we have this logout callback for this one we can just await fetch and from our localhost port 4000 we have this endpoint that's called logout and we set the method to post and we can also include the credentials like so and then this will wipe out the cookie but we also want to reset our application on the front end clear user from context set user and we just give it an empty object for this one and then we also want to navigate back to start page so navigate and forward slash right we save it and we can see if it works we log out and you can see we go to start page you can see that it redirect us to the login that means that we don't have a refresh token now because we logged out so we log in again and it's showing us the content and that's great and if we'll reload it it will grab a new access token as long as we don't log out but if we log out it wipe out the refresh token so we have to log in again all right great it works you can also see here in the console.log that the access token is just an empty string okay we can create the register component also and we can actually just copy all the code from the login component and paste it in the register component of course we're going to rename this to register and also export default register and we have to change a few things here now we're not going to need the context for this one or the use effect just to use state so we can delete these ones here and delete the context we are going to use the email and the password local state and this one we change this to register so we hit the register endpoint instead the method is going to be post credentials yeah we can try it we don't need to include the credentials here because we won't send along the cookie the headers can stay the same the body the same everything is the same here and we're not setting a user here so we can just remove this one and if result.error we can just console.log we want to know the error so console.log result message no this is actually if we don't have an error so we just can console.log out the message we get back and then we want to navigate to the front page to the home page else then we console logout the result.error all right we can remove the use effect the handles change is going to be the same and we can change this one to register instead everything else is going to be the same yeah and also this one here should say register and we save it and we can see if it works so we go to the register and you can see it changes here it's the exact same otherwise but we just changed this once here so we can just try to register without the user as you can see we can now create this is a bug here actually we can create an empty user and that shouldn't be possible so we have to check that in our api also of course but not for this tutorial okay so we just created an empty user and we can see in our console if we go to our our api here you can see that we created this one with an empty email and this password that gets generated is from an empty string and that's no good of course but if we try to create a user that's the same as already in the database it should warn us yeah user already exist and it doesn't matter if we write another password here or something but we can create maybe put a 2 there every register and you can see the user is created and we console log it out here so we can see that it gets created and is put in the database that's not the database that's our fake database maybe you should get logged in automatically when you create a user and we're actually logged in as another user now because yeah this is not a production app and i just want to show you how this stuff works now so yeah we just created the user but we logged in as another user and that's no good of course but it works we can register user and we can log in and we can log out so if we log in with the new user we created you can see first yeah it says that the password is not correct and i had the same password we can log in with that user instead so that's great okay it's working so this is how the flow is when you send tokens to your client and to your api and yeah it's very convenient that you don't have to log in all the time and you can just have these tokens that will simplify everything for you that will simplify everything for your user it's not simple to do this stuff actually okay so we have one more thing to do we have to create a protected route to show you how you can protect data and use your token to get that data yeah and i just realized why our css isn't working as it should and that's because if we move inside of the app.js file the class name is a capital a here on app so just change that one to a lowercase a and save it and it should work yeah it's a little bit nicer now you can see it looks more like a regular login form now and yeah it's centered and the nice stuff like that so yeah that's great move back inside of the protected.js file for this one we are going to need the use effect the use state and the use context we're also going to import the user context from dot dot forward slash app and we can remove this one and create curly braces so we have the const user and we use context and send in our user context then we create the local state content and set content you state and we give it an initial string of you need to login and of course there's many ways of doing this so this is just one way to show you a simple solution how we can get the protected data and show it in our component then we're going to have a use effect and this one is going to fire off when the user changes so we create an async function that's called fetch protected we have yet again the constant result we await and we await again the fetch and from our localhost forward slash protected we are going to grab our data we have a method of post the headers are going to be content type application forward slash json then we have authorization and this is really important here we stand along this property here that's called authorization we give it a string we have backticks here now with a beer and then we give it the user access token and it with the backtick so this is the standard of sending your access token you have this bearer in front of the access token so that's what we stripped away in our api when we get the access token and we actually can look at it here up here you see we get the token by splitting authorization and we get an array with the values and the value at the index one is going to be our access token so we remove the bearer this way or the bearer beer beer yeah i really don't know how you pronounce that um yeah so yeah it may be wrong but i hope you understand what i mean so that's how we send along the access token and down below here we just convert it to json and then if result.data if we get some data back we set the content with result.data and here we have to call or fetch protected down below here we just return a div with the content so obviously this is not going to change if we don't get any data we're just displaying you need to log in otherwise we display the data we get back so we can save this one now and see if it works yeah you see we could log in now with not a user or a password because we created a completely empty user and you shouldn't be able to do that but we logged in now and we can see if the protected works no it doesn't work actually so we have to figure out why yeah and i've done it again i can see here now there should be an s there i missed that again i think that's the third or fourth time in this tutorial so it's really easy to do something like this especially when you sit there and record everything and i'm going to show you this stuff so yeah make sure you have an s on the headers so i try to log in and i go to the protected route and it says this is protected data so that's good that's fine it was just that little s that messed everything up here that's the beauty of coding one little small typo can ruin everything for you so as you can see we're getting the protected data because we send along the access token here so that's how you protect data with your api and you need a user to send along the access token to get the data so this is it actually maybe it seems a little bit much and yeah it is authorization and authentication is really advanced stuff so it should be a lot i think i actually find it a bit hard to explain also because it's a very advanced topic and i hope you learned something from it i will appreciate if you want to subscribe to my youtube channel and you can also add me at twitter at wabenfalk i also got a few premium courses in react out there they're on my own platform www.webenfarc.com and i have a few on udemy also now but i'm going to move them to my own platform in the future so hope you enjoyed it see you in another one

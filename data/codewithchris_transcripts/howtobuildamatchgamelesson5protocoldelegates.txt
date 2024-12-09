@@ -1,0 +1,687 @@
+00:00 - hey welcome in this video you're gonna
+00:01 - learn about special communication
+00:03 - pattern that the collectionview uses to
+00:05 - talk to the view controller and this is
+00:07 - very important because we're going to be
+00:09 - using this concept and all of the apps
+00:11 - that will be building together
+00:12 - furthermore it's not just the collection
+00:14 - view that uses this pattern but there
+00:16 - are many other elements in UI kit that
+00:19 - do the same thing now I'm gonna warn you
+00:21 - it may be a little bit hard to
+00:23 - understand at first but I'm gonna use a
+00:25 - lot of examples and analogies and I
+00:27 - highly recommend that at the end of this
+00:29 - video you download that worksheet and
+00:31 - you try out the examples and get some
+00:33 - hands-on training
+00:34 - alright enough talking let's do this
+00:36 - first let me illustrate what the problem
+00:39 - is so far we've mostly been adding user
+00:41 - interface elements to the storyboard and
+00:43 - then connecting them to iboutlet
+00:45 - properties in the view controller so
+00:47 - that the view controller can reference
+00:49 - them and manipulate them for example if
+00:52 - the view controller needs to disable the
+00:54 - button after the user submits a form it
+00:56 - has the submit button iboutlet property
+00:59 - to do so all of this communication is
+01:01 - one-way the view controller instructs
+01:04 - the elements to do things the v
+01:06 - controller knows about the UI text field
+01:08 - class and knows about the UI label class
+01:10 - it knows about the UI button class and
+01:13 - it knows that this UI button class has a
+01:15 - property called enabled that it can set
+01:17 - to false if it wants to disabled that
+01:19 - button now let me ask you a question
+01:22 - what if the UI button needed to ask the
+01:25 - view controller for some information how
+01:27 - do we make that communication two-way
+01:29 - the UI text field UI label and UI button
+01:33 - classes are all UI kid classes so as
+01:36 - we're coding the view controller class
+01:38 - we know about all of these UI kid
+01:40 - classes and all of the methods and
+01:42 - properties that they contain so we can
+01:44 - have our view controller class call on
+01:46 - these properties and methods of these UI
+01:48 - kid classes however the reverse isn't
+01:52 - true
+01:52 - the UI text field UI label and UI button
+01:55 - knows nothing about the view controller
+01:57 - class they don't even know that this
+01:59 - class exists furthermore we're able to
+02:02 - create custom classes as you saw in the
+02:04 - last lesson the UI text field UI label
+02:07 - and UI button wouldn't know about those
+02:08 - either let's use a more concrete example
+02:11 - in the last lesson we
+02:13 - up our project and right now it looks a
+02:15 - little like this the view controller has
+02:18 - a reference to the UI collection view
+02:20 - element through the IBL elec property so
+02:22 - it can manage and manipulate the
+02:24 - collection view however the way that the
+02:27 - UI collection view class works is that
+02:30 - it only displays enough information to
+02:32 - fill up the screen so for example if you
+02:34 - had a thousand pieces of data to show
+02:36 - and only three would fit on the screen
+02:38 - the collection view would only show
+02:40 - three it does this for performance
+02:43 - reasons if it displayed all 1,000 even
+02:46 - if only three were visible chances are
+02:48 - your phone would be very slow and
+02:50 - sluggish as it starts to run out of
+02:52 - memory when the user starts to scroll
+02:54 - the collection view it is at this point
+02:56 - the collection you would ask for the
+02:58 - next three pieces of data this means
+03:01 - that the UI collection view element
+03:02 - needs a way to ask the view controller
+03:05 - for the next three pieces of data but
+03:08 - the problem is the UI collection view
+03:11 - class doesn't know about the view
+03:13 - controller class so this is the problem
+03:15 - how will the UI collection view ask the
+03:18 - view controller for data even if it
+03:20 - doesn't know anything about the view
+03:21 - controller class well let me tell you
+03:24 - how by using an analogy let's say that
+03:27 - there's a police officer who stumbles
+03:29 - upon a crime and she needs to call it in
+03:32 - so she grabs her radio connects to a
+03:34 - dispatcher and tells the dispatcher some
+03:36 - codes to indicate what sort of crime it
+03:38 - is the dispatcher understands the codes
+03:41 - and dispatches the necessary emergency
+03:43 - vehicles let's examine this scenario
+03:46 - when the officer connects to a
+03:48 - dispatcher she doesn't care who is on
+03:50 - the other line she doesn't know that
+03:52 - dispatchers name gender height and
+03:54 - weight none of it matters the only thing
+03:57 - that matters is that the dispatcher
+03:58 - knows the protocol what is the protocol
+04:01 - well in this case it's a set of
+04:03 - predefined codes that can be used for
+04:05 - communication so when the officer tells
+04:08 - the dispatcher we've got a 902 she
+04:11 - expects the dispatcher to understand
+04:13 - this code and react to it accordingly it
+04:16 - works because they are both following
+04:18 - the same protocol let's label the
+04:20 - scenario with some iOS terminology now
+04:24 - we've already established that there is
+04:25 - a protocol
+04:26 - let's say that there's an officer class
+04:29 - too and this officer is an instance of
+04:31 - that class the officer has a radio right
+04:34 - this radio represents the property that
+04:37 - the officer class uses in order to have
+04:39 - a reference to the other party in this
+04:42 - communication pattern and in case you
+04:44 - forgot you learned all about properties
+04:46 - back in module one now again the officer
+04:49 - has a radio property that references
+04:51 - another object on the other end of the
+04:53 - line the officer doesn't care what or
+04:56 - who this object is it can be a person it
+04:59 - can be a dog a cat and a lien as long as
+05:01 - it conforms to the protocol and
+05:03 - understands the codes then it's all good
+05:05 - this other party is called the delegate
+05:08 - so the property on the officers side is
+05:12 - sometimes called the delegate property
+05:14 - let's run through this scenario again
+05:16 - this time using iOS terminology the
+05:19 - officer object discovers a crime and
+05:21 - then uses its delegate property to
+05:23 - report the crime the delegate property
+05:26 - references another object which is an
+05:28 - unknown class type however this class
+05:31 - conforms to the protocol the protocol
+05:34 - lists some methods and properties that
+05:36 - can be used for communication the police
+05:39 - object uses one of these methods and
+05:41 - calls it on the object that is
+05:43 - referenced by the delegate property
+05:46 - since the delegate object conforms to
+05:48 - the protocol it has implemented all of
+05:51 - the required properties and methods that
+05:53 - has been outlined by the protocol this
+05:56 - is how the officer object can call a
+05:58 - method on the delegate object even
+06:00 - though it doesn't know what class type
+06:02 - it is the officer object knows that as
+06:04 - long as the delegate object conforms to
+06:06 - that protocol it is sure to have the
+06:09 - methods and properties listed in the
+06:11 - protocol so here I've got a brand new
+06:14 - playground and all I've done is declare
+06:16 - two empty classes to represent the two
+06:18 - parties in the communication pattern
+06:20 - following the diagram that we just
+06:23 - talked about the officer which is going
+06:25 - to report the crime to the dispatcher
+06:27 - which is going to listen for the codes
+06:30 - and then go do something with it so
+06:32 - first of all what's missing here is the
+06:34 - protocol that these two parties are
+06:36 - going to use to communicate so
+06:40 - as establish a protocol and the key word
+06:42 - to use there is simply protocol and we
+06:45 - have to give this protocol a name so I'm
+06:48 - just going to call it police codes so
+06:54 - pardon my ignorance if you actually are
+06:57 - a police officer you are probably just
+06:59 - laughing your head off at me right now
+07:01 - anyways in this protocol called police
+07:04 - codes I am going to have a method inside
+07:08 - called let's use the example that we
+07:12 - used earlier in the diagram I'll just
+07:14 - name this 9:02 like that and we are not
+07:18 - actually implementing this function here
+07:21 - right in the protocol that's the job of
+07:23 - the dispatcher who is going to conform
+07:26 - to that protocol so all you need to do
+07:27 - is just list out in this protocol that
+07:30 - anybody who follows this police codes
+07:34 - protocol will need to implement this
+07:36 - method now as we talked about before in
+07:39 - our analogy the police officer class has
+07:43 - a delegate property and this delegate
+07:45 - property references the other party in
+07:48 - this communication so in this officer
+07:50 - class we are going to create a delegate
+07:53 - property and most of the time you are
+07:56 - going to be naming a delegate but in
+07:59 - this case because I want to make it very
+08:01 - very clear and follow that analogy that
+08:04 - I use I'm actually going to call this
+08:06 - radio just so you remember that this
+08:08 - property references the object on the
+08:11 - other end of the line so the funny thing
+08:13 - is that a protocol like this one police
+08:16 - codes is also considered a type so we
+08:19 - can say that this property this radio
+08:21 - property here is going to be a type of
+08:23 - police codes and furthermore because we
+08:27 - don't know if there's going to be anyone
+08:29 - at the other end of the line when the
+08:31 - officer tries to use the radio this has
+08:33 - to be able to return nil and you learned
+08:36 - in the optionals lesson that you can
+08:39 - specify this property is an optional by
+08:41 - using the question mark so this property
+08:45 - may reference nothing or it may
+08:47 - reference an actual object that conforms
+08:50 - to the police codes protocol
+08:53 - okay so now that we have our officer
+08:56 - class with a delegate property we are
+08:59 - going to create a function or a method
+09:01 - here and when this method is called it
+09:03 - is going to call in the 902 code via the
+09:08 - radio so we are going to call this one
+09:10 - maybe we'll just say call it in that's
+09:15 - my method name and inside this method
+09:17 - name we are going to say radio dot 902
+09:24 - and remember this radio is a property
+09:28 - that references some object that
+09:30 - conforms to police codes and sends
+09:33 - police codes lists this method we know
+09:36 - that whoever is on the other line will
+09:39 - have this method and this question mark
+09:42 - here is just called optional chaining
+09:43 - what happens is that when we try to call
+09:46 - this method if it happens that the
+09:48 - radial property is nil then this is not
+09:51 - going to crash however if there is an
+09:53 - object that the radial property is
+09:55 - referencing then it's going to attempt
+09:57 - to call 902 on that object so now why
+10:02 - don't we create our objects and try to
+10:04 - facilitate the communication so let's
+10:08 - use I'm going to say VAR o stands for
+10:10 - officer and I'm going to create a new
+10:13 - officer object I'm going to say var D is
+10:16 - equal to a dispatcher object and
+10:19 - actually we can use the let keyword and
+10:22 - we can use constants because these
+10:24 - aren't going to be changing and next
+10:27 - what we have to do is we have to set our
+10:29 - dispatcher object as the person on the
+10:33 - other end of the radio for this officer
+10:36 - so we are going to say o dot radio is
+10:40 - equal to D unfortunately we are going to
+10:44 - get an error
+10:45 - we can't assign this dispatcher object
+10:48 - to the radio property and the reason is
+10:51 - because we've never said that the
+10:54 - dispatcher class conforms to the police
+10:57 - codes protocol and if it doesn't conform
+11:00 - to the police codes protocol we cannot
+11:02 - set it to this property here
+11:05 - because as we stated here with the
+11:07 - datatype whoever sets itself to the
+11:10 - radio property must conform to police
+11:12 - codes so how do we get the dispatcher
+11:15 - class to conform to the police codes
+11:17 - protocol well what we have to do is use
+11:20 - this notation and you might recognize
+11:23 - this from the inheritance lesson you use
+11:27 - : and then you put in the name of the
+11:30 - protocol there and just like that we are
+11:32 - able to say that the dispatcher class
+11:35 - conforms to this protocol Xcode asks us
+11:38 - to double check it says that dispatcher
+11:40 - does not conform to that protocol
+11:43 - because we haven't implemented all of
+11:46 - the required methods and properties of
+11:49 - that protocol all right so that's what
+11:51 - we have to do in here we have to say we
+11:56 - have to actually implement this and
+11:57 - let's say that the dispatcher when it
+12:01 - receives a 902 code it's going to print
+12:05 - you know something 902 received and
+12:09 - handled or something like that and so
+12:13 - now this line is valid we can set this
+12:16 - dispatcher object to the radio property
+12:19 - and now when we call the collet in
+12:22 - method you can see that the dispatcher
+12:25 - has received that code and it has
+12:28 - printed out this statement now take a
+12:31 - look at how cool this is because in the
+12:33 - officer class there is no reference to
+12:37 - the dispatcher class right the officer
+12:40 - class has no idea that this dispatcher
+12:44 - class even exists the reason that the
+12:47 - officer class can communicate to the
+12:50 - dispatcher class is all because of the
+12:52 - protocol and delegate pattern so just to
+12:54 - walk through this again we have an
+12:56 - officer object we have a dispatcher
+12:59 - object we are setting the dispatcher
+13:01 - object to the delegate property of the
+13:03 - officer object and because the
+13:05 - dispatcher object conforms to the police
+13:08 - codes protocol the officer object even
+13:11 - though it has no idea about the
+13:13 - dispatcher class and what methods or
+13:15 - properties might be in the dispatcher
+13:16 - class it knows at least
+13:18 - the dispatcher class has all of the
+13:21 - things that are listed in the protocol
+13:23 - now might still be hazy to you but we
+13:26 - are going to implement this in the match
+13:29 - app and then there's also a worksheet
+13:31 - for you to run through some exercises to
+13:33 - wrap your head around this whole
+13:35 - protocol and delegate thing and it's
+13:37 - actually a very important pattern
+13:38 - because a lot of the classes in UI can
+13:40 - use this pattern to communicate with
+13:42 - other classes without knowing about them
+13:45 - alright let's go back to our Xcode
+13:47 - project and see how the UI
+13:49 - collectionview uses the protocol and
+13:51 - delegate pattern alright so here we have
+13:54 - our Xcode project and as you can see we
+13:56 - do have this collection view in our
+13:58 - storyboard and as it turns out we
+14:01 - actually do not have an iboutlet
+14:03 - property referencing that collection
+14:05 - view yet so we have to do that
+14:07 - connection let's go to the assistant
+14:10 - editor go back to the storyboard on the
+14:13 - left hand side we should see this
+14:14 - document outline and you can always hit
+14:17 - this button to expand or collapse it on
+14:19 - the right-hand side you should be seeing
+14:21 - the view controller without Swift and
+14:23 - just a double check you can click this
+14:25 - little breadcrumb and go to automatic
+14:26 - and go to view controller if you have
+14:29 - this part highlighted if you have some
+14:32 - element highlighted in there if you go
+14:34 - to automatic it should select the right
+14:36 - corresponding complementary file all
+14:40 - right so we are going to highlight
+14:42 - collection view hold down ctrl and click
+14:45 - and drag it just right there and I'm
+14:49 - going to call this the collection view
+14:50 - so now we have an iboutlet property
+14:54 - let's go back to the view controller
+14:57 - here and if I moved a little faster I
+15:00 - just click this button to go back to the
+15:02 - standard editor alright so now that we
+15:05 - have this collection view let's take a
+15:07 - look at the uikit documentation for this
+15:09 - class and i want to show you the
+15:11 - protocol that it uses and also the
+15:14 - delegate property if you hold down
+15:16 - option on your keyboard you're gonna get
+15:18 - this question mark as you learned in
+15:20 - module 2 and you can jump to the class
+15:23 - reference now right here it jumped to
+15:26 - the UI collection view delegate but
+15:28 - let's go up here
+15:31 - is what I wanted the class documentation
+15:33 - for UI collection view now scrolling
+15:37 - down a little bit to where we see all of
+15:39 - the properties and methods of this class
+15:43 - you can see that here is the delegate
+15:47 - property for the class and here is the
+15:50 - type basically the protocol that's
+15:53 - associated with this delegate property
+15:55 - and this protocol is called UI
+15:57 - collection view delegate down here you
+15:59 - can actually see that listed here and if
+16:02 - you click into it you're going to see
+16:04 - all of the methods and properties that
+16:06 - are in that protocol now I just want to
+16:09 - mention that a lot of these are actually
+16:11 - optional so if the delegate doesn't
+16:14 - handle the optional methods it's fine it
+16:17 - nothing's going to happen but there are
+16:19 - a couple that are absolutely required
+16:21 - and I will go through those when we
+16:24 - actually implement it in Xcode now it's
+16:27 - hard to tell actually which ones are
+16:29 - required and which ones are optional
+16:31 - from this documentation but just based
+16:34 - on my experience I know which ones are
+16:36 - required and also when you state that
+16:38 - your class conforms to this protocol if
+16:40 - you haven't implemented one of the
+16:43 - required methods it's going to let you
+16:46 - know so you're going to get an error so
+16:48 - that's kind of through this trial and
+16:51 - error you're going to understand which
+16:53 - ones are required if we go back for a
+16:56 - second into the UI collection view
+16:58 - actually I want to point out that there
+17:01 - are two protocols where were we here
+17:04 - right here there are actually two
+17:07 - protocols that the UI collection view
+17:09 - class uses to communicate with other
+17:11 - classes in that second protocol is this
+17:14 - one UI collection view data source so
+17:17 - the collection view uses this protocol
+17:19 - to ask for the data source to power that
+17:22 - grid layout right for the items to
+17:24 - display in that grid and for this
+17:27 - protocol the UI collection to delegate
+17:29 - this one is for the collection view to
+17:32 - let other classes know when certain
+17:34 - events happen such as the user selecting
+17:37 - a cell in the grid so as such there are
+17:40 - actually two delegate properties with
+17:42 - the UI collection view class the first
+17:44 - one is this one
+17:44 - we already went over this property is
+17:46 - called delegate so whoever is assigned
+17:49 - to this delegate property must conform
+17:52 - to this protocol and that object will
+17:55 - get notified when certain events happen
+17:57 - in the collection view such as the user
+17:59 - tapping on a cell now someone else it
+18:03 - could be the same object needs to assign
+18:05 - itself to this other delegate property
+18:07 - called datasource now don't get fooled
+18:09 - that this property is called data source
+18:11 - and not delegate because in our police
+18:14 - officer example our delegate property
+18:16 - was called radio so this one's called
+18:19 - data source whoever assigns itself to
+18:22 - data source must conform to the UI
+18:24 - collectionview data source protocol and
+18:26 - the collection view we'll be asking this
+18:29 - object for data to show in the
+18:32 - collection view so for our match app we
+18:36 - are going to be assigning the view
+18:37 - controller to both the data source
+18:39 - property and the delegate property and
+18:42 - as a result our view controller needs to
+18:45 - conform to both of these protocols
+18:47 - okay so let's jump back into our view
+18:50 - controller class and make this happen so
+18:53 - first of all if you remember back from
+18:56 - the playground in order to state that
+18:58 - your class conforms to a protocol use
+19:01 - this : and then you state the protocol
+19:03 - named after it so right here we actually
+19:06 - have a superclass because the view
+19:09 - controller is a subclass of UI view
+19:10 - controller that's completely okay
+19:12 - because what we can do is we can put
+19:14 - comma and then we can do UI collection
+19:18 - view delegate comma UI collection view
+19:21 - datasource and like this you can
+19:24 - actually have your class conform to
+19:26 - multiple protocols and at the same time
+19:28 - be a subclass of another class now Xcode
+19:31 - is going to complain right away because
+19:33 - it detects that we state that we conform
+19:35 - to these two protocols yet we haven't
+19:37 - implemented the required methods for
+19:40 - those protocols yet before I do that
+19:43 - though there's one step that we need to
+19:45 - take care of because oftentimes I still
+19:48 - forget this sometimes so I usually try
+19:51 - to do it as soon as I can and that is
+19:53 - setting the view controller as the
+19:56 - delegate
+19:57 - for the collection view we can do that
+19:59 - in the viewdidload method here so we
+20:03 - have a reference to collection view
+20:04 - let's access the delegate property and
+20:08 - let's assign the view controller which
+20:10 - we can use the self keyword for and
+20:12 - assign that to delegate remember I said
+20:17 - that we're going to assign the view
+20:18 - controller to the datasource as well so
+20:20 - let's set the datasource property also
+20:23 - to self so if you're confused about this
+20:26 - part remember back in the playground
+20:28 - with the officer example we had created
+20:30 - an officer object and a dispatcher
+20:33 - object and then we had set that
+20:35 - dispatcher object to the radial property
+20:37 - of the officer right so we're doing the
+20:40 - same thing here we're setting the view
+20:41 - controller to the delegate and the
+20:43 - datasource properties of the collection
+20:46 - view so when the collection view needs
+20:49 - data it is going to communicate with the
+20:52 - view controller through the methods
+20:54 - stated in this protocol and when the
+20:58 - collection view needs to notify another
+21:00 - class about events happening to the
+21:02 - collection view such as a user tapping
+21:04 - on the grid it's going to tell whoever
+21:07 - is assigned to the delegate which is the
+21:10 - view controller and it's going to
+21:11 - communicate through the methods listed
+21:13 - out in this protocol alright so now it's
+21:16 - time to get rid of these errors here we
+21:18 - need to implement the methods that are
+21:21 - required in these two protocols so
+21:23 - usually what I like to do is create a
+21:25 - separate section for these sort of
+21:27 - protocol methods and you can do that by
+21:30 - using this mark keyword and it's
+21:32 - basically a comment I'm going to call
+21:35 - this the UI collection view protocol
+21:40 - methods and you can see what happens
+21:44 - when you pull down this kind of jump
+21:46 - list to all of the properties and
+21:48 - methods that you see this section header
+21:50 - here and this is created by this line
+21:53 - here so it's a quick and easy way to
+21:56 - organize your code within a class we're
+21:59 - going to start by implementing the
+22:01 - required methods of the datasource
+22:03 - protocol first so one of them are the
+22:07 - number of items in SEC's
+22:09 - so the collectionview is actually going
+22:12 - to ask its delegate for the number of
+22:17 - data items that it needs to display and
+22:19 - this is the method that it does it
+22:21 - through so that's why in the side the
+22:23 - view controller we must implement this
+22:25 - method we basically have to return a
+22:28 - number for the number of items that are
+22:30 - going to get displayed that's really
+22:32 - easy for us because we have actually
+22:34 - gotten the cards from the model and set
+22:37 - it into card array so all we need to do
+22:39 - is return a card array dot count okay
+22:46 - and another one that we have to
+22:48 - implement is when the collection view
+22:51 - asks the datasource which is our view
+22:54 - controller for new data to display for
+22:56 - actually for each individual cell that
+22:59 - it needs to display so this method is
+23:02 - actually called you can't even see the
+23:05 - whole thing but it's this one right here
+23:07 - if you just start typing cell four
+23:10 - you're usually going to get the right
+23:12 - one let me show you that again so you
+23:17 - can see that kind of highlighted there
+23:18 - if you double click that this is the
+23:21 - cell for item at index path in the index
+23:24 - path basically describes which sell the
+23:27 - collection view is asking for it comes
+23:29 - with two different parameters a section
+23:31 - in a row so the section is usually just
+23:34 - the first section unless you have
+23:35 - multiple sections in a collection view
+23:38 - which you can have and the second
+23:40 - property is a row which is almost like
+23:43 - an index in an array so if it were
+23:46 - trying to display the first item and you
+23:49 - only have one section in your collection
+23:52 - view this section would be 0 and the row
+23:54 - would be 0 as well and what you need to
+23:57 - return is a UI collection view cell
+24:00 - object which is basically a cell in your
+24:02 - collection view so what we can do in
+24:04 - here first of all let's create a
+24:07 - constant so we can assign our cell to it
+24:11 - and then at the end here we are going to
+24:13 - just return that cell so the collection
+24:16 - view actually has a method called DQ
+24:19 - reusable cell
+24:22 - with reuse identifier for index path and
+24:25 - this method will basically try to get a
+24:27 - cell that it can reuse maybe a cell
+24:30 - that's scrolled out of view or it will
+24:33 - create a new one so the type of cell
+24:36 - that it's going to create is based on
+24:37 - this reuse identifier and where is this
+24:40 - identifier well if you remember back in
+24:43 - our storyboard when we created this card
+24:45 - cell right here
+24:47 - and if we went to the properties here we
+24:50 - gave it a identifier we called it card
+24:53 - cell so when we put in this identifier
+24:56 - to that DQ method it is going to try to
+25:00 - get an existing card cell which has been
+25:04 - scrolled out of view and is no longer
+25:05 - visible so that it can reuse it or it's
+25:08 - going to create a brand new one so
+25:10 - either way we're gonna get a cell back
+25:11 - so inside here this reuse identifier
+25:15 - parameter we are going to put in card
+25:17 - cell and for index path we are just
+25:21 - going to pass in this index path that it
+25:24 - was asking for and we get back a cell
+25:28 - now how do I know this method returns a
+25:31 - UI collectionview cell well let me show
+25:34 - you when you use dot notation and you
+25:37 - hit dot right there this left part tells
+25:42 - you the return type of calling this
+25:46 - method so when you call this method DQ
+25:48 - reusable cell you're going to get back
+25:50 - an object of type UI collection view
+25:53 - cell all right so that's how you know
+25:56 - let me just undo there you go
+26:00 - and so that's why this constant cell is
+26:04 - going to be pointing to a UI collection
+26:06 - view cell object and then we can simply
+26:08 - return that cell all right so now as for
+26:12 - the second protocol that we have to
+26:15 - implement there is not required but
+26:18 - optional and we will need it it is did
+26:22 - select item at so I've been talking
+26:27 - about this throughout this video this
+26:29 - event happens when the user taps on a
+26:33 - cell in the grid so we're going to want
+26:35 - to capture that
+26:35 - I'm just going to leave this as a to do
+26:37 - right now or empty but this protocol
+26:41 - method is part of the UI collection view
+26:46 - delegate protocol which is this guy
+26:51 - right here all right so let's run our
+26:55 - app right now
+26:57 - so hopefully what we will see is a grid
+27:00 - of cards so while that's similar loads
+27:04 - let me just remind you of what we did in
+27:05 - this card model here see in the gate
+27:09 - cards method we had randomly generated
+27:12 - eight pairs of cards that means there
+27:14 - are 16 cards when we go into the view
+27:18 - controller and the collection view asks
+27:20 - for the number of items we are going to
+27:24 - return card array count which is going
+27:27 - to be 16 and so this one this one where
+27:32 - it asks for the cell is actually going
+27:34 - to be called 16 times 1 for each cell
+27:37 - that it needs to display all right so it
+27:41 - did load up and you can kind of see the
+27:43 - white background of the collection view
+27:44 - but we can get rid of that so you can
+27:48 - see right there there are 16 4 rows of 4
+27:54 - so hopefully you got this result too if
+27:57 - you didn't I would just double-check
+27:59 - that you remembered these two lines
+28:02 - because it's very important to set the
+28:05 - view controller as that object that the
+28:08 - collection view should contact for any
+28:10 - events that happen in the grid as well
+28:13 - as for the data that is going to power
+28:17 - the grid and if you do have these two
+28:19 - lines and it's still not showing
+28:20 - anything what I would do is just double
+28:22 - check that model dot get cards is in
+28:24 - fact returning some card objects into
+28:27 - the card array it could be that your
+28:29 - card array is empty and that's why
+28:30 - you're not seeing anything in the grid
+28:32 - and actually one more improvement we
+28:34 - could do is probably just call get cards
+28:38 - before assigning the collection view
+28:40 - delegate and data source
+28:46 - so what do you think was it easier or
+28:49 - was it harder than you thought either
+28:51 - way I would highly recommend that you
+28:53 - download that worksheet to practice this
+28:55 - concept in that worksheet you'll be
+28:58 - implementing the collection view in a
+28:59 - demo project if you do the worksheet and
+29:02 - you still don't understand it please
+29:03 - leave a comment below telling me which
+29:05 - part confuses you or what you're having
+29:07 - trouble with and I'll jump in to clarify
+29:09 - or maybe a fellow student will lastly if
+29:12 - you like this video and you want to see
+29:13 - more please consider subscribing by
+29:15 - hitting that red subscribe button below
+29:17 - and if you want to get notified when new
+29:19 - videos come out remember to hit that
+29:21 - Bell icon as well ok thanks for watching
+29:23 - and I'll see you in the next lesson

@@ -1,0 +1,557 @@
+With timestamps:
+
+00:00 - Hi.
+My name is Jordan Lynch.
+00:02 - I'm very happy to be offering you this
+series on behalf of Code with Chris.
+00:07 - So the title of this series is iOS.
+00:09 - Concurrency is much, much more.
+00:12 - It's a six part series where I'll
+00:14 - introduce you to JSON,
+decoding and creating models from JSON,
+00:19 - building an API service to perform
+asynchronous network calls to fetch
+00:23 - that JSON,
+we'll go through the traditional
+00:27 - completion handler based URL functions,
+handling and reporting errors.
+00:31 - Along the way.
+00:32 - There are a lot of topics covered,
+00:34 - as my intention is to provide you
+with methods and understanding that you'll
+00:38 - be able to apply to your own
+projects both now and in the future.
+00:43 - In this first video,
+we'll focus on creating our models
+00:46 - from the JSON and an API
+service to handle the process.
+00:50 - We'll create a generic function to handle
+the different API endpoints and models
+00:55 - and use a result based completion
+handler with our own designed API error.
+01:01 - If this is something you're interested in,
+then let's get started.
+01:06 - First create a new Xcode iOS app project
+and make sure it's a Swift to I project
+01:12 - and name it something
+like iOS concurrency.
+01:18 - I always like to add an app icon
+and launch screen to my app so that they
+01:21 - are easily recognizable
+in the simulator or on my phone.
+01:24 - If I install it there, I provided you
+with some resources for this project.
+01:29 - With these two items already created,
+01:32 - you can find those in the link
+and in the description below.
+01:38 - So go to the Assets folder of your project
+01:41 - and drag the Launch Screen
+image into that folder.
+01:47 - Next, select your Apps Target
+01:51 - and then the Info tab to see
+the new iOS 15 Info P list.
+01:58 - Drop down the Disclosure icon
+02:00 - on the Launch screen, then click
+on the plus icon and Select Image Name.
+02:07 - Make sure that you enter the image name
+02:09 - with the lowercase L and uppercase S,
+but don't enter the PNG extension.
+02:18 - Next.
+02:19 - Right click on the App icon in the Assets
+folder and choose Show in Finder.
+02:28 - Bring up that provided Resources folder
+once more and move the App icon App icon
+02:34 - set into that folder,
+replacing the empty one.
+02:37 - We've just installed
+the icon and launch screen.
+02:44 - If you run your app now in the simulator
+02:47 - when it launches, you should
+see that Launch screen.
+02:51 - If you exit the app or quit and check
+02:53 - the Simulator's home screen,
+you'll see that icon on your app.
+03:00 - This project is going to be using the JSON
+Placeholder API to fetch and decode JSON.
+03:09 - This API has a number
+of endpoints that you can use.
+03:13 - One of them is the user's endpoint where
+03:16 - we can fetch JSON corresponding
+to ten different users.
+03:19 - As you can see from this JSON here,
+03:25 - let's take a look at the post endpoint.
+03:29 - Users are able to create posts as you can
+see from this endpoints JSON and there are
+03:34 - 100 of them corresponding to ten
+for each of the ten different users.
+03:40 - What we'll need to do is to create
+a struct that will model that JSON.
+03:45 - And that's why we often call these
+structs that represent something a model.
+03:50 - I have created a couple of YouTube videos
+on modeling data from JSON,
+03:54 - and there are a number of tools
+available to you to do that as well.
+04:00 - The tool that I use a lot is
+one called Ducky Model Editor.
+04:05 - However, many people are happy
+with a free webpace tool called Qwikype.
+04:12 - These tools are particularly useful if you
+04:14 - want to model really complex objects
+that have nested JSON,
+04:18 - our two are relatively simple,
+so I want to model them by hand.
+04:23 - So first let's create
+a new group called Models.
+04:29 - Next, create a new Swift file called User.
+04:36 - Now I'm going to want to reference
+the user's endpoint,
+04:39 - so I'll need to go back and copy that URL,
+and then I can paste it as a comment
+04:45 - at the top of my struct so that I
+have quick reference to it.
+04:49 - Well, now with that file created,
+04:51 - I'm going to create that struct, and I'm
+going to call it the same name user.
+04:57 - Now for the user,
+04:58 - I'm really only interested in modeling
+the ID name, username and email.
+05:05 - And since these are all top level keys
+05:07 - in the key value pairs of this JSON,
+we can simply create properties that use
+05:12 - the same name and the ID will be an Int,
+and the other three are strings.
+05:19 - Now, since we're only going to be reading
+this information and not modifying it,
+05:23 - we can create the properties
+as constants using lead.
+05:29 - Now, in order to decode this JSON,
+05:31 - the model has to conform
+to the quotable protocol.
+05:35 - And because each one of these properties
+are simple types that conform
+05:39 - to the quotable protocol already
+the entire struct wheel too,
+05:43 - so we can Mark it as conforming
+to quotable protocol.
+05:48 - We're also going to want to present our
+users in a list view,
+05:51 - and it's much easier to do if the Struct
+conforms to the identifiable protocol.
+05:56 - And the only requirement for that is
+05:58 - that there is a unique property called ID,
+and we already have that.
+06:05 - So let's do the same now
+for the posts JSON endpoint.
+06:10 - First, let me copy the endpoint
+06:12 - for the postural so that I
+can use as a reference.
+06:19 - And then I want to create
+a new file called Post.
+06:23 - And in that file I can paste that URL as
+a reference for our new model Struct.
+06:37 - Now this URL gets all the posts,
+06:40 - but what I want to know as well is how do
+I get the post for just one user? So let
+06:44 - me return to the API documentation
+to find that endpoint.
+06:51 - Here it is,
+and this is the one that I want.
+06:54 - So let me copy and paste
+that URL in as well.
+07:01 - Now I can create a new
+Struct using that same name
+07:07 - for the posts.
+07:08 - I want to model all four properties here,
+and they are all top level as well.
+07:13 - So fairly easy to do,
+07:15 - just creating our properties using the
+same names as the key values in our JSON.
+07:21 - And again, since we'll be reading this
+07:23 - information only and not modifying it
+will create it using lips as constants.
+07:30 - Both the user ID and ID are INTs,
+while the title and body are strings.
+07:37 - The user ID property corresponds
+to the ID property in our user model.
+07:44 - The ID, though, is the unique
+property for this particular model.
+07:48 - And again, in order to decode the JSON,
+07:51 - the model has to conform
+to the quotable protocol.
+07:54 - And because each of these properties are
+07:56 - simple types that conform to the quotable
+protocol, the entire Struct will too.
+08:03 - And with the ID property being here,
+08:05 - we can conform the struct itself
+to the identifiable protocol.
+08:12 - Now I have an entire series on JSON
+decoding, and it covers this as well as
+08:18 - how to decode and encode your data,
+which we'll be going over soon.
+08:22 - I'll leave a link here in the notes below.
+08:29 - Now I want to create a Struct that I can
+use as a service that I can call
+08:34 - from a variety of different
+views to fetch our data.
+08:37 - Whether that be an array
+of user or an array of posts.
+08:41 - Now, there are a number of ways to do
+this, and you may have heard
+08:45 - of a Singleton, but it gets a lot of bad
+press about not being able to test.
+08:50 - Well, we're not going to be running any
+unit tests on this project,
+08:53 - but let's start right now by creating good
+habits, and anytime we want to access
+08:58 - that service, we'll create
+a new instance of the service.
+09:03 - So I'm going to create
+a group called Services.
+09:06 - And even though there's only going to be
+09:07 - one service that I create,
+I want to keep my code organized
+09:13 - inside that folder group, I'll create
+a new file and I'll call it API service.
+09:22 - And inside there I'll create
+a struct using that same name.
+09:29 - Now the struct will have one property
+09:31 - that will be the URL string representing
+the endpoint, and we're going to have two
+09:37 - different ones, one for the users
+and one for the posts.
+09:41 - So each time that we create an instance
+of this structure,
+09:44 - we'll need to pass in a different
+string representing that endpoint.
+09:51 - Next, we'll create
+a function called Get users.
+09:56 - Now this function is going to have
+to return an array of users,
+10:00 - so my first inclination is to return
+an array of users like this.
+10:07 - Unfortunately, this won't work,
+at least not yet.
+10:10 - Later on in the series,
+10:11 - we'll be covering new concurrency models
+introduced in iOS 15,
+10:16 - but as you are likely to see still,
+for quite a while,
+10:19 - the older method of dealing with
+concurrency, we're going to start there.
+10:23 - This will require using what is known as
+10:25 - a completion handler,
+and eventually we're going to be using
+10:29 - a result type as our
+completion handler's argument.
+10:32 - But I'm getting ahead of myself
+if you are still confused.
+10:36 - After I finish this video.
+10:38 - I recommend that you watch the two videos
+10:40 - I have on that topic and links
+are in the description below.
+10:47 - Let's start easy now
+and build on this concept.
+10:52 - The reason we need a completion handler is
+because we have no idea how long it's
+10:56 - going to take for that network
+call to fetch that data.
+10:59 - And since our code is inherently
+11:01 - synchronous, it would move on to the next
+line before we received our data.
+11:06 - And the completion handler is just
+11:08 - a closure that we can pass in as
+an argument so that it will get executed
+11:13 - when that data has been retrieved,
+and we can give that closure a name.
+11:18 - And typically people call it something
+like completion or completion handler.
+11:24 - So when this function has completed
+and we'll either have successfully
+11:28 - retrieved our JSON and decoded it,
+or an error will have been produced.
+11:36 - So when we call this function,
+we'll need to deal with either case.
+11:39 - But first, I'm going to keep it simple
+and deal with the error right here within
+11:43 - the function and only execute the closure
+if we successfully decoded the data.
+11:49 - So the closure function is going to have
+an argument which will be an array of user
+11:55 - that we've returned and it's
+going to return nothing or void.
+12:02 - There will be another issue, however,
+12:04 - as we'll be fetching that from a
+server and it's going to take.
+12:08 - Some time the function itself will
+escape the scope before we're done.
+12:12 - So we'll need to specify that this
+completion handler is going to escape.
+12:18 - So we do that by marking
+the completion function as escaping.
+12:24 - Well, now we can get to work.
+12:28 - First, we'll need to create a URL from our
+12:30 - string, and we can use
+a guard check for this.
+12:34 - So we'll guard let URL equals
+the URL string from URL string.
+12:43 - Else we'll just return from the function.
+12:49 - Next, we'll use the URL sessions Singleton
+data task function with URL,
+12:56 - and this also has a completion
+handler just like our function does.
+13:02 - So we'll pass in the URL for the URL,
+13:05 - and when we hit enter on the closure,
+we see that we can assign variables
+13:09 - for the three different
+objects that are coming back.
+13:13 - Data, response, and error.
+13:16 - All three of these
+properties are optional.
+13:23 - The most important thing that we have
+13:25 - to do before we forget, however, is to
+make sure that this task gets initiated.
+13:29 - So we'll also need to call resume because
+it's initially in a suspended state.
+13:39 - So now we can check on those three
+optional items that we get back.
+13:44 - First, we'll check the response to see if
+13:47 - it has a status code of 200
+and that it's not nil.
+13:51 - So another guard check
+guard, which http response equal response
+13:58 - as an http URL response, and also
+that the status quo is equal to 200
+14:08 - else we'll just return.
+14:12 - We also only want to continue
+if there isn't an error.
+14:17 - So guard if error is equal to nil,
+14:21 - we can continue else we'll
+return from the function.
+14:27 - If we get this far, then we'll need
+to check to see if we got data.
+14:32 - So another guard check guard,
+but data equals data else return.
+14:41 - Well, now that we've got the data,
+we can try to decode it.
+14:45 - And the key word here is try.
+14:48 - But first we'll need a decoder.
+14:50 - Letdecoder equals JSON decoder.
+14:53 - Now, because the decoding might fail
+14:56 - and throw an error,
+which means generate an error,
+14:59 - we have to create a do catch
+block to try and decode it.
+15:04 - And this is such a common construct,
+15:06 - the do catch block that I've
+created a code snippet for this.
+15:10 - So anytime you see me do DTC
+that stands for do try catch.
+15:17 - I have a code snippet that's
+going to generate that construct.
+15:21 - Then we can let our decoded data be
+15:23 - the result of trying to decode
+the array of user from that data,
+15:29 - and if it's successful,
+we can just use that decoded data as
+15:33 - the argument for our completion
+handler, which is completion,
+15:38 - and it runs that function
+with that argument.
+15:42 - If it's not successful, it fails.
+15:46 - So we'll just catch that error and then
+just print that there was an error.
+15:54 - Now this will work,
+but there are some severe limitations
+15:58 - here, and you'd not want to ship
+an app like this using this function.
+16:02 - When there is an error,
+16:03 - we're not giving any feedback to the user,
+and it just exits the function.
+16:09 - The only time you do anything is when you
+print out that there was an error
+16:13 - to the console, but your user will
+never see that in a later video.
+16:18 - We're going to go over error
+handling in more detail.
+16:21 - But I want to set the stage here
+by changing this function to provide any
+16:24 - errors to the caller,
+so that eventually we can bubble
+16:27 - that error up and provide an error to our
+users in the UI using an alert,
+16:34 - and this is where the result type
+comes in for our completion argument.
+16:39 - A result is simply an en with two cases,
+either a success case with an associated
+16:45 - value and that associated value will be
+in our case, the array of users,
+16:50 - the successful completion or a failure
+case where the result is an error type.
+16:58 - So instead of using simply an array
+of user in our completion handler,
+17:03 - I want to use a result type so we can
+change our completion argument to a result
+17:10 - where the two cases are
+array of user or an error.
+17:17 - Then we need to fix that completion
+that we have in our function so that when
+17:22 - we successfully decode the data,
+the result success case success has
+17:28 - an associated value and that associated
+value is our decoded data.
+17:34 - Still with me?
+17:36 - Well, what about the failure case?
+17:39 - Well, it's going to fail every time we
+17:41 - fail the guard check or
+in that do catch block,
+17:47 - we want to be more prescriptive.
+17:48 - So I'm going to create my own API error
+enum with all five of the cases where we
+17:55 - could have possibly failed, and the enum
+has to conform to the error protocol.
+18:01 - So there are five different cases
+in that first guard,
+18:06 - we had an Invalid URL, so I'll
+set the case to be Invalid URL.
+18:11 - Then we check the response status.
+18:14 - So my case is going to be Invalid response
+18:17 - status, or perhaps the URL
+session didn't work at all.
+18:22 - So it may be a data task error.
+18:25 - Perhaps the data was corrupt,
+corrupt data.
+18:30 - And then finally, once we get the data,
+perhaps our model is incorrect.
+18:34 - So we'll get a decoding error.
+18:38 - So now when we fail, we can do another
+completion using the failure case,
+18:45 - and that has an associated value
+that we'll just use our case.
+18:51 - So first we'll need to go back to where we
+define our result and say that we no
+18:55 - longer want to have that error
+case just a generic error.
+18:59 - We want to be specific and say
+that it's going to be our API error,
+19:04 - and then each of those five cases we're
+19:07 - going to now call our completion handler
+with the failure case,
+19:12 - and the associated value is going to be
+the corresponding case from our API error.
+19:21 - So first failure is an Invalid URL.
+19:29 - Next, an Invalid response status,
+19:33 - then a data task error
+19:38 - corrupt data,
+19:47 - and finally a decoding error.
+19:52 - Now there are only two more things I
+want to do before I finish this video.
+19:56 - This function is looking pretty good,
+19:57 - but currently I can only use it for users
+and not posts,
+20:02 - and when you look at this, though,
+the only time I use user is when I decode
+20:06 - and define the associated value
+for the success case in our result type.
+20:11 - It could be easy just to copy and paste
+20:14 - this function and change this to get
+post and change user to post.
+20:19 - However, there's a better way and that's
+20:21 - using generics and I have
+a video on generics.
+20:24 - If you want to find out more information
+20:25 - on that topic again, a link will
+be in the description below.
+20:30 - The function will work for any decodeable
+20:33 - type object like our user and post
+objects,
+20:37 - and we can use that fact by specifying
+that the function should only work if
+20:41 - that's what we're dealing with,
+which is a decoded type.
+20:45 - So when we define our function,
+20:47 - we can specify that limitation and we can
+use a variable like T to represent
+20:53 - that type and make sure that that type
+conforms to the decoded protocol.
+21:00 - And then everywhere where we see user,
+we can replace it with the T placeholder.
+21:06 - Now T is generic itself,
+and it can represent either a single
+21:10 - object or an array of objects, so we don't
+really even need to specify array here.
+21:16 - We'll be able to specify
+that when we call the function
+21:22 - and we're almost done.
+21:24 - And this is a service class that you can
+use in all of your projects,
+21:28 - but to make it even more inclusive and I
+go through this in my quotable series,
+21:32 - you may have a specific key decoding or
+date decoding strategy that you want
+21:37 - to use, so I'm going to create
+two more arguments here.
+21:43 - So before the closure, let's add two
+more parameters for this function.
+21:49 - One is going to be a date decoding
+strategy, which is a JSON decoder
+21:55 - date decodingstrategy,
+and the second is a key decoding strategy,
+22:00 - which is a JSON decoder
+key decoding strategy.
+22:05 - Now 99% of the time,
+the defaults are just fine.
+22:09 - But since we are adding these two
+22:11 - parameters when I call this function,
+I'm going to be forced to enter in what
+22:16 - would be my default when I create
+the instance of this Get users function.
+22:22 - So in order to make this optional for us,
+I can assign the most common default
+22:27 - values in the initializer
+for each parameter.
+22:36 - Then after we create our decoder, we can
+assign these properties to the decoder.
+22:44 - That's almost it,
+but I forgot this function is still called
+22:48 - Get users when in fact it's
+going to be more generic.
+22:52 - So instead of calling it Get users,
+22:54 - I'm going to change the name
+to getJSON instead.
+22:59 - Well, that's it.
+23:00 - We haven't tested it yet,
+but we've created the groundwork for our
+23:03 - app, and the really good thing is
+that we've created a reusable API service
+23:08 - class that you'll be able to use
+in your own projects in the future.
+23:12 - In the next video I'll show you how you
+can use this class and we'll also be
+23:17 - improving on it when we start
+working on error handling.
+23:21 - Hopefully this hasn't been too technical,
+but it is worthwhile, I think,
+23:25 - going through in some detail so that you
+understand why things are done this way.
+23:29 - When we start to use the functions
+in a later video, we'll be converting this
+23:34 - to an alternative version that uses the
+new Async and Await concurrency model.
+23:40 - So in the next video of the series,
+23:42 - we'll be building out the UI,
+and I'll introduce you to Voodoo,
+23:46 - a modified MVVM design pattern,
+and utilize Xcode's source control
+23:52 - features to ensure that our
+source code is protected.
+23:57 - So make sure you tune in next week
+23:59 - for the second video in the this series
+and subscribe to Chris's Channel to make
+24:03 - sure that you get notifications
+of all new updates.
+24:07 - Thanks for watching.
+
+Cleaned transcript:
+
+Hi. My name is Jordan Lynch. I'm very happy to be offering you this series on behalf of Code with Chris. So the title of this series is iOS. Concurrency is much, much more. It's a six part series where I'll introduce you to JSON, decoding and creating models from JSON, building an API service to perform asynchronous network calls to fetch that JSON, we'll go through the traditional completion handler based URL functions, handling and reporting errors. Along the way. There are a lot of topics covered, as my intention is to provide you with methods and understanding that you'll be able to apply to your own projects both now and in the future. In this first video, we'll focus on creating our models from the JSON and an API service to handle the process. We'll create a generic function to handle the different API endpoints and models and use a result based completion handler with our own designed API error. If this is something you're interested in, then let's get started. First create a new Xcode iOS app project and make sure it's a Swift to I project and name it something like iOS concurrency. I always like to add an app icon and launch screen to my app so that they are easily recognizable in the simulator or on my phone. If I install it there, I provided you with some resources for this project. With these two items already created, you can find those in the link and in the description below. So go to the Assets folder of your project and drag the Launch Screen image into that folder. Next, select your Apps Target and then the Info tab to see the new iOS 15 Info P list. Drop down the Disclosure icon on the Launch screen, then click on the plus icon and Select Image Name. Make sure that you enter the image name with the lowercase L and uppercase S, but don't enter the PNG extension. Next. Right click on the App icon in the Assets folder and choose Show in Finder. Bring up that provided Resources folder once more and move the App icon App icon set into that folder, replacing the empty one. We've just installed the icon and launch screen. If you run your app now in the simulator when it launches, you should see that Launch screen. If you exit the app or quit and check the Simulator's home screen, you'll see that icon on your app. This project is going to be using the JSON Placeholder API to fetch and decode JSON. This API has a number of endpoints that you can use. One of them is the user's endpoint where we can fetch JSON corresponding to ten different users. As you can see from this JSON here, let's take a look at the post endpoint. Users are able to create posts as you can see from this endpoints JSON and there are 100 of them corresponding to ten for each of the ten different users. What we'll need to do is to create a struct that will model that JSON. And that's why we often call these structs that represent something a model. I have created a couple of YouTube videos on modeling data from JSON, and there are a number of tools available to you to do that as well. The tool that I use a lot is one called Ducky Model Editor. However, many people are happy with a free webpace tool called Qwikype. These tools are particularly useful if you want to model really complex objects that have nested JSON, our two are relatively simple, so I want to model them by hand. So first let's create a new group called Models. Next, create a new Swift file called User. Now I'm going to want to reference the user's endpoint, so I'll need to go back and copy that URL, and then I can paste it as a comment at the top of my struct so that I have quick reference to it. Well, now with that file created, I'm going to create that struct, and I'm going to call it the same name user. Now for the user, I'm really only interested in modeling the ID name, username and email. And since these are all top level keys in the key value pairs of this JSON, we can simply create properties that use the same name and the ID will be an Int, and the other three are strings. Now, since we're only going to be reading this information and not modifying it, we can create the properties as constants using lead. Now, in order to decode this JSON, the model has to conform to the quotable protocol. And because each one of these properties are simple types that conform to the quotable protocol already the entire struct wheel too, so we can Mark it as conforming to quotable protocol. We're also going to want to present our users in a list view, and it's much easier to do if the Struct conforms to the identifiable protocol. And the only requirement for that is that there is a unique property called ID, and we already have that. So let's do the same now for the posts JSON endpoint. First, let me copy the endpoint for the postural so that I can use as a reference. And then I want to create a new file called Post. And in that file I can paste that URL as a reference for our new model Struct. Now this URL gets all the posts, but what I want to know as well is how do I get the post for just one user? So let me return to the API documentation to find that endpoint. Here it is, and this is the one that I want. So let me copy and paste that URL in as well. Now I can create a new Struct using that same name for the posts. I want to model all four properties here, and they are all top level as well. So fairly easy to do, just creating our properties using the same names as the key values in our JSON. And again, since we'll be reading this information only and not modifying it will create it using lips as constants. Both the user ID and ID are INTs, while the title and body are strings. The user ID property corresponds to the ID property in our user model. The ID, though, is the unique property for this particular model. And again, in order to decode the JSON, the model has to conform to the quotable protocol. And because each of these properties are simple types that conform to the quotable protocol, the entire Struct will too. And with the ID property being here, we can conform the struct itself to the identifiable protocol. Now I have an entire series on JSON decoding, and it covers this as well as how to decode and encode your data, which we'll be going over soon. I'll leave a link here in the notes below. Now I want to create a Struct that I can use as a service that I can call from a variety of different views to fetch our data. Whether that be an array of user or an array of posts. Now, there are a number of ways to do this, and you may have heard of a Singleton, but it gets a lot of bad press about not being able to test. Well, we're not going to be running any unit tests on this project, but let's start right now by creating good habits, and anytime we want to access that service, we'll create a new instance of the service. So I'm going to create a group called Services. And even though there's only going to be one service that I create, I want to keep my code organized inside that folder group, I'll create a new file and I'll call it API service. And inside there I'll create a struct using that same name. Now the struct will have one property that will be the URL string representing the endpoint, and we're going to have two different ones, one for the users and one for the posts. So each time that we create an instance of this structure, we'll need to pass in a different string representing that endpoint. Next, we'll create a function called Get users. Now this function is going to have to return an array of users, so my first inclination is to return an array of users like this. Unfortunately, this won't work, at least not yet. Later on in the series, we'll be covering new concurrency models introduced in iOS 15, but as you are likely to see still, for quite a while, the older method of dealing with concurrency, we're going to start there. This will require using what is known as a completion handler, and eventually we're going to be using a result type as our completion handler's argument. But I'm getting ahead of myself if you are still confused. After I finish this video. I recommend that you watch the two videos I have on that topic and links are in the description below. Let's start easy now and build on this concept. The reason we need a completion handler is because we have no idea how long it's going to take for that network call to fetch that data. And since our code is inherently synchronous, it would move on to the next line before we received our data. And the completion handler is just a closure that we can pass in as an argument so that it will get executed when that data has been retrieved, and we can give that closure a name. And typically people call it something like completion or completion handler. So when this function has completed and we'll either have successfully retrieved our JSON and decoded it, or an error will have been produced. So when we call this function, we'll need to deal with either case. But first, I'm going to keep it simple and deal with the error right here within the function and only execute the closure if we successfully decoded the data. So the closure function is going to have an argument which will be an array of user that we've returned and it's going to return nothing or void. There will be another issue, however, as we'll be fetching that from a server and it's going to take. Some time the function itself will escape the scope before we're done. So we'll need to specify that this completion handler is going to escape. So we do that by marking the completion function as escaping. Well, now we can get to work. First, we'll need to create a URL from our string, and we can use a guard check for this. So we'll guard let URL equals the URL string from URL string. Else we'll just return from the function. Next, we'll use the URL sessions Singleton data task function with URL, and this also has a completion handler just like our function does. So we'll pass in the URL for the URL, and when we hit enter on the closure, we see that we can assign variables for the three different objects that are coming back. Data, response, and error. All three of these properties are optional. The most important thing that we have to do before we forget, however, is to make sure that this task gets initiated. So we'll also need to call resume because it's initially in a suspended state. So now we can check on those three optional items that we get back. First, we'll check the response to see if it has a status code of 200 and that it's not nil. So another guard check guard, which http response equal response as an http URL response, and also that the status quo is equal to 200 else we'll just return. We also only want to continue if there isn't an error. So guard if error is equal to nil, we can continue else we'll return from the function. If we get this far, then we'll need to check to see if we got data. So another guard check guard, but data equals data else return. Well, now that we've got the data, we can try to decode it. And the key word here is try. But first we'll need a decoder. Letdecoder equals JSON decoder. Now, because the decoding might fail and throw an error, which means generate an error, we have to create a do catch block to try and decode it. And this is such a common construct, the do catch block that I've created a code snippet for this. So anytime you see me do DTC that stands for do try catch. I have a code snippet that's going to generate that construct. Then we can let our decoded data be the result of trying to decode the array of user from that data, and if it's successful, we can just use that decoded data as the argument for our completion handler, which is completion, and it runs that function with that argument. If it's not successful, it fails. So we'll just catch that error and then just print that there was an error. Now this will work, but there are some severe limitations here, and you'd not want to ship an app like this using this function. When there is an error, we're not giving any feedback to the user, and it just exits the function. The only time you do anything is when you print out that there was an error to the console, but your user will never see that in a later video. We're going to go over error handling in more detail. But I want to set the stage here by changing this function to provide any errors to the caller, so that eventually we can bubble that error up and provide an error to our users in the UI using an alert, and this is where the result type comes in for our completion argument. A result is simply an en with two cases, either a success case with an associated value and that associated value will be in our case, the array of users, the successful completion or a failure case where the result is an error type. So instead of using simply an array of user in our completion handler, I want to use a result type so we can change our completion argument to a result where the two cases are array of user or an error. Then we need to fix that completion that we have in our function so that when we successfully decode the data, the result success case success has an associated value and that associated value is our decoded data. Still with me? Well, what about the failure case? Well, it's going to fail every time we fail the guard check or in that do catch block, we want to be more prescriptive. So I'm going to create my own API error enum with all five of the cases where we could have possibly failed, and the enum has to conform to the error protocol. So there are five different cases in that first guard, we had an Invalid URL, so I'll set the case to be Invalid URL. Then we check the response status. So my case is going to be Invalid response status, or perhaps the URL session didn't work at all. So it may be a data task error. Perhaps the data was corrupt, corrupt data. And then finally, once we get the data, perhaps our model is incorrect. So we'll get a decoding error. So now when we fail, we can do another completion using the failure case, and that has an associated value that we'll just use our case. So first we'll need to go back to where we define our result and say that we no longer want to have that error case just a generic error. We want to be specific and say that it's going to be our API error, and then each of those five cases we're going to now call our completion handler with the failure case, and the associated value is going to be the corresponding case from our API error. So first failure is an Invalid URL. Next, an Invalid response status, then a data task error corrupt data, and finally a decoding error. Now there are only two more things I want to do before I finish this video. This function is looking pretty good, but currently I can only use it for users and not posts, and when you look at this, though, the only time I use user is when I decode and define the associated value for the success case in our result type. It could be easy just to copy and paste this function and change this to get post and change user to post. However, there's a better way and that's using generics and I have a video on generics. If you want to find out more information on that topic again, a link will be in the description below. The function will work for any decodeable type object like our user and post objects, and we can use that fact by specifying that the function should only work if that's what we're dealing with, which is a decoded type. So when we define our function, we can specify that limitation and we can use a variable like T to represent that type and make sure that that type conforms to the decoded protocol. And then everywhere where we see user, we can replace it with the T placeholder. Now T is generic itself, and it can represent either a single object or an array of objects, so we don't really even need to specify array here. We'll be able to specify that when we call the function and we're almost done. And this is a service class that you can use in all of your projects, but to make it even more inclusive and I go through this in my quotable series, you may have a specific key decoding or date decoding strategy that you want to use, so I'm going to create two more arguments here. So before the closure, let's add two more parameters for this function. One is going to be a date decoding strategy, which is a JSON decoder date decodingstrategy, and the second is a key decoding strategy, which is a JSON decoder key decoding strategy. Now 99% of the time, the defaults are just fine. But since we are adding these two parameters when I call this function, I'm going to be forced to enter in what would be my default when I create the instance of this Get users function. So in order to make this optional for us, I can assign the most common default values in the initializer for each parameter. Then after we create our decoder, we can assign these properties to the decoder. That's almost it, but I forgot this function is still called Get users when in fact it's going to be more generic. So instead of calling it Get users, I'm going to change the name to getJSON instead. Well, that's it. We haven't tested it yet, but we've created the groundwork for our app, and the really good thing is that we've created a reusable API service class that you'll be able to use in your own projects in the future. In the next video I'll show you how you can use this class and we'll also be improving on it when we start working on error handling. Hopefully this hasn't been too technical, but it is worthwhile, I think, going through in some detail so that you understand why things are done this way. When we start to use the functions in a later video, we'll be converting this to an alternative version that uses the new Async and Await concurrency model. So in the next video of the series, we'll be building out the UI, and I'll introduce you to Voodoo, a modified MVVM design pattern, and utilize Xcode's source control features to ensure that our source code is protected. So make sure you tune in next week for the second video in the this series and subscribe to Chris's Channel to make sure that you get notifications of all new updates. Thanks for watching.

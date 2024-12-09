@@ -1,0 +1,2035 @@
+00:00 - in this course antonio papa will teach
+00:02 - you how to create a microservices
+00:04 - project using fast api react and redis
+00:09 - antonio has a bunch of experience with a
+00:12 - lot of different tech stacks
+00:14 - in this video we will build a simple
+00:17 - micro services app using python fast api
+00:22 - the front end of this app will be in
+00:24 - react and we will have two main micro
+00:28 - services
+00:29 - one is the inventory microservice and
+00:31 - the other one is the payment
+00:33 - microservice the inventory microservice
+00:36 - will store products and the payment
+00:38 - microservice will purchase those
+00:40 - products the data will be stored in
+00:44 - redis so we will use the redis json
+00:48 - database which is a database similar to
+00:50 - mongodb
+00:52 - and we will send events uh from one
+00:55 - microservice to another using redis
+00:58 - streams so that is another functionality
+01:01 - of redis
+01:02 - i choose this architecture because
+01:05 - we will not use any other database or
+01:08 - rabbitmq or kafka we can use redis for
+01:12 - all the needs that we have now let's see
+01:16 - the app that we are going to build also
+01:19 - make sure to check my channel scalable
+01:21 - scripts where here i have a lot of
+01:23 - projects and more microservices
+01:26 - tutorials if you are interested now
+01:29 - let's move to the app
+01:31 - this is the app that we will build so it
+01:34 - is very simple we can create products
+01:37 - here which i will create one right now
+01:40 - so i'll call it product
+01:42 - i'll set up price and the quantity
+01:46 - when i create we will have a product
+01:48 - created with this id here and we have
+01:52 - the option to delete this product so
+01:55 - this is the first microservice and the
+01:58 - other microservice is purchasing that
+02:01 - product
+02:02 - here we need to copy this id
+02:05 - and when i paste this id we can see that
+02:09 - your product price is 24
+02:12 - now you may be confused because the
+02:15 - price here is 20 and here is 24.
+02:18 - the reason that i increase the price
+02:21 - here is uh think of it as another
+02:25 - app that
+02:26 - buys the products from this uh
+02:29 - warehouse you can
+02:30 - think of it
+02:31 - and
+02:32 - on top of that it will add
+02:35 - 20 fee so
+02:37 - it is 24 because it is 20
+02:41 - more
+02:42 - so
+02:43 - that's it when
+02:44 - the user buys this product
+02:47 - this app
+02:49 - will gain
+02:50 - profits and also the warehouse also
+02:53 - i will buy a quantity of three
+02:56 - i'll buy
+02:58 - and here it says thank you for your
+03:00 - order and
+03:02 - if we refresh we won't see it
+03:04 - immediately because it needs five
+03:06 - seconds to update
+03:08 - and now the quantity is
+03:10 - 97 so
+03:13 - the app
+03:14 - will seem very easy but
+03:17 - there is lot of asynchronous stuff going
+03:20 - in the background and also redis
+03:23 - stream events so we will see it now when
+03:27 - we build the backend
+03:30 - now let's create the projects go to
+03:32 - fastapi.tagolo.com
+03:35 - and here
+03:36 - we will see the instructions to install
+03:39 - fast api and uv corn
+03:42 - after you install these two packages
+03:45 - click tutorial first steps and i'll copy
+03:49 - this code here
+03:51 - now i will open my ide and i have two
+03:55 - projects here so the first one is
+03:57 - inventory where here we will store
+04:00 - products
+04:02 - and also their quantities
+04:04 - and the payment project where we will
+04:08 - purchase those products
+04:10 - so these are the two microservices that
+04:13 - we will work in the this tutorial
+04:17 - we have a main.pi file which currently
+04:20 - it is empty and the
+04:21 - requirements.txt where we have all the
+04:24 - packages that we need like fast api and
+04:28 - redis om we will use redis as a database
+04:32 - we will store
+04:34 - our products there but also we will use
+04:38 - redis as
+04:39 - event sourcing software like rabbitmq
+04:43 - and kafka so
+04:44 - we will use it for multiple cases
+04:48 - now let's go to main.pipe
+04:51 - and i will paste the code that i just
+04:53 - copied and to run this code now
+04:56 - simply run the command
+04:58 - which is showed here uvicorn main up
+05:02 - reload
+05:03 - so
+05:04 - this is a command and it will run this
+05:07 - app on port 8000
+05:09 - now
+05:10 - let's test that end point and to test
+05:13 - that endpoint i will use a tool called
+05:15 - postman so this
+05:17 - tool helps us to
+05:19 - test
+05:20 - api endpoints i will open the tool now
+05:24 - it is free
+05:26 - i will open a new tab and i will send a
+05:28 - get request to http localhost port 8000
+05:33 - and if i send the request we will see
+05:35 - hello world here
+05:37 - so we created our first endpoint and now
+05:41 - we want to create a database where we
+05:44 - want to store products here for that i
+05:47 - will use redis so go to redis.com
+05:51 - and we need to try
+05:53 - the redis cloud for free now i'm logged
+05:56 - in to redis cloud and here we need to
+05:59 - create a new subscription so there is a
+06:02 - free plan available
+06:04 - i'm located in europe
+06:08 - and
+06:10 - i will select this free plan 30
+06:12 - megabytes the subscription name i'll
+06:15 - call it microservices
+06:20 - and that's it we created this plan and
+06:22 - now we need to create a new database
+06:25 - i'll call it this database redis
+06:33 - db
+06:36 - and for the models i will select ready
+06:38 - search and reduce json so already json
+06:41 - is a database just like mongodb energy
+06:44 - search
+06:45 - adds some functionality to search that
+06:49 - database like
+06:50 - it is similar to elasticsearch
+06:53 - and i will activate this database
+06:57 - so the database was created successfully
+06:59 - and as you can see here we have a public
+07:02 - endpoint which we will use it uh right
+07:04 - now and we need also the default user
+07:08 - password
+07:09 - which we will copy as well so
+07:13 - that's it now
+07:14 - in this invertory app
+07:17 - i will connect with redis and
+07:22 - we need to use this package called redis
+07:24 - om
+07:26 - i will copy it
+07:28 - and i will install install it via pip so
+07:30 - pip
+07:31 - install
+07:33 - redis om
+07:36 - and
+07:37 - let's uh import it here so from
+07:40 - redis
+07:41 - om
+07:43 - we need to import
+07:45 - get redis connection and with this we
+07:49 - will
+07:50 - connect to redis i'll do it here so red
+07:52 - is
+07:54 - uh
+07:55 - it is equal to get redisconnection
+07:59 - inside we need to pass the host
+08:03 - which in our case is this public
+08:06 - endpoint i will copy the public endpoint
+08:08 - and i will paste it here
+08:10 - but we don't need the port so i'll cut
+08:13 - the port here
+08:15 - because the port will be another
+08:17 - variable so port here
+08:19 - is equal to this value and then we need
+08:24 - the
+08:24 - password
+08:26 - which
+08:27 - it is this user password value here
+08:31 - which i will copy
+08:34 - and i'll paste it here so this is my
+08:36 - password
+08:37 - don't use my credentials because i will
+08:39 - remove this connection once this
+08:42 - tutorial is over so you have to create
+08:44 - your own credentials
+08:46 - and then the code responses it is equal
+08:49 - to true
+08:51 - so that should be it
+08:53 - we created the connection via redis and
+08:56 - now we want to create a model that will
+09:00 - be converted to a table
+09:03 - in
+09:04 - the redis database so for that i'll
+09:07 - create a class here
+09:09 - product
+09:11 - and from redis om we need to import also
+09:14 - hash model
+09:16 - and this product will extend from hash
+09:18 - model
+09:20 - and let's add all the values that the
+09:23 - product has so the product has a name
+09:28 - which should be a string
+09:30 - then it has a price
+09:33 - which it is an integer
+09:36 - and a quantity
+09:38 - which it is an integer actually i will
+09:41 - change the price i will make it a float
+09:43 - better
+09:45 - and that's it so this product will have
+09:48 - just a name a price and
+09:50 - this quantity is the quantity available
+09:53 - i will keep it short so it could be
+09:56 - quantity available
+09:59 - but i will just keep it quantity so i
+10:01 - will keep it short
+10:03 - and to make this
+10:06 - product connect with our redis database
+10:08 - we need to add another class here meta
+10:13 - and inside we'll say that the database
+10:16 - will be equal to
+10:18 - redis
+10:21 - and that should be it so with this
+10:24 - uh
+10:25 - every time we query and we create
+10:27 - products they will it will be stored in
+10:30 - our redis connection and let's do that
+10:33 - i will remove this end point here
+10:36 - and i'll create a function
+10:40 - products
+10:42 - or all
+10:44 - doesn't matter
+10:45 - uh let's return an empty
+10:48 - list for the moment this will be
+10:51 - a get request
+10:53 - to slash products
+10:57 - and that's it so let's test this
+11:01 - endpoint on postman
+11:03 - if we send a get request to
+11:06 - localhost port 8000 slash products
+11:10 - so we have an error
+11:12 - is your corn running it seems it's not
+11:18 - and we can see an empty array right now
+11:20 - so it is uh this simple
+11:23 - now
+11:24 - we need to return the products
+11:27 - from redis and to do that we have to
+11:31 - return products
+11:34 - that all underscore primary keys
+11:38 - so
+11:39 - this is
+11:40 - the function that will return all the
+11:42 - products
+11:43 - i will save it
+11:45 - and for the moment we don't have any
+11:48 - but this
+11:50 - will return only the primary keys and
+11:52 - this will not return the products
+11:55 - for the moment we cannot see it but we
+11:57 - need to create another endpoint to
+11:59 - create a product to see what this
+12:02 - returns
+12:03 - we will do that but first we need to
+12:05 - create also a middleware here
+12:09 - so
+12:11 - we need to add a middleware called
+12:13 - course
+12:16 - let's import it here
+12:20 - so from
+12:21 - fast api
+12:22 - middleware course we need to import
+12:26 - the course middleware
+12:29 - and we need to add it here
+12:32 - so what is course so course is a problem
+12:35 - that when we run our front end it will
+12:38 - run on port 3000
+12:40 - and the uv cord here is running on port
+12:43 - 8000 so it's not running for the moment
+12:45 - i will fix that
+12:47 - but
+12:49 - there are different ports and the
+12:51 - browser will prevent that in order to
+12:54 - prevent that
+12:55 - problem we need to add the middleware
+12:58 - also we need to specify the allowed
+13:01 - origins so allow
+13:04 - origins
+13:06 - here will be http
+13:09 - localhost
+13:12 - for 3000
+13:13 - so this is our frontend we need to allow
+13:16 - the frontend to request our apis
+13:20 - we need the
+13:21 - the methods so i'll copy this
+13:25 - paste it here so this is allow
+13:28 - methods
+13:32 - i'll put the star here so all the
+13:34 - methods and
+13:36 - we need to allow headers
+13:39 - so
+13:40 - that should be it this won't change
+13:43 - anything
+13:44 - until now
+13:47 - so the app will work the same but the
+13:50 - changes will be reflected on the front
+13:53 - end so we won't have
+13:55 - problems
+13:57 - in the front end if we add this
+13:58 - middleware and now
+14:00 - let's create the other end point where
+14:03 - we create products so i'll create a
+14:06 - function here create
+14:10 - and uh
+14:11 - fast api makes it really simple for us
+14:14 - first i will add here the method so
+14:17 - up post method
+14:20 - to slash products
+14:23 - and to create
+14:25 - a product we need to pass in the
+14:27 - parameters here the product itself
+14:32 - as a product
+14:33 - and we need to return product
+14:36 - save
+14:37 - it is this simple so the parameters that
+14:41 - we need to send in the request
+14:43 - are the name of the price and the
+14:45 - quantity
+14:46 - and the rest
+14:48 - will be taken care from fast api
+14:51 - so
+14:52 - let's see if this works i'll copy this
+14:55 - open a new tab i'll send a post request
+14:58 - and in the body
+15:00 - i'll send a json
+15:03 - i'll send a name
+15:06 - product
+15:09 - i'll send the price
+15:12 - 20
+15:14 - and a quantity available
+15:19 - i'll say 100 so
+15:22 - if we send this request we can see that
+15:26 - we get a primary key a name the price
+15:29 - and the quantity so the product was
+15:32 - created successfully and if we try this
+15:34 - request again
+15:36 - we can see that we are returning a
+15:38 - primary key but i don't want to return
+15:41 - just a primary key i want to return
+15:44 - all the
+15:46 - objects
+15:47 - and we need to create another function
+15:50 - for me for it so i'll create a function
+15:53 - here format
+15:59 - and in this function we need to pass a
+16:01 - primary key as a string
+16:05 - so we will pass the
+16:07 - all the primary keys to this function
+16:10 - we need to get the product
+16:12 - which is equal to product that get
+16:16 - with this primary key so this will query
+16:19 - that
+16:21 - product from the database and we want to
+16:23 - return
+16:26 - the response of this so
+16:30 - i want to display the primary key i will
+16:32 - display directly the id which is product
+16:35 - dot primary key
+16:38 - we need the name
+16:40 - which is product dot name
+16:44 - we need the price which is
+16:46 - product
+16:47 - that price
+16:50 - and we need the quantity
+16:53 - which is product that quantity
+16:58 - and for this function now
+17:02 - we need to return an array now
+17:05 - that we'll do something here
+17:08 - for primary key in
+17:10 - product
+17:12 - all primary keys
+17:13 - and this something will be
+17:16 - calling this format function that we
+17:18 - just created and i will pass the primary
+17:21 - key there
+17:22 - so that's it
+17:24 - uh with this change
+17:27 - now
+17:29 - so it seems uv corn stopped again
+17:34 - we can see now the response is what i
+17:37 - wanted so we have an array of products
+17:40 - with the id name price and quantity
+17:44 - so that's it we need also one last
+17:48 - method which is deleting this product
+17:52 - actually we need two so i'll add the
+17:54 - first one so def
+17:57 - get
+17:58 - with a primary key as a string
+18:02 - so this will get a single product from
+18:05 - an id
+18:07 - and this will be a get request
+18:12 - get to
+18:14 - products
+18:15 - slash the primary key here
+18:20 - and we will return product
+18:22 - that get
+18:24 - with the primary key
+18:26 - let's see if uvicorn is running it is so
+18:30 - if i copy this id
+18:32 - and i will
+18:33 - put it here
+18:36 - we can see that we are returning not an
+18:38 - array now but
+18:40 - directly the object so
+18:42 - this is working fine and now let's add
+18:45 - the last one which is deleting this
+18:48 - product so
+18:50 - delete here
+18:52 - and we need to pass again the primary
+18:54 - key
+18:56 - as a string
+18:58 - i'll copy this part
+18:59 - i'll paste it here and this is a delete
+19:02 - method
+19:05 - and we will get the product
+19:08 - like this so product
+19:11 - is equal to product get with this
+19:13 - primary key and we will return
+19:16 - product that delete
+19:20 - if we try this
+19:22 - method now
+19:23 - this will be a delete request
+19:28 - so we have a problem
+19:33 - what is the problem now
+19:37 - it seems that uh
+19:39 - we need
+19:40 - a primary key here so maybe i made a
+19:43 - mistake
+19:44 - we should do it like this then
+19:48 - so now it should work so my bet there
+19:52 - and now it is working not sure why it
+19:55 - returns one but it means uh it probably
+19:58 - means that it is successful
+20:00 - now if we get all the products
+20:03 - we don't have any so
+20:06 - we created a simple crowd for the
+20:09 - products and now let's move to the
+20:12 - payment microservice let's go to the
+20:15 - main.pi file and let's add
+20:19 - all these parts
+20:22 - and i'll paste it here so we still need
+20:24 - the course middleware we need to create
+20:27 - a fast api project
+20:29 - and we need to connect to a database
+20:32 - i'll copy this again
+20:34 - and i'll paste it here
+20:36 - a lot of comments
+20:38 - here and i will say this should
+20:42 - be a different
+20:44 - database
+20:47 - so the point of microservices is that
+20:50 - each microservice needs their own
+20:52 - database i will keep the same database
+20:55 - because if we go to
+20:57 - the redis cloud
+20:59 - if we add a new subscription
+21:02 - let me open it here
+21:04 - not sure
+21:06 - it is here
+21:08 - we need to pay
+21:10 - still i have 200 dollars in three
+21:13 - credits but
+21:15 - in this case
+21:16 - it won't make a difference since it will
+21:19 - be another database i will use the same
+21:22 - database
+21:24 - but
+21:25 - keep in mind that this could be
+21:27 - not a radius database but a mongodb or a
+21:31 - mysql database so this is not a problem
+21:35 - in what i'm trying to teach you
+21:38 - and now let's create
+21:41 - the class for this
+21:44 - microservice what we need to create
+21:47 - and it will be an order so this will
+21:50 - extend from the hash model
+21:53 - and what does the order table
+21:56 - has as a column so it has a product id
+22:01 - as a string
+22:03 - so when we create an order we need to
+22:06 - know which
+22:07 - product id we are buying and that
+22:10 - product id has a price
+22:13 - which is a float
+22:16 - and this microservice will
+22:20 - buy that product with that price but it
+22:22 - will also add a
+22:25 - so think of it as
+22:28 - you are
+22:30 - getting items from
+22:32 - a warehouse
+22:34 - but you also need your own revenue so
+22:36 - you
+22:37 - add the fee on top of the price that you
+22:39 - buy on that warehouse
+22:42 - and also price plus fee
+22:45 - it mean it needs a total here
+22:49 - which is also a float
+22:51 - the total price that the user pays
+22:54 - the quantity
+22:56 - is an integer
+22:58 - so this is a quantity that the user buys
+23:02 - and the status
+23:04 - so this is important so the status is
+23:08 - pending
+23:10 - i will add a comment here so pending
+23:14 - completed
+23:15 - and refunded
+23:18 - so we will handle all these cases in
+23:21 - this tutorial pending is when we create
+23:24 - this
+23:26 - record in our database but the payment
+23:29 - processor hasn't completed yet
+23:33 - this status is when the payment
+23:35 - processor approves our request and
+23:38 - refunded is when an error happens which
+23:42 - i will show you later
+23:43 - when
+23:45 - that error happens and how we will
+23:48 - handle it so we need the meta here
+23:52 - and we need to connect with the database
+23:56 - which is redis
+24:00 - so that's it we created also another
+24:03 - model and here
+24:05 - let's add
+24:06 - the
+24:07 - method so we need to create a function
+24:11 - create
+24:14 - this will be a post request
+24:18 - to
+24:19 - orders
+24:23 - and we will pass a request here
+24:29 - so we need to import a request
+24:33 - i will import it directly so i have a
+24:35 - lot of imports there
+24:39 - from
+24:41 - starlet
+24:45 - requests
+24:46 - import request
+24:48 - so this is what we want
+24:51 - and then
+24:53 - what do we want to do right now
+24:57 - first we know that fast api supports
+25:00 - asynchronous requests
+25:03 - and asynchronous functions
+25:05 - and i will get the body
+25:08 - of that request
+25:10 - by awaiting requests
+25:13 - that json
+25:15 - so this is one way of getting all the
+25:18 - data in the request
+25:20 - but
+25:21 - i will show you later
+25:23 - a better way of handling asynchronous
+25:27 - tasks but for the moment
+25:29 - let's get just the body
+25:31 - and here
+25:33 - we will send just
+25:37 - an id
+25:39 - and a quantity
+25:41 - and from that id
+25:43 - we want to get
+25:45 - the products and all the information
+25:47 - regarding that product so
+25:50 - now comes the first problem of
+25:52 - microservices how do we get that
+25:55 - information
+25:56 - that information we will get it
+25:59 - if we request directly the inverter in
+26:02 - microservice so we request this endpoint
+26:06 - here
+26:07 - and we retrieve
+26:08 - that information and to do that we need
+26:12 - to install another package
+26:15 - pip install
+26:17 - requests
+26:20 - so it is installed and we need to import
+26:22 - it here so import
+26:25 - requests
+26:26 - so
+26:28 - let's send now a get request to the
+26:31 - inventory microservice so the request
+26:34 - will be equal to requests
+26:38 - we'll send a get request to
+26:40 - http
+26:42 - localhost port 8000 slash
+26:46 - products slash
+26:48 - percentage s so this is a string so we
+26:51 - need to pass the id
+26:54 - of the product which we get it from the
+26:56 - body
+26:58 - and that will be converted
+27:00 - like this with a percentage body id
+27:05 - so this value will be converted
+27:08 - to this value
+27:10 - and in the end
+27:12 - let's see what this returns i will
+27:15 - return request
+27:18 - dot json
+27:20 - and let's see what this returns so first
+27:24 - we don't have any products
+27:26 - so send again the request here to create
+27:29 - another product
+27:31 - which we
+27:32 - created so we can see it we have a
+27:35 - product in the other microservice
+27:38 - we need also to run this microservice
+27:41 - but we won't use the
+27:44 - command so i'll copy it here directly
+27:48 - i'll copy it
+27:50 - i'll run it here
+27:51 - i'll paste it here but here we need also
+27:54 - to change the port because the port 8000
+27:56 - is already occupied
+27:59 - so add
+28:00 - port here
+28:01 - 8001
+28:04 - and this will run
+28:06 - this up on port
+28:08 - 8001 and now let's send this request so
+28:12 - we'll send a request to http
+28:16 - localhost port 8001 this time
+28:20 - slash orders
+28:23 - we'll send a post request
+28:26 - and we will
+28:28 - send as we said an id
+28:34 - which in our case it is this id here
+28:37 - that we just created
+28:39 - and the quantity
+28:44 - and we will buy two products let's say
+28:47 - let's send this request
+28:49 - and indeed we got that product so
+28:53 - we are not
+28:55 - querying this product
+28:57 - in this microservice
+28:59 - instead we are sending an http request
+29:02 - to the other microservice
+29:04 - and we are retrieving the products from
+29:07 - here so
+29:09 - this is one way of microservices
+29:12 - communicating with each other
+29:15 - and now
+29:17 - we successfully got the product i will
+29:19 - cut this
+29:20 - the product will be equal to
+29:22 - request.json here
+29:25 - and we want to create this order so to
+29:28 - create that order
+29:30 - the order will be equal
+29:32 - to an order
+29:34 - and let's add all the values that we
+29:37 - need like the product
+29:38 - id
+29:42 - will be equal to body
+29:45 - id
+29:48 - we need the price
+29:52 - which is equal
+29:54 - to this product here because we don't
+29:57 - send it in the request so this is
+29:58 - product
+30:01 - price
+30:03 - the fee
+30:06 - this fee will be 20 of the products
+30:09 - price so this will be 0.2
+30:12 - times the product price
+30:15 - and the total will be the price plus the
+30:18 - fee
+30:20 - total here
+30:21 - so this means is 1.2 times the product
+30:25 - price
+30:27 - so that's it so this is a price the fee
+30:29 - is a total we need also the quantity
+30:35 - which we get it from the request body
+30:42 - and that's it we need also the status
+30:45 - which
+30:46 - the first case is pending
+30:50 - in the end we will save it so order
+30:53 - dot save
+30:56 - so
+30:58 - we successfully created an order here in
+31:01 - the end we will return the order
+31:05 - and
+31:06 - the only problem is this status pending
+31:09 - which
+31:11 - means that
+31:12 - we are waiting for a
+31:14 - payment processor to finish in order to
+31:18 - change this status
+31:20 - and for that
+31:22 - i'll create here another function
+31:26 - i'll call it
+31:28 - order completed
+31:31 - we'll pass the order here
+31:33 - as an order
+31:36 - and
+31:37 - what we want to do here is simply say
+31:40 - that the order
+31:42 - that
+31:44 - [Music]
+31:45 - status
+31:47 - is equal to completed
+31:50 - for the moment we will do it like this
+31:53 - order dot save
+31:56 - and we will call it here
+32:00 - order completed with an order so you may
+32:03 - ask yourself why i did it this way so we
+32:06 - will
+32:07 - make make this more complicated so don't
+32:09 - worry
+32:11 - first let's test if this is working
+32:16 - i will send
+32:17 - an order here
+32:19 - let's send this request
+32:21 - and indeed it works so we see we have a
+32:24 - primary key here so a new primary key
+32:27 - which means it's a primary key of the
+32:30 - order
+32:31 - this has this
+32:33 - product id this has this price fee total
+32:36 - quantity and in the end it is completed
+32:40 - so
+32:42 - this means that it went also to this
+32:44 - function change it to completed and it
+32:47 - is working fine
+32:49 - but let's say that
+32:52 - the payment processor needs five seconds
+32:54 - to confirm our order so i will add here
+32:57 - time
+32:59 - sleep
+33:00 - for 5 seconds
+33:02 - usually the payment processor
+33:05 - needs their time to confirm and so this
+33:07 - is a good estimation what happens if we
+33:11 - add this delay here
+33:14 - if we send another request right now
+33:18 - we will wait for five seconds till we
+33:21 - get the response
+33:23 - but this should not be the case because
+33:26 - we want to return the
+33:29 - pro the order with the status
+33:32 - pending and later on when it is
+33:35 - completed we want to change the status
+33:38 - how can we do that so
+33:40 - fast api supports asynchronous requests
+33:44 - like we did here
+33:46 - and
+33:47 - for that we need to create a background
+33:51 - task so
+33:53 - we need to import
+33:55 - i will import it here
+33:57 - from fast api
+33:59 - background import
+34:01 - background tasks
+34:04 - i will also cut time here and add it
+34:07 - here so
+34:08 - we have more space
+34:11 - and let's uh use now the background task
+34:14 - and
+34:15 - when we call the function here
+34:18 - i will add background
+34:24 - tasks
+34:26 - is a type of background tasks
+34:29 - i have also a typo here
+34:32 - and
+34:33 - we have this variable right now
+34:36 - and the way that we will use the
+34:39 - background tasks is like this so we will
+34:42 - use background tasks
+34:45 - other tasks and our task will be this
+34:48 - function here so i'll cut this
+34:52 - name and i'll put it here
+34:55 - if
+34:57 - this function does not have parameters
+35:00 - the background task
+35:02 - will be simply like this
+35:04 - but
+35:06 - this has an order as a parameter so all
+35:09 - the other parameters should be passed
+35:12 - after the name of the function
+35:15 - and that should be it
+35:17 - with this
+35:19 - fast api will execute this
+35:24 - function on the background
+35:26 - and let's see it
+35:28 - [Music]
+35:29 - before we test it i will add also
+35:32 - another endpoint here
+35:34 - i'll add it here on top
+35:36 - this will be a get request
+35:40 - because we need to see
+35:43 - if the order has changed so orders
+35:46 - with the primary key here
+35:50 - def
+35:51 - get
+35:52 - primary key as a string
+35:55 - and we will return order
+35:57 - get
+35:58 - with that primary theme
+36:01 - so we created this just to test it
+36:04 - and now
+36:05 - let's test it on the
+36:09 - postman now
+36:11 - let's send this request
+36:14 - the status is pending as we can see but
+36:16 - now let's open another tab
+36:19 - and let's
+36:20 - paste
+36:21 - this id
+36:23 - now the status it is completed so
+36:27 - i used five seconds to
+36:31 - request this so if i do it uh faster
+36:33 - this time so let's send this
+36:35 - this request i'll copy the primary key
+36:37 - paste it here
+36:39 - is still pending let's wait two more
+36:42 - seconds
+36:43 - and now it is completed so as you can
+36:46 - see this is indeed
+36:48 - executing in the background this is how
+36:51 - we execute functions in the background
+36:55 - in fast api
+36:56 - and now let's go to the other problem
+37:00 - which it is that every time we buy a
+37:04 - product
+37:05 - the the quantity should be subtracted
+37:08 - from the
+37:09 - inverter so the quantity here is 100
+37:13 - and we should decrease this value how do
+37:17 - we do that
+37:18 - we will do this by sending events
+37:21 - through redis streams so what are ready
+37:24 - streams
+37:25 - ready stream is
+37:28 - a messaging
+37:30 - event pass just like rabbit mq and kafka
+37:35 - so
+37:36 - you can read the documentation here
+37:40 - how it works so it has a lot of
+37:42 - functionalities
+37:43 - i will use just the basic ones
+37:47 - and
+37:48 - it will simply let us communicate via
+37:51 - different microservices
+37:53 - by sending events and they won't know
+37:56 - about each other
+37:58 - how do we do it
+38:00 - we will do it like this
+38:02 - the first step is sending the event to
+38:04 - the
+38:06 - uh ready streams and we already have a
+38:09 - redis connection here
+38:12 - and
+38:13 - when the order is completed
+38:16 - we change the status of the order and we
+38:19 - will send an event to redis
+38:22 - and the command is x add so this is a
+38:26 - command
+38:28 - in reddit streams we need a key
+38:31 - and the key will be order
+38:33 - completed
+38:36 - and we need a value
+38:38 - which in our case i will send directly
+38:41 - the order as it is so
+38:44 - this should be a dictionary as well
+38:47 - but fast api makes it uh easier for us
+38:51 - so i will send directly the order as a
+38:54 - dictionary like this
+38:57 - so
+38:59 - the order is sent
+39:00 - and the other parameter is a star
+39:05 - so this last parameter is the id of this
+39:09 - event
+39:11 - we can put it ourselves as we want but i
+39:14 - want
+39:15 - to have an auto generated id
+39:18 - so if you want uh now to generate id
+39:20 - just put a star here
+39:22 - and that should be it so this is the
+39:24 - event that we will send
+39:27 - and in our inventory here
+39:30 - we need to create a consumer so this
+39:33 - will wait for these events
+39:37 - for that i will create a new
+39:40 - python file i'll call it consumer here
+39:45 - and in this file first we need to add
+39:48 - the imports so from the main app
+39:51 - we need to import the redis connection
+39:56 - import redis and
+39:59 - we will import the product
+40:02 - and
+40:04 - what do we want to add here first i'll
+40:06 - create a variable key
+40:08 - which is equal to order
+40:11 - completed
+40:13 - and we need also a group
+40:16 - which i'll call this
+40:19 - inventory
+40:22 - group and let's create a redis consumer
+40:26 - group so i'll use a try accept here
+40:32 - and we will try to create
+40:37 - x group
+40:39 - create
+40:40 - with the key
+40:43 - and the group
+40:45 - so we will create a consumer group with
+40:48 - this key and this name
+40:51 - if it fails then we will print
+40:55 - group
+40:56 - already
+40:58 - exists
+41:02 - so we need
+41:04 - a consumer group in order to consume
+41:06 - and now
+41:08 - we need to consume and to do that we
+41:11 - need to add the
+41:12 - infinite loop here so while true
+41:15 - i'll use a try accept here as well
+41:21 - for the exception i want to print the
+41:23 - exception so exception as e here
+41:28 - and we will print
+41:31 - the exception as a string so like this
+41:36 - and inside the try
+41:38 - we will
+41:40 - consume and the way to consume is like
+41:44 - this
+41:45 - we'll get the results
+41:49 - redis
+41:51 - x read
+41:52 - group
+41:54 - and the parameters here first we need
+41:57 - the group
+41:59 - second we need the key
+42:03 - so it is the opposite as creating the
+42:06 - group so we need the key here and the
+42:08 - group but here we need the group and the
+42:10 - key
+42:11 - we need also two more parameters
+42:14 - uh the second one is
+42:17 - a dictionary that the
+42:19 - key will be our key
+42:22 - so it is order completed and we need to
+42:26 - add
+42:27 - this symbol which means that we want to
+42:30 - get all the events here
+42:33 - and
+42:35 - the second parameter the the last one is
+42:39 - none
+42:40 - and this is how we consume i will print
+42:44 - the results here
+42:46 - so to see what
+42:48 - is the type of
+42:50 - content that we are reading
+42:52 - and we need to add a timer so
+42:56 - while
+42:57 - we have an infinite loop here
+42:59 - i'll import
+43:00 - time here
+43:03 - and we will wait
+43:07 - sleep
+43:08 - for one second so every second we will
+43:11 - consume messages
+43:14 - and that should be it so now what is
+43:16 - left is to run this consumer
+43:20 - i will open a new tab and run python
+43:25 - consumer dot pi
+43:28 - and as you can see it is running
+43:32 - uh nostalgia
+43:34 - key order completed so it is running
+43:37 - and
+43:38 - this is waiting for the event in the
+43:41 - payment part which we will do it right
+43:44 - now
+43:45 - we will send an event when we create an
+43:48 - order let's send this
+43:50 - event
+43:52 - and we should be able to see
+43:55 - something here
+43:56 - in five seconds because we need to wait
+43:59 - that much
+44:03 - and uh
+44:05 - not sure if it is working i will
+44:08 - interrupt it and run it again
+44:10 - so we see an empty array actually
+44:14 - [Music]
+44:15 - so the message is different so this
+44:18 - means that
+44:19 - the key was created let's send another
+44:22 - event
+44:24 - then
+44:25 - we should probably wait uh five seconds
+44:28 - till we get
+44:29 - the response and indeed we got so i will
+44:32 - stop it here
+44:34 - and as you can see
+44:36 - we got an asynchronous event from redis
+44:40 - streams so
+44:42 - this is the order itself
+44:44 - this is a key order completed this is
+44:46 - the key of
+44:48 - the ready streams event
+44:50 - and this is the
+44:54 - order that we just created
+44:56 - and with this information
+44:59 - we will decrease the quantity
+45:02 - by 2 in the inventory microservice so
+45:05 - let's do that
+45:07 - and the way
+45:08 - that
+45:09 - i will do it right now
+45:12 - is uh first i'll make the condition if
+45:15 - results
+45:17 - is not an empty array
+45:21 - i will not print more empty arrays here
+45:25 - and then for each
+45:27 - result
+45:30 - in results so we can have multiple
+45:32 - events
+45:33 - because they are returned as a list
+45:36 - and the
+45:38 - object itself so this is what we want we
+45:41 - don't need the key we don't need the
+45:44 - event id here we just need this object
+45:48 - and that object
+45:50 - will be equal to result
+45:54 - we need the second
+45:56 - value of that list then the first one
+45:59 - then the second one so this is the way
+46:02 - how we get it
+46:04 - and
+46:05 - then we will get the product
+46:09 - which will be equal to product get
+46:14 - with the object
+46:17 - product underscore id
+46:20 - so
+46:21 - this is the id of the product that we
+46:25 - use in the order
+46:27 - and if the product is set
+46:30 - or i will print it directly so i will do
+46:33 - it like this so print
+46:36 - product
+46:39 - then i will decrease the quantity so
+46:41 - product that quantity
+46:44 - is equal to product that quantity again
+46:48 - minus
+46:49 - this
+46:51 - object
+46:53 - quantity
+46:55 - and i will convert this to an integer
+46:56 - because it will throw an error if we
+46:58 - don't do it
+47:01 - and we will save it so product
+47:04 - that save
+47:06 - and that should be it so
+47:09 - we get the event through ready streams
+47:13 - we loop the results we get the order
+47:17 - from that order we
+47:19 - get the product we decrease the quantity
+47:21 - and we save that product let's see if
+47:24 - this works i will save it
+47:26 - and
+47:28 - i will run it again and this time we get
+47:30 - the group already exist but we are not
+47:32 - getting empty arrays because i added the
+47:35 - if condition
+47:36 - here
+47:37 - and we are waiting to send this event
+47:42 - i send this event
+47:44 - so we need to wait five seconds
+47:47 - and
+47:48 - as we can see we got a
+47:51 - product print here so it got the product
+47:54 - that we want with the quantity of 100
+47:58 - and now if we query
+48:01 - again all the products
+48:03 - we can see that the quantity now is 98
+48:07 - so we decreased the quantity
+48:10 - asynchronously so
+48:12 - this is how it works we make a payment
+48:16 - for a product and we send events to
+48:20 - ready streams
+48:21 - to that microservice this microservice
+48:23 - doesn't know what happens in the other
+48:25 - microservice it just get events to
+48:28 - decrease the quantity of the products
+48:32 - so that's it our app it seems that is uh
+48:35 - almost completed
+48:37 - uh if you look at this app uh
+48:40 - with the functionalities it seems that
+48:43 - everything is handled
+48:45 - but there is
+48:46 - a small a rare problem that may happen
+48:50 - which is
+48:52 - in between this time period of five
+48:55 - seconds so in between this
+48:58 - time period we may have a problem that
+49:02 - if we don't handle it we will charge
+49:05 - customers for nothing basically
+49:08 - and that is the time when
+49:12 - for example i will copy this
+49:14 - endpoint
+49:16 - i will
+49:19 - create a new one
+49:20 - and this will be delete now
+49:23 - we want to delete this product with this
+49:27 - id
+49:29 - before i delete the id
+49:31 - uh
+49:32 - i will create an order for that product
+49:35 - and
+49:36 - if everything is successful
+49:39 - within five seconds i will delete that
+49:42 - product so let's do it now let's send
+49:45 - the request for the orders it is pending
+49:48 - let's delete the product
+49:51 - if we wait
+49:52 - i will copy the id of this order
+49:57 - this means that the order
+50:00 - was successful because now the status is
+50:03 - completed
+50:05 - the
+50:06 - customer was charged the order was
+50:09 - completed but the product was removed
+50:13 - uh one or two seconds
+50:16 - after the order was completed
+50:19 - this means that the customer was charged
+50:21 - and the product does not exist
+50:24 - how do we handle this case
+50:26 - so
+50:28 - these are rare problems but if you are
+50:31 - building event driven systems
+50:34 - you need to handle these problems
+50:37 - in this case
+50:39 - in our app what we will do is we will
+50:42 - refund
+50:44 - our customers so we will change the
+50:46 - status of the order to
+50:48 - refund it and we will send to the email
+50:51 - to the customers that
+50:53 - an error happens and
+50:56 - your payment has been refunded and to do
+50:59 - that
+51:00 - we need to send an event here
+51:03 - to the other microservice so we will
+51:06 - send
+51:07 - an event here
+51:09 - to the inventory and now we will send it
+51:11 - from the inventory back
+51:14 - and we will do it the same
+51:16 - so i'll copy this code
+51:20 - and i will make an if condition here for
+51:23 - the product
+51:24 - so
+51:26 - i'll do it like this if the product
+51:29 - is set
+51:32 - then we will decrease the quantity of
+51:34 - that product else
+51:37 - if the product does not exist so else
+51:39 - here
+51:42 - we will call redis we need to add the
+51:45 - so we need to send another event
+51:48 - which i'll call it refund
+51:51 - order
+51:52 - and the order in our case is this object
+51:55 - here which is already a dictionary so
+51:58 - i'll do it like this
+52:00 - so this is
+52:01 - the event in this part
+52:04 - this microservice has totally finished
+52:07 - now let's add the consumer which i will
+52:09 - copy again the consumer here and i'll
+52:11 - paste it here
+52:14 - to this microservice
+52:15 - of course we need to make changes here
+52:17 - we need to get the order
+52:22 - this is not order completed this is
+52:24 - refund
+52:26 - order
+52:27 - the group is a
+52:29 - payment group
+52:32 - so we need to create the group here
+52:34 - and we need to
+52:37 - make an infinite loop
+52:39 - here we get the
+52:41 - order
+52:43 - actually the order will be here
+52:49 - or the object i'll do it like this
+52:51 - object
+52:52 - then this is the order itself we will
+52:55 - get
+52:56 - the order from that primary key
+53:01 - order here
+53:02 - and we will change the status of the
+53:06 - order
+53:08 - status to
+53:10 - refunded
+53:12 - and we will save the order
+53:18 - and that should be it
+53:20 - so
+53:22 - this microservice now needs uh
+53:24 - to
+53:26 - call the consumer so python
+53:29 - consumer.pi
+53:31 - it is running
+53:33 - let's do the same for
+53:35 - this other microservice let's run the
+53:37 - consumer here as well
+53:40 - and let's uh
+53:42 - simulate that problem now so first we
+53:45 - will create a product which was created
+53:49 - we can see this is a product i'll copy
+53:51 - the id i'll paste it here just to be
+53:54 - ready to be deleted when we create an
+53:57 - order
+53:58 - and let's create an order now i'll
+54:00 - change the id send this and delete
+54:03 - immediately the product so
+54:07 - i think the problem now is that
+54:10 - the first time
+54:12 - the key won't be created that's why i'm
+54:15 - getting this message
+54:17 - let me stop it now and run it again
+54:22 - so
+54:24 - i will try to
+54:27 - do it like this then
+54:30 - so in the payment
+54:33 - uh when we get the order
+54:36 - i'll copy this
+54:41 - and i'll paste it here
+54:44 - i'll just say send an empty list here
+54:47 - just to create the key
+54:50 - and if i get this order so let's send a
+54:53 - get request
+54:55 - so we have a problem it seems
+55:00 - must be an empty dictionary so
+55:04 - then i will get the order
+55:08 - and i'll pass the order
+55:11 - to dictionary here
+55:13 - and i'll return the order
+55:18 - i'll run it again
+55:22 - and i will stop this
+55:26 - now it is working and if i run the
+55:29 - consumer
+55:30 - i won't have this problem that the
+55:33 - consumer is
+55:35 - was not created so as we see it is empty
+55:38 - here
+55:39 - and now we can simulate
+55:41 - that
+55:43 - the product deletion again so let's
+55:45 - create a product
+55:47 - it is appearing here
+55:49 - i'll copy the id
+55:51 - be ready to be deleted
+55:53 - and let's create another order
+55:57 - which
+55:58 - we have a mistake
+56:01 - so what is the mistake right now
+56:07 - so the mistake is because i forgot to
+56:10 - change the id here
+56:13 - and now let's send the request it is
+56:15 - spending delete the product
+56:18 - and now let's see the consumer
+56:22 - do we print something here
+56:24 - i don't think so so we don't print
+56:28 - anything but
+56:29 - for the order that we just created
+56:32 - let's see it here
+56:34 - and this time
+56:35 - i won't send
+56:37 - a random event here so i'll remove this
+56:39 - part i'll just return the order as it
+56:41 - was before
+56:43 - i'll save it
+56:47 - and we are still getting completed so i
+56:50 - figured out what is the reason the
+56:52 - reason is this if condition here is not
+56:56 - working
+56:58 - because
+56:59 - when it doesn't find the product
+57:01 - currently it throws an error so i have
+57:04 - to do a try accept here also
+57:14 - and we have multiple try catch
+57:16 - statements here
+57:18 - but let's hope if this
+57:21 - works then i will immediately create a
+57:24 - product now
+57:27 - i will
+57:28 - save this delete request
+57:31 - to do it immediately now when we create
+57:33 - an order
+57:35 - and let's delete it immediately and
+57:37 - let's see if we get a
+57:40 - deletion here
+57:42 - so actually
+57:44 - here we don't have
+57:47 - any print statements because i removed
+57:49 - it
+57:50 - so i added a print statement here on top
+57:53 - and as you can see
+57:55 - i retried again with a new order
+57:58 - and we actually get an event and uh for
+58:01 - this order that i created i will copy
+58:05 - this paste it here let's see if the
+58:08 - status now it is refunded so that's it
+58:12 - how it works
+58:14 - this is a
+58:15 - rare case but
+58:17 - anyway we need to handle also the rare
+58:21 - cases
+58:22 - in an event-driven architecture so
+58:25 - that's it this were the microservices
+58:28 - that i wanted to
+58:31 - build
+58:32 - now let's build the front end
+58:34 - so now it's time to create the front end
+58:37 - and
+58:38 - i'm in a in the folder now with where i
+58:41 - have the inventory and the payment
+58:43 - microservice
+58:44 - and now i will use the command mpx
+58:47 - create react
+58:49 - up
+58:51 - i'll call it front end
+58:54 - or i'll call it inventory
+58:57 - front-end
+59:00 - and let's wait till it's completed right
+59:03 - now
+59:04 - so it is completed i open it with my ide
+59:07 - so this is the front end now and i have
+59:10 - the back ends running
+59:13 - in other tabs but we won't change those
+59:16 - let's work with the front end i will
+59:18 - remove the test file
+59:21 - and this up css
+59:23 - we need to adjust our app.js
+59:27 - and our index.css so for the app.js i
+59:31 - will change the html here
+59:34 - i'll go to
+59:35 - boots gets bootstrap.com
+59:38 - click get started and let's copy the
+59:40 - bootstrap css
+59:43 - i'll paste it here on the index.html
+59:48 - and for the html here go to examples and
+59:53 - go to
+59:55 - dashboard
+59:56 - here
+59:58 - let's view the page source and i'll copy
+60:01 - the code from the
+60:04 - container fluid or from the header i
+60:06 - guess
+60:08 - until the end
+60:10 - and i will replace this html here
+60:14 - with
+60:15 - the one that i just copied
+60:18 - but we need to make a lot of changes
+60:20 - here for example
+60:22 - this table we need just a table row we
+60:24 - don't need all the other
+60:26 - table rows so
+60:29 - from the end
+60:30 - until here
+60:32 - i will remove everything so we need
+60:34 - just one table row
+60:36 - we don't need the section title neither
+60:39 - the canvas
+60:41 - i will remove also this
+60:43 - div here
+60:45 - we don't need it
+60:48 - for the menu
+60:50 - we have two kinds of menu so this
+60:53 - ul here i will remove it along with this
+60:56 - h6 here
+60:58 - and we need this ul but we need only one
+61:02 - list item so i will keep
+61:05 - the dashboard
+61:08 - and and for the header
+61:11 - we don't need
+61:13 - this button
+61:15 - this
+61:16 - input
+61:18 - we don't need it
+61:21 - and what is left here so something
+61:25 - is wrong i guess
+61:26 - or not so let me format it i'll save it
+61:31 - run npm
+61:33 - start
+61:34 - and let's see how it looks like so if we
+61:38 - open it on the browser
+61:41 - it will look like this still we need
+61:43 - some css
+61:46 - because this dashboard has this
+61:48 - dashboard css here so in the in the
+61:51 - paste source click dashboard css
+61:54 - select all the
+61:56 - css there and add it to the index css
+62:00 - here
+62:01 - i'll save it
+62:03 - if we see now our react app it will look
+62:06 - better now
+62:08 - let's make
+62:09 - other changes
+62:11 - for example the dashboard here i'll
+62:13 - rename it to products
+62:15 - i'll remove this spawn
+62:21 - and it will look like this
+62:24 - and here we need to render our products
+62:28 - but
+62:29 - i will create components i want to do it
+62:32 - directly
+62:34 - so first i will create
+62:37 - a new directory components
+62:40 - and inside i will create a products
+62:43 - component so this will be a javascript
+62:45 - file
+62:46 - products
+62:49 - and
+62:50 - i will export a constant here products
+62:54 - this will be equal to a function that we
+62:57 - will return here
+62:59 - an html and that html will be
+63:03 - this
+63:04 - table here
+63:08 - so i will cut the code
+63:09 - and i will return it here
+63:12 - so this is the products
+63:16 - component for the moment
+63:18 - and
+63:19 - for the other html that is left i will
+63:23 - create another component i'll call it
+63:26 - wrapper
+63:30 - because we will reuse this wrapper to
+63:33 - another component so that's why i split
+63:36 - that html into two different components
+63:39 - so
+63:39 - i'll export a constant
+63:42 - wrapper
+63:44 - that this will contain
+63:47 - all this
+63:49 - html
+63:51 - in the wrapper i will return
+63:54 - the
+63:55 - html so i will remove this class name up
+63:59 - and also the div in the beginning so
+64:01 - i'll keep it like this
+64:04 - and
+64:05 - here we want to display our products.js
+64:10 - we can do it like this so i'll add here
+64:14 - the props
+64:17 - and inside our main
+64:19 - div here i'll add props
+64:22 - that children
+64:28 - and this wrapper will be used in our
+64:30 - products.js because we will wrap this
+64:34 - html with the wrapper
+64:38 - i'll cut it i'll put it here
+64:41 - and that's it so this is our products is
+64:44 - rapid is wrapped with this wrapper
+64:47 - component
+64:48 - and here we can simply return our
+64:51 - products
+64:53 - like this
+64:55 - and if we save
+64:57 - if we go back nothing will change
+65:00 - but our code will look much better
+65:04 - now let's add the the
+65:06 - router so we need to install a package
+65:08 - npm install
+65:10 - react router dom
+65:14 - so this will
+65:15 - let us
+65:17 - map the routes so we will have more
+65:20 - components we don't we won't have just
+65:22 - the products here
+65:24 - and first we need to import
+65:28 - from
+65:29 - react
+65:31 - router dom
+65:32 - we need to import
+65:34 - browser router
+65:37 - routes
+65:39 - and route
+65:42 - so
+65:43 - now this will change this return
+65:46 - statement to this first i will use the
+65:49 - browser router
+65:51 - inside
+65:52 - this will have the routes
+65:56 - and for all the routes we need
+65:59 - the specific routes so
+66:03 - we have only one route for the moment
+66:05 - which is the path is
+66:08 - just the main path and the element
+66:11 - is our
+66:13 - products
+66:14 - components like this
+66:17 - so if we go to the main path we will
+66:19 - render our products component i will
+66:22 - save this
+66:23 - and nothing will change again
+66:26 - now
+66:28 - we are finished with app.js every time
+66:31 - we create a new component we need to add
+66:33 - a new route here so for the moment let's
+66:36 - make the products work so here we are
+66:40 - displaying just an html but this should
+66:42 - be
+66:43 - the list of the products and to do that
+66:46 - we have to create a variable here
+66:48 - products
+66:50 - set products
+66:53 - will be equal to use state
+66:56 - and the default state will be an empty
+66:58 - array
+67:00 - and
+67:01 - to get the products we have to use here
+67:04 - use effect
+67:08 - and we need to make a request to the
+67:11 - backend let's add first the dependencies
+67:14 - which should be an empty array
+67:16 - this means that we will use use effect
+67:19 - only once if we add
+67:21 - the empty array here
+67:24 - and inside
+67:26 - i will call an asynchronous function
+67:30 - like this
+67:32 - because usefx does not support
+67:35 - adding a synchronous function here on
+67:37 - top it will throw an error that's why we
+67:40 - need to create this
+67:42 - and i created an asynchronous function
+67:44 - because now we will send an asynchronous
+67:47 - request so we'll get a response
+67:50 - is equal to await
+67:52 - fetch
+67:54 - http
+67:55 - localhost so http
+67:59 - localhost
+68:01 - port 8000
+68:05 - slash
+68:06 - products
+68:09 - and
+68:10 - the content
+68:12 - it will be equal to a weight response
+68:16 - json
+68:19 - so this is the content
+68:22 - so
+68:24 - this content will be our products and we
+68:27 - will call here set products to the
+68:29 - content
+68:30 - and that should be it we added the
+68:33 - products here
+68:35 - and we should loop them here so
+68:38 - let's loop the products so products
+68:41 - map
+68:43 - product
+68:45 - we will return
+68:47 - this
+68:50 - html where the key we need to add the
+68:53 - key for when we make for loops in react
+68:56 - so the key will be the product dot id
+69:00 - and the values will be
+69:03 - actually let's add them first here
+69:06 - on top so
+69:08 - the first value is id which is correct
+69:11 - then we need the name
+69:14 - the price
+69:17 - the quantity
+69:22 - and the actions
+69:26 - and when we loop the product we will
+69:28 - display the product
+69:30 - dot id here
+69:33 - i'll copy paste it here this is name
+69:37 - this is a
+69:39 - price
+69:40 - this is the quantity
+69:44 - and for the actions
+69:46 - this will be just an anchor link
+69:49 - with an href to
+69:51 - hashtag
+69:53 - we need to add these class names which
+69:55 - are button
+69:57 - button
+69:58 - small
+69:59 - button
+70:00 - outline
+70:03 - secondary
+70:08 - and we need to close it and we will call
+70:10 - delete here
+70:13 - and that should be it
+70:16 - so let's see it uh here
+70:18 - we can see that
+70:21 - we are showing here a table
+70:23 - if we inspect
+70:25 - we're calling the products but
+70:27 - momentarily we don't have any products
+70:29 - so we need to create
+70:31 - the component to create those products
+70:34 - and i'll create it now so this will be
+70:38 - the products
+70:41 - create component
+70:44 - before we add any code i will go to the
+70:46 - products and i will add a button here on
+70:50 - top
+70:52 - and that will be
+70:53 - this
+70:54 - html with the link so
+70:58 - this will look like
+71:00 - this so we have another button here
+71:03 - that will navigate to the create page
+71:06 - which will be this products create
+71:09 - and
+71:10 - we are using a link here which we import
+71:13 - from react router dom so we can navigate
+71:16 - to that page
+71:18 - also that page should be added on our
+71:22 - routes here but first we need to
+71:25 - export
+71:27 - the constant product create
+71:31 - and we need to return some html so i'll
+71:34 - return the div here
+71:36 - so we can add it here
+71:39 - so the path now will be create
+71:41 - and the element is product
+71:44 - create
+71:45 - so we added the second route
+71:48 - now let's add the html here so we don't
+71:51 - need this div we need to add here a form
+71:57 - i will add the class for the form so
+71:59 - class name here
+72:01 - margin top should be three
+72:04 - and for all the inputs i will use this
+72:08 - format here so we need this class name
+72:11 - and we need
+72:13 - an input here so the first input will be
+72:16 - the name so for the placeholder i will
+72:18 - put here name
+72:20 - and inside the label i'll put name again
+72:23 - and i'll do the same for the other
+72:26 - inputs which are the
+72:29 - price
+72:31 - and the last one
+72:34 - is
+72:34 - the quantity
+72:42 - we need also a button
+72:45 - so i preset
+72:46 - the button also with this classes
+72:49 - and with submit inside
+72:52 - and this form
+72:53 - will look so let's let me click there we
+72:56 - will go there and
+72:57 - we can see only the form here
+73:00 - which is not correct because i forgot to
+73:02 - wrap it with the wrapper i'll add here
+73:05 - the wrapper
+73:09 - and i will close it
+73:11 - and if i save it we can see the form now
+73:14 - we have a name a price and a quantity
+73:18 - for the price and quantity i will make
+73:20 - the type here to a number
+73:25 - same for the quantity
+73:28 - and this inputs now will have this
+73:32 - arrows up and down
+73:34 - now let's make this form work so for
+73:37 - each input now i'll create a variable so
+73:40 - we need
+73:42 - a name
+73:43 - set name is equal to use state
+73:47 - empty
+73:49 - and same for the other inputs which are
+73:52 - the price
+73:54 - set price
+73:57 - and this is the quantity
+74:01 - set quantity
+74:04 - and now
+74:06 - for all the inputs when we make a change
+74:08 - so on change here we will have an event
+74:11 - that will set the name to
+74:13 - event.target.value
+74:17 - we will do the same for
+74:19 - all the other inputs
+74:21 - so this is set
+74:23 - price
+74:25 - and this is
+74:27 - set quantity
+74:31 - and we got all the values now it's time
+74:34 - to submit the form so i will create a
+74:36 - function here
+74:37 - submit
+74:43 - and when we submit here
+74:45 - on submit
+74:46 - we will call that submit function
+74:50 - this will have an event
+74:52 - and what do we want to do here is we
+74:54 - need to prevent default
+74:56 - because if we don't add this line
+74:59 - when we submit here it will refresh the
+75:02 - page and
+75:03 - that is not what we want
+75:06 - so that's it now what is left is to send
+75:10 - the request to the backend so we will
+75:13 - make this asynchronous
+75:15 - and we will await here
+75:17 - fetch
+75:19 - will send an http request
+75:23 - localhost port 8000 slash
+75:26 - products
+75:28 - and this time the the method will be a
+75:30 - post request
+75:33 - we need to add the headers
+75:35 - which are
+75:36 - content
+75:40 - type
+75:41 - will be application
+75:46 - json
+75:48 - and we need to send the information that
+75:50 - we need which are these three variables
+75:53 - here and we'll send that in the body
+75:56 - which
+75:57 - should be a string so we need to use the
+75:59 - function json stringify
+76:02 - and the object that we need to send is
+76:05 - the name will have the value of name but
+76:08 - since they have the same key and the
+76:11 - value
+76:12 - i can use it directly like this so i
+76:14 - added the name
+76:16 - the price and the quantity and that's it
+76:20 - this is the request that we want in
+76:23 - order to create the product
+76:25 - and when we are finished so if this is
+76:27 - successful i want to navigate back to
+76:30 - the products and we will use
+76:33 - the function navigate
+76:37 - is equal to use navigate
+76:43 - so
+76:45 - y is not imported so
+76:48 - we need to import
+76:51 - use navigate
+76:54 - from
+76:55 - react
+76:56 - router dom
+76:59 - and
+77:01 - when this request
+77:03 - completes successfully we will await
+77:06 - navigate
+77:08 - i'll pass here minus one which means
+77:11 - that go to the previous page
+77:14 - and with this
+77:16 - let's try to create our first product
+77:19 - product
+77:22 - the price will be 20 and the quantity
+77:24 - will be 100 submit
+77:27 - we redirected back we created the
+77:29 - product we have an id here the name the
+77:32 - price and the quantity so
+77:34 - everything works fine
+77:37 - we need also to add the functionality to
+77:40 - delete a product so let's add it now so
+77:44 - we have this
+77:46 - incorrectly which does nothing for the
+77:48 - moment
+77:49 - let's create a delete function
+77:53 - i'll call it deal because delete is a
+77:54 - keyword
+77:56 - and this function will accept
+77:59 - this will be asynchronous will accept
+78:01 - an id
+78:03 - and if we scroll down
+78:07 - i will add here on click
+78:11 - and when we
+78:13 - get an event
+78:15 - we will call delete
+78:18 - with the product id inside
+78:22 - so
+78:23 - we have the product id let's go back
+78:26 - and
+78:28 - the first thing that we need to do once
+78:29 - we delete something is to
+78:32 - make a confirmation window so window
+78:34 - confirm
+78:38 - are
+78:38 - you sure
+78:41 - to delete
+78:44 - this record
+78:46 - so every time you delete something make
+78:48 - sure to
+78:49 - ask them the confirmation window
+78:52 - and if they type ok we will await fetch
+78:57 - [Music]
+78:58 - http
+79:01 - localhost port 8000
+79:05 - slash
+79:06 - products slash the id that we just
+79:11 - passed here
+79:13 - and if that is successful so
+79:16 - we need also to add the method here
+79:18 - which is delete
+79:22 - if that is successful then from the
+79:25 - products here we have to
+79:27 - remove that product
+79:28 - and we will do it like this so set
+79:30 - products
+79:34 - to products but we have to filter
+79:37 - we have to filter all the products
+79:39 - that the product that id
+79:42 - is different than this id that we just
+79:45 - removed
+79:46 - and that's it
+79:47 - so
+79:48 - let's test it now
+79:50 - are you sure you want to delete this
+79:52 - record okay and it is removed if i
+79:55 - refresh we won't see that record so we
+79:57 - need to create another product
+80:00 - with a new price
+80:03 - a new quantity
+80:06 - and it will it works successfully now
+80:10 - is time to add the other front end for
+80:13 - the other microservice so
+80:16 - again this should be another app so we
+80:19 - need to create another react app
+80:21 - in order to add the micro the front end
+80:24 - for the payment microservice but i will
+80:26 - still do it in this
+80:29 - front end
+80:30 - because it won't make a difference i
+80:33 - already explained the concepts that i
+80:36 - wanted to teach you so
+80:39 - adding a new react app won't add
+80:41 - anything new to this project so
+80:44 - that's it with this i will create
+80:47 - a new
+80:48 - component here and i will call it orders
+80:51 - and
+80:52 - let's export
+80:54 - this constant orders
+80:58 - and for the html
+81:00 - i will paste it it directly
+81:03 - so this is the html that i want to show
+81:07 - there
+81:08 - so to see what it looks like
+81:10 - we need to add it also to the routes so
+81:14 - the path here will be orders
+81:17 - and the element will be
+81:19 - orders so don't forget to import that
+81:22 - also
+81:23 - and if we open the browser i'll open a
+81:26 - new tab here i'll close this other tabs
+81:30 - and this is slash orders
+81:33 - and this is the checkout form so
+81:36 - think of it as a new microservice
+81:39 - it is the same app but it won't make a
+81:41 - difference if we create a new react app
+81:44 - so
+81:45 - here we create the products and here we
+81:48 - buy them and the way that we want to buy
+81:51 - them is we will copy here the
+81:53 - id of the product and we will pass the
+81:57 - quantity here so
+82:00 - let's go to the orders now
+82:03 - first let's make
+82:05 - for each input let's make a variable
+82:07 - here so
+82:09 - i'll add the id
+82:11 - set id
+82:14 - this will be equal to use state
+82:17 - empty by default
+82:21 - and we need also the quantity
+82:28 - and this is set quantity
+82:33 - and when we change those values
+82:36 - we change them here
+82:38 - so on change
+82:40 - we will set
+82:43 - the id here event.target.value
+82:47 - and we will do the same for the quantity
+82:51 - set quantity
+82:55 - so
+82:56 - we got those values and now we need to
+82:59 - submit the form so
+83:01 - let's create a function here
+83:04 - submit
+83:08 - let's add it here on submit
+83:13 - we will call a submit function
+83:15 - this will be an asynchronous
+83:18 - function this will get the event and we
+83:21 - need to prevent default
+83:24 - and
+83:26 - here we want to send a request to the
+83:29 - backend so wait
+83:31 - fetch
+83:33 - localhost
+83:38 - port 8000
+83:41 - not 8 000 sorry 8001 in this case
+83:43 - because we are
+83:45 - sending a request to the payment
+83:47 - microservice so this is 8001 slash
+83:51 - orders
+83:53 - this should be a post request
+83:57 - and we need to
+83:59 - add the headers
+84:01 - i'll copy them from here
+84:03 - so the headers and the body
+84:07 - and if i go here i'll paste it here
+84:11 - so the headers are the same and the body
+84:14 - is sending this information but we don't
+84:16 - need the name and the price we need to
+84:18 - send just an id
+84:20 - and the quantity
+84:22 - and if everything is set
+84:24 - then
+84:26 - i will display a message here
+84:28 - so i'll cut this
+84:31 - i'll create a variable message
+84:36 - message
+84:38 - set message
+84:41 - is equal to use state default message is
+84:44 - by your favorite products
+84:47 - and when it's completed we'll set the
+84:49 - message to
+84:54 - thank you
+84:56 - for
+84:57 - your
+84:58 - order
+85:01 - and i will show the message here
+85:06 - and that should be it so
+85:10 - this will look like this let's uh try to
+85:13 - purchase this product
+85:15 - the quantity is three let's buy the
+85:18 - product and as we can see thank you for
+85:20 - your order and if we refresh this
+85:24 - we will see 117
+85:27 - so we should wait five seconds till this
+85:30 - value changes
+85:31 - and everything is working as it should i
+85:34 - will adjust a small change so our app is
+85:38 - perfectly working i will
+85:42 - add the use effect here
+85:46 - that this use effect will depend on the
+85:50 - id
+85:51 - so every time we change the id here
+85:54 - the input
+85:56 - we want to
+85:59 - we want to display another message here
+86:02 - so the product price is this much
+86:05 - so
+86:06 - i'll first make an asynchronous function
+86:09 - here
+86:15 - and
+86:17 - i will use a try catch
+86:21 - because we may have a problem
+86:24 - in in case that we have an error i'll
+86:28 - set the message to
+86:30 - uh
+86:31 - the same message that was all the time
+86:33 - so be buy your favorite product
+86:36 - and
+86:37 - if the id is set
+86:41 - then we will send
+86:43 - a message so
+86:45 - request sorry
+86:46 - wait
+86:47 - fetch to http localhost port
+86:53 - 8000 slash
+86:55 - products
+86:58 - so i'll change the quotes here because
+87:00 - we need to use these
+87:03 - because i will pass the id of the
+87:06 - product here
+87:08 - we'll get the content
+87:09 - which is equal to a weight
+87:11 - response
+87:13 - json
+87:15 - and we will set the message to
+87:20 - your
+87:21 - product
+87:23 - price
+87:24 - is
+87:25 - in dollars and i'll put here the value
+87:30 - content dot price
+87:34 - and let's see if this is working fine
+87:39 - so i will use double dollar signs
+87:41 - because we need an actual dollar sign
+87:44 - here
+87:44 - so if i refresh
+87:47 - i will copy this value paste it here and
+87:50 - as you can see your product price is 25
+87:54 - dollars
+87:55 - so
+87:57 - i will make a small change also now so
+88:02 - the price will be equal to
+88:06 - we need to parse it to float so parts
+88:09 - float
+88:11 - times 1.2 since we are the
+88:15 - uh 20
+88:17 - in this microservice so the actual price
+88:20 - will be more than that
+88:23 - and
+88:24 - as you can see now your product price is
+88:26 - 30. so this is a inventory
+88:30 - we are selling the price
+88:32 - we are selling the product with the
+88:33 - price of 25
+88:35 - and in another app that is using those
+88:38 - products
+88:39 - we add the fee of 5 dollars so this is
+88:43 - how microservices work
+88:46 - and thank you for watching this video
+88:49 - don't forget to like share and subscribe
+88:52 - thank you

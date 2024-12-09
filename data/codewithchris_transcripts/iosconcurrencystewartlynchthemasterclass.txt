@@ -1,0 +1,2547 @@
+00:00 - hi my name is stuart lynch and i'm very
+00:02 - happy to be offering you this series on
+00:04 - behalf of code with chris
+00:07 - though the title of this series is ios
+00:09 - concurrency it is much much more
+00:12 - it's a six part series where i'll
+00:14 - introduce you to json decoding
+00:16 - and creating models from json building
+00:19 - an api service to perform asynchronous
+00:22 - network calls to fetch that json
+00:25 - we'll go through the traditional
+00:26 - completion handler-based url functions
+00:29 - handling and reporting errors along the
+00:31 - way
+00:32 - there are a lot of topics covered as my
+00:34 - intention is to provide you with methods
+00:37 - and understanding that you'll be able to
+00:38 - apply to your own projects both now and
+00:41 - in the future
+00:43 - in this first video we'll focus on
+00:45 - creating our models from the json and an
+00:48 - api service to handle the process
+00:50 - we'll create a generic function to
+00:52 - handle the different api endpoints and
+00:54 - models and use a result based completion
+00:57 - handler with our own designed api error
+01:01 - if this is something you're interested
+01:02 - in then let's get started
+01:06 - first create a new xcode ios app project
+01:10 - and make sure it's a swift ui project
+01:12 - and name it something like ios
+01:14 - concurrency
+01:17 - now i always like to add an app icon and
+01:20 - launch screen to my app so that they are
+01:21 - easily recognizable in the simulator or
+01:24 - on my phone if i install it there
+01:26 - i provided you with some resources for
+01:28 - this project with these two items
+01:30 - already created
+01:32 - you can find those in the link in the
+01:34 - description below
+01:38 - so go to the assets folder of your
+01:40 - project
+01:41 - and drag the launch screen image into
+01:43 - that folder
+01:47 - next select your app's target
+01:51 - and then the info tab to see the new ios
+01:54 - 15 info.plist
+01:58 - drop down the disclosure icon on the
+02:00 - launch screen
+02:02 - then click on the plus icon and select
+02:05 - image name
+02:07 - make sure that you enter the image name
+02:09 - with the lowercase l and uppercase s
+02:12 - but don't enter the png extension
+02:18 - next right click on the app icon in the
+02:21 - assets folder and choose show in finder
+02:28 - bring up that provided resources folder
+02:30 - once more and move the app icon app icon
+02:33 - set into that folder replacing the empty
+02:36 - one
+02:37 - we've just installed the icon and launch
+02:40 - screen
+02:44 - if you run your app now in the simulator
+02:46 - when it launches you should see that
+02:48 - launch screen
+02:51 - if you exit the app or quit and check
+02:53 - the simulator's home screen
+02:55 - you'll see that icon on your app
+03:00 - this project is going to be using the
+03:02 - json placeholder api to fetch and decode
+03:05 - json
+03:09 - this api has a number of endpoints that
+03:11 - you can use
+03:13 - one of them is the user's endpoint where
+03:15 - we can fetch json corresponding to 10
+03:18 - different users
+03:19 - as you can see from this json here
+03:25 - let's take a look at the post endpoint
+03:29 - users are able to create posts as you
+03:31 - can see from this endpoints json
+03:34 - and there are 100 of them corresponding
+03:36 - to 10 for each of the 10 different users
+03:40 - what we'll need to do is to create a
+03:42 - struct that will model that json
+03:45 - that's why we often call these structs
+03:47 - that represent something a model
+03:50 - i have created a couple of youtube
+03:52 - videos on modeling data from json and
+03:54 - there are a number of tools available to
+03:56 - you to do that as
+03:58 - well
+04:00 - the tool that i use a lot is one called
+04:02 - ducky model editor
+04:05 - however many people are happy with a
+04:07 - free web paste tool called quick type
+04:12 - these tools are particularly useful if
+04:13 - you want to model really complex objects
+04:16 - that have nested json our two are
+04:18 - relatively simple so i want to model
+04:21 - them by hand
+04:23 - so first let's create a new group called
+04:26 - models
+04:29 - next create a new swift file called user
+04:36 - now i'm going to want to reference the
+04:38 - user's endpoint so i'll need to go back
+04:40 - and copy that url
+04:43 - and then i can paste it as a comment at
+04:45 - the top of my struct so that i have
+04:47 - quick reference to it
+04:49 - well now with that file created i'm
+04:51 - going to create that struct and i'm
+04:53 - going to call it the same name user
+04:57 - now for the user i'm really only
+04:59 - interested in modeling the id
+05:02 - name
+05:02 - username and email
+05:05 - and since these are all top level keys
+05:07 - in the key value pairs of this json we
+05:10 - can simply create properties that use
+05:12 - the same name
+05:13 - and the id will be an int
+05:16 - and the other three are strings
+05:19 - now since we're only going to be reading
+05:21 - this information and not modifying it we
+05:23 - can create the properties as constants
+05:25 - using let
+05:29 - now in order to decode this json the
+05:31 - model has to conform to the codable
+05:33 - protocol
+05:35 - and because each one of these properties
+05:37 - are simple types that conform to the
+05:39 - quotable protocol already the entire
+05:42 - struct will too so we can mark it as
+05:44 - conforming to codable protocol
+05:48 - we're also going to want to present our
+05:50 - users in a list view and it's much
+05:52 - easier to do if the struct conforms to
+05:54 - the identifiable protocol and the only
+05:57 - requirement for that is that there is a
+05:58 - unique property called id and we already
+06:02 - have that
+06:05 - so let's do the same now for the posts
+06:08 - json endpoint
+06:10 - first let me copy the endpoint for the
+06:12 - post url so that i can use as a
+06:14 - reference
+06:19 - and then i want to create a new file
+06:21 - called post
+06:23 - and in that file i can paste that url as
+06:26 - a reference for our new model struct
+06:37 - now this url gets all of the posts
+06:39 - but what i want to know as well is how
+06:41 - do i get the post for just one user
+06:44 - so let me return to the api
+06:46 - documentation to find that endpoint
+06:51 - here it is
+06:53 - and this is the one that i want so let
+06:54 - me copy and paste that url in as well
+07:01 - now i can create a new struct using that
+07:03 - same name
+07:07 - for the posts i want to model all four
+07:09 - properties here and they are all top
+07:12 - level as well so fairly easy to do
+07:15 - just creating our properties using the
+07:17 - same names as the key values in our json
+07:22 - and again since we'll be reading this
+07:23 - information only and not modifying it
+07:26 - we'll create it using lips as constants
+07:30 - both the user id and id are ints while
+07:34 - the title and body are strings
+07:37 - the user id property corresponds to the
+07:40 - id property in our user model
+07:43 - and the id though is the unique property
+07:46 - for this particular model and again in
+07:49 - order to decal with the json the model
+07:51 - has to conform to the equitable protocol
+07:54 - and because each of these properties are
+07:55 - simple types that conform to the
+07:57 - quotable protocol the entire struct
+07:59 - wheel too
+08:03 - and with the id property being here we
+08:05 - can conform the construct itself to the
+08:08 - identifiable protocol
+08:12 - now i have an entire series on json
+08:15 - decoding
+08:16 - and it covers this as well as how to
+08:18 - decode and encode your data which we'll
+08:20 - be going over soon
+08:22 - i'll leave a link here in the notes
+08:24 - below
+08:29 - now i want to create a struct that i can
+08:31 - use as a service
+08:33 - that i can call from a variety of
+08:34 - different views to fetch our data
+08:37 - whether that be an array of user or an
+08:39 - array of post
+08:42 - now there are a number of ways to do
+08:43 - this and you may have heard of a
+08:45 - singleton
+08:46 - but it gets a lot of bad press about not
+08:48 - being able to test but we're not going
+08:51 - to be running any unit tests on this
+08:52 - project but let's start right now by
+08:54 - creating good habits and anytime we want
+08:57 - to access that service we'll create a
+08:59 - new instance of the service
+09:03 - so i'm going to create a group called
+09:05 - services and even though there's only
+09:06 - going to be one service that i create
+09:09 - i want to keep my code organized
+09:13 - inside that folder group i'll create a
+09:16 - new file
+09:17 - and i'll call it api service
+09:22 - and inside there i'll create a struct
+09:24 - using that same name
+09:29 - now the struct will have one property
+09:31 - that will be the url string
+09:33 - representing the endpoint
+09:35 - and we're going to have two different
+09:37 - ones one for the users
+09:40 - and one for the posts
+09:41 - so each time that we create an instance
+09:43 - of this struct we'll need to pass in a
+09:46 - different string representing that
+09:47 - endpoint
+09:51 - next we'll create a function called get
+09:54 - users
+09:56 - now this function is going to have to
+09:58 - return an array of users
+10:00 - so my first inclination is to return an
+10:03 - array of users like this
+10:07 - unfortunately this won't work at least
+10:09 - not yet
+10:10 - later on in the series we'll be covering
+10:12 - new concurrency models introduced in ios
+10:15 - 15
+10:16 - but as you are likely to see still for
+10:19 - quite a while the older method of
+10:20 - dealing with concurrency we're going to
+10:22 - start there
+10:23 - this will require using what is known as
+10:25 - a completion handler
+10:27 - and eventually we're going to be using a
+10:29 - result type as our completion handler's
+10:31 - argument
+10:32 - but i'm getting ahead of myself
+10:34 - if you are still confused after i finish
+10:37 - this video i recommend that you watch
+10:39 - the two videos i have on that topic
+10:42 - and links are in the description below
+10:47 - let's start easy now and build on this
+10:50 - concept
+10:52 - the reason we need a completion handler
+10:53 - is because we have no idea how long it's
+10:55 - going to take for that network call to
+10:58 - fetch that data and since our code is
+11:00 - inherently synchronous
+11:02 - it would move on to the next line before
+11:04 - we received our data
+11:06 - and a completion handler is just a
+11:08 - closure that we can pass in as an
+11:10 - argument so that it will get executed
+11:13 - when that data has been retrieved
+11:15 - and we can give that closure a name
+11:18 - and typically people call it something
+11:19 - like completion or completion handler
+11:24 - so when this function has completed
+11:26 - and we'll either have successfully
+11:28 - retrieved our json
+11:31 - and decoded it
+11:33 - or an error will have been produced
+11:36 - so when we call this function we'll need
+11:38 - to deal with either case but first i'm
+11:40 - going to keep it simple and deal with
+11:42 - the error right here within the function
+11:44 - and only execute the closure if we
+11:46 - successfully decoded the data
+11:49 - so the closure function is going to have
+11:52 - an argument which will be an array of
+11:54 - user that we've returned
+11:57 - and it's going to return nothing or void
+12:02 - there will be another issue however
+12:04 - as we'll be fetching that from a server
+12:06 - and it's going to take some time the
+12:09 - function itself will escape the scope
+12:11 - before we're done
+12:12 - so we'll need to specify that this
+12:14 - completion handler is going to escape
+12:18 - so we do that by marking the completion
+12:20 - function as escaping
+12:24 - well now we can get to work
+12:28 - first we'll need to create a url from
+12:30 - our string
+12:31 - and we can use a guard check for this
+12:34 - so we'll guard
+12:37 - url equals the url
+12:39 - string from
+12:41 - url string
+12:43 - else
+12:44 - we'll just return from the function
+12:49 - next we'll use the url sessions
+12:52 - singleton datatask function
+12:54 - with url
+12:56 - and this also has a completion handler
+12:58 - just like our function does
+13:02 - so we'll pass in the url for the url
+13:05 - and when we hit enter on the closure we
+13:07 - see that we can assign variables for the
+13:09 - three different
+13:11 - objects that are coming back
+13:13 - data response and error
+13:16 - and all three of these properties are
+13:18 - optional
+13:23 - the most important thing that we have to
+13:25 - do before we forget however is to make
+13:27 - sure that this task gets initiated so
+13:29 - we'll also need to call resume because
+13:32 - it's initially in a suspended state
+13:39 - so now we can check on those three
+13:41 - optional items that we get back
+13:44 - first we'll check the response to see if
+13:46 - it has a status code of 200
+13:49 - and that it's not nil
+13:51 - so another guard check
+13:54 - guard
+13:55 - http response equal response as an http
+13:59 - url response
+14:01 - and also
+14:02 - that the status code is equal to 200.
+14:08 - else we'll just return
+14:12 - we also only want to continue if there
+14:15 - isn't an error
+14:17 - so guard
+14:19 - if error is equal to nil we can continue
+14:22 - else we'll return from the function
+14:27 - if we get this far then we'll need to
+14:29 - check to see if we got data
+14:32 - so another guard check
+14:35 - guard but data equals data
+14:37 - else return
+14:40 - well now that we've got the data we can
+14:43 - try to decode it
+14:45 - and the key word here is try
+14:48 - but first we'll need a decoder let
+14:50 - decoder equals json decoder
+14:53 - now because the decoding might fail and
+14:56 - throw an error which means generate an
+14:58 - error
+14:59 - we have to create a do catch block to
+15:02 - try and decode it
+15:04 - and this is such a common construct the
+15:06 - do catch block that i've created a code
+15:09 - snippet for this so anytime you see me
+15:12 - do dtc
+15:14 - that stands for do try catch
+15:17 - i have a code snippet that's going to
+15:18 - generate that construct
+15:21 - then we can let our decoded data be the
+15:23 - result of trying to decode the array of
+15:26 - user from that data
+15:29 - and if it's successful
+15:31 - we can just use that decoded data as the
+15:33 - argument for our completion handler
+15:35 - which is completion
+15:38 - and it runs that function with that
+15:40 - argument
+15:42 - if it's not successful it fails
+15:46 - so we'll just catch that error and then
+15:48 - just print that there was an error
+15:54 - now this will work
+15:56 - but there are some severe limitations
+15:57 - here and you'd not want to ship an app
+15:59 - like this using this function
+16:02 - when there is an error
+16:03 - we're not giving any feedback to the
+16:05 - user
+16:06 - and it just exits the function
+16:09 - the only time you do anything is when
+16:10 - you print out that there was an error
+16:13 - to the console but your user will never
+16:15 - see that
+16:17 - in a later video we're going to go over
+16:19 - error handling in more detail but i want
+16:21 - to set the stage here by changing this
+16:23 - function to provide any errors to the
+16:25 - caller so that eventually we can bubble
+16:27 - that error up and provide an error to
+16:30 - our users in the ui using an alert
+16:34 - and this is where the result type comes
+16:36 - in for our completion argument
+16:39 - a result is simply an enum with two
+16:41 - cases
+16:42 - either a success case with an associated
+16:45 - value
+16:46 - and that associated value will be in our
+16:48 - case the array of users the successful
+16:51 - completion
+16:52 - or a failure case
+16:54 - where the result is a error type
+16:58 - so instead of using simply an array of
+17:01 - user in our completion handler i want to
+17:04 - use a result type
+17:05 - so we can change our completion
+17:08 - argument
+17:09 - to a result
+17:10 - where the two cases are array of user
+17:14 - or an error
+17:17 - and then we'll need to fix that
+17:19 - completion that we'd have in our
+17:20 - function
+17:21 - so that when we successfully decode the
+17:23 - data
+17:24 - the result success case dot success has
+17:28 - an associated value and that associated
+17:31 - value is our decoded data
+17:34 - still with me
+17:36 - well what about the failure case
+17:39 - well it's going to fail every time we
+17:41 - fail the guard check
+17:43 - or in that do catch block
+17:47 - we want to be more prescriptive so i'm
+17:49 - going to create my own api error enum
+17:52 - with all five of the cases where we
+17:55 - could have possibly failed
+17:57 - and the enum has to conform to the error
+18:00 - protocol
+18:01 - so there are five different cases
+18:04 - in that first guard
+18:06 - we have an invalid url so i'll set the
+18:09 - case to be invalid url
+18:11 - then we check the response status
+18:14 - so my case is going to be invalid
+18:16 - response status
+18:18 - or perhaps the
+18:19 - url session didn't work at all so it may
+18:22 - be a dated task error
+18:25 - perhaps the data was corrupt
+18:28 - corrupt data
+18:30 - and then finally once we get the data
+18:32 - perhaps our model is incorrect so we'll
+18:34 - get a decoding error
+18:38 - so now when we fail we can do another
+18:40 - completion using the failure case
+18:45 - and that has an associated value that
+18:47 - will just use our case
+18:51 - so first we'll need to go back to where
+18:52 - we define our result and say that we no
+18:54 - longer want to have that error case just
+18:58 - a generic error we want to be specific
+19:00 - and say that it's going to be our api
+19:02 - error
+19:04 - and then each of those five cases we're
+19:07 - going to now call our completion handler
+19:10 - with the failure case
+19:12 - and the associated value is going to be
+19:15 - the corresponding
+19:16 - case from our api error
+19:21 - so first failure is an invalid url
+19:28 - next an invalid response status
+19:33 - then a data task error
+19:38 - corrupt data
+19:47 - and finally a decoding error
+19:52 - now there are only two more things i
+19:53 - want to do before i finish this video
+19:56 - this function is looking pretty good but
+19:58 - currently i can only use it for users
+20:00 - and not post
+20:02 - and when you look at this though the
+20:03 - only time i use user is when i decode
+20:06 - and define the associated value for the
+20:08 - success case in our result type
+20:11 - it could be easy just to copy and paste
+20:14 - this function and change this to get
+20:16 - posts and change user to post
+20:19 - however there's a better way and that's
+20:20 - using generics
+20:22 - and i have a video on generics if you
+20:24 - want to find out more information on
+20:25 - that topic again a link will be in the
+20:28 - description below
+20:30 - the function will work for any decodable
+20:32 - type object like our user and post
+20:35 - objects
+20:37 - and we can use that fact by specifying
+20:39 - that the function should only work if
+20:41 - that's what we're dealing with
+20:43 - which is a decodable type
+20:45 - so when we define our function we can
+20:47 - specify that limitation
+20:49 - and we can use a variable like t to
+20:53 - represent that type
+20:55 - and make sure that that type conforms to
+20:57 - the decodable protocol
+21:00 - and then everywhere where we see user we
+21:02 - can replace it with the t placeholder
+21:06 - now t
+21:07 - is generic itself and it can represent
+21:09 - either a single object or an array of
+21:12 - objects
+21:13 - so we don't really even need to specify
+21:15 - array here we'll be able to specify that
+21:18 - when we call the function
+21:23 - and we're almost done and this is a
+21:25 - service class that you can use in all of
+21:27 - your projects but to make it even more
+21:29 - inclusive
+21:30 - and i go through this in my quotable
+21:32 - series you may have a specific key
+21:34 - decoding or date decoding strategy that
+21:36 - you want to use
+21:38 - so i'm going to create two more
+21:40 - arguments
+21:42 - here so before the closure let's add two
+21:45 - more parameters for this function
+21:49 - one is going to be a date decoding
+21:51 - strategy
+21:52 - which is a json decoder
+21:55 - dot date decoding strategy
+21:57 - and the second is a key decoding
+21:59 - strategy which is a json decoder key
+22:02 - decoding strategy
+22:05 - now 99 of the time the defaults are just
+22:08 - fine
+22:09 - but since we are adding these two
+22:11 - parameters when i call this function i'm
+22:13 - going to be forced to enter in what
+22:15 - would be my defaults
+22:18 - when i create the instance of this
+22:19 - getusers function
+22:22 - so in order to make this optional for us
+22:24 - i can assign the most common default
+22:27 - values in the initializer for each
+22:29 - parameter
+22:36 - then after we create our decoder we can
+22:38 - assign these properties to the decoder
+22:44 - that's almost it
+22:46 - but i forgot this function is still
+22:48 - called get users when in fact it's going
+22:50 - to be more generic
+22:52 - so instead of calling it get users i'm
+22:54 - going to change the name to get json
+22:56 - instead
+22:59 - well that's it we haven't tested it yet
+23:01 - but we've created the groundwork for our
+23:03 - app and the really good thing is that
+23:05 - we've created a reusable api service
+23:07 - class that you'll be able to use in your
+23:09 - own projects in the future
+23:12 - in the next video i'll show you how you
+23:14 - can use this class
+23:16 - and we'll also be improving on it when
+23:18 - we start working on error handling
+23:21 - hopefully this hasn't been too technical
+23:23 - but it is worthwhile i think going
+23:25 - through in some detail so that you
+23:27 - understand why things are done this way
+23:29 - when we start to use functions
+23:32 - in a later video we'll be converting
+23:33 - this to an alternative version that uses
+23:36 - the new async and await concurrency
+23:38 - model
+23:40 - so in the next video of the series we'll
+23:42 - be building out the ui
+23:44 - and i'll introduce you to voodoo a
+23:46 - modified mvvm design pattern
+23:49 - and utilize xcode's source control
+23:52 - features to ensure that our source code
+23:54 - is protected
+23:57 - hi my name is stuart lynch and this is
+23:59 - the second of six videos in the ios
+24:01 - concurrency series
+24:03 - in the first video we began by creating
+24:05 - our models and a service so that we
+24:07 - could fetch and decode json from the
+24:09 - json placeholder api
+24:12 - in this video i'll introduce you to
+24:14 - voodoo a modified mvvm design pattern so
+24:18 - that we can create view models and views
+24:20 - to display the content that we fetch
+24:22 - from our api endpoints
+24:25 - we'll also be seeing how we can use mock
+24:27 - data so that we don't have to always
+24:28 - make calls to the api when we design our
+24:31 - apps and you'll be introduced to get
+24:34 - source control using xcode
+24:39 - i'm going to be using what mark markins
+24:41 - from big mountain studio calls swift
+24:43 - ui's vudu and this is a modified nvvm
+24:47 - architecture
+24:50 - there are three parts as you see a view
+24:53 - the observable object
+24:55 - and the data object now we've already
+24:58 - created our data objects those are our
+24:59 - models
+25:01 - so i'll let you go through the post and
+25:03 - i'm just going to start using it
+25:05 - the first thing we have to do is to
+25:07 - change the name of our opening view from
+25:09 - content view to represent what our first
+25:12 - view is going to be and that's going to
+25:13 - be our users list view
+25:16 - so we can do this by right clicking on
+25:18 - the name
+25:19 - and choosing refactor
+25:23 - and when we type in our new name this
+25:25 - not only renames the view but also the
+25:28 - file name and any instances where it is
+25:30 - referenced like in the app file
+25:35 - the other thing you might want to do is
+25:36 - to change the preview to users list view
+25:39 - underscore preview
+25:41 - and the header as well
+25:46 - next we'll create a group called views
+25:49 - and move that file into there
+25:53 - i'm just going to adjust the order a
+25:55 - little bit in my navigator
+25:59 - i have my view here that i want to
+26:00 - modify
+26:02 - and i have data objects which are the
+26:04 - user and post objects
+26:07 - and now i need my observable object
+26:09 - which i will call the users list view
+26:12 - model
+26:13 - so let's create a file
+26:15 - in a new group
+26:16 - called view models
+26:22 - so inside that group
+26:24 - i'll create a new file
+26:26 - that i'll call users list view model
+26:31 - and in there i'll create a new class
+26:33 - with the same name
+26:35 - but conforming to the observable object
+26:37 - protocol
+26:41 - now this class is going to have a single
+26:43 - published property called users
+26:46 - and that's going to be an array of user
+26:49 - and i'll initialize it as an empty array
+26:52 - so this is before we fetch our json
+26:56 - it's also going to have a single
+26:58 - function called fetch users
+27:02 - so it's within this function then
+27:05 - that we can call that function using our
+27:07 - api service
+27:10 - so first we'll need to create an
+27:11 - instance of the api service
+27:13 - and it requires a url string for the
+27:16 - endpoint
+27:17 - well we have that url string back in our
+27:20 - model so we can copy that
+27:23 - and we can then just paste it in here as
+27:25 - the argument for the api service
+27:27 - instance
+27:32 - within the function then we can call the
+27:34 - api services get json function
+27:38 - and this provides us with a closing
+27:39 - completion handler that is a result
+27:42 - however this result type is generic so
+27:45 - we'll need to specify which objects we
+27:48 - expect to come back as the cases for the
+27:52 - argument for that completion handler
+27:54 - well we know that a result type has two
+27:56 - cases
+27:57 - and for this instance the first case the
+28:00 - success case is going to be an array of
+28:02 - users
+28:04 - and the error is going to be of the type
+28:06 - of our new api error
+28:10 - and then we can switch on the result
+28:13 - in an xcode 15 this nicely completes the
+28:16 - case for me however i'm going to change
+28:18 - the let's success to be let users
+28:22 - and let failure to be let errors so
+28:25 - users represents the users that we're
+28:27 - getting back
+28:29 - and error will represent any error that
+28:31 - we might get
+28:34 - now we know that that success type is
+28:35 - that array of users so we can assign
+28:37 - those users then to that published
+28:39 - property of users
+28:41 - but it's an asynchronous function that's
+28:43 - executing on a background thread
+28:46 - and we're going to be using this array
+28:48 - of users to update our ui so we'll need
+28:51 - to go back
+28:52 - onto the main thread to do that using a
+28:55 - dispatchq dot main dot async
+28:58 - and just like i had a code snippet for
+29:01 - my do catch block
+29:03 - i have one for this dispatch queue as
+29:05 - well
+29:06 - all i have to do is enter dq
+29:12 - so for the failure then i'll just print
+29:15 - out the error at this time we'll deal
+29:17 - with this a little bit later
+29:18 - great
+29:19 - now we can use this view model back in
+29:22 - our users list view
+29:25 - first we'll create a state object that
+29:27 - i'll call vm
+29:29 - that will be an instance of our user's
+29:31 - view model
+29:34 - next we'll replace the body with a
+29:37 - navigation view
+29:41 - and inside there let's create a list
+29:45 - and then within the list we'll iterate
+29:47 - over our view models users with a for
+29:49 - each loop
+29:51 - and then for each user in that array
+29:54 - then we'll create a v-stack
+29:57 - with an alignment that is leading
+30:04 - and then for two textviews within that
+30:07 - stack we'll first create one it's going
+30:09 - to represent the
+30:11 - user.name property
+30:13 - we'll set the font to title
+30:19 - and then the next one we're going to
+30:21 - represent the user's email in a text
+30:24 - view
+30:29 - and then we'll set the navigation title
+30:31 - to say users
+30:36 - we'll also set the list view style to
+30:38 - just plain using the new condensed way
+30:40 - of applying a list style
+30:43 - and then finally when this view appears
+30:46 - we can call our view models fetch users
+30:49 - function
+30:50 - and thus update the view
+30:54 - so if we resume our canvas all we see is
+30:57 - the navigation bar we don't see the
+30:59 - preview
+31:00 - and this is because our preview provider
+31:02 - hasn't fetched any of our users this is
+31:05 - only happening if we go into preview
+31:07 - mode so we'll have to enter preview mode
+31:09 - to initiate the fetch and display that
+31:12 - list of fetched users
+31:14 - i'd really like to see what my view
+31:16 - looks like without having to make that
+31:17 - network call you may have noticed that
+31:20 - xcode provides us with a preview content
+31:22 - folder and this is where you can place
+31:24 - content that you want to exclude from
+31:26 - your release builds when you upload to
+31:28 - the app store
+31:30 - the content will be available to you
+31:31 - during development or the debug stage so
+31:34 - this is a great place to store that kind
+31:36 - of information
+31:38 - and the easiest way to do that in our
+31:41 - case is to use a sample of the json that
+31:43 - you'll actually get from your api
+31:47 - now i recommend you use safari without
+31:50 - any json extension enabled so that when
+31:52 - we view our endpoints the json will be
+31:54 - displayed as json text in the browser
+31:57 - window
+31:58 - so let's go get the 10 users json from
+32:01 - the json placeholder api
+32:04 - all i have to do is select and copy the
+32:07 - text to my clipboard
+32:11 - then within the preview content group
+32:14 - i'm going to create a new file that i'll
+32:16 - call users.json
+32:19 - now make sure you specify json as the
+32:22 - extension and then replace the entire
+32:24 - content with what you copied from your
+32:25 - clipboard
+32:28 - now i want to repeat exactly the same
+32:30 - process for the post because we're going
+32:33 - to be building out the ui for a list of
+32:35 - posts as well
+32:37 - so we'll go to the post json endpoint
+32:42 - we'll copy that json
+32:46 - i'll return to xcode
+32:48 - and create a new file
+32:51 - that i'll call
+32:54 - posts.json and paste the json into there
+32:59 - this content is now located in your
+33:01 - application bundle during debug mode
+33:05 - so we'll need to somehow access that
+33:08 - and i'm going to create an extension to
+33:10 - bundle that will easily decode this data
+33:13 - so as long as it is a decodable type
+33:16 - which we know ours is
+33:20 - i'm going to share with you an extension
+33:22 - that i copied and modified from paul
+33:24 - hudson from hacking with swift
+33:27 - it uses generics just like we did in our
+33:29 - api services get json function to decode
+33:32 - decodable objects from files stored in
+33:35 - your application bundle
+33:37 - now i use this all the time so i've
+33:39 - created a just where i can get access to
+33:41 - it at any time
+33:43 - and a link to this is provided in the
+33:45 - description below
+33:47 - the code should look actually pretty
+33:48 - familiar to you
+33:50 - it's just that we're getting our url
+33:52 - from the bundle instead of an endpoint
+33:55 - and instead of a result completion
+33:57 - handler decoding from a file isn't
+34:00 - asynchronous so we can simply just exit
+34:02 - with a fatal error if something goes
+34:04 - wrong
+34:05 - and return the decoded data if we're
+34:08 - successful
+34:09 - now i suggest that you just copy this to
+34:11 - your clipboard
+34:15 - now returning to xcode i'm going to
+34:17 - create a new group that i'll call
+34:19 - extensions
+34:21 - and inside that folder i'm going to
+34:22 - create a new file that i'll call bundle
+34:26 - plus extension
+34:29 - now just below the import i'll just
+34:32 - paste that extension it's ready to use
+34:35 - so you feel free to use this in any of
+34:37 - your projects it's a really handy
+34:39 - extension
+34:42 - next we'll create a file within the
+34:44 - preview content folder that i'll call
+34:47 - mock data
+34:50 - first i'm going to create an extension
+34:52 - to the user struct
+34:54 - and within there i'm going to create two
+34:56 - static computed properties
+34:58 - one that will return an array of users
+35:01 - and another that's going to return a
+35:03 - single user that we can use for our
+35:05 - previews
+35:06 - the first we'll call mock users
+35:10 - which is an array of user
+35:12 - and what we're going to return is that
+35:14 - array that we decode from our bundled
+35:16 - file
+35:18 - so we can simply use bundle dot main
+35:21 - dot decode
+35:23 - the array of user
+35:25 - type self
+35:27 - from the users.json file within quotes
+35:32 - for the single user then we can just
+35:34 - create another static computed property
+35:36 - called mock single user
+35:39 - of type user
+35:41 - and we'll just return the first item
+35:43 - from our mock users
+35:45 - by accessing the static property on self
+35:49 - at index 0.
+35:54 - well we can do the same for our post
+35:56 - so all we have to do is create a new
+35:58 - extension for post
+36:02 - and then i'll just copy from above
+36:05 - and anywhere i had user i'll just change
+36:08 - it to post
+36:13 - now i'm also going to be needing a post
+36:15 - for a single user
+36:17 - so i'll create one more static property
+36:20 - that i'll call mock single users post
+36:23 - array it's a mouthful but it's
+36:26 - descriptive
+36:28 - and this will be an array of post
+36:31 - but i'll filter it so that it's using a
+36:34 - user id
+36:36 - that matches
+36:37 - the number one because i know that there
+36:40 - is a user with an id of one in my mock
+36:43 - users
+36:46 - great
+36:47 - so how do we use it
+36:50 - now there's a problem with the fact that
+36:52 - we're using a view model to fetch our
+36:54 - users
+36:55 - and there's no easy way to display mock
+36:57 - data while developing your ui
+36:59 - in this case because whenever your view
+37:01 - model is instantiated we set the array
+37:04 - of users to an empty array
+37:06 - and then the view appears when we fetch
+37:08 - users from the api
+37:10 - now there are a couple of ways around
+37:12 - this you could create an alternative
+37:14 - initializer for the view model like this
+37:19 - we create an extension on the user's
+37:21 - view model
+37:22 - and in there we'll create a convenience
+37:25 - initializer with an additional parameter
+37:27 - called for preview
+37:29 - that's a boolean value
+37:31 - that will default to false
+37:36 - then we can call the self
+37:38 - the parents initializer
+37:40 - which sets users to an empty array
+37:44 - and then if we specify that for preview
+37:46 - has been true
+37:48 - we'll set the users to be our users.mock
+37:51 - users
+37:56 - with this in place then we can go back
+37:58 - to the users list view
+38:00 - and anytime we want to show mock data in
+38:03 - our initializer we can simply change it
+38:06 - so that we have this convenience
+38:08 - initializer where we'll set for preview
+38:11 - true
+38:15 - and we see then without making a call to
+38:18 - the endpoint
+38:20 - our preview provider will generate that
+38:22 - preview on the canvas
+38:24 - now the bad news is that we will either
+38:27 - have to remove the argument or set it to
+38:29 - false when we ship
+38:31 - otherwise our users will get that mock
+38:33 - data first even if it never makes a call
+38:36 - to the api
+38:38 - so for this reason i suggest that you
+38:40 - place a warning above this state object
+38:43 - to remind you that you need to remove
+38:45 - that argument before you ship
+38:52 - now the good news is that even if your
+38:55 - argument is set to true whenever you run
+38:57 - on the simulator
+38:59 - or on a device the preview will be
+39:02 - overridden by the fetch users call on
+39:04 - the api
+39:06 - so that the data will quickly be
+39:07 - replaced but it's still not ideal so
+39:10 - remember to remove that argument or not
+39:12 - use it at all and just keep pressing
+39:14 - preview
+39:15 - however if you're paying for a service
+39:17 - that charges for fetch requests you
+39:19 - definitely don't want to do this
+39:25 - now we're going to do a similar thing
+39:26 - for our posts and we'll create a post
+39:29 - list view model that conforms to the
+39:31 - observable object
+39:35 - like our users list view model we'll
+39:37 - have a published property but this time
+39:40 - it will be an array of post objects
+39:46 - now the criteria for fetching posts for
+39:48 - a user will be a user id
+39:52 - and we won't know that user id until we
+39:54 - specify it so let's make it optional
+39:57 - and it will default as nil
+40:01 - and then like in our other view model
+40:04 - we'll want to fetch the posts
+40:06 - but we won't do that until our user id
+40:08 - has been specified so we can use an if
+40:11 - let here to unwrap user id
+40:15 - so first we'll need an endpoint for the
+40:18 - single user post
+40:20 - so we can copy that from the post model
+40:22 - and then returning to our post list view
+40:25 - model we can create a new instance of
+40:27 - that api service passing in that string
+40:30 - making sure that we replace the
+40:32 - hard-coded one with the user id from our
+40:35 - view model
+40:36 - now inside that function we can use a
+40:39 - similar api call as when fetching our
+40:42 - users so let's just copy and paste that
+40:45 - in here
+40:46 - and adjust to fit
+40:49 - for our result we're getting back an
+40:52 - array of post not an array of user
+40:57 - and when we're successful we get posts
+41:00 - so we can set our published post to that
+41:02 - decoded array
+41:06 - to display the posts for the user we'll
+41:08 - need a new swift ui view
+41:11 - that uses this view model so let's
+41:13 - create a new file within our views
+41:16 - folder
+41:17 - that we'll call posts list view
+41:24 - and inside that struct will create a new
+41:26 - state object for post list view model
+41:32 - now we're going to be presenting this
+41:34 - view from a navigation view so we don't
+41:37 - need to add one in here it's already
+41:39 - going to be here
+41:40 - but we can create our list so let's just
+41:43 - copy the code from the previous view and
+41:45 - adjust to fit again
+41:48 - first we'll change all references from
+41:50 - users
+41:51 - to posts or post
+41:58 - for the first text view let's pick the
+42:00 - post title
+42:03 - but change the font to headline
+42:08 - and for the second we'll use the post
+42:10 - body
+42:12 - but also set a font
+42:14 - for call out
+42:16 - and change the foreground color to
+42:19 - secondary
+42:25 - and then for the navigation title we'll
+42:27 - change it to posts
+42:33 - and change our navigation bar title
+42:36 - display mode to be inline
+42:44 - in the on appear then we can change this
+42:46 - to fetch posts
+42:49 - the errors are all gone now but our user
+42:51 - id in our view model is still nil
+42:54 - so we'll not be able to get any listings
+42:56 - yet
+42:57 - we'll have to be injecting the id when
+43:00 - we tap on a row from our users list
+43:02 - so let's create a property here
+43:05 - that's not going to change once we've
+43:07 - passed it in so it doesn't need to be a
+43:08 - binding and it's going to be a user id
+43:13 - we'll also need to pass in a user id to
+43:15 - stop the preview from completing so let
+43:17 - me just enter a 1 here
+43:23 - and then in on appear before we fetch
+43:26 - our posts
+43:27 - we'll set the user id within our view
+43:30 - model to be what was passed in
+43:34 - and it will no longer be optional
+43:36 - therefore we'll generate the list view
+43:38 - that we can be presented in this view
+43:42 - similarly we're not going to be seeing
+43:43 - that navigation bar
+43:46 - because our preview has no idea that our
+43:48 - view is in a navigation view
+43:50 - so we can surround our preview with a
+43:53 - navigation view just so that we can see
+43:55 - what it looks like in our canvas
+43:59 - i'd also like to make sure that we have
+44:00 - some mock data so that we can view the
+44:03 - list of posts within our canvas without
+44:06 - having to make a call to the api
+44:09 - so we're going to have to do the similar
+44:11 - thing that we did with our list view
+44:13 - model
+44:14 - so we'll go back to that one and then
+44:16 - we'll just copy that extension
+44:20 - and we'll change the extension to be a
+44:22 - post-list view model extension
+44:26 - and adjust it here where we display
+44:28 - instead
+44:29 - a mock single user's post array
+44:35 - so back in our view then we can do the
+44:36 - same thing by
+44:38 - cautiously adding a preview argument
+44:40 - when creating our view model
+44:43 - then back in our list view in order to
+44:45 - be directed to the post list view
+44:48 - we'll need to create a navigation link
+44:52 - and the navigation links destination is
+44:54 - going to be our post list view
+44:57 - passing in the selected user id
+45:02 - and the label will be exactly what we
+45:04 - have
+45:18 - if i test this now it all just works
+45:21 - perfect
+45:24 - but one more thing though when i run
+45:26 - this on the simulator i get these
+45:28 - constraint warnings showing up in the
+45:31 - console and this happens when you embed
+45:33 - your views in an unstacked navigation
+45:36 - view
+45:36 - i think this has to be an xcode bug
+45:38 - because i'm using swift ui and not ui
+45:41 - kit and i have no idea how i can adjust
+45:43 - constraints
+45:44 - if you want to suppress these errors you
+45:46 - can set a value for user defaults that
+45:49 - can suppress the warning
+45:51 - so when your user's list view is first
+45:53 - instantiated at launch time in the app
+45:56 - file
+45:57 - we can assign this in the on appear
+45:59 - function
+46:01 - and i do this again so often that i have
+46:03 - another code snippet for this
+46:06 - and we set the user default standard
+46:08 - value to false for the key
+46:11 - which is in quotes
+46:13 - this ui constraint based layout log
+46:17 - unsatisfiable
+46:23 - so you've seen now that i've used three
+46:25 - different code snippets so far
+46:27 - so if you're interested in code snippets
+46:29 - they're very powerful i recommend that
+46:31 - you watch this video that i created
+46:33 - quite some time ago on creating your own
+46:35 - code snippets
+46:37 - well we've spent a lot of time so far on
+46:39 - this project and we want to make sure
+46:41 - that going forward as we make
+46:42 - adjustments we can return to a point in
+46:45 - time in the past in case we need to
+46:46 - rework something
+46:48 - and this is known as source control
+46:51 - and the most common versioning system
+46:53 - for developers is called git
+46:55 - and xcode provides us with access to git
+46:58 - right from its own source control menu
+47:01 - i have an entire series on source
+47:02 - control with git and xcode if you're
+47:04 - interested in learning more
+47:06 - i'll leave a link in the description
+47:08 - below
+47:10 - all we have to do is select commit from
+47:13 - the source control menu
+47:15 - and enter a comment as to what stage you
+47:17 - are in your project and that's a
+47:19 - reference
+47:21 - we'll be exploring more source code
+47:22 - features in future videos in this series
+47:26 - in the next video in this series we'll
+47:28 - be finishing up the first part of the
+47:30 - series to provide better feedback to our
+47:32 - users
+47:33 - so that they'll know when our
+47:34 - application is actually fetching data so
+47:37 - they have to be patient
+47:38 - and if there are any errors we can let
+47:41 - them know to file a bug report with the
+47:43 - developer
+47:45 - hi my name is stuart lynch and this is
+47:47 - the third of six videos in the ios
+47:49 - concurrency series
+47:51 - at the end of the second video we had a
+47:53 - working application but the user
+47:55 - experience was not optimal
+47:57 - in this video we're going to improve the
+47:59 - user experience by doing two things
+48:01 - whenever our app is fetching and loading
+48:03 - data we want to present a spinning
+48:05 - progress view on top of our view to
+48:08 - indicate that the data is loading
+48:11 - if an error does occur then we want to
+48:13 - know about it so instead of printing the
+48:15 - error to the console or doing nothing at
+48:17 - all
+48:18 - we want to present an alert to our users
+48:20 - with that error information and ask them
+48:22 - to contact us with that information
+48:26 - now if you're just jumping into the
+48:27 - start of this series you can download
+48:29 - the completed code from the second video
+48:31 - in this series from the link in the
+48:33 - description below
+48:36 - sometimes our users might be on a slow
+48:38 - connection so fetching data from a
+48:40 - network call might take some time to be
+48:42 - retrieved and decoded
+48:44 - your user shouldn't be sitting there
+48:46 - wondering what's going on you should
+48:47 - give them some visual clue that
+48:49 - something is happening
+48:51 - and swift ui gives us a nice spinner
+48:53 - called a progress view that we can use
+48:54 - for this
+48:56 - so in order to present the progress view
+48:59 - we'll need to have some sort of a
+49:00 - published property in our view model
+49:03 - that we can toggle
+49:04 - so in the users list view model create a
+49:08 - published property
+49:10 - that you can call is loading
+49:12 - and set it equal to false that makes it
+49:14 - a boolean property
+49:17 - then as soon as we start to fetch that
+49:20 - data we'll toggle it making it now true
+49:25 - now a defer block is used for executing
+49:28 - code just before transferring program
+49:30 - control outside of the scope that the
+49:32 - statement appears in
+49:34 - and this means that when the function
+49:36 - has completed
+49:37 - so inside of our api service class we
+49:40 - can create a defer block
+49:42 - and the code inside there will be
+49:44 - executed after the data is retrieved and
+49:47 - processed
+49:48 - so what do we want to do when that's
+49:50 - done
+49:50 - well we want to toggle that is loading
+49:53 - again to set it back to false
+49:56 - now since that's on a background thread
+49:59 - and we are using a published property
+50:02 - we'll need to make sure that we get it
+50:04 - back onto the main thread and we'll do
+50:06 - that again within a
+50:09 - dispatchq.main.async block
+50:15 - so to display the progress view while
+50:17 - it's loading well we can return to the
+50:20 - users list view
+50:22 - and here we can create an overlay on the
+50:25 - list view
+50:26 - using the overlay function
+50:29 - and the content will be a progress view
+50:32 - but we only want to display the progress
+50:34 - view if the view model is loading has
+50:36 - been set to true
+50:41 - if we test this now we'll first need to
+50:43 - set our for preview to false to get a
+50:45 - real test
+50:48 - now i'm on a fast network and i can't
+50:50 - really notice that progress view the
+50:52 - data loads really quickly
+50:58 - even when i try dark mode it's it's not
+51:00 - obvious i really can't see it
+51:02 - so we can simulate a slow connection
+51:04 - here by surrounding our api service call
+51:07 - within a dispatchq dot main
+51:10 - dot async after block
+51:14 - and we can set a delay of say one second
+51:18 - so let's test once more
+51:24 - now we can see it
+51:28 - so let's repeat this then for the post
+51:30 - list view model when we're fetching the
+51:32 - posts
+51:34 - first we'll need a published property
+51:36 - called is loading
+51:38 - and set it initially to false
+51:43 - then we toggle it when we start to fetch
+51:46 - our posts
+51:50 - and then for our defer block we can just
+51:52 - copy it from our user's list view model
+51:54 - here and use it inside the get json
+51:57 - function
+52:03 - similarly we can reuse the code that we
+52:05 - created for the users list view overlay
+52:08 - here because we use the same property
+52:10 - names for the view model and the is
+52:12 - loading property
+52:15 - so let's make sure that we commit our
+52:16 - source code now
+52:18 - it looks like some of my assets weren't
+52:20 - committed from the last commit
+52:22 - that question mark's an indication and
+52:24 - i'm not sure what went wrong here but
+52:26 - let's select them and make sure that the
+52:28 - commit now works to commit those to our
+52:31 - repository
+52:43 - now we've structured our app so that it
+52:44 - doesn't crash when fetching and decoding
+52:46 - data
+52:47 - it either prints out that decoding error
+52:50 - or
+52:51 - it just does nothing there's no
+52:53 - indication that anything goes wrong and
+52:55 - the user has no idea why they're not
+52:57 - going to get the data
+53:01 - for example let's go to our users list
+53:03 - model and add another property
+53:06 - one that's going to invalidate the
+53:07 - decoding
+53:08 - for example let test be string
+53:11 - it'll be invalidated because there is no
+53:13 - key value pair in the json to correspond
+53:16 - to this
+53:19 - so when we run this we'll see that case
+53:21 - decoding error is printed on the console
+53:24 - that's just the case name for our api
+53:26 - error that's not any help to our users
+53:29 - and it's not really much help to me
+53:33 - we want to present something more
+53:35 - descriptive for each of these user cases
+53:38 - but before i do that let's take away
+53:40 - that delay in our fetch request
+53:43 - we just did that for testing
+53:47 - now if the error was an actual ns error
+53:49 - like what happens in our data task or in
+53:52 - the decoding routine
+53:53 - we can pass along the localized
+53:55 - description that's part of that error
+53:58 - along to the api error
+54:01 - and we can do that by using an enums
+54:03 - associated value
+54:06 - now i have a whole video on associated
+54:08 - values for enum if you're unfamiliar
+54:10 - with that concept i recommend that you
+54:12 - take a look at it
+54:17 - and now that we have an associated value
+54:18 - we've got some errors so we have to
+54:21 - provide that associative value which is
+54:24 - the localized description
+54:26 - in the cases of our error here
+54:31 - and in the case of this error
+54:34 - we can safely unwrap it because it's not
+54:37 - nil
+54:38 - in the second case the catch block will
+54:41 - generate an unwrapped error with its own
+54:43 - localized description too
+54:45 - so we can use it here
+54:48 - but what about these other cases
+54:51 - well we can provide our own localized
+54:54 - description for each of these cases
+54:56 - we've got our own error we can create
+54:57 - our own description
+54:59 - and the way that you do that is to make
+55:01 - sure that your api error conforms to the
+55:04 - localized error protocol
+55:07 - and this now provides us with a new
+55:09 - property called error description
+55:12 - and it's an optional string
+55:15 - and we can make that into a computed
+55:17 - property and switch on self and then
+55:20 - allow xcode again to generate the cases
+55:23 - for us
+55:27 - now for the three without an associated
+55:29 - value we can return our own custom
+55:32 - localized string
+55:36 - we use ns localize string and this
+55:39 - accepts a string and a comment
+55:42 - now the string is what you want to have
+55:44 - as the localized error
+55:46 - and the comment is there for your
+55:47 - translator should you actually be
+55:49 - localizing your app to other languages
+55:52 - and this would be another video series
+55:54 - entirely i think
+55:56 - so since we're not we can just enter a
+55:58 - string that makes sense like this one
+56:00 - and leave the comment as an empty string
+56:05 - we can then copy and paste this into the
+56:08 - remaining two cases
+56:10 - and we can adjust the string as needed
+56:12 - to represent the error
+56:25 - for the two that have an associated
+56:27 - value already we'll simply return that
+56:29 - string which is the associated value
+56:32 - that we passed in when we created the
+56:33 - error
+56:34 - and that's the errors actual localized
+56:37 - description
+56:38 - so now our error
+56:40 - our api error has a localized
+56:42 - description for all five cases
+56:45 - well now we can use those strings as
+56:47 - part of a message in an alert that we
+56:49 - can present to the users whenever an
+56:51 - error occurs
+56:54 - so let's return to the users list view
+56:56 - model and prepare for that
+57:00 - to present an alert in our view we'll
+57:02 - need to provide not only the boolean
+57:04 - property to trigger the alert but also
+57:06 - the message corresponding to the error
+57:08 - that we can put in the alerts message so
+57:12 - we'll create a new published property
+57:14 - first called show alert
+57:16 - and we'll set it initially to false
+57:21 - we'll also need to have an optional
+57:23 - string property that we can set with our
+57:25 - error message when we have an error
+57:28 - and this too has to be a published
+57:30 - property
+57:34 - now whenever we have an error we can set
+57:37 - show alert to true
+57:39 - and assign our localized error and
+57:42 - further information as the alert error
+57:44 - message
+57:46 - and we need to do this on the main
+57:47 - thread because we're changing a
+57:49 - published property that will affect the
+57:51 - ui so inside a dispatch
+57:54 - dispatchqueue.main.async block
+58:02 - in users list view then we can attach an
+58:04 - alert to our list using the new ios 15
+58:07 - alert type
+58:08 - that will have a localized string as the
+58:10 - title
+58:12 - bound to a boolean for is presented
+58:15 - with actions for buttons and a view for
+58:18 - our message
+58:20 - the title will just be application error
+58:25 - is presented is going to be bound to our
+58:27 - view model's show alert published
+58:29 - property
+58:31 - and the action is that button that has a
+58:34 - label of ok
+58:36 - but no action
+58:38 - and when it's tapped swift ui will take
+58:40 - care of dismissing the alert
+58:44 - then for the message if it's no longer
+58:47 - optional we can use the view model's
+58:49 - error string as the string for the text
+58:52 - view in our message
+59:08 - if we test this now we see that our
+59:09 - error is displayed
+59:11 - great
+59:13 - now before we forget let's fix that user
+59:15 - model to remove that extra property
+59:17 - because we've done a great job here
+59:19 - we're not going to get any errors
+59:21 - but just in case you do
+59:23 - your users are going to see it
+59:27 - now let's do the same thing for the post
+59:29 - list view model and post list view
+59:32 - we can simply copy the code from the two
+59:35 - files that we've already done because
+59:36 - they'll be identical
+59:39 - first the two publish
+59:44 - properties then the failure code to
+59:47 - trigger the alert
+59:52 - and then for the view itself we can copy
+59:54 - the whole alert
+59:56 - again because we use the same variable
+59:58 - names the code will just work
+60:16 - well before we forget let's update our
+60:18 - source control by issuing a new commit
+60:22 - it looks like i missed one of those
+60:24 - assets the last time so let's make sure
+60:25 - i do it here
+60:28 - now all five of our files are updated
+60:31 - and that's important because in the next
+60:33 - video in this series we're going to
+60:35 - branch off of this main branch
+60:37 - that we've been working on so that we
+60:39 - can take a look at the new concurrency
+60:41 - model introduced in ios 15.
+60:45 - we still need this branch though because
+60:47 - we'll be checking it out again later
+60:48 - though
+60:49 - and will branch off in another direction
+60:51 - when we change our deployment target
+60:55 - hi my name is stuart lynch and this is
+60:57 - the fourth of six videos in the ios
+60:59 - concurrency series
+61:01 - at the end of the third video we had our
+61:03 - completed application and it was using a
+61:06 - result based completion handler for our
+61:08 - api services get json function
+61:11 - in this video we're going to be
+61:12 - implementing the new asynchronous
+61:14 - methods introduced in ios 15.
+61:18 - this will introduce you to new terms
+61:20 - such as async and await
+61:23 - main actor
+61:24 - and an asynchronous unit of work called
+61:27 - the task
+61:28 - now if you're just jumping into the
+61:29 - start of this series you can download
+61:31 - the completed code from the third video
+61:33 - in this series from the link in the
+61:34 - description below
+61:36 - the first thing we should do since we're
+61:38 - going to be experimenting with a new
+61:40 - feature is create a new branch for our
+61:42 - project
+61:43 - so that if things go awry we can always
+61:45 - roll back to that one that we completed
+61:46 - in the last video and that's a fully
+61:49 - working app
+61:51 - so switch to the source code navigator
+61:54 - then select the repositories tab and
+61:58 - expand the application
+62:00 - you'll notice that the current branch is
+62:02 - the one that's called main
+62:04 - and if you expand the branches section
+62:06 - you'll see it
+62:08 - right click on main and choose new
+62:10 - branch from main
+62:12 - and call it async and await no spaces
+62:17 - it should automatically
+62:19 - check that branch out and switch to it
+62:21 - but if it doesn't like mine doesn't i'll
+62:23 - right click on the branch and choose
+62:25 - checkout
+62:27 - that means i'm leaving the old main
+62:29 - branch behind and that code is safe and
+62:32 - won't be touched and you'll always know
+62:35 - what branch you're on because you'll see
+62:37 - that in the title bar
+62:40 - now within the api service struct i want
+62:43 - to create a new function
+62:45 - and i'm going to use the same name and
+62:47 - this is going to allow because i'm going
+62:49 - to be giving this function different
+62:51 - parameters
+62:52 - instead of providing a completion
+62:54 - handler i'm going to do what i used to
+62:56 - do when i knew nothing about
+62:58 - asynchronous nature of network calls
+63:00 - and in fact i was bitten by this when i
+63:02 - first started coding
+63:03 - i thought every line of code waited
+63:05 - until the previous line of code
+63:07 - completed before moving on
+63:09 - so i would call get json and then just
+63:12 - return my array of objects from the call
+63:15 - so i can copy everything except the
+63:17 - completion handler from this method
+63:19 - then close it off
+63:21 - and then return that decodable object
+63:24 - which in our case is either an array of
+63:26 - user or an array of post but we're using
+63:29 - generics so it's just t
+63:33 - now this means within my view model i
+63:35 - expect to get my array of user or posts
+63:38 - back immediately
+63:40 - so that i can assign it to my published
+63:41 - property
+63:43 - and that's what i would have thought
+63:46 - well let's try and fix this function up
+63:48 - so that we can actually do that
+63:51 - let me start the same way as before i'm
+63:52 - going to copy the pasted code
+63:55 - but since there's no completion handler
+63:57 - let's just
+63:58 - rule that out and just return
+64:01 - now this isn't really good because
+64:03 - remember we want to pass that error on
+64:06 - up to our calling view so that we can
+64:07 - present it to the user in an alert
+64:11 - so we can designate this function as
+64:13 - being a throwing function one that might
+64:16 - throw an error or cause an error
+64:18 - and we do that by typing throws before
+64:21 - the return
+64:23 - then you can throw the error rather than
+64:25 - returning
+64:28 - and what kind of error do we have
+64:30 - we have an invalid url error
+64:34 - so we can just throw the api errors
+64:37 - invalid url case
+64:41 - by designating a function as being a
+64:43 - throwing function every time you call
+64:45 - the function
+64:46 - you're going to have to at some point
+64:48 - catch the errors that were thrown by it
+64:50 - so this means we'll be passing the error
+64:52 - higher up the calling hierarchy
+64:54 - this function could have been called by
+64:56 - another function
+64:57 - that was itself called by another one
+65:00 - and at some point then you need to catch
+65:02 - and deal with that error or maybe
+65:05 - translate that error into a different
+65:07 - type of error
+65:08 - and that's where a do try catch block
+65:12 - comes in
+65:14 - and you'll see that in just a second
+65:18 - so here's where i ran into a roadblock
+65:21 - when i'm fetching from a network it's
+65:23 - not asynchronous normally
+65:25 - we have to wait until i get that
+65:27 - response before i can move on to the
+65:29 - decoding the data
+65:32 - and this is the equivalent to a
+65:33 - completion handler we wait for it to
+65:35 - complete processing before we pass it
+65:38 - back as the argument for our completion
+65:41 - function
+65:42 - now though instead of using our previous
+65:44 - url sessions data task with url function
+65:47 - we're going to use a different version
+65:51 - when we start typing
+65:52 - urlsession.shared.data
+65:57 - i see that there are a number of options
+65:59 - and i can scroll down and there are some
+66:01 - grayed out ones
+66:02 - and the one that i'm looking for is this
+66:05 - one here
+66:06 - and you'll see why it's grayed out in
+66:09 - just a minute we see that it's marked
+66:11 - with async throws
+66:14 - the throws means what we've just
+66:16 - experienced if we run into an error we
+66:18 - can throw that error back to the caller
+66:20 - but what about async
+66:22 - well i'll get to that in just a minute
+66:25 - we do see however that it will return
+66:27 - both a data
+66:29 - and a url response
+66:32 - and this function itself has been
+66:34 - designated as throwing so here's what i
+66:37 - talked about somewhere on down the chain
+66:39 - we have a throwing function and we're
+66:41 - going to have to deal with it at some
+66:43 - point so let's deal with it here and
+66:46 - convert that error into our own api
+66:48 - error
+66:49 - so we'll catch that error
+66:51 - and then pass it on up to our caller
+66:55 - now the delegate is optional so we can
+66:58 - remove that
+66:59 - and the url is just our url so let's
+67:02 - just use it
+67:05 - remember that function does return data
+67:07 - and response so we'll create a tuple of
+67:10 - our own to assign those return values
+67:14 - now xcode is going to help us here
+67:17 - it generates an error and it says that
+67:19 - this function can throw but it's not
+67:21 - marked with try
+67:23 - so anytime a function throws you have to
+67:25 - use try
+67:27 - so that url session function it was a
+67:30 - throwing function
+67:32 - so we'll have to try
+67:34 - now this creates a new error which is
+67:37 - the async call in a function does not
+67:39 - support concurrency
+67:41 - and that's when our function was
+67:42 - designated as an async throwing function
+67:46 - and this is new for us
+67:47 - it means that that get json function
+67:50 - needs to support concurrency
+67:52 - so we'll need to have to go back up to
+67:54 - where we define our function
+67:56 - and make it an async throwing function
+68:02 - now we're not out of the water yet
+68:04 - though because we're told now that the
+68:06 - expression is async but it's not marked
+68:08 - with a weight
+68:10 - and that's because the function is an
+68:12 - asynchronous one and we have no idea how
+68:15 - long it's going to take for our data and
+68:16 - response to come back
+68:18 - so we must wait for it before we move on
+68:21 - in our code
+68:22 - and we do this by specifying that we
+68:24 - await for that tuple before assigning it
+68:27 - to our constant
+68:28 - and the order matters
+68:30 - we first try
+68:32 - and then we await for the result from
+68:34 - our call
+68:36 - now what if that data from the url
+68:38 - function actually produces an error
+68:41 - that try through an error
+68:43 - well by using a simple try we're saying
+68:46 - that we want the error to bubble up to
+68:48 - whatever viewmodel is calling that
+68:50 - function
+68:51 - but i want to handle all my errors here
+68:54 - in the same way right here in this
+68:55 - function
+68:56 - so i'm going to catch that error
+68:59 - and change it to one of my ati error
+69:01 - types and throw it
+69:04 - so for this what i'll do is use a do
+69:07 - catch block
+69:08 - and in the catch block then
+69:10 - i can throw our api services api error
+69:14 - which is the data task error case
+69:18 - and it needs an associated value
+69:20 - which is the localized description of
+69:22 - the error
+69:24 - that that one level up through
+69:27 - so now we have data and response so we
+69:29 - can check exactly the same way as we did
+69:31 - before
+69:33 - first for the response we need to check
+69:35 - that it's a code of 200 or throw
+69:39 - so we can do this inside a do catch
+69:42 - block just like we did before
+69:44 - only we have a completion handler to
+69:46 - pass our under error with
+69:48 - we don't have one anymore so instead
+69:51 - we're just going to throw an api error
+69:53 - which is the case in valid response
+69:55 - status
+69:57 - still within the do block we have that
+69:59 - data and the data task error will have
+70:01 - thrown an error there been one so now we
+70:04 - can decode and return the decoded data
+70:08 - now unless there is an error decoding
+70:10 - data in which case again no completion
+70:12 - handler we'll need to throw the decoding
+70:14 - error using that errors localized
+70:17 - description as the associated value for
+70:20 - our api error type
+70:25 - well that's it
+70:26 - we're done
+70:31 - our app would still build and run
+70:33 - because we're still calling that
+70:35 - original function though i haven't
+70:36 - deleted it at least not yet
+70:39 - let's return now to our users list view
+70:42 - model and change that call
+70:45 - we'll still need that instance of api
+70:47 - service and the is loading toggle
+70:49 - function but this get json function
+70:52 - needs to be commented out for now but
+70:54 - i'll keep it here just for reference
+70:57 - instead we can use our new api service
+70:59 - get json function
+71:01 - now we know that it's going to return
+71:03 - our user so let's assign the return
+71:05 - value to users and we'll
+71:07 - call that function
+71:09 - now notice there are two of them we want
+71:12 - the async throws one
+71:15 - now this generates an error call can
+71:17 - throw but it's not marked with try and
+71:19 - the error is not handled in fact the
+71:22 - order in which the arrow occurs
+71:24 - as there are going to be three of them
+71:26 - may be different from you but
+71:28 - the errors are the same as we saw
+71:30 - earlier
+71:32 - first we'll need a try
+71:36 - and we'll need to designate that
+71:38 - function as being asynchronous
+71:42 - then we'll need to await the result
+71:46 - but we're at the end of the line now if
+71:48 - we encountered any errors we'll need to
+71:51 - set our show alert
+71:53 - to true and set the error message so
+71:55 - that the localized description
+71:57 - is used for the message body
+72:00 - so we can do that do catch block right
+72:03 - now to handle that
+72:07 - well we're going to do it the same way
+72:09 - that we did before by setting the show
+72:11 - error alert to true and setting the
+72:13 - error message to that errors localized
+72:15 - description and we don't even need self
+72:23 - we no longer need this commented out
+72:25 - code here for reference so let's just
+72:26 - delete it
+72:29 - our is loading property has been toggled
+72:31 - to true but we've never turned it off
+72:34 - well since this entire function is
+72:36 - asynchronous we can place our defer
+72:38 - block right after it and it won't be
+72:40 - toggled or called if the execution is
+72:43 - going to be deferred until the function
+72:45 - exits its scope
+72:49 - so we can just use defer is loading
+72:52 - toggle right after we assign it
+72:54 - isn't this nice and clean
+72:56 - so much easier to read and follow
+72:59 - now users is a published property and
+73:01 - this function is executing on a
+73:03 - background thread
+73:05 - so we'll get that severe warning if we
+73:07 - don't do something to fix that and set
+73:09 - it back on the main thread
+73:12 - if i try to enclose this with a
+73:15 - dispatchq.main.async block
+73:17 - i get an error
+73:21 - in swift 5.5 there is a new attribute
+73:23 - called main actor that we can use to
+73:25 - decorate the entire function
+73:28 - and it will then dispatch this task onto
+73:30 - the main thread
+73:35 - when we build we get an error though in
+73:37 - the users list view because it's now
+73:39 - calling that new get users function
+73:43 - and that's an asynchronous function
+73:47 - so what we have to do is make sure that
+73:49 - our on appear is asynchronous
+73:52 - and so what we can do is we can within
+73:55 - that on appear function create an
+73:57 - asynchronous unit of work which we'll
+74:00 - call a task
+74:02 - and since that's asynchronous
+74:04 - we need to await the result
+74:08 - no try here though because we've caught
+74:10 - any errors back in that fetch users
+74:12 - function
+74:15 - well in ios 15 we can go one step
+74:17 - further than this we can combine both on
+74:20 - appear and task
+74:22 - into a new asynchronous task method that
+74:25 - adds an asynchronous task to perform
+74:28 - when this view appears
+74:32 - this code is much easier to follow and
+74:34 - work with
+74:35 - when i make that call
+74:37 - to fetch users i'm either going to be
+74:39 - successful
+74:40 - or it'll throw an error
+74:43 - if successful we assign the decoded data
+74:45 - to our published property
+74:48 - since this is our calling point of our
+74:50 - throwing functions we need to deal with
+74:52 - any errors that were thrown earlier in
+74:54 - the process and therefore the do catch
+74:57 - block
+74:58 - it all compiles properly now no errors
+75:02 - but our posts are still using that old
+75:04 - api service
+75:06 - get json function
+75:07 - so we want to fix that before we can
+75:09 - remove it
+75:11 - so let's do that let's return to the
+75:13 - users list view model and we'll copy
+75:16 - everything from the defer on down
+75:21 - then in post list view in the fetch post
+75:23 - function will replace the old get json
+75:26 - function
+75:27 - with this new code
+75:29 - we just have to change our users to
+75:31 - posts
+75:34 - it's complaining however because it's an
+75:36 - async call in a function that doesn't
+75:39 - support concurrency remember anytime
+75:41 - we've got concurrency we need to specify
+75:44 - that our function is asynchronous
+75:48 - and also don't forget that we need to
+75:50 - dispatch that task back onto the main
+75:53 - queue so we decorate the function with
+75:55 - the main actor attribute
+76:01 - this requires one more change in the
+76:03 - post list view as well because we are
+76:05 - now calling an asynchronous task
+76:08 - so we'll need to create that unit of
+76:09 - work
+76:11 - which means we'll change appear to task
+76:14 - and then await the return of our posts
+76:19 - we can test now in the simulator
+76:22 - and we'll see that it all works just as
+76:24 - before
+76:25 - but with much more readable code
+76:34 - after having done all of that work we
+76:36 - want to make sure that you commit the
+76:38 - changes to your git repository
+76:40 - this is so much cleaner now
+76:45 - in the fifth video in this series we're
+76:47 - going to take this even further we are
+76:49 - currently fetching all of our users at
+76:51 - once and then at one at a time we're
+76:54 - fetching an individual user's post as
+76:56 - needed
+76:57 - and we'll do that every time that we
+77:00 - click on one of the rows in our users
+77:02 - list that's a lot of network calls if
+77:04 - we're viewing a lot of different users
+77:06 - posts
+77:07 - so what we'll do in the next video is
+77:09 - retrieve all of the users and all of the
+77:12 - posts in parallel so that they're all in
+77:14 - memory and then filter the posts for
+77:16 - each individual user as we need them
+77:19 - a maximum of two network calls anytime
+77:22 - we launch our application
+77:25 - hi my name is stuart 9chan this is the
+77:27 - fifth of six videos in the ios
+77:29 - concurrency series
+77:31 - by the end of the fourth video we had
+77:33 - converted our get json function into one
+77:35 - that uses the new async and away
+77:37 - concurrency method introduced in ios 15.
+77:42 - in this video we're going to extend that
+77:43 - even further by introducing you to
+77:45 - parallel asynchronous concurrency using
+77:48 - asynclet
+77:50 - we'll create a new model to contain a
+77:52 - user and all of that user's posts in an
+77:55 - array and use that model after fetching
+77:58 - all users and posts up front in two
+77:59 - asynchronous calls in parallel when the
+78:02 - user's list loads thus potentially
+78:05 - reducing the number of network requests
+78:08 - now if you're just jumping into the
+78:09 - start of this series you can download
+78:11 - the completed code from the fourth video
+78:14 - of this series from the link in the
+78:15 - description below
+78:18 - now that we have much more easily
+78:20 - readable code i want to show you where
+78:22 - this really shines
+78:24 - let's create a new experimental branch
+78:26 - on this current branch
+78:28 - so make sure you select the source
+78:30 - control navigator
+78:33 - then right click on async and await
+78:36 - and create a new branch from here
+78:38 - and call it parallel concurrency
+78:42 - and make sure you check out that branch
+78:43 - if it's not done automatically
+78:47 - what i'd like to do now is to fetch all
+78:49 - of our users and all the posts before
+78:51 - presenting the list view and add a count
+78:55 - of the number of posts per user
+78:56 - alongside their name in the users list
+78:59 - view
+79:01 - then since i have all of the users posts
+79:04 - i can pass them on to the post list view
+79:07 - for that user instead of when i get
+79:09 - there
+79:10 - this should limit the number of server
+79:11 - requests to 2 then no matter how many
+79:14 - times i go from users to posts
+79:18 - so to do this i'm going to need a new
+79:20 - model that we can use to consolidate
+79:22 - this information
+79:25 - in the models folder create a new swift
+79:27 - file called user and posts
+79:30 - and in there create a struct with the
+79:32 - same name
+79:35 - i'm going to be using this in the users
+79:37 - list view so i want to to conform to the
+79:40 - identifiable protocol
+79:45 - we'll need an id property to make sure
+79:47 - that it does conform to that protocol so
+79:50 - to make it easy let's just create one
+79:52 - and we'll use the uuid
+79:59 - now each object will contain a user and
+80:01 - that user's posts
+80:03 - so the user will be of type user and
+80:06 - posts will be an array of post
+80:11 - i do want one more thing though and that
+80:12 - is the number of posts so that i can
+80:14 - display it
+80:15 - so i can create a computed property for
+80:17 - this called number of posts
+80:20 - and it will be an int that returns the
+80:23 - post count
+80:30 - in the users listview model right now we
+80:32 - have a single function that fetches
+80:34 - users
+80:35 - what if after we fetch users then we
+80:37 - fetch all of the posts and then run a
+80:39 - loop through our users filtering the
+80:41 - posts by id and then assigning them to
+80:44 - that user
+80:46 - so let's change this publish property
+80:48 - here to no longer be an array of user
+80:50 - but an array of user and posts
+80:57 - of course this is going to break our
+80:58 - code because we no longer have that
+81:00 - published user property
+81:02 - but we still have to keep track of them
+81:04 - until we build our now empty user and
+81:07 - posts array
+81:08 - so let's just preface this with a let to
+81:11 - create a constant users containing the
+81:14 - array of fetched users
+81:17 - but this is a new property and users
+81:19 - won't know what it's expecting to
+81:20 - retrieve so we'll need to specify that
+81:22 - it expects an array of user
+81:28 - this convenient init no longer uses any
+81:31 - users and we've not set up any in our
+81:33 - mock data for our new users and posts so
+81:36 - let's just comment this out for now
+81:42 - so how do we get all posts
+81:45 - well the url for that can be found
+81:48 - in the api documentation and we put that
+81:51 - endpoint url as a comment at the top of
+81:53 - our post struct
+81:55 - so we'll
+81:56 - copy that now and we'll create a new
+81:59 - instance of the api service
+82:02 - passing in that endpoint
+82:08 - then we can asynchronously fetch all of
+82:10 - the posts the same way that we fetched
+82:12 - all of our users
+82:14 - but this time for posts
+82:16 - and it's an array of post
+82:23 - now if we had to do this with our old
+82:25 - callback method we'd be in a little bit
+82:27 - of trouble since we would need to have
+82:29 - nested these requests within an api
+82:31 - service get json callback function with
+82:34 - a completion handler
+82:36 - here the power of async and await really
+82:39 - shines
+82:40 - this fetch post request won't be
+82:42 - executed until the above one has
+82:44 - completed
+82:46 - so it looks almost synchronous
+82:49 - well now that we have both users and
+82:51 - posts we can loop on users
+82:55 - and then we can determine that
+82:57 - particular user's post by filtering the
+82:59 - posts array
+83:01 - where the user id is equal to the user
+83:04 - id
+83:06 - and we can use the array filter
+83:08 - operation for this
+83:10 - and using a higher order function really
+83:13 - condenses your code and if you're
+83:15 - familiar with the syntax it's quite easy
+83:16 - to read
+83:18 - if you are unfamiliar with this you can
+83:20 - check out my video on higher order
+83:21 - functions
+83:23 - and this one here in particular includes
+83:25 - the filter function
+83:28 - well now that we have a user in all of
+83:30 - her posts we can create a new user and
+83:33 - posts
+83:35 - so we can pass in the user and all of
+83:37 - our posts
+83:39 - and then we can append it to our users
+83:41 - in posts publish property
+83:46 - users in list view of course is broken
+83:49 - because we no longer have an array of
+83:50 - users we have an array of user and posts
+83:54 - so in the navigation link we no longer
+83:57 - are going to pass in the user id
+84:00 - we want to pass the entire array
+84:03 - so we'll just have to fix the post list
+84:05 - view
+84:06 - as well in a minute so for now let's
+84:08 - just change this to
+84:10 - post list view
+84:11 - posts
+84:12 - being user and posts dot posts
+84:17 - for the label we'll need to change this
+84:19 - to user and post dot user to access the
+84:22 - user's name and the user's email
+84:24 - properties
+84:29 - i also mentioned we want to display the
+84:31 - number of posts so we can do that right
+84:32 - here by embedding the name text view in
+84:35 - an h stack
+84:38 - and then after the name we'll add a
+84:40 - spacer
+84:42 - and then present another text view with
+84:44 - the computed property of the number of
+84:46 - posts from our model
+84:48 - and use string interpolation to surround
+84:50 - the number with brackets
+85:02 - all we have to do now is fix up that
+85:04 - post list view
+85:07 - now instead of having to create a view
+85:09 - model i can remove this state object
+85:11 - altogether
+85:14 - we're not expecting a user id anymore
+85:16 - we're expecting an array of post
+85:20 - since our posts are no longer in a view
+85:22 - model we can remove the vm
+85:26 - there will no longer be a need for the
+85:28 - alert here because we're not going to be
+85:30 - fetching anything here
+85:32 - and we can also remove the overlay
+85:35 - and the task
+85:38 - now our preview is complaining here so
+85:40 - we'll need to fix that which means that
+85:41 - we'll need more mock data but we'll come
+85:44 - back to that
+85:45 - for the moment let's just comment the
+85:47 - preview out here
+85:49 - i'm still getting an error when i want
+85:50 - to build
+85:52 - uh yeah i see i forgot that i commented
+85:54 - out that convenience initializer
+85:56 - so it no longer exists so i need to
+85:59 - remove it here when we initialize
+86:04 - if we test this in the simulator now it
+86:06 - works
+86:07 - and we see the number of posts besides
+86:09 - each user
+86:11 - it just so happens that this api
+86:13 - actually has 10 posts per user but trust
+86:16 - me if the count were different per user
+86:18 - this would still work
+86:21 - so let's fix that mock data for our
+86:23 - preview
+86:27 - we can create a new extension in our
+86:29 - mock data file for user and posts
+86:33 - and then create a static computed
+86:35 - property that's called users and posts
+86:37 - that is an array of our new user and
+86:40 - posts object
+86:44 - so we then repeat the same process that
+86:46 - we did when we are in our users view
+86:48 - model
+86:52 - we'll create an empty array of new user
+86:55 - and posts
+86:57 - and then we'll loop through our
+86:59 - mock users from the user
+87:02 - model will create a new user and post
+87:07 - filtering the post mock posts
+87:10 - to get just the posts for that
+87:12 - particular user
+87:26 - and then we'll append it to that new
+87:28 - user and post array
+87:30 - and once the loop is completed we can
+87:33 - return the new users and posts
+87:41 - back then to the users list view model
+87:44 - we can fix that extension
+87:46 - so that users and posts is user and
+87:49 - posts mock users and posts
+87:56 - and then in the post list view then we
+87:58 - can uncomment the preview to change that
+88:01 - argument to posts
+88:02 - and pass in the post mock single users
+88:05 - post array
+88:10 - and then back in the user's list view we
+88:12 - could add back that convenience
+88:14 - initializer because we have it again
+88:16 - and whether we are in the preview mode
+88:18 - or not we can decide if we want to see
+88:21 - that mock data in the canvas when it's
+88:23 - set to true
+88:26 - if it's set to false it disappears
+88:32 - if we go back and check out our code and
+88:34 - however there is something that can be
+88:36 - improved on even more
+88:39 - we're fetching all of our users and then
+88:41 - waiting until they're all fetched before
+88:43 - we fetch all of the posts
+88:45 - the fetching of the posts is not reliant
+88:48 - on the fetching of users in fact we
+88:50 - could be doing this in parallel
+88:53 - well welcome to asynclet
+88:56 - we can simply preface each of our api
+88:59 - service calls with async
+89:03 - so that it now reads async lat
+89:07 - now this creates errors in our for loop
+89:09 - because we'll need to wait for them to
+89:11 - have finished first before carrying on
+89:13 - before we can access both the users and
+89:15 - posts
+89:16 - so we'll need to try and await for both
+89:19 - and we can do that by assigning them to
+89:21 - a new variable but as i said we'll have
+89:24 - to await for both of them so let fetched
+89:28 - users
+89:29 - fetch posts in the tuple
+89:31 - await for the users and posts
+89:35 - but as i said these are failing because
+89:37 - we'll have to try for each of them
+89:44 - then all we need to do in our loop is to
+89:47 - change user to fetch users
+89:51 - and posts to fetch posts
+89:55 - we're now
+89:56 - getting both the users and posts at the
+89:59 - same time
+90:01 - and then we can then run our loop
+90:04 - testing now we see that it all works
+90:06 - nicely
+90:07 - and we're now saving on costly network
+90:10 - calls
+90:15 - let's finish now then by committing this
+90:17 - branch to our git repository
+90:27 - in the final video of this series we'll
+90:29 - be checking out that old main branch
+90:31 - again and branching off of it to change
+90:34 - our target back to ios 14
+90:37 - and see if we can use these new
+90:38 - asynchronous functions in an earlier ios
+90:42 - this is what's promised in xcode
+90:46 - 13.2 hi my name is stuart lynch and this
+90:49 - is the sixth and final video in the ios
+90:52 - swift concurrency series
+90:55 - in this video we're going to see if we
+90:56 - can apply the new ios asynchronous
+90:58 - concurrency methods to an xcode project
+91:01 - with a target of ios 14.
+91:04 - this will require xcode 13.2 or later
+91:07 - and it wasn't until xcode 13.2 that
+91:10 - apple back-ported some of these features
+91:12 - to targets of ios 13 or earlier
+91:16 - if you're just jumping into the start of
+91:18 - this series you can download the
+91:20 - completed code from the fifth video in
+91:22 - this series from the link in the
+91:24 - description below
+91:27 - with xcode 13.2 some of the new
+91:29 - concurrency features have been
+91:31 - backported to ios 13. and this is great
+91:34 - news because perhaps we realize that by
+91:36 - setting our target to ios 15 only we're
+91:39 - missing out on a lot of users who have
+91:41 - not upgraded their phones
+91:44 - we're currently using some ios 15
+91:46 - specific apis that we'll no longer be
+91:48 - able to use
+91:49 - but i would really like to use this new
+91:51 - asynchronous concurrency model
+91:54 - as we're testing again let's create a
+91:56 - new branch
+91:57 - by now this should be familiar to you
+92:00 - select the source code navigator and
+92:03 - then
+92:04 - right click on the main branch to check
+92:06 - it out
+92:09 - notice that it is now the active branch
+92:12 - and we're going to branch off of this
+92:14 - one right here so we'll right click and
+92:17 - create a new branch
+92:19 - and i'll call it back port
+92:24 - this time
+92:25 - it created the branch and it checked it
+92:27 - out all at the same time so now it's my
+92:29 - current active branch that i can work on
+92:35 - now this get json function in our api
+92:37 - service is the completion handler
+92:39 - version of our function
+92:41 - and it doesn't use the new async and
+92:43 - await concurrency methods that were
+92:44 - introduced in ios 15.
+92:47 - in videos four and five of this series
+92:49 - we changed that to use these new methods
+92:52 - now if you've updated your xcode to
+92:54 - version 13.2 you should now be able to
+92:57 - take advantage of those new features and
+92:59 - projects for targeting earlier versions
+93:01 - of ios
+93:03 - and this is one of the terms target
+93:05 - applies
+93:07 - switch the application and you'll see
+93:09 - both project and target
+93:12 - the target in this sense means which of
+93:14 - the apple sdks am i developing for is it
+93:17 - mac os ios
+93:19 - ipad os
+93:21 - is it a widget kit application or one of
+93:23 - many others
+93:25 - if you click on the target and then on
+93:28 - the general tab
+93:29 - there is a deployment info section
+93:32 - and here you get to see what the ios
+93:34 - deployment target is
+93:36 - and in my case here it's set to ios 15.2
+93:41 - this means that in order to install and
+93:43 - run this application on your device it
+93:45 - has to be running ios version 15.2 or
+93:48 - higher
+93:49 - and those who haven't upgraded yet can't
+93:52 - run your application
+93:54 - as i said you potentially may be losing
+93:56 - out on a lot of customers
+93:58 - in most cases the swift ui going back to
+94:01 - ios 14 from ios 15
+94:04 - requires only minor changes depending on
+94:06 - what apis you've implemented and we'll
+94:08 - see that shortly
+94:10 - going back to ios 13 is a little bit
+94:12 - more problematic because there are more
+94:15 - deprecated methods
+94:17 - so i'm going to take the less
+94:18 - troublesome path and change my target
+94:20 - back to ios 14
+94:22 - and see what happens and what's going to
+94:24 - be required
+94:29 - when we build
+94:30 - we get several errors
+94:33 - and these errors are all saying that a
+94:35 - particular api that we're using is only
+94:38 - available in ios 15 and newer
+94:43 - the overlay and alert apis we use in our
+94:46 - code have changed since ios 14.
+94:49 - so we're going to have to revert back to
+94:51 - the deprecated versions that were
+94:53 - available to us then
+94:55 - it's important to note that deprecated
+94:57 - doesn't mean that we are playing with
+94:59 - fire there are many deprecated apis that
+95:02 - have been around for many many years so
+95:04 - there's no need to panic
+95:06 - at some point however in the future
+95:08 - though
+95:08 - when you change your target back to ios
+95:10 - 15 or higher you should change the code
+95:13 - again to remove the deprecated versions
+95:17 - if i click on one of the overlay errors
+95:19 - it takes us to that culprit
+95:23 - if you option click in the overlay error
+95:25 - in users list view we get the quick help
+95:28 - and if we scroll down further we see
+95:30 - open in documentation
+95:33 - so let's do that
+95:35 - and we'll see that it's available from
+95:37 - ios 15 on
+95:41 - i know that there's an ios 14 version
+95:43 - however because i use it
+95:48 - and it doesn't put our view into this
+95:49 - trailing closure
+95:51 - rather overlay didn't use a closure at
+95:53 - all
+95:54 - so let's remove it
+95:57 - now the error here is hard to decipher
+95:59 - but if we enclose
+96:01 - our clause here in a group
+96:04 - the error goes away
+96:08 - but we can repeat that in the post list
+96:10 - view too
+96:11 - so we'll do the same thing we'll remove
+96:13 - the closure
+96:14 - and embed it within a group
+96:21 - let's check out the alert and option
+96:23 - click and then drill down into the
+96:25 - documentation
+96:29 - i can see that it too is ios 15 on only
+96:34 - now if i search through the
+96:35 - documentation
+96:37 - and click on the alert that's found i'm
+96:39 - taken to another alert
+96:41 - and i see that it's been available since
+96:44 - ios 13
+96:46 - but that has been deprecated
+96:48 - it may take several releases for it to
+96:50 - actually disappear and by that time
+96:53 - hopefully you've updated your code to
+96:55 - use the more modern apis
+96:59 - we can see that this documentation is
+97:01 - within a section called deprecated views
+97:04 - and controls
+97:06 - scrolling down we can see the different
+97:07 - initializers that were available to us
+97:13 - if we remove this code now we can start
+97:15 - typing dot alert
+97:19 - and if we take a look at the options we
+97:21 - can scroll down and we'll see the two
+97:23 - earlier versions and they are marked in
+97:25 - gray that's an indication that they're
+97:28 - deprecated or not available to us
+97:31 - however we can make them available to us
+97:33 - let's choose the is presented version
+97:37 - and it needs to be bound to something
+97:39 - which is our view models show error
+97:42 - alert
+97:45 - inside the content closure we'll need to
+97:47 - use what is known as an alert object
+97:51 - and there are a number of options here
+97:53 - the one we want is the one with title
+97:56 - message
+97:57 - both being text views
+97:59 - and an optional dismiss button
+98:04 - for the title we can use a text view
+98:07 - and we'll just say application error
+98:12 - for the message we can use another text
+98:13 - view with our view models error message
+98:19 - but it's optional
+98:20 - so we'll no coalesce it with an empty
+98:23 - string
+98:25 - and we don't need the dismiss button
+98:26 - because as i mentioned it's optional so
+98:28 - we can just remove it
+98:32 - we can repeat this process for the
+98:34 - user's list view and i happen to know
+98:36 - that the ad alert is exactly the same so
+98:38 - we'll just copy it here
+98:41 - and
+98:42 - paste it or replace it with the same
+98:44 - version
+98:46 - if we build now there are no errors
+98:49 - great
+98:49 - but we really haven't gained anything
+98:53 - what you have now is a project that you
+98:54 - could have originally coded using xcode
+98:57 - 12 under ios 14.
+99:01 - if you want to go back to ios 13 you'd
+99:03 - have to do more things like changing the
+99:05 - navigation title to a navigation bar
+99:08 - title
+99:09 - you couldn't use state object and
+99:11 - there's probably a host of others so i'm
+99:13 - going to stop here but you can go back
+99:15 - as far as ios 13 with swift ui
+99:19 - the observant of you will notice that
+99:21 - the list style is not complaining about
+99:23 - my using dot plane instead of using the
+99:26 - full instance of plane list style struct
+99:29 - that we had to do in xcode 12
+99:32 - and it appears that the new style
+99:33 - options have been backboarded so we
+99:36 - don't need to do anything to change them
+99:40 - well with xcode 13.2 we learned that the
+99:43 - new concurrency methods have been
+99:45 - backboarded as far back as ios 13.
+99:49 - so if we want to update your api fetches
+99:51 - to use this new asynchronous version of
+99:53 - the url session data method
+99:56 - we're going to have to implement those
+99:58 - new features
+100:00 - and this should greatly clean up our
+100:01 - code
+100:03 - well it turns out that although swift
+100:05 - 5.5 new concurrency system is becoming
+100:08 - backward compatible in xcode 13.2
+100:11 - some of the built-in apis that make use
+100:14 - of these concurrency features are still
+100:15 - only available on ios 15.
+100:19 - mac os monterey
+100:21 - and the rest of apple's 2021 operating
+100:24 - systems
+100:25 - the good news however is that we are
+100:27 - provided with another method that we
+100:29 - haven't looked at yet and it's a
+100:31 - continuation mechanism that lets us
+100:33 - retrofit existing code with async await
+100:37 - support
+100:39 - and what also is good news is that xcode
+100:41 - gives us some assistance here
+100:44 - if you command click on the function
+100:46 - name for our existing completion handler
+100:49 - version of get json
+100:50 - you get three different options for
+100:52 - converting this function to an
+100:54 - asynchronous version
+100:56 - and all three will work but we really
+100:58 - would like to understand this so i can
+101:00 - code in the future from the get-go
+101:03 - so let's explore the options and we'll
+101:05 - start from the bottom up
+101:08 - if i choose this method it simply
+101:10 - creates a new function that has the same
+101:12 - first two parameters but instead of a
+101:14 - completion handler it's an asynchronous
+101:17 - throwing function
+101:18 - just like our new one that we created in
+101:20 - videos four and five
+101:23 - no error then calling the new function
+101:26 - yet json because as we saw in video four
+101:29 - we can have two functions with the same
+101:31 - name so long as the function parameters
+101:33 - are different
+101:34 - what this does use is the with checked
+101:38 - throwing continuation that calls our old
+101:41 - completion handler function
+101:43 - and then essentially maps the
+101:44 - continuation into an asynchronous one
+101:48 - that's pretty cool but now i have two
+101:50 - functions to clutter my code
+101:52 - and our viewmodels are still calling the
+101:54 - older version with the completion
+101:56 - handler and not this version
+101:58 - so let's just undo this and take a look
+102:00 - at our second one
+102:05 - if we choose this one it basically does
+102:07 - the same thing as we saw in the previous
+102:09 - example
+102:10 - but it makes all of the same changes in
+102:13 - line in the asynchronous version of our
+102:15 - function
+102:17 - with the use of the checked throwing
+102:19 - continuation block
+102:21 - and adds continuation resume for each of
+102:23 - the result enum cases
+102:27 - now the errors we're getting here are
+102:29 - all related to the function now not
+102:30 - recognizing the api error case since
+102:33 - it's not specified in our function
+102:35 - parameters
+102:36 - and we can fix that by
+102:38 - prepending all of the cases with api
+102:41 - error
+102:42 - and by removing any unnecessary returns
+102:56 - still i have two functions to deal with
+102:58 - and our viewmodels are still calling
+103:00 - this older version with the completion
+103:02 - handler and not this version so let's
+103:05 - undo once
+103:08 - more let's go all in now then and
+103:11 - convert our function completely so that
+103:13 - we only have a single function to deal
+103:15 - with and that's what this first
+103:18 - option will do for us
+103:22 - well we'll need to fix those return and
+103:24 - errors for not knowing what type the
+103:26 - error is still just like we did in the
+103:28 - last version
+103:34 - the errors in this file all go away now
+103:36 - but when i build i get four errors well
+103:39 - why is that
+103:40 - well it's because now i'm trying to call
+103:42 - that old completion handler version that
+103:44 - we had before
+103:47 - and it's no longer here
+103:49 - so let's fix that
+103:50 - and this will be a repeat of what we
+103:52 - basically did in video 4 when we created
+103:55 - the async function from scratch in ios
+103:58 - 15.
+104:00 - in users list view model then let's
+104:02 - remove from the fetch users function
+104:05 - everything except the first two lines
+104:07 - because we are going to need an instance
+104:09 - of the api service and we want to set is
+104:12 - loading to true
+104:15 - but remember
+104:16 - we can now use a defer block right
+104:19 - within our function so after is loading
+104:21 - dot toggle we'll add the defer block
+104:28 - then we can simply create a do catch
+104:30 - block
+104:31 - and then within the do block we can try
+104:34 - and await the return from the api
+104:36 - service get json function and assign it
+104:38 - to our users
+104:42 - and we can fix the error because we need
+104:44 - to specify that our function get json is
+104:47 - now an asynchronous function
+104:51 - in the catch block we can set show error
+104:55 - to true
+104:58 - and then set our error message with the
+105:01 - errors localized description
+105:03 - and that contact information
+105:13 - and then we have to decorate the
+105:15 - function with app main actor to ensure
+105:17 - that the function is dispatched back on
+105:19 - the main cube
+105:26 - well we can copy everything from defer
+105:28 - on down here
+105:31 - and then go to the post list view model
+105:33 - and replace the corresponding part of
+105:35 - the get post function with this same
+105:38 - content
+105:40 - updating of course users to posts
+105:44 - specifying that the fetch post function
+105:46 - is asynchronous
+105:49 - and adding the app main actor to make
+105:52 - sure that we get executed on the main
+105:54 - thread again
+105:59 - we have a couple of errors left though
+106:01 - and those are in our views
+106:05 - and that's because in on appear
+106:08 - we're trying to call a asynchronous
+106:10 - function
+106:12 - well we can't use dot task as we did in
+106:15 - ios 15. it's one of those things that
+106:18 - didn't get backboarded
+106:19 - however you may recall that there's
+106:22 - another option
+106:23 - we can use a unit of asynchronous work
+106:26 - called a task
+106:28 - so we can embed within the on appear our
+106:31 - content inside a task
+106:34 - and await the fetching of the json
+106:40 - finally then we can go to the post list
+106:43 - view and do exactly the same thing for
+106:46 - on appear
+106:47 - we can enclose our actions in an
+106:50 - asynchronous task
+106:53 - and then await the fetching of the posts
+106:57 - we can build and run now
+107:00 - and all errors will disappear
+107:02 - and our application runs
+107:14 - we have successfully backported our
+107:17 - application to run under ios 14
+107:20 - using the new asynchronous methods
+107:24 - before we ship the app though make sure
+107:26 - that you'll check any warnings the app
+107:28 - is giving you
+107:29 - like this one here that we left for
+107:31 - ourself to make sure that the four
+107:34 - previews is set to false
+107:37 - now the last thing i'm going to do is
+107:39 - commit any changes to our local git
+107:42 - repository
+107:48 - well that's it
+107:50 - thanks for joining me on this six part
+107:52 - journey and i hope that you've learned
+107:53 - some useful and transferable skills
+107:56 - i want to thank chris for inviting me to
+107:58 - add content to his channel and i look
+108:01 - forward to being able to contribute more
+108:02 - in the future thanks for watching

@@ -1,0 +1,447 @@
+00:00 - we're at the point now that I'm sure a lot 
+of you have been waiting for the ability  
+00:04 - to play a game across the network 
+one phone or iPad against another  
+00:09 - I'm going to break this up into two videos in 
+the first one we'll set up our surface class and  
+00:14 - get things all organized so that in the final 
+video we can finish the game by implementing  
+00:19 - the code that will allow us to broadcast 
+our availability to play invite others or  
+00:25 - accept an invitation from someone else and then 
+transfer our moves and actions across the network  
+00:31 - but first let's create a new branch and 
+we'll call it multi-pier connectivity service
+00:42 - the multiplayer connectivity framework supports 
+the discovery of services provided by nearby  
+00:46 - devices and supports communicating with those 
+Services through message-based data streaming  
+00:52 - data and resources such as files in iOS the 
+framework uses infrastructure Wi-Fi networks  
+00:59 - peer-to-peer Wi-Fi and Bluetooth personal 
+area networks for the underlying transport  
+01:05 - apps that use the local area network must provide 
+a usage string in their info p list with the key  
+01:12 - NS localized string description apps that use 
+bonjour must also declare the services they browse  
+01:19 - using the NS bones your service key
+01:24 - let's start by setting up our info p list 
+and first let's set the Bonjour Services
+01:34 - drop down the disclosure triangle and for 
+the string item let's add an underscore  
+01:42 - X and O were X and O are both capitals 
+period underscore TCP for TCP transport
+01:54 - then we'll add another item and repeat that 
+but instead of TCP we're going to use UDP
+02:05 - now that string capital x capital A 
+and D capital O is really important  
+02:11 - so copy it to your clipboard because 
+we're going to be using it shortly  
+02:17 - now if you go to the project and back again you'll 
+see that it has added that key to the P list  
+02:24 - now let's add the privacy 
+local network usage description
+02:31 - and then for the string you can add 
+something like would like to play x's and o's
+02:39 - we now need to do some coding 
+and I want to keep everything  
+02:42 - related to multipure connectivity framework 
+together so I'm going to create a new group  
+02:48 - and I'm going to call it multi-peer connectivity
+02:53 - I'm going to move it down 
+below the game screen group
+03:00 - inside there I'm going to create a new file that 
+I'll call MP Connection Manager now this is going  
+03:07 - to be a service class that I will inject into the 
+environment so all the properties and functions  
+03:12 - can be accessed from any view that needs it first 
+we change the import to multi-peer connectivity
+03:23 - next we need a string that's an identifier for the 
+service and there are lots of ways in which one  
+03:29 - can create a constant for a string value what I'm 
+going to do is to create a string extension and  
+03:35 - inside the extension create a static VAR called 
+service name and this string must match the string  
+03:43 - used in the Bonjour Services p-list entry that we 
+copied to our clipboard and that was that X and O  
+03:51 - now we can create a MP Connection Manager class 
+now if I bring up the documentation on multiplayer  
+03:59 - connectivity we see that it's an objective-c 
+framework and it's been around for a while  
+04:05 - there are some requirements and the one marked 
+as important is that we have already done by  
+04:11 - adding those two items to our info.p list 
+the documentation goes through the process of  
+04:17 - letting you know what properties and functions 
+are required to make this work so we'll need  
+04:21 - to create this service that we can call from our 
+views to initiate the advertising and browsing for  
+04:26 - availability and then making an invitation 
+and when accepted send off our game moves
+04:34 - So within the file now we'll create that 
+class and we'll call it MP Connection Manager
+04:41 - and because it's an objective-c framework 
+we'll need to conform to NS object  
+04:46 - but we'll also want to add published 
+properties that we can observe changes on  
+04:51 - so we can update our UI so we'll also 
+conform it to the observable object protocol
+04:59 - now we'll need several properties  
+05:03 - first is one that will identify the service by 
+creating a constant called surface type and it  
+05:09 - must be a string value so we can use our extension 
+on string and use our service name an MC session  
+05:19 - object enables and manages communication amongst 
+all peers in a multiple year connectivity session
+05:28 - but my peer ID is of type MC peer ID and 
+this object represents a peer in a multipur  
+05:35 - session I.E the game player and this is 
+the one that's going to represent me so  
+05:41 - that I can broadcast my availability and 
+every phone will emit a unique MC peer ID
+05:50 - now we'll need an instance of the 
+MC nearby surface Advertiser class  
+05:55 - and this publishes an advertisement for 
+our services and it'll have a number of  
+06:00 - delegate functions that we'll be able to use
+06:04 - similarly we'll need an object that's going to 
+represent the MC nearby service browser class  
+06:10 - which allows us to search for others 
+who are advertising their availability  
+06:14 - and this also has the number of 
+delegate functions that we'll use
+06:21 - now we have a number of uninitialized properties 
+now and since it's a class we'll need to create an  
+06:25 - initializer when we create it as a state object 
+using this class it will call the initializer  
+06:32 - to initialize each of these properties well the 
+my peer ID property is an MC peer ID object that  
+06:39 - represents the instance of our app running on 
+our local device in the multi-peer connectivity  
+06:45 - framework is responsible for creating that 
+peer ID object that represents our devices  
+06:50 - so to create a new peer ID for the local app 
+and Associate a display name of that ID we'll  
+06:56 - use the MC peer ID initializer that's going to 
+require a display name and this is where I ran  
+07:02 - into the problem that caused me to refactor 
+in that last video but what's going to use  
+07:07 - the user assigned device name for this but as 
+I mentioned in the last video this won't work  
+07:12 - anymore since in iOS 16 it only offers a generic 
+device name not the user assigned device name  
+07:20 - so for this initializer we can provide 
+your name as a string as a parameter  
+07:26 - so that when the surface objects gets initialized 
+we're going to assign it to my peer ID  
+07:33 - and then an MC peer ID object 
+we'll use that as the display name
+07:41 - the session is an MC session object and it 
+requires a peer which is a MC peer ID well  
+07:48 - we have that now so we can use it um the nearby 
+service Advertiser is an instance of the MC nearby  
+07:57 - service Advertiser it requires a peer which is our 
+my peer ID and possibly some extra Discovery info  
+08:06 - that we'll not be using here so we'll just put 
+in nil and a service type which is what we have  
+08:13 - service type the nearby service browser is 
+an instance of the MC nearby service browser  
+08:21 - that requires a mcpear ID which is my peer ID 
+and the same service type service type foreign
+08:32 - we'll need to start advertising our availability 
+and at the same time we'll want to browse for  
+08:38 - others willing to play but as soon as we 
+start playing a game we'll want to stop  
+08:43 - advertising and browsing so let's create four 
+simple functions that we can use we'll create  
+08:51 - two that will allow us to advertise or stop 
+advertising availability to play a shared game
+09:01 - and also too for the same thing but for 
+starting and stopping browsing foreign
+09:10 - to start advertising we 
+can call the nearby service  
+09:13 - Advertiser classes start advertising peer function
+09:20 - stop advertising calls the 
+stop advertising peer function
+09:26 - and there are two very similar 
+functions for our two browsing functions
+09:33 - now before I forget if our class 
+gets de-initialized we'll want to  
+09:38 - stop all browsing and advertising for 
+our availability so we'll create a dnet  
+09:46 - and we'll call the stop advertising 
+and stop browsing functions in our dnit
+09:55 - next I want to create a Boolean property called 
+is available to play that will initially be false  
+10:03 - but if we changed our property in our UI we can 
+either start or stop advertising our availability  
+10:09 - so we'll just use a did set property Observer 
+here that we'll just call those functions  
+10:17 - so if is available to play is set to True we'll 
+start advertising else we'll stop advertising
+10:27 - we need to implement a number of 
+delegate functions and we'll need  
+10:31 - to allow our Connection Manager to 
+perform those functions on our behalf  
+10:36 - in order to find others to play with we'll 
+need to conform our MP Connection Manager  
+10:41 - to the MC nearby service browser delegate 
+protocol so to keep our code manageable let  
+10:47 - me create an extension to our MP Connection 
+Manager that conforms to bat protocol
+10:56 - let me allow xcode to generate these 
+stubs and it creates two functions for us
+11:05 - if we find appear we'll want to be able 
+to update a list that we can pick from  
+11:11 - so as more peers become available we can 
+update that list and present it to our user  
+11:18 - we'll not be receiving any other discoverable 
+information so we can ignore the optional  
+11:23 - dictionary so let's create a published property 
+that we can observe and we'll call it available  
+11:31 - peers and I'm going to initialize it as an 
+empty array of MC peer ID that we receive
+11:40 - so in the first function then if we find a peer 
+we can append this to our array that will update  
+11:47 - our UI since the browsing is happening on a 
+background thread we'll need to make sure we  
+11:53 - bring ourselves back to our main queue and in 
+order to make sure that this is a unique array  
+12:00 - we will only do that if the existing array of 
+available peers does not already contain that one
+12:12 - now when one of those advertising stops 
+advertising availability will get notified  
+12:16 - in the second function so we'll need 
+to remove that peer ID from our array  
+12:22 - again that has to be on the main queue so first 
+we'll determine the index that corresponds to  
+12:29 - the peer ID that we receive because it may not 
+exist and if it does we'll remove that index
+12:46 - and then while we're at it when we stop 
+looking for others which will be when  
+12:50 - we make a connection we should remove all 
+from the array in the stop browsing function
+13:01 - that takes care of the MC nearby service browser  
+13:03 - delegate function but we'll need to 
+do the same now for the MC nearby  
+13:08 - service Advertiser delegate functions so 
+we'll create another extension for that
+13:16 - again we'll let X go generate the stubs and 
+this time there's only a single function
+13:25 - now if you're advertising and you receive an 
+invitation from someone and you accept you  
+13:31 - can start playing the game when you accept the 
+invitation you're given an invitation Handler  
+13:36 - that's an escape enclosure that will provide 
+you with the session that you can use in your  
+13:42 - application and you'll also want to know who 
+you are playing against which is the peer ID  
+13:49 - in some cases that user may also be 
+sending along some data with their  
+13:53 - name for example well I'm not going to 
+be doing that here but it's possible  
+13:59 - so let's create three new published properties 
+that we can assign those values we receive to  
+14:07 - first a Boolean property that's going to 
+in the future trigger an alert in our UI  
+14:13 - so we could call that received invite and 
+it'll be initialized as a false Value First
+14:22 - for the next two properties we'll want to make 
+them optional until we receive an invitation  
+14:29 - that way we won't have to provide an initializer 
+we'll create one called received invite from  
+14:36 - which will be our optional MC peer 
+ID so it's a nil to begin with  
+14:43 - and also will create a invitation Handler 
+which is a closure that has to has the same  
+14:49 - signature as the one that we're going to 
+get so we can just copy that and use it  
+14:57 - and if we surround it in 
+parentheses we can make it optional
+15:04 - let's go back to the function then and 
+update those properties by assigning the  
+15:08 - values that came in but again we'll 
+need to be back on the main queue
+15:15 - the received invite will be true so we 
+need to access that value by using self
+15:26 - the received invite from will be the peer ID  
+15:31 - and the invitation Handler will be 
+the invitation Handler that we receive
+15:38 - in the final delegate extension will 
+be the MC session delegate function  
+15:44 - so let's create that and I'll 
+let xcode generate the stubs  
+15:49 - and I have to do this five times before 
+xcode stops complaining so there are five  
+15:55 - functions but really only two of them need 
+any body entered into them for our purposes
+16:03 - I'm going to create one more 
+Boolean published property  
+16:06 - and I'm going to call it paired that's false 
+initially so that we can keep track of when we are  
+16:13 - paired and playing a game with another device and 
+that will allow us to update our UI accordingly
+16:21 - so in the did change function we'll get 
+an MC session state property that we'll  
+16:27 - be able to use to update our published 
+properties so let's switch on that state  
+16:33 - I'm really only interested in what happens if I'm 
+connected or if I'm disconnected or not connected  
+16:42 - so if the state is not connected within a 
+dispatch queue main.async block we can set  
+16:49 - the paired property to false and then change 
+our is available to play property to true
+16:59 - this code block will be used for connected 
+but in a reverse order so let's copy it and  
+17:06 - use it where paired will be true and 
+our availability to play will be false
+17:13 - and then I can use default for any 
+other case down and in the future  
+17:19 - and we can use the same code as the not connected
+17:30 - in the did receive function we'll receive data 
+from our peer that we have to respond to and  
+17:36 - this will be their next move or perhaps their 
+starting or ending a game or resetting a game  
+17:44 - so before we can receive data we need to know 
+what we can send so we'll need to create a send  
+17:50 - function within our manager class that will allow 
+us to send that move information on to the peered  
+17:54 - player over the network so before we do that then 
+all these delegate classes need a representative  
+18:01 - to perform all the functions and that will be our 
+manager class itself so within the initializer  
+18:08 - first we'll call Super dot init and then we 
+can set the delegate of all of our delegate  
+18:17 - properties to self the session.delegate self 
+nearby service Advertiser delegate will be self  
+18:25 - and the nearby service 
+browser.delegate will be self
+18:32 - so let's create that send function so that 
+we'll know what to expect when we receive it  
+18:37 - so let's think about that for a minute when you 
+make a move start a game end the game or create  
+18:45 - a new game our app already knows how to handle 
+that but what we'll need to do is to send over  
+18:51 - our connection enough information so that we can 
+replicate that move on their device and this is  
+18:58 - all done by sending data between two devices with 
+information that it can decode and respond to  
+19:05 - all that word decode and respond is a clue we 
+want to encode our data on our end so that we  
+19:14 - can send it over and be decoded on the other end 
+so first let's think of the different actions that  
+19:20 - one can perform that will require some action 
+on the receiving end well when one of our users  
+19:26 - Taps on a button to indicate that they want to go 
+first that information needs to be sent when we  
+19:33 - start playing we need to be able to send along the 
+square index and who it is that's tapping there  
+19:40 - and then if we decide to end the game 
+well that's another option and if we  
+19:44 - want to start a new game we'll need to be able 
+to notify the peer of that information as well  
+19:50 - so in addition to that action type will want to 
+pass along the ID of the person who's playing  
+19:56 - along with if it's a game move the 
+index of the square that's being played  
+20:02 - so let's create a new file called 
+MP game move within our folder group  
+20:09 - and this will be a struct that 
+will represent that information  
+20:14 - and so we'll call that MP game move and make 
+sure that it conforms to the quotable protocol
+20:23 - then I can create an enum called action  
+20:26 - that'll be of type integer and it will be 
+codable and this will represent those four  
+20:33 - possible actions that we just talked about so 
+those cases will be start move reset and end
+20:45 - next we can create three properties that we can 
+encode to data and send when will be the action
+20:55 - the second will be an optional string for 
+the player name and then the third will be  
+21:02 - the index for the move being made if it's a move 
+so it won't be an optional int to help with the  
+21:09 - coding we'll create a new function called 
+data that returns an optional data object
+21:19 - and then for the return we can try to use 
+a Json encoder to encode the object itself
+21:29 - now we can return to our manager class and 
+create a new send function that will receive  
+21:35 - a game move and send it on using the current 
+sessions send method with the encoded data
+21:44 - we'll need to make sure that there are 
+some connected peers and in our case  
+21:49 - there's always only going to be one but for 
+a multiple player game there could be many  
+21:53 - then within a do catch block we can check to see 
+if we have data from the game move data object
+22:03 - and then try to send it to the connected 
+peers using the reliable option
+22:10 - foreign
+22:14 - if it fails we can catch and print an error
+22:24 - finally now that we know what 
+we're sending we can return to  
+22:28 - our did receive delegate function 
+and deal with what it may receive
+22:34 - so we can check to see if the game move data 
+is valid first using an optional try to Json  
+22:42 - decode that data into an MP game move 
+object type then since we're going to  
+22:50 - be updating on the main queue we can embed it 
+in another dispatch queue.maine.async block
+23:00 - then we can switch on the game moves action 
+and respond accordingly so you'll recall we  
+23:08 - have four action cases so let's add them one for 
+start one for move one for reset and one for end
+23:19 - now we find ourselves in a bit of a 
+predicament because we need access  
+23:22 - to our game service now from within this new class  
+23:26 - this is in the environment but we can't use an 
+environment object here in the same way that we  
+23:31 - do in a view however there's nothing stopping us 
+from passing it in somehow as a function argument  
+23:38 - let's create an optional property 
+called game that is of type game service
+23:45 - then I can create a setup function that 
+will receive a game service from our view  
+23:51 - and assign it to that property so 
+if we set that function up before  
+23:55 - we make any function calls that 
+required game function will be okay
+24:03 - back to the receive function then here's 
+where we'll be needing those game functions  
+24:08 - first the easier two reset if we receive a 
+reset action we'll want to issue the call  
+24:17 - to the games reset function so that it will 
+clear the board and allow us to play again
+24:26 - for end if we receive an end action we'll 
+need to disconnect from the current session  
+24:32 - and then indicate that we're available to 
+play again and you'll recall that we've set  
+24:36 - up a did set on this so that we know it will 
+now start advertising our availability again
+24:46 - when we receive a move action the 
+index for the square to set that player  
+24:52 - if it it's optional however so we can unwrap it
+24:58 - and then call the games make 
+move function at that index
+25:05 - for start though I don't quite have enough 
+information yet to create this case so I'm going  
+25:10 - to have to add a break statement here and call it 
+a day for this video we may receive a start action  
+25:16 - we'll also receive the player name and we can use 
+that information to compare it to the names that  
+25:22 - will be provided during the setup we don't need to 
+do anything with the remaining functions because  
+25:29 - we're not passing any resources or input stream 
+so we can just leave those function bodies empty  
+25:36 - in the final video of this series we'll create 
+the remaining view that will allow us to see who  
+25:41 - is advertising and be able to select one to invite 
+the play or we'll be able to accept an invitation  
+25:48 - if someone else has invited us and we'll make 
+sure that we send our moves across the wire  
+25:55 - we'll also then be able to complete this case 
+here before I do that however let's make sure  
+26:01 - that we commit what we've done so 
+far to our git Repository foreign

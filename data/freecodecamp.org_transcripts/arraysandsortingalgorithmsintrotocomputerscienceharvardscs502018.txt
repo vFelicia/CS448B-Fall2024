@@ -1,0 +1,4712 @@
+00:00 - [MUSIC PLAYING]
+00:49 - DAVID J. MALAN: All right.
+00:50 - This is CS50 and this is
+the start of week two.
+00:54 - And you'll recall that over
+the past couple of weeks,
+00:56 - we've been building up.
+00:57 - First initially from Scratch, the
+graphical programming language
+01:00 - that we then, just last week,
+translated to the equivalent program NC.
+01:04 - And of course, there's
+a lot more syntax now.
+01:07 - It's entirely text but the ideas,
+recall, were fundamentally the same.
+01:11 - The catch is that computers
+don't understand this.
+01:13 - They only understand what language?
+01:15 - AUDIENCE: [INAUDIBLE]
+01:16 - DAVID J. MALAN: zeros
+and ones or binary.
+01:18 - And so there's a requisite step in order
+for us to get from this code to binary.
+01:23 - And what was that step or that
+program or process called?
+01:26 - AUDIENCE: [INAUDIBLE]
+01:27 - DAVID J. MALAN: Yeah, so compiling.
+01:28 - And of course, recall as
+you've now experimented
+01:30 - with this past week that
+to compile a program,
+01:32 - you can use clang for C, language.
+01:34 - And you can just say clang
+and then the name of the file
+01:36 - that you want to compile.
+01:37 - And that outputs by default
+a pretty oddly named program.
+01:40 - Just a dot out.
+01:41 - Which stands for assembler output.
+01:43 - More on that in just a moment.
+01:44 - But recall too that you can
+override that default behavior.
+01:47 - And you can actually say,
+Output instead a program
+01:49 - called, hello instead of just a dot out.
+01:52 - But you can go one step further,
+and you actually use Make.
+01:55 - And Make it self is not a
+compiler, it's a build utility.
+01:58 - But in layman's terms,
+what does it do for us?
+02:00 - AUDIENCE: [INAUDIBLE]
+02:02 - DAVID J. MALAN: compiles it.
+02:03 - And it essentially figures out
+all of those otherwise cryptic
+02:07 - looking command line arguments.
+02:08 - Like dash-o something, and so forth.
+02:10 - So that the program
+is built just the way
+02:12 - we want it without
+our having to remember
+02:14 - those seemingly magical incantations.
+02:16 - And though that only works for
+programs as simple as this.
+02:20 - In fact, some of you with
+the most recent problems that
+02:23 - might have encountered compilation
+errors that we actually
+02:25 - did not encounter deliberately in
+class because Make was helping us out.
+02:29 - In fact, as soon as
+you enhance a program
+02:31 - to actually take user input using
+CS50's library by including CS50 dot H,
+02:36 - some of you might have realized
+that all of a sudden the sandbox,
+02:39 - and more generally Clang,
+didn't know what get_string was.
+02:43 - And frankly, Clang might not
+even known what a string was.
+02:45 - And that's because those two
+are features of CS50's library
+02:49 - that you have to teach Clang about.
+02:51 - But it's not enough to teach Clang what
+they look like, as by including CS50.h.
+02:57 - Turns out there's a missing
+step that Make helps us solve
+03:01 - but that you too can just
+solve manually if you want.
+03:04 - And by that I mean this, instead of
+compiling a program with just Clang,
+03:08 - hello.c.
+03:09 - When you want to use CS50's
+library, you actually
+03:13 - need to add this additional
+command line argument.
+03:15 - Specifically at the end, can't
+go in the beginning like dash-O.
+03:18 - And dash-L stands for link.
+03:20 - And this is a way of telling Clang,
+by the way when compiling my program,
+03:24 - please link in CS50's zeros
+and ones that we the staff
+03:28 - wrote some weeks ago and
+installed in the sandbox for you.
+03:31 - So you've got your
+zeros and ones and then
+03:33 - you've got our zeros
+and ones so to speak.
+03:35 - And dash-LCS50 says
+to link them together.
+03:38 - So if you were getting some kind of
+undefined reference error to get_string
+03:42 - or you didn't--
+03:43 - you weren't able to compile a program
+that just used any of the get functions
+03:46 - from CS50's library.
+03:47 - Odds are, this simple change
+dash-LCS50 would have fixed.
+03:51 - But of course, this isn't interesting
+stuff to remember, let alone
+03:54 - remembering how to use dash-0
+as well, at which point
+03:57 - the command gets really tedious to type.
+03:59 - So here comes, Make again.
+04:00 - Make automates all of this for us.
+04:02 - And in fact, if you henceforth
+start running Make and then
+04:04 - pay closer attention to the fairly
+long line of output that it outputs,
+04:08 - you'll actually see
+mention of dash-LCS50,
+04:11 - you'll see mention of even
+dash-LM, which stands for math.
+04:14 - So if you're using
+round, for instance, you
+04:16 - might have discovered
+that round two also
+04:18 - doesn't work out of the box
+unless you use Make itself
+04:21 - or this more nuanced approach.
+04:25 - So this is all to say that
+compiling is a bit of a white lie.
+04:28 - Like, yes you've been compiling and
+you've been going from source code
+04:31 - to machine code.
+04:32 - But it turns out that there's been
+a number of other steps happening
+04:35 - for you that we're going to
+just slap some labels on today.
+04:37 - At the end of the day, we're
+just breaking the abstraction.
+04:40 - So compiling is this abstraction
+from source code to machine code.
+04:42 - Let's just kind of zoom
+in briefly to appreciate
+04:45 - what it is that's going on in
+hopes that it makes the code we're
+04:47 - compiling a little more understandable.
+04:50 - So step one of four, when it comes
+to actually compiling a program
+04:54 - is called Pre-processing.
+04:55 - So recall that this program we
+just looked at had a couple of
+04:58 - includes at the top of the file.
+05:00 - These are generally known
+as pre-processor directives.
+05:02 - Not a particularly
+interesting term but they're
+05:05 - demarcated by the hash at
+the start of these lines.
+05:08 - That's a signal to Clang that these
+things should be handled first.
+05:12 - Preprocessed.
+05:13 - Process before everything else.
+05:15 - And in fact, the reason for this we
+did discuss last week, inside of CS50.h
+05:20 - is what, for instance?
+05:21 - AUDIENCE: [INAUDIBLE]
+05:24 - DAVID J. MALAN: Specifically,
+the declaration of get strings.
+05:27 - So there's some lines of code,
+the prototype if you recall,
+05:30 - that one line of code that teaches
+Clang what the inputs to get_string are
+05:34 - and what the outputs are.
+05:35 - The return type and the
+arguments, so to speak.
+05:38 - And so when you have include
+CS50.h at the top of the file, what
+05:42 - is happening when you first run Clang
+during this so-called pre-processing
+05:45 - step, is Clang looks on the hard drive
+for the file literally called CS50.h.
+05:49 - It grabs its contents and essentially
+finds and replaces this line here.
+05:54 - So somewhere in CS50.h is a
+line like this yellow one here
+05:58 - that says get_string, is a
+function that returns a string.
+06:02 - And it takes as input, the
+so-called argument, a string
+06:05 - that we'll call prompt.
+06:06 - Meanwhile, with include standard I/O.
+What's the point of including that?
+06:10 - What is declared inside
+of that file presumably?
+06:14 - Yeah?
+06:14 - AUDIENCE: It's the standard
+inputs and outputs.
+06:16 - DAVID J. MALAN: Standard
+inputs and outputs.
+06:17 - And more specifically,
+what example there of?
+06:19 - What function?
+06:19 - AUDIENCE: [INAUDIBLE]
+06:20 - DAVID J. MALAN: So printf.
+06:21 - The other function we keep using.
+06:22 - So inside of standard io.h,
+somewhere on the sandbox's hard drive
+06:26 - is similarly a line of code that
+frankly looks a little more cryptic
+06:29 - but we'll come back
+to this sort of thing
+06:31 - down the road, that says
+print if is a function.
+06:33 - Happens to return on int, but
+more on that another time.
+06:36 - Happens to take a char* format.
+06:38 - But more on that another time.
+06:40 - Indeed, this is one
+of the reasons we hide
+06:41 - this detail early on because
+there's some syntax that's
+06:44 - just a distraction for now.
+06:45 - But that's all that's going on.
+06:46 - The sharp include sign is just
+finding and replacing the contents.
+06:50 - Plus dot, dot, dot, a bunch of
+other things in those files as well.
+06:54 - So when we say
+pre-processing, we just mean
+06:56 - that that's getting substituted in
+so you don't have to copy and paste
+06:59 - this sort of thing manually yourself.
+07:01 - So "compiling" is a word that
+actually has a well-defined meaning.
+07:04 - Once you've preprocessed your code, and
+your code looks essentially like this,
+07:08 - unbeknownst to you, then comes
+the actual compilation step.
+07:11 - And this code here gets
+turned into this code here.
+07:15 - Now this is scary-looking,
+and this is the sort of thing
+07:18 - that if you take a class
+like CS61 at Harvard,
+07:21 - or, more generally, systems
+programming, so to speak,
+07:23 - you might see something like this.
+07:25 - This is x86 64-bit
+assembly instructions.
+07:28 - And the only thing interesting
+about that claim for the moment
+07:31 - is that assembly--
+07:32 - I kind of alluded to that
+earlier-- assembler output, a.out.
+07:35 - There's actually a relationship
+here, but long story short, these
+07:38 - are the lower level
+instructions that only the CPU,
+07:41 - the brain inside your
+computer, actually understands.
+07:44 - Your CPU does not understand C. It
+doesn't understand Python or C++
+07:48 - or Java or any language with
+which you might be familiar.
+07:50 - It only understands this
+cryptic-looking thing.
+07:53 - But frankly, from the looks of it, you
+might glean that probably not so much
+07:56 - fun to program in this.
+07:58 - I mean, arguably, it's not that
+much fun to program yet in C,
+08:00 - So this looks even more cryptic.
+08:03 - But that's OK.
+08:04 - C and lots of languages
+are just these abstractions
+08:07 - on top of the lower level
+stuff that the CPUs do actually
+08:10 - understand so that we don't
+have to worry about it as much.
+08:13 - But if we highlight a few terms,
+here you'll see some familiar things.
+08:16 - So main is mentioned in this
+so-called assembly code.
+08:19 - You see mention of
+get string and printf,
+08:21 - so we're not losing information.
+08:23 - It's just being presented in really a
+different language, assembly language.
+08:27 - Now you can glean, perhaps, from some
+of the names of these instructions,
+08:31 - this is what Intel Inside means.
+08:33 - When Intel or any brand of
+CPU understands instructions,
+08:37 - it means things like pushing and
+moving and subtracting and calling.
+08:42 - These are all low
+level verbs, functions,
+08:44 - if you will, but at
+the level of the CPU.
+08:46 - But for more on that, you
+can take entire courses.
+08:48 - But just to take the hood
+off of this for today,
+08:51 - this is a step that's been happening
+for us magically unbeknownst
+08:54 - to us, thanks to Clang.
+08:57 - So assembling-- now that you've got this
+cryptic-looking code that we will never
+09:00 - see again-- we'll never
+need to output again--
+09:02 - what do you do with it?
+09:03 - Well, you said earlier that computers
+only understand zeros and ones,
+09:07 - so the third step is actually to convert
+this assembly language to actual zeros
+09:12 - and ones that now look like this.
+09:15 - So the assembling step
+happening, unbeknownst to you,
+09:17 - every time you run
+Clang or, in turn, run
+09:19 - make, we're getting zeros and
+ones out of the assembly code,
+09:22 - and we're getting the assembly
+code out of your C-code.
+09:25 - But here's the fourth and final step.
+09:28 - Recall that we need to link in
+other people's zeros and ones.
+09:32 - If you're using printf
+you didn't write that.
+09:34 - Someone else created those
+zeros and ones, the patterns
+09:36 - that the computer understands.
+09:38 - You didn't create get string.
+09:39 - We did, so you need access
+to those zeros and ones
+09:41 - so that your program
+can use them as well.
+09:44 - So linking, essentially, does this.
+09:45 - If you've written a program--
+for instance, hello.c--
+09:48 - and it happens to use a
+couple of other libraries,
+09:51 - files that other people
+wrote of useful code
+09:53 - for you, like cs50.c,
+which does exist somewhere,
+09:57 - and even stdio.c, which
+does exist somewhere,
+10:00 - or technically, Standard
+IO is such a big library,
+10:03 - they actually put printf in a
+file specifically called printf.c.
+10:06 - But somewhere in the sandbox's hard
+drive, in all of our Macs and PCs,
+10:10 - if they support compiling, are,
+for instance, files like these.
+10:14 - But we've got to convert this to
+zeros and ones, this, and this,
+10:18 - and then somehow combine them.
+10:19 - So pictorially, this just
+looks a bit like this.
+10:21 - And this is all happening
+automatically by Clang.
+10:23 - Hello.c, the code you
+wrote, gets compiled
+10:25 - to assembly, which then gets assembled
+into zeros and ones, so-called machine
+10:31 - code or object code.
+10:32 - Cs50.c-- we did this for you
+before the semester started.
+10:36 - Printf was done way before
+any of us started decades
+10:39 - ago and looks like this.
+10:41 - These are three separate files,
+though, so the linking step literally
+10:44 - means, link all of these things
+together, and combine the zeros
+10:48 - and ones from, like, three,
+at least, separate files,
+10:51 - and just combine them
+in such a way that now
+10:53 - the CPU knows how to use not just
+your code but printf and get string
+10:57 - and so forth.
+10:59 - So last week, we introduced
+compiling as an abstraction,
+11:02 - if you will, and this is all that
+we've really meant this whole time.
+11:05 - But now that we've seen what's
+going on underneath the hood,
+11:08 - and we can stipulate that
+my CPU that looks physically
+11:11 - like this, albeit smaller
+in a laptop or desktop,
+11:14 - knows how to deal with all of that.
+11:17 - So any questions on these four steps--
+11:19 - pre-processing, compiling,
+assembling, linking?
+11:22 - But generally, now, we can just call
+them compiling, as most people do.
+11:27 - Any questions?
+11:28 - Yeah.
+11:29 - AUDIENCE: How does the CPU
+know that [INAUDIBLE] is there?
+11:36 - Is that [INAUDIBLE]?
+11:39 - DAVID J. MALAN: Not in
+the pre-processing step,
+11:41 - so the question is,
+how does the computer
+11:43 - know that printf is the
+only function that's there?
+11:46 - Essentially, when
+you're linking in code,
+11:49 - only the requisite zeros and
+ones are typically linked in.
+11:51 - Sometimes you get more than you
+actually need, if it's a big library,
+11:55 - but that's OK, too.
+11:56 - Those zeros and ones are
+just never used by the CPU.
+11:58 - Good question.
+11:59 - Other questions?
+12:02 - OK, all right.
+12:03 - So now that we know this
+is possible, let's start
+12:06 - to build our way back
+up, because everyone here
+12:09 - probably knows now that
+when writing in C, which
+12:11 - is kind of up here
+conceptually, like, it
+12:13 - is not without its hurdles and
+problems and bugs and mistakes.
+12:16 - So let's introduce a few techniques and
+tools with which you can henceforth,
+12:19 - starting this week and beyond, trying
+to troubleshoot those problems yourself
+12:23 - rather than just trying to read through
+the cryptic-looking error messages
+12:26 - or reach out for help to another human.
+12:28 - Let's see if software can actually
+answer some of these questions for you.
+12:31 - So let me go ahead and do this.
+12:32 - Let me go ahead and
+open up a sandbox here,
+12:35 - and I'm going to go ahead
+and create a new file called
+12:38 - buggy0.c in which I will, this
+time, deliberately introduce a bug.
+12:43 - I'm going to go ahead and
+create my function called
+12:46 - main, which, again, is the default,
+like when green flag is clicked.
+12:50 - And I'm going to go ahead and
+say, printf, quote, unquote,
+12:53 - "Hello world/m."
+12:56 - All right.
+12:56 - Looks pretty good.
+12:57 - I'm going to go ahead and
+compile buggy0, Enter,
+13:01 - and of course, I get a bunch
+of error messages here.
+13:03 - Let me zoom in on them.
+13:05 - Fortunately, I only have two, but
+remember, you have to, have to,
+13:07 - have to always scroll
+up to look at the first,
+13:09 - because there might just be an annoying
+cascading effect from one earlier
+13:12 - bug to the later.
+13:13 - So buggy0.c, line 5, is what this
+means, character 5, so like 5 spaces in,
+13:18 - implicitly declaring library
+function printf with dot, dot, dot.
+13:22 - So you're going to start to see
+this pretty often if you make
+13:24 - this particular mistake or oversight.
+13:27 - Implicitly declaring
+something means you forgot
+13:29 - to teach Clang that something exists.
+13:31 - And you probably know from experience,
+perhaps now, what the solution is.
+13:36 - What's the first mistake I made here?
+13:38 - AUDIENCE: [INAUDIBLE].
+13:39 - DAVID J. MALAN: Yeah, I didn't
+include the header file,
+13:42 - so to speak, for the library.
+13:43 - I'm missing, at the top of
+the file, include stdio.h,
+13:47 - in which printf is defined.
+13:49 - But let's propose that you're not
+quite sure how to get to that point,
+13:53 - and how can we get, actually,
+some help with this?
+13:55 - Let me actually increase
+the size of my terminal
+13:57 - here, and recall that just a
+moment ago, I ran makebuggy0,
+14:00 - which yielded the errors that I saw.
+14:02 - It turns out that
+installed in the sandbox
+14:04 - is a command that we, the
+staff, wrote called help50.
+14:07 - And this is just a program we
+wrote that takes as input any error
+14:11 - messages that your code or
+some program has outputted.
+14:14 - We kind of look for
+familiar words and phrases,
+14:16 - just like a TF would in office hours,
+and if we recognize some error message,
+14:20 - we're going to try to provide,
+either rhetorically or explicitly,
+14:24 - some advice on how to handle.
+14:25 - So if I go ahead and run this command
+now, notice there's a bit more output.
+14:29 - I see exactly the same output in
+white and green and red as before,
+14:33 - but down below is some yellow, which
+comes specifically from help50.
+14:36 - And if I go ahead and
+zoom in on this, you'll
+14:38 - see that the line of
+output that we recognized
+14:43 - is this one, that same one
+I verbally drew attention
+14:46 - to before-- buggy0.c, line 5, error,
+implicitly declaring library function
+14:50 - printf, and so forth.
+14:52 - So here, without the background
+highlighting, but still in yellow,
+14:54 - is our advice or a question a TF or
+CA might ask you in office hours.
+14:58 - Well, did you forget to
+include stdio.h in which printf
+15:02 - is declared atop your file?
+15:05 - And hopefully, our questions,
+rhetorical or otherwise, are correct,
+15:08 - and that will get you further along.
+15:10 - So let's go ahead and try that advice.
+15:12 - So include stdio.h.
+15:15 - Now let me go ahead
+and go back down here.
+15:16 - And if you don't like
+clutter, you can type "clear,"
+15:19 - or hit Control+L in the terminal
+window to keep cleaning it like I do.
+15:23 - If you want to go ahead now and run
+makebuggy0, Enter, fewer errors,
+15:29 - so that's progress, and not the same.
+15:30 - So this one's, perhaps, a little easier.
+15:33 - Reading the line, what
+line of code is buggy here?
+15:36 - AUDIENCE: Forgot the semicolon.
+15:38 - DAVID J. MALAN: Yeah, so this is
+now still on line 5, it turns out,
+15:41 - but for a different reason.
+15:42 - I seem to be missing a semi-colon.
+15:44 - But I could similarly ask
+help50 for help with that
+15:47 - and hope that it recognizes my error.
+15:48 - So this, too, should start
+being your first instinct.
+15:50 - If on first glance, you
+don't really understand
+15:52 - what an error message is
+doing, even though you've
+15:54 - scrolled to the very first one, like
+literally ask this program for help
+15:57 - by rerunning the exact
+same command you just
+15:59 - ran, but prefix it with
+help50 and a space,
+16:03 - and that will run help50 for you.
+16:05 - Any questions on that process?
+16:08 - All right, let's take a
+look at one other program,
+16:10 - for instance, that, this time, has
+a different error involved in it.
+16:15 - So how about-- let me go ahead
+and whip up a quick program here.
+16:19 - I'll call this buggy2.c for
+consistency with some of the samples
+16:23 - we have online for you later.
+16:25 - And in this example, I'm going to
+go ahead and write the correct thing
+16:29 - at first, stdio.h, and then I'm
+going to have int main void, which
+16:33 - just gets my whole program started.
+16:35 - And then I'm going to have
+a loop, and recall for--
+16:37 - [CLEARS THROAT] excuse me--
+Mario or some other program,
+16:40 - you might have done something like int
+i get 0, i is less than or equal to--
+16:44 - let's do this 10 times, and then i++.
+16:47 - And all I want to do in this program is
+print out that value of i, as I can do,
+16:53 - with the %i placeholder--
+so a simple program.
+16:55 - Just want it to count from 0 to 10.
+16:59 - So let's go ahead and run
+buggy2, or rather, I want to--
+17:04 - let's not print up--
+17:06 - rewind.
+17:07 - Let's go ahead and just
+print out a hash symbol
+17:12 - and not spoil the solution this way.
+17:15 - So here, I go ahead
+and print out buggy2.
+17:17 - My goal is now I will stipulate to print
+out just 10 hash symbols, one per line,
+17:21 - which is what I want to do here.
+17:23 - And now I'm going to go ahead and run
+./buggy2, and I should see, hopefully,
+17:28 - 10 hashes.
+17:30 - And I kind of spoiled this a little
+bit, but what do I instead see?
+17:36 - Yeah, I think I see more than I expect.
+17:39 - And we can kind of zoom in here and
+double check, so 1, 2, 3, 4, 5, 6, 7,
+17:46 - 8, 9, 10, ooh, 11.
+17:48 - 11.
+17:49 - Now some of your eyes might already be
+darting to what the solution should be,
+17:53 - but let's just propose
+that it's not obvious.
+17:55 - And if it is actually not obvious,
+all the better, so how might
+17:57 - you go about diagnosing this
+kind of problem, short of just
+17:59 - reaching out and asking
+a human for help.
+18:02 - This is not a problem
+that help50 can help with,
+18:04 - because it's not an error message.
+18:06 - Your program is working.
+18:07 - It's just not outputting
+what you wanted it to work,
+18:09 - but it's not an error message from the
+compiler with which help50 can help.
+18:13 - So you want to kind of get eyes
+into what your program is doing,
+18:17 - and you want to understand, why
+are you printing 11 when you really
+18:20 - are setting this up from 0 to 10?
+18:22 - Well, one of the most common
+techniques in C or any language,
+18:25 - honestly, is to use printf for just
+other purposes-- diagnostic purposes.
+18:29 - For instance, there's not
+much going on in this program,
+18:32 - but I'd argue that it would
+be interesting for me to know,
+18:35 - and therefore understand
+my program, by just,
+18:37 - let's print out this value
+of i on each iteration,
+18:41 - as by doing the line of
+code that I earlier did,
+18:44 - and just say something
+literally like, i is %i.
+18:47 - I'm going to remove this
+ultimately, because it's
+18:49 - going to make my program
+look a little silly,
+18:52 - but it's going to help me
+understand what's going on.
+18:54 - Let me go ahead and recompile
+buggy2, ./bugg2, and this time,
+19:01 - I see a lot more output.
+19:03 - But if I zoom in, now it's kind of--
+19:07 - now the computer is essentially
+helping me understand what's going on.
+19:10 - When i is 0, here's one of them.
+19:11 - When i is 1, here's another.
+19:13 - I is 2, 3, 4, 5, 6, 7, 8,
+9, and that looks good.
+19:16 - But if we scroll a little further,
+it feels a little problematic
+19:19 - that i can also be 10.
+19:22 - So what's logically the
+bug in this program?
+19:24 - AUDIENCE: [INAUDIBLE].
+19:25 - DAVID J. MALAN: Yeah.
+19:26 - I use less than or equal to, because
+I kind of confuse the paradigm.
+19:29 - Like programmers tend to
+start counting at zero,
+19:31 - apparently, but I want to do this
+10 times, and in the human world,
+19:34 - if I want to do something 10 times,
+I might count up to and including 10.
+19:38 - But you can't have it both ways.
+19:39 - You can't start at zero
+and end at 10 if you
+19:41 - want to do something exactly 10 times.
+19:43 - So there's a couple
+of possibilities here.
+19:46 - How might we fix this?
+19:48 - Yeah, so we could certainly
+change it to less than.
+19:50 - What's another correct approach?
+19:53 - Yeah, so we could leave this alone
+and just start counting at one,
+19:56 - and if you're not actually printing
+the values in your actual program,
+19:59 - that might be perfectly reasonable, too.
+20:01 - It's just not conventional.
+20:03 - Get comfortable with, quickly, just
+counting from zero, because that's just
+20:06 - what most everyone does these days.
+20:08 - But the technique here
+is just use printf.
+20:11 - Like, when in doubt, literally use
+printf on this line, on this line,
+20:15 - on this line.
+20:15 - Anywhere something is interesting
+maybe going on in your program,
+20:18 - just use it to print out the
+strings that are in your variables,
+20:21 - print out the integers that are in
+your variables, or anything else.
+20:24 - And it allows you to
+kind of see, so to speak,
+20:26 - what's going on inside
+of your program, printf.
+20:32 - One last tool-- so it's not
+uncommon, when writing code,
+20:36 - to maybe get a little sloppy early
+on, especially when you're not
+20:39 - quite familiar with the patterns.
+20:40 - And for instance, if
+I go ahead and do this
+20:43 - by deleting a whole bunch of whitespace,
+even after fixing this mistake
+20:47 - by going from zero to 10,
+is this program now correct,
+20:52 - if the goal is to print 10 hashes?
+20:57 - Yeah, I heard yes.
+20:57 - Why is it correct?
+20:58 - In what sense?
+21:02 - Yeah, exactly.
+21:03 - It still works.
+21:04 - It prints out the 10
+hashes, one per line,
+21:06 - but it's poorly written
+in the sense of style.
+21:09 - So recall that we tend to
+evaluate, and the world
+21:12 - tends to think about code
+in at least three ways.
+21:14 - One, the correctness-- does it
+do what it's supposed to do,
+21:16 - like print 10 hashes?
+21:17 - And yes, it does, because all
+I did was delete whitespace.
+21:19 - I didn't actually change or break
+the code after making that fix.
+21:22 - Two is design, like how thoughtful,
+how well-written is the code?
+21:25 - And frankly, it's kind of hard
+to write this in too many ways,
+21:28 - because it's so few lines.
+21:29 - But you'll see over time,
+as your programs grow,
+21:31 - the teaching fellows and staff
+can provide you with feedback
+21:33 - on the design of your code.
+21:35 - But style is relatively easy.
+21:36 - And I've been teaching it mostly
+by way of example, if you will,
+21:39 - because I've been very
+methodically indenting my code
+21:42 - and making sure everything looks
+very pretty, or at least pretty
+21:45 - to a trained eye.
+21:47 - But this, let's just
+stipulate, is not pretty.
+21:49 - Like, left aligning everything
+still works, not incorrect,
+21:53 - but it's poorly styled.
+21:54 - And what would be an
+argument for not writing code
+21:56 - like this and, instead,
+writing code the way
+21:58 - I did a moment ago, albeit
+after fixing the bug?
+22:02 - Yeah.
+22:02 - AUDIENCE: It'll help you identify
+each little subroutine that
+22:05 - goes through the thing, so
+you know this section is here.
+22:10 - DAVID J. MALAN: Yeah.
+22:11 - AUDIENCE: [INAUDIBLE] next one,
+so you know where everything is.
+22:13 - DAVID J. MALAN: Exactly.
+22:14 - Let me summarize this.
+22:15 - It allows you to see,
+more visually, what
+22:17 - are the individual subroutines
+or blocks of code doing
+22:20 - that are associated with each other?
+22:22 - Scratch is colorful, and it has
+shapes, like the hugging shape
+22:25 - that a lot of the control
+blocks make, to make
+22:27 - clear visually to the programmer
+that this block encompasses others,
+22:30 - and, therefore, this repeats
+block or this forever block
+22:34 - is doing these things
+again and again and again.
+22:36 - That's the role that these curly
+braces serve, and indentation
+22:38 - in this and in other
+contexts just helps it
+22:41 - become more obvious to the
+programmer what is inside of what
+22:45 - and what is happening where.
+22:46 - So this is just better
+written, because you
+22:49 - can see that the code inside of main
+is everything that's indented here.
+22:52 - The code that's inside the for loop
+is everything that's indented here.
+22:56 - So it's just for us human
+readers, teaching fellows
+22:58 - in the case of a course, or colleagues
+in the case of the real world.
+23:01 - But suppose that you don't quite see
+these patterns too readily initially.
+23:05 - That, too, is fine.
+23:06 - CS50 has on its website
+what we call a style guide.
+23:09 - It's just a summary of
+what your code should
+23:11 - look like when using certain
+features of C-- loops,
+23:14 - conditions, variables,
+functions, and so forth.
+23:16 - And it's linked on the course's website.
+23:18 - But there's also a tool
+that you can use when
+23:20 - writing your code that'll help you
+clean it up and make it consistent,
+23:23 - not just for the sake of making it
+consistent with the style guide,
+23:26 - but just making your
+own code more readable.
+23:28 - So for instance, if I go
+ahead and run a command called
+23:31 - style50 on this program,
+buggy2.c, and then hit Enter,
+23:37 - I'm going to see some
+output that's colorful.
+23:40 - I see my own code in white,
+and then I see, anywhere
+23:44 - I should have indented,
+green spaces that
+23:47 - are sort of encouraging me to put
+space, space, space, space here.
+23:50 - Put space, space, space, space here.
+23:51 - Put eight spaces here, four
+spaces here, and so forth,
+23:54 - and then it's reminding me I
+should add comments as well.
+23:56 - This is a short program--
+doesn't necessarily
+23:58 - need a lot of commenting
+to explain what's going on.
+24:01 - But just one //, like we
+saw last week to explain,
+24:04 - maybe at the top of the file
+or top the block of the code,
+24:06 - would make style50 happy as well.
+24:08 - So let's do that.
+24:09 - Let me go ahead and take its advice
+and actually indent this with Tab,
+24:13 - this with Tab, this with Tab,
+this with Tab, and this once more.
+24:17 - And you'll notice that on your keyboard,
+even though you're hitting Tab,
+24:20 - it's actually converting it for you,
+which is very common to four spaces,
+24:23 - so you don't have to hit
+the spacebar four times.
+24:25 - Just get into the habit of using Tab.
+24:27 - And let me go ahead and
+write a comment here.
+24:30 - "Print 10 hashes."
+24:32 - This way, my colleagues, my
+teaching fellow, myself in a week
+24:35 - don't have to read my own code again
+and figure out what it's doing.
+24:37 - I can read the comments
+alone per the //.
+24:40 - If I run style50 again,
+now it looks good.
+24:44 - It's in accordance with the style guide,
+and it's just more prettily written,
+24:47 - so pretty printed would be
+a term of art in programming
+24:50 - when your code looks good
+and isn't just correct.
+24:53 - Any questions then?
+24:55 - Yeah.
+24:56 - AUDIENCE: I tried using
+[INAUDIBLE] this past week
+24:58 - and it said I needed a new program.
+25:00 - DAVID J. MALAN: That's--
+25:01 - it wasn't enabled for the
+first week of the class.
+25:04 - It's enabled as of right
+now and henceforth.
+25:06 - Other questions?
+25:08 - No.
+25:09 - All right, so just to recap then, three
+tools to have in the proverbial toolbox
+25:13 - now are help50 anytime you see an error
+message that you don't understand,
+25:16 - whether it's with make or Clang
+or, perhaps, something else.
+25:18 - Printf-- when you've
+got a logical program--
+25:21 - a bug in your program, and it's just
+not working the way it's supposed to
+25:24 - or the way the problem set tells
+you it should, and then style50
+25:27 - when you want to make sure that, does
+my code look right in terms of style,
+25:31 - and is it as readable as possible?
+25:33 - And honestly, you'll find us
+at office hours and the like
+25:35 - often encouraging you, hey,
+before we answer this question,
+25:38 - can you please run style50 on your code?
+25:40 - Can you please clean up your code,
+because it just makes our lives, too,
+25:43 - as other humans so much easier
+when we can understand what's
+25:45 - going on without having to visually
+figure out what parentheses and curly
+25:49 - braces line up.
+25:50 - And so do get into
+that habit, because it
+25:52 - will save you time from having to waste
+time parsing things visually yourself.
+25:57 - All right.
+25:58 - So there's not just CPUs in computers.
+26:01 - CPUs are the brains,
+central processing unit,
+26:03 - and that's why we keep emphasizing the
+instructions that computers understand.
+26:06 - There's also this, which
+we saw last time, too.
+26:09 - This is an example of
+what type of hardware?
+26:12 - AUDIENCE: RAM.
+26:12 - DAVID J. MALAN: RAM, or
+Random Access Memory.
+26:15 - This is the type of memory
+that laptops, desktops, servers
+26:17 - have that is used whenever you
+run a program or open a file.
+26:21 - There's another type of memory called
+hard drives or solid state drives,
+26:25 - which you're probably
+familiar as a consumer,
+26:27 - and that's just where your
+files are stored permanently.
+26:29 - Your battery can die.
+26:30 - You can pull the plug from
+your laptop or desktop,
+26:32 - and any files saved on a
+hard drive are persistent.
+26:35 - They stay there because
+of the technology
+26:37 - being used to implement that.
+26:38 - But RAM is more ephemeral.
+26:41 - RAM is powered only by electricity.
+26:43 - It's only used when the power
+is on or the battery is charged,
+26:46 - and it's where your files and
+programs live effectively when
+26:49 - you double click on them and open them.
+26:52 - So when you double click on
+something like Microsoft Word,
+26:54 - it is copied from your hard drive
+long term into this type of memory,
+26:59 - because this type of memory,
+though smaller in capacity--
+27:02 - you don't have as many bytes of it--
+27:04 - but it is much, much, much, much faster.
+27:06 - Similarly, when you open a
+document, or you go to a web page,
+27:09 - the contents of the file you're seeing
+are stored in this type of hardware,
+27:13 - because even though you don't
+have terribly many bytes of it,
+27:15 - it's just much, much, much, much faster.
+27:18 - And so this will be thematic in
+computer science and in hardware.
+27:20 - You sort of have lots
+of cheap, slow stuff,
+27:23 - like hard disk space, relatively
+speaking, and you have a little less
+27:27 - of the more expensive but
+faster stuff like RAM.
+27:30 - And you have just one, usually, CPU,
+which is the really fast thing that
+27:33 - can do a billion things per second.
+27:34 - But it, too, is more expensive.
+27:37 - So there's four visible chips
+on this thing, if you will.
+27:39 - And we won't get into the details
+of how these things work, but let's
+27:42 - just zoom in on this one black
+chip here and focus on it
+27:46 - as being representative
+as some amount of memory.
+27:48 - Maybe it's one megabyte,
+one million bytes.
+27:50 - Maybe it's even one gigabyte
+these days, one billion bytes.
+27:54 - But this is to say that this chip
+can be thought of as just having
+27:57 - a bunch of bytes in it.
+27:58 - This is not to scale.
+27:59 - You have many more bytes
+than these, but let
+28:01 - me propose that you just
+think of each of these squares
+28:04 - here as representing one byte.
+28:06 - So the very first byte of
+memory I have access to is here.
+28:08 - Next one is here, and so forth.
+28:10 - And the fact that they wrap around
+is just an artist rendition.
+28:13 - These things you can think
+of just virtually as going
+28:15 - left to right, not in any kind of grid,
+but physically, they look like this.
+28:19 - So when you actually create a
+variable in a program like C,
+28:23 - like you need a char.
+28:24 - A char tends to be one
+byte or eight bits,
+28:27 - and so that means when you have a
+variable of type char in a C program,
+28:32 - it goes, literally, physically
+in one of these boxes,
+28:35 - inside of your computer's RAM.
+28:37 - So for instance, it might take
+up this much space at top left.
+28:40 - If you have a bigger
+type of data, so you
+28:42 - have an integer, which tends
+to be four bytes or 32 bits,
+28:45 - you might need more than one square,
+so the computer might give you access
+28:48 - to four squares instead.
+28:50 - And you have 32 bits spanning
+that region of memory.
+28:54 - But honestly, I chose
+those boxes arbitrarily.
+28:56 - They could be anywhere in that
+chip or in any of the other chips.
+28:58 - It's up to the computer to just
+remember where they are for you.
+29:01 - You don't need to remember that, per se.
+29:04 - But if we think about
+this grid, it turns out
+29:07 - this is actually very valuable
+that we have chunks of memory--
+29:10 - bytes, if you will--
+29:11 - that are back to back to back to back.
+29:13 - And in fact, there's a
+word for this technique.
+29:16 - This is contiguous memory--
+29:17 - back to back to back to back to back.
+29:19 - And in general, in programming,
+this is referred to as an array.
+29:23 - You might recall from Scratch,
+if you use this feature,
+29:25 - it actually has things
+called lists, which
+29:27 - are exactly that-- lists of values,
+lists of words, lists of strings.
+29:30 - An array is just a contiguous
+chunk of memory, such
+29:33 - that you can store something here,
+something here, something here,
+29:35 - something here, and so forth.
+29:37 - So it turns out an array,
+this super simple primitive,
+29:41 - is actually incredibly powerful.
+29:43 - Just being able to store
+things in my computer's memory
+29:46 - back to back to back to back enables so
+many possibilities, both design-wise,
+29:52 - like how well I can write my code, and
+also how fast I can make my code run.
+29:56 - So let me go ahead and
+take out an example.
+29:59 - Let me go ahead and open up, for
+instance, a new file in a sandbox,
+30:04 - and we'll call this score0.
+30:06 - So let me go ahead and close this one,
+create a new file called scores0.c.
+30:12 - And in this file, let's go ahead and
+write a relatively simple program.
+30:16 - Let me go ahead and, as
+usual, give myself access
+30:18 - to some helpful functions--
+cs50.h and stdio.h.
+30:22 - And no need to copy all this
+down verbatim, if you don't like.
+30:25 - Everything will have or is
+already on the course's website.
+30:28 - Let me start my program as
+usual with int main void.
+30:30 - And then let me write a program,
+as this program's name implies,
+30:33 - that, like, asks the user for three
+scores on recent problem sets,
+30:38 - quizzes, whatever, and then kind of
+creates a very simple chart of them,
+30:41 - like a bar chart to kind of
+help me visualize how well
+30:44 - or how poorly I did on something.
+30:46 - So if I want to get an
+integer, no surprise,
+30:49 - we can use the get int
+function, and I can just
+30:51 - ask the user for their first score.
+30:54 - But I should probably do
+something with this score,
+30:56 - and on the left hand side of
+this, what do I typically put?
+31:00 - Yeah.
+31:00 - So int-- sure, score 1 equals
+this, and then my semi-colon.
+31:04 - So you might not have had many
+occasions to use ints just yet,
+31:07 - but get int is in the cs50 library.
+31:09 - This is the so-called
+prompt that the human
+31:11 - sees, and let me actually
+fix my space, because I
+31:13 - want the human to see the
+space after the colon.
+31:16 - But that's just an aesthetic detail.
+31:18 - And then when I get back this
+value, its return value--
+31:21 - just like Aaron, last week,
+handed me a piece of paper,
+31:23 - so does get int hand me a virtual
+piece of paper with a number
+31:26 - that I'm going to store in
+a variable called Score 1.
+31:29 - And now just to be clear, what has
+just happened effectively is this.
+31:34 - The moment you create a variable
+of type int, which is four bytes,
+31:39 - literally, this is what
+Clang or, more generally,
+31:42 - the computer has done for you.
+31:44 - That int that the human
+typed in is stored literally
+31:47 - in four contiguous bytes back to
+back to back, maybe here, maybe here,
+31:51 - but together.
+31:52 - So that's all that's going on
+when you're actually using C.
+31:55 - So let me go back into
+my code here, and now I
+31:58 - want to-- it's not
+interesting to plot one score.
+32:00 - So let's go ahead and do another.
+32:01 - So int Score 2, get int, get int,
+and I'll ask the user for score 2,
+32:08 - semi-colon, and then let's get one
+more, Score 3, get int, call it Score 3,
+32:13 - semi-colon.
+32:14 - All right, so now let me go
+ahead and generate a bar,
+32:17 - like a bar chart of this.
+32:18 - I'm going to use what
+we'll call ASCII art.
+32:20 - ASCII, of course, is just text, recall--
+32:22 - very simple text in a computer.
+32:23 - And I can kind of make a bar chart
+pretty simply by just printing out
+32:27 - like a bunch of hashes
+horizontally, so a short bar
+32:30 - will represent a small number, and a
+long bar will represent a big number.
+32:34 - So let me go ahead and say to the
+user, all right, here's your Score 1.
+32:38 - I'm going to go ahead, then,
+and say, for int i get 0.
+32:41 - I is less than Score 1, i++.
+32:46 - And now if I scroll down and
+give myself a bit of room here,
+32:48 - let me go ahead and implement
+just a simple print.
+32:53 - So go ahead and print out a hash, and
+then when you're all done with that,
+32:57 - print out a new line at
+the end of that loop.
+33:01 - And let's just pause there.
+33:03 - Just to recap, I've asked
+the human for three scores.
+33:05 - I'm only doing something with one
+of them at the moment, so in fact,
+33:09 - just as a quick check, let me delete
+those so as to not get ahead of myself.
+33:13 - Let me do make score 0.
+33:15 - Cross my fingers.
+33:16 - OK, no errors.
+33:17 - Now let me go ahead and do ./score0,
+and your first score on a pset this year
+33:22 - out of 100 has been?
+33:24 - OK, 100.
+33:26 - And good job.
+33:27 - So it's a really long bar,
+and if we count those up,
+33:29 - hopefully, there's actually 100 bars.
+33:31 - And if we run it again and
+say, eh, it didn't go so well.
+33:33 - I got a 50.
+33:35 - That's half as big a bar.
+33:36 - So it seems like we're on
+our way correctness-wise.
+33:39 - So now let me go ahead
+and get the other scores.
+33:41 - Well, I had them here a moment ago.
+33:42 - So let me go ahead and just, well,
+copy, paste, and change this to two,
+33:46 - change this to three, change
+this to three, this to three.
+33:50 - All right, I know how to print
+bars clearly, so let me go ahead
+33:53 - and do this, and then do this,
+and then fix the indentation.
+33:56 - I don't want to say Score 1 everywhere.
+33:58 - I want to say a Score 2, Score 2.
+34:00 - I mean you're probably being
+rubbed the wrong way that this
+34:03 - is both tedious and sloppy, and why?
+34:06 - What am I doing poorly now design-wise?
+34:07 - AUDIENCE: Copying and pasting code.
+34:09 - DAVID J. MALAN: Like copy-pasting
+almost always bad, right?
+34:11 - There's redundancy
+here, but that's fine.
+34:13 - Let's prioritize correctness,
+at least, for now.
+34:15 - So let me go ahead and make Score 0.
+34:18 - All right, no mistakes-- ./score0.
+34:21 - And then Tab it.
+34:22 - Let me go ahead now and run--
+34:24 - OK, we got 100 the first time.
+34:26 - We got 50 the--
+34:27 - oh, that's a bug.
+34:29 - What did I do there?
+34:31 - See, this is what happens
+when you copy-paste.
+34:33 - So let's fix this.
+34:34 - That should say Score 2, so
+Control+C will quit a program.
+34:37 - Make score 0 will
+recreate it. ./0, Enter--
+34:42 - all right, here we go.
+34:43 - 100, 50.
+34:44 - Let's split the difference--
+34:46 - 75.
+34:47 - All right, so this is a simple
+bar chart horizontally drawn
+34:51 - of each of my three scores, where this
+is 100, this is 50, and this is 75.
+34:55 - But there's opportunities
+for improvement here.
+34:57 - So one, it rubbed some
+folks the wrong way
+34:59 - already that we were literally
+copying and pasting code.
+35:05 - So where is one opportunity
+for improvement here?
+35:09 - What should I do instead of copying
+and pasting that code again and again?
+35:13 - What ingredient can you bring?
+35:15 - OK, so we can use a loop and actually
+just do the same thing three times.
+35:19 - So let's try that.
+35:22 - Let me go ahead and do this.
+35:25 - So let's go ahead and
+delete the copy-paste I did,
+35:28 - and let me go ahead and say, OK, well,
+for int i get zero, i less than 3, i++.
+35:35 - Let me create a bracket.
+35:37 - I can highlight multiple
+lines and hit Tab,
+35:39 - and they'll all indent for
+me, which is convenient.
+35:41 - And can I do this now, for instance?
+35:48 - Say it a little louder.
+35:50 - AUDIENCE: If you [INAUDIBLE]
+to a specific [INAUDIBLE]..
+35:54 - DAVID J. MALAN: Yeah,
+I'm a little worried.
+35:56 - As you're noting here, we're using on
+line 13 here the same variable, so mm.
+36:01 - So it's good instincts,
+but I feel like the fact
+36:03 - that this program,
+unlike last week, we're
+36:05 - now collecting multiple pieces of data.
+36:06 - Loops are breaking down for us.
+36:08 - Yeah.
+36:08 - AUDIENCE: [INAUDIBLE] function
+[INAUDIBLE] takes in--
+36:13 - like you can have it [INAUDIBLE].
+36:16 - DAVID J. MALAN: OK.
+36:17 - AUDIENCE: So like an input of how
+many scores you wanted to enter.
+36:20 - DAVID J. MALAN: OK.
+36:21 - AUDIENCE: And then [INAUDIBLE].
+36:23 - DAVID J. MALAN: Yeah,
+we can implement another
+36:25 - function that factors out
+some of this functionality.
+36:27 - Any other thoughts?
+36:28 - AUDIENCE: Store your scores in an array.
+36:30 - DAVID J. MALAN: OK, so we could
+also store our scores in an array.
+36:33 - So let's do these in
+order then, in fact.
+36:34 - So loops are wonderful when you
+want to do something again and again
+36:37 - and again, but the whole
+purpose of a function,
+36:39 - fundamentally, is to factor
+out common functionality.
+36:43 - And there might still be
+a loop in the solution,
+36:45 - but the real fundamental problem
+with what I was doing a moment ago
+36:48 - was I was copying and
+pasting functionality--
+36:50 - shouldn't need to do that,
+because in both C and Scratch,
+36:52 - we had the ability to
+make our own functions.
+36:54 - So let's do that.
+36:55 - Let me undo my loop changes
+here, just to get us
+36:58 - back to where we were a moment ago.
+36:59 - And let me go ahead and, instead,
+clean this up a little bit.
+37:02 - Let me go ahead and
+create a new function
+37:04 - down here that I'm going
+to call, say, Chart, just
+37:07 - to create a chart for myself.
+37:09 - And it's going to take as input a score,
+but I could call this anything I want.
+37:12 - It's void as its return type, because
+I don't need it to hand me something
+37:15 - back.
+37:16 - Like I'm not getting a
+string from the user.
+37:18 - I'm just printing a char.
+37:19 - It's a so-called side effect or output.
+37:21 - Now I'm going to go ahead and
+do my loop here for int i get 0.
+37:25 - I is less than--
+37:27 - how many hashes do I want to print if
+I'm being passed in the user score?
+37:32 - Like, is this 3 here?
+37:34 - AUDIENCE: The score.
+37:35 - DAVID J. MALAN: The
+score, so if I'm being
+37:37 - handed a number that's 0 to 100,
+that's what I want to iterate over.
+37:40 - If my goal here, ultimately--
+37:43 - let me finish this thought-- i++ is
+[? 2 ?] inside this loop print out one
+37:48 - hash per point in 1's total score.
+37:52 - And just to keep things clean,
+I'm going to go ahead and put
+37:54 - a new line at the very end of this.
+37:56 - But I think now, I factored out
+a good amount of the redundancy.
+37:59 - It's not everything,
+but I've at least now
+38:01 - given myself a function called Chart.
+38:04 - So up here, it looks like I can
+kind of remove this loop, which
+38:08 - is what I factored out.
+38:10 - That's almost identical, except
+the variable name was hardcoded.
+38:13 - And I think I could
+now do chart like this,
+38:18 - and then I maybe could do a little
+copy-paste, if that's OK, like if maybe
+38:22 - I can get away with just doing this,
+and then say 2, and then say 3,
+38:28 - and then say 3, and then say 2.
+38:30 - So it's still copy-paste, but it's less.
+38:32 - And it looks better.
+38:33 - It literally fits on the screen, so it's
+progress-- not perfect, but progress.
+38:36 - Better design, but not perfect.
+38:38 - So is this going to compile?
+38:42 - I'm going to have errors why?
+38:44 - AUDIENCE: Essentially, it's
+[INAUDIBLE] the program [INAUDIBLE]..
+38:47 - DAVID J. MALAN: OK.
+38:49 - Yeah.
+38:50 - AUDIENCE: We need to
+declare a [INAUDIBLE]..
+38:52 - DAVID J. MALAN: OK, good.
+38:53 - So let me induce the actual error, just
+so we know what problem we're solving.
+38:58 - Let me go ahead and sort
+of innocently go ahead
+39:00 - and compile Score 0 hoping
+all is well, but of course,
+39:03 - it's not because of a
+familiar error up here.
+39:07 - So notice, implicit declaration of
+function chart is invalid in C99.
+39:12 - So again, implicit
+declaration of function
+39:14 - just tends to mean Clang does not
+know what you're talking about.
+39:18 - And you could run help50,
+and it would probably
+39:20 - provide you with similar advice.
+39:22 - But the gist of this is that
+chart is not a C function.
+39:25 - It doesn't come with C. I wrote it.
+39:27 - I just wrote it a little too late.
+39:29 - So one solution that we
+didn't used last week
+39:32 - would be, OK, well, if you don't
+know what chart is, let me just
+39:35 - go put it where you'll know about it.
+39:37 - And now run make score 0.
+39:40 - OK, problem solved.
+39:42 - So that fixes it, but we fixed
+it in a different way last week.
+39:46 - And why might we want to stick
+with last week's approach
+39:48 - and not just copy-paste
+my function and put it
+39:50 - at the top instead of the bottom?
+39:55 - AUDIENCE: [INAUDIBLE].
+39:57 - DAVID J. MALAN: Yeah, I mean it's
+kind of a minor concern at the moment,
+40:00 - because this is a pretty short program.
+40:02 - But I'm pushing the main part of
+my program, literally called Main,
+40:06 - farther and farther down.
+40:07 - And the whole point of reading code
+is to understand what it's doing.
+40:10 - So if I open this file, and I have to
+scroll, scroll, scroll, scroll, scroll,
+40:13 - just looking for the main
+function, it's just bad style.
+40:16 - It's just kind of nice, and
+it's a good human convention.
+40:18 - Put the main code, the main function,
+when green flag clicks equivalent,
+40:22 - at the very top.
+40:23 - So C does offer us a solution here.
+40:25 - You just have to provide
+it with a little hint.
+40:27 - Let me go ahead and cut this from here,
+put it back down at the bottom here,
+40:32 - and then go ahead and copy-paste
+only or retype only the value--
+40:38 - whoops-- the value of that first line,
+which is its so-called prototype.
+40:43 - Give Clang enough information so that
+it knows what arguments the function
+40:47 - takes, what its return type is,
+and what its name is, semi-colon,
+40:50 - and that's the so-called
+declaration or--
+40:53 - and then implement it with the curly
+braces and all the logic down below.
+40:58 - So let's go ahead and run this.
+40:59 - And if I scroll up here,
+we'll see-- whoops.
+41:03 - We'll see make score 0.
+41:05 - All right, now we're
+on our way, score 0.
+41:08 - Enter.
+41:08 - Score 1 is 100, 50, 75, and now we
+seem to have some good functionality.
+41:13 - But there's still an opportunity,
+I dare say, for improvement.
+41:17 - And I think the fundamental
+problem is that I'm still
+41:19 - copy-pasting the little
+stuff, but I think
+41:21 - the fundamental problem is that I
+don't have the expressiveness to store
+41:26 - multiple values, unless I, in
+advance, as the programmer,
+41:30 - give them all unique names, because if
+I use the same variable for everything,
+41:34 - I couldn't collect all
+three variables at the top,
+41:37 - and then iterate over all three at the
+bottom, if I only have one variable.
+41:40 - So I do need three variables,
+but this doesn't scale very well.
+41:43 - And who knows?
+41:44 - If I want to take in five scores,
+10 scores, or more scores,
+41:47 - then I'm really copying
+and pasting excessively.
+41:51 - So it turns out, indeed,
+the answer is an array.
+41:53 - So an array, at the
+end of the day, is just
+41:55 - a side effect of storing stuff in
+memory back to back to back to back.
+41:59 - But what's powerful about this
+reality of memory is the following.
+42:03 - I can go ahead here and in,
+say, a new and more improved
+42:07 - version of this program, do this.
+42:10 - Let me go ahead and open this one, which
+I wrote in advance, called scores2.c.
+42:14 - And in scores2.c, notice
+we have the following code.
+42:18 - In my main function, I've got a new
+feature and a new bit of syntax.
+42:23 - This line here that I've
+highlighted says, hey, Clang,
+42:26 - give me a variable called
+Scores of type integer,
+42:30 - but please give me three of them.
+42:32 - So the new syntax are
+your square brackets,
+42:34 - and inside of which is the number
+of variables you want of that type.
+42:37 - And you don't have to
+give them unique names.
+42:39 - You literally call them
+collectively, Scores,
+42:41 - and in English, I deliberately
+chose a plural to connote as much.
+42:44 - This is an array of
+values, not a single value.
+42:48 - What can I do next?
+42:49 - Well, here's my for loop for int
+i get zero i is less than 3 i++,
+42:53 - and now I've solved that earlier
+problem that was proposed.
+42:56 - Well, just put it in a loop.
+42:57 - Now I can, because now my variables are
+not called Score 1, Score 2, Score 3,
+43:02 - which I literally had to hard code.
+43:04 - They're just called Scores, and
+now that they're called Scores,
+43:07 - and I have this square bracket
+notation, notice what I can do.
+43:10 - I can get an int, and I can say, give
+me score%i, and plug in i plus 1.
+43:15 - I didn't want to say
+"zero," because humans
+43:17 - don't count from zero in general.
+43:18 - So this is counting from one, two, and
+three, but the computer is doing this.
+43:24 - So Scores is a variable.
+43:25 - Bracket, i, close bracket says
+store the i-th value there.
+43:32 - So i-th is just non-English.
+43:33 - That means go to bracket
+0, bracket 1, bracket 2.
+43:36 - So what this effectively means is on
+the first iteration of the loop, when
+43:40 - i equals 0, this looks
+like this, effectively.
+43:44 - When i then becomes 1 on the next
+iteration, then you're doing this.
+43:48 - When i becomes 2 on the final
+iteration, it looks like this.
+43:51 - When i becomes 3, well,
+3 is not less than 3,
+43:54 - and so it doesn't execute again.
+43:57 - So by using i inside of these square
+brackets, am I indexing into an array?
+44:03 - To index into an array means
+go to a specific location,
+44:06 - the so-called i-th location,
+but you start counting at zero.
+44:09 - Just to make this more
+real, then, if you go back
+44:12 - to this picture of
+your computer's memory,
+44:14 - this might, therefore,
+be bracket i, bracket 1--
+44:18 - bracket 0, bracket 1, bracket 2, bracket
+3, bracket 4, bracket 50, or wherever.
+44:23 - You can now, using square brackets,
+get at any of these blocks of memory
+44:27 - to store values for you.
+44:30 - Any questions on what we've just done?
+44:34 - All right, then on the flip side,
+we can do the exact same thing.
+44:37 - Now when I print my scores, I can
+similarly iterate from 0 to 3,
+44:42 - and then print out the
+scores by passing to chart
+44:45 - the same value, the i-th score.
+44:48 - Again, the only new syntax here
+is variable name, square bracket,
+44:51 - and then a number, like 0,
+1, 2, or a variable like i,
+44:54 - and then my chart function
+down here is exactly the same.
+44:57 - It has no idea an array is
+even involved, because I'm just
+45:00 - passing in one score at a time.
+45:04 - Now it turns out there's still one
+bad design decision in this program.
+45:08 - There's still some redundancy,
+something that I keep typing again
+45:12 - and again and again.
+45:14 - Do any values jump out
+at you as repeated?
+45:19 - AUDIENCE: The for loop.
+45:20 - DAVID J. MALAN: The for loop.
+45:21 - OK, so I've got the for
+loop in multiple places.
+45:24 - Sure.
+45:25 - And what other value seems
+to be in multiple places?
+45:29 - It's subtle.
+45:32 - Total number.
+45:33 - Yeah, 3.
+45:34 - Three is in a few places.
+45:35 - It's up here.
+45:36 - It's when I declare the array
+and ask myself for three scores.
+45:41 - It's here when I'm iterating.
+45:44 - It's not here, because this
+is a different iteration.
+45:46 - That's just for the hashes.
+45:48 - So in, ironically, three
+places, have I written 3.
+45:51 - So what does this mean?
+45:52 - Well, suppose next year you
+take more tests or whatever,
+45:54 - and you need more scores.
+45:55 - You open up your program, and all right,
+now I've got five scores and five--
+46:00 - whoops, typo already-- five,
+like this kind of pattern
+46:04 - where you're typing the
+same thing again and again.
+46:06 - And now the onus is
+on me, the programmer,
+46:08 - to remember to change the same
+[? damn ?] value in multiple places--
+46:11 - bad, bad, bad design.
+46:12 - You're going to miss
+one of those values.
+46:14 - Your program's going
+to get more complex.
+46:15 - You're going to leave one at
+3 and change the other to 5,
+46:18 - and logical errors are
+eventually going to happen.
+46:20 - So how do we solve this?
+46:21 - The function's not the solution
+here, because it's not functionality.
+46:24 - It's just a value.
+46:25 - Well, we could use a variable,
+but a certain type of variable.
+46:28 - These numbers here--
+5, 5, 5 or 3, 3, 3--
+46:32 - are what humans generally
+refer to as magic numbers.
+46:34 - Like they're numbers, but
+they're kind of magical,
+46:36 - because you just arbitrarily
+hardcoded them in random places.
+46:39 - But a better convention would be, often
+as a global variable, to do this--
+46:44 - int, let's call it "count," equals 3.
+46:47 - So declare a variable of type
+int that is the number of things
+46:51 - you want, and then type that variable
+name all throughout your code
+46:55 - so that later on, if you ever
+want to change this program,
+46:58 - you change it-- whoops--
+in one place, and you're
+47:01 - done after recompiling the program.
+47:03 - And actually, I should do
+a little better than this.
+47:05 - It turns out that if you know you have
+a variable that you're never going
+47:08 - to change, because it's
+not supposed to change--
+47:10 - it's supposed to be a constant value--
+47:12 - C also has a special keyword called
+const, where before the data type,
+47:16 - you say, const int, and then the name
+and then the value, and this way,
+47:20 - the compiler, Clang, will
+make sure that you, the human,
+47:22 - don't screw up and accidentally try
+to change the count anywhere else.
+47:27 - There's one other thing notable.
+47:28 - I also capitalize this whole
+thing for some reason--
+47:30 - human convention.
+47:31 - Anytime you capitalize all of
+the letters in a variable name,
+47:34 - the convention is that
+that means it's global.
+47:36 - That means it's defined way up top,
+and you can use it anywhere, therefore,
+47:40 - because it's outside all curly braces.
+47:42 - But it's meant to imply and
+remind you that this is special.
+47:46 - It's not just a so-called
+local variable inside
+47:48 - of a function or inside
+of a loop or the like.
+47:52 - Any questions on that?
+47:54 - Yeah.
+47:55 - AUDIENCE: What is [INAUDIBLE]?
+47:56 - Why do you have i plus 1?
+47:57 - DAVID J. MALAN: Oh,
+why do I have i plus 1?
+47:59 - Let me run this program real quick.
+48:01 - Why do I have i plus 1 in this
+line here, is the question.
+48:05 - So let me go ahead and
+run make scores 2--
+48:07 - whoops-- in my directory.
+48:09 - Make scores 2 ./scores2, Enter.
+48:13 - I wanted just the human to see
+Score 1 and Score 2 and Score 3.
+48:18 - I didn't want him or her to see Score 0,
+Score 1, Score 2, because it just looks
+48:22 - lame to the human.
+48:23 - The computer needs to
+think in terms of zeros.
+48:25 - My humans and my users do
+not, so just an aesthetic.
+48:29 - Other questions.
+48:29 - Yeah.
+48:30 - AUDIENCE: [INAUDIBLE].
+48:37 - DAVID J. MALAN: Ah,
+really good question.
+48:39 - And I actually thought
+about this last night
+48:40 - when trying to craft this example.
+48:43 - Why don't I just combine
+these two for loops,
+48:45 - because they're clearly iterating
+an identical number of times?
+48:50 - Was this a hand or just a stretch?
+48:52 - No, stretch.
+48:53 - So this is actually deliberate.
+48:57 - If I combine these, what would
+change logically in my program?
+49:01 - Yeah.
+49:02 - AUDIENCE: After every [INAUDIBLE]
+input, you would [INAUDIBLE]..
+49:05 - DAVID J. MALAN: Yeah, so after
+every human input of a score,
+49:08 - I would see that user's
+chart, the row of hashes.
+49:11 - Then I'd ask them for another value.
+49:13 - They'd see the chart, another
+value, and they'd see the chart.
+49:15 - And that's fine, if that
+is the design you want.
+49:17 - Totally acceptable.
+49:18 - Totally correct.
+49:19 - I wanted mine to look a little more
+traditional with all of the bars
+49:22 - together, so I effectively had
+to postpone printing the hashes.
+49:25 - And that's why I did have
+a little bit of redundancy
+49:27 - by getting the user's input
+here and then iterating again
+49:30 - to actually print the user's output
+as a chart, so just a design decision.
+49:34 - Good question.
+49:35 - Other questions?
+49:37 - All right, so what does this look like?
+49:40 - Actually, you know what?
+49:41 - I can probably do a little better.
+49:42 - Let me open up one final example
+involving scores and this thing
+49:45 - called an array.
+49:46 - In Scores 4 here, let
+me go ahead and do this.
+49:52 - Now I've changed my chart
+function to do a little bit more,
+49:55 - and you might recall from week 0
+and 1, we had the call function,
+49:58 - and we kept enhancing
+it to do more and more,
+50:00 - like putting more and
+more logic into it.
+50:02 - Notice this.
+50:04 - Chart function now takes a second
+argument, which is kind of interesting.
+50:08 - It takes one argument,
+which is a number,
+50:10 - and then the next argument
+is an array of scores.
+50:13 - So long story short, if you
+want to have a function that
+50:16 - takes as input an array,
+you don't have to know
+50:18 - in advance how big that array is.
+50:20 - You should not, in fact, put a
+number in between the square brackets
+50:23 - in this context.
+50:24 - But the thing is you do
+need to know, at some point,
+50:27 - how many items are in the array.
+50:29 - If you've programmed in Java, took
+AP CS, Java just gives you .length,
+50:32 - if you recall that feature of objects.
+50:35 - C does not have this.
+50:36 - Arrays do not have an inherent
+length associated with them.
+50:39 - You have to tell everyone who
+uses your array how long it is.
+50:44 - So even though you don't
+do that syntactically here,
+50:46 - you literally just say, I expect
+an argument called scores that
+50:50 - is an array per the square brackets.
+50:53 - You have to pass and almost
+always a second variable
+50:55 - that is literally called
+whatever you want,
+50:57 - but is the number of
+things in that array,
+50:59 - because if the goal of
+this function is just
+51:02 - to iterate over the number
+of scores that are passed in,
+51:09 - and then iterate over the
+number of points in that score
+51:12 - in order to print out the hashes,
+you need to know this count.
+51:16 - So what does this function
+do, just to be clear?
+51:19 - This iterates over the total
+number of scores from 0 to count,
+51:22 - which is probably 3 or 5 or whatever.
+51:24 - This loop here, using J,
+which is just a convention,
+51:27 - instead iterates from 0 to
+whatever that i-th score is.
+51:32 - So this is what's convenient.
+51:33 - Now I've passed in the array, and I
+can still get at individual values
+51:38 - just by using i, because I'm
+on my i-th iteration here.
+51:41 - So you might recall this from Mario,
+for instance, or any other example
+51:44 - in which you had nested loops--
+51:46 - just very conventional to use i
+on the outside, j on the inside.
+51:50 - But again, the only point here is that
+you can, indeed, pass around arrays,
+51:54 - even as arguments, which we'll
+see why that's useful before long.
+51:59 - Any questions?
+52:02 - OK, so this was a lot, but we can
+do so much more still with arrays.
+52:05 - It gets even more and more cool.
+52:07 - In fact, we'll see, in just a
+bit, how arrays have actually
+52:10 - been with us since last week.
+52:11 - We just didn't quite realize it
+under the hood, but let's go ahead
+52:14 - and take a breather, five minutes.
+52:15 - We'll come back and dive in.
+52:16 - All right.
+52:17 - So I know that was a
+bit of a cliffhanger.
+52:20 - Where else could arrays
+have actually been?
+52:22 - But, of course, this is how we
+might depict it pictorially.
+52:25 - We called it an array, and it
+turns out that last week, when
+52:27 - we introduced strings, strings,
+sequences of characters,
+52:31 - are literally just an
+array by another name.
+52:34 - A string is an array of chars, and
+chars, of course, is another data type.
+52:39 - Now what are the actual
+implications of this,
+52:41 - both in terms of representation,
+like how a computer's representing
+52:44 - information, and then
+fundamentally, programmatically,
+52:48 - what can we do when we
+know all of our data
+52:50 - is so back to back to back or
+so proximal to one another?
+52:53 - Well, it turns out that we can apply
+this logic in a few different ways.
+52:58 - Let me go ahead and
+open up, for instance,
+53:01 - an example here called String 0.
+53:04 - So in our code for today,
+in our Source 2 folder,
+53:08 - let me go ahead and open up String
+0, and this example looks like this.
+53:13 - Notice that we first, on line
+9, get a string from the user.
+53:17 - Just say, input, please.
+53:19 - We store that value in a string, s,
+and then we say, here comes the output.
+53:23 - And notice what I'm doing
+in the following line.
+53:26 - I'm iterating over i from 0
+to strlen, whatever that is.
+53:31 - And then in line 13, I'm printing
+a character one at a time.
+53:34 - But notice the syntax I'm using,
+which we didn't use last week.
+53:38 - If you have a string called
+s, you can index into a string
+53:43 - just like it's an array, because
+it, indeed, is underneath the hood.
+53:46 - So s bracket i, where
+i starts at 0 and goes
+53:50 - up to whatever this value is is just
+a way of getting character 0, then
+53:55 - character 1, then character
+2, then character 3,
+53:58 - and so the end result is
+actually going to look like this.
+54:01 - Let me go ahead and do, make string--
+54:04 - whoops-- make string 0.
+54:06 - Oops.
+54:06 - Not in the directory.
+54:07 - Make string 0, ./string0, Enter,
+and I'll type in, say, Zamyla,
+54:15 - and the output now is
+Z-A-M-Y-L-A. It's a little messy,
+54:21 - because I don't have a new line here, so
+let me actually-- let's clean that up,
+54:24 - because this is unnecessarily sloppy.
+54:27 - So let me go ahead and
+print out a new line.
+54:31 - Let me recompile with
+make string 0, dot--
+54:34 - whoops-- ./string0.
+54:37 - Input shall be Zamyla,
+Enter, and now Z-A-M-Y-L-A.
+54:43 - So why is that happening?
+54:44 - Well, if I scroll down on
+this code, it seems that I am,
+54:47 - via this printf line here, just getting
+the i-th character of the name in s,
+54:52 - and then printing out one
+character at a time per the %c,
+54:55 - followed by a new line.
+54:57 - So you might guess, what is
+this function here doing?
+55:01 - Strlen-- slightly abbreviated, but
+you can, perhaps, glean what it means.
+55:06 - Yeah, so it's actually string length.
+55:08 - So it turns out there
+is a function that comes
+55:11 - with C called strlen, and
+humans back in the day
+55:13 - and to this day like to type as
+few characters when possible.
+55:17 - And so strlen is string length,
+and the way you use it is you
+55:21 - just need one more header file.
+55:22 - So there's another library,
+the so-called string
+55:24 - library that gives you
+string-related functions
+55:27 - beyond what CS50's library provides.
+55:29 - And so if you include
+string.h, that gives you access
+55:32 - to another function called
+strlen, that if you pass it,
+55:35 - a variable containing a
+string, it will pass you back
+55:38 - as a return value the
+total number of characters.
+55:40 - So I typed in Z-A-M-Y-L-A, and so
+that should be returning to me six,
+55:46 - thereby printing out the six
+characters in Zamyla's name.
+55:49 - Yeah.
+55:50 - AUDIENCE: [INAUDIBLE].
+55:52 - DAVID J. MALAN: Uh-huh.
+55:54 - AUDIENCE: [INAUDIBLE] useful to get
+the individual digits [INAUDIBLE]..
+55:56 - DAVID J. MALAN: Really good question.
+55:57 - In the credit problem of the problem
+set, would this have been useful?
+56:00 - Yes, absolutely.
+56:01 - But recall that in the credit
+pset, we encourage you to actually
+56:04 - take in the number as a long,
+so as an integral value, which
+56:07 - thereby necessitated arithmetic.
+56:09 - But yes, if you had, instead, in
+a problem involving credit card
+56:12 - numbers, gotten the human's input
+as a long string of characters
+56:16 - and not as an actual number
+like an int or a long,
+56:18 - then, yes, you could actually get
+at those individual characters,
+56:21 - which probably would have made
+things even easier but deliberate.
+56:26 - Yeah.
+56:27 - AUDIENCE: [INAUDIBLE].
+56:29 - DAVID J. MALAN: Really good question.
+56:30 - If we're defining string in CS50,
+are we redefining it in string?
+56:33 - No.
+56:34 - So string, even though
+it's named string.h,
+56:36 - doesn't actually define
+something called a string.
+56:39 - It just has string-related functions.
+56:42 - More on that soon.
+56:43 - Yeah.
+56:43 - AUDIENCE: [INAUDIBLE]
+individual values [INAUDIBLE]??
+56:46 - DAVID J. MALAN: Ah,
+really good question.
+56:48 - Could you edit the individual values?
+56:51 - So short answer, yes.
+56:52 - We could absolutely change values, and
+we'll soon do that in another context.
+56:57 - Other questions?
+56:59 - All right, so turns out this
+is correct, if my goal is
+57:03 - to print out all of the
+characters in Zamyla's name,
+57:06 - but it's not the best design.
+57:07 - And this one's a little subtle, but
+this is, again, what we mean by design.
+57:09 - And to a question that
+came up during the break,
+57:12 - did we expect everyone to be writing
+good style and good design last week?
+57:16 - No.
+57:16 - Up until today, like we've
+introduced the notion of correctness
+57:19 - in both Scratch and in C
+last week, but now we're
+57:21 - introducing these other
+axes of quality of code
+57:24 - like design, how well-designed
+it is, and how pretty
+57:27 - does it look in the context of style.
+57:28 - So expectations are here on out meant to
+be aligned with those characteristics,
+57:33 - but not in the past.
+57:35 - So there's a slight inefficiency here.
+57:37 - So on the first iteration of this
+loop, I first initialize i to 0,
+57:41 - and then I check if i less than the
+length of the string, which hopefully,
+57:45 - it is, if it's Zamyla,
+which is longer than 0.
+57:48 - Then I print the i-th character.
+57:50 - Then I increment i.
+57:51 - Then I check this condition.
+57:53 - Then I print the i-th character.
+57:55 - Then I increment i.
+57:56 - Then I check this
+condition and so forth.
+57:58 - We looped through loops last week,
+and you've used them, perhaps,
+58:01 - by now in problems.
+58:03 - What question am I redundantly
+asking seemingly unnecessarily?
+58:11 - I have to check a
+condition again and again,
+58:13 - because i is getting incremented.
+58:15 - But there's another
+other question that I
+58:18 - don't need to keep asking again
+just to get the same answer.
+58:21 - AUDIENCE: What is the
+length [? of the string? ?]
+58:23 - DAVID J. MALAN: Yeah,
+there's this function call
+58:25 - in my loop of strlen s, which is fine.
+58:28 - This is correct.
+58:29 - I'm checking the length of the
+string, but once I type in Zamyla,
+58:32 - her name is not changing in length.
+58:34 - I'm incrementing i, so I'm moving
+in the string, if you will.
+58:38 - But the string itself,
+Z-A-M-Y-L-A, is not changing.
+58:41 - So why am I asking the computer, again
+and again, get me the strlen of s,
+58:46 - get me the strlen of s,
+get me the strlen of s.
+58:48 - So I can actually fix this.
+58:49 - I can improve the design, because
+that must take some amount of time.
+58:52 - Maybe it's fast, but it's still
+a non-zero amount of time.
+58:55 - So you know what I could do?
+58:56 - I could do something like this--
+int n get string length of s.
+58:59 - And now just do this.
+59:01 - This would be better design, because
+now I'm only asking the question once
+59:05 - of the function.
+59:06 - I'm remembering or caching, if
+you will, the answer, and then
+59:09 - I'm just using a variable.
+59:10 - And just comparing
+variables is just faster
+59:12 - than comparing a variable against
+a function, which has to be called,
+59:16 - which has to return a value,
+which you can then compare.
+59:18 - But honestly, it doesn't
+have to be this verbose.
+59:20 - We can actually be a
+little elegant about this.
+59:22 - If you're using a loop,
+a secret feature of loops
+59:25 - is that you can have commas
+after declaring variables.
+59:28 - And you can actually do this and make
+this even more elegant, if you will,
+59:32 - or more confusing-looking,
+depending on your perspective.
+59:35 - But this now does the same thing
+but declares n inside of the loop,
+59:39 - just like I'm declaring i, and
+it's just a little tighter.
+59:41 - It's one fewer lines of code.
+59:44 - Any questions, then?
+59:47 - AUDIENCE: [INAUDIBLE].
+59:50 - DAVID J. MALAN: Good question.
+59:51 - In the way I've just done it cannot
+reuse this outside of the curly braces.
+59:54 - The scope of i and n exists
+only in this context right now.
+59:59 - The other way, yes.
+60:00 - I could have used it elsewhere.
+60:03 - AUDIENCE: What if you [INAUDIBLE] other
+loops, and you also had [INAUDIBLE]??
+60:09 - DAVID J. MALAN: Absolutely.
+60:11 - AUDIENCE: Using different
+letters of the alphabet,
+60:13 - you could just use n
+and not be [INAUDIBLE]..
+60:17 - DAVID J. MALAN: Correct.
+60:18 - If I want to use the length
+of s again, absolutely.
+60:20 - I can declare the variable, as I
+did earlier, outside of the loop,
+60:24 - so as to reuse it.
+60:25 - That's totally fine.
+60:26 - Yes.
+60:27 - And even i-- i exists only inside of
+this loop, so if I have another loop,
+60:31 - I can reuse i, and it's a different
+i, because these variables only
+60:34 - exist inside the for loop
+in which they're declared.
+60:37 - So it turns out that these strings
+don't have anything in them
+60:44 - other than character after
+character after character.
+60:46 - And in fact, let me
+go ahead here and draw
+60:49 - a picture of what's actually going on
+underneath the hood of the computer
+60:52 - here.
+60:52 - So when I type in Zamyla's
+name, I'm, of course,
+60:55 - doing something like Z-A-M-Y-L-A.
+But where is that actually going?
+61:02 - Well, we know now that inside of
+your computer is RAM or memory,
+61:04 - and you can think of it like a grid.
+61:06 - And honestly, I can think
+of this whole screen
+61:08 - as just being in a different
+orientation, a grid of memory.
+61:11 - So for instance, maybe we can divide
+it into rows and columns like this, not
+61:16 - necessarily to scale, and
+there's more rows and columns.
+61:20 - So on the screen here,
+I'm just dividing things
+61:23 - into the individual bytes of
+memory that we saw a moment ago.
+61:28 - And so, indeed, underneath the hood of
+the computer is this layout of memory.
+61:32 - The compiler has somehow figured out
+or the program has somehow figured out
+61:35 - where to put the z and where the a and
+the m and the y and the l and the a,
+61:39 - but the key is that they're all
+contiguous, back to back to back.
+61:42 - But the catch is if I'm typing other
+words into my program or scores
+61:46 - into my program or any
+data into my program,
+61:49 - it's going to end up elsewhere
+in the computer's memory.
+61:51 - So how do you know where
+Zamyla begins and where
+61:53 - Zamyla ends, so to speak, in memory?
+61:56 - Well, the variable, called
+s, essentially is here.
+62:02 - There's some remembrance in
+the computer of where s begins.
+62:06 - But there's no obvious way
+to know where Zamyla ends,
+62:10 - unless we ourselves tell the computer.
+62:12 - So unbeknownst to us, any time a
+computer is storing a string like
+62:16 - Z-A-M-Y-L-A, it turns out that it's
+not using one, two, three, four, five,
+62:21 - six characters.
+62:22 - It's actually using seven secretly.
+62:25 - It's actually putting
+a special character
+62:28 - of all zeros in the very last bytes.
+62:33 - Every byte is eight bits, so it's
+putting secretly eight zeros there,
+62:37 - or we can actually draw this
+more conventionally as /0.
+62:40 - It's what's called the null character,
+and it just means all zeros.
+62:44 - So the length of the
+string, Zamyla, is six,
+62:46 - but how many bytes does it
+apparently take up, just to be clear?
+62:50 - So it actually takes up seven.
+62:52 - And this is kind of a
+secret implementation detail
+62:54 - that we don't really have to care
+about, but eventually, we will,
+62:57 - because if we want to implement
+certain functionality,
+62:59 - we're going to need to know
+what is actually going on.
+63:01 - So for instance, let me
+go ahead and do this.
+63:03 - Let me go ahead and create a
+program called strlen itself.
+63:07 - So this is not a function but
+a program called strlen.c.
+63:10 - Let me go ahead and include
+the CS50 library at the top.
+63:13 - Let me go ahead and include stdio.h.
+63:15 - Let me go ahead and type out main
+void, so all this is same as always.
+63:20 - And then let me go ahead and prompt
+the user for, say, his or her name,
+63:24 - like so.
+63:25 - And then you know what?
+63:26 - Let me actually, this time,
+not just print their name out,
+63:28 - because we've done that ad nauseam.
+63:29 - Let's just count the number
+of letters in his or her name.
+63:32 - So how could we do that?
+63:33 - Well, we could just do this-- int
+n get strlen of s, and then say,
+63:40 - printf "The length of your name is %i."
+63:45 - And then we can plug
+in n, because that's
+63:48 - the number we stored the length in.
+63:49 - But to use strlen, I have
+to include what header file?
+63:52 - String.h, which is the
+new one, so string.h.
+63:56 - And now if I type this all correctly,
+make strlen, make strlen, good.
+64:02 - ./strlen-- let's try it--
+64:05 - Zamyla.
+64:06 - Enter.
+64:06 - OK, the length of her name is six.
+64:08 - But what is strlen doing?
+64:10 - Well, strlen is just an abstraction
+for us that someone else wrote,
+64:13 - and it's wonderfully convenient, but
+you know, we don't strictly need it.
+64:16 - I can actually do this myself.
+64:18 - If I understand what
+the computer is doing,
+64:20 - I can implement this same
+functionality myself as follows.
+64:24 - I can declare a variable called
+n and initialize it to 0,
+64:26 - and then you know what?
+64:27 - I'm going to go ahead and do this.
+64:29 - While s bracket n does
+not equal all zeros,
+64:36 - but you don't write all zeros like this.
+64:38 - You literally do this--
+64:39 - that /0 to which I referred
+earlier in single quotes.
+64:42 - That just means all zeros in the bytes.
+64:45 - And now I can go ahead and do n++.
+64:47 - If I'm familiar with what
+this means, remember,
+64:49 - that this is just n equals n plus 1, but
+it's just a little more compact to say,
+64:54 - n++.
+64:55 - And then I can print
+out the name of your n--
+64:57 - the name of your n--
+64:59 - the name of-- the length of
+your name is %i, plugging in n.
+65:03 - So why does this work?
+65:05 - It's a little funky-looking,
+but this is just
+65:07 - demonstrating an understanding
+of what's going on
+65:09 - underneath the proverbial hood.
+65:10 - If n is initialized to zero,
+and I look at s bracket n,
+65:14 - well, that's like
+looking at s bracket 0.
+65:16 - And if the string, s, is
+Zamyla, what is s bracket 0?
+65:21 - Z. And then it does not equal /0.
+65:24 - It equals z, obviously.
+65:25 - So we increment n.
+65:26 - So now n is 1.
+65:28 - Now n is 1.
+65:29 - So what is s bracket 1 in Zamyla's name?
+65:32 - A and so forth, and we get to
+Z-A-M-Y-L-A, then all zeros,
+65:38 - the so-called null character, or /0.
+65:41 - That, of course, does equal
+/0, so the loop stops,
+65:44 - thereby leaving the total count or
+value of n at what it previously was,
+65:49 - which was 6.
+65:51 - So that's it.
+65:52 - Like all underneath
+the hood, all we have
+65:54 - is memory laid out like this,
+top to bottom, left to right,
+65:57 - and yet all of the functionality
+we've been using for a week now
+66:00 - and henceforth just boils down to
+some relatively simple primitives,
+66:03 - and if you understand
+those primitives, you
+66:05 - can do anything you want using
+the computer, both computationally
+66:08 - code-wise, but also memory-wise.
+66:11 - We can actually see, in fact, some of
+the stuff we looked at two weeks ago as
+66:14 - follows.
+66:15 - Let me go ahead and open up
+an example called ASCII 0.
+66:18 - Recall that ASCII is the mapping between
+letters and numbers in a computer.
+66:22 - And notice what this
+program's going to do.
+66:23 - Make-- let me go into this folder.
+66:26 - Make ascii0, ./ascii0, Enter.
+66:30 - The string shall be,
+let's say, Zamyla, Enter.
+66:34 - Well, it turns out that
+if you actually look up
+66:38 - the ASCII code for Zamyla's name, z
+is 90, lowercase a is 97, m is 109,
+66:45 - and so forth.
+66:46 - There are those characters,
+and actually, we
+66:47 - can play the same game we did last week.
+66:49 - If I do this again on "hi," there's
+your 72, and there's your 73.
+66:53 - Where is this coming from?
+66:55 - Well, now that I know how to
+manipulate individual strings,
+66:57 - notice what I can do.
+66:58 - I can get a string from the
+user, just as we always have.
+67:01 - I can iterate over the length of
+that string, albeit inefficiently
+67:05 - using strlen here.
+67:06 - And then notice this new feature today.
+67:09 - I can now convert one data type
+to another, because a char,
+67:14 - a character is just eight bits, but
+presented in the context of characters.
+67:20 - Bytes is also just eight bits that you
+could treat as an integer, a number.
+67:24 - It's totally context-sensitive.
+67:25 - If you use Photoshop, it's a graphic.
+67:27 - If you use a text program,
+it's a message and so forth.
+67:29 - So you can encode--
+67:31 - change the context.
+67:33 - So notice here, s bracket i is, of
+course, the i-th character of Zamyla's
+67:38 - name, so Z or A or M or whatever.
+67:40 - But I can convert that i-th character to
+an integer doing what's called casting.
+67:44 - You can literally, in
+parentheses, specify the data type
+67:47 - you want to convert one
+data type to, and then
+67:50 - store it in exactly that data type.
+67:52 - So s bracket i-- convert it to a number.
+67:54 - Then store it in an actual number
+variable, so I can print out its value.
+67:59 - So c-- this is show me the character.
+68:01 - Show me the letter as by plugging in
+the character, and then the letter--
+68:06 - sorry, the character and the number
+that I've just converted it to.
+68:09 - And you don't actually
+even have to be explicit.
+68:11 - This is called explicit casting.
+68:13 - Technically, we can do
+this implicitly, too.
+68:17 - And the computer knows that
+numbers are characters,
+68:19 - and characters are a number.
+68:20 - You don't have to be
+so pedantic and even do
+68:22 - the explicit casting in parentheses.
+68:24 - You can just do it implicitly with data
+types, and honestly, at this point,
+68:27 - I don't even need the variable.
+68:29 - I can get rid of this, and
+down here, I can literally just
+68:32 - print the same thing
+twice, but tell printf
+68:36 - to print the first in the
+context of a character
+68:39 - and the second in the context of an
+int, just treating the exact same bits
+68:43 - differently.
+68:44 - That's implicit casting.
+68:46 - And it just demonstrates
+what we did in week 0
+68:48 - when we claimed that
+letters are numbers,
+68:51 - and numbers can also be colors, and
+colors can be images, and so forth.
+68:54 - Is this a question?
+68:55 - AUDIENCE: Would've
+been useful for credit.
+68:57 - DAVID J. MALAN: Also, yes.
+68:57 - It all comes back to credit.
+68:58 - Yeah.
+68:59 - Indeed.
+69:00 - Other questions?
+69:01 - No.
+69:02 - All right, so what else can we
+actually do with this appreciation?
+69:06 - So super simple feature that all
+of us surely take for granted,
+69:08 - if we even use it anymore these days.
+69:10 - Google Docs, Microsoft Word,
+and such can automatically
+69:13 - capitalize words for you these days.
+69:14 - I mean your phone can do it nowadays.
+69:16 - They just sort of
+AutoCorrect your messages.
+69:18 - Well, how is that actually working?
+69:20 - Well, once you know that a string
+is just a bunch of characters
+69:22 - back to back to back, and you know
+that these characters have numbers
+69:26 - representing them, and like capital A is
+65, and lowercase A is 97, apparently,
+69:32 - and so forth, we can
+leverage these patterns.
+69:34 - If I go ahead and open
+up this other example
+69:36 - here called Capitalize 0,
+notice what this program is
+69:40 - going to do for me first by running it.
+69:43 - Make capitalize 0 ./capitalize0.
+69:47 - Let me go ahead and type in Zamyla's
+name just as before, but now
+69:50 - it's all capital.
+69:51 - So this is a little extreme.
+69:52 - Hopefully, your phone is not
+capitalizing every letter,
+69:55 - but you can imagine it capitalizing
+just the first, if you wanted it.
+69:58 - So how does this work?
+69:59 - Well, let me go ahead and
+open up this example here.
+70:03 - And so what we did--
+70:04 - so here, I'm getting a string from
+the user, just as we always do.
+70:08 - Then I'm saying, after, just to
+kind of format the output nicely.
+70:11 - Here, I'm doing a loop pretty
+efficiently from i equals 0 up
+70:15 - to the length of the string.
+70:17 - And now notice this neat
+application of logic.
+70:20 - It's a little cryptic,
+certainly, at first glance.
+70:22 - But whoops.
+70:23 - And now it's gone.
+70:23 - And what am I doing exactly
+with these lines of code?
+70:27 - Well, with every iteration of this
+loop, I'm asking the question,
+70:31 - is the i-th character of s,
+so the current character,
+70:33 - is it greater than or equal to
+lowercase A, and is it less than
+70:37 - or equal to lowercase Z?
+70:39 - Put another way, how do you say
+that more colloquially in English?
+70:42 - Is it lowercase, literally.
+70:44 - But this is the more programmatic
+way of expressing, is it lowercase?
+70:47 - All right, if it is,
+go ahead and do this.
+70:49 - Now this is a little funky, but
+print out a character, specifically
+70:53 - the i-th character, but subtract
+from that lowercase letter whatever
+70:58 - the difference is between little A and
+big A. Now where did that come from?
+71:05 - So it turns out--
+71:06 - OK, capital A is 65.
+71:08 - Lowercase A is 97.
+71:10 - So the difference between those is 32.
+71:13 - And that's true for B, so capital
+B is 66, and lowercase B is 98.
+71:18 - Still 32, and it repeats
+for the whole alphabet.
+71:20 - So I could just do this.
+71:22 - If I know that lowercase letters
+have bigger numbers, like 97, 98,
+71:27 - and I know that lowercase numbers
+have lower letters, like 65, 66,
+71:32 - I can just literally subtract
+off 32 from my lowercase letters.
+71:35 - As you point out, it's
+a lowercase letter.
+71:37 - Subtract 32, and that
+gives us what result?
+71:40 - The capitalized version.
+71:42 - It uppercases things for us.
+71:43 - But honestly, this feels a little
+hackish that, like, OK, yes,
+71:46 - I can do the math correctly,
+but you know what?
+71:48 - It's better practice, generally,
+to abstract this away.
+71:50 - Don't get into the weeds of counting
+how many characters are away
+71:53 - from each other.
+71:53 - Math is cheap and easy in the computer.
+71:55 - Let it do the math for you by
+subtracting whatever the value of A
+71:58 - is, of capital A is from the value of
+lowercase A. Or we could just write 32.
+72:04 - Otherwise, go ahead and just
+print the character unchanged.
+72:07 - So in this case, the A-M-Y-L-A
+in Zamyla's name got uppercased,
+72:11 - and everything else,
+the Z, got left alone,
+72:13 - just by understanding what's going on
+with how the computer's represented.
+72:18 - But honestly, God, I don't want
+to keep writing code like this.
+72:21 - Like, I'm never going to get this.
+72:22 - I'm new to programming, perhaps.
+72:23 - I'm never going to get this sort of
+sequence of all the cryptic symbols
+72:26 - together, and that's OK, because we can
+actually implement this same program
+72:30 - a little more easily,
+thanks to functions
+72:32 - and abstractions that
+others have written for us.
+72:35 - So in this program,
+turns out I can simplify
+72:38 - the questions I'm asking by literally
+calling a function that says, is lower.
+72:43 - And there's another
+one called, is upper,
+72:45 - and there's bunches of others
+that just literally are called,
+72:48 - is something or other.
+72:49 - So is lower takes an argument
+like the i-th character of s,
+72:53 - and it just returns a
+bull-- true or false.
+72:55 - How is it implemented?
+72:57 - Well, honestly, if we looked at the
+code that someone else wrote decades ago
+73:00 - for is upper, odds are-- or is lower--
+73:03 - odds are he or she wrote code
+that looks almost like this.
+73:07 - But we don't need to worry
+about that level of detail.
+73:10 - We can just use his or her
+function, but how do we do that?
+73:12 - Turns out that this function--
+and you would only know this
+73:15 - by having been told or Googling
+or reading a reference--
+73:17 - is in a library called ctype.h.
+73:20 - And you need the header file
+called ctype.h in order to use it.
+73:25 - And we'll almost always point you
+to references and documentation
+73:27 - to explain that to you.
+73:29 - Toupper is another feature, right?
+73:31 - This math-- like, my god.
+73:33 - I just want to uppercase a letter.
+73:34 - I don't want to really keep thinking
+about how far apart uppercase letters
+73:36 - are from lowercase.
+73:37 - Turns out that in the
+C type library, there's
+73:39 - another function called toupper that
+literally does the exact same thing
+73:43 - in the previous program we wrote.
+73:45 - And so that, too, is OK.
+73:47 - But you know what?
+73:48 - This feels a little verbose.
+73:50 - It would be nice if I could
+really tighten this program up.
+73:53 - So how those toupper work?
+73:55 - Well, it turns out some of you might
+be familiar with CS50 Reference
+73:58 - Online, our web-based
+app that we have that
+74:00 - helps you navigate
+available functions in C.
+74:03 - Turns out that all of the
+data for that application
+74:06 - comes from an older command
+line program that comes in Linux
+74:09 - and comes in the sandbox
+called Man for manual.
+74:12 - And anytime you type "man" at the
+command prompt, and then the name
+74:16 - of a function you're
+interested in, if it exists,
+74:18 - it will tell you a little
+something about it.
+74:20 - So if I go to toupper, man toupper,
+I get slightly cryptic documentation
+74:27 - here.
+74:27 - But notice, toupper and
+some other functions
+74:30 - convert uppercase or lowercase.
+74:31 - That's the summary.
+74:33 - Notice that in the synopsis,
+the man page, so to speak,
+74:36 - is telling me what header
+file I have to include.
+74:39 - Notice that under Synopsis,
+it's also telling me
+74:41 - what the signature or
+prototype is of the function.
+74:44 - In other words, the documentation in
+Man, the Linux programmer's manual,
+74:48 - is very terse.
+74:48 - So it's not going to hold your hand
+in this black and white format.
+74:51 - It's just going to
+convey, well, implicitly,
+74:54 - you better put this on top of your file.
+74:55 - And by the way, this is
+how you use the function.
+74:57 - It takes an argument called C,
+returns a value of type int.
+75:03 - Why is it int?
+75:06 - Let me wave my hands at that.
+75:07 - It effectively returns a
+character for our purposes today.
+75:10 - And if we scroll down, OK, description.
+75:12 - Ugh, I don't really want to read
+all of this, but OK, here we go.
+75:16 - If c is a lowercase letter, toupper
+returns its uppercase equivalent,
+75:21 - if an uppercase representation
+exists in the current locale.
+75:23 - That just means if it's punctuation,
+it's not going to do anything.
+75:26 - Otherwise, it returns C, And
+that's kind of the key detail.
+75:29 - If I pass it lowercase A, it's
+going to give me capital A,
+75:33 - but if I pass it capital A,
+what's it going to give me?
+75:36 - AUDIENCE: Capital A.
+75:37 - DAVID J. MALAN: Also, capital A. It
+returns the original character, c.
+75:40 - That's the only detail I cared about.
+75:42 - When in doubt, read the manual.
+75:43 - And it might be a
+little cryptic, and this
+75:45 - is why CS50 Reference takes
+somewhat cryptic documentation
+75:48 - and tries to simplify it into
+more human-friendly terms.
+75:50 - But at the end of the day, these
+are the authoritative answers.
+75:53 - And if I or one of the staff
+don't know, we literally
+75:55 - pull up the Man page or CS50 Reference
+to answer these kinds of questions.
+75:59 - Now what's the implication?
+76:01 - I don't need any of this.
+76:02 - I can literally get rid of
+the condition and just let
+76:06 - toupper do all of the
+legwork, and now my program
+76:10 - is so much more compact than
+the previous versions were,
+76:13 - because I've read the documentation.
+76:15 - I know what the function does, and I
+can let toupper uppercase something
+76:18 - or just pass it through unchanged.
+76:21 - We can better design, because we're
+writing fewer lines of code that
+76:23 - are just as clear, and so we can
+now actually tighten things up.
+76:29 - Any questions on this
+particular approach?
+76:33 - All right.
+76:34 - So we're getting very low level.
+76:35 - Now let's make these things more
+useful, because clearly, other people
+76:38 - have solved some of
+these problems for us,
+76:40 - as by having these functions and the
+C type library and the string library.
+76:44 - What more is there?
+76:45 - Well, recall that every time
+we run Clang, or even run make,
+76:49 - we're typing multiple words
+at the command prompt.
+76:52 - You're typing make hello or
+make Mario, a second word,
+76:56 - or you're typing
+clang-o, hello, hello.c,
+76:59 - like lots of words at the prompt.
+77:01 - Well, it turns out that all
+this time, you're using, indeed,
+77:04 - command line arguments.
+77:05 - But in C, you can write programs that
+also accept words and numbers when
+77:10 - the user runs the program.
+77:11 - Think back, after all.
+77:12 - When you ran Mario,
+you did ./mario, Enter.
+77:15 - You couldn't type any
+more words at the prompt.
+77:17 - When you did credit,
+you did ./credit, Enter.
+77:20 - No more words at the prompt.
+77:21 - You used get string or get
+long to get more input, but not
+77:24 - at the command line.
+77:26 - And it turns out that we
+can, relatively simply, in C,
+77:29 - but it's a little
+cryptic at first glance.
+77:31 - Let me go ahead and--
+77:33 - let me go ahead and, here, pull up this
+signature here, which looks like this.
+77:41 - This is the function that we're all used
+to by now for writing a main function.
+77:45 - And up until now, we've said void.
+77:47 - Main doesn't take any inputs,
+and indeed, it just runs.
+77:50 - But it turns out if you change your
+existing programs or future programs,
+77:54 - not to say void, but to
+say, int argc, string argv,
+77:58 - it's a little cryptic at first glance.
+78:00 - But what's a recognizable symbol now?
+78:04 - Yeah, there's brackets here.
+78:05 - So it turns out that every
+time you write a program,
+78:08 - if you don't just say void, you
+actually enable this feature
+78:11 - by writing int argc, string argv.
+78:13 - You can actually tell
+Clang, you know what?
+78:15 - I want this program to accept one or
+more words or numbers after the name
+78:20 - of the program, so I can do
+./hellodavid, or ./hellozamyla.
+78:23 - I don't have to wait for the
+program to be running to use string.
+78:27 - And just as with the earlier example,
+where you were able to chart an array,
+78:34 - main is defined as taking an array,
+called argv historical reasons--
+78:38 - argument vector.
+78:39 - Vector means array.
+78:40 - Argument vector, bracket, closed
+bracket just means this is--
+78:43 - this contains one or more words,
+each of which is a string.
+78:46 - Argc is argument count,
+so this is the variable
+78:49 - that main gets access to that
+tells it how many arguments,
+78:52 - how many strings are actually in argv.
+78:55 - So how can we use this in a useful way?
+78:58 - Well, let me go ahead here
+and open up the sandbox.
+79:01 - And let me go ahead and create a new
+file called, say, argv0, argv0.c--
+79:06 - again, argument vector, just
+list or array of arguments.
+79:10 - And let me go ahead and, as usual,
+include cs50.h, include stdio.h,
+79:19 - and then int main not void,
+but int argc, string argv--
+79:26 - argv-- open bracket, closed bracket.
+79:28 - And even if that doesn't come
+naturally at first, it will eventually.
+79:31 - And I'm going to do this.
+79:32 - If the number of arguments
+passed in equals 2,
+79:39 - then I'm going to go ahead and do
+this-- printf, hello %s, comma,
+79:45 - and here in the past, I've
+typed a variable name.
+79:47 - And I now actually have
+access to a variable.
+79:49 - Go ahead and do argv bracket 1.
+79:52 - Else, if the user does not
+type, apparently, two words,
+79:56 - let me go ahead and just by default,
+say, hello world, as we always have.
+80:00 - Now why-- what is this doing,
+and how is it doing it?
+80:03 - Well, let's quickly run it.
+80:04 - So make-- whoops.
+80:07 - Make argv0, ./argv0, Enter, Hello World.
+80:15 - But if I do Hello--
+80:17 - or dot-- the program
+would be better named
+80:19 - if we called it Hello,
+but Zamyla, Enter.
+80:23 - Hello Zamyla.
+80:24 - If I change it to David,
+now I have access to David.
+80:26 - If I had David Malan, no.
+80:29 - It doesn't support that.
+80:30 - So what's going on?
+80:31 - If you change main in
+any program write to take
+80:34 - these two arguments, argc
+and argv of type string int
+80:38 - and then an array of strings,
+argc tells you how many words
+80:41 - were typed at the prompt.
+80:42 - So if the human typed
+two words, I presume
+80:45 - the first word is the name of
+the program, dot slash argv0,
+80:48 - the second word is presumably my
+name, if he or she is actually
+80:51 - providing their name at the prompt.
+80:53 - And so I print out argv bracket 1.
+80:55 - Not 0 because that's the name of
+the program, but argv bracket 1.
+80:58 - Else, down here, if the human doesn't
+provide just Zamyla, or just David,
+81:02 - or just one word more generally, I
+just print the default, "Hello world."
+81:07 - But what's neat about this now is
+notice that argv is an array of strings.
+81:15 - What is a string?
+81:18 - It's an array of characters.
+81:20 - And so let's enter just one last piece
+of syntax that gets kind of powerful
+81:24 - here.
+81:24 - Let me go ahead and do this.
+81:28 - Let me go ahead and, in a
+new file here, argv 1 dot c.
+81:33 - Let me go ahead and paste this in.
+81:35 - Close this.
+81:36 - Let me go ahead and do this.
+81:38 - Rather than do this logical
+checking, let me do this, for--
+81:43 - let's say for int, i get 0.
+81:48 - i is less than argc--
+81:50 - i++.
+81:51 - Let's go ahead and, one per
+line, print out every word
+81:54 - that the human just
+typed, just to reinforce
+81:57 - that this is indeed what's going on.
+81:59 - So argv bracket 0, save.
+82:01 - Make argv 1, enter.
+82:05 - And now let's go ahead
+and run this program--
+82:07 - dot slash, argv 1, David Malan.
+82:12 - OK, you see all three words.
+82:14 - If we change it to Zamyla,
+we see just those two words.
+82:17 - If we change it to Zamyla
+Chan, we see those three words.
+82:20 - So we clearly have access to
+all of the words in the array,
+82:23 - but let's take this one step further.
+82:25 - Rather than just print out every word
+in a string, let's go ahead and do this.
+82:28 - For intj get 0.
+82:32 - n equals the string length of
+the current argument, like this--
+82:40 - j is less than n, j++--
+82:43 - oops, oops, oops-- j++.
+82:45 - Now let me go ahead and print out not
+the full string, but let me do-- oops,
+82:49 - oops-- let me go ahead
+and print out this--
+82:52 - not a string, but a character, n
+bracket i bracket j, like this.
+83:00 - All right.
+83:00 - So what's going on?
+83:01 - One, this outer loop, and let's comment
+it, iterate over strings in argv.
+83:07 - This inner loop, iterate
+over chars in argv bracket i.
+83:13 - So the outer loop iterates over
+all of the strings in argv.
+83:17 - And the inner loop, using a
+different variable, starting at 0,
+83:20 - iterates over all of the
+characters in the ith
+83:23 - argument, which itself is a string.
+83:26 - So we can call string length on it.
+83:28 - And then we do this up until n,
+which is the length of that string.
+83:31 - And then we print out each character.
+83:33 - So just to be clear-- when I run
+arv1 and correct it, at first glance,
+83:38 - why it's implicitly declaring library
+function sterling, what's almost always
+83:42 - the solution when you do this wrong?
+83:44 - AUDIENCE: [INAUDIBLE]
+83:45 - DAVID J. MALAN: Yeah.
+83:45 - So I forgot this, so include
+string.h and help50 would
+83:49 - help with that as well.
+83:50 - Let's recompile with make argv1.
+83:52 - All right.
+83:53 - When I run argv1, of, say, Zamyla
+Chan, what am I going to see?
+84:00 - AUDIENCE: [INAUDIBLE]
+84:01 - DAVID J. MALAN: Yeah.
+84:03 - Is that the right intuition?
+84:05 - AUDIENCE: [INAUDIBLE]
+84:06 - DAVID J. MALAN: I'm going
+to see Zamyla Chan, but--
+84:10 - AUDIENCE: [INAUDIBLE]
+84:11 - DAVID J. MALAN: One character on each
+line, including the program's name.
+84:14 - So in fact, let me scroll this
+up so it's a little bigger.
+84:16 - Enter.
+84:17 - OK, it's a little stupid, the program,
+but it does confirm that using arrays
+84:22 - do I have access not only to
+the words, but I can kind of
+84:25 - have the second dimension.
+84:26 - And within each word, I can
+get at each character within.
+84:30 - And we do this, again, just by using
+not just single square brackets,
+84:34 - but double.
+84:35 - And again, just break this
+down into the first principles.
+84:37 - What is this first bracket?
+84:38 - This is the ith argument,
+the ith string in the array.
+84:41 - And then if you take it
+further, with bracket j,
+84:43 - that gives you the j
+character inside of this.
+84:47 - Now, who cares about any of
+this kind of functionality?
+84:51 - Well, let me scroll back and
+propose one application here.
+84:54 - So recall that CS is really
+just problem solving.
+84:57 - But suppose the problem
+that you want to solve
+84:59 - is to actually pass a
+secret message in class
+85:02 - or send someone a secret
+for whatever reason.
+85:04 - Well, the input to that
+problem is generally
+85:06 - called plain test, a message you
+want to send to that other person.
+85:09 - You ideally want ciphertext
+to emerge from it,
+85:12 - which is enciphered and scrambled,
+somehow encrypted information
+85:15 - so that anyone in the room, like the
+teacher, can't just grab the note
+85:18 - and read what you're sending to your
+secret crush or love across the room,
+85:21 - or in any other context as well.
+85:23 - But the problem is that if the
+message you want to send, say,
+85:26 - is our old friend Hi!,
+with an exclamation point,
+85:29 - you can encode it in certain
+contexts as just 72, 73, 33.
+85:34 - And I daresay most classes on campus
+if you wrote on a piece of paper 72,
+85:37 - 73, 33, passed it through the room,
+and whatever professor intercepts it,
+85:40 - they're not going to know
+what you're saying anyway.
+85:43 - But this is not a good system.
+85:44 - This is not a cryptosystem.
+85:46 - Why?
+85:47 - It's not secure.
+85:52 - [INAUDIBLE]
+85:52 - [INTERPOSING VOICES]
+85:54 - DAVID J. MALAN: Yeah.
+85:55 - Anyone has access to
+this, right, so long
+85:57 - as you attend like week 1
+or 0 of CS50, or you just
+86:00 - have general familiarity with Ascii.
+86:02 - Like this is just a code.
+86:04 - I mean Ascii is a system
+that maps letters to numbers.
+86:08 - And anyone else who
+knows this code obviously
+86:10 - knows what your message is,
+because it's not a unique secret
+86:12 - to you and the recipient.
+86:14 - So that's probably not the best idea.
+86:16 - Well, you can be a little
+more sophisticated.
+86:18 - And this is back--
+actually, a photograph
+86:19 - from World War I of a message that
+was sent from Germany to Mexico
+86:23 - that was encoded in a very similar way.
+86:25 - It wasn't using Ascii.
+86:26 - The numbers, as you can
+perhaps glean from the photo,
+86:29 - are actually much larger.
+86:30 - But in this system, in a militaristic
+context, there was a code book.
+86:33 - So similar in spirit to
+Ascii, where you have
+86:35 - a column of numbers and a column of
+letters to which they correspond,
+86:39 - a codebook more generally has
+like numbers, and then maybe
+86:42 - even letters or whole words
+that they correspond to,
+86:45 - sometimes thousands of them, like
+literally a really big book of codes.
+86:50 - And so long as only, in this context
+the Germans and the recipients,
+86:53 - the Mexicans, had access
+to that same book,
+86:56 - only they could encrypt and decrypt, or
+rather encode and decode information.
+87:01 - Of course, in this
+very specific context--
+87:03 - you can read more about
+this in historical texts--
+87:05 - this was intercepted.
+87:06 - This message, seemingly
+innocuous, though definitely
+87:08 - suspicious looking
+with all these numbers,
+87:11 - so therefore not innocuous, the British,
+in this case actually, intercepted it.
+87:16 - And thanks to a lot of
+efforts and cryptanalysis,
+87:18 - the Bletchley Park style code
+breaking, albeit further back,
+87:23 - were they able to figure out what
+those numbers represented in words
+87:27 - and actually decode the message.
+87:29 - And in fact, here's a
+photograph of some of the words
+87:31 - that were translated
+from one to the other.
+87:34 - But more on that in any
+online or textual references.
+87:38 - Turns out in this poem too
+there was a similar code, right?
+87:41 - So apropos of being in Boston
+here, you might recall this one.
+87:44 - "Listen my children, and you shall hear
+of the midnight ride of Paul Revere.
+87:49 - On the 18th of April
+in '75, hardly a man
+87:51 - is now alive who remembers
+that famous day and year.
+87:54 - He said to his friend, if the
+British march by land or sea
+87:58 - from the town tonight
+night, hang a lantern
+88:00 - aloft in the belfry arch of the
+North Church tower as a signal light,
+88:05 - one if by land, and two if by sea.
+88:08 - And I on the opposite shore
+will be ready to ride and spread
+88:10 - the alarm through every Middlesex
+village and farm for the country folk
+88:13 - to be up and to arm."
+88:14 - So it turns out some of that is
+not actually factually correct,
+88:17 - but the one if by land and
+the two if by sea code were
+88:21 - sort of an example of a one-time code.
+88:23 - Because if the revolutionaries in
+the American Revolution kind of
+88:27 - decided secretly among themselves
+literally that-- we will put up one
+88:30 - light at the top of a church if
+the British are coming by land.
+88:34 - And we will instead use two if the
+British are instead coming by sea.
+88:37 - Like that is a code.
+88:38 - And you could write it down in a
+book, unless you have a code book.
+88:41 - But of course, as soon as
+someone figures out that pattern,
+88:44 - it's compromised.
+88:45 - And so code books tend not to
+be the most robust mechanisms
+88:49 - for encoding information.
+88:51 - Instead, it's better to use
+something more algorithmic.
+88:54 - And wonderfully, in computer
+science is this black box
+88:56 - to-- we keep saying,
+the home of algorithms.
+88:59 - And in general, encryption is a
+problem with inputs and outputs,
+89:03 - but we just need one more input.
+89:05 - The input is what's generally
+called the key, or a secret.
+89:09 - And a secret might just be a number.
+89:11 - So for instance, if I
+wanted my secret to be 1,
+89:13 - because we'll keep the example simple,
+but it could really be any number.
+89:16 - And indeed, we saw with the
+photograph a moment ago,
+89:18 - the Germans used much larger than
+this, albeit in the context of codes.
+89:21 - Suppose that you now want to send
+a more private message to someone
+89:24 - across the room in a
+class that, I love you.
+89:26 - How do you go about encoding that
+in a way that isn't just using Ascii
+89:31 - and isn't just using
+some simple code book?
+89:33 - Well, let me propose that now that we
+understand how strings are represented,
+89:37 - right-- we're about to make love
+really, really lame and geeky--
+89:41 - so now that you know how to
+express strings computationally,
+89:44 - well, let's just start
+representing "I love you" in Ascii.
+89:47 - So I is 73.
+89:49 - L is 76.
+89:50 - O-V-E Y-O-U. That's just Ascii.
+89:53 - Should not send it this
+way, because anyone
+89:55 - who knows Ascii is going
+to know what you're saying.
+89:58 - But what if I enciphered this message,
+I performed an algorithm on it?
+90:02 - And at its simplest,
+an algorithm can just
+90:04 - be math-- simple
+arithmetic, as we've seen.
+90:06 - So you know, let me just
+use my secret key of 1.
+90:09 - And let me make sure that my crush knows
+that I am using a secret value of 1.
+90:14 - So he or she also knows
+to expect that value.
+90:17 - And before I send my message, I'm
+going to add 1 to every letter.
+90:21 - So 73 becomes 74.
+90:23 - 76 becomes 77.
+90:24 - 80, 87, 70, 90, 80, 86.
+90:29 - Now this could just
+be sent in the clear.
+90:31 - But then, I could actually
+send it as a textual message.
+90:35 - So let's convert it back to Ascii.
+90:37 - 74 is now J. 77 is now M. 80 is now P.
+And you can perhaps see the pattern.
+90:45 - This message was, I love you.
+90:48 - And now, all of the letters
+are off by one, I think.
+90:52 - I became J. L became M.
+O became P, and so forth.
+90:57 - So now the claim would
+be, cryptographically, I'm
+91:00 - going to send this
+message across the room.
+91:02 - And now no one who has a code book
+is going to be able to solve this.
+91:05 - I can't just steal the
+book and decode it,
+91:07 - because now the key is
+only up here, so to speak.
+91:09 - It's just the number
+1 that he or she and I
+91:12 - had to agree upon in
+advance that we would
+91:13 - use for sending our secret messages.
+91:15 - So if someone captures this message,
+teacher in the room or whoever,
+91:20 - how would they even go about
+decoding this or decrypting it?
+91:26 - Are there any techniques
+available to them?
+91:29 - I daresay we can kind of
+chip away at this love note.
+91:32 - AUDIENCE: [INAUDIBLE]
+91:32 - DAVID J. MALAN: What's that?
+91:33 - Guess and check.
+91:34 - OK, we could try all--
+91:35 - there still kind of some spacing.
+91:36 - So you know honestly, we could do
+like kind of a cryptanalysis of it,
+91:40 - a frequency attack.
+91:41 - Like, I can't think of
+too many words in English
+91:43 - that have a single letter in them.
+91:45 - So what does J probably represent?
+91:46 - [INTERPOSING VOICES]
+91:47 - DAVID J. MALAN: I, probably.
+91:48 - Maybe A, but probably I. And
+there's not too many other options.
+91:52 - So we've attacked one part
+of the message already.
+91:55 - I see a commonality.
+91:56 - There's two what in here?
+91:59 - Two P. And I don't necessarily
+know that that maps to O, but I do
+92:02 - know it's the same character.
+92:04 - So if I kind of continue this thoughtful
+process or this trial and error,
+92:08 - and I figure out, oh,
+what if that's an O?
+92:10 - And then that's an O.
+And then wait a minute.
+92:12 - They're passing from one to another.
+92:13 - Maybe this says, I love you.
+92:15 - Like you actually can,
+with some probability,
+92:17 - decrypt a message by doing
+this kind of analysis on it.
+92:20 - It's at least more secure
+than the code book,
+92:22 - because you're not compromised
+if the book itself is stolen.
+92:25 - And you can change the key
+every time, so long as you
+92:28 - and the recipient actually
+agree on something.
+92:30 - But at least we now have
+this mechanism in place.
+92:33 - So with just the understanding
+of what you can do with strings,
+92:36 - can you actually now do really
+interesting domain-specific things
+92:39 - to them?
+92:40 - And in fact, back in the day, Caesar,
+back in militaristic times literally
+92:45 - used a cipher quite like this.
+92:47 - And frankly, when you're the
+first one to use these ciphers,
+92:49 - they actually are kind of secure,
+even if they're relatively simple.
+92:52 - But hopefully, not just using a
+key of 1, maybe 2, or 13, or 25,
+92:57 - or something larger.
+92:58 - But this is an example
+of a substitution cipher,
+93:01 - or a rotational cipher where
+everything's kind of rotating--
+93:04 - A's becoming B, B's becoming
+C. Or you can kind of
+93:07 - rotate it even further than that.
+93:11 - Well, let's take a look
+at one last example here
+93:14 - of just one other final
+primitive of a feature
+93:17 - today, before we then go back high
+level to bring everything together.
+93:20 - It turns out that printing
+out error messages
+93:23 - is not the only way to signal
+that something has gone wrong.
+93:27 - There's a new keyword, a new use
+of an old keyword in this example,
+93:31 - that's actually a convention
+for signaling errors.
+93:33 - So this is an example called exit.c.
+93:36 - It apparently wants the human to do
+what, if you infer from the code?
+93:42 - AUDIENCE: Exit [INAUDIBLE].
+93:43 - DAVID J. MALAN: Yes.
+93:44 - Say again?
+93:44 - AUDIENCE: [INAUDIBLE]
+93:45 - DAVID J. MALAN: Well, it
+wants the-- well, what
+93:47 - does it what the human to do
+implicitly, based on the printf's here?
+93:51 - How should I run this program?
+93:53 - Yeah?
+93:53 - AUDIENCE: [INAUDIBLE]
+just apply [INAUDIBLE]..
+93:56 - DAVID J. MALAN: Yeah.
+93:57 - So for whatever reason,
+this program implicitly
+94:00 - wants me to write exactly
+two words at the prompt.
+94:03 - Because if I don't, it's going to yell
+at me, missing command line argument.
+94:06 - And then it's going to
+return 1, whatever that is.
+94:08 - Otherwise, it's going to
+say, Hello, such and such.
+94:10 - So if I actually run this program--
+94:12 - let me go back over
+here and do make exit--
+94:17 - oops-- in my directory, make exit.
+94:19 - OK, dot slash exit, enter, I'm
+missing a command line argument.
+94:23 - All right, let me put Zamyla's name.
+94:25 - Oh, Hello Zamyla.
+94:26 - Let me put Zamyla Chan.
+94:28 - Nope, missing command line argument.
+94:29 - It just wants the one,
+so in this case here.
+94:33 - I'm seeing visually the error
+message, but it turns out
+94:36 - the computer is also signaling to
+me what the so-called exit code is.
+94:41 - So long story short, we've already
+seen examples last week of how
+94:44 - you can have a function return a value.
+94:46 - And we saw how [? Erin ?]
+came up on stage,
+94:47 - and she returned to me a piece
+of paper with a string on it.
+94:50 - But it turns out that
+main is a little special.
+94:52 - If main returns a value like 1
+or 0, you can actually see that,
+94:58 - albeit in a kind of a non-obvious way.
+95:01 - If I run exit, and I run it
+correctly with Zamyla as the name,
+95:06 - if I then type echo, dollar sign,
+question mark, of all things,
+95:10 - enter, I will then see exactly what main
+returned with, which in this case is 0.
+95:15 - Now, let me try and be uncooperative.
+95:17 - If I actually run just dot
+slash exit, with no word,
+95:23 - I see, missing command line argument.
+95:25 - But if I do the same cryptic command,
+echo, dollar sign, question mark,
+95:29 - I see that main exited with 1.
+95:30 - Now, why is this useful?
+95:32 - Well, as we start to write
+more complicated programs,
+95:35 - it's going to be a convention
+to exit from main by returning
+95:39 - a non-zero value, if
+anything goes wrong.
+95:42 - 0 happens to mean everything went well.
+95:44 - And in fact, in all
+of the programs we've
+95:46 - written thus far, if you
+don't mention return anything,
+95:49 - main automatically for you returns 0.
+95:53 - And it has been all this time.
+95:55 - It's just a feature, so you don't
+have to bother typing it yourself.
+95:57 - But what's nice about this,
+or what's real about this,
+96:00 - is if on your Mac or PC, if you've ever
+gotten an annoying error message that
+96:04 - says, error negative 29, system error
+has occurred, or something freezes,
+96:08 - but you very often see
+numbers on the screen, maybe.
+96:11 - Like those error codes actually tend
+to map to these kinds of values.
+96:15 - So when a human is writing
+software and something goes wrong
+96:18 - and an error happens, they
+typically return a value like this.
+96:21 - And the computer has access to it.
+96:23 - And this isn't all that useful
+for the human running the program.
+96:25 - But as your programs
+get more complex, we'll
+96:27 - see that this is actually quite
+useful as a way of signaling
+96:32 - that something indeed went wrong.
+96:34 - Whew.
+96:34 - OK, that's a lot of syntax
+wrapped in some loving context.
+96:41 - Any questions before we
+look at one final domain?
+96:44 - No?
+96:45 - All right.
+96:46 - So it turns out that we can answer the
+"who cares" question in yet another way
+96:51 - too.
+96:52 - It turns out-- let me go ahead and open
+up an example of our array again here--
+96:59 - that arrays can actually now be used
+to solve problems more algorithmically.
+97:03 - And this is where life
+gets more interesting.
+97:05 - Like we were so incredibly
+in the weeds today.
+97:06 - And as we move forward
+in the class, we're
+97:08 - not going to spend so
+much time on syntax,
+97:10 - and dollar signs, and question marks,
+and square brackets, and the like.
+97:13 - That's not the interesting part.
+97:14 - The interesting part is when we
+now have these fundamental building
+97:17 - blocks, like an array, with
+which we can solve problems.
+97:20 - So it turns out that
+an array, you know, you
+97:23 - can kind of think of it
+as a series of lockers,
+97:26 - a series of lockers that might
+look like this, inside of which
+97:29 - are values-- strings, or
+numbers, or chars, or whatnot.
+97:32 - But the lockers is an apt metaphor
+because a computer, unlike us humans,
+97:36 - can only see and do one thing at a time.
+97:38 - It can open one locker and look
+inside, but it can't kind of
+97:41 - take a step back, like we humans
+can, and look at all of the lockers,
+97:44 - even if all of the doors are open.
+97:46 - So it has to be a more
+deliberate act than that.
+97:49 - So what are the actual implications?
+97:51 - Well, all this time--
+97:52 - we had that phone book
+example in the first week,
+97:55 - and the efficiency of that algorithm, of
+finding Mike Smith in this phone book,
+97:59 - all assumed what feature
+of this phone book?
+98:02 - AUDIENCE: That it's
+ordered alphabetically.
+98:03 - DAVID J. MALAN: That it
+was ordered alphabetically.
+98:05 - And that was a huge plus, because
+then I could go to the middle,
+98:08 - and I could go to the middle
+of the middle, and so forth.
+98:10 - And that was an algorithmic possibility.
+98:12 - On our phones, if you
+pull up your contacts,
+98:13 - you've got a list of first names, or
+last names, all alphabetically sorted.
+98:17 - That is because, guess what
+data structure or layout
+98:20 - your phone probably uses
+to store your contacts?
+98:24 - It's an array of some sort, right?
+98:26 - It's just a list.
+98:27 - And it might be displayed
+vertically, instead of horizontally,
+98:29 - as I've been drawing it today.
+98:30 - But it's just values that are back,
+to back, to back, to back, to back,
+98:33 - that are actually sorted.
+98:34 - But how did they actually
+get into that sorted order?
+98:37 - And how do you actually find values?
+98:38 - Well, let's consider what
+this problem is actually
+98:40 - like for a computer, as follows.
+98:43 - Let me go ahead here.
+98:44 - Would a volunteer mind
+joining us up here?
+98:47 - I can throw in a free stress ball.
+98:49 - OK, someone from the back?
+98:51 - OK, come on up here.
+98:52 - Come on.
+98:52 - What's your name?
+98:53 - ERIC: Eric.
+98:54 - DAVID J. MALAN: Aaron.
+98:55 - All right.
+98:56 - So Aaron's going to come on up.
+98:57 - And--
+98:58 - ERIC: Eric.
+98:59 - DAVID J. MALAN: I'm sorry?
+98:59 - Oh, Eric.
+99:00 - Nice to meet you.
+99:01 - All right.
+99:01 - Come on over here.
+99:02 - So Eric, now normally, I would
+ask you to find the number 23.
+99:05 - But seeing is that's a little easy,
+can you go ahead and just find us
+99:08 - the number 50 behind these doors,
+or really these yellow lockers?
+99:11 - 8?
+99:11 - Nope.
+99:12 - 42?
+99:13 - Nope.
+99:13 - OK.
+99:14 - Pretty good.
+99:14 - That's three, three out of seven.
+99:16 - How did you get it so quickly?
+99:17 - ERIC: I guessed.
+99:18 - DAVID J. MALAN: OK, so he guessed.
+99:20 - Is that the best algorithm
+that Eric could have used here?
+99:24 - ERIC: Probably not.
+99:26 - DAVID J. MALAN: Well, I don't know.
+99:27 - Yes?
+99:28 - No?
+99:28 - AUDIENCE: Yeah.
+99:29 - DAVID J. MALAN: Why?
+99:30 - Why yes?
+99:30 - AUDIENCE: [INAUDIBLE]
+99:31 - DAVID J. MALAN: He has
+no other information.
+99:32 - So yes, like that was
+the best you can do.
+99:34 - But let me give you a
+little more information.
+99:35 - You can stay here.
+99:36 - And let me go ahead and
+reload the screen here.
+99:40 - And let me go ahead and pull
+up a different set of doors.
+99:43 - And now suppose that, much like the
+phone book, and much like the phones
+99:46 - are sorted, now these doors are sorted.
+99:49 - And find us the number 50.
+99:54 - All right.
+99:54 - So good.
+99:55 - What did you do that time?
+99:57 - AUDIENCE: Well, [INAUDIBLE].
+99:59 - It was 50 is 116.
+100:00 - So I just--
+100:01 - DAVID J. MALAN: Right.
+100:02 - So you jumped to the middle,
+initially, and then to the right half.
+100:07 - And then technically-- so we're
+technically off by 1, right?
+100:10 - Because like binary search would
+have gone to the middle of the--
+100:12 - that's OK, but very well done to Eric.
+100:14 - Here, let me at least reinforce
+this with a stress ball.
+100:18 - So thank you.
+100:20 - Very well done.
+100:21 - So with that additional
+information, as you know,
+100:23 - Eric was able to do better because the
+information was sorted on the screen.
+100:27 - But he only had one insight
+to a locker at a time,
+100:30 - because only by revealing what's
+inside can he actually see it.
+100:33 - So this seems to
+suggest that once you do
+100:35 - have this additional information in
+Eric's example, in your phone example,
+100:39 - in the phone book example, you open up
+possibilities for much much, much more
+100:44 - efficient algorithms.
+100:45 - But to get there, we've kind of been
+deferring this whole time in class
+100:50 - how you actually sort these elements.
+100:53 - And if you wouldn't mind-- and this way,
+we'll hopefully end on a more energized
+100:56 - note here because I know we've
+been in the weeds for a while--
+100:59 - can we get like eight volunteers?
+101:02 - OK, so 1, 2, 3, 4-- how about
+5, 6, 7, 8, come on down.
+101:09 - Oh, I'm sorry.
+101:09 - Did I completely overlook the front row?
+101:11 - OK.
+101:12 - All right, next time.
+101:13 - Next time.
+101:14 - Come on down.
+101:20 - Oh, and Colton, do you mind
+meeting them over there instead?
+101:23 - All right.
+101:25 - Come on up.
+101:26 - What's your name?
+101:26 - [? CAHMY: ?] [? Cahmy. ?]
+101:27 - DAVID J. MALAN: [? Cahmy? ?] David.
+101:28 - Right over there.
+101:29 - What's your name?
+101:29 - MATT: Matt.
+101:29 - DAVID J. MALAN: Matt?
+101:30 - David.
+101:30 - [? JUHE: ?] [? Juhe. ?]
+101:31 - DAVID J. MALAN: [? Juhe? ?] David.
+101:32 - MAX: Max.
+101:32 - DAVID J. MALAN: Max, nice to meet you.
+101:33 - JAMES: James.
+101:34 - DAVID J. MALAN: James, nice to see you.
+101:35 - Here, I'll get more chairs.
+101:36 - What's your name?
+101:37 - ,PEYTON: Peyton.
+101:37 - DAVID J. MALAN: Peyton?
+101:38 - David.
+101:38 - And two more.
+101:40 - Actually can what have you
+come down to this end here?
+101:42 - What's your name.
+101:43 - ANDREA: Andrea.
+101:43 - DAVID J. MALAN: Andrea, nice to see you.
+101:45 - And your name?
+101:46 - [? PICCO: ?] [? Picco. ?]
+101:46 - DAVID J. MALAN: [? Picco, ?] David.
+101:47 - Nice to see you.
+101:48 - OK, Colton has a T-shirt for each
+of you, very Harvard-esque here.
+101:54 - And each of these shirts, as you're
+about to see, has a number on it.
+101:57 - And that number is--
+102:00 - well, go ahead put them
+on, if you wouldn't mind.
+102:06 - OK, thank you so much.
+102:07 - So I daresay we've arranged our humans
+much like the lockers in an array.
+102:11 - Like we have humans back,
+to back, to back, to back.
+102:13 - But this is actually both a
+blessing and a constraint,
+102:17 - because we only have eight chairs.
+102:18 - So there's really not much room here, so
+we're confined to just this space here.
+102:22 - And I see we have a 4,
+8, 5, 2, 3, 1, 6, 7.
+102:25 - So this is great.
+102:26 - Like they are unsorted.
+102:28 - By definition, it's pretty random.
+102:29 - So that's great.
+102:30 - So let's just start off like this.
+102:31 - Sort yourselves from 1 to 8, please.
+102:42 - OK.
+102:42 - All right.
+102:43 - Well, what algorithm was that?
+102:45 - [LAUGHTER]
+102:46 - AUDIENCE: Look around, figure it out.
+102:47 - DAVID J. MALAN: Look
+around, figure it out.
+102:49 - OK, well--
+102:49 - MATT: Human ingenuity.
+102:50 - DAVID J. MALAN: Human ingenuity?
+102:51 - Very well done.
+102:52 - So can we-- well, what
+was like a thought
+102:54 - going through any of your minds?
+102:56 - MATT: Find a chair and sit down.
+102:57 - DAVID J. MALAN: Find the chair--
+102:58 - find the right chair.
+102:59 - So go to a location.
+103:00 - Good.
+103:01 - So like an index location, right?
+103:02 - Arrays have indices, so to spea--
+103:04 - 0, 1, 2, all the way up to 7.
+103:07 - And even though our shirts
+are numbered from 1 to 8,
+103:10 - you can think in terms of 0 to 7.
+103:11 - So that was good.
+103:12 - Anyone else?
+103:12 - Other thoughts?
+103:14 - [? CAHMY: ?] I mean, this is
+something we implicitly think of,
+103:17 - but no one told us that it
+was ordered right to left.
+103:19 - Like we could have
+done it left to right.
+103:20 - DAVID J. MALAN: OK.
+103:21 - Absolutely.
+103:21 - Could have gone from right to
+left, instead of left to right.
+103:23 - But at least we all
+agreed on this convention
+103:25 - too, so that was in your mind.
+103:26 - OK.
+103:26 - So good.
+103:27 - So we got this sorted.
+103:28 - Go ahead and re-randomize
+yourself, if you could.
+103:35 - And what algorithm was this?
+103:37 - Just random awkwardness?
+103:38 - OK, so that's fine.
+103:39 - So it looks pretty random.
+103:41 - That will do.
+103:42 - Let's see if we can now
+reduce the process of sorting
+103:44 - to something a little more algorithmic
+so that, one, we can be sure
+103:47 - we're correct and not just kind of get
+lucky that everyone kind of figured it
+103:50 - out and no one was
+left out, and two, then
+103:52 - start to think about how
+efficient it is, right?
+103:54 - Because if we've been gaining so
+much efficiency for the phone book,
+103:57 - for our contacts, for
+[? error ?] coming up,
+103:59 - we really should have been
+asking the whole time,
+104:01 - sure, you save time with binary
+search and divide and conquer,
+104:05 - but how much did it cost
+you to get to a point
+104:08 - where you can use binary
+search and divide and conquer?
+104:10 - Because sorting, if it's super, super,
+super expensive and time-consuming
+104:14 - maybe it's a net negative.
+104:15 - And you might as well just
+search the whole list,
+104:17 - rather than ever sort anything.
+104:18 - All right.
+104:19 - So let's see here.
+104:20 - 6 and 5, I don't like this.
+104:22 - Why?
+104:24 - AUDIENCE: [INAUDIBLE]
+104:25 - DAVID J. MALAN: 6 is
+supposed to come after 5.
+104:27 - And so, can we fix this, please?
+104:29 - All right.
+104:30 - And then let's see.
+104:30 - OK, 6 and 1-- ugh,
+don't really like this.
+104:33 - Yeah, can we fix this?
+104:36 - Very nice.
+104:36 - 6 and 3, OK, you really got the
+short end of the stick here.
+104:39 - So 6 and 3, could we fix this?
+104:43 - And 6-- yeah, OK.
+104:44 - Ooh, OK, 6 and 7-- good.
+104:46 - All right, so that's pretty good.
+104:47 - 7 and 8, nice.
+104:49 - 8 and 4, sorry.
+104:50 - Could we switch here?
+104:52 - All right.
+104:53 - And then 8 and 2?
+104:54 - OK, could we switch here?
+104:56 - OK.
+104:56 - And let me ask you a
+somewhat rhetorical question.
+104:58 - OK, am I done?
+105:00 - OK, no.
+105:00 - Obviously not, but I did
+fix some problems, right?
+105:03 - I fixed some transpositions,
+numbers being out of order.
+105:06 - And in fact, I-- what's your name again?
+105:07 - [? CAHMY: ?] [? Cahmy. ?]
+105:08 - DAVID J. MALAN: [? Cahmy, ?] kind of
+bubbled to the right here, if you will.
+105:11 - Like you were kind of farther
+down, and now you're over here.
+105:14 - And like the smaller
+numbers, kind of-- yeah 1.
+105:16 - Like, my god, like he kind
+of bubbled his way this way.
+105:19 - So things are percolating,
+in some sense.
+105:21 - And that's a good thing.
+105:23 - And so you know what?
+105:24 - Let Me try to fix some
+remaining problems.
+105:26 - So 1 and 5-- good.
+105:27 - Oh 3 and 5, could you switch?
+105:29 - 5 and 6, OK.
+105:31 - 6 and 7?
+105:32 - 7 and 4, could you switch?
+105:34 - OK.
+105:36 - And 7 and 2, could you switch?
+105:40 - And now, I don't have to
+speak with [? Cahmy ?] again,
+105:42 - because we know you're
+in the right place.
+105:44 - So I actually don't have
+to do quite as much work
+105:46 - this time, which is kind of nice.
+105:48 - But am I done?
+105:49 - No, obviously not.
+105:50 - But what's the pattern now?
+105:52 - Like what's the fundamental primitive?
+105:53 - If I just compare pairwise
+humans and numbers,
+105:57 - I can slightly improve
+the situation each time
+105:59 - by just swapping them, swapping them.
+106:01 - And each time now--
+106:02 - I'm sorry, [? Picco ?]
+is in number 7's place.
+106:04 - I don't have to talk to him
+anymore, because he's now bubbled
+106:07 - his way all the way up to the top.
+106:08 - So even though I'm doing the
+same thing again and again,
+106:10 - and looping again and again
+isn't always the best thing,
+106:13 - so long as you're looping fewer and
+fewer times, I will eventually stop,
+106:16 - it would seem.
+106:17 - Because 6 is going to eventually
+go in the right place, and then 5,
+106:20 - and then 4, and so forth.
+106:21 - So if we can just finish this algorithm.
+106:22 - Good.
+106:24 - Not good.
+106:26 - OK, 6 and 2, not good.
+106:27 - If you could swap?
+106:28 - OK, and what's your name again?
+106:30 - PEYTON: Peyton.
+106:31 - DAVID J. MALAN: Peyton is
+now in the right place.
+106:32 - I have even less work now ahead of me.
+106:33 - So if I can just continue this process--
+106:35 - 1 and 3, 3 and 5, 4 and
+5, OK, and then 2 and 5.
+106:39 - And then, what's your name again?
+106:40 - MATT: Matt.
+106:41 - DAVID J. MALAN: Matt is
+now in the right place.
+106:42 - Even less work.
+106:43 - We're almost there.
+106:44 - 1 and 3, 3 and 4, 4 and
+2, if you could swap.
+106:47 - OK, almost done.
+106:48 - And 1 and 3, 3 and 2, if you could swap.
+106:51 - Nice.
+106:52 - So this is interesting.
+106:53 - It would seem that-- you
+know, in the first place,
+106:55 - I kind of compared
+seven pairs of people.
+106:59 - And then the next time I went through,
+I compared how many pairs of people
+107:02 - maximally?
+107:02 - AUDIENCE: [INAUDIBLE]
+107:03 - DAVID J. MALAN: Just six, right?
+107:05 - Because we were able to
+leave [? Cahmy ?] out.
+107:06 - And then we were able to leave
+[? Picco ?] out, and then Peyton.
+107:09 - And so the number of comparisons I
+was doing was getting fewer and fewer.
+107:12 - So that feels pretty good.
+107:13 - But you know what?
+107:14 - Before We even analyze that, can
+you just randomize yourselves again?
+107:17 - Any human algorithm is fine.
+107:18 - Let's try one other approach, because
+this feels kind of non-obvious, right?
+107:22 - I was fixing things, but I had to
+keep fixing things again and again.
+107:26 - Let me try to take a bigger
+bite out of the problem
+107:28 - this time by just selecting
+the smallest person.
+107:30 - OK, so your name again is?
+107:31 - [? JUHE: ?] [? Juhe. ?]
+107:32 - DAVID J. MALAN: [? Juhe, ?] number
+2-- that's a pretty small number,
+107:34 - so I'm going to remember that
+in sort of a mental variable.
+107:36 - 4?
+107:36 - No, you're too big.
+107:37 - Too big.
+107:39 - Oh, what was your name again?
+107:40 - JAMES: James.
+107:40 - DAVID J. MALAN: James.
+107:41 - James is a 1.
+107:42 - That's pretty nice.
+107:43 - Let me keep checking.
+107:43 - OK, James, in my mental
+variable is the smallest number.
+107:47 - I know I want him at the beginning.
+107:48 - So if you wouldn't mind coming with me.
+107:50 - And I'm sorry, we don't
+have room for you anymore.
+107:52 - If you could just-- oh, you know what?
+107:53 - Could you all just shuffle down?
+107:55 - Well, hm, I don't know if I like that.
+107:57 - That's a lot of work, right?
+107:58 - Moving all these values,
+let's not do that.
+108:00 - Let's not do that.
+108:01 - Number 2, could you
+mind just going where--
+108:03 - where--
+108:03 - JAMES: It's James.
+108:04 - DAVID J. MALAN: --James was?
+108:06 - OK, so I've kind of made the
+problem a little worse in that,
+108:09 - now, number 2 is farther
+away from the goal.
+108:11 - But I could have gotten lucky,
+and maybe she was number 7 or 8.
+108:14 - And so let me just claim that, on
+average, just evicting the person
+108:17 - is going to kind of be
+a wash and average out.
+108:20 - But now James is in the right place.
+108:21 - Done.
+108:22 - Now I have a problem that's of size 7.
+108:24 - So let me select the
+next smallest person.
+108:26 - 4 is the next smallest, not
+8, not 5, not 7-- ooh, 2.
+108:29 - Not 3, 6.
+108:30 - OK, so you're back in the game.
+108:32 - All right, come on back.
+108:33 - And can we evict number 4?
+108:35 - And on this algorithm,
+if you will, I just
+108:37 - interpretively select
+the smallest person.
+108:40 - I'm not comparing everyone in quite the
+same way and swapping them pairwise,
+108:44 - I'm doing some of more
+macroscopic swaps.
+108:46 - So now I'm going to look for
+the next smallest, which is 3.
+108:48 - If you wouldn't mind
+popping around here?
+108:50 - [? Cahmy, ?] we have to,
+unfortunately, evict you,
+108:52 - but that works out to our favor.
+108:53 - Let me look for the next
+smallest, which is 4.
+108:55 - OK, you're back in.
+108:56 - Come on down.
+108:57 - Swap with 5.
+108:58 - OK, now I'm looking for 5.
+109:00 - Hey, 5, there you are.
+109:01 - OK.
+109:01 - So go here.
+109:02 - OK, looking for 6.
+109:03 - Oh, 6, a little bit of a shuffle.
+109:06 - OK.
+109:07 - And now looking for 7.
+109:08 - Oh, 7, if you could go here.
+109:10 - But notice, I'm not going back.
+109:12 - And this is what's important.
+109:13 - Like my steps are getting
+shorter and shorter.
+109:15 - My remaining steps are
+getting shorter and shorter.
+109:17 - And now we've actually
+sorted all of these humans.
+109:21 - So two fundamentally different ways,
+but they're both comparative in nature,
+109:24 - because I'm comparing
+these characters again,
+109:27 - and again, and again, and swapping
+them if they're out of order.
+109:29 - Or at a higher level, going
+through and swapping them again,
+109:34 - and again, and again.
+109:35 - But how many steps am
+I taking each time?
+109:38 - Even though I was doing fewer and
+fewer and I wasn't doubling back,
+109:41 - the first time, I was doing
+like n minus 1 comparisons.
+109:45 - And then I went back here.
+109:46 - And in the first algorithm, I
+kind of stopped going as far.
+109:50 - In the second algorithm, I
+just didn't go back as far.
+109:53 - So it was just kind of a different
+way of thinking of the problem.
+109:56 - But then I did what?
+109:57 - Like seven comparisons?
+109:59 - Then six, then five, then four,
+then three, then two, then one.
+110:03 - It's getting smaller, but how
+many comparisons is that total?
+110:06 - I've got like n people,
+n being a number.
+110:09 - AUDIENCE: [INAUDIBLE]
+110:10 - DAVID J. MALAN: Is not
+as bad as factorial.
+110:12 - We'd be here all day long.
+110:14 - But it is big.
+110:15 - It is big.
+110:15 - Let's go-- a round of applause,
+if we could, for our volunteers.
+110:18 - You can keep the shirts, if
+you'd like, as a souvenir.
+110:19 - [APPLAUSE]
+110:20 - Thank you, very much.
+110:22 - Let me see if we can't just kind of
+quantify that-- thank you, so much--
+110:26 - and see how we actually
+got to that point.
+110:29 - If I go ahead and pull up not our
+lockers, but our answers here,
+110:34 - let me propose that what we just
+did was essentially two algorithms.
+110:38 - One has the name bubble.
+110:39 - And I was kind of deliberately kind
+of shoehorning the word in there.
+110:42 - Bubble sort is just that
+comparative sort, pair by pair,
+110:45 - fixing tiny little mistakes.
+110:47 - But we needed to do it
+again, and again, and again.
+110:50 - So those steps kind of add up, but
+we can express them as pseudocode.
+110:54 - So in pseudocode-- and you can
+write this any number of ways--
+110:56 - I might just do the following.
+110:58 - Just keep doing the following,
+until there's no remaining swaps--
+111:01 - from i from 0 to n -2, which is just
+n is the total number of humans.
+111:06 - n -2 is go up from that
+person to this person,
+111:10 - because I want to compare him or
+her against the person next to them.
+111:13 - So I don't want to accidentally do this.
+111:14 - That's why it's n -2 at the end here.
+111:16 - Then I want to go ahead and, if the
+ith and the ith +1 elements are out
+111:19 - of order, swap them.
+111:21 - So that's why I was asking our
+human volunteers to exchange places.
+111:24 - And then just keep doing that,
+until there's no one left to swap.
+111:27 - And by definition, everyone is in order.
+111:29 - Meanwhile, the second algorithm has the
+conventional name of selection sort.
+111:33 - Selection sort is literally
+just that, where you actually
+111:37 - select the smallest person, or number
+of interest to you, intuitively,
+111:40 - again and again.
+111:41 - And the number keeps
+getting bigger, but you
+111:43 - start ignoring the people who
+you've already put into place.
+111:45 - So the problem, similarly, is
+getting smaller and smaller.
+111:48 - Just like in bubble sort, it was
+getting more and more sorted.
+111:52 - The pseudocode for selection
+sort might look like this.
+111:54 - For i from 0 to n -1,
+so that's 0 in an array.
+111:58 - And this is n -1.
+112:00 - Just keep looking for the smallest
+element between those two chairs,
+112:05 - and then pull that person out.
+112:06 - And then just evict
+whoever's there-- swap them,
+112:09 - but not necessarily adjacently,
+just as far away as is necessary.
+112:13 - And in this way, I keep turning
+my back on more and more people
+112:16 - because they are then in place.
+112:18 - So two different
+framings of the problem,
+112:20 - but it turns out they're actually both
+the same number of steps, give or take.
+112:24 - It turns out they're roughly
+the same number of steps,
+112:27 - even though it's a different
+way of thinking about it.
+112:29 - Because if I think about bubble sort,
+the first iteration, for instance,
+112:32 - what just-- actually, well, let's
+consider selection sort even.
+112:35 - In selection sort, how many
+comparisons did I have to do?
+112:39 - Well, once I found my
+smallest element, I
+112:41 - had to compare them
+against everyone else.
+112:43 - So that's n -1 comparisons
+the first time.
+112:46 - So n -1 on the board.
+112:47 - Then I can ignore them,
+because they're behind me now.
+112:50 - So now I have how many
+comparisons left out of n people?
+112:54 - n -2, because I subtracted one.
+112:56 - Then again, n -3, then n -4, all the
+way down to just one person remaining.
+113:00 - So I'll express that sort of
+generally, mathematically, like this.
+113:03 - So n -1 plus n -2 plus whatever plus
+one final comparison, whatever that is.
+113:09 - It turns out that if you actually
+read the back of the math
+113:12 - book or your physics textbooks
+where they have those little cheat
+113:14 - sheets as to what these recurrences are,
+turns out that n -1 plus n -2 plus n -3
+113:20 - and so forth can be
+expressed more succinctly
+113:22 - as literally just n
+times n -1 divided by 2.
+113:26 - And if you don't recall that, that's OK.
+113:28 - I always look these things up as well.
+113:30 - But that's true-- fact.
+113:32 - So what does that equal out to?
+113:33 - Well, it's like n squared minus
+n, if you just multiply it out.
+113:36 - And then if you divide
+the two, then it's
+113:38 - n squared divided by 2 minus n over 2.
+113:40 - So that's the total number of steps.
+113:42 - And I could actually plug this in.
+113:43 - We could plug in 8, do the math, and
+get the total number of comparisons
+113:46 - that I was verbally
+kind of rattling off.
+113:49 - So is that a big deal?
+113:51 - Hm, it feels like it's on
+the order of n squared.
+113:54 - And indeed, a computer
+scientist, when assessing
+113:56 - the efficiency of an algorithm,
+tends not to care too much
+113:59 - about the precise values.
+114:00 - All we're going to care
+about it's the biggest term.
+114:02 - What's the value in the
+formula that you come up
+114:05 - with that just dominates the
+other terms, so to speak,
+114:07 - that has the biggest effect, especially
+as n is getting larger and larger?
+114:11 - Now, why is this?
+114:12 - Well, let's just do sort of
+proof by example, if you will.
+114:15 - If this is the expression,
+technically, but I
+114:18 - claim that, ugh, it's
+close enough to say
+114:20 - on the order of, big O of n squared,
+so to speak, let's use an example.
+114:24 - If there's a million people
+on stage, and not just eight,
+114:27 - that math works out to
+be like a million squared
+114:29 - divided by 2 steps minus a
+million divided by 2, total.
+114:33 - So what does that
+actually work out to be?
+114:35 - Well, that's 500 billion minus 500,000.
+114:38 - And what does that work out to be?
+114:40 - Well, that's 499 billion,
+999 million, 500,000.
+114:46 - That feels pretty darn
+close to like n squared.
+114:49 - I mean, that's a drop in the bucket
+to subtract 500,000 from 500 billion.
+114:54 - So you know what?
+114:55 - Eh, it's on the order of n squared.
+114:57 - It's not precise, but it's in
+that general order of magnitude,
+115:01 - so to speak.
+115:02 - And so this symbol, this
+capital 0, is literally a symbol
+115:04 - used in computer science
+and in programming
+115:06 - to just kind of describe
+with a wave of the hand,
+115:09 - but some good intuition and algorithm,
+how fast or slow your algorithm is.
+115:13 - And it turns out there's different
+ways to evaluate algorithms
+115:16 - with just different similar formulas.
+115:18 - n squared happens to be how much
+time both bubble sort and selection
+115:21 - sort take.
+115:22 - If I literally count
+up all of the work we
+115:24 - were doing on stage
+with our volunteers, it
+115:26 - would be roughly n squared, 8
+squared, or 64 steps, give or take,
+115:32 - for all of those humans.
+115:33 - And that would be notably off.
+115:35 - There's a good amount
+of rounding error there.
+115:36 - But if we had a million
+volunteers on stage,
+115:39 - then the rounding error
+would be pretty negligible.
+115:42 - But we've actually seen some of
+these other orders of magnitude,
+115:45 - so to speak, before.
+115:46 - For instance, when we counted someone,
+or we searched for Mike Smith one page
+115:49 - at a time, we called
+that a linear algorithm.
+115:52 - And that was big O of n.
+115:53 - So it's on the order of n steps.
+115:55 - It's 1,000.
+115:55 - Maybe it's 999.
+115:56 - Whatever.
+115:57 - It's on the order of n steps.
+115:58 - The [? twosies ?] approach was twice
+as fast, recall-- two pages at a time.
+116:02 - But you know what?
+116:03 - That's still linear, right?
+116:05 - Like two pages at a time?
+116:06 - Let me just wait till next
+year when my CPU is twice
+116:08 - as fast, because Intel and companies
+keep speeding up computers.
+116:10 - The algorithm is fundamentally the same.
+116:12 - And indeed, if you think
+back to the picture we drew,
+116:15 - the shapes of those curves
+were indeed the same.
+116:18 - That first algorithm, finding Mike
+one page at a time looked like this.
+116:22 - Second algorithm finding
+him looked like this.
+116:24 - Only the third algorithm, the divide
+and conquer, splitting the phone book
+116:28 - was a fundamentally different shape.
+116:29 - And so even though we didn't use
+this fancy phrasing a couple of weeks
+116:33 - ago, these first algorithms, one page
+at a time, two pages at a time, eh,
+116:37 - they're on the order of n.
+116:39 - Technically, yes, n
+versus n divided by 2,
+116:42 - but we only care about the
+dominating factor, the variable n.
+116:46 - We can throw away everything
+in the denominator,
+116:48 - and we can throw away everything that's
+smaller than the biggest term, which
+116:51 - in this case is just n.
+116:52 - And I alluded to this two weeks ago--
+116:54 - logarithmic.
+116:55 - Well, it turns out that any time you
+divide something again, and again,
+116:58 - and again, you're leveraging
+a logarithmic type function,
+117:02 - log base 2 technically.
+117:03 - But on the order of log base
+n is a common one as well.
+117:08 - The beautiful algorithms are these--
+117:10 - literally, one step, or technically
+constant number of steps.
+117:14 - For instance, like what's an
+algorithm that might be constant time?
+117:20 - Open phone book.
+117:21 - OK, one step.
+117:22 - Doesn't really matter
+how many pages there are,
+117:24 - I'm just going to open the phone book.
+117:25 - And that doesn't vary
+by number of pages.
+117:27 - That might be a constant
+time algorithm, for instance.
+117:30 - So those are the lowest you can go.
+117:32 - And then there's somewhere
+even in between here
+117:34 - that we might aspire to with
+certain other algorithms.
+117:37 - So in fact, let's just
+see if-- just a moment--
+117:41 - let's just see if we can do
+this a little more succinctly.
+117:44 - Let's go ahead and use arrays in just
+one final way, using merge sorts.
+117:50 - So it turns out, using
+an array, we can actually
+117:53 - do something pretty powerfully,
+so long as we allow ourselves
+117:56 - a couple of arrays.
+117:58 - So again, when we just add sorting
+with bubble sort and selection sort,
+118:00 - we had just one array.
+118:01 - We had eight chairs
+for our eight people.
+118:04 - But if I actually allowed myself
+like 16 chairs, or even more,
+118:07 - and I allowed these
+folks to move a bit more,
+118:10 - I could actually do even
+better than that using arrays.
+118:12 - So here's some random numbers that we'll
+just do visually, without any humans.
+118:16 - And they're in an array, back,
+to back, to back, to back.
+118:18 - But if I allow myself
+a second array, I'm
+118:20 - going to be able to shuffle these
+things around and not just compare them,
+118:23 - because it was those comparisons and
+all of my footsteps in front of them
+118:26 - that really started
+to take a lot of time.
+118:28 - So here's my array.
+118:29 - You know what?
+118:29 - Just like the phone book-- that
+phone book example got us pretty far
+118:32 - in the first week--
+118:33 - let me do half of the problem at a time
+and then kind of combine my answer.
+118:38 - So here's an array--
+118:39 - 4, 2, 7, 5, 6, 8, 3,
+1-- randomly sorted.
+118:42 - Let me go ahead and
+sort just half of this,
+118:44 - just like I searched for Mike initially
+in just half of the phone book.
+118:47 - So 4, 2, 7, 5-- not sorted.
+118:50 - But you know what?
+118:51 - This feels like too big
+of a problem, still.
+118:53 - Let me sort just the left
+half of the left half.
+118:56 - OK, now it's a smaller problem.
+118:58 - You know what?
+118:59 - 4 and 2, still out of order.
+119:00 - Let me just divide this list of two
+into two tiny arrays, each of size 1.
+119:05 - So here's a mini-array of size 1,
+and then another one of like size
+119:08 - 7, but they're back
+to back, so whatever.
+119:10 - But this array of size 1, is it sorted?
+119:14 - AUDIENCE: No.
+119:15 - DAVID J. MALAN: I'm sorry?
+119:16 - AUDIENCE: No.
+119:17 - DAVID J. MALAN: No?
+119:18 - If this array has just one
+element and that element is 4--
+119:21 - AUDIENCE: There's only
+one thing you can do.
+119:22 - DAVID J. MALAN: Yes, then
+it is sorted, by definition.
+119:24 - All right, so done.
+119:25 - Making some progress.
+119:26 - Now, let me kind of mentally rewind.
+119:28 - Let me sort the right
+half of that array.
+119:32 - So now I have another array of size 1.
+119:34 - Is this array sorted?
+119:36 - Yeah, kind of stupidly.
+119:37 - We don't really seem
+to be doing anything.
+119:39 - We're just making claims.
+119:40 - But yes, this is sorted.
+119:41 - But now, this was the original half.
+119:44 - And this half is sorted.
+119:46 - This half is sorted.
+119:47 - What if I now just kind of
+merge these sorted halves?
+119:49 - I've got two lists of size 1--
+119:52 - 4 and 2.
+119:53 - And now if I have extra storage
+space, if I had like extra benches,
+119:56 - I could do this a little better.
+119:58 - don't I go ahead and merge
+these two as follows?
+120:00 - 2 will go there.
+120:02 - 4 will go there.
+120:03 - So now I've taken two sorted lists
+and made one bigger, more sorted list
+120:06 - by just merging them together,
+leveraging some additional space.
+120:10 - Now, let me mentally rewind.
+120:11 - How did I get to 4 and 2?
+120:12 - Well, I started with the left half,
+then the left half of the left half.
+120:15 - Let me now do the right half
+of the left half, if you will.
+120:19 - All right, let me divide this again.
+120:20 - 7, list of size 1, is it sorted?
+120:23 - Yes, trivially.
+120:24 - 5, is it sorted?
+120:26 - Yes.
+120:27 - 7 and 5, let's go ahead
+and merge them together.
+120:29 - 5 is, of course, going to go here.
+120:31 - 7, of course, is going to go here.
+120:33 - OK.
+120:34 - Now where do we go?
+120:35 - We originally sorted the left half.
+120:37 - Let's go sort the right-- oh, right.
+120:39 - Sorry.
+120:40 - Now, we have the left half.
+120:41 - And the right half of
+the left half are sorted.
+120:45 - Let's go ahead and merge these.
+120:46 - We have two lists now of size 2--
+120:48 - 2, 4 and 5, 7, both of which are sorted.
+120:52 - If I now merge 2, 4 and 5, 7,
+which element should come first
+120:56 - in the new longer list, obviously?
+120:59 - 2.
+121:00 - And then 4, then 5, and then 7.
+121:01 - That wasn't much of anything.
+121:03 - But OK, we're just using a
+little more space in our array.
+121:05 - Now what comes next?
+121:07 - Now, let's do the right half.
+121:08 - Again, we started by taking the
+whole problem, doing the left half,
+121:11 - the left half of the left half, the left
+half of the left half of the left half.
+121:14 - And now we're going back
+in time, if you will.
+121:17 - So let's divide this into two
+halves, now the left half into two
+121:20 - halves still.
+121:21 - 6 is sorted.
+121:22 - 8 is sorted.
+121:23 - Now I have to merge them--
+121:24 - 6, 8.
+121:26 - What comes next?
+121:26 - Right half-- 3 and 1.
+121:29 - Well, left half is sorted,
+right half is sorted--
+121:31 - 1 and 3.
+121:33 - All right, now how do I merge these?
+121:35 - 6, 8, 1, 3, which element
+should obviously come first?
+121:38 - 1, then 3, then 6, then 8.
+121:42 - And then lastly, I have
+two lists of size four.
+121:45 - Let me give myself a little
+more space, one more array.
+121:48 - Now let me go ahead and put
+1, and 2, and 3, and 4, and 5,
+121:53 - and 6, and 7, and 8.
+121:56 - What just happened?
+121:57 - Because it actually happened a lot
+faster, even though we were doing this
+122:00 - all verbally.
+122:01 - Well notice, how many times did
+each number change locations?
+122:09 - Literally three, right?
+122:10 - Like one, two, three, right?
+122:13 - It moved from the original array, to the
+secondary array, to the tertiary array,
+122:17 - to the fourth array,
+whatever that's called.
+122:19 - And then it was ultimately in place.
+122:21 - So each number had to move
+one, two, three spots.
+122:24 - And then how many numbers are there?
+122:26 - AUDIENCE: [INAUDIBLE]
+122:28 - DAVID J. MALAN: Well, they were
+already in the original array.
+122:30 - So how many times do they have to move?
+122:32 - Just one, two, three.
+122:33 - So how many total numbers
+are there, just to be clear?
+122:36 - There's eight.
+122:37 - So 8 times 3.
+122:38 - So let's generalize this.
+122:39 - If there's n numbers,
+and each time we moved
+122:43 - the numbers we did like half of
+them, than half, then half, well,
+122:46 - how many times can you divide 8 by 2?
+122:50 - 8 goes to 4.
+122:51 - 4 goes to 2.
+122:52 - 2 goes to 1.
+122:53 - And that's why we bottomed out
+at one element, lists of size 1.
+122:57 - So it turns out whenever you divide
+something by half, by half, by half,
+123:00 - what is that function or formula?
+123:05 - Not power, that's bad.
+123:06 - That's the other direction.
+123:07 - AUDIENCE: [INAUDIBLE]
+123:08 - DAVID J. MALAN: It's a logarithm.
+123:08 - So again, logarithm is just
+a mathematical description
+123:11 - for any function that you keep dividing
+something again, and again, and again.
+123:14 - In half, in half, in half, in third,
+in third, in third, whatever it is,
+123:17 - it just means division by the
+same proportional amounts again,
+123:20 - and again, and again.
+123:22 - And so if we move the numbers
+three times, or more generally log
+123:27 - of n times, which again just
+means you divided n things again,
+123:31 - and again, and again,
+you just call that log n.
+123:33 - And there's n numbers,
+so n numbers moved
+123:36 - log n times, the total
+arithmetic here in question
+123:40 - is one of those other values on
+our little cheat sheet, which
+123:44 - looked like this.
+123:46 - In our other cheat sheet, recall that
+we had formulas that looked like this,
+123:51 - not just n squared and n, and log n,
+and 1, we have this one in the middle--
+123:55 - n times log n.
+123:57 - So again, we're kind
+of jumping around here.
+123:59 - But again, each number
+moves log n places.
+124:02 - There's n total numbers.
+124:03 - So n times log n is just,
+by definition, n log n.
+124:07 - But why is this sorted this way?
+124:09 - Well log n, recall from week
+0 with the phone book example,
+124:12 - the green curve is definitely smaller
+than n. n was the straight lines,
+124:16 - log n was the green curved one.
+124:18 - So this indeed belongs in between,
+because this is n times n.
+124:21 - This is n.
+124:22 - This is n times
+something smaller than n.
+124:25 - So what's the actual implication?
+124:26 - Well, if we were to run
+these algorithms side by side
+124:29 - and actually compare them
+with something like this--
+124:34 - let me go ahead and compare these
+algorithms using this demo here--
+124:41 - if I go ahead and hit play, we'll
+see that the bars in this chart
+124:44 - are actually horizontal.
+124:45 - And the small bars
+represent small numbers,
+124:47 - large bars represent long numbers.
+124:49 - And then each of these is going to
+run a different algorithm-- selection
+124:52 - sort on the left, bubble
+sort in the middle,
+124:54 - merge sort, as we'll now
+call it, on the right.
+124:57 - And here's how long each of
+them take to sort those values.
+125:04 - Bubble's still going.
+125:06 - Selection's still going.
+125:07 - And so that's the appreciable
+difference, albeit with a small demo,
+125:09 - between n squared and
+something like log n.
+125:12 - And so what have we done here?
+125:13 - We've really, really, really got into
+the weeds of what arrays can actually
+125:17 - do for us and what the relationships
+are with strings, because all of it
+125:20 - kind of reduces to just things being
+back, to back, to back, to back.
+125:22 - But now that we kind
+of come back, and we'll
+125:24 - continue along this
+trajectory next time to be
+125:26 - able to talk at a much higher level
+about what's actually going on.
+125:29 - And we can now take this
+even further, by applying
+125:32 - other sort of forms of media to
+these same kinds of questions.
+125:35 - And we'll conclude it's
+about 60 seconds long.
+125:37 - These bars are vertical,
+instead of horizontal.
+125:39 - And what you'll see
+here is a visualization
+125:41 - of various sorting algorithms,
+among them selection sort, bubble
+125:43 - sort, and merge sort, and a whole
+assortment of others, each of which
+125:46 - has even a different sound
+to it because of the speed
+125:50 - and the pattern by which
+it actually operates.
+125:53 - So let's take a quick look.
+125:54 - [VIDEO PLAYBACK]
+125:55 - [MUSIC PLAYING]
+126:05 - This is bubble sort.
+126:06 - And you can see how the larger elements
+are indeed bubbling up to the top.
+126:15 - [?
+126:16 - And you can kind of
+hear the ?] periodicity,
+126:18 - or the cycle that it's going in.
+126:25 - And there's less, and less, and less,
+and less work to do, until almost--
+126:33 - This is selection sort now.
+126:34 - So it starts off random, but we
+keep selecting the smallest human
+126:38 - or, in this case, the shortest bar.
+126:41 - And you'll see here the bars
+correlate with frequency, clearly.
+126:45 - So it's getting higher and
+higher and taller and taller.
+126:50 - This is merge sort now which,
+recall, does things in halves,
+126:53 - and then halves of halves,
+and then merges those halves.
+126:57 - So we just did all the left
+work, almost all the right work.
+127:03 - That one's very gratifying.
+127:04 - [LAUGHS]
+127:06 - This is something called [? nom ?]
+sort, which is improving things.
+127:10 - Not quite perfectly, but it's
+always making forward progress,
+127:13 - and then kind of doubling
+back and cleaning things up.
+127:24 - [END PLAYBACK]
+127:24 - Whew.
+127:25 - That was a lot.
+127:26 - Let's call it a day.
+127:26 - I'll stick around for
+one-on-one questions.
+127:28 - We'll see you next time.
+127:29 - [APPLAUSE]

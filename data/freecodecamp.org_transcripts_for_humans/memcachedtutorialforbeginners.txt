@@ -1,0 +1,1517 @@
+With timestamps:
+
+00:00 - welcome to this comprehensive video
+00:01 - course on MIM cached an inmemory caching
+00:05 - system known for its Simplicity and
+00:08 - Effectiveness in reducing database load
+00:11 - in this course Hussein will teach you
+00:13 - about MC's architecture and design
+00:16 - choices and he'll conclude with a
+00:18 - Hands-On demo using Docker and telnet
+00:21 - get ready to deepen your understanding
+00:24 - of this transient cache system mimc D is
+00:28 - a simple inmemory key e Value Store
+00:32 - written in c h it was originally I think
+00:34 - written in Pearl and then Rewritten in C
+00:37 - this is what back in 2003 so it's been a
+00:41 - while and it has been popular with
+00:44 - companies such as Facebook Netflix
+00:46 - Wikipedia Facebook I think pushed it to
+00:49 - its limit you know and the most uh and
+00:53 - the reason it's why popular is because
+00:56 - of its Simplicity and we're going to
+00:58 - talk about that I know we throw the word
+01:00 - simple a lot these days but MIM casd is
+01:03 - truly simple I
+01:06 - mean if you're looking for advanced
+01:08 - features it's not here it was designed
+01:11 - to be simple solve the problems of the
+01:14 - web back in 2003 which is we want to
+01:17 - help alleviate the queries to the
+01:19 - database we're we're you know the
+01:22 - databases are taking a hit you know so
+01:24 - let's cash things although I usually do
+01:27 - not agree with having a cash to solve a
+01:32 - slow query because I think personally I
+01:35 - think it's a cop out you know to to just
+01:37 - add a cash when you have a slow query
+01:39 - you have to understand why it's slow you
+01:41 - have to understand why it exactly taking
+01:44 - time why there are a lot of logic reads
+01:47 - and how to minimize it and that's
+01:49 - another story for another day but
+01:51 - sometimes you need a cash of course
+01:52 - right and then MIM casd was born right
+01:55 - of course there are alternatives such as
+01:57 - redus I made a video about it but this
+01:59 - this video is to is a crash course of
+02:03 - mhd we're going to dive into the agenda
+02:06 - here you're watching this on YouTube
+02:08 - there will be uh chapters where you can
+02:11 - jump into the interesting part of the
+02:13 - things but it's an inmemory database
+02:15 - we're going to talk about memory
+02:17 - management you might say why well we're
+02:20 - going to find out memory management is
+02:21 - not easy at all you know it's not just
+02:24 - like hey just throw things in memory and
+02:26 - then read it it's a little bit more
+02:28 - complicated than that going talk about
+02:29 - the Ario the least recently used uh
+02:32 - which was designed to
+02:35 - avoid growing the memory of this
+02:38 - instance unlimitedly right CU you have
+02:41 - to have a some sort of a a mechanism to
+02:45 - evi all entries that has been never used
+02:49 - that's why you cannot really rely on MIM
+02:51 - cash D to have a value always there it
+02:54 - was never the goal of this cash right
+02:59 - unlike Reddit right is if you if you
+03:00 - store something is going to be there and
+03:02 - you told it to be there forever it's
+03:04 - going to stay forever it will make sure
+03:06 - to stay forever MIM casd does not
+03:08 - guarantee that and you can argue that
+03:10 - this is actually a feature and you can
+03:11 - argue that this is something you don't
+03:13 - want you know
+03:15 - so tread
+03:17 - lightly thread we're going to talk about
+03:19 - the threading model cuz you have to have
+03:21 - multiple threads if you want to serve a
+03:24 - lot a lot a lot of clients with a lot a
+03:27 - lot a lot of TCP connection connected to
+03:29 - this thing read and WR we're going to go
+03:31 - through examples of a read example for
+03:33 - the write and okay kind of uh open the
+03:37 - hood and look what is inside this
+03:40 - beautiful
+03:41 - thing locking model obviously uh two
+03:45 - people trying to write in the same item
+03:48 - it's not as advanced as acid obviously
+03:51 - where you have isolation levels now it's
+03:54 - a serialized model where we try not to
+03:58 - have two people read the thing item at
+04:00 - the same time or write uh the same item
+04:02 - at the same time so locking and we're
+04:04 - going to talk about the old model and
+04:06 - the new model that's where you really
+04:09 - try to understand what how things are
+04:12 - built is completely different from the
+04:14 - way we explain it distributed cach I
+04:16 - know they say it's a distributed cach
+04:18 - but I kind of don't like to say that
+04:21 - because in itself MIM casd is not
+04:24 - distributed it's just when you spin up a
+04:26 - m casd instance three M casd instance
+04:29 - they don't know about each other and
+04:30 - they will never be right the client is
+04:33 - responsible for the distribution so I
+04:35 - kind of reluctant to say it's a
+04:36 - distributed cash I know people call it a
+04:38 - distributed cach I don't like to do that
+04:40 - but hey it is a distributed cache if you
+04:44 - if you if you put the distribution at
+04:45 - the client side and I think this is part
+04:48 - of the beautiful simple design they
+04:52 - they on purpose they didn't make it
+04:54 - distributed to make it simple and then
+04:56 - we're going to go through a demo we're
+04:58 - going to use Docker because you can spin
+05:00 - up a lot of instances in in Docker
+05:03 - really easily let's do that so in memory
+05:07 - key value St what's that really uh we're
+05:09 - going to talk about some terminology
+05:11 - here specific to mkd an item that's what
+05:14 - they call it an item is really what
+05:17 - consist of a key and a value a key is
+05:19 - usually should be unique right and a
+05:21 - value could be literally anything a key
+05:25 - has to be a string and it maxed out at
+05:28 - 250 character you can see the limits
+05:30 - right that's why I think uh redis kind
+05:33 - of won the cash game when it comes to
+05:36 - this thing because MIM Cas has a lot of
+05:38 - limits and uh this kind of uh you know
+05:43 - crippled some people from using this
+05:46 - cache because of these limits right but
+05:48 - you can Ario also the Simplicity of this
+05:51 - design and if you can work around the
+05:53 - the design to use MIM
+05:56 - casd it it's actually pretty nice right
+06:00 - when when they key as a strength they
+06:02 - did that for a Simplicity reason to
+06:05 - right if if you support like dates uh or
+06:08 - or I don't know like blobs as Keys then
+06:10 - Things become really complicated and
+06:12 - there shows in the architecture and if
+06:15 - there is a bug it's really hard to track
+06:18 - down right and the value can be any type
+06:21 - h it's by default one megabyte again
+06:24 - another limitation in MIM casd yeah you
+06:27 - can see that I I talk about limitation
+06:29 - but these limitations technically to me
+06:31 - I I see them as features you know
+06:34 - because they didn't claim to be like the
+06:36 - best in the world they said hey we are
+06:38 - designed to be simple and I appreciate
+06:40 - and I completely love that you know when
+06:44 - you say I want to build something simple
+06:47 - the simple thing has limitations right
+06:49 - the simple thing will by Design have
+06:52 - limitation when you look at the big
+06:54 - picture right it's not going to have
+06:56 - like tons of features right so yeah you
+06:59 - can configure this to to increase it but
+07:01 - again it's not really a good idea all
+07:03 - the time uh Keys have exploration date
+07:05 - ttls right time to Liv and uh even that
+07:09 - don't rely on that right even if you put
+07:11 - like a key that has like a 1 hour and
+07:14 - your memory is filled the lru will can
+07:17 - kick in and if you never use that key
+07:20 - it's going to get affected and they tell
+07:21 - you that right hey mkd is a transad
+07:25 - we're not going to make sure that it's
+07:27 - actually persisted it's not supposed to
+07:30 - be that
+07:31 - right again always go back to the the
+07:34 - requirements here they never meant right
+07:37 - for this to be a persisted cash forever
+07:40 - right you don't rely on that you kind of
+07:44 - use it to help you avoid expensive
+07:47 - queries but yeah be ready at any time
+07:50 - that this value is not going to be there
+07:51 - everything is stored in memory right
+07:54 - that's why it done cash MIM Cas D again
+07:56 - don't confuse MIM Cas D with MIM Cas DB
+07:59 - that's a completely different project
+08:01 - and I think it's abandoned since 2019
+08:04 - 2009 right but yeah m casd is still
+08:06 - going and Facebook and I think Mark
+08:10 - Zucker give a presentation about M casd
+08:12 - as well at some point how they tuned it
+08:15 - to its maximal values let's talk about
+08:18 - memory management here's the memory
+08:20 - right when you allocate items you know
+08:22 - when you say hey I want to allocate an
+08:24 - array and iate an integer and I want
+08:26 - tocate a here's a block of M you know
+08:30 - these items that you allocate and even
+08:33 - you new program today they going to go
+08:35 - in random places now they yes the
+08:38 - process has a dedicated memory area but
+08:41 - when you allocate these things go random
+08:43 - so the grain is allocated they're going
+08:45 - to go to random places right yeah
+08:48 - initially they might be consequent but
+08:51 - as you uh remove and free items you're
+08:54 - going to end up with these gaps so you
+08:56 - might say what's wrong with these gaps
+08:58 - the problem is like this this is called
+08:59 - the fragmentation what's wrong with
+09:01 - fragmentation well you're going to have
+09:03 - like a little bit of few bytes here few
+09:05 - bytes here few bytes here few here but
+09:07 - if you want like a big bulk of memory
+09:10 - location consent like you want one Meg
+09:13 - you have one Meg but it's fragmented and
+09:16 - guess what if it's fragmented you cannot
+09:18 - use it you cannot just allocate here oh
+09:20 - my part and then part here and this part
+09:22 - here I think that the operating system
+09:25 - allows you to do that maybe but then it
+09:27 - will it will crash left and right to
+09:30 - collect what you have right we had the
+09:32 - same problem with hard drive I guess
+09:35 - right back in the days with
+09:37 - fragmentation where the the seek you
+09:39 - know the the needle has to to go
+09:42 - multiple places to fit your files
+09:44 - because it's a circle right this this
+09:47 - desk and has the if if you store a file
+09:50 - and you start editing the file the files
+09:52 - will go to multiple sectors and to read
+09:55 - that file back you have to go sector one
+09:58 - sector two
+09:59 - this was supposed to be like a rotating
+10:02 - disc I failed miserably but you get
+10:05 - point right so memory fragmentation is
+10:07 - bad we try to avoid it right new items
+10:09 - can can no longer fit so what what did
+10:11 - they do so me casd at least what they
+10:13 - did is they allocate pages instead even
+10:19 - if they don't use it they say hey when
+10:21 - you
+10:22 - start I look at the whole page one Meg
+10:25 - again that's that's the design right
+10:29 - that that's the reason why we have one
+10:31 - value up to one megabyte you cannot go
+10:33 - beyond that so they say hey let's start
+10:35 - with one Meg so if they allocate they
+10:37 - allocate at one Meg the whole thing they
+10:39 - don't use it technically to the
+10:42 - operating system you the cash has used 1
+10:46 - Megabyte it doesn't know it right that
+10:48 - it's not actively using it that client
+10:52 - us connecting to M casd we're not
+10:54 - probably we're using like part of that
+10:56 - memory does that make sense but this
+10:58 - avoids frag M mentation right cuzz now
+11:01 - all of this just one big page with a lot
+11:04 - of empty space right but it is
+11:07 - elated and then there is this idea of
+11:09 - chunks right so the pages are broken
+11:13 - down into equal size of they call chunk
+11:17 - so um keep these in mind the terminology
+11:20 - in mind the chunk is a fix size and what
+11:23 - determines the chunk size is actually
+11:25 - something called a slab class right and
+11:28 - the slab is think of a slab every time I
+11:31 - hear the word slab I remember Dark Souls
+11:33 - you know it's a video game where you
+11:35 - have the last item that you require in
+11:38 - order to upgrade your weapon it's called
+11:40 - a titanite slab where it's say like
+11:43 - really large rock that you use in order
+11:47 - to upgrade your weapon it's a it's it's
+11:49 - basically a a a big thing a slab of meat
+11:52 - they say right it's just a big thing
+11:54 - that's what it means so this idea of
+11:56 - slab and slab classes will always show
+11:58 - up up here so it's like a b big portion
+12:02 - of memory a slab class is what define
+12:05 - the chunk size right so there is there
+12:07 - will be a slab class of 40 bytes there
+12:10 - will be a slab class of a one Meg so the
+12:13 - chunk sizes will be 44 bytes right and
+12:17 - the chunk sizes for a slab class of that
+12:20 - type is one Meg so we're going to show
+12:22 - an example to cons to to show that of
+12:24 - stuff and the pages consist of fixed
+12:26 - chunk size right items are in chunks
+12:29 - here's the a very important item so your
+12:31 - item will be stored in the chunk your
+12:34 - chunk size could be let's say uh 100 BYT
+12:37 - right if it's 100 BYT and your item
+12:41 - which includes the key and the value is
+12:43 - less than 100 you're going to include
+12:45 - the whole chunk right so if it's 90 byte
+12:48 - you lost 10 byte within that chunk
+12:51 - nothing to do about it sorry right
+12:53 - that's one limitation here so there
+12:56 - there will be a free space a tiny free
+12:58 - space in the chunk chunk and obviously
+12:59 - each slab class has a fixed chunk size
+13:02 - so that's how they are determined it's
+13:04 - going to be clear as we go through them
+13:06 - obviously avoid memory fragmentation
+13:08 - here's an example right so here we have
+13:11 - a slab class with a chunk size of 72 at
+13:15 - subass one and slab class 43 for example
+13:19 - the chunk size is one Meg so you have in
+13:22 - a single page right so slap class have
+13:25 - multiple pages and sometimes they call
+13:28 - them also the is called slabs the word
+13:30 - slab in the documentation is so
+13:32 - overloaded and I've seen people use it
+13:34 - one over the other so I avoid using it
+13:37 - the word slap so a slap class and there
+13:39 - are pages right so this page in this
+13:43 - case we said one Meg right and the
+13:45 - chunks are 72 divided that means we have
+13:47 - one
+13:50 - 14563 chunks per page but each chunk is
+13:54 - 72 byte right so if you have an item
+13:56 - around 72 byte fits nicely in this right
+14:01 - but if your item is larger let's say
+14:04 - 900k then oh it doesn't fit this slab
+14:07 - class so we need to let's let's find out
+14:11 - what is the subass for this item oh
+14:13 - subass 42 because the closest one Mig
+14:16 - and guess what the
+14:17 - one the one Mig
+14:20 - class slab class has this entire page is
+14:25 - one chunk right so this is really
+14:29 - important to understand here right so
+14:31 - that's how they allocate memories this
+14:33 - we're looking at the internal
+14:35 - architecture of M casd here right let's
+14:38 - go example new item 40 byte 40 byte the
+14:42 - closest thing is this guy right slab
+14:44 - class one let's allocate memory and then
+14:47 - Boop no we don't allocate memory that
+14:49 - this memory is already allocated right
+14:52 - we just store the item right in this
+14:56 - chunk and then we start adding pointers
+14:58 - and stuff stuff like that here so now
+15:00 - our item is right here we're going to
+15:03 - talk about the hash table and stuff like
+15:05 - that but this is just again memory
+15:06 - management let's say I have a new item
+15:09 - 900k oh this fits right here so one big
+15:12 - chunk in one page right so that's
+15:15 - interesting let's say another new item
+15:18 - 40 byte but guess what slab slab class
+15:22 - one because that's the what the chunk
+15:25 - size is fits it nicely but guess what we
+15:28 - have two pages they're all completely
+15:32 - full so I cannot insert this what do we
+15:35 - do create a brand new page put that
+15:38 - thing here does that make sense so we
+15:41 - allocate the new page and when you go to
+15:43 - the demo we're going to see all this
+15:44 - stuff right we're going to do a stats
+15:46 - and see like oh how number of pages
+15:48 - allocated is this right so it's just I I
+15:51 - absolutely love how they did this it's
+15:53 - interesting obviously doesn't doesn't
+15:55 - have limitation of course but you're
+15:57 - going to see that depends on the sizes
+15:59 - of the item you say and once you really
+16:02 - understand how things work you you can
+16:06 - architect your application specifically
+16:08 - the back end here frontend doesn't
+16:10 - really talk to M casd at all right the
+16:13 - back end here can be architected so that
+16:15 - you can choose the perfect items right
+16:19 - to fit this entire thing right you're
+16:22 - not going to just choose hophazardly
+16:24 - right that's how you know your craft
+16:27 - effectively all right let's get to the
+16:29 - meat lru least recently used you know
+16:34 - the main problem with memory is it's
+16:37 - limited you know and even if MIM casd
+16:40 - allocated certain amount of memory if
+16:42 - you store a lot a lot a lot of keys even
+16:45 - with good expiration date memory can get
+16:48 - full what do you do do you
+16:51 - block new
+16:53 - inserts I would say that's that's one
+16:56 - feature that you can add I suppose
+16:59 - but but mimk they don't allow you to do
+17:02 - it they won't let you go to that state
+17:04 - you if the memory is be about to be full
+17:09 - then anything that hasn't been used for
+17:11 - a very long time they will release it
+17:15 - that's another reason where REM Cas D is
+17:17 - a transient memory it do not rely on a
+17:21 - key even if you said the expire for an
+17:23 - hour do not rely to that key to be to be
+17:26 - there in an hour it can go any any time
+17:29 - right that's another limitation that's
+17:31 - another feature right I say limitation
+17:35 - and a feature at the same time because
+17:36 - it is it is a feature right and it's to
+17:39 - some people it's a limitation and how do
+17:41 - they do that right they use something
+17:43 - called the link List have you ever heard
+17:46 - about this before and 20 years ago 21
+17:49 - years ago uh in the University I took a
+17:52 - course and the Cs CS 101 they talked
+17:56 - about link list and that is pretty much
+17:58 - the the only time in my entire
+18:00 - professional career I ever used a link
+18:03 - list that's probably I'm not saying
+18:05 - that's just the case with my the
+18:07 - application I wrote is all high level
+18:09 - languages I never had to write a
+18:11 - database or a m cache you know so I
+18:14 - never used the link list right so
+18:16 - doesn't doesn't mean that it's it's a
+18:18 - useless structure but it is it's a
+18:21 - important data structure why cu the
+18:25 - least recently used is a link list
+18:27 - there's a head and there's a tail and
+18:30 - every item is linked to each other so if
+18:33 - all these items that you add are the in
+18:36 - this architecture right they are in the
+18:38 - link class and there is every slap class
+18:40 - has its own lru right so if I for
+18:44 - example access an item that happens to
+18:46 - be in the tail it will be popped and go
+18:48 - back to the head so there is a cost to
+18:51 - accessing an item there is a cost there
+18:54 - is a cost of removing this chain put it
+18:57 - that back pull the head to this pull
+19:00 - this guy to this guy pull this guy to
+19:01 - this guy that's how you do linkless
+19:03 - right so every time you access an item
+19:06 - it goes back to the head so items that
+19:09 - are not used they will automatically be
+19:12 - pushed down to the tail and if the
+19:14 - memory is Out Of Reach basically these
+19:17 - items will be removed from the tail but
+19:21 - also another thing with with this link
+19:23 - list is like with threads if you with
+19:26 - which MD is is multi-threaded app how
+19:30 - can you have multiple threads read at
+19:32 - the same items right you can't you have
+19:35 - to lock this structure you know if
+19:38 - people who done multi-threading you have
+19:40 - to you have to lock it right and the
+19:42 - moment you do locking if you if you know
+19:44 - about something about databases which I
+19:47 - a course on database engineering check
+19:49 - out check it out it's actually right
+19:51 - here database. husin as.com I talk about
+19:54 - all this stuff you know in details in
+19:57 - fundamental details you know so don't
+19:59 - expect like SQL syntaxes in my courses
+20:01 - not like that I talk about fundamentals
+20:04 - which which should then build up and see
+20:07 - how the client is built out right but
+20:10 - yeah locks is a very critical concept
+20:12 - here you have to lock it to avoid this
+20:15 - you know mutation you know corruption
+20:18 - right but yeah it's a cost and there's
+20:21 - an a you CLW crawler and a demon that
+20:24 - does the cash inection from the tail
+20:26 - right and again every time it kicks out
+20:28 - have to lock and then if it's locked
+20:30 - people cannot read people threads cannot
+20:33 - read and if threads cannot read latency
+20:37 - right block
+20:39 - slow right all of this you got to
+20:42 - understand when things happen this is
+20:44 - why and I'm going to share my opinion
+20:46 - about the lru right and I think this is
+20:50 - a good time by the way there is an L
+20:52 - cache per slab class I think I mentioned
+20:54 - that so the one Meg slab class right
+20:57 - which has like pages of one Meg and the
+20:59 - chunk sizes of one Meg has its own laru
+21:02 - and each other sub slab class has its
+21:04 - own L by the way I don't make I'm not
+21:06 - making any of this up I'm I had to read
+21:10 - frankly maybe 20 different documents to
+21:12 - collect this information and and kind of
+21:14 - present it in a summarized manner here
+21:16 - right because there is no one dog to
+21:18 - explain all that unfortunately right
+21:20 - it's it's not incomplete unfortunately
+21:22 - that's what I noticed and
+21:25 - outdated so my opinion about the lru in
+21:28 - my in my personal humble opinion is I
+21:32 - wish MIM casd actually disa this by
+21:35 - default you know L is a feature right
+21:40 - and they the reason they added it
+21:42 - because memory is limited especially
+21:43 - back in 2003 when they first built this
+21:46 - thing memory was so scarce or scarce is
+21:50 - it scarce or scarce scarce right it's
+21:52 - very limited and when you do that you
+21:55 - don't want to run out of memory right so
+21:58 - if you allocate certain amount of memory
+21:59 - for M casd it can easily run out right
+22:02 - if you have a lot of keys so how do you
+22:04 - manage that they say hey we're going to
+22:06 - remove we're going to build an
+22:08 - laru least recently items K get kicked
+22:11 - out from my memory that's a fine but I
+22:15 - wish they disabled that by default or
+22:17 - give us an option to disable it because
+22:19 - the overhead of managing AIO and you can
+22:22 - see from the papers I'm going to
+22:23 - reference is so large the locks that
+22:27 - they have to maintain slows down
+22:29 - throughput right and comp and complicate
+22:32 - the application so I think they stuck
+22:37 - whoever built this 20 in 2003 MIM casd
+22:40 - Brad Fitzpatrick who is the original
+22:42 - developer of MIM casd he built this for
+22:44 - his website live Journal you know I wish
+22:48 - he disabled this by default I really
+22:50 - wish because his original design is so
+22:53 - simple and so elegant I absolutely love
+22:56 - it you know you build something so
+22:58 - simple with its featur stripped there
+23:01 - are no much features
+23:03 - U made it not simple unfortunately yeah
+23:07 - cool have this a feature but disabled by
+23:10 - by
+23:11 - default or have an option to disable I
+23:14 - don't know if there's an option to
+23:15 - disable maybe there is but hey I want to
+23:18 - take the responsibility as a client
+23:21 - right if I'm going to allocate certain
+23:23 - amount of memory cuz I'm responsible I'm
+23:24 - going to give uh MIM cash D 5 gig 10 gig
+23:29 - and my application is smart enough to
+23:33 - know to set expiry date right for this
+23:36 - item and yeah if I'm going to get errors
+23:38 - if it's failed out it's on me I want to
+23:41 - delete an items I want to do this
+23:42 - management this
+23:45 - way for 95% of the users who want simple
+23:50 - things they're going to get it l are you
+23:52 - in my personal opinion again this is
+23:54 - just my personal opinion you can agree
+23:56 - or disagree I think you should this this
+23:58 - should have been disabled because now
+24:01 - they they created a new lru which is
+24:03 - like has hot and warm and cold and and
+24:07 - they move stuff around because they have
+24:08 - a lot of problems with lru like moving
+24:11 - stuff around all the time is so
+24:13 - expensive you know so it it has a cost
+24:17 - so let us just how about eh give me an
+24:21 - option not to use it and go back to a
+24:24 - simple model of course I I don't I don't
+24:27 - mind if two items two users trying to
+24:29 - access the same two threads trying to
+24:31 - access the same item at the same time
+24:33 - let them be serialized that's fine right
+24:36 - but lru as a whole thing I think it's a
+24:38 - it's just to me over engineering that's
+24:41 - just my opinion you can disagree here is
+24:43 - how it looks like by the way aot you in
+24:45 - the big picture again this is all
+24:46 - drawings I made it uh I could be wrong
+24:50 - in small details because I don't I don't
+24:53 - know the actual architecture so this is
+24:54 - I derive this from reading the source
+24:56 - code and the doc so this is how it looks
+25:00 - like so this is this is where we talk
+25:01 - about the pages right and the chunks so
+25:03 - the chunks or the items is what being
+25:07 - lru right so the head is right here and
+25:10 - this is linked to this item this is link
+25:12 - to this item this link to this item this
+25:14 - this is the tail so this is how it looks
+25:16 - like every item here is actually linked
+25:20 - to the next to the one next to it right
+25:23 - this is think this of this as a snapshot
+25:26 - after many many usages right gets and
+25:29 - red that so so things will move to the
+25:32 - head and the tail obviously I didn't
+25:34 - draw every particular thing because it's
+25:36 - going to be a mess of a drawing but you
+25:38 - get the point right that's that that's
+25:40 - how the L you and you can see how
+25:42 - complex things get so let's talk about
+25:44 - threading so this is one of my favorite
+25:46 - Parts I know uh I absolutely have um I
+25:51 - absolutely love networking and if you're
+25:53 - interested I have a networking course
+25:56 - and and this part is is all about
+25:59 - sockets connections the way listeners
+26:03 - work the way the TCP connection works I
+26:07 - talk this about this in detail in my
+26:09 - network course if you're interested go
+26:10 - to network. hus n.com learn more about
+26:13 - that again network.has nasa.com this URL
+26:17 - redirected immediately to UD me with the
+26:20 - latest coupon applied so uh you're going
+26:23 - to get a discount and you're going to be
+26:24 - supporting this channel this work thank
+26:26 - you so much there's here's the threading
+26:28 - model for uh for mam casd right because
+26:32 - it accepts clients it has to have
+26:35 - networking right so what they do is they
+26:38 - listen on a TCP Port right so that means
+26:41 - they support transmission control
+26:43 - protocol that's the native transport
+26:45 - that they support they also support UDP
+26:48 - which I didn't mention here but UDP has
+26:51 - been now disabled by default because of
+26:53 - an attack that happened 4 years ago 2018
+26:56 - uh reflection attack actually right with
+26:59 - with MIM casd public servers so it was
+27:02 - the cloud flare actually reported that
+27:04 - so UDP has been disabled by default but
+27:06 - yeah you can use it if you want but yeah
+27:07 - let's stick with TCP right now TCP Port
+27:11 - 11211 and there is a listener thread so
+27:14 - one spin up listener one thread that
+27:18 - spins up it listen to Port 11211 so that
+27:21 - creates a socket right in the operating
+27:23 - system speak right and that basically
+27:26 - creates its own accept Q it's on syn Q
+27:30 - this is how the application start
+27:33 - accepting connection right so
+27:36 - everything every single connection that
+27:38 - is happening The Listener thread will
+27:42 - accept it so there is a loop infinite
+27:44 - Loop here literally all application has
+27:47 - this Loop where it's constantly
+27:48 - accepting uh connections one thread
+27:52 - right so all the connections goes to
+27:55 - this thread so once it accept the
+27:58 - connection it gets the file descriptor
+28:00 - we call it right which actually
+28:01 - represents the connection and now what
+28:04 - what mimk does is spins up a new thread
+28:08 - gives that file descriptor to that
+28:10 - thread now if a stream of data if a
+28:15 - request to get a
+28:16 - key was sent to this connection it will
+28:20 - the operating system knows to send it to
+28:22 - this thread well technically what
+28:24 - happens is the thread pulls the
+28:27 - descriptor right this is now this thre
+28:29 - is responsible for this connection This
+28:32 - Thread is responsible for this
+28:33 - connection This Thread is responsible
+28:34 - for this connection so you can see
+28:37 - that now this model just blows up right
+28:40 - if a one connection PA of thread if you
+28:42 - have so many connections you can R run
+28:45 - out of threads right or that kind also
+28:48 - blows your memory and CPU so be careful
+28:51 - with that as well I think they put a
+28:53 - limit number of connections M casd I
+28:55 - might be wrong there but yeah so this is
+28:57 - basically explains all of that now the
+28:59 - moment you have threading now the beauty
+29:02 - here is you don't have bottleneck right
+29:05 - if you have one thread that is
+29:07 - responsible for all the connections and
+29:09 - listening you you will be blocked right
+29:13 - one user will send a key and then
+29:14 - another user will send a key they won't
+29:16 - be served right they have to be
+29:18 - serialized because there's one thread
+29:21 - actually executing them one by one right
+29:23 - but here if one user executes a sends a
+29:26 - key request to get a key and this guy
+29:28 - want to write they can happen at the
+29:30 - same time right this thread will read it
+29:32 - and this thread will read it they are
+29:34 - different processing this could be in a
+29:36 - core this could be in a completely
+29:38 - different core that could be also
+29:41 - possible versus it's one thread then
+29:43 - becomes really a a problem so we had to
+29:46 - go with multi- threads what's the
+29:48 - problem with that well the problem is
+29:51 - these threads will try to access what we
+29:53 - call the laru and the items and the
+29:56 - memory so everything is shared between
+29:59 - all these threads but you can't have two
+30:02 - threads right to the same location
+30:04 - that's a problem that's why the original
+30:08 - design had one Global lock it was
+30:12 - serialized so in this case yeah the
+30:14 - threads kind of helped with the
+30:17 - connection but but you were serialized
+30:20 - at the Locking model so nobody can even
+30:23 - access two different items has nothing
+30:25 - to do with each other they were serious
+30:27 - they were locked so one thread has to be
+30:29 - served after the other they they fixed
+30:32 - that they completely red that now it's a
+30:35 - pair item log so if two threads try to
+30:38 - access the same item then there will be
+30:39 - SSE that's good that's okay I'm okay
+30:42 - with that right but yeah if I am
+30:44 - accessing item one key number one and
+30:47 - then another thre access key number two
+30:49 - at the same time they should be served
+30:51 - at the same time what there is no reason
+30:53 - for locking and the only reason we lock
+30:56 - is because we want to update the lru
+30:58 - again so there is so much stuff that
+31:01 - comes back always to the lru it's like
+31:02 - oh really we did we really need an lru
+31:05 - why what if we disabled by default right
+31:09 - okay that's just me let's go through an
+31:11 - example read and this is something we
+31:14 - never talked about here which is the
+31:16 - hash table if you think about it if you
+31:19 - have a key how do you actually find
+31:21 - where this key lives right if you think
+31:23 - about it you need hash tables so what
+31:26 - you do and I talked about hash table in
+31:27 - my YouTube channel uh look up hashing
+31:31 - and consistent hashing I talk about
+31:33 - details hash table is nothing but an
+31:35 - associative array it's really just an
+31:37 - array and the beauty of an array is if
+31:40 - you have an array right let's talk about
+31:42 - arrays a little bit if you have an array
+31:44 - from an array has to be consecutive if
+31:46 - you allocate an array of a thousand
+31:49 - elements accessing element number seven
+31:52 - access an element number
+31:56 - 10243 is biger of one is fast because
+31:59 - you know the index once you know the
+32:01 - index and you know the head of the array
+32:04 - you add the address to the index voila
+32:06 - you have the address and the memory of
+32:08 - the CPU can immediately go to that
+32:10 - location that's the beauty you have an
+32:12 - index with hash tables you don't have an
+32:15 - index you have a key the trick is to
+32:17 - convert the key back to an index that is
+32:20 - all what it is a hash table nothing
+32:23 - fancy it's just an array so we take that
+32:25 - what we do is the do a hash on the key
+32:28 - right let's say I'm going to R test key
+32:30 - right and then do a hash and then do
+32:33 - modul n where n is the size of this
+32:35 - array or the hash table right and then
+32:38 - you're going to get a value between zero
+32:39 - and N minus one I guess right so now
+32:42 - okay let's go point it and that's big of
+32:45 - one plus the cast of The Hash right now
+32:48 - you got here found it now what you do is
+32:53 - you're going to get a pointer which
+32:55 - takes you to the the page on that
+32:59 - specific slab class for that item which
+33:02 - is happened to be D in this case that's
+33:05 - how a read works so it's a big off one
+33:08 - you can argue that this is one read and
+33:10 - this is a second read yeah I suppose
+33:13 - that works too right I think the the new
+33:16 - model have kind of two hash tables if
+33:18 - I'm mistaken but I couldn't find detail
+33:21 - docs about this so I explain this so I
+33:23 - apologies if this is a little bit out of
+33:24 - date but this gives you the idea here
+33:27 - the new two hashes I think uh they were
+33:29 - provided to provide a pair item lock and
+33:32 - obviously what happened here is this is
+33:35 - the lru you access the item the D is
+33:38 - pushed to the head right so now you have
+33:40 - a b c d a is now the least recently used
+33:44 - item is in the tail and a points to b b
+33:46 - points to C C points to D and obviously
+33:49 - it's a revers length as well so D point
+33:51 - to c c points to B P point to a right so
+33:55 - that's how they allot you actually what
+33:56 - you if you think about it the the
+33:58 - pointers are right here in the item
+34:01 - itself right but I drew it this way for
+34:03 - Simplicity otherwise it's not readable
+34:05 - at all read two this is another example
+34:09 - for read I'm going to read Buzz hash the
+34:12 - buzz get the N whoa get the item Boop
+34:17 - get a c nice now when we get a c the C
+34:21 - is pushed to the Head D is slightly
+34:23 - pushed and then obviously the allario is
+34:25 - updated and that's another lock right
+34:27 - you have to do a lock to do that so if
+34:30 - buzz and whatever the value before a
+34:32 - test was read at the same time they are
+34:34 - serialized at the lru level if they
+34:38 - belong to the same slab class again this
+34:42 - might have change with the new
+34:43 - architecture they changed that a little
+34:45 - bit so I think that you can you can play
+34:48 - with that a little bit but again to
+34:50 - update the L you have to you have to
+34:52 - kind of acquire a lock so you're going
+34:54 - to be serialized right here yeah
+34:57 - let's go through a write I'm going to
+34:59 - write key new of a value with
+35:04 - 44 whopping bites let's do that well to
+35:08 - write we need to obviously find the hash
+35:11 - right where to write it hash module in
+35:14 - get that puppy find where to write it oh
+35:18 - happen to be an empty location sure
+35:20 - that's good right and now you have
+35:22 - questions what if what if I happen to
+35:25 - have something that is already written
+35:26 - you can you can have collisions and
+35:28 - we're going to talk about collisions in
+35:29 - a minute right it's a problem of hash
+35:32 - tables hash tables are fun and good but
+35:34 - the moment they you run into collisions
+35:36 - and you want to resize it it falls apart
+35:40 - but now I create a new pointer this
+35:43 - pointer now I need to allocate a slab
+35:46 - class not slab class I need to allocate
+35:49 - a a chunk where going to put my item in
+35:52 - and that chunk goes into a specific slab
+35:54 - class well 44 bytes pick a a slab class
+35:57 - right and even the slab classes guys by
+36:00 - the way it's not really fixed you can
+36:02 - play with those the other configuration
+36:04 - called the Chun the chunk Factor growth
+36:08 - size I'm not going to mention it here
+36:10 - it's just going to make the course a
+36:12 - little bit longer but you you get the
+36:14 - point there are so many tweaking you can
+36:16 - play with right tweak these chunk sizes
+36:18 - but yeah I look at a new memory location
+36:21 - in this specific page in an empty page
+36:24 - in a fit a fitting chunk right because
+36:27 - you want to pick a chunk that is almost
+36:30 - fits right in the chunk right not too
+36:33 - small obviously cannot be larger than
+36:36 - the chunk SI I have to fit right into it
+36:38 - right but then that's the the that's
+36:40 - what the what MIM casy does all right
+36:44 - let's spice things up let's say I'm
+36:46 - going to write a key called Nanny which
+36:48 - is a new key I don't have it before and
+36:51 - value 44 but it happened to clash with
+36:54 - another existing key because that's
+36:58 - hashes always do that right so when you
+37:00 - do that you hash Nan and happen to be
+37:03 - fitting on a entry that already have a
+37:07 - pointer what do we do do we overwrite it
+37:10 - no what they did is this is called a
+37:12 - bucket by the way right they add more
+37:15 - item to the bucket you know we have one
+37:17 - item let's call it I don't know test or
+37:20 - something all right and then we have
+37:21 - Nani which fits right in the same bucket
+37:26 - what we do is just we make it into a
+37:28 - chain this chain of buckets right
+37:31 - actually one bucket with two items I
+37:33 - don't know right whatever the
+37:34 - terminology doesn't really matter you
+37:36 - just read to understand let's turn back
+37:39 - the laser here and yeah we're going to
+37:41 - add it here and then just do the pointer
+37:45 - and do the do your thing now obviously
+37:48 - we need to talk about a collision what
+37:50 - happen to Collision I want to read the
+37:53 - keani right go here hash it obviously go
+37:57 - here oh we have two which one
+38:02 - Ah that's the cost you have to go one by
+38:06 - one through all of them right why
+38:08 - because now we have a hash you don't
+38:10 - know one of which one of these are
+38:12 - actually Nanny what you do is read the
+38:15 - first one right check it compare the key
+38:19 - oh because if you go to the item you're
+38:21 - going to find the actual key right
+38:23 - that's stored here so you're going to
+38:25 - find it and say oh that's not 90 that's
+38:27 - something else right let's go through
+38:29 - the bucket go to the next one there you
+38:32 - go that's my item
+38:34 - so here is a completely different paper
+38:37 - that you can write here this P people
+38:40 - take phds in this stuff by the way guys
+38:42 - you know this is called the the the
+38:45 - scale factor you know mimc D measures
+38:49 - this growth and if it's too much based
+38:53 - on a certain percentage if you're
+38:54 - overloading then then you're going to
+38:56 - still see performance problems right
+38:58 - reading a key is going to have to go
+39:00 - through multiple reads to find the
+39:02 - actual key versus if it goes right here
+39:05 - hey the key is right here of course
+39:06 - there's one entry it has to be it right
+39:09 - but if there's
+39:10 - multiple yeah then it's a problem right
+39:14 - I mean you can you can think about it
+39:16 - you can argue that you can hash a key
+39:18 - that happened to get to a value that is
+39:20 - not there so technically you have to
+39:22 - read it and compare because your key
+39:25 - might not exist but it happened to Hash
+39:27 - to a value that does right so you have
+39:29 - to read it so there is a cost to reading
+39:32 - so that's the problem of hash table so
+39:34 - and if that's the case then they do a
+39:37 - hash
+39:38 - resize and boy when you rehash your
+39:41 - table they have to shift everything
+39:43 - around and I believe this is when they
+39:45 - use the consisting hashing which is this
+39:48 - ring concept which I talked about in
+39:50 - another video and that just gets really
+39:53 - complicated right because they know now
+39:56 - the moment you resized your hash table
+39:58 - you need to move stuff around because
+40:00 - Nanny will not be this index number one
+40:03 - anymore it going to be index number 7700
+40:06 - something like that right 1700 is not a
+40:08 - number I think I'm going to skip this
+40:10 - because we talked about locking in a
+40:11 - minute we talk about thre threads and
+40:13 - then accessing the lru and how it was a
+40:16 - global lock and then it changed to a
+40:18 - pair item lock and then still we have
+40:20 - ref counting you know every time you
+40:22 - read an item you increase the ref count
+40:24 - you know and when you release it you
+40:26 - decrement the rount this is for so the
+40:28 - garbage collection can the garbage
+40:31 - collection is written in C there's no
+40:33 - garbage collector but the the the the
+40:37 - ephemeral application Level garbage
+40:40 - collection when Elio kick in can remove
+40:44 - the item because you cannot just remove
+40:47 - the item if if someone is referencing it
+40:49 - that's the definition of meem memory
+40:52 - leaks right all right let's talk about
+40:54 - distributed cach and how it's uh MIM
+40:56 - casd is actually not a distributed cash
+40:59 - in my opinion mimc D servers when you
+41:01 - spin up a mimc d server mcash D server
+41:04 - they are completely isolated you cannot
+41:08 - link a server to another server there is
+41:09 - no mechanism to do that right when you
+41:12 - spin up a mimc d server it's a mimc d
+41:15 - server it doesn't talk to another
+41:17 - servers and I absolutely love this
+41:20 - design how simple and elegant this is
+41:23 - put the responsibility if you want to do
+41:25 - distributed well the apis at the client
+41:28 - side has to do that and that's what
+41:31 - we're going to show in the in the code
+41:33 - section where we're going to write our
+41:35 - own uh we're going to use a nodejs
+41:38 - application to do that of course we're
+41:39 - going to use also tnet to connect to
+41:41 - that and write stuff right but we're
+41:44 - going to go through all this stuff now
+41:46 - but yeah what happens here is the client
+41:48 - actually knows about all the servers it
+41:51 - has knowledge so the client site
+41:54 - actually does the distribution right so
+41:56 - it's like okay key number one go here
+41:58 - key number two go here key number three
+42:00 - go here so there's a hashing going on
+42:02 - consistent hashing to be specific you
+42:05 - can build your own mimc D client that
+42:09 - does whatever you want right and then
+42:11 - distribute that stuff well what happen
+42:13 - if I if I add a if I add a server well
+42:18 - your client can start Distributing the
+42:21 - keys I would
+42:24 - definitely not be with that that because
+42:27 - why would you distribute the keys for in
+42:29 - a transient cash anyway who cares at a
+42:32 - server is like oh yeah if if the kid is
+42:34 - not there you're going to query the
+42:35 - database and pull it up right it's it's
+42:38 - not worth it to do this this chattiness
+42:41 - to move items around from one server to
+42:44 - another that's just a bad idea I don't
+42:46 - know if clients do it maybe they do but
+42:49 - I don't think it's it's required it's
+42:51 - just thrashing for the case thrashing D
+42:54 - B Shing
+42:56 - again you you might if you know this
+42:58 - channel you know that I'm I try as much
+43:01 - as possible to push it as the last
+43:03 - resort I do not like distributed
+43:07 - stuff especially so complex to deal with
+43:11 - right I like Simplicity I'm a simple
+43:13 - man right but yeah sometimes you
+43:17 - go you have you go to the YouTube scale
+43:21 - and Google scale then you don't have a
+43:23 - choice one machine cannot possibly
+43:26 - handle everything I would I would go
+43:28 - with raid replicas I would go with
+43:31 - partitioning horizontal
+43:34 - partitioning in the server itself
+43:37 - minimize that as much as possible I
+43:39 - would go with raid you know distributed
+43:42 - dis storage but the application remain
+43:46 - as a single writer the moment you have
+43:48 - multiple writers and you have to deal
+43:51 - with the Shing it becomes really complex
+43:55 - you know if you want to deal with the
+43:57 - complex complexity sure but yeah that's
+43:59 - that's the idea of distributed
+44:01 - cash okay let's do a demo we're going to
+44:03 - do a demo we're going to spin up a bunch
+44:06 - of MIM cash D Docker instances so for
+44:10 - this exercise just install Docker and
+44:13 - you're good to go and you have to have a
+44:15 - Docker H you have to have a Docker
+44:18 - account because somehow they are locked
+44:20 - behind an account M casd I have no idea
+44:22 - why did that they did do they do that
+44:24 - sometimes right so you just just create
+44:26 - an account do a Docker login you're good
+44:29 - to go right once you do that you can
+44:30 - download the image and you can spin up
+44:32 - as many MIM cash G instances as you want
+44:35 - so we're going to do that I'm going to
+44:36 - use tnet because I love the Simplicity
+44:39 - of MIM casd you know how many clients
+44:42 - these days that you can actually just
+44:43 - til it and run commments to they can be
+44:45 - counted on one finger you know they
+44:48 - don't exist anymore the Simplicity is
+44:50 - gone from
+44:52 - these from today's applications right
+44:55 - the good old days of you just telling it
+44:57 - and run and one thing I didn't mention
+45:00 - is M casd doesn't have security by
+45:02 - default so that might be a deal breaker
+45:04 - for you right so you have to you can
+45:06 - Implement authentication which doesn't
+45:08 - exist by default sassel I believe they
+45:10 - call it you can Implement TLS if you
+45:12 - want but by defa they don't have any of
+45:15 - that stuff right so take it with a grain
+45:17 - of salt right they they said simple it
+45:20 - is simple right but you have to be
+45:22 - careful in a cloud environment when it
+45:23 - comes to MIM casd you have to TLS it
+45:26 - right they support that there is a
+45:28 - support for that and obviously we're
+45:30 - going to use no JSM Cas D for this
+45:32 - consistent hashing and we going to put
+45:34 - all our Docker containers and and play
+45:36 - with that a little bit how about we do
+45:37 - that so I have Docker installed here on
+45:40 - my Mac you can have Windows and install
+45:42 - Docker on top of it you can have Linux
+45:43 - install Docker on top of it that's why I
+45:45 - always like to use Docker just it's an
+45:47 - agnostic whether whe whatever your
+45:50 - application is you know whatever your
+45:52 - operating system Docker works you know
+45:54 - we have it on top of all all of this
+45:56 - stuff so let's go ahead and spin up a
+45:59 - Docker container that have a mimc d
+46:02 - instance one MIM casd instance right so
+46:05 - Docker run you do das Das name let's
+46:08 - give it a name uh let's called it M1 M
+46:10 - casd or M1 right you don't have to give
+46:13 - it a name but I like that so that we can
+46:15 - find it and delete it later
+46:17 - easily and then you can expose the port
+46:20 - uh by default
+46:22 - 11211 right
+46:24 - 11211 so this is what is running in the
+46:27 - container this is what is exposed in my
+46:30 - host right cuz I'm going to hit my host
+46:33 - which is Hussein Mac which is that's the
+46:35 - actual host that is running Docker and
+46:37 - then I'm going to hit that Port which
+46:39 - will be Port forwarded to this Con
+46:42 - container and I'm going to spin up
+46:44 - another one with 11 211 11 212 and 1121
+46:50 - three right later we're going to spin up
+46:52 - multiple ones and then finally we're
+46:54 - going to do MIM cache d right if you do
+46:58 - just like that this will block the uh
+47:01 - the terminal you know and it's going to
+47:03 - be just work so I I suggest you do that
+47:06 - first I know it's going to work for me
+47:07 - because I I did it before but I like to
+47:09 - do dashd right- d means just hey detach
+47:12 - it because I'm going to use this
+47:14 - terminal for something else later right
+47:17 - so just go just like that we created a
+47:18 - container it can do Docker PS to make
+47:20 - sure that the container is running
+47:22 - obviously if the image is not there it's
+47:24 - going to download it for you and you
+47:26 - have to do Docker login to do all that
+47:28 - stuff so do all of that log to your
+47:30 - account and uh all that stuff all right
+47:34 - so let's test it
+47:35 - out how do you test it tell it what are
+47:39 - we telling it into Hussein Mac which is
+47:41 - my host and which Port 11211 again this
+47:43 - is the port that I exposed that happen
+47:45 - to be the same doesn't have to right if
+47:48 - I do that all of a sudden I'm logged in
+47:51 - how do I do that well let's do a stats
+47:55 - give me your stats and this is the stuff
+47:57 - that most of the stuff here we talked
+47:58 - about currently right up time what's the
+48:01 - version of MCD the pointer size maximum
+48:04 - number of connections 1024 we talked
+48:06 - about that right there's a maximum
+48:08 - number of connections uh how many times
+48:11 - you run a get how many times you run a
+48:13 - set how many times you
+48:15 - incremented uh the threads how many
+48:17 - threads you have here right eviction how
+48:20 - many times they allow you kicked in and
+48:22 - evicted stuff and then you can do like
+48:24 - stats uh Slack I think which going to
+48:27 - give you like how many slabs were active
+48:31 - how many is actually allocated obviously
+48:33 - we don't have anything because we didn't
+48:34 - do anything right so let's go ahead and
+48:36 - set something so to set a key you do set
+48:39 - and then you do the key let's call it Fu
+48:41 - and then um the flags zero I don't have
+48:44 - any Flags here Flags you can do further
+48:47 - controls over here and the second
+48:49 - parameter here is the expiration so
+48:51 - let's say it's 3,600 which is an hour
+48:54 - right you can set it for for an hour you
+48:57 - can say it for a minute you can say it
+48:58 - for a second if you want right that's
+49:00 - the expiration so if your item ever get
+49:03 - to after an hour it will be Eed it will
+49:08 - not be returned to you not necessarily
+49:10 - will be Eed until the lru kicks in and
+49:13 - that actually physically removes it
+49:16 - right and then finally we're going to uh
+49:18 - put the data length how how how big is
+49:21 - the value that you're going to set let's
+49:23 - say two characters here right so I'm
+49:25 - going to do high you have to exactly
+49:28 - match it right otherwise it's going to
+49:30 - be uh it's not going to fit nicely right
+49:33 - so now we sto the value so let's read
+49:35 - that value give yay I know this is just
+49:40 - very simple stuff but you get the point
+49:42 - right you can you can uh increment you
+49:45 - can you can delete that key right and if
+49:47 - you delete it you can read that it's not
+49:50 - there so very simple stuff I don't
+49:52 - really care about the API more I want
+49:54 - more to talk about the architecture of
+49:56 - stuff here right and that's what matters
+49:58 - here there's there are actually two
+50:00 - protocols command set this is the old
+50:03 - one and there's the new one which is
+50:05 - starts with mg like two characters and
+50:08 - there's like a different set of syntax
+50:10 - right there are two syntaxes here syntax
+50:13 - can you say syntaxes I I guess you do
+50:15 - you can but you can play with this it's
+50:17 - very simple you connect to that and you
+50:20 - see I didn't log in there's no accounts
+50:23 - or anything like that there's no
+50:24 - collection that you create it's just a
+50:26 - free floating right some people might
+50:29 - like that some people might not like
+50:31 - that cuz they want partitioning hey let
+50:33 - me create a table or collection let me
+50:36 - play with that key value right there so
+50:38 - it's a it's a freefor all if I if I
+50:41 - destroy this connection so if I destroy
+50:43 - it and I connect it again right and I do
+50:45 - get F obviously it's not there because
+50:47 - we deleted it so if I set it again um
+50:51 - black zero let's said it for 10 seconds
+50:54 - or or 2000 seconds
+50:56 - whatever and then to high stored get Fu
+51:01 - right if I killed it now let's kill the
+51:03 - session right quit and then do again
+51:08 - connect and then get Fu the value is
+51:10 - still there obviously right cuz it's
+51:13 - it's stort in memory right even if I
+51:15 - connect it as a different TCP connection
+51:17 - right and now that we did that if you do
+51:19 - stats slabs you can see some interesting
+51:23 - values that we talked about here right
+51:25 - let's chunk size right so we have this
+51:27 - number one which is this represent the
+51:29 - slab class that we talked about right so
+51:31 - we happen to have one slab class because
+51:33 - my value is so tiny right if I created
+51:36 - another chunk with a large value the
+51:39 - large item another slap class will be
+51:41 - created and that will have its own
+51:44 - configuration so the chunks per page
+51:46 - which we talked about
+51:49 - 10,922 we have one page only as we add
+51:52 - items we can just increase that if we
+51:54 - want how many is in used one chunk how
+51:57 - many is free 21 109 21 so that's the
+52:01 - total we used one how many time we read
+52:03 - it how many time we said it how many
+52:05 - time we delet it everything here is
+52:08 - actually uh accounted for active slabs
+52:11 - we have one slab right here effectively
+52:15 - active and this is the memory allocated
+52:17 - right so it's like
+52:20 - what that's like uh one Meg exactly
+52:24 - right that's the make is that is
+52:25 - allocated we talked about
+52:27 - that so yeah so you can start playing
+52:30 - with that and add M multiple data points
+52:34 - and and look at the stats and play with
+52:37 - it a little bit so let's
+52:39 - control this and quit so now that we
+52:42 - talked about tillet how about we
+52:44 - actually go to nodejs and build our
+52:46 - beautiful interesting application here
+52:49 - all right so I created this I went to my
+52:51 - project folder here I'm going to go Ahad
+52:53 - and create a directly called no mod M
+52:56 - right and I just go ahead and do that
+52:59 - right do an mpm init Dy right I have
+53:04 - nodejs of of course installed right here
+53:06 - to do all this stuff right and then um
+53:09 - let's create an index.js file and we're
+53:13 - going to do const MIM cached equal I
+53:19 - believe it just do require MIM cache
+53:22 - literally and that's the library we're
+53:23 - going to install so
+53:25 - once we have this Library we can call it
+53:29 - right how can I call it const um let
+53:33 - call it server and then we're going to
+53:35 - create a new MIM cached and here's the
+53:38 - interesting thing you can pass in an
+53:39 - array of servers and you can pass in a
+53:42 - string you can pass in an array or you
+53:44 - can pass an object if you pass an array
+53:47 - then the uh the the keys will be evenly
+53:51 - distributed between all these instances
+53:54 - today I have only one server so Hussein
+53:56 - Mac
+53:57 - 11211 all right close the array we're
+54:00 - going to add more servers later but
+54:02 - that's that's it basically because
+54:04 - server I guess server pool is a better
+54:07 - name huh let's let's call it server pool
+54:09 - because that's what it is it's a server
+54:11 - pool here let's create a function called
+54:13 - run and this function will be called in
+54:17 - right and this function we're going to
+54:20 - use the server pool and we're going to
+54:22 - set a value so here's how we set a value
+54:24 - set pool uh server pool do set and you
+54:27 - give it a key say F right and then the
+54:30 - value bar right and then expiration day
+54:34 - an hour and then the final one is a call
+54:37 - back which gives you like in case of an
+54:38 - error I'm not going to set it because I
+54:41 - trust that it's going to just work so
+54:43 - all we have to do is
+54:45 - uh do that and this will just set the
+54:48 - value but for the sake of time I'm going
+54:52 - to actually set 10 values 3 4 5 6 S 8
+54:56 - nine for those who know JavaScript we
+54:59 - can do this trick like for each I I
+55:02 - think you can do a better job at this
+55:04 - than I will but I think this works right
+55:07 - this this should work
+55:11 - right I like that that so they will have
+55:14 - a different
+55:15 - key a and the bar will have a this way
+55:19 - we'll set what 10 values in this case
+55:22 - and each value will have the full a for
+55:25 - one and bar one for two bar two the
+55:29 - reason I do this is because I want to
+55:30 - actually see the I'm not going to read
+55:32 - it from here all of us going to do that
+55:34 - is just run and I'm going to read it
+55:36 - from tnet right that's how I'm going to
+55:38 - do it let's go ahead and do save mpm
+55:42 - install MIM
+55:45 - casd and then
+55:47 - npm that's it node index. GS hopefully
+55:50 - it
+55:51 - runs and of course the moment I say that
+55:53 - I have an error so let's go ahead and
+55:55 - and check the error here so I going to
+55:58 - see what the error is for
+56:04 - each so let's go ahead and just add that
+56:07 - okay this is going to print the error in
+56:10 - case there is an error just in case all
+56:14 - right try it
+56:16 - again node index
+56:19 - toj all right now works I had like a
+56:24 - typo so I had effect but look at this
+56:26 - get full three get full four get full
+56:29 - five we're getting all the values that
+56:32 - is pretty cool you guys right it's
+56:34 - pretty cool so here's what I'm going to
+56:35 - do now let's control exit here quit
+56:40 - here's what I'm going to do now I'm
+56:41 - going to spin up
+56:44 - more containers so it's going to do run
+56:48 - Das Dash name MIM 2 right they call it-
+56:53 - p1212 2
+56:57 - 11211 again this is the actual Port will
+57:00 - this will not change this is what's
+57:02 - changing here right right here right
+57:04 - detach MIM cash d right got to do the
+57:09 - same thing or
+57:12 - three
+57:14 - three that is pretty neat right and uh
+57:19 - for for sake of completing let's add so
+57:21 - four servers why servers are free we can
+57:25 - we can spin up as much as we want now
+57:28 - let's edit our application right here
+57:31 - and uh what we're going to do
+57:33 - is literally just add a comma say hey
+57:37 - hin Mac 11212 is another server right
+57:42 - there's another one too hin Mac all they
+57:44 - are living in the same server if you
+57:47 - think about it right it's just different
+57:50 - Services right J say mac 11214
+57:55 - that is awesome nothing changes right so
+57:58 - I'm going to do it again and then node
+58:01 - index.js I don't want you to pay
+58:03 - attention to what will happen now The
+58:05 - Client app now distributed all the stuff
+58:08 - to all the servers so now my foods will
+58:11 - be all over the place Let's test it out
+58:14 - tet Hussein Mac uh
+58:19 - 11212 right let's connect to
+58:22 - 11212 the second server and then get f
+58:25 - one it's right there get F two not there
+58:29 - get F three not yeah it's right there
+58:31 - good F four it's not there get it
+58:34 - because now the distribution is up to
+58:36 - the cine I have no idea how how this
+58:38 - will be distributed probably round robin
+58:41 - but uh could be something else right so
+58:44 - if I pick now another server right three
+58:49 - let's do that get f one not there get F
+58:52 - two not there get F three not there good
+58:55 - full four not there good full five right
+58:59 - there so it took us like five five is
+59:02 - there right and and you get the idea
+59:04 - these keys are now distributed
+59:07 - everywhere and when you ask about it now
+59:10 - I'm going physically to the server
+59:12 - itself to ask about it but if I ask the
+59:15 - nodejs app it's going to give me these
+59:18 - values right so here's what I'm going to
+59:21 - do next right I'm going to do index.js
+59:25 - after I run all these which is I'm not
+59:27 - going to run it anymore right uh cuz I
+59:30 - already store these for an hour I'm
+59:32 - going to just go a loop and read right
+59:35 - going to create a function that reads
+59:37 - and exactly
+59:39 - similar uh
+59:41 - YY p and then just do a get right the
+59:47 - get is slightly different what we going
+59:49 - to do is that you don't need a value
+59:51 - right you don't need an expir date but
+59:54 - it's going to give you a function a
+59:56 - callback where it's actually two places
+59:58 - error and data right and then we just
+60:01 - print the data CU that's what we're
+60:03 - interested in assume there are no errors
+60:05 - here again this is a very simple app
+60:06 - here and then's just go ahead and read
+60:08 - so in this case you're talking to the
+60:11 - pool directly you're not talking to
+60:13 - individual machines so we know that the
+60:15 - keys were actually evenly distributed
+60:17 - between the servers because we ta
+60:19 - knitted into each servers and tested
+60:21 - that out right so now what we're going
+60:23 - to do is let's run and see node
+60:27 - index.js look at beautiful Bar Nine bar
+60:30 - two bar four bar three bar six Bar Seven
+60:33 - bar eight bar one bar five why do we get
+60:36 - the different values it's very easy
+60:38 - because we we're we're running
+60:40 - asynchronous job we have no idea yeah we
+60:43 - executed f one first right but Fu right
+60:47 - we we what do we did is like we looped
+60:50 - and sent all the 10 request at the same
+60:53 - time right
+60:56 - all this is what we did we looped and
+60:58 - all the 10 request but these are
+61:00 - asynchronous so Bar Nine F9 might get
+61:05 - give us a result before f8 right all of
+61:08 - these are just this is how no GS works
+61:10 - it's single threaded and it sends all
+61:12 - these request and just Loops through the
+61:15 - its main um the the main Loop the the
+61:18 - main thread Loop right and looks for the
+61:20 - result it depends on the server how fast
+61:22 - is going to respond right so is going to
+61:24 - send all these things and then hey the
+61:26 - server responds for this respond for
+61:27 - this for this we just do all this stuff
+61:30 - so the client here it really depends
+61:32 - what it does as well right so the client
+61:36 - really depends on this it took the hash
+61:39 - right of the f one determine that F1
+61:43 - should exist on This Server connect it
+61:45 - to the server asked for the value pull
+61:48 - that value and then return it so you
+61:50 - have no idea how fast these servers will
+61:52 - reply right and the number number of
+61:54 - connections to each server also really
+61:57 - matter right so that's basically uh it
+62:00 - for the demo guys and kind of explained
+62:02 - all this uh idea of MIM casd let's go
+62:05 - ahead and summarize this course all
+62:07 - right we did the demo let's summarize we
+62:09 - talked about memory management memory is
+62:11 - fragmented if we didn't do the slab
+62:13 - Pages concept then we're going to be
+62:16 - allocating values left and right right
+62:18 - and that as a result uh becomes
+62:21 - fragmentation and fragmentation is bad
+62:23 - because now you have all these beautiful
+62:26 - gaps of free space that we cannot use
+62:28 - unfortunately right because our items
+62:30 - might not necessarily fit these gaps
+62:33 - right so we need memory management lru
+62:36 - again uh very in unpopular opinion I I
+62:39 - would like for this to be an option to
+62:41 - be disabled so that I don't get locked
+62:45 - right and keep my application simple and
+62:48 - if someone want to build Anu why don't
+62:50 - they build it themselves right or just
+62:52 - have the client have the control I wish
+62:54 - they stayed simple and didn't implement
+62:56 - this just that's just my only this
+62:59 - criticism of the MIM casd they they
+63:01 - stayed simple they stick to their rules
+63:04 - this is to in my opinion I think it's an
+63:06 - Overkill right threads I love this
+63:08 - design yeah we can work with money
+63:11 - threads of course there is a limit for
+63:14 - there is another problem with the
+63:15 - threads design here is that let's assume
+63:18 - you have multiple threads all right and
+63:22 - each thread is a connection right let's
+63:23 - say about that right and and when we
+63:26 - looked at the data I think when we
+63:28 - looked at the stat we saw that there is
+63:29 - a fixed number of threads right and I
+63:31 - don't know if this if MIM casd
+63:34 - share connections on a given thread like
+63:37 - have multiple connection on thread I
+63:39 - don't know that maybe because otherwise
+63:41 - it's going to run out of threads right
+63:43 - so in this case what you you you can end
+63:46 - up with is a thread with a connection
+63:49 - that happen to have a very aggressive
+63:51 - client a client that sends a lot of d
+63:54 - data to the thre you know so in this
+63:57 - particular thing you create a bottleneck
+63:59 - and that
+64:00 - bottleneck really there is no solution
+64:02 - to it because you don't know if a
+64:04 - connection is going to be aggressive or
+64:05 - light waight right you can you can
+64:07 - change that complete model to a
+64:10 - centralized thread model where is a
+64:13 - center thread that takes the messages
+64:15 - these requests and these requests will
+64:17 - be distributed evenly right you can do
+64:19 - that but then the bottleneck is moved to
+64:21 - a single thread you lose either way
+64:24 - right there is no solution the best
+64:25 - solution that's when you when you when
+64:27 - you go into deep these things like it's
+64:29 - it's fascinating to me I absolutely love
+64:32 - it we talked about read and write talked
+64:34 - about locking about distribution cach
+64:36 - which is completely client side guys I
+64:38 - hope you enjoy this uh crash course Deep
+64:41 - dive level into MIM casd absolutely uh I
+64:45 - enjoyed researching this talk me a lot a
+64:47 - month to research this entire course uh
+64:50 - absolutely love it uh if you want to
+64:52 - support the channel become a member
+64:54 - there is a lot of uh member exclusive
+64:56 - content in this channel uh if you want
+64:58 - to support
+64:59 - otherwise there is the there's uh I have
+65:03 - a lot of UD me courses uh there's
+65:04 - discount coupons check it check them out
+65:07 - and that supports the channel I
+65:08 - appreciate you so much and thank you all
+65:11 - for your wonderful messages hope you
+65:13 - enjoy this course I'm going to see you
+65:15 - on the next one you guys stay awesome
+65:16 - goodbye
+
+Cleaned transcript:
+
+welcome to this comprehensive video course on MIM cached an inmemory caching system known for its Simplicity and Effectiveness in reducing database load in this course Hussein will teach you about MC's architecture and design choices and he'll conclude with a HandsOn demo using Docker and telnet get ready to deepen your understanding of this transient cache system mimc D is a simple inmemory key e Value Store written in c h it was originally I think written in Pearl and then Rewritten in C this is what back in 2003 so it's been a while and it has been popular with companies such as Facebook Netflix Wikipedia Facebook I think pushed it to its limit you know and the most uh and the reason it's why popular is because of its Simplicity and we're going to talk about that I know we throw the word simple a lot these days but MIM casd is truly simple I mean if you're looking for advanced features it's not here it was designed to be simple solve the problems of the web back in 2003 which is we want to help alleviate the queries to the database we're we're you know the databases are taking a hit you know so let's cash things although I usually do not agree with having a cash to solve a slow query because I think personally I think it's a cop out you know to to just add a cash when you have a slow query you have to understand why it's slow you have to understand why it exactly taking time why there are a lot of logic reads and how to minimize it and that's another story for another day but sometimes you need a cash of course right and then MIM casd was born right of course there are alternatives such as redus I made a video about it but this this video is to is a crash course of mhd we're going to dive into the agenda here you're watching this on YouTube there will be uh chapters where you can jump into the interesting part of the things but it's an inmemory database we're going to talk about memory management you might say why well we're going to find out memory management is not easy at all you know it's not just like hey just throw things in memory and then read it it's a little bit more complicated than that going talk about the Ario the least recently used uh which was designed to avoid growing the memory of this instance unlimitedly right CU you have to have a some sort of a a mechanism to evi all entries that has been never used that's why you cannot really rely on MIM cash D to have a value always there it was never the goal of this cash right unlike Reddit right is if you if you store something is going to be there and you told it to be there forever it's going to stay forever it will make sure to stay forever MIM casd does not guarantee that and you can argue that this is actually a feature and you can argue that this is something you don't want you know so tread lightly thread we're going to talk about the threading model cuz you have to have multiple threads if you want to serve a lot a lot a lot of clients with a lot a lot a lot of TCP connection connected to this thing read and WR we're going to go through examples of a read example for the write and okay kind of uh open the hood and look what is inside this beautiful thing locking model obviously uh two people trying to write in the same item it's not as advanced as acid obviously where you have isolation levels now it's a serialized model where we try not to have two people read the thing item at the same time or write uh the same item at the same time so locking and we're going to talk about the old model and the new model that's where you really try to understand what how things are built is completely different from the way we explain it distributed cach I know they say it's a distributed cach but I kind of don't like to say that because in itself MIM casd is not distributed it's just when you spin up a m casd instance three M casd instance they don't know about each other and they will never be right the client is responsible for the distribution so I kind of reluctant to say it's a distributed cash I know people call it a distributed cach I don't like to do that but hey it is a distributed cache if you if you if you put the distribution at the client side and I think this is part of the beautiful simple design they they on purpose they didn't make it distributed to make it simple and then we're going to go through a demo we're going to use Docker because you can spin up a lot of instances in in Docker really easily let's do that so in memory key value St what's that really uh we're going to talk about some terminology here specific to mkd an item that's what they call it an item is really what consist of a key and a value a key is usually should be unique right and a value could be literally anything a key has to be a string and it maxed out at 250 character you can see the limits right that's why I think uh redis kind of won the cash game when it comes to this thing because MIM Cas has a lot of limits and uh this kind of uh you know crippled some people from using this cache because of these limits right but you can Ario also the Simplicity of this design and if you can work around the the design to use MIM casd it it's actually pretty nice right when when they key as a strength they did that for a Simplicity reason to right if if you support like dates uh or or I don't know like blobs as Keys then Things become really complicated and there shows in the architecture and if there is a bug it's really hard to track down right and the value can be any type h it's by default one megabyte again another limitation in MIM casd yeah you can see that I I talk about limitation but these limitations technically to me I I see them as features you know because they didn't claim to be like the best in the world they said hey we are designed to be simple and I appreciate and I completely love that you know when you say I want to build something simple the simple thing has limitations right the simple thing will by Design have limitation when you look at the big picture right it's not going to have like tons of features right so yeah you can configure this to to increase it but again it's not really a good idea all the time uh Keys have exploration date ttls right time to Liv and uh even that don't rely on that right even if you put like a key that has like a 1 hour and your memory is filled the lru will can kick in and if you never use that key it's going to get affected and they tell you that right hey mkd is a transad we're not going to make sure that it's actually persisted it's not supposed to be that right again always go back to the the requirements here they never meant right for this to be a persisted cash forever right you don't rely on that you kind of use it to help you avoid expensive queries but yeah be ready at any time that this value is not going to be there everything is stored in memory right that's why it done cash MIM Cas D again don't confuse MIM Cas D with MIM Cas DB that's a completely different project and I think it's abandoned since 2019 2009 right but yeah m casd is still going and Facebook and I think Mark Zucker give a presentation about M casd as well at some point how they tuned it to its maximal values let's talk about memory management here's the memory right when you allocate items you know when you say hey I want to allocate an array and iate an integer and I want tocate a here's a block of M you know these items that you allocate and even you new program today they going to go in random places now they yes the process has a dedicated memory area but when you allocate these things go random so the grain is allocated they're going to go to random places right yeah initially they might be consequent but as you uh remove and free items you're going to end up with these gaps so you might say what's wrong with these gaps the problem is like this this is called the fragmentation what's wrong with fragmentation well you're going to have like a little bit of few bytes here few bytes here few bytes here few here but if you want like a big bulk of memory location consent like you want one Meg you have one Meg but it's fragmented and guess what if it's fragmented you cannot use it you cannot just allocate here oh my part and then part here and this part here I think that the operating system allows you to do that maybe but then it will it will crash left and right to collect what you have right we had the same problem with hard drive I guess right back in the days with fragmentation where the the seek you know the the needle has to to go multiple places to fit your files because it's a circle right this this desk and has the if if you store a file and you start editing the file the files will go to multiple sectors and to read that file back you have to go sector one sector two this was supposed to be like a rotating disc I failed miserably but you get point right so memory fragmentation is bad we try to avoid it right new items can can no longer fit so what what did they do so me casd at least what they did is they allocate pages instead even if they don't use it they say hey when you start I look at the whole page one Meg again that's that's the design right that that's the reason why we have one value up to one megabyte you cannot go beyond that so they say hey let's start with one Meg so if they allocate they allocate at one Meg the whole thing they don't use it technically to the operating system you the cash has used 1 Megabyte it doesn't know it right that it's not actively using it that client us connecting to M casd we're not probably we're using like part of that memory does that make sense but this avoids frag M mentation right cuzz now all of this just one big page with a lot of empty space right but it is elated and then there is this idea of chunks right so the pages are broken down into equal size of they call chunk so um keep these in mind the terminology in mind the chunk is a fix size and what determines the chunk size is actually something called a slab class right and the slab is think of a slab every time I hear the word slab I remember Dark Souls you know it's a video game where you have the last item that you require in order to upgrade your weapon it's called a titanite slab where it's say like really large rock that you use in order to upgrade your weapon it's a it's it's basically a a a big thing a slab of meat they say right it's just a big thing that's what it means so this idea of slab and slab classes will always show up up here so it's like a b big portion of memory a slab class is what define the chunk size right so there is there will be a slab class of 40 bytes there will be a slab class of a one Meg so the chunk sizes will be 44 bytes right and the chunk sizes for a slab class of that type is one Meg so we're going to show an example to cons to to show that of stuff and the pages consist of fixed chunk size right items are in chunks here's the a very important item so your item will be stored in the chunk your chunk size could be let's say uh 100 BYT right if it's 100 BYT and your item which includes the key and the value is less than 100 you're going to include the whole chunk right so if it's 90 byte you lost 10 byte within that chunk nothing to do about it sorry right that's one limitation here so there there will be a free space a tiny free space in the chunk chunk and obviously each slab class has a fixed chunk size so that's how they are determined it's going to be clear as we go through them obviously avoid memory fragmentation here's an example right so here we have a slab class with a chunk size of 72 at subass one and slab class 43 for example the chunk size is one Meg so you have in a single page right so slap class have multiple pages and sometimes they call them also the is called slabs the word slab in the documentation is so overloaded and I've seen people use it one over the other so I avoid using it the word slap so a slap class and there are pages right so this page in this case we said one Meg right and the chunks are 72 divided that means we have one 14563 chunks per page but each chunk is 72 byte right so if you have an item around 72 byte fits nicely in this right but if your item is larger let's say 900k then oh it doesn't fit this slab class so we need to let's let's find out what is the subass for this item oh subass 42 because the closest one Mig and guess what the one the one Mig class slab class has this entire page is one chunk right so this is really important to understand here right so that's how they allocate memories this we're looking at the internal architecture of M casd here right let's go example new item 40 byte 40 byte the closest thing is this guy right slab class one let's allocate memory and then Boop no we don't allocate memory that this memory is already allocated right we just store the item right in this chunk and then we start adding pointers and stuff stuff like that here so now our item is right here we're going to talk about the hash table and stuff like that but this is just again memory management let's say I have a new item 900k oh this fits right here so one big chunk in one page right so that's interesting let's say another new item 40 byte but guess what slab slab class one because that's the what the chunk size is fits it nicely but guess what we have two pages they're all completely full so I cannot insert this what do we do create a brand new page put that thing here does that make sense so we allocate the new page and when you go to the demo we're going to see all this stuff right we're going to do a stats and see like oh how number of pages allocated is this right so it's just I I absolutely love how they did this it's interesting obviously doesn't doesn't have limitation of course but you're going to see that depends on the sizes of the item you say and once you really understand how things work you you can architect your application specifically the back end here frontend doesn't really talk to M casd at all right the back end here can be architected so that you can choose the perfect items right to fit this entire thing right you're not going to just choose hophazardly right that's how you know your craft effectively all right let's get to the meat lru least recently used you know the main problem with memory is it's limited you know and even if MIM casd allocated certain amount of memory if you store a lot a lot a lot of keys even with good expiration date memory can get full what do you do do you block new inserts I would say that's that's one feature that you can add I suppose but but mimk they don't allow you to do it they won't let you go to that state you if the memory is be about to be full then anything that hasn't been used for a very long time they will release it that's another reason where REM Cas D is a transient memory it do not rely on a key even if you said the expire for an hour do not rely to that key to be to be there in an hour it can go any any time right that's another limitation that's another feature right I say limitation and a feature at the same time because it is it is a feature right and it's to some people it's a limitation and how do they do that right they use something called the link List have you ever heard about this before and 20 years ago 21 years ago uh in the University I took a course and the Cs CS 101 they talked about link list and that is pretty much the the only time in my entire professional career I ever used a link list that's probably I'm not saying that's just the case with my the application I wrote is all high level languages I never had to write a database or a m cache you know so I never used the link list right so doesn't doesn't mean that it's it's a useless structure but it is it's a important data structure why cu the least recently used is a link list there's a head and there's a tail and every item is linked to each other so if all these items that you add are the in this architecture right they are in the link class and there is every slap class has its own lru right so if I for example access an item that happens to be in the tail it will be popped and go back to the head so there is a cost to accessing an item there is a cost there is a cost of removing this chain put it that back pull the head to this pull this guy to this guy pull this guy to this guy that's how you do linkless right so every time you access an item it goes back to the head so items that are not used they will automatically be pushed down to the tail and if the memory is Out Of Reach basically these items will be removed from the tail but also another thing with with this link list is like with threads if you with which MD is is multithreaded app how can you have multiple threads read at the same items right you can't you have to lock this structure you know if people who done multithreading you have to you have to lock it right and the moment you do locking if you if you know about something about databases which I a course on database engineering check out check it out it's actually right here database. husin as.com I talk about all this stuff you know in details in fundamental details you know so don't expect like SQL syntaxes in my courses not like that I talk about fundamentals which which should then build up and see how the client is built out right but yeah locks is a very critical concept here you have to lock it to avoid this you know mutation you know corruption right but yeah it's a cost and there's an a you CLW crawler and a demon that does the cash inection from the tail right and again every time it kicks out have to lock and then if it's locked people cannot read people threads cannot read and if threads cannot read latency right block slow right all of this you got to understand when things happen this is why and I'm going to share my opinion about the lru right and I think this is a good time by the way there is an L cache per slab class I think I mentioned that so the one Meg slab class right which has like pages of one Meg and the chunk sizes of one Meg has its own laru and each other sub slab class has its own L by the way I don't make I'm not making any of this up I'm I had to read frankly maybe 20 different documents to collect this information and and kind of present it in a summarized manner here right because there is no one dog to explain all that unfortunately right it's it's not incomplete unfortunately that's what I noticed and outdated so my opinion about the lru in my in my personal humble opinion is I wish MIM casd actually disa this by default you know L is a feature right and they the reason they added it because memory is limited especially back in 2003 when they first built this thing memory was so scarce or scarce is it scarce or scarce scarce right it's very limited and when you do that you don't want to run out of memory right so if you allocate certain amount of memory for M casd it can easily run out right if you have a lot of keys so how do you manage that they say hey we're going to remove we're going to build an laru least recently items K get kicked out from my memory that's a fine but I wish they disabled that by default or give us an option to disable it because the overhead of managing AIO and you can see from the papers I'm going to reference is so large the locks that they have to maintain slows down throughput right and comp and complicate the application so I think they stuck whoever built this 20 in 2003 MIM casd Brad Fitzpatrick who is the original developer of MIM casd he built this for his website live Journal you know I wish he disabled this by default I really wish because his original design is so simple and so elegant I absolutely love it you know you build something so simple with its featur stripped there are no much features U made it not simple unfortunately yeah cool have this a feature but disabled by by default or have an option to disable I don't know if there's an option to disable maybe there is but hey I want to take the responsibility as a client right if I'm going to allocate certain amount of memory cuz I'm responsible I'm going to give uh MIM cash D 5 gig 10 gig and my application is smart enough to know to set expiry date right for this item and yeah if I'm going to get errors if it's failed out it's on me I want to delete an items I want to do this management this way for 95% of the users who want simple things they're going to get it l are you in my personal opinion again this is just my personal opinion you can agree or disagree I think you should this this should have been disabled because now they they created a new lru which is like has hot and warm and cold and and they move stuff around because they have a lot of problems with lru like moving stuff around all the time is so expensive you know so it it has a cost so let us just how about eh give me an option not to use it and go back to a simple model of course I I don't I don't mind if two items two users trying to access the same two threads trying to access the same item at the same time let them be serialized that's fine right but lru as a whole thing I think it's a it's just to me over engineering that's just my opinion you can disagree here is how it looks like by the way aot you in the big picture again this is all drawings I made it uh I could be wrong in small details because I don't I don't know the actual architecture so this is I derive this from reading the source code and the doc so this is how it looks like so this is this is where we talk about the pages right and the chunks so the chunks or the items is what being lru right so the head is right here and this is linked to this item this is link to this item this link to this item this this is the tail so this is how it looks like every item here is actually linked to the next to the one next to it right this is think this of this as a snapshot after many many usages right gets and red that so so things will move to the head and the tail obviously I didn't draw every particular thing because it's going to be a mess of a drawing but you get the point right that's that that's how the L you and you can see how complex things get so let's talk about threading so this is one of my favorite Parts I know uh I absolutely have um I absolutely love networking and if you're interested I have a networking course and and this part is is all about sockets connections the way listeners work the way the TCP connection works I talk this about this in detail in my network course if you're interested go to network. hus n.com learn more about that again network.has nasa.com this URL redirected immediately to UD me with the latest coupon applied so uh you're going to get a discount and you're going to be supporting this channel this work thank you so much there's here's the threading model for uh for mam casd right because it accepts clients it has to have networking right so what they do is they listen on a TCP Port right so that means they support transmission control protocol that's the native transport that they support they also support UDP which I didn't mention here but UDP has been now disabled by default because of an attack that happened 4 years ago 2018 uh reflection attack actually right with with MIM casd public servers so it was the cloud flare actually reported that so UDP has been disabled by default but yeah you can use it if you want but yeah let's stick with TCP right now TCP Port 11211 and there is a listener thread so one spin up listener one thread that spins up it listen to Port 11211 so that creates a socket right in the operating system speak right and that basically creates its own accept Q it's on syn Q this is how the application start accepting connection right so everything every single connection that is happening The Listener thread will accept it so there is a loop infinite Loop here literally all application has this Loop where it's constantly accepting uh connections one thread right so all the connections goes to this thread so once it accept the connection it gets the file descriptor we call it right which actually represents the connection and now what what mimk does is spins up a new thread gives that file descriptor to that thread now if a stream of data if a request to get a key was sent to this connection it will the operating system knows to send it to this thread well technically what happens is the thread pulls the descriptor right this is now this thre is responsible for this connection This Thread is responsible for this connection This Thread is responsible for this connection so you can see that now this model just blows up right if a one connection PA of thread if you have so many connections you can R run out of threads right or that kind also blows your memory and CPU so be careful with that as well I think they put a limit number of connections M casd I might be wrong there but yeah so this is basically explains all of that now the moment you have threading now the beauty here is you don't have bottleneck right if you have one thread that is responsible for all the connections and listening you you will be blocked right one user will send a key and then another user will send a key they won't be served right they have to be serialized because there's one thread actually executing them one by one right but here if one user executes a sends a key request to get a key and this guy want to write they can happen at the same time right this thread will read it and this thread will read it they are different processing this could be in a core this could be in a completely different core that could be also possible versus it's one thread then becomes really a a problem so we had to go with multi threads what's the problem with that well the problem is these threads will try to access what we call the laru and the items and the memory so everything is shared between all these threads but you can't have two threads right to the same location that's a problem that's why the original design had one Global lock it was serialized so in this case yeah the threads kind of helped with the connection but but you were serialized at the Locking model so nobody can even access two different items has nothing to do with each other they were serious they were locked so one thread has to be served after the other they they fixed that they completely red that now it's a pair item log so if two threads try to access the same item then there will be SSE that's good that's okay I'm okay with that right but yeah if I am accessing item one key number one and then another thre access key number two at the same time they should be served at the same time what there is no reason for locking and the only reason we lock is because we want to update the lru again so there is so much stuff that comes back always to the lru it's like oh really we did we really need an lru why what if we disabled by default right okay that's just me let's go through an example read and this is something we never talked about here which is the hash table if you think about it if you have a key how do you actually find where this key lives right if you think about it you need hash tables so what you do and I talked about hash table in my YouTube channel uh look up hashing and consistent hashing I talk about details hash table is nothing but an associative array it's really just an array and the beauty of an array is if you have an array right let's talk about arrays a little bit if you have an array from an array has to be consecutive if you allocate an array of a thousand elements accessing element number seven access an element number 10243 is biger of one is fast because you know the index once you know the index and you know the head of the array you add the address to the index voila you have the address and the memory of the CPU can immediately go to that location that's the beauty you have an index with hash tables you don't have an index you have a key the trick is to convert the key back to an index that is all what it is a hash table nothing fancy it's just an array so we take that what we do is the do a hash on the key right let's say I'm going to R test key right and then do a hash and then do modul n where n is the size of this array or the hash table right and then you're going to get a value between zero and N minus one I guess right so now okay let's go point it and that's big of one plus the cast of The Hash right now you got here found it now what you do is you're going to get a pointer which takes you to the the page on that specific slab class for that item which is happened to be D in this case that's how a read works so it's a big off one you can argue that this is one read and this is a second read yeah I suppose that works too right I think the the new model have kind of two hash tables if I'm mistaken but I couldn't find detail docs about this so I explain this so I apologies if this is a little bit out of date but this gives you the idea here the new two hashes I think uh they were provided to provide a pair item lock and obviously what happened here is this is the lru you access the item the D is pushed to the head right so now you have a b c d a is now the least recently used item is in the tail and a points to b b points to C C points to D and obviously it's a revers length as well so D point to c c points to B P point to a right so that's how they allot you actually what you if you think about it the the pointers are right here in the item itself right but I drew it this way for Simplicity otherwise it's not readable at all read two this is another example for read I'm going to read Buzz hash the buzz get the N whoa get the item Boop get a c nice now when we get a c the C is pushed to the Head D is slightly pushed and then obviously the allario is updated and that's another lock right you have to do a lock to do that so if buzz and whatever the value before a test was read at the same time they are serialized at the lru level if they belong to the same slab class again this might have change with the new architecture they changed that a little bit so I think that you can you can play with that a little bit but again to update the L you have to you have to kind of acquire a lock so you're going to be serialized right here yeah let's go through a write I'm going to write key new of a value with 44 whopping bites let's do that well to write we need to obviously find the hash right where to write it hash module in get that puppy find where to write it oh happen to be an empty location sure that's good right and now you have questions what if what if I happen to have something that is already written you can you can have collisions and we're going to talk about collisions in a minute right it's a problem of hash tables hash tables are fun and good but the moment they you run into collisions and you want to resize it it falls apart but now I create a new pointer this pointer now I need to allocate a slab class not slab class I need to allocate a a chunk where going to put my item in and that chunk goes into a specific slab class well 44 bytes pick a a slab class right and even the slab classes guys by the way it's not really fixed you can play with those the other configuration called the Chun the chunk Factor growth size I'm not going to mention it here it's just going to make the course a little bit longer but you you get the point there are so many tweaking you can play with right tweak these chunk sizes but yeah I look at a new memory location in this specific page in an empty page in a fit a fitting chunk right because you want to pick a chunk that is almost fits right in the chunk right not too small obviously cannot be larger than the chunk SI I have to fit right into it right but then that's the the that's what the what MIM casy does all right let's spice things up let's say I'm going to write a key called Nanny which is a new key I don't have it before and value 44 but it happened to clash with another existing key because that's hashes always do that right so when you do that you hash Nan and happen to be fitting on a entry that already have a pointer what do we do do we overwrite it no what they did is this is called a bucket by the way right they add more item to the bucket you know we have one item let's call it I don't know test or something all right and then we have Nani which fits right in the same bucket what we do is just we make it into a chain this chain of buckets right actually one bucket with two items I don't know right whatever the terminology doesn't really matter you just read to understand let's turn back the laser here and yeah we're going to add it here and then just do the pointer and do the do your thing now obviously we need to talk about a collision what happen to Collision I want to read the keani right go here hash it obviously go here oh we have two which one Ah that's the cost you have to go one by one through all of them right why because now we have a hash you don't know one of which one of these are actually Nanny what you do is read the first one right check it compare the key oh because if you go to the item you're going to find the actual key right that's stored here so you're going to find it and say oh that's not 90 that's something else right let's go through the bucket go to the next one there you go that's my item so here is a completely different paper that you can write here this P people take phds in this stuff by the way guys you know this is called the the the scale factor you know mimc D measures this growth and if it's too much based on a certain percentage if you're overloading then then you're going to still see performance problems right reading a key is going to have to go through multiple reads to find the actual key versus if it goes right here hey the key is right here of course there's one entry it has to be it right but if there's multiple yeah then it's a problem right I mean you can you can think about it you can argue that you can hash a key that happened to get to a value that is not there so technically you have to read it and compare because your key might not exist but it happened to Hash to a value that does right so you have to read it so there is a cost to reading so that's the problem of hash table so and if that's the case then they do a hash resize and boy when you rehash your table they have to shift everything around and I believe this is when they use the consisting hashing which is this ring concept which I talked about in another video and that just gets really complicated right because they know now the moment you resized your hash table you need to move stuff around because Nanny will not be this index number one anymore it going to be index number 7700 something like that right 1700 is not a number I think I'm going to skip this because we talked about locking in a minute we talk about thre threads and then accessing the lru and how it was a global lock and then it changed to a pair item lock and then still we have ref counting you know every time you read an item you increase the ref count you know and when you release it you decrement the rount this is for so the garbage collection can the garbage collection is written in C there's no garbage collector but the the the the ephemeral application Level garbage collection when Elio kick in can remove the item because you cannot just remove the item if if someone is referencing it that's the definition of meem memory leaks right all right let's talk about distributed cach and how it's uh MIM casd is actually not a distributed cash in my opinion mimc D servers when you spin up a mimc d server mcash D server they are completely isolated you cannot link a server to another server there is no mechanism to do that right when you spin up a mimc d server it's a mimc d server it doesn't talk to another servers and I absolutely love this design how simple and elegant this is put the responsibility if you want to do distributed well the apis at the client side has to do that and that's what we're going to show in the in the code section where we're going to write our own uh we're going to use a nodejs application to do that of course we're going to use also tnet to connect to that and write stuff right but we're going to go through all this stuff now but yeah what happens here is the client actually knows about all the servers it has knowledge so the client site actually does the distribution right so it's like okay key number one go here key number two go here key number three go here so there's a hashing going on consistent hashing to be specific you can build your own mimc D client that does whatever you want right and then distribute that stuff well what happen if I if I add a if I add a server well your client can start Distributing the keys I would definitely not be with that that because why would you distribute the keys for in a transient cash anyway who cares at a server is like oh yeah if if the kid is not there you're going to query the database and pull it up right it's it's not worth it to do this this chattiness to move items around from one server to another that's just a bad idea I don't know if clients do it maybe they do but I don't think it's it's required it's just thrashing for the case thrashing D B Shing again you you might if you know this channel you know that I'm I try as much as possible to push it as the last resort I do not like distributed stuff especially so complex to deal with right I like Simplicity I'm a simple man right but yeah sometimes you go you have you go to the YouTube scale and Google scale then you don't have a choice one machine cannot possibly handle everything I would I would go with raid replicas I would go with partitioning horizontal partitioning in the server itself minimize that as much as possible I would go with raid you know distributed dis storage but the application remain as a single writer the moment you have multiple writers and you have to deal with the Shing it becomes really complex you know if you want to deal with the complex complexity sure but yeah that's that's the idea of distributed cash okay let's do a demo we're going to do a demo we're going to spin up a bunch of MIM cash D Docker instances so for this exercise just install Docker and you're good to go and you have to have a Docker H you have to have a Docker account because somehow they are locked behind an account M casd I have no idea why did that they did do they do that sometimes right so you just just create an account do a Docker login you're good to go right once you do that you can download the image and you can spin up as many MIM cash G instances as you want so we're going to do that I'm going to use tnet because I love the Simplicity of MIM casd you know how many clients these days that you can actually just til it and run commments to they can be counted on one finger you know they don't exist anymore the Simplicity is gone from these from today's applications right the good old days of you just telling it and run and one thing I didn't mention is M casd doesn't have security by default so that might be a deal breaker for you right so you have to you can Implement authentication which doesn't exist by default sassel I believe they call it you can Implement TLS if you want but by defa they don't have any of that stuff right so take it with a grain of salt right they they said simple it is simple right but you have to be careful in a cloud environment when it comes to MIM casd you have to TLS it right they support that there is a support for that and obviously we're going to use no JSM Cas D for this consistent hashing and we going to put all our Docker containers and and play with that a little bit how about we do that so I have Docker installed here on my Mac you can have Windows and install Docker on top of it you can have Linux install Docker on top of it that's why I always like to use Docker just it's an agnostic whether whe whatever your application is you know whatever your operating system Docker works you know we have it on top of all all of this stuff so let's go ahead and spin up a Docker container that have a mimc d instance one MIM casd instance right so Docker run you do das Das name let's give it a name uh let's called it M1 M casd or M1 right you don't have to give it a name but I like that so that we can find it and delete it later easily and then you can expose the port uh by default 11211 right 11211 so this is what is running in the container this is what is exposed in my host right cuz I'm going to hit my host which is Hussein Mac which is that's the actual host that is running Docker and then I'm going to hit that Port which will be Port forwarded to this Con container and I'm going to spin up another one with 11 211 11 212 and 1121 three right later we're going to spin up multiple ones and then finally we're going to do MIM cache d right if you do just like that this will block the uh the terminal you know and it's going to be just work so I I suggest you do that first I know it's going to work for me because I I did it before but I like to do dashd right d means just hey detach it because I'm going to use this terminal for something else later right so just go just like that we created a container it can do Docker PS to make sure that the container is running obviously if the image is not there it's going to download it for you and you have to do Docker login to do all that stuff so do all of that log to your account and uh all that stuff all right so let's test it out how do you test it tell it what are we telling it into Hussein Mac which is my host and which Port 11211 again this is the port that I exposed that happen to be the same doesn't have to right if I do that all of a sudden I'm logged in how do I do that well let's do a stats give me your stats and this is the stuff that most of the stuff here we talked about currently right up time what's the version of MCD the pointer size maximum number of connections 1024 we talked about that right there's a maximum number of connections uh how many times you run a get how many times you run a set how many times you incremented uh the threads how many threads you have here right eviction how many times they allow you kicked in and evicted stuff and then you can do like stats uh Slack I think which going to give you like how many slabs were active how many is actually allocated obviously we don't have anything because we didn't do anything right so let's go ahead and set something so to set a key you do set and then you do the key let's call it Fu and then um the flags zero I don't have any Flags here Flags you can do further controls over here and the second parameter here is the expiration so let's say it's 3,600 which is an hour right you can set it for for an hour you can say it for a minute you can say it for a second if you want right that's the expiration so if your item ever get to after an hour it will be Eed it will not be returned to you not necessarily will be Eed until the lru kicks in and that actually physically removes it right and then finally we're going to uh put the data length how how how big is the value that you're going to set let's say two characters here right so I'm going to do high you have to exactly match it right otherwise it's going to be uh it's not going to fit nicely right so now we sto the value so let's read that value give yay I know this is just very simple stuff but you get the point right you can you can uh increment you can you can delete that key right and if you delete it you can read that it's not there so very simple stuff I don't really care about the API more I want more to talk about the architecture of stuff here right and that's what matters here there's there are actually two protocols command set this is the old one and there's the new one which is starts with mg like two characters and there's like a different set of syntax right there are two syntaxes here syntax can you say syntaxes I I guess you do you can but you can play with this it's very simple you connect to that and you see I didn't log in there's no accounts or anything like that there's no collection that you create it's just a free floating right some people might like that some people might not like that cuz they want partitioning hey let me create a table or collection let me play with that key value right there so it's a it's a freefor all if I if I destroy this connection so if I destroy it and I connect it again right and I do get F obviously it's not there because we deleted it so if I set it again um black zero let's said it for 10 seconds or or 2000 seconds whatever and then to high stored get Fu right if I killed it now let's kill the session right quit and then do again connect and then get Fu the value is still there obviously right cuz it's it's stort in memory right even if I connect it as a different TCP connection right and now that we did that if you do stats slabs you can see some interesting values that we talked about here right let's chunk size right so we have this number one which is this represent the slab class that we talked about right so we happen to have one slab class because my value is so tiny right if I created another chunk with a large value the large item another slap class will be created and that will have its own configuration so the chunks per page which we talked about 10,922 we have one page only as we add items we can just increase that if we want how many is in used one chunk how many is free 21 109 21 so that's the total we used one how many time we read it how many time we said it how many time we delet it everything here is actually uh accounted for active slabs we have one slab right here effectively active and this is the memory allocated right so it's like what that's like uh one Meg exactly right that's the make is that is allocated we talked about that so yeah so you can start playing with that and add M multiple data points and and look at the stats and play with it a little bit so let's control this and quit so now that we talked about tillet how about we actually go to nodejs and build our beautiful interesting application here all right so I created this I went to my project folder here I'm going to go Ahad and create a directly called no mod M right and I just go ahead and do that right do an mpm init Dy right I have nodejs of of course installed right here to do all this stuff right and then um let's create an index.js file and we're going to do const MIM cached equal I believe it just do require MIM cache literally and that's the library we're going to install so once we have this Library we can call it right how can I call it const um let call it server and then we're going to create a new MIM cached and here's the interesting thing you can pass in an array of servers and you can pass in a string you can pass in an array or you can pass an object if you pass an array then the uh the the keys will be evenly distributed between all these instances today I have only one server so Hussein Mac 11211 all right close the array we're going to add more servers later but that's that's it basically because server I guess server pool is a better name huh let's let's call it server pool because that's what it is it's a server pool here let's create a function called run and this function will be called in right and this function we're going to use the server pool and we're going to set a value so here's how we set a value set pool uh server pool do set and you give it a key say F right and then the value bar right and then expiration day an hour and then the final one is a call back which gives you like in case of an error I'm not going to set it because I trust that it's going to just work so all we have to do is uh do that and this will just set the value but for the sake of time I'm going to actually set 10 values 3 4 5 6 S 8 nine for those who know JavaScript we can do this trick like for each I I think you can do a better job at this than I will but I think this works right this this should work right I like that that so they will have a different key a and the bar will have a this way we'll set what 10 values in this case and each value will have the full a for one and bar one for two bar two the reason I do this is because I want to actually see the I'm not going to read it from here all of us going to do that is just run and I'm going to read it from tnet right that's how I'm going to do it let's go ahead and do save mpm install MIM casd and then npm that's it node index. GS hopefully it runs and of course the moment I say that I have an error so let's go ahead and and check the error here so I going to see what the error is for each so let's go ahead and just add that okay this is going to print the error in case there is an error just in case all right try it again node index toj all right now works I had like a typo so I had effect but look at this get full three get full four get full five we're getting all the values that is pretty cool you guys right it's pretty cool so here's what I'm going to do now let's control exit here quit here's what I'm going to do now I'm going to spin up more containers so it's going to do run Das Dash name MIM 2 right they call it p1212 2 11211 again this is the actual Port will this will not change this is what's changing here right right here right detach MIM cash d right got to do the same thing or three three that is pretty neat right and uh for for sake of completing let's add so four servers why servers are free we can we can spin up as much as we want now let's edit our application right here and uh what we're going to do is literally just add a comma say hey hin Mac 11212 is another server right there's another one too hin Mac all they are living in the same server if you think about it right it's just different Services right J say mac 11214 that is awesome nothing changes right so I'm going to do it again and then node index.js I don't want you to pay attention to what will happen now The Client app now distributed all the stuff to all the servers so now my foods will be all over the place Let's test it out tet Hussein Mac uh 11212 right let's connect to 11212 the second server and then get f one it's right there get F two not there get F three not yeah it's right there good F four it's not there get it because now the distribution is up to the cine I have no idea how how this will be distributed probably round robin but uh could be something else right so if I pick now another server right three let's do that get f one not there get F two not there get F three not there good full four not there good full five right there so it took us like five five is there right and and you get the idea these keys are now distributed everywhere and when you ask about it now I'm going physically to the server itself to ask about it but if I ask the nodejs app it's going to give me these values right so here's what I'm going to do next right I'm going to do index.js after I run all these which is I'm not going to run it anymore right uh cuz I already store these for an hour I'm going to just go a loop and read right going to create a function that reads and exactly similar uh YY p and then just do a get right the get is slightly different what we going to do is that you don't need a value right you don't need an expir date but it's going to give you a function a callback where it's actually two places error and data right and then we just print the data CU that's what we're interested in assume there are no errors here again this is a very simple app here and then's just go ahead and read so in this case you're talking to the pool directly you're not talking to individual machines so we know that the keys were actually evenly distributed between the servers because we ta knitted into each servers and tested that out right so now what we're going to do is let's run and see node index.js look at beautiful Bar Nine bar two bar four bar three bar six Bar Seven bar eight bar one bar five why do we get the different values it's very easy because we we're we're running asynchronous job we have no idea yeah we executed f one first right but Fu right we we what do we did is like we looped and sent all the 10 request at the same time right all this is what we did we looped and all the 10 request but these are asynchronous so Bar Nine F9 might get give us a result before f8 right all of these are just this is how no GS works it's single threaded and it sends all these request and just Loops through the its main um the the main Loop the the main thread Loop right and looks for the result it depends on the server how fast is going to respond right so is going to send all these things and then hey the server responds for this respond for this for this we just do all this stuff so the client here it really depends what it does as well right so the client really depends on this it took the hash right of the f one determine that F1 should exist on This Server connect it to the server asked for the value pull that value and then return it so you have no idea how fast these servers will reply right and the number number of connections to each server also really matter right so that's basically uh it for the demo guys and kind of explained all this uh idea of MIM casd let's go ahead and summarize this course all right we did the demo let's summarize we talked about memory management memory is fragmented if we didn't do the slab Pages concept then we're going to be allocating values left and right right and that as a result uh becomes fragmentation and fragmentation is bad because now you have all these beautiful gaps of free space that we cannot use unfortunately right because our items might not necessarily fit these gaps right so we need memory management lru again uh very in unpopular opinion I I would like for this to be an option to be disabled so that I don't get locked right and keep my application simple and if someone want to build Anu why don't they build it themselves right or just have the client have the control I wish they stayed simple and didn't implement this just that's just my only this criticism of the MIM casd they they stayed simple they stick to their rules this is to in my opinion I think it's an Overkill right threads I love this design yeah we can work with money threads of course there is a limit for there is another problem with the threads design here is that let's assume you have multiple threads all right and each thread is a connection right let's say about that right and and when we looked at the data I think when we looked at the stat we saw that there is a fixed number of threads right and I don't know if this if MIM casd share connections on a given thread like have multiple connection on thread I don't know that maybe because otherwise it's going to run out of threads right so in this case what you you you can end up with is a thread with a connection that happen to have a very aggressive client a client that sends a lot of d data to the thre you know so in this particular thing you create a bottleneck and that bottleneck really there is no solution to it because you don't know if a connection is going to be aggressive or light waight right you can you can change that complete model to a centralized thread model where is a center thread that takes the messages these requests and these requests will be distributed evenly right you can do that but then the bottleneck is moved to a single thread you lose either way right there is no solution the best solution that's when you when you when you go into deep these things like it's it's fascinating to me I absolutely love it we talked about read and write talked about locking about distribution cach which is completely client side guys I hope you enjoy this uh crash course Deep dive level into MIM casd absolutely uh I enjoyed researching this talk me a lot a month to research this entire course uh absolutely love it uh if you want to support the channel become a member there is a lot of uh member exclusive content in this channel uh if you want to support otherwise there is the there's uh I have a lot of UD me courses uh there's discount coupons check it check them out and that supports the channel I appreciate you so much and thank you all for your wonderful messages hope you enjoy this course I'm going to see you on the next one you guys stay awesome goodbye

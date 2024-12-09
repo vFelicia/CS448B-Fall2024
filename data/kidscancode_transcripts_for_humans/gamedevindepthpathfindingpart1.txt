@@ -1,0 +1,351 @@
+With timestamps:
+
+00:01 - hi welcome back to another in-depth game
+00:05 - development video series in this next
+00:08 - set of videos we're going to be talking
+00:09 - about path finding in this first part
+00:12 - we're going to explore what path finding
+00:14 - is and define some of the concepts we'll
+00:17 - need to know to implement them and in
+00:20 - subsequent videos we will explore some
+00:22 - different path finding algorithms and
+00:24 - how you can implement them in your games
+00:27 - first let's talk about what we mean by
+00:29 - path finding so I have a simple PI game
+00:33 - program here that just draws a grid
+00:36 - that's gonna represent our game screen
+00:39 - and the map that we're gonna be moving
+00:43 - around on before we start writing any
+00:46 - code we need to talk a little bit about
+00:48 - how we're gonna represent the data for
+00:52 - our map and path finding algorithms work
+00:56 - on something called a graph and a graph
+01:00 - looks like this this is a graph is a
+01:03 - mathematical construct where you have
+01:05 - nodes that's what these circles are and
+01:08 - the nodes have connections between them
+01:11 - and if you notice these connections have
+01:13 - arrows on them which means they are
+01:15 - directional from a you can travel to B
+01:18 - but from B you can't travel back to a
+01:21 - and path finding algorithms work by
+01:24 - traversing the connections in the graph
+01:26 - and finding the path from your desired
+01:30 - starting point to your desired ending
+01:33 - point for example if I am starting on E
+01:36 - and I want to travel to a then the path
+01:39 - is going to be to move to D and to be
+01:42 - and to see them to a and so a path
+01:46 - finding algorithm the inputs would be
+01:48 - the start and the end and it would tell
+01:51 - you the list of the connections that you
+01:54 - have to travel to get there and so in
+02:00 - most 2d games we're representing our map
+02:04 - as a grid of squares and so your graph
+02:07 - could be a grid that looks like this or
+02:10 - each tile on the grid
+02:13 - here's a node and the connections are
+02:18 - all of the edges all the each node is
+02:21 - connected to its adjacent neighbors and
+02:25 - this is fine this works fine from here
+02:28 - you can travel along this path to
+02:31 - whatever other node your destination is
+02:33 - and for example if you wanted to have
+02:37 - some walls then your graph would look
+02:40 - like this right and so the path would
+02:45 - have to go around the walls if you
+02:47 - wanted to get from one side to the other
+02:51 - however something that you need to take
+02:53 - into account is that graph algorithms
+02:56 - are faster when there are fewer nodes so
+02:58 - the more nodes you have the longer it's
+03:00 - going to take to calculate all the
+03:02 - different paths and find the shortest
+03:04 - one so for example let's look at this
+03:08 - map so here's a map of tiles this map is
+03:14 - 640 tiles 32 by 20 so the if we were
+03:22 - using a square grid the path finding
+03:25 - algorithm would have to look at each one
+03:26 - of these tiles and find and all the
+03:28 - connections between them to get from any
+03:30 - point to any other point but we could
+03:35 - make this a lot more efficient if we
+03:37 - thought about the fact that if you're
+03:39 - starting in this room over here and
+03:41 - you're heading for this target the
+03:43 - difference between this tile and this
+03:45 - tile the path is going to be almost the
+03:47 - same so you might want to represent your
+03:51 - path finding graph like this just using
+03:57 - nodes where there are doors or in the
+03:59 - middle of the room right and then now we
+04:03 - only have 22 nodes in our graph instead
+04:05 - of 640 so this is gonna be a lot faster
+04:08 - to calculate and so if your mob was say
+04:13 - over here in this room and your target
+04:16 - is over here then you would just say
+04:18 - travel towards the nearest node and then
+04:22 - follow the path on the grid I mean sorry
+04:25 - on the graph
+04:26 - and towards the closest node to the
+04:29 - target and then your your mob would find
+04:35 - from wherever it is what the closest are
+04:37 - what the shortest path is towards that
+04:39 - target and then it would be close enough
+04:41 - to go straight towards it and we'll talk
+04:44 - about that a little bit later once we
+04:46 - have our algorithm set up and we're
+04:48 - starting to do some path finding but to
+04:51 - start with just to keep things simple
+04:53 - we're gonna stick to the square grid
+04:55 - representation so that our graph our
+04:58 - path finding graph is going to match our
+05:00 - map grid we will talk a little bit later
+05:03 - once we have it working about how we can
+05:05 - do this kind of optimization okay it's a
+05:10 - little bit more abstract so we're gonna
+05:12 - stick to this representation where our
+05:16 - map is gonna be a grid our walls are
+05:18 - gonna be blank grids that you can't
+05:20 - travel in and our path finding algorithm
+05:23 - will just look at all the tiles
+05:25 - individually okay so our task will be to
+05:28 - represent this data in our code so our
+05:33 - grid is going to be a bunch of squares
+05:36 - right and they will just be labeled by
+05:39 - their grid position and any tile that's
+05:45 - a wall just shouldn't be in the grid at
+05:48 - all all right if there is no two comma
+05:52 - one then there's no way to connect to it
+05:55 - so so we'll just keep a list of the
+05:59 - walls and those will be the ones that we
+06:01 - ignore every other tile we look at and
+06:05 - any tile that we have we just need to be
+06:07 - able to calculate what its neighbors are
+06:09 - right which in if it's in the middle is
+06:13 - gonna be all four but if we're on an
+06:16 - edge or in a corner linear a wall we
+06:19 - need to make sure that we only connect
+06:22 - to the adjacent ones so we'll need to be
+06:24 - able to calculate for any given tile
+06:26 - what are its neighbors
+06:30 - okay so we're going to do that by using
+06:33 - by setting up a new object or a new
+06:37 - class so we're gonna call this a square
+06:43 - grid and it's starting parameters are
+06:51 - just going to be we're gonna tell it
+06:52 - what width and height we want and we'll
+06:56 - store those as properties so that we can
+07:01 - access them anytime we want and then the
+07:06 - walls are just going to be a list it'll
+07:10 - be a list of what tiles have walls in
+07:13 - them okay I'm also going to make a list
+07:16 - here of what connections are allowed and
+07:21 - what I mean by that are which directions
+07:23 - from from any given tile which
+07:25 - directions can you travel in okay and in
+07:29 - the grid that we drew obviously you can
+07:33 - move up down left and right and so since
+07:35 - our nodes are going to be our handy PI
+07:38 - game vectors we're going to make a list
+07:41 - of all the directions that you can
+07:44 - travel in you can travel to the right
+07:46 - you can travel to the left you can
+07:49 - travel up I'm sorry
+07:52 - down would be positive one or you can
+07:55 - travel up those are the four directions
+08:00 - now if you were to be on a grid where
+08:04 - you allowed diagonal travel you could
+08:06 - add those as well right you could add
+08:08 - one one and say you could travel down
+08:11 - into the right and so forth but we're
+08:13 - not going to do that we're only allowing
+08:15 - up down left and right and that'll help
+08:19 - us calculate what neighbors a given cell
+08:22 - has and that's what we need to do next
+08:26 - is we need to calculate you define the
+08:28 - neighbors of any given node
+08:34 - right so if we pass a node what are the
+08:37 - neighbors of that node well the
+08:42 - neighbors start with the neighbors are
+08:45 - going to be taking this node and adding
+08:51 - each of these vectors to it all right
+08:54 - and we'll get four neighbors so we want
+08:57 - to take the node plus connection for for
+09:15 - each connection in that list of
+09:17 - connections we're going to add it to
+09:18 - note and then we're going to have a list
+09:20 - of vectors at the end of this that has
+09:22 - those in it and that's fine except for
+09:28 - the case where you know one or more of
+09:30 - these isn't legal because we were on an
+09:33 - edge or we were next to a wall so we
+09:36 - need to take these four vectors that we
+09:39 - have and we need to filter them out and
+09:42 - we need to filter out the ones that are
+09:44 - in the walls or outside of the bounds
+09:48 - and the easiest way to do that in Python
+09:52 - is using the filter function so there's
+09:55 - a function called filter in Python takes
+09:59 - two arguments okay
+10:00 - the second argument is what sequence
+10:04 - you're filtering right we're gonna
+10:05 - filter the neighbors list and the first
+10:09 - argument is what function you want to
+10:13 - apply to that to filter it out and this
+10:17 - function will be a function that can
+10:19 - return true or false right so it looks
+10:23 - at the list apply some criteria that can
+10:28 - result in true or false and then what
+10:31 - you get back out of the filter list or
+10:33 - the out of the filter function is which
+10:35 - ones were true right so we have a couple
+10:41 - of things we want to check first we need
+10:44 - to just check if that
+10:46 - note that we're adding here is in bounce
+10:49 - right is is it a inbounds move so let's
+10:53 - define a function called in bounce just
+10:59 - to check if a node is in the bounds of
+11:04 - the grid and what that means is you know
+11:09 - if we have a grid that's 10 10 tiles
+11:12 - wide then the legal values for X are
+11:16 - from 0 to 9 right and for y it's between
+11:20 - 0 and height minus 1 all right so so we
+11:25 - just need to check if that is the case
+11:27 - and we can do that by just saying my
+11:34 - cursor is if we just want the X to be
+11:41 - between 0 less than or equal to 0 and
+11:47 - [Music]
+11:49 - less than with but not equal to all
+11:52 - right and also the same is true with
+11:54 - left all right if both of those things
+12:00 - are true then the tile is in bounce that
+12:05 - note is in bounds so we'll use that in
+12:12 - bounce and we'll just assign that back
+12:15 - to neighbors okay so now our neighbors
+12:20 - list instead of having the for all for
+12:24 - in it will have just the ones that were
+12:26 - in bounce okay now we need to do the
+12:29 - same thing again to filter out if it's a
+12:36 - possible tile meaning there's no ball
+12:38 - there
+12:41 - all right so let's define possible and
+12:51 - this just means tell us if it is not in
+12:59 - all right as long as the note is not in
+13:02 - the walls and we're good I just noticed
+13:05 - I just put X but I need that's supposed
+13:08 - to be no dot X and no dot Y ok so now we
+13:15 - should have a list let's let's print it
+13:19 - out just to test and be sure it's true
+13:25 - what we really want to do is return it
+13:29 - right but let's print it out so we can
+13:31 - see if our make sure our filters are
+13:35 - working right and we're finding the
+13:37 - neighbors so we can test that out I've
+13:40 - actually already gone down here and I've
+13:42 - said I've created a square grid that's
+13:44 - five by four and I've added two walls
+13:46 - and that's actually so that it will
+13:49 - match exactly what we have what we had
+13:52 - here in our little example
+13:56 - all right I have walls at 2 comma 1 and
+13:59 - 2 comma 2 so I've created that grid
+14:03 - that's 5 by 4 and add those two walls
+14:06 - and now let's find the neighbors of 0 0
+14:08 - and the neighbors of 3 2 and hopefully
+14:12 - we'll get the right answers let's see
+14:14 - what happens ok oh so you see when we
+14:21 - print we're printing out and it's
+14:22 - printing a filter object ok what that
+14:26 - means is when you run the filter command
+14:30 - or when you're in the filter function
+14:32 - what it returns is a filter object which
+14:34 - is which is an iterable
+14:37 - I'm just something you can loop over and
+14:39 - do things with but you can't just print
+14:40 - it out directly so we need to print out
+14:43 - that as a list
+14:48 - okay so that's our problem there all
+14:53 - right there we go
+14:53 - so the neighbors of 0 0 R 1 0 and 0 1 so
+14:58 - you can see it filtered out negative 1 0
+15:01 - and 0 negative 1 and then the neighbors
+15:04 - of 3 2 are everything but 2 - I actually
+15:10 - didn't include 2 2 because 2 2 was in
+15:13 - the list of walls ok so our neighbor
+15:16 - function is our fine neighbors function
+15:20 - is working so let's just not write that
+15:23 - out ok then the last thing I'm going to
+15:28 - add to the square grid here so that
+15:30 - we'll be able to see it is it's just a
+15:35 - draw method I'm just going to draw the
+15:37 - walls where they're supposed to be so
+15:44 - we're just going to go through the walls
+15:47 - and figure out where their rectangles
+15:51 - are supposed to be it's going to be a
+15:54 - rectangle at node I'm sorry at wall
+15:59 - times tile signs right that's going to
+16:04 - give us the location because wall is a
+16:08 - vector so that's gonna give us the X and
+16:09 - the y and then the width and height are
+16:12 - just also tile size by not size and then
+16:19 - we just PG draw rect screen and that
+16:28 - light gray color that rectangle so that
+16:31 - way we'll be able to draw them we can
+16:34 - test that out just by doing
+16:39 - g-got draw and we should get a couple of
+16:44 - walls at tu1 and tu2
+16:48 - okay so let's get rid of this test grid
+16:52 - and what we're going to do is we're
+16:53 - gonna make it the size that we specified
+16:57 - up top grid width by grid height so
+17:03 - that's gonna be how big our Gradius and
+17:05 - we need to be able to add and remove
+17:06 - walls and it's the easiest way to do
+17:08 - that is going to be to be able to click
+17:10 - on the screen and draw walls and remove
+17:13 - them so we want to detect mouse clicks
+17:18 - so in our event loop here we're going to
+17:25 - say if event if it's a mouse button down
+17:33 - so it's a mouse button down event then
+17:36 - we need to get the mouse position right
+17:42 - and that's going to tell us what screen
+17:44 - coordinates are click was at but let's
+17:48 - make that a let's make that a vector
+17:50 - since we are gonna be working with
+17:53 - vectors the other ones now we have the x
+17:55 - and y of on the screen of where the
+18:00 - person clicked right but we want the
+18:03 - tile coordinates so we need to divide by
+18:05 - tile size and then we'll get the integer
+18:09 - values right because we're doing integer
+18:12 - division and so now we can say if you
+18:20 - vet button
+18:26 - I'm sorry equals one so if we could done
+18:29 - if we click the left mouse button then
+18:31 - whatever tile we clicked on we want to
+18:34 - if there's no wall there we want to add
+18:37 - a wall there but there is a wall there
+18:40 - we want to delete the wall there so we
+18:43 - want to just basically toggle walls so
+18:48 - if it's in the walls list and we want to
+18:56 - remove it right otherwise we want to add
+19:02 - it okay and we're drawing them so we
+19:11 - should be able to click and add walls
+19:13 - now okay and so you can go along and add
+19:25 - however you like okay alright and we are
+19:36 - done we have everything we need to
+19:39 - create our graph to add and remove walls
+19:45 - so that we can test the pathfinding and
+19:47 - see how the paths change as we add and
+19:49 - remove walls and in the next video we'll
+19:51 - start building our path finding
+19:54 - algorithms we'll start with simple ones
+19:55 - and then we'll improve them as we go and
+20:00 - thanks for watching and I'll see you in
+20:01 - the next video
+20:09 - you
+
+Cleaned transcript:
+
+hi welcome back to another indepth game development video series in this next set of videos we're going to be talking about path finding in this first part we're going to explore what path finding is and define some of the concepts we'll need to know to implement them and in subsequent videos we will explore some different path finding algorithms and how you can implement them in your games first let's talk about what we mean by path finding so I have a simple PI game program here that just draws a grid that's gonna represent our game screen and the map that we're gonna be moving around on before we start writing any code we need to talk a little bit about how we're gonna represent the data for our map and path finding algorithms work on something called a graph and a graph looks like this this is a graph is a mathematical construct where you have nodes that's what these circles are and the nodes have connections between them and if you notice these connections have arrows on them which means they are directional from a you can travel to B but from B you can't travel back to a and path finding algorithms work by traversing the connections in the graph and finding the path from your desired starting point to your desired ending point for example if I am starting on E and I want to travel to a then the path is going to be to move to D and to be and to see them to a and so a path finding algorithm the inputs would be the start and the end and it would tell you the list of the connections that you have to travel to get there and so in most 2d games we're representing our map as a grid of squares and so your graph could be a grid that looks like this or each tile on the grid here's a node and the connections are all of the edges all the each node is connected to its adjacent neighbors and this is fine this works fine from here you can travel along this path to whatever other node your destination is and for example if you wanted to have some walls then your graph would look like this right and so the path would have to go around the walls if you wanted to get from one side to the other however something that you need to take into account is that graph algorithms are faster when there are fewer nodes so the more nodes you have the longer it's going to take to calculate all the different paths and find the shortest one so for example let's look at this map so here's a map of tiles this map is 640 tiles 32 by 20 so the if we were using a square grid the path finding algorithm would have to look at each one of these tiles and find and all the connections between them to get from any point to any other point but we could make this a lot more efficient if we thought about the fact that if you're starting in this room over here and you're heading for this target the difference between this tile and this tile the path is going to be almost the same so you might want to represent your path finding graph like this just using nodes where there are doors or in the middle of the room right and then now we only have 22 nodes in our graph instead of 640 so this is gonna be a lot faster to calculate and so if your mob was say over here in this room and your target is over here then you would just say travel towards the nearest node and then follow the path on the grid I mean sorry on the graph and towards the closest node to the target and then your your mob would find from wherever it is what the closest are what the shortest path is towards that target and then it would be close enough to go straight towards it and we'll talk about that a little bit later once we have our algorithm set up and we're starting to do some path finding but to start with just to keep things simple we're gonna stick to the square grid representation so that our graph our path finding graph is going to match our map grid we will talk a little bit later once we have it working about how we can do this kind of optimization okay it's a little bit more abstract so we're gonna stick to this representation where our map is gonna be a grid our walls are gonna be blank grids that you can't travel in and our path finding algorithm will just look at all the tiles individually okay so our task will be to represent this data in our code so our grid is going to be a bunch of squares right and they will just be labeled by their grid position and any tile that's a wall just shouldn't be in the grid at all all right if there is no two comma one then there's no way to connect to it so so we'll just keep a list of the walls and those will be the ones that we ignore every other tile we look at and any tile that we have we just need to be able to calculate what its neighbors are right which in if it's in the middle is gonna be all four but if we're on an edge or in a corner linear a wall we need to make sure that we only connect to the adjacent ones so we'll need to be able to calculate for any given tile what are its neighbors okay so we're going to do that by using by setting up a new object or a new class so we're gonna call this a square grid and it's starting parameters are just going to be we're gonna tell it what width and height we want and we'll store those as properties so that we can access them anytime we want and then the walls are just going to be a list it'll be a list of what tiles have walls in them okay I'm also going to make a list here of what connections are allowed and what I mean by that are which directions from from any given tile which directions can you travel in okay and in the grid that we drew obviously you can move up down left and right and so since our nodes are going to be our handy PI game vectors we're going to make a list of all the directions that you can travel in you can travel to the right you can travel to the left you can travel up I'm sorry down would be positive one or you can travel up those are the four directions now if you were to be on a grid where you allowed diagonal travel you could add those as well right you could add one one and say you could travel down into the right and so forth but we're not going to do that we're only allowing up down left and right and that'll help us calculate what neighbors a given cell has and that's what we need to do next is we need to calculate you define the neighbors of any given node right so if we pass a node what are the neighbors of that node well the neighbors start with the neighbors are going to be taking this node and adding each of these vectors to it all right and we'll get four neighbors so we want to take the node plus connection for for each connection in that list of connections we're going to add it to note and then we're going to have a list of vectors at the end of this that has those in it and that's fine except for the case where you know one or more of these isn't legal because we were on an edge or we were next to a wall so we need to take these four vectors that we have and we need to filter them out and we need to filter out the ones that are in the walls or outside of the bounds and the easiest way to do that in Python is using the filter function so there's a function called filter in Python takes two arguments okay the second argument is what sequence you're filtering right we're gonna filter the neighbors list and the first argument is what function you want to apply to that to filter it out and this function will be a function that can return true or false right so it looks at the list apply some criteria that can result in true or false and then what you get back out of the filter list or the out of the filter function is which ones were true right so we have a couple of things we want to check first we need to just check if that note that we're adding here is in bounce right is is it a inbounds move so let's define a function called in bounce just to check if a node is in the bounds of the grid and what that means is you know if we have a grid that's 10 10 tiles wide then the legal values for X are from 0 to 9 right and for y it's between 0 and height minus 1 all right so so we just need to check if that is the case and we can do that by just saying my cursor is if we just want the X to be between 0 less than or equal to 0 and less than with but not equal to all right and also the same is true with left all right if both of those things are true then the tile is in bounce that note is in bounds so we'll use that in bounce and we'll just assign that back to neighbors okay so now our neighbors list instead of having the for all for in it will have just the ones that were in bounce okay now we need to do the same thing again to filter out if it's a possible tile meaning there's no ball there all right so let's define possible and this just means tell us if it is not in all right as long as the note is not in the walls and we're good I just noticed I just put X but I need that's supposed to be no dot X and no dot Y ok so now we should have a list let's let's print it out just to test and be sure it's true what we really want to do is return it right but let's print it out so we can see if our make sure our filters are working right and we're finding the neighbors so we can test that out I've actually already gone down here and I've said I've created a square grid that's five by four and I've added two walls and that's actually so that it will match exactly what we have what we had here in our little example all right I have walls at 2 comma 1 and 2 comma 2 so I've created that grid that's 5 by 4 and add those two walls and now let's find the neighbors of 0 0 and the neighbors of 3 2 and hopefully we'll get the right answers let's see what happens ok oh so you see when we print we're printing out and it's printing a filter object ok what that means is when you run the filter command or when you're in the filter function what it returns is a filter object which is which is an iterable I'm just something you can loop over and do things with but you can't just print it out directly so we need to print out that as a list okay so that's our problem there all right there we go so the neighbors of 0 0 R 1 0 and 0 1 so you can see it filtered out negative 1 0 and 0 negative 1 and then the neighbors of 3 2 are everything but 2 I actually didn't include 2 2 because 2 2 was in the list of walls ok so our neighbor function is our fine neighbors function is working so let's just not write that out ok then the last thing I'm going to add to the square grid here so that we'll be able to see it is it's just a draw method I'm just going to draw the walls where they're supposed to be so we're just going to go through the walls and figure out where their rectangles are supposed to be it's going to be a rectangle at node I'm sorry at wall times tile signs right that's going to give us the location because wall is a vector so that's gonna give us the X and the y and then the width and height are just also tile size by not size and then we just PG draw rect screen and that light gray color that rectangle so that way we'll be able to draw them we can test that out just by doing ggot draw and we should get a couple of walls at tu1 and tu2 okay so let's get rid of this test grid and what we're going to do is we're gonna make it the size that we specified up top grid width by grid height so that's gonna be how big our Gradius and we need to be able to add and remove walls and it's the easiest way to do that is going to be to be able to click on the screen and draw walls and remove them so we want to detect mouse clicks so in our event loop here we're going to say if event if it's a mouse button down so it's a mouse button down event then we need to get the mouse position right and that's going to tell us what screen coordinates are click was at but let's make that a let's make that a vector since we are gonna be working with vectors the other ones now we have the x and y of on the screen of where the person clicked right but we want the tile coordinates so we need to divide by tile size and then we'll get the integer values right because we're doing integer division and so now we can say if you vet button I'm sorry equals one so if we could done if we click the left mouse button then whatever tile we clicked on we want to if there's no wall there we want to add a wall there but there is a wall there we want to delete the wall there so we want to just basically toggle walls so if it's in the walls list and we want to remove it right otherwise we want to add it okay and we're drawing them so we should be able to click and add walls now okay and so you can go along and add however you like okay alright and we are done we have everything we need to create our graph to add and remove walls so that we can test the pathfinding and see how the paths change as we add and remove walls and in the next video we'll start building our path finding algorithms we'll start with simple ones and then we'll improve them as we go and thanks for watching and I'll see you in the next video you

@@ -1,0 +1,692 @@
+00:00 - Hello and welcome to
+another beginner's guide
+00:02 - to machine learning with
+ML5.js video on pose estimation
+00:06 - and posenet.
+00:07 - So this is the third, the last
+one that I'll do in this series
+00:10 - here about posenet.
+00:12 - First I looked at just what
+posenet is and how it works
+00:14 - and how you can get the key
+points of a human skeleton.
+00:17 - Then I took the output
+of the posenet model, all
+00:20 - those key points, and fed them
+into another neural network
+00:22 - to do pose classification,
+to recognize different poses
+00:25 - that I made with my body.
+00:27 - And in this grand
+finale pose video,
+00:31 - I will do exactly what I
+did in the previous video
+00:33 - with post classification.
+00:35 - But perform a regression.
+00:37 - So the final output instead
+of being a classifier,
+00:40 - am I making a Y, M, C, or A
+pose, I will make a regression.
+00:45 - What do I mean by that exactly?
+00:47 - So to review, the setup
+I have is as follows.
+00:51 - [MUSIC PLAYING]
+00:58 - The system starts with an image.
+01:01 - It sends that image into
+the pre-trained posenet
+01:04 - machine learning model.
+01:05 - That model performs pose
+estimation and gives as its
+01:09 - output 17 x,y pairs.
+01:13 - Wrist, elbow, shoulder,
+shoulder, elbow, wrist,
+01:16 - et cetera, et cetera, et cetera.
+01:17 - And then I take all
+of those and feed them
+01:20 - into another neural network,
+an ML5 neural network, which
+01:24 - then classifies those key
+points as Y, M, C, or A.
+01:29 - So that's the process that I've
+built in the first two videos.
+01:32 - I want the final output to
+no longer be categorical.
+01:35 - It's not one of four option.
+01:37 - The final output is any number.
+01:39 - So you could think of
+it as the final output
+01:41 - is going to control a slider.
+01:43 - And that slider is going
+to have some sort of range.
+01:46 - So what I did previously in
+other examples of regression
+01:50 - in this full series
+if you go back,
+01:52 - I used a neural network to
+output a frequency value
+01:56 - to play a musical note.
+01:57 - So I certainly
+could do that here.
+01:59 - I could train the
+machine learning model
+02:02 - to play the note
+[SINGING] for this pose
+02:06 - and [SINGING] for this pose.
+02:08 - And I could actually have
+something that output like
+02:10 - [SINGING].
+02:14 - So I could go and do that.
+02:15 - And boy wouldn't
+that be fun to watch?
+02:18 - But I want to do
+something different.
+02:19 - That I'll leave as
+an exercise to you.
+02:21 - Make a gesture or posed
+based musical instrument.
+02:26 - I am going to control color.
+02:28 - And this comes from a project
+that I referenced inspired
+02:31 - by a viewer, Darshawn, who made
+a project that does an output.
+02:35 - Because specifically what
+I want to demonstrate
+02:37 - here is that the
+regression output doesn't
+02:39 - have to be a single number.
+02:41 - In this case, I want
+to have three values.
+02:45 - And I'm going to think of
+those values as an R for red,
+02:49 - a G for green, and a B for blue.
+02:52 - So I can say things like,
+and the training can be,
+02:57 - this pose is this
+particular color.
+02:59 - This pose is this
+particular color.
+03:02 - And then this pose is this
+other particular color.
+03:06 - And then as I move,
+it will interpolate
+03:09 - between those colors by trying
+to guess the value according
+03:13 - to the regression.
+03:15 - Now I'm ready to start
+implementing this in code.
+03:19 - So I'm not going to
+write everything again.
+03:21 - I'm going to start from
+the pose classifier.
+03:23 - And the first thing
+that I need to do
+03:25 - is adjust the configuration
+of the neural network.
+03:28 - The differences instead of four
+categorical outputs, Y, M, C,
+03:33 - or A, I just need three
+continuous outputs.
+03:37 - So I could actually just
+change this number to three.
+03:40 - Because it's still a number
+of outputs but the task
+03:43 - is now regression.
+03:44 - The other thing I
+really need to do
+03:46 - is think about during
+the training process,
+03:50 - how am I going to create
+these target values?
+03:53 - And this is going
+to be really tricky.
+03:55 - So maybe this color
+scenario isn't the best one.
+03:58 - I only was one person here.
+04:00 - But I think to
+demonstrate this idea,
+04:03 - the best way would be for me
+to make these literal sliders.
+04:06 - So I'm going to
+adjust the sliders
+04:08 - and make the target
+outputs based
+04:10 - on the position of the sliders.
+04:12 - And then when I actually
+deploy the model,
+04:14 - the model will control
+the sliders themselves
+04:16 - and I'll see the color.
+04:18 - I think that's going to work.
+04:19 - So this target label is no more.
+04:21 - I don't have a target label,
+there's no categorical output.
+04:24 - Instead I'm going
+to have sliders.
+04:26 - So let's comment this out and
+say, three sliders four red,
+04:31 - green, and blue.
+04:34 - They're all going to have
+a range between 0 and 255
+04:36 - with some default
+value, in this case 0.
+04:41 - And I'll have the sliders
+start with red at 255 and G
+04:46 - and B at 0.
+04:47 - So we can see these
+are the sliders
+04:49 - that I'm now going to control.
+04:50 - And match their positions
+with a given pose.
+04:53 - Now if you recall, I had
+this horribly awkward,
+04:56 - for a variety of
+reasons, interface.
+04:58 - As in, no interface at
+all with just key presses
+05:02 - to set a label.
+05:02 - And then I'd have
+this, like, callback
+05:04 - hell with nested set time outs.
+05:06 - Let me improve this for a
+little bit for this round.
+05:09 - So one thing that I
+can do to improve this,
+05:11 - and I haven't been using this
+throughout this video series,
+05:13 - I've been staying away from it.
+05:15 - But I'm going to replace this
+with something called async
+05:19 - and await.
+05:19 - These are key words that
+operate in JavaScript.
+05:23 - They're part of ES 8 which is
+a newer version of JavaScript
+05:26 - that allows me to have
+asynchronous events happen much
+05:29 - more sequentially in the code.
+05:31 - And I've covered this
+previously in several videos.
+05:33 - If you haven't seen
+that, you'll want
+05:34 - to go watch those or read up
+about promises and async and a
+05:37 - await somewhere else.
+05:38 - But what I'm
+actually going to do
+05:39 - is I'm just going
+to go get the code
+05:41 - from a very specific video where
+I wrote this delay function.
+05:44 - I'm going to bring that in here.
+05:46 - And then I'm going to change
+key press to use async and await
+05:50 - with that delay function.
+05:51 - And let me just do that and
+then explain what I mean.
+05:54 - [MUSIC PLAYING]
+05:58 - Oh, it is so lovely, look at it.
+06:00 - Look at this nice sequential
+code that's, like,
+06:03 - set the target label, console
+log it, wait 10 seconds,
+06:06 - then do this.
+06:08 - Then wait 10 more
+seconds, then do this.
+06:10 - Isn't this lovely?
+06:11 - It is really worth
+taking some time
+06:13 - to read up and explore async
+and await so that you can have
+06:17 - some much more readable code.
+06:18 - This is all still
+happening asynchronously.
+06:21 - JavaScript, everything
+happens asynchronously.
+06:23 - This is just sweet
+syntactic sugar
+06:25 - to make our lives a little
+bit more joyful today.
+06:30 - But, ah, that's not really
+the content of this video.
+06:34 - That's not the topic.
+06:35 - The topic is, I don't have
+a target label anymore.
+06:38 - What I have is--
+06:42 - and actually, let's just
+change this to if key equals--
+06:46 - like, I'm no longer
+going to be collecting
+06:50 - a particular key press.
+06:52 - So let's just have
+the collection
+06:54 - moment happen when I do--
+06:56 - so D for data.
+06:58 - And then I'm going to
+have a target color.
+07:04 - And it's going to be an
+array with the values of all
+07:07 - the sliders.
+07:08 - [MUSIC PLAYING]
+07:13 - So the idea is that when
+I pressed the D key,
+07:18 - I'm going to pull the
+values from the sliders.
+07:20 - I'm going to set that
+to a target color.
+07:22 - I'm going to wait 10 seconds
+so I can get in position.
+07:25 - And then start the
+collecting process,
+07:27 - collect for 10 seconds,
+and then jump out.
+07:29 - Now it would be much
+better interaction wise
+07:31 - if I could manipulate
+the sliders
+07:33 - while I'm making the pose.
+07:34 - And if I could just,
+like, open the magic door
+07:36 - and have a volunteer come
+in and help me with this,
+07:38 - that might make more sense.
+07:39 - But I guess I didn't
+think of that in advance
+07:41 - so I'll do that another time.
+07:43 - I also think that I'm
+going to be able to get
+07:45 - into position a little faster.
+07:46 - So let me change this to 3,000.
+07:48 - But I haven't done
+the important part.
+07:51 - This target color needs to
+replace the target label
+07:54 - when I collect the data.
+07:55 - That's happening right here.
+07:56 - So previously I had
+this target label
+07:58 - that was a character
+that I put into an array.
+08:00 - And then passed it and add data.
+08:02 - I think I can get rid of this
+now and just say target color.
+08:06 - So this should be good.
+08:07 - OK, dare I say that I can
+collect this data now?
+08:11 - Oh, the chat thankfully
+is pointing out
+08:13 - that I missed
+adjusting these to G
+08:15 - and B. Oh, that would have
+really gotten me later,
+08:18 - thank you.
+08:19 - So I think also I
+just want to collect
+08:21 - data for, like, 3 seconds.
+08:24 - Because I'm going to do
+things like set the color,
+08:27 - set the color.
+08:27 - I'm going to move my
+arms maybe like this.
+08:30 - And then just set a
+lot of different colors
+08:32 - with lots of in-between states.
+08:33 - That'll really show, I think,
+the regression more clearly.
+08:37 - Let me also console log what
+colors there just so I see it.
+08:41 - I'm going to start
+with the sliders
+08:42 - in their original position.
+08:45 - And press D. One, two, three.
+08:52 - Collecting.
+08:55 - OK, I got some data.
+08:56 - Now let me adjust the
+slider a little bit.
+08:58 - Let me add some of this color.
+09:01 - I really should pick something
+where I could see what it is.
+09:04 - Oh well, next time.
+09:05 - Add, press D.
+09:10 - Wait, happened to my pose?
+09:12 - Uh-oh, I have a bug.
+09:15 - Bug, bad bug.
+09:17 - Bad, bad, bad bug.
+09:18 - I re-declared target color.
+09:20 - I'm making it a global variable
+so that I can use it across.
+09:26 - I mean, there's ultimately a
+nicer way to organize the code.
+09:30 - But I want it to be
+a global variable.
+09:31 - So I set it here and then when
+I'm adding it I get it here.
+09:36 - That was the problem, OK.
+09:38 - Now, let's collect some data.
+09:41 - Collecting, OK.
+09:44 - Now, let me move
+the sliders around.
+09:46 - I really should
+visualize the color.
+09:48 - But what are you going to do?
+09:50 - I'll just add a little green and
+take away a little bit of red.
+09:53 - I don't know.
+09:54 - And press D again.
+09:57 - And, where was I?
+09:59 - I'll go like this.
+10:02 - Really make this
+pretty arbitrary.
+10:04 - Oh, it really would be good
+for me to see what I'm doing.
+10:08 - I'll make this pose.
+10:11 - Let's do this.
+10:18 - So you, following
+this along, if you're
+10:21 - going to try to
+build the same thing,
+10:23 - think about how you might
+really thoughtfully make
+10:25 - a bunch of colors with
+a defined set of poses
+10:28 - that means something to you.
+10:30 - I'm doing this
+somewhat arbitrarily
+10:32 - just to see if we
+get some results.
+10:34 - Now I could hit S
+to save the data.
+10:38 - And I have a nice JSON
+file, this default name
+10:41 - that downloaded.
+10:42 - Let me change this
+to color poses.
+10:45 - Let's take a look at
+in Visual Studio code
+10:47 - just to make sure
+it makes sense.
+10:49 - Looks like it does.
+10:50 - It's got a bunch of X's, 34.
+10:53 - It's got some Y's.
+10:54 - The Y's are the outputs, and
+it's an R, G, and B value.
+10:57 - So I could have done the thing
+where I named the outputs.
+11:01 - If I wanted to have
+names show up in the data
+11:05 - I could change this to--
+11:06 - [MUSIC PLAYING]
+11:08 - So ML5, the neural network
+is just dealing with numbers.
+11:12 - But ML5 will allow you to
+specify names of the output
+11:16 - so that when you
+get them back later
+11:17 - you can figure out
+which is which.
+11:19 - But I'm just going to
+remember there's three
+11:21 - and they're in the order, red
+is 0, green is 1, blue is 2.
+11:24 - That'll be simpler right now.
+11:27 - Now I can go to the
+training the model stage.
+11:30 - So the truth of the
+matter is, I could add
+11:32 - and key press another option.
+11:33 - I press tree T, it
+trains the model.
+11:35 - But the way I made
+my classifier,
+11:37 - I did those in three
+separate sketches.
+11:39 - Collect data, train the
+model, deploy the model.
+11:42 - So I'm going to keep
+going in that way.
+11:44 - I'm going to open up the model
+training sketch from before.
+11:48 - I duplicated it and
+renamed it to regression.
+11:51 - The only thing that
+I need to change here
+11:52 - is the outputs are three,
+the task is classification.
+11:55 - And then I need a new data file.
+11:59 - So I'm going to delete
+other data files I have
+12:02 - and upload my new file.
+12:07 - Load that file.
+12:10 - And then everything is the same.
+12:12 - I'm just running
+the train function.
+12:15 - And then when it's
+done, save the model.
+12:16 - So there's very little that
+I need to change here, just
+12:19 - a different configuration.
+12:20 - Load a different data
+file and train the model.
+12:22 - I hope this works.
+12:24 - I really hope this works.
+12:25 - If you're watching
+this right now,
+12:27 - you don't know how many times
+I've tried to get this to work
+12:29 - where it hasn't.
+12:31 - That's promising.
+12:33 - A little bit of wonky stuff
+going on, but it trained.
+12:36 - The loss went down.
+12:37 - I think I've gotten
+some results here.
+12:40 - And it looks like those
+files have downloaded.
+12:42 - And we could see
+those files there
+12:44 - in my downloads
+directory, which means
+12:46 - I can go to the last sketch,
+the one where I load the train
+12:50 - model and deploy it.
+12:51 - So I've opened that
+sketch, I've duplicated it,
+12:54 - and now I just want to
+delete the model files
+12:56 - and upload my new ones.
+13:02 - Files are uploaded.
+13:04 - Adjust the configuration
+of the network.
+13:08 - I'm going to delete
+some old code that's
+13:09 - no longer being used.
+13:12 - And I don't have
+a label anymore.
+13:14 - This shouldn't be called
+classify pose anymore.
+13:17 - Let's just call it predict,
+predict pose or predict color.
+13:22 - Call it predict color.
+13:24 - And this should be the brain.
+13:27 - Because I'm doing
+regression I shouldn't
+13:28 - call the classify function.
+13:30 - I should call the
+predict function.
+13:34 - This changes to predict color.
+13:36 - And now the main
+work here is I need
+13:38 - to change what happens
+when I get the results.
+13:41 - So before I was looking
+at a confidence score
+13:43 - and getting a label.
+13:44 - Now I just want the raw
+red, green, and blue values.
+13:48 - So this should change
+to predict color.
+13:52 - Let me just console
+log the results.
+13:58 - So let's see what
+the results look
+13:59 - like in the case
+of a regression.
+14:01 - They'll be formatted
+differently than when
+14:03 - it came as the classification.
+14:04 - It's no longer a
+sorted list of labels
+14:06 - ordered by confidence score,
+sorted by confidence score.
+14:09 - Let me also make sure to comment
+out this post label, which
+14:11 - no longer gets drawn.
+14:13 - We're just going to
+look at the console now.
+14:15 - So in theory the first
+pose that it sees,
+14:17 - I should get an
+output here that has
+14:19 - red, green, and blue values.
+14:21 - Uh-oh, I don't see any values.
+14:26 - What happened?
+14:28 - Oh, for some reason
+the path says model 2.
+14:34 - I've been messing
+around with this code
+14:36 - and that says model 2.
+14:37 - Weird that it didn't give me an
+error like it couldn't find it.
+14:40 - Is it in the--
+14:43 - oh, yeah.
+14:43 - It's saying failed to load here.
+14:45 - I don't know whose fault
+this is, whether the web
+14:47 - editor should be showing this
+or ML5 didn't log it correctly.
+14:50 - But that's definitely
+the problem.
+14:54 - Path is model.
+14:56 - Let's try this again.
+14:59 - No pose, no pose, no
+pose, no pose, predicting.
+15:04 - And I'm seeing, oh, three
+objects, R, G, and B. Let's
+15:08 - take a look inside.
+15:10 - An R, G, and a B.
+An R, G, and a B.
+15:13 - So I should be able to
+use those values now
+15:15 - to set the positions of sliders.
+15:17 - Oh, I got to put the sliders in.
+15:19 - And then also I could
+just draw the color.
+15:21 - I kind of want to see
+the sliders move, though.
+15:22 - I think it would be fun.
+15:24 - [MUSIC PLAYING]
+15:29 - So I have three sliders there.
+15:31 - So now when I get the result,
+I can assign it to the slider.
+15:35 - So I can say R equals
+results index 0 dot value.
+15:40 - Pretty sure if I
+go back and look
+15:41 - at what was in
+that object, you'll
+15:43 - see there was an array
+of three objects.
+15:46 - And the red value was in
+a property called value.
+15:53 - And then there's 1 and
+2, so there were three.
+15:57 - Then I should be able to
+set the slider's position
+16:00 - to these values.
+16:04 - And then I also might
+as well add something
+16:06 - to draw the color.
+16:07 - So here before, when
+I was getting a label,
+16:12 - I drew it as text.
+16:14 - Let's draw a background
+overlay on the video
+16:17 - with a little bit of alpha.
+16:19 - Let's grab the values from
+the sliders which were set.
+16:24 - And set that at the
+background with some alpha.
+16:30 - Did I get this?
+16:30 - Let's run it.
+16:36 - OK, look at the colors moving.
+16:39 - The sliders are sliding based
+on whatever pose I'm making.
+16:42 - If only I could remember
+what it was that I did.
+16:46 - But anything is going to
+give me a predicted value.
+16:48 - I'm controlling
+sliders with my body.
+16:51 - It's all very arbitrary.
+16:52 - But hopefully you
+can see that if you
+16:56 - did this in a thoughtful
+way, maybe color
+16:58 - isn't the output that you want.
+16:59 - Maybe three isn't the
+number of regression outputs
+17:03 - that you want.
+17:03 - Maybe it's music and
+frequencies or this or that.
+17:07 - You must have a creative idea.
+17:08 - But you can see that if you
+can, as you're moving your body,
+17:13 - match the position of your
+body with some set of numbers
+17:17 - you could then train
+a model to learn
+17:19 - all of those relationships.
+17:21 - And then interpolate
+between them
+17:24 - as you move your body around.
+17:25 - So I imagine that there's a very
+creative, exciting, fun, unique
+17:30 - way of doing this.
+17:31 - And I hope that you
+will explore it.
+17:34 - So if you do, please
+share it with me.
+17:37 - There's a variety of
+different ways to do it.
+17:39 - You can find the page
+on TheCodingTrain.com
+17:42 - for this particular video.
+17:44 - Ask your questions in the
+chat, on social media,
+17:47 - all of the above.
+17:47 - We have a new Discord,
+which I'll just
+17:49 - happen to mention in
+this particular video.
+17:51 - Coding Train has a discord,
+you can find the link
+17:52 - to that in this
+video's description.
+17:53 - That's another way you can join
+the community and share what
+17:56 - you've done.
+17:56 - So thank you so much
+for sticking with me.
+17:59 - I don't know how easy
+this was to follow
+18:01 - or if this makes sense
+because I used so much
+18:03 - of the previous code in it.
+18:04 - So if you didn't watch
+those previous videos,
+18:06 - hopefully those would
+fill in some gaps for you.
+18:08 - But let me know.
+18:09 - I can always revisit
+this in a future video.
+18:11 - And thanks for watching goodbye.
+18:13 - [MUSIC PLAYING]

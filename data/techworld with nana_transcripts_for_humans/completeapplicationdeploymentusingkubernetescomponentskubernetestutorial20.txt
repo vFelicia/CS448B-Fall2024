@@ -1,0 +1,624 @@
+With timestamps:
+
+00:00 - in this video we're gonna deploy two
+00:02 - applications MongoDB and Express
+00:05 - and I chose this too because it
+00:08 - demonstrates really well a typical
+00:10 - simple setup of a web application and
+00:12 - its database so you can apply this to
+00:15 - any similar setup you have so let's see
+00:18 - how we're gonna do this so first we will
+00:27 - create a MongoDB pod and in order to
+00:30 - talk to that pot we are gonna need a
+00:31 - service and we're gonna create an
+00:33 - internal service which basically means
+00:35 - that no external requests are allowed to
+00:38 - the pod only components inside the same
+00:41 - cluster can talk to it and that's what
+00:42 - we want then we're going to create a
+00:44 -  Express deployment one we're going
+00:47 - to need a database URL of MongoDB so
+00:50 - that Express can connect to it and
+00:52 - the second one is credentials so
+00:55 - username and password of the database so
+00:57 - that it can authenticate so the way we
+00:59 - can pass this information to
+01:01 - Express deployment is through its
+01:03 - deployment configuration file through
+01:06 - environmental variables because that's
+01:08 - how the application is configured so
+01:10 - we're gonna create a config map that
+01:12 - contains database URL and we're gonna
+01:15 - create a secret that contains the
+01:17 - credentials and we're gonna reference
+01:19 - both inside of that deployment file so
+01:22 - once we have that setup we are gonna
+01:24 - need Express to be accessible
+01:26 - through a browser in order to do that
+01:29 - we're gonna create an external service
+01:30 - that will allow external requests to
+01:34 - talk to the pod so the URL will be HTTP
+01:38 - IP address of the node and the service
+01:41 - port so with this set up the request
+01:44 - flow will now look like this so the
+01:46 - request comes from the browser and it
+01:49 - goes to the external service of the
+01:51 -  Express which will then forward it
+01:53 - to the Express pod the pod will
+01:56 - then connect to internal service of
+01:58 - MongoDB that's basically the database
+02:01 - URL here and it will fall ready then to
+02:04 - I'm going to be pod where it will
+02:07 - authenticate the request using the
+02:09 - credentials so now let's go and create
+02:12 - this whole setup using
+02:13 - kubernetes configuration files let's
+02:16 - dive right into it and create the whole
+02:18 - setup so first of all I have a mini cube
+02:20 - class to run if I do cube city I'll get
+02:23 - all which basically gets me all the
+02:26 - components that are inside the cluster I
+02:28 - only have a default currently service so
+02:31 - my cluster is empty and I'm sorry from
+02:34 - scratch so the first thing that I said
+02:37 - we're gonna do is create a MongoDB
+02:39 - deployment I usually created in an
+02:43 - editor so I'm gonna go to visual studio
+02:46 - code and paste a prepared deployment
+02:51 - file there for MongoDB and this is how
+02:54 - it's gonna look like so I have
+02:56 - deployment kind and I have some metadata
+02:59 - I'm just gonna call it MongoDB
+03:01 - deployment labels and selectors in the
+03:05 - previous video I already explained the
+03:07 - syntax of kubernetes llamó configuration
+03:11 - file so if you want to know what all
+03:14 - these attributes mean then you can check
+03:16 - out that video and here in the template
+03:18 - I have a definition or blueprint for
+03:21 - pots that this deployment gonna create
+03:24 - and I'm just gonna go with one replica
+03:27 - so the container is gonna be called
+03:30 - MongoDB and this is the image that I'm
+03:32 - gonna take so let's actually go and
+03:34 - check out the image configuration for
+03:37 - I'm going to be so montgo and I see this
+03:46 - image here that's open this and
+03:48 - basically what I'm looking for is how to
+03:52 - use that container meaning what ports
+03:56 - it's gonna open
+03:57 - and what's external configuration it's
+03:59 - gonna take so a default port of MongoDB
+04:05 - container is twenty seven thousand
+04:07 - seventeen so I'm gonna use that and we
+04:11 - are gonna use variables environmental
+04:15 - variables the root username and root
+04:17 - password so basically I can on the
+04:20 - container startup define the admin
+04:23 - username and password so let's go ahead
+04:25 - and configure all the
+04:27 - inside the configuration file so here
+04:30 - below the image MongoDB so we're just
+04:33 - gonna leave the name of the image and is
+04:35 - gonna pull the latest one and that's
+04:38 - what we want so here I'm gonna specify
+04:40 - what port I want to expose so ports
+04:44 - attribute name and container port and
+04:53 - that's the standard port so I'm gonna
+04:55 - leave it
+04:55 - and below that I'm gonna specify those
+04:59 - two environments of variables so one is
+05:03 - called let's see what it's called it's
+05:06 -  DB username and here was gonna be
+05:11 - values so we're gonna actually leave it
+05:13 - blank for now and the other one is
+05:16 - called init root password and we're
+05:20 - gonna leave that blank as well just view
+05:23 - and once we have the values here we'll
+05:27 - gonna have a complete deployment for
+05:30 - MongoDB this is basically all we need
+05:31 - now note that this is a configuration
+05:34 - file that it's going to be checked into
+05:36 - a repository so usually you wouldn't
+05:39 - write admin username and password inside
+05:42 - the configuration file so what we're
+05:44 - gonna do now is we're gonna create a
+05:46 - secret from where we will reference the
+05:50 - values so meaning that the secret is
+05:54 - gonna be live in kubernetes and nobody
+05:56 - will have access to it in a git
+05:58 - repository so we're gonna save this in
+06:01 - complete deployment file first of all so
+06:04 - let's call it deployment or let's
+06:09 - just call it
+06:10 - yamo and save it here so that we get the
+06:16 - syntax highlight and now before we apply
+06:18 - this configuration we're going to create
+06:20 - the secret where the root username and
+06:22 - password we'll leave
+06:25 - so let's create a new file and I'm gonna
+06:28 - paste in the configuration of a secret
+06:31 - which is actually pretty simple so we
+06:33 - have a kind secret then we have a
+06:36 - metadata which again is just simply the
+06:38 - name we're gonna call it MongoDB secret
+06:41 - the type OPEC is actually a default type
+06:44 - which is the most basic key value secret
+06:47 - type other types for example include TLS
+06:50 - certificates so you can create a secret
+06:53 - specifically with the TLS certificate
+06:55 - type and a couple of more types but
+06:58 - mostly you're gonna use the default one
+06:59 - and these are the actual contents so you
+07:03 - have the data and here you have key
+07:05 - value pairs which of course are the
+07:08 - names you come up with so we're gonna
+07:11 - specify user name or we can actually
+07:13 - call it root username and we're
+07:20 - gonna call it root password and
+07:23 - here's the thing the values in in this
+07:27 - key value pairs are not plaintext so
+07:31 - when we are creating a secret the value
+07:33 - must be base64 encoded so the way you
+07:36 - can do that the simplest way is go to
+07:39 - your terminal so here I'm gonna say echo
+07:42 - - n very important option don't leave it
+07:45 - out otherwise it's not gonna work and
+07:47 - here I'm gonna put a plaintext value and
+07:50 - I want so I'm just gonna go with just
+07:53 - user name whatever of course you can
+07:56 - have something more secretive here and
+07:59 - I'm gonna base64 encoding and the value
+08:04 - that I get here I'm gonna copy it into
+08:07 - the secret configuration as a value and
+08:10 - I'm gonna do the same with password so
+08:13 - again I'm just gonna go with simple
+08:16 - password obviously you want to have
+08:17 - something more secure and I'm gonna copy
+08:21 - that it's a value here and save it is
+08:26 -  secret thoughts mo
+08:31 - okay now we have only written
+08:34 - configuration files we haven't created
+08:36 - anything yet in the cluster so this is
+08:39 - just preparation work and we have to
+08:42 - create secret before the deployment if
+08:44 - we're gonna reference the secret inside
+08:47 - of this so the order of creation matters
+08:49 - because if I'm creating a deployment
+08:51 - that reference is a secret that doesn't
+08:54 - exist yet I'm gonna get an error so it's
+08:57 - not gonna start since we have our first
+08:59 - component let's actually go ahead and
+09:01 - create our secret from a configuration
+09:03 - file so again I'm gonna go to my console
+09:07 - it's actually clear all this and I'm
+09:11 - gonna go into the folder where I'm
+09:14 - creating all this configuration files I
+09:15 - called it kubernetes configuration and
+09:18 - here I have both on my first so I'm
+09:21 - doing I'm gonna do cube city I'll apply
+09:25 - secret and secret create it so I'm gonna
+09:31 - do cube city I'll get secret and I
+09:35 - should see my secret has been created
+09:37 - this is something created by default
+09:39 - with a different type and this is our
+09:42 - secret here so now that we have our
+09:45 - secrets we can reference it inside over
+09:48 - deployment configuration file so let's
+09:51 - go back and this is how you reference
+09:54 - contents specific key value data of
+09:57 - secret so is there a value we're gonna
+10:00 - say value from and then I'm gonna do
+10:05 - secret key ref secret key reference and
+10:11 - name is gonna be the secret name so this
+10:15 - one here and key is gonna be the key in
+10:20 - the data I want the value of this key
+10:24 - value pair so I want this part of the
+10:26 - data so I'm gonna reference it by key so
+10:29 - you don't have to learn it by heart
+10:30 - obviously all the syntax and attribute
+10:33 - names important thing here is that you
+10:35 - know approximately how to reference it
+10:38 - the actual syntax you can always look up
+10:40 - in Google or maybe from previous
+10:42 - configuration files but
+10:44 - yeah this is how you reference it and
+10:45 - we're gonna do the same with password so
+10:48 - I'm gonna do from and I'm just gonna
+10:51 - copy the rest here remember llamo is
+10:57 - very strict with the indentation here is
+10:59 - the same secret but a different key so
+11:01 - I'm gonna use password key here and that
+11:07 - will be it so now we have the root
+11:11 - username and password referenced from
+11:14 - the secret and no actual values inside
+11:18 - the configuration file which is good for
+11:20 - security because you don't want your
+11:22 - credentials in your code repository okay
+11:26 - so our deployment file is actually ready
+11:28 - so let's apply that apply and the
+11:41 - deployment created meaning if I do get
+11:44 - all I should see the pod starting up the
+11:49 - deployment and the replica set so let's
+11:52 - actually check how pod is doing
+11:57 - container creating so let's actually
+12:01 - watch it might take some time to create
+12:03 - it if it takes long and if you want to
+12:06 - see whether there's a problem there you
+12:08 - can also do cube CTL described pod and
+12:12 - the pod name so at least we know
+12:15 - nothing's wrong there so we see that
+12:18 - it's just pulling the image so that's
+12:20 - what it takes so long so let's see again
+12:24 - cube City I'll get pot and as you see
+12:27 - it's running so we have more going to be
+12:30 - deployment and the pod one replica of
+12:33 - its pod running now the second step is
+12:35 - we're gonna create an internal service
+12:37 - so that other components or other parts
+12:41 - can talk to this MongoDB so let's go
+12:43 - ahead and create service configuration
+12:46 - so go back to Yemen and here we can
+12:50 - either create a separate mo
+12:52 - configuration file for secret or we can
+12:55 - also include it in the same way
+12:57 - so in yellow you can actually put
+12:58 - multiple documents in one file
+13:01 - so if I put three dashes that's
+13:04 - basically a syntax for document
+13:07 - separation in the mo so I need new
+13:09 - document is starting so actually I'm
+13:11 - going to put both deployment and service
+13:13 - in one configuration file because they
+13:15 - usually belong together so here I'm
+13:18 - gonna paste the service configuration
+13:20 - and by the way I'm gonna put all these
+13:23 - configuration files in git repository
+13:25 - and link the repository in the
+13:28 - description of this video so this is a
+13:31 - service for MongoDB let's go through
+13:33 - some of the attributes here so it's the
+13:35 - service kind just the name we're gonna
+13:39 - call it MongoDB service selector this is
+13:42 - an important one because we want this
+13:43 - service to connect to the pod right and
+13:46 - the way to do that is using selector and
+13:50 - label so using this here the labels that
+13:55 - deployment pod have service can find the
+13:58 - pots that it's going to attach to
+14:00 - alright so we have the selector here and
+14:03 - this is an important part where we
+14:06 - expose service port so this is gonna be
+14:10 - the service port and this is gonna be
+14:11 - the container and since we expose
+14:14 - container port it this address right
+14:17 - here these two have to match so target
+14:20 - port is container or pot port and this
+14:24 - is the service port and obviously these
+14:26 - two here can be different but I'm gonna
+14:30 - go with the same port and that's
+14:32 - basically it
+14:33 - that's our service so I'm gonna create
+14:35 - the service now so let's save this file
+14:38 - and go back to my console and I'm gonna
+14:42 - apply the same file that I applied
+14:47 - before to create deployment so let's see
+14:50 - what happens see both deployment and
+14:52 - service configuration but it's gonna
+14:54 - know that I haven't changed the
+14:55 - deployment that's what it means here and
+14:59 - service is created so if I were to edit
+15:02 - both for example I can reapply the file
+15:05 - and deployment and service can be
+15:07 - changed so I think using local
+15:10 - configuration
+15:11 - files is a handy way to edit your
+15:14 - components so now let's actually check
+15:16 - that our service was created get service
+15:21 - and this is our service and it's
+15:24 - listening at port twenty-seven thousand
+15:26 - seventeen and I showed it in one of the
+15:28 - previous videos but we can actually also
+15:31 - validate that the service is attached to
+15:33 - the correct pod and to do that I'm gonna
+15:36 - do describe service you know need the
+15:43 - service name for this so here I have the
+15:47 - endpoint which is an IP address of a pod
+15:51 - and the port where the application
+15:54 - inside the pod is listening it
+15:56 - so let's actually check that this is the
+15:58 - right pot I mean we just have one but
+16:00 - still so if I do get pot and I want
+16:04 - additional output to what I get by
+16:07 - default one of the columns includes the
+16:11 - IP address which is this one right here
+16:13 - so 172 point
+16:18 - 17:06 that's the pod IP address and this
+16:23 - is the port where the application inside
+16:25 - the pod is listening at so everything is
+16:29 - set up perfectly
+16:30 - MongoDB deployment and service has been
+16:32 - created and by the way if you want to
+16:34 - see all the components for one
+16:37 - application you can also display them
+16:42 - using Kip's ETL get all that will show
+16:44 - all the components and you can filter
+16:48 - them by name so DB and here you
+16:53 - see the service deployment replicas said
+16:58 - and the pod so when you do all that
+17:02 - component type will be the first here
+17:05 - okay that's just a side info so now the
+17:08 - next step we're gonna create
+17:11 - Express deployment service and also an
+17:13 - external configuration where we're gonna
+17:16 - put the database URL form I'm going to
+17:19 - be so let's go ahead and do it
+17:21 - so I'm gonna clear that up
+17:24 - go and create a new file for
+17:27 - Express deployment service so this is
+17:30 - the deployment draft of Express
+17:34 - same things here Express that's
+17:37 - the name and here we have the pod
+17:40 - definition where the image name is
+17:43 - Express let's actually go ahead and
+17:46 - check that image as well we don't need
+17:49 - this express and it's the name of the
+17:54 - image more Express and let's see the
+17:57 - same data here let's see the port the
+17:59 -  Express application inside the
+18:02 - container starts at is 80 81 and these
+18:08 - are some of the environmental variables
+18:10 - so obviously we need three things for my
+18:13 - workspace we need to tell it which
+18:15 - database application it should connect
+18:18 - to so obviously we need to tell it the
+18:20 - MongoDB address database address it
+18:23 - should connect to the internal service
+18:25 - and we we're gonna need credentials so
+18:28 - that MongoDB can authenticate that
+18:30 - connection and the environments of
+18:32 - variables to do that is going to be
+18:34 - admin username admin password and the
+18:37 - MongoDB endpoint will be this year so
+18:39 - these three environments of variables we
+18:41 - need so let's go ahead and use that so
+18:45 - first we're gonna open the port again
+18:49 - container ports and the reason why you
+18:55 - have multiple ports is that inside of
+18:57 - the pot you can actually open multiple
+18:59 - ports so that's gonna be a t1 and now
+19:04 - we're gonna add the environment
+19:06 - variables for the connectivity so the
+19:09 - first one is the username and this is
+19:13 - gonna be obviously the same username and
+19:15 - password that we defined right here so
+19:19 - what I'm gonna do is I'm just gonna copy
+19:21 - them because it's really the same so the
+19:23 - value from we're gonna read it from the
+19:25 - secret that's already there so I'm gonna
+19:29 - paste it here
+19:33 - second environmental variable is called
+19:36 - an password and I'm also going to copy
+19:40 - that from here and the third one is
+19:47 - gonna be the database server and since
+19:51 - this is also an external configuration
+19:53 - we could either do value here and we
+19:56 - could write the MongoDB server address
+19:59 - directly here or as I showed you in the
+20:02 - diagram at the beginning we can put it
+20:04 - in a config map which is an external
+20:06 - configuration so that it's centralized
+20:09 - so it's stored in one place and also
+20:11 - other components can also use it so for
+20:14 - example if I have two applications that
+20:17 - are using MongoDB database then I can
+20:20 - just reference that external
+20:22 - configuration here and if I have to
+20:24 - change it at some point I just change it
+20:26 - in one place and nothing else gets
+20:28 - updated so because of that we're gonna
+20:31 - keep this incomplete deployment
+20:34 - configuration and we're going to create
+20:37 - the config map which will contain the
+20:40 - MongoDB server address so I'm gonna
+20:43 - create a new file let's actually save
+20:45 - this incomplete deployment let's call it
+20:48 -  Express demo and we're gonna come
+20:51 - back to it later so save that now we
+20:56 - need a config map here so copy the
+20:59 - configuration and this is also pretty
+21:01 - simple just like secret you have the
+21:05 - kind which is config map the name and
+21:08 - the same construct see just like you saw
+21:11 - here
+21:12 - data which is key value pair it doesn't
+21:15 - have a type because there's just one
+21:18 - config map type and that's it and here
+21:20 - you'll again have key value pairs so
+21:23 - database URL and server name is actually
+21:26 - the name of the service it's as simple
+21:29 - as that
+21:30 - so what do we call our service we called
+21:32 - it MongoDB service so I'm gonna copy the
+21:35 - service name and that's gonna be the
+21:37 - database server URL so I'm gonna copy
+21:41 - that and let's actually call it
+21:43 - config map for consistency
+21:46 - and save it and just like with secret
+21:51 - the order of execution or creation
+21:53 - matters so I have to have a config map
+21:56 - already in the cluster so that I can
+21:59 - reference it so when we're done I have
+22:03 - to create the config map first and then
+22:05 - the deployment so the way that I can
+22:08 - reference the config map inside the
+22:12 - deployment is very similar to secret so
+22:15 - I'm actually gonna copy the whole thing
+22:17 - from secret here the only thing
+22:20 - different here is that instead of secret
+22:23 - I'm gonna say config map it's all
+22:28 - camelcase and obviously the name is
+22:31 - gonna be conflict map that's what we
+22:34 - called it I think yes that's the name
+22:37 - that's actually copied and again key is
+22:41 - the key in the key value pair here so
+22:43 - let's copy that as well
+22:45 - so now I have our manga request
+22:47 - deployment these are just standard stuff
+22:50 - and this is where the pod blueprint or
+22:53 - container configuration exists we have
+22:56 - exposed port 8081 this is the image with
+22:59 - latest tech and these are the three
+23:02 - environmental variables that manga
+23:05 - express needs to connect and
+23:07 - authenticate with MongoDB so deployment
+23:10 - is done and let's go ahead and create
+23:12 - config map first and then MA Express
+23:16 - deployment keep CTL applying config map
+23:26 - and I'm gonna do it
+23:28 - oopsie they'll apply always Express and
+23:36 - let's see the pot so container creating
+23:40 - looks good so let's see the pod and it's
+23:46 - running and I actually want to see the
+23:49 - locks so I'm gonna lock the
+23:52 - Express and here you see that Express
+23:57 - service started and database connected
+24:00 - so now the final step is to exes manga
+24:04 - Express from a browser and in order to
+24:06 - do that we are gonna need an external
+24:08 - service for Momo Express so let's go
+24:11 - ahead and create that one as well so
+24:13 - it's clear this output go back to visual
+24:16 - code and as we need last time in the
+24:18 - same file as a deployment I'm gonna
+24:21 - create more Express service because
+24:24 - actually in practice you never have
+24:27 - deployment without the service so it
+24:29 - makes sense to keep them together and
+24:31 - this is Express external service
+24:35 - and this configuration right now looks
+24:38 - exactly the same as the DB service
+24:42 - configuration and even ports are the
+24:44 - same like here I have exposed service
+24:47 - port at 80 81 and target port is where
+24:51 - the container port is listening so how
+24:54 - do I make this external service is by
+24:58 - doing two things so in the specification
+25:01 - section so I'm gonna do it below the
+25:05 - selector I'm gonna put a type and a type
+25:10 - of this external service is load
+25:12 - balancer which I think is a bad name for
+25:18 - external service because internal
+25:20 - service also acts as a load balancer so
+25:24 - if I had two MongoDB pots the internal
+25:26 - service would also load balance the
+25:28 - requests coming to these pots so I think
+25:31 - the load balancer type name was chosen
+25:34 - not very well because it can be
+25:36 - confusing but what this type load
+25:38 - balancer does basically is it accepts
+25:41 - external requests by assigning the
+25:45 - service and external IP address so
+25:47 - another thing that we're gonna do here
+25:49 - to make this service external is right
+25:53 - here we're gonna provide third port and
+25:56 - this is gonna be called node port and
+26:00 - what this is basically is the port where
+26:04 - this external IP address will be open so
+26:08 - this will be the port that I'll have to
+26:10 - put in the browser to access this
+26:12 - service
+26:13 - and this note port actually has a range
+26:16 - and that range is between 30,000 and
+26:21 - 32,000 something so I can not give it
+26:25 - the same port here as I said it has to
+26:27 - be between that range so I'm just gonna
+26:30 - go with the 30,000 that's the minimum in
+26:34 - that range and that would be it so this
+26:36 - configuration here will create an
+26:39 - external service let's go ahead and do
+26:41 - it and I will show you exactly how these
+26:44 - ports differ from each other
+26:46 - so I'm gonna apply Express so service
+26:55 - created and if I do get service I see
+27:00 - that
+27:01 - MongoDB service that we created
+27:03 - previously has a type of cluster IP and
+27:07 - the mono Express service that we just
+27:09 - created is load balancer which is the
+27:11 - type that we specifically defined an
+27:13 - internal service we didn't specify any
+27:16 - type because cluster IP which is the
+27:20 - same as an internal service type is
+27:22 - default so you don't have to define it
+27:25 - when you're creating internal service
+27:27 - and the difference here is that cluster
+27:31 - IP will give the service an internal IP
+27:34 - address which is this one right here so
+27:38 - this is an internal IP address of the
+27:40 - service and load balancer will also give
+27:43 - service an internal IP address but in
+27:46 - addition to that it will also give the
+27:48 - service an external IP address where the
+27:51 - external requests will be coming from
+27:54 - and here it says pending because we're
+27:56 - in mini cube and it works a little bit
+27:58 - differently in a regular kubernetes
+28:00 - setup here you would also see an actual
+28:02 - IP address a public one and this is
+28:05 - another difference because with internal
+28:08 - IP address you just have port for that
+28:11 - IP address with both internal and
+28:13 - external IP addresses you have ports for
+28:16 - both of them and that's why we had to
+28:18 - define third port which was for the
+28:20 - external IP address this is that pending
+28:23 - means that it doesn't have that external
+28:25 - IP address yet so in mini
+28:28 - the way to do that is using the command
+28:31 - mini cube service and I'm gonna need the
+28:34 - name of the service so this command will
+28:38 - basically assign external service a
+28:41 - public IP address so I'm going to
+28:43 - execute this and the browser window will
+28:45 - open and I will see my Express
+28:49 - page so if I go back to the command line
+28:51 - you see that this command here assigned
+28:54 -  Express service a URL with the
+28:58 - public IP address or with an external IP
+29:00 - address and the port which is what we
+29:04 - defined in the node port so I can
+29:07 - basically copy that command which is the
+29:10 - same as this one here and I get the page
+29:14 - form Express so now with this setup the
+29:17 - way it's gonna work is that when I make
+29:19 - changes here for example I'm gonna
+29:22 - create a new database let's call it test
+29:24 - DB whatever and I'm gonna create a
+29:28 - request what just happened in background
+29:30 - is that this requests lended with the
+29:34 - external service of Express which
+29:37 - then forwarded it to the Express
+29:40 - pot and the Express pod connected
+29:43 - to the MongoDB service and internal
+29:45 - service and MongoDB service then
+29:48 - forwarded that request finally to the
+29:50 - MongoDB pod and then all the way back
+29:52 - and we have the changes here so that's
+29:56 - how you deploy a simple application set
+29:58 - up in a kubernetes cluster thanks for
+30:02 - watching the video I hope it was helpful
+30:04 - and if it was don't forget to like it
+30:06 - this is a video series so I will create
+30:09 - a new one every week so if you want to
+30:11 - be notified whenever a new video comes
+30:13 - out then subscribe to my channel if you
+30:16 - have any questions if something wasn't
+30:18 - clear in the video please post them in a
+30:20 - comment section below and I will try to
+30:22 - answer them so thank you and see you in
+30:25 - the next video
+
+Cleaned transcript:
+
+in this video we're gonna deploy two applications MongoDB and Express and I chose this too because it demonstrates really well a typical simple setup of a web application and its database so you can apply this to any similar setup you have so let's see how we're gonna do this so first we will create a MongoDB pod and in order to talk to that pot we are gonna need a service and we're gonna create an internal service which basically means that no external requests are allowed to the pod only components inside the same cluster can talk to it and that's what we want then we're going to create a Express deployment one we're going to need a database URL of MongoDB so that Express can connect to it and the second one is credentials so username and password of the database so that it can authenticate so the way we can pass this information to Express deployment is through its deployment configuration file through environmental variables because that's how the application is configured so we're gonna create a config map that contains database URL and we're gonna create a secret that contains the credentials and we're gonna reference both inside of that deployment file so once we have that setup we are gonna need Express to be accessible through a browser in order to do that we're gonna create an external service that will allow external requests to talk to the pod so the URL will be HTTP IP address of the node and the service port so with this set up the request flow will now look like this so the request comes from the browser and it goes to the external service of the Express which will then forward it to the Express pod the pod will then connect to internal service of MongoDB that's basically the database URL here and it will fall ready then to I'm going to be pod where it will authenticate the request using the credentials so now let's go and create this whole setup using kubernetes configuration files let's dive right into it and create the whole setup so first of all I have a mini cube class to run if I do cube city I'll get all which basically gets me all the components that are inside the cluster I only have a default currently service so my cluster is empty and I'm sorry from scratch so the first thing that I said we're gonna do is create a MongoDB deployment I usually created in an editor so I'm gonna go to visual studio code and paste a prepared deployment file there for MongoDB and this is how it's gonna look like so I have deployment kind and I have some metadata I'm just gonna call it MongoDB deployment labels and selectors in the previous video I already explained the syntax of kubernetes llamó configuration file so if you want to know what all these attributes mean then you can check out that video and here in the template I have a definition or blueprint for pots that this deployment gonna create and I'm just gonna go with one replica so the container is gonna be called MongoDB and this is the image that I'm gonna take so let's actually go and check out the image configuration for I'm going to be so montgo and I see this image here that's open this and basically what I'm looking for is how to use that container meaning what ports it's gonna open and what's external configuration it's gonna take so a default port of MongoDB container is twenty seven thousand seventeen so I'm gonna use that and we are gonna use variables environmental variables the root username and root password so basically I can on the container startup define the admin username and password so let's go ahead and configure all the inside the configuration file so here below the image MongoDB so we're just gonna leave the name of the image and is gonna pull the latest one and that's what we want so here I'm gonna specify what port I want to expose so ports attribute name and container port and that's the standard port so I'm gonna leave it and below that I'm gonna specify those two environments of variables so one is called let's see what it's called it's DB username and here was gonna be values so we're gonna actually leave it blank for now and the other one is called init root password and we're gonna leave that blank as well just view and once we have the values here we'll gonna have a complete deployment for MongoDB this is basically all we need now note that this is a configuration file that it's going to be checked into a repository so usually you wouldn't write admin username and password inside the configuration file so what we're gonna do now is we're gonna create a secret from where we will reference the values so meaning that the secret is gonna be live in kubernetes and nobody will have access to it in a git repository so we're gonna save this in complete deployment file first of all so let's call it deployment or let's just call it yamo and save it here so that we get the syntax highlight and now before we apply this configuration we're going to create the secret where the root username and password we'll leave so let's create a new file and I'm gonna paste in the configuration of a secret which is actually pretty simple so we have a kind secret then we have a metadata which again is just simply the name we're gonna call it MongoDB secret the type OPEC is actually a default type which is the most basic key value secret type other types for example include TLS certificates so you can create a secret specifically with the TLS certificate type and a couple of more types but mostly you're gonna use the default one and these are the actual contents so you have the data and here you have key value pairs which of course are the names you come up with so we're gonna specify user name or we can actually call it root username and we're gonna call it root password and here's the thing the values in in this key value pairs are not plaintext so when we are creating a secret the value must be base64 encoded so the way you can do that the simplest way is go to your terminal so here I'm gonna say echo n very important option don't leave it out otherwise it's not gonna work and here I'm gonna put a plaintext value and I want so I'm just gonna go with just user name whatever of course you can have something more secretive here and I'm gonna base64 encoding and the value that I get here I'm gonna copy it into the secret configuration as a value and I'm gonna do the same with password so again I'm just gonna go with simple password obviously you want to have something more secure and I'm gonna copy that it's a value here and save it is secret thoughts mo okay now we have only written configuration files we haven't created anything yet in the cluster so this is just preparation work and we have to create secret before the deployment if we're gonna reference the secret inside of this so the order of creation matters because if I'm creating a deployment that reference is a secret that doesn't exist yet I'm gonna get an error so it's not gonna start since we have our first component let's actually go ahead and create our secret from a configuration file so again I'm gonna go to my console it's actually clear all this and I'm gonna go into the folder where I'm creating all this configuration files I called it kubernetes configuration and here I have both on my first so I'm doing I'm gonna do cube city I'll apply secret and secret create it so I'm gonna do cube city I'll get secret and I should see my secret has been created this is something created by default with a different type and this is our secret here so now that we have our secrets we can reference it inside over deployment configuration file so let's go back and this is how you reference contents specific key value data of secret so is there a value we're gonna say value from and then I'm gonna do secret key ref secret key reference and name is gonna be the secret name so this one here and key is gonna be the key in the data I want the value of this key value pair so I want this part of the data so I'm gonna reference it by key so you don't have to learn it by heart obviously all the syntax and attribute names important thing here is that you know approximately how to reference it the actual syntax you can always look up in Google or maybe from previous configuration files but yeah this is how you reference it and we're gonna do the same with password so I'm gonna do from and I'm just gonna copy the rest here remember llamo is very strict with the indentation here is the same secret but a different key so I'm gonna use password key here and that will be it so now we have the root username and password referenced from the secret and no actual values inside the configuration file which is good for security because you don't want your credentials in your code repository okay so our deployment file is actually ready so let's apply that apply and the deployment created meaning if I do get all I should see the pod starting up the deployment and the replica set so let's actually check how pod is doing container creating so let's actually watch it might take some time to create it if it takes long and if you want to see whether there's a problem there you can also do cube CTL described pod and the pod name so at least we know nothing's wrong there so we see that it's just pulling the image so that's what it takes so long so let's see again cube City I'll get pot and as you see it's running so we have more going to be deployment and the pod one replica of its pod running now the second step is we're gonna create an internal service so that other components or other parts can talk to this MongoDB so let's go ahead and create service configuration so go back to Yemen and here we can either create a separate mo configuration file for secret or we can also include it in the same way so in yellow you can actually put multiple documents in one file so if I put three dashes that's basically a syntax for document separation in the mo so I need new document is starting so actually I'm going to put both deployment and service in one configuration file because they usually belong together so here I'm gonna paste the service configuration and by the way I'm gonna put all these configuration files in git repository and link the repository in the description of this video so this is a service for MongoDB let's go through some of the attributes here so it's the service kind just the name we're gonna call it MongoDB service selector this is an important one because we want this service to connect to the pod right and the way to do that is using selector and label so using this here the labels that deployment pod have service can find the pots that it's going to attach to alright so we have the selector here and this is an important part where we expose service port so this is gonna be the service port and this is gonna be the container and since we expose container port it this address right here these two have to match so target port is container or pot port and this is the service port and obviously these two here can be different but I'm gonna go with the same port and that's basically it that's our service so I'm gonna create the service now so let's save this file and go back to my console and I'm gonna apply the same file that I applied before to create deployment so let's see what happens see both deployment and service configuration but it's gonna know that I haven't changed the deployment that's what it means here and service is created so if I were to edit both for example I can reapply the file and deployment and service can be changed so I think using local configuration files is a handy way to edit your components so now let's actually check that our service was created get service and this is our service and it's listening at port twentyseven thousand seventeen and I showed it in one of the previous videos but we can actually also validate that the service is attached to the correct pod and to do that I'm gonna do describe service you know need the service name for this so here I have the endpoint which is an IP address of a pod and the port where the application inside the pod is listening it so let's actually check that this is the right pot I mean we just have one but still so if I do get pot and I want additional output to what I get by default one of the columns includes the IP address which is this one right here so 172 point 1706 that's the pod IP address and this is the port where the application inside the pod is listening at so everything is set up perfectly MongoDB deployment and service has been created and by the way if you want to see all the components for one application you can also display them using Kip's ETL get all that will show all the components and you can filter them by name so DB and here you see the service deployment replicas said and the pod so when you do all that component type will be the first here okay that's just a side info so now the next step we're gonna create Express deployment service and also an external configuration where we're gonna put the database URL form I'm going to be so let's go ahead and do it so I'm gonna clear that up go and create a new file for Express deployment service so this is the deployment draft of Express same things here Express that's the name and here we have the pod definition where the image name is Express let's actually go ahead and check that image as well we don't need this express and it's the name of the image more Express and let's see the same data here let's see the port the Express application inside the container starts at is 80 81 and these are some of the environmental variables so obviously we need three things for my workspace we need to tell it which database application it should connect to so obviously we need to tell it the MongoDB address database address it should connect to the internal service and we we're gonna need credentials so that MongoDB can authenticate that connection and the environments of variables to do that is going to be admin username admin password and the MongoDB endpoint will be this year so these three environments of variables we need so let's go ahead and use that so first we're gonna open the port again container ports and the reason why you have multiple ports is that inside of the pot you can actually open multiple ports so that's gonna be a t1 and now we're gonna add the environment variables for the connectivity so the first one is the username and this is gonna be obviously the same username and password that we defined right here so what I'm gonna do is I'm just gonna copy them because it's really the same so the value from we're gonna read it from the secret that's already there so I'm gonna paste it here second environmental variable is called an password and I'm also going to copy that from here and the third one is gonna be the database server and since this is also an external configuration we could either do value here and we could write the MongoDB server address directly here or as I showed you in the diagram at the beginning we can put it in a config map which is an external configuration so that it's centralized so it's stored in one place and also other components can also use it so for example if I have two applications that are using MongoDB database then I can just reference that external configuration here and if I have to change it at some point I just change it in one place and nothing else gets updated so because of that we're gonna keep this incomplete deployment configuration and we're going to create the config map which will contain the MongoDB server address so I'm gonna create a new file let's actually save this incomplete deployment let's call it Express demo and we're gonna come back to it later so save that now we need a config map here so copy the configuration and this is also pretty simple just like secret you have the kind which is config map the name and the same construct see just like you saw here data which is key value pair it doesn't have a type because there's just one config map type and that's it and here you'll again have key value pairs so database URL and server name is actually the name of the service it's as simple as that so what do we call our service we called it MongoDB service so I'm gonna copy the service name and that's gonna be the database server URL so I'm gonna copy that and let's actually call it config map for consistency and save it and just like with secret the order of execution or creation matters so I have to have a config map already in the cluster so that I can reference it so when we're done I have to create the config map first and then the deployment so the way that I can reference the config map inside the deployment is very similar to secret so I'm actually gonna copy the whole thing from secret here the only thing different here is that instead of secret I'm gonna say config map it's all camelcase and obviously the name is gonna be conflict map that's what we called it I think yes that's the name that's actually copied and again key is the key in the key value pair here so let's copy that as well so now I have our manga request deployment these are just standard stuff and this is where the pod blueprint or container configuration exists we have exposed port 8081 this is the image with latest tech and these are the three environmental variables that manga express needs to connect and authenticate with MongoDB so deployment is done and let's go ahead and create config map first and then MA Express deployment keep CTL applying config map and I'm gonna do it oopsie they'll apply always Express and let's see the pot so container creating looks good so let's see the pod and it's running and I actually want to see the locks so I'm gonna lock the Express and here you see that Express service started and database connected so now the final step is to exes manga Express from a browser and in order to do that we are gonna need an external service for Momo Express so let's go ahead and create that one as well so it's clear this output go back to visual code and as we need last time in the same file as a deployment I'm gonna create more Express service because actually in practice you never have deployment without the service so it makes sense to keep them together and this is Express external service and this configuration right now looks exactly the same as the DB service configuration and even ports are the same like here I have exposed service port at 80 81 and target port is where the container port is listening so how do I make this external service is by doing two things so in the specification section so I'm gonna do it below the selector I'm gonna put a type and a type of this external service is load balancer which I think is a bad name for external service because internal service also acts as a load balancer so if I had two MongoDB pots the internal service would also load balance the requests coming to these pots so I think the load balancer type name was chosen not very well because it can be confusing but what this type load balancer does basically is it accepts external requests by assigning the service and external IP address so another thing that we're gonna do here to make this service external is right here we're gonna provide third port and this is gonna be called node port and what this is basically is the port where this external IP address will be open so this will be the port that I'll have to put in the browser to access this service and this note port actually has a range and that range is between 30,000 and 32,000 something so I can not give it the same port here as I said it has to be between that range so I'm just gonna go with the 30,000 that's the minimum in that range and that would be it so this configuration here will create an external service let's go ahead and do it and I will show you exactly how these ports differ from each other so I'm gonna apply Express so service created and if I do get service I see that MongoDB service that we created previously has a type of cluster IP and the mono Express service that we just created is load balancer which is the type that we specifically defined an internal service we didn't specify any type because cluster IP which is the same as an internal service type is default so you don't have to define it when you're creating internal service and the difference here is that cluster IP will give the service an internal IP address which is this one right here so this is an internal IP address of the service and load balancer will also give service an internal IP address but in addition to that it will also give the service an external IP address where the external requests will be coming from and here it says pending because we're in mini cube and it works a little bit differently in a regular kubernetes setup here you would also see an actual IP address a public one and this is another difference because with internal IP address you just have port for that IP address with both internal and external IP addresses you have ports for both of them and that's why we had to define third port which was for the external IP address this is that pending means that it doesn't have that external IP address yet so in mini the way to do that is using the command mini cube service and I'm gonna need the name of the service so this command will basically assign external service a public IP address so I'm going to execute this and the browser window will open and I will see my Express page so if I go back to the command line you see that this command here assigned Express service a URL with the public IP address or with an external IP address and the port which is what we defined in the node port so I can basically copy that command which is the same as this one here and I get the page form Express so now with this setup the way it's gonna work is that when I make changes here for example I'm gonna create a new database let's call it test DB whatever and I'm gonna create a request what just happened in background is that this requests lended with the external service of Express which then forwarded it to the Express pot and the Express pod connected to the MongoDB service and internal service and MongoDB service then forwarded that request finally to the MongoDB pod and then all the way back and we have the changes here so that's how you deploy a simple application set up in a kubernetes cluster thanks for watching the video I hope it was helpful and if it was don't forget to like it this is a video series so I will create a new one every week so if you want to be notified whenever a new video comes out then subscribe to my channel if you have any questions if something wasn't clear in the video please post them in a comment section below and I will try to answer them so thank you and see you in the next video

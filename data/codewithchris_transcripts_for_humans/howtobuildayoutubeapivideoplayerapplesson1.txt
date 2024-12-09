@@ -1,0 +1,360 @@
+With timestamps:
+
+00:00 - hi my name is Chris and I'll teach you how to 
+build an IOS app that displays YouTube videos of  
+00:04 - you're choosing in this example I've configured 
+this app to fetch videos from my how to build  
+00:09 - an app in 8 Days playlist and display all the 
+videos from there the great thing is that this  
+00:14 - app actually connects to the YouTube data API 
+so if you remove or add videos to the playlist  
+00:20 - on YouTube it'll automatically get reflected in 
+the app without you having to revise any sort of  
+00:26 - code oh and you'll also be able to tap into the 
+videos and watch the videos in the app or to read  
+00:31 - the video description okay so let's take a look 
+now at what skills you'll gain after completing  
+00:36 - this app all right so by completing this app 
+you're going to learn how to work with the  
+00:40 - YouTube data API you're going to learn how to 
+send and receive Network requests to and from  
+00:46 - your app and in doing so you're going to learn a 
+little bit about iOS concurrency especially using  
+00:51 - async weight and through the process of doing 
+this we're going to need to be able to debug  
+00:57 - and troubleshoot our network issues and we're 
+going to learn how to do that using proxy man  
+01:02 - a free thirdparty tool when we get the data back 
+from the YouTube API we're going to need to turn  
+01:07 - that Json and parse it into usable structures 
+and instances inside our app so you're going  
+01:13 - to learn about Json parsing and how to do that 
+and we're also going to need to store our API  
+01:19 - key securely in our xcode project so that it 
+doesn't accidentally get leaked out now most  
+01:24 - of this networking stuff we covered in the iOS 
+networking course so although we are going to go  
+01:31 - over that again in this video series it won't be 
+as in-depth so if you really want to learn that  
+01:37 - material well and you want to dive a little deeper 
+check out the networking course all right now on  
+01:43 - the IOS app side we are going to use YouTube 
+player kit which is a thirdparty library to be  
+01:49 - playing the YouTube videos in the app and we're 
+going to import that into our xcode project using  
+01:55 - Swift package manager now on the UI side you're 
+going to learn how to use Swift UI lists geometry  
+02:02 - reader async image progress view scroll views 
+just to name a few but there's a lot more that  
+02:07 - goes into building the user interface and you're 
+going to get extra practice just working with uis  
+02:14 - Okay so let's do a quick little overview of how 
+this all works in case you're new to working with  
+02:18 - apis and if you have used apis before then 
+this will just be a little review for you  
+02:24 - now an API is an interface that you can connect 
+to to send and receive data to put it in simply  
+02:30 - terms you can think of an API as a collection 
+of URLs that your app can access to retrieve  
+02:36 - data or to send data now there are many apis out 
+there some are free and some are paid but most  
+02:41 - of the large platforms like Facebook X Spotify 
+Google they all have apis for you to work with  
+02:47 - that platform or to retrieve data from it and 
+there are some apis that are just data focused  
+02:53 - such as retrieving uh recipes or stock prices or 
+weather data things like that so being able to use  
+03:01 - apis in your app is very very powerful so what 
+actually happens and how do you use an API from  
+03:08 - your app well from your IOS app you send a network 
+request to an API endpoint which remember is just  
+03:15 - a URL in your network request you specify what 
+data you want to get back and in some apis you  
+03:21 - also have to identify yourself in the request this 
+identification part is called authentication the  
+03:28 - API receives your request and it will authenticate 
+you and also make sure that your request is valid  
+03:34 - note that not all apis require authentication 
+but most do now if your authentication checks  
+03:41 - out and your request is valid then the API will go 
+ahead and gather the data and send a response to  
+03:47 - your app the response contains the data that 
+you requested and it's typically in a format  
+03:53 - called Json when your app receives the response 
+it can read the Json formatted data and and then  
+04:00 - convert it into Data that can be displayed on 
+the screen for the user to see this process of  
+04:06 - converting the Json data into usable data in your 
+app this is called Json parsing all right so this  
+04:12 - is the process that you're going to learn how 
+to do with the YouTube API now let's take a  
+04:17 - look at the YouTube API I hope you're enjoying 
+the lesson so far now just in case you want to  
+04:22 - launch your own app I want to tell you about 
+cdb C+ this step-by-step program will help you  
+04:27 - launch your own app even if you don't have any 
+experience and it takes about 4 months if this  
+04:32 - sounds like something you're interested in I have 
+a special offer for you I'll leave the link in  
+04:37 - the description below this video and hopefully 
+I'll see you there if not no worries I really  
+04:42 - appreciate that you're here watching this lesson 
+and learning with us so thank you for that anyways  
+04:47 - now back to the lesson all right so here we are 
+the YouTube data API you can visit this page at
+04:54 - developers.google.com I want you to go under 
+this section that says add YouTube data and  
+05:01 - click references and here you can see all of 
+the endpoints that are available in this API  
+05:07 - for our app to send a request to now remember 
+these endpoints they're just URLs so let's take  
+05:15 - for instance search so let's look at overview 
+first this describes to you what this endpoint  
+05:23 - does how you interact with it and it lists 
+different methods different ways you can use this  
+05:29 - end point so let's take a look at list okay when 
+you click into that you can see that changed uh  
+05:38 - to this section here and the common use cases 
+okay so this is essentially searching YouTube  
+05:45 - for something you can search by here are some 
+use cases by keyword which is probably the  
+05:50 - typical example right location Live Events or 
+your videos for instance if you scroll a little  
+05:56 - lower this is the important part here this is 
+telling you the exact URL that you need to hit  
+06:02 - so this is the endpoint and this is the request 
+type so when you send a network request it can  
+06:10 - be one of a couple a few different types and 
+get is the one that's typically used for when  
+06:17 - you want to retrieve data from the API okay 
+so not only do you need to send a request to  
+06:24 - this URL but you need to specify parameters 
+of your request remember remember if you're  
+06:31 - searching for something on YouTube what are you 
+searching for you can't just say search right so  
+06:37 - here these parameters they describe what you can 
+specify along with your request in order to tell  
+06:43 - the API what you want to retrieve or what you're 
+searching for in this case so let's take a look
+06:49 - here uh one thing I should mention here 
+is in the parameter section there's always  
+06:59 - they're not not always but there may be required 
+parameters so remember in that overview I said  
+07:06 - that the API checks a request to see if it's valid 
+well if it is a required parameter then you have  
+07:12 - to specify this information the optional ones you 
+can leave out but the required ones you have to  
+07:17 - include as part of your request so what is this 
+required parameter okay so this part it's called  
+07:23 - part this parameter specifies a comma separated 
+list of one or more search Resource Property  
+07:30 - that the API response will include set the 
+parameter value to snip it okay so it's a  
+07:38 - little hard to determine what these things 
+mean but what I'll typically say is to try  
+07:45 - it out you know the next step is to try this 
+API let's set this parameter to snip it as  
+07:50 - it says and then let's see what gets returned 
+and if it's not what we're looking for we can  
+07:56 - probably look at what else we can spe specify 
+for this parameter now what I'm looking for  
+08:03 - is if we want to search for something specific 
+like a keyword what where would we do that or  
+08:09 - what would we do so this is searching by location 
+this is searching by event this is searching for  
+08:16 - uh types of Channel a specific Channel you can 
+look for um how many results you want uh this  
+08:23 - is the one the CU parameter specifies the query 
+term to search for so if you wanted to search  
+08:29 - for uh videos regarding let's say uh gardening 
+right you would put the gardening keyword in this  
+08:37 - parameter and I'll show you a little later how you 
+assign that data to these parameters but we're not  
+08:43 - going to dive that deep just wanted to give you an 
+overview of the YouTube API and all the endpoints  
+08:49 - that are available and also how these endpoints 
+work right so you learned about the URL this is  
+08:56 - the URL that you're going to send the request 
+to this this is your request type and there are  
+09:01 - required parameters that you have to specify and 
+then there are optional ones that would give more  
+09:07 - context for your request now the Endo that we are 
+going to use in this video series um remember so  
+09:14 - this app it can display any YouTube video uh and 
+it can play it in the app so for my use case I  
+09:24 - want to display a list of videos from a specific 
+playlist because I have a YouTube channel and uh  
+09:32 - I have some playlists that I want to display 
+the videos for so the Endo that I'm going to  
+09:37 - use is playlists right here and I'm going to use 
+um actually I I believe it was I can't remember  
+09:47 - if it was playlists or videos at this point okay 
+so let's take a look at this endpoint so here is  
+09:53 - the playlist endpoint get and if we take a look at 
+the use case let's see it retrieves all playlists  
+10:02 - or yeah all playlists for a channel that's not 
+what I want um this one is let's see the request  
+10:12 - that I use retrieves a specific playlist and I 
+believe it was this endpoint because there is  
+10:18 - let's see the ID specifies being retrieved yeah 
+this is what I used okay so instead of retrieving  
+10:29 - all all playlists from the channel I wanted a 
+specific one so I had to include this parameter  
+10:37 - here which was called ID and this is the ID of the 
+specific playlist that I want and then within that  
+10:43 - playlist I also got the videos after you complete 
+this video series and you follow along and you  
+10:49 - learn how to use this YouTube data API feel free 
+to change the way that the app works right you  
+10:57 - can Implement search in your app if you'd want 
+just put a text field right when the user types  
+11:03 - something in call this um call this uh endpoint 
+pass in the keyword that the user searched for  
+11:11 - and return a list of video results and the user 
+can play it right in the the app right the what  
+11:18 - I'm going to show you in the video series is using 
+this endpoint showing a specific list of videos  
+11:24 - um or you can create your own playlist or maybe 
+create uh specific videos that you want to show  
+11:31 - and you might use another endpoint so feel free to 
+customize the app but I would recommend especially  
+11:37 - if you're new to working with apis and networking 
+to follow along in this video series wait till  
+11:42 - the end get comfortable after you've achieved the 
+result and then customize it all right now let's  
+11:48 - take a look at authentication because this YouTube 
+data API needs to identify who you are before it's  
+11:54 - going to give up its data now before I show you 
+the YouTube authentication Part I I want to point  
+11:59 - out this line right here these endpoints they all 
+have a quota impact and it tells you how much it  
+12:04 - costs to send a request and to get a response from 
+this endpoint and that has everything to do with  
+12:09 - the authentication stuff so now let's move on to 
+there now we're going to click on guides typically  
+12:16 - with API documentation all the authentication 
+stuff is all the way at the beginning so here it  
+12:22 - tells you how to do that let's go into overview 
+uh actually let's go into get off CR itial here  
+12:31 - and you'll see that there are two different types 
+that you can two different techniques that you can  
+12:36 - go about this so one is ooth and one is API Keys 
+now most apis will use one or the other sometimes  
+12:44 - both but uh if I were to throw out a number out 
+there I would say 90% of apis you can use API  
+12:52 - keys let me explain briefly the difference 
+between the two so API key Authentication  
+12:59 - is where you sign up for an account and they give 
+you a long string of letters and numbers that is  
+13:04 - your key and when you're making Network requests 
+to the API you're going to specify that key with  
+13:10 - your request and that way they can associate that 
+request with your account and then they can also  
+13:18 - rate limit you they can see how much you're using 
+the API if you're abusive if you are yeah mostly  
+13:27 - rate limiting giving you uh quota and things like 
+that because you can imagine if it's unlimited and  
+13:36 - as fast as possible and everyone is hitting their 
+API it could take it down or the server load could  
+13:43 - be too high so this allows them to control access 
+to their API and if they find you to be abusive  
+13:50 - they could ban your key and you won't be able to 
+make requests anymore so that that's how API key  
+13:57 - authentication works now o off is a little bit 
+different this is where you typically see um a  
+14:04 - username and password box in your app and the 
+user has to sign into their Google account and  
+14:09 - by doing that they are obtaining a token from the 
+API and then you attach that token to the requests  
+14:19 - that you send so there's a distinction because 
+now they're associating those requests with the  
+14:26 - user's Google account so no longer are you being 
+rate limited it's not counting towards your quota  
+14:33 - it's counting towards their quota and also what 
+you can do is different because now that Google  
+14:40 - can identify their Google account that user can 
+perform things like liking a video or subscribing  
+14:48 - to a video you can call those types of endpoints 
+right or perhaps following a user whereas API key  
+14:56 - access right all of your users they're using the 
+same API key the one that's that you signed up  
+15:04 - for that's associated to your account so that's 
+why with API Keys you can't really do things like  
+15:10 - liking a video or subscribing to a channel because 
+the API has no idea who the user is they all they  
+15:17 - can see is that they can associate this API key 
+to your account that you created now ooth is a  
+15:24 - little bit more involved so we're not going to 
+use that in this video series we're going to go  
+15:29 - through the API key route and learning how to 
+do that is going to cover the vast majority of  
+15:35 - apis that you'll encounter all right so now let's 
+go on to the next step which is actually creating  
+15:40 - an account and getting our API key so all you have 
+to do is follow this credentials page link and I'm  
+15:46 - going to open it in a new tab it's going to ask 
+you to sign into to your Google account because  
+15:51 - I'm already signed in it's brought me into this 
+credentials page of my project you probably won't  
+15:58 - have a project either so let me try to go back 
+out onto the the dashboard and you might have to  
+16:03 - go through some onboarding questions or something 
+like that but eventually you'll arrive at a page  
+16:09 - that looks like something like this because right 
+here it's saying I have a project but you won't  
+16:14 - have a project so it might prompt you to create 
+a new project you can go ahead and do that or  
+16:18 - you can click on this drop down up here um and 
+then we can choose new project and we create a  
+16:24 - project together oh it looks like I cannot create 
+a new project but this is what you would do so you  
+16:30 - would type in a project name you would uh I don't 
+think this one matters too much so you can choose  
+16:37 - whatever and just hit create and then once you've 
+created a project right go ahead and navigate to  
+16:43 - that project so for me that' be this one right 
+here and you're going to click on credentials  
+16:49 - or sorry API and services and then you're going 
+to go down to credentials and then once you get  
+16:56 - here this is where you can create the API key so 
+you're going to say create credentials create API  
+17:03 - key it's going to generate one for you and then 
+you're going to have to restrict it to the YouTube  
+17:10 - data API that would be good Let me refresh the 
+screen did it do it for me there it is okay so  
+17:16 - this is the new API key that was just created I'm 
+going to click into it and then I am going to set  
+17:25 - uh the restrict right here I'm going to restrict 
+it to a specific API and the reason this is a good  
+17:31 - idea is just so that if the API key gets into the 
+wrong hands I mean it limits what they can do to  
+17:38 - just using the YouTube data API and it's I think 
+it's a good um it's a good practice to not just  
+17:48 - give free reign to everything restricting things 
+and um removing options is always good especially  
+17:54 - if you don't need those options because it limits 
+what can um it limits any unexpected Behavior same  
+18:02 - thing goes for programming right and uh I wouldn't 
+set restrictions on that you I mean you could do  
+18:10 - this but it's going to get it might interfere with 
+your testing especially if this is your first time  
+18:16 - so let's just choose none restrict the key to the 
+YouTube data API there's your API key right there  
+18:21 - you shouldn't be showing this anyone uh I won't 
+be using this key so don't try to copy it and  
+18:27 - use this key I'll probably delete this after but 
+go ahead and save it and there you go you have a  
+18:32 - valid key that you can use and you're going to 
+be using this key inside your iOS project all  
+18:39 - right now we're set all right now we're ready 
+to start using the YouTube data API in the next  
+18:45 - lesson we're going to build a test project to 
+connect to the API and retrieve data from it  
+18:49 - if you like this video please give it a thumbs 
+up and also comment down below what you're most  
+18:54 - excited about learning in this app series thanks 
+for watching and I'll see you in the next slide l
+
+Cleaned transcript:
+
+hi my name is Chris and I'll teach you how to build an IOS app that displays YouTube videos of you're choosing in this example I've configured this app to fetch videos from my how to build an app in 8 Days playlist and display all the videos from there the great thing is that this app actually connects to the YouTube data API so if you remove or add videos to the playlist on YouTube it'll automatically get reflected in the app without you having to revise any sort of code oh and you'll also be able to tap into the videos and watch the videos in the app or to read the video description okay so let's take a look now at what skills you'll gain after completing this app all right so by completing this app you're going to learn how to work with the YouTube data API you're going to learn how to send and receive Network requests to and from your app and in doing so you're going to learn a little bit about iOS concurrency especially using async weight and through the process of doing this we're going to need to be able to debug and troubleshoot our network issues and we're going to learn how to do that using proxy man a free thirdparty tool when we get the data back from the YouTube API we're going to need to turn that Json and parse it into usable structures and instances inside our app so you're going to learn about Json parsing and how to do that and we're also going to need to store our API key securely in our xcode project so that it doesn't accidentally get leaked out now most of this networking stuff we covered in the iOS networking course so although we are going to go over that again in this video series it won't be as indepth so if you really want to learn that material well and you want to dive a little deeper check out the networking course all right now on the IOS app side we are going to use YouTube player kit which is a thirdparty library to be playing the YouTube videos in the app and we're going to import that into our xcode project using Swift package manager now on the UI side you're going to learn how to use Swift UI lists geometry reader async image progress view scroll views just to name a few but there's a lot more that goes into building the user interface and you're going to get extra practice just working with uis Okay so let's do a quick little overview of how this all works in case you're new to working with apis and if you have used apis before then this will just be a little review for you now an API is an interface that you can connect to to send and receive data to put it in simply terms you can think of an API as a collection of URLs that your app can access to retrieve data or to send data now there are many apis out there some are free and some are paid but most of the large platforms like Facebook X Spotify Google they all have apis for you to work with that platform or to retrieve data from it and there are some apis that are just data focused such as retrieving uh recipes or stock prices or weather data things like that so being able to use apis in your app is very very powerful so what actually happens and how do you use an API from your app well from your IOS app you send a network request to an API endpoint which remember is just a URL in your network request you specify what data you want to get back and in some apis you also have to identify yourself in the request this identification part is called authentication the API receives your request and it will authenticate you and also make sure that your request is valid note that not all apis require authentication but most do now if your authentication checks out and your request is valid then the API will go ahead and gather the data and send a response to your app the response contains the data that you requested and it's typically in a format called Json when your app receives the response it can read the Json formatted data and and then convert it into Data that can be displayed on the screen for the user to see this process of converting the Json data into usable data in your app this is called Json parsing all right so this is the process that you're going to learn how to do with the YouTube API now let's take a look at the YouTube API I hope you're enjoying the lesson so far now just in case you want to launch your own app I want to tell you about cdb C+ this stepbystep program will help you launch your own app even if you don't have any experience and it takes about 4 months if this sounds like something you're interested in I have a special offer for you I'll leave the link in the description below this video and hopefully I'll see you there if not no worries I really appreciate that you're here watching this lesson and learning with us so thank you for that anyways now back to the lesson all right so here we are the YouTube data API you can visit this page at developers.google.com I want you to go under this section that says add YouTube data and click references and here you can see all of the endpoints that are available in this API for our app to send a request to now remember these endpoints they're just URLs so let's take for instance search so let's look at overview first this describes to you what this endpoint does how you interact with it and it lists different methods different ways you can use this end point so let's take a look at list okay when you click into that you can see that changed uh to this section here and the common use cases okay so this is essentially searching YouTube for something you can search by here are some use cases by keyword which is probably the typical example right location Live Events or your videos for instance if you scroll a little lower this is the important part here this is telling you the exact URL that you need to hit so this is the endpoint and this is the request type so when you send a network request it can be one of a couple a few different types and get is the one that's typically used for when you want to retrieve data from the API okay so not only do you need to send a request to this URL but you need to specify parameters of your request remember remember if you're searching for something on YouTube what are you searching for you can't just say search right so here these parameters they describe what you can specify along with your request in order to tell the API what you want to retrieve or what you're searching for in this case so let's take a look here uh one thing I should mention here is in the parameter section there's always they're not not always but there may be required parameters so remember in that overview I said that the API checks a request to see if it's valid well if it is a required parameter then you have to specify this information the optional ones you can leave out but the required ones you have to include as part of your request so what is this required parameter okay so this part it's called part this parameter specifies a comma separated list of one or more search Resource Property that the API response will include set the parameter value to snip it okay so it's a little hard to determine what these things mean but what I'll typically say is to try it out you know the next step is to try this API let's set this parameter to snip it as it says and then let's see what gets returned and if it's not what we're looking for we can probably look at what else we can spe specify for this parameter now what I'm looking for is if we want to search for something specific like a keyword what where would we do that or what would we do so this is searching by location this is searching by event this is searching for uh types of Channel a specific Channel you can look for um how many results you want uh this is the one the CU parameter specifies the query term to search for so if you wanted to search for uh videos regarding let's say uh gardening right you would put the gardening keyword in this parameter and I'll show you a little later how you assign that data to these parameters but we're not going to dive that deep just wanted to give you an overview of the YouTube API and all the endpoints that are available and also how these endpoints work right so you learned about the URL this is the URL that you're going to send the request to this this is your request type and there are required parameters that you have to specify and then there are optional ones that would give more context for your request now the Endo that we are going to use in this video series um remember so this app it can display any YouTube video uh and it can play it in the app so for my use case I want to display a list of videos from a specific playlist because I have a YouTube channel and uh I have some playlists that I want to display the videos for so the Endo that I'm going to use is playlists right here and I'm going to use um actually I I believe it was I can't remember if it was playlists or videos at this point okay so let's take a look at this endpoint so here is the playlist endpoint get and if we take a look at the use case let's see it retrieves all playlists or yeah all playlists for a channel that's not what I want um this one is let's see the request that I use retrieves a specific playlist and I believe it was this endpoint because there is let's see the ID specifies being retrieved yeah this is what I used okay so instead of retrieving all all playlists from the channel I wanted a specific one so I had to include this parameter here which was called ID and this is the ID of the specific playlist that I want and then within that playlist I also got the videos after you complete this video series and you follow along and you learn how to use this YouTube data API feel free to change the way that the app works right you can Implement search in your app if you'd want just put a text field right when the user types something in call this um call this uh endpoint pass in the keyword that the user searched for and return a list of video results and the user can play it right in the the app right the what I'm going to show you in the video series is using this endpoint showing a specific list of videos um or you can create your own playlist or maybe create uh specific videos that you want to show and you might use another endpoint so feel free to customize the app but I would recommend especially if you're new to working with apis and networking to follow along in this video series wait till the end get comfortable after you've achieved the result and then customize it all right now let's take a look at authentication because this YouTube data API needs to identify who you are before it's going to give up its data now before I show you the YouTube authentication Part I I want to point out this line right here these endpoints they all have a quota impact and it tells you how much it costs to send a request and to get a response from this endpoint and that has everything to do with the authentication stuff so now let's move on to there now we're going to click on guides typically with API documentation all the authentication stuff is all the way at the beginning so here it tells you how to do that let's go into overview uh actually let's go into get off CR itial here and you'll see that there are two different types that you can two different techniques that you can go about this so one is ooth and one is API Keys now most apis will use one or the other sometimes both but uh if I were to throw out a number out there I would say 90% of apis you can use API keys let me explain briefly the difference between the two so API key Authentication is where you sign up for an account and they give you a long string of letters and numbers that is your key and when you're making Network requests to the API you're going to specify that key with your request and that way they can associate that request with your account and then they can also rate limit you they can see how much you're using the API if you're abusive if you are yeah mostly rate limiting giving you uh quota and things like that because you can imagine if it's unlimited and as fast as possible and everyone is hitting their API it could take it down or the server load could be too high so this allows them to control access to their API and if they find you to be abusive they could ban your key and you won't be able to make requests anymore so that that's how API key authentication works now o off is a little bit different this is where you typically see um a username and password box in your app and the user has to sign into their Google account and by doing that they are obtaining a token from the API and then you attach that token to the requests that you send so there's a distinction because now they're associating those requests with the user's Google account so no longer are you being rate limited it's not counting towards your quota it's counting towards their quota and also what you can do is different because now that Google can identify their Google account that user can perform things like liking a video or subscribing to a video you can call those types of endpoints right or perhaps following a user whereas API key access right all of your users they're using the same API key the one that's that you signed up for that's associated to your account so that's why with API Keys you can't really do things like liking a video or subscribing to a channel because the API has no idea who the user is they all they can see is that they can associate this API key to your account that you created now ooth is a little bit more involved so we're not going to use that in this video series we're going to go through the API key route and learning how to do that is going to cover the vast majority of apis that you'll encounter all right so now let's go on to the next step which is actually creating an account and getting our API key so all you have to do is follow this credentials page link and I'm going to open it in a new tab it's going to ask you to sign into to your Google account because I'm already signed in it's brought me into this credentials page of my project you probably won't have a project either so let me try to go back out onto the the dashboard and you might have to go through some onboarding questions or something like that but eventually you'll arrive at a page that looks like something like this because right here it's saying I have a project but you won't have a project so it might prompt you to create a new project you can go ahead and do that or you can click on this drop down up here um and then we can choose new project and we create a project together oh it looks like I cannot create a new project but this is what you would do so you would type in a project name you would uh I don't think this one matters too much so you can choose whatever and just hit create and then once you've created a project right go ahead and navigate to that project so for me that' be this one right here and you're going to click on credentials or sorry API and services and then you're going to go down to credentials and then once you get here this is where you can create the API key so you're going to say create credentials create API key it's going to generate one for you and then you're going to have to restrict it to the YouTube data API that would be good Let me refresh the screen did it do it for me there it is okay so this is the new API key that was just created I'm going to click into it and then I am going to set uh the restrict right here I'm going to restrict it to a specific API and the reason this is a good idea is just so that if the API key gets into the wrong hands I mean it limits what they can do to just using the YouTube data API and it's I think it's a good um it's a good practice to not just give free reign to everything restricting things and um removing options is always good especially if you don't need those options because it limits what can um it limits any unexpected Behavior same thing goes for programming right and uh I wouldn't set restrictions on that you I mean you could do this but it's going to get it might interfere with your testing especially if this is your first time so let's just choose none restrict the key to the YouTube data API there's your API key right there you shouldn't be showing this anyone uh I won't be using this key so don't try to copy it and use this key I'll probably delete this after but go ahead and save it and there you go you have a valid key that you can use and you're going to be using this key inside your iOS project all right now we're set all right now we're ready to start using the YouTube data API in the next lesson we're going to build a test project to connect to the API and retrieve data from it if you like this video please give it a thumbs up and also comment down below what you're most excited about learning in this app series thanks for watching and I'll see you in the next slide l

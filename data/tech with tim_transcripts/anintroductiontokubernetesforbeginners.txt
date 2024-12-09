@@ -1,0 +1,1191 @@
+00:02 - [Music]
+00:08 - in this video i'll be giving you an
+00:10 - introduction to kubernetes specifically
+00:12 - i'll discuss what kubernetes is some
+00:14 - kubernetes terminology and the basic
+00:16 - kubernetes architecture after that i'll
+00:19 - transition to the computer and show you
+00:20 - how to create and connect to a
+00:21 - kubernetes cluster then once we've
+00:24 - created a cluster i'll walk you through
+00:25 - a simple demo of deploying a basic flask
+00:27 - website using kubernetes now if you want
+00:30 - to follow along with this video and
+00:31 - create your own cluster you can do this
+00:33 - locally on your own computer or you can
+00:35 - use a cloud provider like lenode which
+00:37 - happens to be the sponsor of this video
+00:40 - so what is kubernetes kubernetes also
+00:42 - known as k-8s is an open source
+00:44 - container orchestration system used for
+00:46 - automating software deployment scaling
+00:49 - and management it was originally
+00:50 - designed at google but now is maintained
+00:52 - by the cloud native computing foundation
+00:55 - kubernetes typically works with docker
+00:56 - containers and microservices and
+00:58 - automatically creates destroys and
+01:00 - manages containers based on scaling and
+01:02 - performance needs kubernetes allows you
+01:05 - to easily scale your applications by
+01:06 - running multiple containers and having
+01:08 - requests load balance between them
+01:10 - automatically kubernetes also prevents
+01:12 - significant downtime by automatically
+01:14 - recreating containers when they die and
+01:16 - or crash and ensuring a predetermined
+01:18 - number of containers is always running
+01:20 - so to better understand kubernetes let
+01:22 - me quickly describe some key terminology
+01:25 - starting with a pod so in kubernetes a
+01:27 - pod is an abstraction of a container
+01:30 - usually a docker container but it can be
+01:31 - other types of containers as well now
+01:33 - pods are where your applications and
+01:35 - microservices will be running and they
+01:37 - have the potential to crash or to die
+01:39 - now every single pod is assigned a
+01:41 - dynamic internal ip address that allows
+01:43 - it to communicate with other pods that
+01:45 - are running every time a pod dies a new
+01:47 - one is created and it will be assigned a
+01:49 - new ip address next we'll talk about a
+01:52 - node a node is simply some server that
+01:54 - is running pots it's also commonly
+01:56 - referred to as a worker and it usually
+01:58 - runs multiple pods at the same time so
+02:00 - pods are an abstraction of containers
+02:02 - and then your nodes are running multiple
+02:05 - pods or multiple containers at the same
+02:07 - time continuing we have a cluster a
+02:10 - cluster is simply the set of nodes that
+02:12 - are running the pod slash containerized
+02:14 - applications one cluster may contain
+02:16 - many different nodes
+02:18 - next we have what is known as a service
+02:20 - now a service is assigned a static slash
+02:22 - permanent ip address and allows you to
+02:24 - communicate with different pods all of
+02:26 - the requests being sent to a pod will
+02:28 - first go through the service and this
+02:30 - service will act like a load balancer
+02:32 - and send requests to the appropriate pod
+02:34 - typically the one that is less busy you
+02:36 - can have both internal and external
+02:38 - services now an internal service is one
+02:41 - that's only accessible from the nodes
+02:42 - within the cluster and an external
+02:45 - service is accessible from outside of
+02:47 - the cluster for example you may have an
+02:49 - internal service for your database pods
+02:51 - and an external service for pods that
+02:53 - are running your public-facing website
+02:54 - endpoints lastly here we have a
+02:57 - deployment now a deployment is the
+02:59 - specification for what pods kubernetes
+03:01 - should run and how many of them should
+03:03 - be running a deployment is an
+03:05 - abstraction over pods meaning you don't
+03:07 - have to create pods yourself you simply
+03:09 - define the images you want each set of
+03:11 - pods to run and then the number of
+03:13 - replica of those pods you want to always
+03:15 - be running for example you may want to
+03:17 - run three replicas of a pod that
+03:19 - contains an api if that's the case you
+03:21 - specify this in the deployment and
+03:23 - kubernetes will ensure three replicas
+03:25 - are always running if one replica dies
+03:27 - it will automatically create another one
+03:29 - for you so now that we have some of the
+03:31 - key terminology down let's talk about
+03:33 - the basic kubernetes architecture now
+03:36 - i'm going to give you a very high level
+03:37 - overview of how kubernetes works there's
+03:39 - a lot of details i'm skimming over this
+03:41 - will give you the basics just keep in
+03:43 - mind there's a lot of other awesome
+03:45 - features in kubernetes that i'm not
+03:46 - discussing in this video this is meant
+03:48 - to be a very basic introduction if you
+03:50 - want to learn more then leave a comment
+03:52 - down below and maybe i'll make a
+03:53 - follow-up follow-up video sorry in the
+03:55 - future
+03:56 - so let's start here with how nodes
+03:58 - function well each node must run three
+04:01 - applications a container runtime so
+04:03 - something like docker cubelet and cube
+04:06 - proxy now cubelet is the application
+04:08 - that interacts with pods and the node
+04:11 - and cubeproxy is what proxies and load
+04:13 - balances request to the correct pod
+04:16 - based on the defined service so cube
+04:18 - proxy runs on every single node and that
+04:21 - implements part of the kubernetes
+04:23 - service component so it's a lot more
+04:24 - complicated than this but cube proxy
+04:26 - essentially ensures that requests go to
+04:28 - the right place so all three of those
+04:30 - programs cubelet cube proxy and then
+04:33 - some type of container runtime are
+04:35 - required on every single individual node
+04:38 - okay so now we need to introduce a new
+04:39 - concept known as masternodes so in a
+04:41 - kubernetes cluster you have master and
+04:44 - slave nodes now the master nodes are
+04:46 - what you as the system administrator or
+04:48 - devops engineer would interact with and
+04:50 - those manage all of the slave nodes and
+04:53 - handle things like authentication so the
+04:55 - slave nodes are those that are running
+04:56 - the actual applications and pawns now in
+04:59 - a large system you have multiple
+05:00 - masternodes and these masternodes
+05:02 - typically require less system resources
+05:04 - than the slave nodes because they're not
+05:06 - actually running any system applications
+05:08 - they're just handling all of the slave
+05:10 - notes so to clarify here let's go
+05:12 - through a simple example let's say you
+05:14 - have a cluster containing one masternode
+05:16 - and three slave nodes to create a
+05:18 - deployment and start running pods you
+05:21 - send a request to the master node
+05:23 - containing the deployment that you want
+05:25 - to run the masternode then talks to all
+05:27 - of the slave nodes and handles the
+05:28 - creation of all of the necessary pods
+05:31 - services etc so you don't have to
+05:33 - manually touch any of the slave nodes or
+05:35 - create any pods yourself the master node
+05:37 - does all of this for you all you have to
+05:39 - do is send it a deployment so
+05:41 - essentially you're going to be
+05:42 - interacting with the masternode using an
+05:44 - api and then the masternode is going to
+05:46 - do all of the heavy lifting for you
+05:47 - handle all of your slave nodes and other
+05:49 - servers handle creating pods and really
+05:52 - everything that's going on behind the
+05:53 - scenes so that is the basics on
+05:55 - kubernetes as i said there's a lot of
+05:57 - details i've left out here but this is
+05:59 - really all you need to understand to
+06:01 - start working with kubernetes and
+06:02 - deploying some simple systems with that
+06:05 - said let's hop over to the computer and
+06:06 - create our first kubernetes cluster all
+06:08 - right so i'm on the computer and the
+06:10 - first thing we need to do here is create
+06:12 - a kubernetes cluster now there's two
+06:14 - methods to do this the first way is to
+06:16 - use a cloud provider like lenode which
+06:18 - is what i'm going to do in this video
+06:20 - the second way is to set this up locally
+06:21 - on your computer using something called
+06:24 - mini cube now i recommend the cloud
+06:26 - provider approach because lenode has
+06:27 - sponsored this video and they're going
+06:28 - to be giving all of you a hundred
+06:30 - dollars in free credit for 60 days so
+06:32 - it's completely free to follow along
+06:34 - with this i actually think this setup is
+06:36 - way easier on the node than it is doing
+06:38 - it locally and this will allow you to
+06:40 - get a feel for what it's like to
+06:41 - actually work with a remote server and
+06:44 - have multiple nodes running as opposed
+06:46 - to doing it locally on your own machine
+06:48 - where you're kind of simulating or
+06:49 - faking it in a sense and you have only a
+06:51 - single node which is your own computer
+06:53 - that's going to be running the master
+06:55 - node as well as all of the parts so
+06:57 - again recommend the cloud approach but
+06:59 - if you want to do it on your own
+06:59 - computer that's totally fine i'll
+07:01 - explain how to do that in a minute for
+07:02 - now though you can go to the link in the
+07:04 - description it is lenove.com tech with
+07:06 - tim sign up for a new account and again
+07:08 - you get a hundred dollars in free credit
+07:11 - for this tutorial we're going to use
+07:12 - like 15 cents uh worth of stuff just
+07:14 - because we're only going to be running
+07:15 - this for you know an hour or however
+07:17 - long once you're done with the services
+07:19 - of course you can delete them and you
+07:20 - won't be charged for them okay so sign
+07:22 - up for a new account i already have one
+07:23 - so i'm going to sign in then i will walk
+07:25 - you through how to create the cluster on
+07:26 - low note all right so i'm on my leno
+07:29 - dashboard and i just wanted to quickly
+07:30 - mention that i've worked with lenode for
+07:32 - over two years now i actually have a
+07:34 - bunch of servers and development
+07:35 - projects that are ran with lenode in
+07:37 - fact we have a kubernetes cluster that
+07:40 - runs a website and some apis and stuff
+07:42 - that i have going on for my discord
+07:43 - server anyways just wanted to mention
+07:45 - that this is a great company work with
+07:47 - them for a long time and there's a
+07:48 - reason why they're sponsoring this video
+07:50 - and some others on the channel
+07:52 - regardless what we want to do is create
+07:53 - a kubernetes cluster here so we're going
+07:55 - to go to kubernetes and we're going to
+07:57 - click create cluster now lenode has
+07:59 - their own kubernetes engine which makes
+08:01 - it really easy to set up a cluster and
+08:03 - have everything initialized for you so
+08:06 - you don't have to go in and do any
+08:07 - manual setup yourself you just kind of
+08:09 - look at this user interface here select
+08:11 - what you want in the cluster and it will
+08:12 - set it up for you so for the cluster
+08:14 - label i'm just going to go with tutorial
+08:17 - for now
+08:18 - for the region i'm going to go with
+08:20 - toronto they have a bunch of other
+08:21 - regions you can select whatever one is
+08:23 - closest to you and then for the
+08:25 - kubernetes version we can go with 1.22
+08:27 - it doesn't really matter what version
+08:28 - you select
+08:29 - okay now we need to add a node pool so
+08:32 - the node pools are going to be all of
+08:34 - the individual servers that are running
+08:35 - as a part of our kubernetes cluster so
+08:38 - you can select which ones you would like
+08:40 - and the quantity that you want to have
+08:42 - now lenode recommends you have a at
+08:44 - minimum three
+08:45 - so up to you but you can do two you
+08:47 - could do one
+08:48 - you are going to run into some
+08:49 - availability issues
+08:51 - and just performance issues if you have
+08:53 - less service right the more servers you
+08:55 - have the more available your application
+08:56 - is going to be and if i go here and
+08:58 - notice that we have stuff like shared
+09:00 - cpu dedicated cpu high memory a bunch of
+09:03 - different options i'm sure you guys can
+09:04 - read through the specs on your own for
+09:06 - now though let's just go with three
+09:07 - lenode two gigabyte servers which are
+09:09 - ten uh ten dollars a month so i'm gonna
+09:11 - click add here the quantity was three so
+09:13 - i've added those in and if i wanted more
+09:15 - well i could add those okay so now that
+09:17 - i've done that i'm just gonna click on
+09:18 - create cluster and this is gonna take a
+09:21 - second and once it's created i will be
+09:22 - right back all right so all of my nodes
+09:25 - here have been created and if i go to
+09:27 - the kubernetes tab you can see that i
+09:28 - can click on tutorial and i can see my
+09:30 - node pool which are just connected nodes
+09:33 - right in the kubernetes cluster now it's
+09:34 - automatically given them a name for me i
+09:36 - have three of them and they are all
+09:38 - running now that's as easy as it is to
+09:40 - create a cluster i'm going to show you
+09:41 - how to connect to this in a second but
+09:43 - for now i will quickly go through how
+09:44 - you can do this locally in case you
+09:46 - didn't want to use the cloud provider so
+09:48 - here is the mini cube documentation for
+09:50 - getting started this is not overly
+09:52 - complicated but it is a few more steps
+09:54 - than the cloud provider so i'll leave
+09:56 - this link in the description and what
+09:57 - you can do is install this program
+09:59 - called minicube and then you can run the
+10:02 - command mini cube start and that will
+10:04 - actually allow you to treat your own
+10:06 - local device as a kubernetes cluster now
+10:10 - again go through the installation i'm
+10:11 - not going to walk through it because it
+10:12 - differs based on your operating system
+10:14 - you're going to start your cluster and
+10:15 - then if you want you can look at the
+10:17 - interact with your cluster and deploy
+10:18 - applications although i'm going to
+10:20 - explain how to do that in the next steps
+10:22 - in this video so i'll leave that link in
+10:24 - the description again walk through this
+10:25 - if you want to do this locally
+10:27 - so now that we've done that let me close
+10:29 - this here what we need to do is install
+10:31 - program here called cubectl so as i said
+10:35 - what we're doing is we have our
+10:36 - kubernetes cluster in our case we're
+10:39 - having this hosted in the cloud if
+10:40 - you're using minicube it's going to be
+10:42 - on your local machine and we need a way
+10:44 - to interact with the cluster
+10:45 - specifically with the master node of the
+10:48 - cluster so there's this command line
+10:49 - tool called cubectl and you download
+10:52 - this or install it on whatever computer
+10:55 - you want not one that's running the
+10:57 - cluster but one that's going to be
+10:58 - interacting with the cluster so in the
+11:00 - case of minicube yes it will be on the
+11:02 - same computer but in our case we have a
+11:04 - lenode cluster out in the cloud we
+11:06 - install this on our local machine and
+11:08 - then it allows us sorry to send requests
+11:10 - to the cluster after we connect to it so
+11:13 - just keep that in mind this is kind of
+11:14 - our way to interface with the cluster
+11:16 - this does not need to be on the same
+11:18 - machine that is running the cluster or
+11:20 - on the master node or anything along
+11:21 - those lines we're just communicating
+11:22 - with the masternode using this so i'll
+11:24 - leave this link in the description as
+11:26 - well you want to install this for linux
+11:28 - mac or for windows right so whatever
+11:30 - operating system you're on click on the
+11:32 - appropriate link on this case i'm on
+11:34 - windows and what i would do is use this
+11:36 - curl command so i'd say curl hyphen lo i
+11:39 - would paste this and in fact i'll run
+11:40 - through the installation if you're on
+11:42 - mac or if you are on linux it'll be
+11:44 - slightly different so just click on the
+11:46 - appropriate link anyways what i'm going
+11:48 - to do is use this command so i'm going
+11:49 - to open up my command prompt here i'm on
+11:51 - windows i'm going to cd onto my desktop
+11:54 - and i want to make a directory uh mkdir
+11:57 - okay so let's say mkdir and let's go
+12:00 - with k8
+12:01 - and i'm going to cd into k8 and i'm just
+12:04 - going to run this curl command in the
+12:06 - directory so that my program here
+12:08 - cubectl gets saved inside of this
+12:10 - directory
+12:11 - okay so i'm going to run this curl
+12:12 - command this is going to take a second
+12:14 - to download and now if i have a look in
+12:16 - this directory we can see that i have
+12:18 - the cubectl.exe
+12:20 - alright so now that that is installed or
+12:22 - at least downloaded in our directory
+12:25 - here i need to add this to the system
+12:27 - path now this is going to be different
+12:29 - if you are on mac or linux so you'll
+12:31 - have to look up how to add a program to
+12:34 - the system path it's not overly
+12:36 - complicated from what i can remember but
+12:37 - obviously i'm not on a mac right now and
+12:39 - so i can't show you how to do that so
+12:40 - you need to add this to the path the way
+12:42 - you do this on windows is you type in
+12:44 - env and you access the edit environment
+12:46 - variables for your account you then go
+12:49 - to the path variable and you either
+12:51 - double click on it or click edit now
+12:53 - inside of here we want to add the
+12:55 - location of where we downloaded the
+12:57 - cubectl.exe
+12:59 - so i'm going to go down here notice i
+13:00 - already have this because i installed it
+13:02 - somewhere else but i'm now going to
+13:03 - change the location so it's actually
+13:05 - where i installed this uh this exe file
+13:07 - where i downloaded it
+13:09 - so in this case it's on my desktop
+13:11 - it's in the k8 folder and then the name
+13:14 - of it is cube ctl dot exe
+13:17 - okay so there we go i'm gonna click ok
+13:20 - ok and now it should be saved and now
+13:23 - that i've added this the path again on
+13:25 - mac and linux it's going to be different
+13:26 - but you need to add it to the system
+13:27 - path
+13:28 - what you can do is open up a new command
+13:30 - prompt here or terminal window if you're
+13:32 - on mac or linux and type in cube ctl now
+13:36 - when you do that you should get some
+13:37 - output here if it says it is not a
+13:39 - recognized command then that means you
+13:40 - did not successfully add it to the path
+13:43 - okay so now that we have cube ctl
+13:45 - installed what we need to do is link
+13:47 - this with our cluster now if you
+13:49 - followed along with the lenode
+13:50 - instructions you need to follow the
+13:52 - following steps i'm about to go through
+13:54 - if you installed minicube it should be
+13:56 - automatically linked for you but if it's
+13:58 - not you'll have to reference the
+13:59 - minicube documentation
+14:01 - anyways we're going to go back to lenode
+14:03 - here and i'm going to download this
+14:05 - cubeconfig file so the way i find this
+14:07 - is i go to the kubernetes tab i click on
+14:10 - my kubernetes cluster and you should see
+14:12 - something that says cube config and then
+14:14 - there's a yaml file here so what we're
+14:16 - going to do is click on that and
+14:17 - download it so i'm going to download it
+14:18 - into this k8 folder and it's named
+14:20 - tutorial and then cube config okay so
+14:23 - i'm going to hit save
+14:25 - now that i've done this what i need to
+14:26 - do is create an environment variable
+14:29 - that references this file and the
+14:31 - environment variable needs to be named
+14:33 - something specific i'll show you that in
+14:34 - a second and once we create that
+14:36 - environment variable then cubectl will
+14:39 - know to look for that and to use this
+14:41 - configuration file to access our cluster
+14:43 - so this config file here i can click on
+14:45 - view and i can have a look what's inside
+14:47 - of it you can see we have a certificate
+14:48 - we have our token essentially it has the
+14:50 - authentication to our master node into
+14:53 - our cluster so we're able to send
+14:55 - requests to the cluster that are
+14:56 - authenticated and we don't need to kind
+14:58 - of do anything manually we just link
+15:00 - this file essentially and again if you
+15:02 - did this locally with minicube it should
+15:04 - already be set up and connected for you
+15:06 - so what i'm going to do here is go back
+15:08 - to my environment variables okay and
+15:11 - notice here that we have this
+15:12 - environment variable called cube config
+15:15 - now again on mac and linux to create
+15:16 - this is going to be different you're
+15:17 - probably going to have to use the export
+15:19 - command from your terminal but on
+15:20 - windows what i can do is simply create
+15:23 - this variable if i don't already have it
+15:25 - or edit so let me just delete it and
+15:26 - let's recreate it to go through the
+15:28 - steps so this is called cube config in
+15:30 - all capitals and then the value of this
+15:33 - needs to be the path to where you
+15:34 - downloaded this file so the path of this
+15:37 - file is c colon slash users slash tim
+15:41 - slash desktop and then this is slash k8
+15:44 - and then the name of the file
+15:46 - i believe is
+15:49 - tutorial and then the path for this
+15:51 - actually what i can do i should have
+15:53 - done this before is just click on browse
+15:55 - file
+15:56 - or browse directory and now i can just
+15:59 - go and actually find where this file is
+16:00 - so it's in tim it should be in desktop
+16:04 - and then k8
+16:05 - and okay so k8 and then the name of this
+16:09 - is going to be
+16:11 - tutorialcubeconfig.yaml so you just need
+16:12 - to find where you downloaded this and
+16:13 - put the path to the downloaded file
+16:15 - again that's in the cubeconfig
+16:17 - environment variable all right i'm going
+16:19 - to click ok now we can see that we've
+16:21 - created this environment variable cube
+16:22 - config i'm going to click ok again now
+16:25 - i'm going to restart my terminal window
+16:28 - i'm going to type on cmd and now cube
+16:31 - ctl should be connected to my kubernetes
+16:33 - cluster and i will show you how we can
+16:35 - test that all right so the command that
+16:37 - we're going to run to test to see if we
+16:38 - are connected successfully is simply
+16:41 - cube
+16:42 - ctl and then this is going to be get and
+16:45 - pod now this is going to give us a list
+16:47 - of all of the pods that are running now
+16:49 - in this case no pods are running in our
+16:51 - cluster but notice we didn't get an
+16:52 - error from this command meaning we are
+16:54 - connected and yeah we get this result no
+16:56 - resource found in default namespace now
+16:59 - as i go through this you will see a
+17:00 - bunch of terminology that we have not
+17:02 - yet covered for now you can simply
+17:04 - ignore it for example namespace you
+17:05 - don't need to know what that is just
+17:06 - understand what a pod is a services and
+17:09 - a node and then a few other things as we
+17:11 - go through anyways that was getting the
+17:13 - pod the next thing that i will do here
+17:15 - is look at these services so let's say
+17:17 - cube ctl get and then let's go with
+17:20 - service now when i do this notice we
+17:22 - have one service now this is the cluster
+17:25 - ip and it is
+17:27 - 10.12.0.1 this is a default service
+17:29 - that's going to be on all of our
+17:30 - kubernetes clusters okay so we've now
+17:33 - looked at how to get the pods how to get
+17:34 - these services we could also get a
+17:36 - deployment so we could say kubernetes or
+17:38 - not kubernetes cube ctl gets
+17:42 - and then deployment like that and of
+17:43 - course we don't have any deployments
+17:45 - because we have not created any so now
+17:47 - let's create our first deployment now
+17:49 - remember the pod is the smallest unit
+17:52 - that we have and we don't interact with
+17:54 - the pod or we don't at least stack
+17:56 - manually create the pods what we do
+17:58 - instead is we create a deployment and
+18:00 - the deployment specifies the pods that
+18:02 - we should be running
+18:03 - right now i will create the most basic
+18:05 - deployment that i possibly can then i
+18:07 - will show you how we write deployment
+18:09 - configuration files and how we actually
+18:11 - i guess deploy or execute those
+18:13 - configuration files and send them to the
+18:15 - masternode for now though let's create a
+18:17 - simple deployment just so we can look at
+18:19 - a few things i'm going to say cubectl
+18:21 - this is going to be create and then i'm
+18:23 - going to create a deployment but i could
+18:25 - create a few other things as well like a
+18:27 - service for example and i'm going to put
+18:29 - the name of the deployment now here we
+18:32 - can do something like mongodb because
+18:35 - what i need to do is pass an image and
+18:37 - the image is going to be what the pods
+18:40 - should be running where the containers
+18:41 - in the pod should be running so i'm
+18:43 - going to say cube cto create deployment
+18:46 - mongodb and then hyphen hyphen image is
+18:49 - equal to and then i can put any docker
+18:51 - image here from docker hub so docker hub
+18:54 - is a place where a bunch of docker
+18:55 - images are hosted if you're unfamiliar
+18:57 - with docker then check out my docker
+18:59 - tutorial i will leave it on the screen
+19:00 - as well as a link in the description
+19:02 - because i'm not going to be explaining
+19:03 - all the docker concepts in this video
+19:06 - regardless we place the docker image
+19:07 - that we want this deployment to run for
+19:09 - the pawns so now i'm going to hit enter
+19:12 - and we can see that we have created this
+19:14 - deployment so now if i run cubectl
+19:17 - getdeployment you can see that we have
+19:19 - the mongodb deployment and it's a zero
+19:21 - out of one up to date one availability
+19:23 - zero age five seconds now this is
+19:25 - because it's booting up the container
+19:27 - right now so if i do something like
+19:28 - cubectl getpod you can see that we have
+19:31 - one pod we have a mongodb pod that was
+19:34 - created for us it has some id here and
+19:36 - then it's not ready because we are
+19:37 - creating the container so if i give this
+19:40 - a few seconds then i run this command
+19:41 - again we now see that this is ready the
+19:44 - container is running and there you go
+19:46 - we've just created a deployment the
+19:47 - deployment then ran the pods for us and
+19:49 - now if this pod were to die or to crash
+19:52 - it would automatically be recreated by
+19:54 - kubernetes for us there you go so that's
+19:57 - as easy as it is to start working and
+19:58 - actually deploying something out now the
+20:00 - image that i picked here is just a
+20:02 - random image i just picked the
+20:03 - image just so we had something to kind
+20:05 - of mess around with
+20:06 - later i'm going to show you how we
+20:07 - deploy our own image so we can actually
+20:09 - deploy sample flask application
+20:12 - for now though let's have a look at how
+20:14 - we can do something like view what's
+20:16 - actually going on inside of the pod so
+20:19 - this is my pod id or my pod name so i'm
+20:22 - going to copy that with ctrl c and now
+20:24 - i'm going to use a command that gets the
+20:25 - logs of this pod so i'm going to say
+20:27 - cube ctl
+20:28 - logs and then i'm going to paste the pod
+20:30 - name now when i do this we're going to
+20:32 - see everything that's happening inside
+20:34 - of this pod now it may be pretty
+20:35 - meaningless to us but sometimes this is
+20:37 - useful for debugging and allows us to
+20:39 - view you know what the output is
+20:41 - in the pod okay so let's clear this
+20:43 - let's run another command now another
+20:44 - command that i have found very useful
+20:46 - here is called exec
+20:49 - now what this command allows you to do
+20:51 - is actually get inside of the
+20:53 - interactive shell for a pod so i can say
+20:56 - cube ctl exec and then hyphen i t for
+20:59 - interactive shell then i'm going to put
+21:01 - my pod name which is this and then i am
+21:04 - going to put hyphen hyphen bin slash and
+21:07 - then bash now this is actually going to
+21:08 - put me in a bash environment for this
+21:10 - shell
+21:11 - although i need to do sorry a space here
+21:14 - after the dash dash so i just cleared
+21:16 - the screen so it was fresh here but now
+21:17 - you can see i'm inside of the
+21:18 - interactive shell and inside of here i
+21:20 - can type a command like ls i can cd into
+21:23 - the home directory i can ls inside of
+21:25 - here and i can essentially debug the
+21:27 - container that's actually running or the
+21:29 - pod that's running by getting into it in
+21:31 - that way now if i want to exit i'll type
+21:33 - exit and that will bring me back to my
+21:35 - main commands line okay so those are a
+21:38 - few basic commands to deal with pods and
+21:40 - to deal with deployments now let's have
+21:42 - a look at how we can delete pods and
+21:44 - delete deployments so i can do something
+21:46 - here like cubectl get
+21:49 - and then pod all right this gives me the
+21:51 - pod names let's copy this and now if i
+21:53 - want to delete the pod i can do
+21:54 - something like cubectl
+21:56 - delete pod and then paste the pod and
+21:59 - notice it's going to say that it was
+22:00 - deleted however if i now go to get the
+22:03 - pods notice that one is running with an
+22:05 - age of four seconds the reason it's
+22:07 - running is because as soon as this pod
+22:09 - is deleted our deployment now has said
+22:11 - okay well one was deleted we need to run
+22:13 - another pod because this pod died or
+22:15 - this pod crashed so just trying to show
+22:17 - you here the power of kubernetes a pod
+22:19 - crashed it died and knew a new one was
+22:21 - automatically created so how would we
+22:23 - prevent this from happening what happens
+22:25 - if we actually want to remove say the
+22:26 - entire deployment well i can do that i
+22:28 - can remove the deployment so i can do
+22:30 - something like cubectl and then i can
+22:32 - say delete
+22:34 - deployment so let's do this and the name
+22:36 - of the deployment which i believe i
+22:38 - called mongodb so now i've deleted the
+22:40 - deployment and if i go to get my pods
+22:42 - notice we have no pods because we would
+22:44 - have removed all of the ones that were
+22:46 - associated with that specific deployment
+22:48 - all right i think that is really all i
+22:50 - need to show you for the basic
+22:51 - kubernetes commands there of course is a
+22:53 - lot more stuff that you can do but this
+22:55 - show you how to get the pod get the
+22:56 - service get the deployment create a very
+22:58 - basic deployment as well as how to
+23:00 - delete a deployment and delete pods next
+23:03 - what i would like to do is actually go
+23:05 - through an example where i demonstrate
+23:07 - how we deploy our own application
+23:09 - because that's going to be a lot more
+23:10 - useful than just going through some
+23:11 - basic commands all right so now we're
+23:13 - going to start going through this flask
+23:14 - deployment now all of the code that you
+23:16 - will see here will be available from the
+23:18 - description you can click on the link
+23:20 - that says github repository or something
+23:22 - along those lines and you'll see the
+23:23 - docker file the config.yml file main.pi
+23:26 - as well as requirements.txt
+23:28 - and i'll explain all these files in a
+23:30 - minute however i want to start with this
+23:32 - file right here so for this application
+23:34 - we need to have a deployment and this
+23:37 - deployment needs to specify what docker
+23:40 - image we want to run that docker image
+23:42 - is going to be a custom image that's
+23:44 - going to contain our application and in
+23:46 - this case we're going to make three
+23:47 - replicas of it now what you're looking
+23:49 - at is the configuration file for this
+23:51 - deployment so often times when we are
+23:54 - deploying applications it's not enough
+23:55 - to simply run a single pod and all of
+23:58 - the options for our deployment we don't
+23:59 - want to specify in the command line so
+24:01 - instead we put them in a configuration
+24:03 - file and then we can use the
+24:05 - configuration file as our deployment
+24:07 - which i'll show you how to do later on
+24:09 - for now that we have a very basic
+24:10 - config.yml file i will not walk through
+24:12 - every single line in this but i'll go
+24:14 - through some of the important ones now
+24:16 - so this is yaml y-a-m-l okay file
+24:19 - extension mostly for configuration and
+24:21 - inside of here i have an api version i
+24:23 - have the kind of this file which is a
+24:25 - deployment because we can create other
+24:27 - things as well we can create a service
+24:29 - right we can create a namespace we can
+24:31 - create all these other things
+24:33 - that i haven't necessarily talked about
+24:34 - the only ones we're really familiar with
+24:36 - are deployments and services so i do my
+24:39 - kind i have some metadata the name of
+24:41 - this the labels associated with this and
+24:43 - then i have my specification for what i
+24:45 - actually want for my different pots so i
+24:48 - say replicas is equal to three now that
+24:50 - means we're going to run three replicas
+24:52 - of all of the pods that i specify here
+24:55 - then i have selector i have my template
+24:58 - and i have my spec here for the
+24:59 - different containers that i want to run
+25:01 - you can read about all of this uh all of
+25:03 - these different what do you call it
+25:05 - symbols or fields from the kubernetes
+25:08 - documentation for now you can just kind
+25:09 - of copy this file again from the link in
+25:11 - the description and work with it and
+25:13 - just change some of the important
+25:15 - aspects so here i have my containers now
+25:18 - the container name is going to be flask
+25:20 - web and then the image is going to be a
+25:22 - custom docker image i'm going to show
+25:24 - you how we create this in a minute and
+25:25 - then for the ports i'm saying i want to
+25:27 - expose expose sorry port 5000 because
+25:30 - that's the port that my flask
+25:32 - application is going to run so this will
+25:34 - now create when i send this deployment
+25:36 - over to my masternode three pods that
+25:39 - are running this image there are all
+25:41 - explorers exposing port 5000
+25:44 - now the issue is we need a service
+25:46 - that's going to allow us to actually
+25:48 - interact with our pods and so what i'm
+25:51 - going to do is paste down here a service
+25:54 - now i put three dashes the three dashes
+25:56 - means we're gonna have a new file here a
+25:58 - new config and so you can place kind of
+26:00 - as much as you want in a single file if
+26:02 - you separate it with three dashes and
+26:04 - now here i'm saying my api version is v1
+26:06 - my kind is service
+26:08 - my metadata name is flask service and
+26:11 - then for the specification what i need
+26:13 - to do is essentially link different
+26:15 - ports and i need to specify that this is
+26:16 - going to be an external service the
+26:18 - reason it needs to be external is
+26:20 - because i want to be able to access the
+26:22 - website from outside of the nodes right
+26:26 - outside of the kubernetes cluster if
+26:28 - this was something like a database or an
+26:29 - internal api then i would not make this
+26:32 - an external service i would make it
+26:33 - internal because then only the
+26:35 - applications in the cluster would be
+26:36 - able to access it i understand this is a
+26:38 - lot but just bear with me for now
+26:41 - okay so we have our kind service
+26:42 - metadata then we have our spec and
+26:44 - inside of here we specify the ports that
+26:46 - we want to have exposed and kind of
+26:48 - linking with so in this case i'm saying
+26:50 - okay port 5000 now what that means is
+26:53 - that i want the port for this service to
+26:56 - be 5000
+26:58 - so i'm going to go to the static ip
+26:59 - address of this service which i will
+27:01 - show you how to get and then port 5000
+27:04 - and that is going to proxy the request
+27:06 - to the target port and the target port
+27:09 - is the port on my pod that i want to
+27:11 - actually access so in this case i want
+27:13 - to access port 5000 because that's the
+27:15 - port on my pod and i access it through
+27:18 - port 5000 on my
+27:21 - uh what do you call it on my service
+27:23 - okay now i can make this port something
+27:25 - different i can change the target port
+27:27 - they do not have to be the same in this
+27:28 - case i'm just making them the same and
+27:30 - then the protocol of course is going to
+27:31 - be tcp okay for the selector i'm saying
+27:34 - this service is going to be for the
+27:35 - flask web container or the flask web pod
+27:39 - so that's why i have flask web flask web
+27:41 - here right
+27:42 - and then the type is going to be load
+27:44 - balancer now this is kind of a
+27:46 - misleading name but what this
+27:47 - essentially means is that this is an
+27:49 - external service
+27:51 - all right so that is really all we need
+27:53 - for this file here again i understand
+27:55 - not all this is completely clear i don't
+27:57 - want to explain every single line you
+27:59 - can find that from the kubernetes
+28:00 - documentation for now though this is the
+28:02 - file we'll use to actually deploy our
+28:05 - flask application okay so this is our
+28:07 - config file however we now need to
+28:09 - actually get the code for our app and
+28:12 - see how we're going to deploy that so i
+28:13 - have this main.pi file and this is
+28:16 - what's going to be running my flask
+28:17 - application again available from the
+28:18 - link in the description but i just
+28:20 - import flask create my app i create a
+28:22 - very basic route it's going to render
+28:24 - some html hello this is the main page
+28:26 - and then an h1 tag that says hello and
+28:29 - then i have if underscore name is equal
+28:30 - to main i'm going to run the app and
+28:33 - when i put the host of 0.000
+28:36 - that means that this is going to run on
+28:39 - the ip address of the machine so rather
+28:41 - than running locally on localhost it's
+28:43 - going to run on the public ip address
+28:45 - and then i'm running this on port 5000.
+28:48 - okay so that is the main code of my app
+28:51 - i then have requirements.txt which is
+28:53 - for python just saying what requirements
+28:55 - we need to run this python code in this
+28:57 - case it's just flask and then i have a
+28:59 - docker file
+29:01 - now again i'm not going to explain all
+29:02 - the docker stuff because i have an
+29:03 - entire video on that but the docker file
+29:06 - is essentially the image is going to be
+29:09 - used sorry to create an image for my
+29:11 - application so i have from python colon
+29:14 - 3.6 slim this is the base image that i'm
+29:16 - going to use i'm then going to run this
+29:18 - command i'm going to run this command
+29:20 - which is going to install python engines
+29:22 - and build essential which i need to run
+29:24 - my website and then i'm saying i'm going
+29:26 - to copy the requirements txt file to the
+29:29 - container and then i'm going to run the
+29:30 - command pip install hyphen
+29:32 - requirements.txt
+29:34 - so inside of my container it's going to
+29:36 - install flask then i'm going to copy the
+29:38 - main.pi file
+29:40 - i'm going to expose port 5000 on this
+29:43 - container and then i'm going to run the
+29:44 - command python3 main.pi which will start
+29:47 - running my flask server now this will
+29:49 - happen three times right inside of the
+29:52 - three replicas of my pods so each one of
+29:55 - them will be running an instance of the
+29:56 - main.pi file and then the requests that
+29:59 - are sent to this will be load balanced
+30:01 - between the different nodes or between
+30:03 - the different pods sorry
+30:04 - okay so that is the code that i have so
+30:07 - now that we've kind of walked through
+30:08 - all of this we need to first create our
+30:11 - docker file or sorry our docker image
+30:14 - let's go here we need to create this
+30:15 - image and we need to upload it to docker
+30:18 - hub so we're actually able to access it
+30:20 - from inside of this config.yml file
+30:22 - so what i need to do here is go to my
+30:24 - command line so now what we need to do
+30:26 - here is build a docker image and upload
+30:28 - that docker image to docker hub so
+30:31 - actually i'm not going to go to my
+30:32 - command line quite yet what i'm going to
+30:34 - do instead is tell you to download
+30:36 - docker desktop if you don't already have
+30:38 - it or just download docker so you need
+30:39 - to have docker on your system again if
+30:41 - you're unfamiliar with docker i will
+30:42 - leave a link to a video on it in the
+30:44 - description but download docker once
+30:47 - you've done that you need to create an
+30:48 - account on docker hub docker hub is
+30:50 - where you're going to host your image so
+30:51 - it's accessible from your kubernetes
+30:53 - cluster
+30:54 - and then you are good now keep in mind
+30:56 - your username because you're going to
+30:57 - need that username so again download
+30:59 - docker install that on your system and
+31:01 - then go to docker hub create an account
+31:04 - and once you know the username of that
+31:06 - account you can follow along with the
+31:07 - next steps so from your computer open up
+31:10 - docker desktop if you have it and you're
+31:12 - going to need to authenticate with
+31:13 - docker hub by signing into your docker
+31:16 - hub account so you can then push an
+31:18 - image to docker hub so up here you
+31:20 - should see something that says account
+31:22 - or sign in or whatever so click on it
+31:24 - and then you're going to be prompted to
+31:26 - sign into your account sign in to the
+31:28 - docker hub account you just created and
+31:30 - then you should be automatically like
+31:32 - linked with the docker hub account so
+31:34 - you can push images to docker hub in
+31:36 - this case i'm already signed in so of
+31:37 - course i don't need to do anything okay
+31:39 - now that i'm signed in though i'm going
+31:41 - to go to my command line and now we can
+31:43 - actually start writing some code so the
+31:44 - first thing i need to do is build a
+31:46 - docker image and push it to docker hub
+31:48 - so i need to locate my docker file to
+31:50 - build the image from so i'm going to go
+31:52 - cd it's actually in my downloads and
+31:54 - then a folder called
+31:56 - not that called test okay so inside of
+31:59 - here you see i have my config.yaml
+32:01 - dockerfile main.pi requirements.txt
+32:04 - now i'm going to build my docker image
+32:06 - so i'm going to say docker build i'm
+32:08 - going to put a dot this is the current
+32:10 - directory where my docker file is that's
+32:12 - why i'm putting dot then i'm going to do
+32:14 - hyphen t for the name and it is very
+32:16 - important here for the name of your
+32:17 - docker image that you prefix it with the
+32:19 - username of your docker hub account so
+32:22 - i'm going to say tech with tim zero
+32:24 - which is the name of my docker hub
+32:25 - account
+32:26 - slash and then you can put whatever name
+32:28 - you want here for the image so since i
+32:30 - already have one called flask web i'm
+32:32 - going to go flask web tutorial okay so
+32:35 - you put your username you put the name
+32:37 - of the image or actually what may be
+32:39 - called the repository that this image is
+32:41 - going to be a part of and then colon and
+32:44 - then the name of the actual image which
+32:46 - in this case i'm going to put as latest
+32:48 - now you can name this whatever you want
+32:49 - i miss explain this a little bit again
+32:51 - we have username
+32:52 - slash and then this is your repository
+32:55 - because theoretically you can have
+32:56 - multiple images in the repository and
+32:58 - then you put the name of the image after
+33:00 - the colon here which in this case is
+33:02 - latest you don't have to know what all
+33:03 - of these mean so long as you have this
+33:05 - kind of string right here and you can
+33:06 - use it okay so now that we've done that
+33:09 - i'm going to hit enter and it should
+33:10 - start building my docker image for me
+33:12 - from the docker file so once this is
+33:15 - done i will be right back okay so we
+33:17 - have now created this docker image so if
+33:19 - i want to view the images i can say
+33:20 - docker and i think just images and it
+33:22 - will show me all the ones i have notice
+33:24 - i was messing around with this
+33:25 - previously and hence i have a bunch of
+33:27 - different images but i also have tech
+33:29 - with tim zero slash flask and then web
+33:32 - tutorial so i'm going to copy this okay
+33:35 - and now i'm going to push this to docker
+33:37 - hub and this will only work if you
+33:38 - signed into docker hub so let's clear
+33:40 - here and let's push so i'm going to say
+33:43 - docker
+33:44 - push and then i'm going to push the name
+33:46 - of the image that i just made so i need
+33:49 - to add the latest here as well
+33:51 - okay so docker push user name slash
+33:53 - repository name colon name of image
+33:55 - which is latest
+33:57 - let's hit enter and then it should push
+33:59 - it to docker hub alright so it looks as
+34:01 - though this has finished and i've pushed
+34:03 - it to docker hub so let's have a look
+34:05 - and verify here so if i go to docker hub
+34:07 - and i refresh
+34:09 - we should see now that we have a new
+34:11 - repository and we do it as flask web
+34:13 - tutorial and if i click in here i can
+34:15 - see that i have an image called latest
+34:17 - and if i click into the latest image
+34:20 - then i can see kind of all the stuff
+34:21 - related to this image anyways i'm not
+34:22 - super concerned about looking at that uh
+34:25 - but we can see that we have tech with
+34:26 - tim zero flask web tutorial latest that
+34:28 - is our image so now that this is on
+34:30 - docker hub this is a public image
+34:32 - meaning anyone can view it so keep that
+34:34 - in mind you only want to put open source
+34:36 - code here don't put anything private
+34:37 - unless you're going to make a private
+34:39 - docker hub one but that kind of involves
+34:40 - a few different things and now that we
+34:42 - have this image we want to go to our
+34:44 - config.yaml file so let's open up
+34:47 - sublime text which is what i was using
+34:49 - here okay y is select folder i don't
+34:51 - want select folder okay subline text
+34:53 - though and now all i need to do is
+34:56 - inside of my spec here for the
+34:58 - deployment i need to change the image
+35:00 - that i want to run
+35:01 - to be the name of the image that i just
+35:03 - created now again for you guys it will
+35:04 - be different i mean theoretically you
+35:06 - can actually use this because it's
+35:07 - public so you can just put in what i
+35:09 - have here or put in your own docker
+35:11 - image that you would have already
+35:12 - created now i will mention that if you
+35:14 - wanted to make multiple containers you
+35:16 - would just copy this here and you put
+35:18 - this here and then you just put whatever
+35:19 - the other images that you want to run
+35:21 - give it a different name maybe the
+35:23 - container port would be different if
+35:24 - you're exposing a port but that's kind
+35:26 - of how you run multiple containers then
+35:28 - all of those would be replicated three
+35:30 - times anyways i don't want to run
+35:31 - multiple pods or multiple containers i
+35:34 - just want to run one and have it
+35:35 - replicated three times so that is what i
+35:37 - am doing here okay so i'm now going to
+35:39 - save this file again make sure it looks
+35:41 - like this you can download it from the
+35:42 - link in the description and now that we
+35:44 - have this file all that's left to do is
+35:47 - actually put this on our kubernetes
+35:49 - cluster and then we'll actually be able
+35:50 - to view our flask website from the ip
+35:53 - address of our cluster
+35:55 - or from our servicer so i'm going to
+35:57 - clear the screen here and i'm inside
+35:59 - again the directory where i have this
+36:01 - config.yaml file and what i can do now
+36:03 - is type cubectl and then apply hyphen f
+36:07 - which stands for file and the name of
+36:09 - the file that i want to apply now in
+36:11 - this case the file that i want to apply
+36:13 - is called
+36:14 - config.yaml so i'm going to hit enter
+36:16 - here and apply this and it's going to
+36:18 - create a deployment and create a service
+36:21 - for me on my kubernetes cluster so now
+36:24 - what i can do is type cube ctl get pod
+36:28 - and you should see that we get three
+36:29 - pods because we replicated the pod three
+36:32 - times right and if i go cube ctl and get
+36:35 - service this is actually what we want to
+36:36 - look at here we can see that we have a
+36:38 - flask service it is type load balancer
+36:41 - meaning it is external again kind of a
+36:43 - weird name here but that's what it means
+36:45 - we have a cluster ip and then we have an
+36:47 - external ip now the external ip is what
+36:50 - i was talking about with the services
+36:51 - that are external and this allows us to
+36:54 - actually access the service from this ip
+36:56 - address outside of the cluster so i'm
+36:58 - going to copy this ip address and then i
+37:00 - want to look at the ports here so when
+37:02 - it shows me these two ports what this
+37:04 - means is i can access both port 5000 and
+37:07 - port 3002 are 32 000 sorry 194. both of
+37:11 - these are tcp ports which are going to
+37:13 - allow me uh to be rooted essentially
+37:16 - inside of whatever pod the load balancer
+37:18 - sends me to and then i will be able to
+37:20 - hit the end point for my website
+37:23 - okay so let's see if the pods are
+37:24 - running now okay so they're all running
+37:26 - so that's good to go let's check our
+37:28 - deployments
+37:29 - okay so let's say
+37:31 - cube ctl get deployment it would be
+37:33 - helpful if we spelt deployment properly
+37:36 - and we have our flask deployment three
+37:38 - out of three up to date available
+37:39 - awesome
+37:40 - okay so now let's go here
+37:44 - and let's go to our browser let's paste
+37:46 - in the ip address let's go to port 5000
+37:49 - and notice that i get my website there
+37:51 - you go we just hosted a website this is
+37:53 - publicly available assuming i'm still
+37:55 - running this cluster which i probably
+37:56 - won't be when you're watching a video
+37:58 - you could go to this url as well and you
+38:00 - would be able to visit the website now
+38:01 - one thing to note here because i
+38:02 - realized i mis-explained something
+38:04 - so for the ports for your external
+38:07 - services they're actually supposed to be
+38:09 - within a specified range i believe the
+38:11 - range is something like 31 000 to 34 000
+38:14 - i don't know the exact range up what
+38:16 - this means here is not that it is
+38:17 - running on both of these ports that is
+38:19 - incorrect it means that when i go to
+38:21 - port 5000 it's kind of an alias for the
+38:23 - port 3002 or 32194
+38:27 - and so that means i use port 5000 but
+38:30 - really it's going to come in as this
+38:31 - port when i put 5000 in my browser at
+38:34 - least i believe that's what's happening
+38:35 - here if someone knows precisely and they
+38:38 - think i'm incorrect then please do leave
+38:39 - a comment about from what i can tell
+38:41 - that's what's happening here we're kind
+38:42 - of aliasing this port which is actually
+38:44 - the port it's going to come in through
+38:46 - as poor 5000 but that still means that
+38:48 - we can use port 5000 here to access the
+38:51 - uh the website okay
+38:54 - all right so that is going to wrap up
+38:56 - this video now i know that i did not
+38:58 - show you everything associated with
+39:00 - kubernetes i'd not go through all of the
+39:02 - different features but i thought this
+39:03 - was a really good introduction video
+39:05 - that even if you didn't follow along
+39:07 - with at least gave you a decent idea of
+39:08 - how these things work and how easy it is
+39:11 - to actually deploy
+39:12 - in this case a distributed system where
+39:14 - we have multiple pods running the same
+39:17 - website we're going to have a load
+39:18 - balancer automatically set up for us and
+39:20 - if we had a website that was getting a
+39:22 - ton of traffic then we would just have
+39:23 - more pods right and we could easily
+39:25 - modify the deployment to replicate maybe
+39:27 - 20 times 30 times 40 times whatever and
+39:29 - kubernetes would handle all of that for
+39:31 - us so that said i will wrap up the video
+39:34 - here i hope that you guys found this
+39:36 - helpful if you did make sure leave a
+39:37 - like subscribe the channel thanks again
+39:39 - to lenode for sponsoring this video and
+39:41 - i will see you in another one
+39:45 - [Music]

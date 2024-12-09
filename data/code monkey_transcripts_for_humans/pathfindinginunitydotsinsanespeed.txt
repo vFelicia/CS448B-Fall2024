@@ -1,0 +1,569 @@
+With timestamps:
+
+00:00 - in this video we're going to implement a
+00:01 - star path finding in unity dots we're
+00:04 - going to implement the algorithm in a
+00:05 - pure data oriented way which will allow
+00:08 - us to benefit from the extreme
+00:09 - performance of unity dots let's begin
+00:11 - [Music]
+00:15 - okay so in this video we want to
+00:18 - implement a star using a data oriented
+00:20 - design we want to benefit from massive
+00:23 - performance from unity dots by using the
+00:25 - job system and the burst compiler now
+00:27 - previously I covered how to do a star
+00:29 - where we made it the normal way using
+00:31 - objects if you haven't seen it yet then
+00:33 - go watch that video in there I cover the
+00:35 - algorithm in more detail step by step
+00:38 - here I'm going to do an overview of the
+00:40 - algorithm and then start implementing it
+00:42 - in unity dots paying close attention to
+00:44 - how we can convert from object oriented
+00:46 - into data oriented so before we get to
+00:49 - the code let's first check out the
+00:51 - theory the goal of the a-star path
+00:53 - finding algorithm is to search to find a
+00:55 - path from A to B so the algorithm
+00:57 - already detects one coupon and
+00:59 - unwalkable
+00:59 - areas and correctly identifies the
+01:01 - insurance path from A to B our map won't
+01:04 - be grid based from each grid position we
+01:07 - can move in all eight directions on each
+01:09 - node essentially we have three values
+01:11 - first we have the G cost that is the
+01:14 - walking cost from the start node so for
+01:17 - example to go from this node into this
+01:18 - node it has a cost of 1 and we can also
+01:21 - move diagonally so from this node into
+01:23 - this node has a cost of 1.4 now in order
+01:26 - for our code to work with ends instead
+01:27 - of floats we're simply going to multiply
+01:29 - our values by 10 so horizontally we have
+01:32 - a cost of 10 and diagonally cost of 14
+01:34 - then we have the H cost this is the
+01:37 - heuristic cost to reach our final goal
+01:39 - so it's essentially an estimate to try
+01:41 - to reach the goal our calculation is
+01:43 - simply assuming there are no 1 so moving
+01:45 - straight towards our goal so in here our
+01:47 - hitch cost more commonly going from here
+01:48 - to here to here again this is just a
+01:51 - basic guess to figure out which notes
+01:52 - you prioritize and finally we have the F
+01:55 - which is simply G + H so this combines
+01:58 - our actual cost from the start combined
+01:59 - with an estimate to reach the goal and
+02:01 - we have our final number using this we
+02:03 - can prioritize nodes with lower F since
+02:06 - those are more likely to be closer to
+02:07 - the goal the algorithm finally stops
+02:09 - when our current node is our goal node
+02:12 - so if we start here for
+02:13 - we check on the neighbors these are
+02:15 - unwalkable so they are ignored so he
+02:16 - checks this one then checks these two
+02:18 - neighbors then this one has a lower F
+02:20 - value so it checks this one checks the
+02:22 - neighbors four down then it starts
+02:24 - locating that one and it says that this
+02:25 - one is a go so we have our path so here
+02:27 - as you can see that G cast is constantly
+02:29 - increasing and the F cast is constantly
+02:31 - decreasing then our path is traced back
+02:33 - from the final node into our original so
+02:36 - each node also knows what the previous
+02:37 - path node was then for the algorithm to
+02:40 - work we also have two lists for our
+02:41 - notes the open list and the close list
+02:44 - the open list is where we have all the
+02:46 - nodes that are queued up for searching
+02:47 - and the cause lists are all the notes
+02:49 - that have already been searched so we
+02:51 - keep going until we find the current
+02:53 - node on the open list or our open list
+02:55 - is empty so we no longer have anywhere
+02:57 - to search so there's no path okay so now
+02:59 - that we've got that the algorithm let's
+03:01 - implement it again in this video we're
+03:04 - focused on the unity dot specific
+03:05 - implementation which means that are
+03:07 - oriented and no objects so make sure to
+03:09 - watch that other video first which will
+03:11 - make the data oriented version much
+03:13 - easier to follow I've also made a video
+03:15 - covering the differences between
+03:16 - reference types and value types that is
+03:19 - one of the main differences between the
+03:20 - object-oriented way and the data
+03:22 - oriented way objects are reference types
+03:24 - whereas here we're going to use structs
+03:26 - which are value types so watch that
+03:28 - video to see how they behave differently
+03:30 - this video is made possible thanks to
+03:32 - these awesome supporters go to
+03:34 - patreon.com/scishow to code monkey to
+03:36 - get some perks and help keep the videos
+03:38 - free for everyone let's begin by making
+03:40 - our script so a new c-sharp script and
+03:43 - just call it cat finding and just for
+03:46 - testing let's make a empty game object
+03:48 - and attach our script onto it okay now
+03:52 - the core of our pathfinding is to source
+03:55 - some data on each squared position so
+03:57 - let's begin by defining our pet node now
+03:59 - first of all this will be a struct and
+04:02 - College Pat node now inside the first
+04:07 - thing we're going to need is the
+04:08 - position so let's have an end for the X
+04:10 - and then in for the Y and now since
+04:12 - we're working with structs and not
+04:14 - objects that means we're going to work a
+04:15 - lot with indexes so let's also store a
+04:18 - public and for the index then we have
+04:21 - the standard a star path finding values
+04:25 - so we have the G cast H cos and F cast
+04:28 - the G cast is the actual move cast from
+04:30 - the start node onto this node the H cast
+04:33 - is the estimated cost from this node
+04:35 - onto the end node and the F cost is
+04:38 - simply G Plus H then we're also going to
+04:40 - have a simple boolean for is welcome and
+04:44 - lastly in order to calculate our path
+04:46 - back from the end node then we need to
+04:48 - know where we came from now in the
+04:50 - object-oriented way here we we just saw
+04:52 - our previous path node but we cannot use
+04:55 - objects so instead we're going to define
+04:57 - it as our index so this is the index of
+05:00 - node previous to this one when we're
+05:02 - completing our path all right so here we
+05:04 - have our path node defined purely using
+05:07 - value types so that means we can use
+05:09 - this struct inside a burst compile job
+05:11 - now up here let's make a testing
+05:13 - function so a simple called fine path
+05:18 - we're going to find a path and we're
+05:20 - going to receive an into for the
+05:23 - starting position and then into for the
+05:27 - end position now the into is inside the
+05:30 - new unity dot mathematics library and
+05:33 - there it is so in here let's start off
+05:37 - by creating our grid let's start off
+05:40 - with just basic four by four grid and in
+05:43 - order to store our grid we're going to
+05:44 - use a flat native all right okay so we
+05:52 - define our flat native Ray and then
+05:54 - since we're dealing with native race we
+05:56 - must remember to dispose of them so at
+05:58 - the end we call this post all right now
+06:02 - to initialize it in here we construct a
+06:08 - new path node and now to set the
+06:13 - starting Val so we set the x to this X
+06:17 - same thing for the Y okay now to
+06:21 - initialize the remaining values we're
+06:24 - going to need the index so let's make a
+06:26 - function to calculate that
+06:31 - here it is very simple we just convert a
+06:34 - x and y position into a flat in X so in
+06:38 - here we can set the path node index to
+06:40 - be are constantly indexed and a path
+06:42 - length DX and one then we need to
+06:46 - initialize our costs so first of all for
+06:49 - the path no dodgy cost this is the cost
+06:52 - from the start node onto this node so
+06:55 - let's start off with all of them at max
+06:57 - value now for the edge cost which is the
+07:01 - heuristic cost in order to reach the end
+07:03 - node so we're going to make a function
+07:05 - to calculate that now we need to define
+07:19 - the weight for the diagonal and the
+07:21 - straight move cost so let's go up here
+07:23 - to the final alright so here's our
+07:31 - function to calculate a distance cost
+07:33 - from A to B and now up here we can set
+07:36 - our Edge cost it won't be calculate our
+07:39 - distance cost from position a which will
+07:41 - be this one so when into with this X and
+07:44 - this y then the B position will be the
+07:47 - end position so there's the H cost and
+07:51 - now for the path node F cost we can
+07:54 - calculate this inside of our struct so
+07:57 - in here let's make a function and the F
+08:03 - cost is simply the G cost was the H cost
+08:06 - and up here we simply hopefully alright
+08:11 - so lastly we just need the is welcome
+08:14 - all for that one let's make them welcome
+08:17 - so plot node that is welcome on let's
+08:19 - set it to true and lastly we have the
+08:22 - came from node index which we're going
+08:27 - to use minus 1 as our invalid Val
+08:29 - alright so here we have our pet node
+08:32 - correctly set up now after its set up
+08:34 - then we need to assign it to the index
+08:36 - position in our flat rate so in the
+08:39 - pattern of the array on the index of the
+08:42 - index then we set this pattern oh okay
+08:45 - so here we have our grid completely set
+08:47 - up now after doing that let's grab our
+08:50 - start node to grab that we calculate the
+08:55 - index and up here we use our start
+08:58 - position so this is our start node and
+09:03 - for starters we're going to update the G
+09:05 - cost since its start we're going to set
+09:08 - it off to zero and then we need to
+09:10 - recalculate the F cost and again always
+09:12 - remember that here we are working with
+09:15 - value types so what we're doing in here
+09:16 - is simply modifying the copy
+09:18 - we're not modifying what is actually
+09:20 - inside of this array so after we modify
+09:22 - it let's place it back in the array all
+09:28 - right there it is
+09:29 - now following our algorithm we're going
+09:32 - to need an open list and a closed list
+09:34 - and again we're working with structs so
+09:36 - let's define our a race as list of int
+09:39 - indexes instead of references and again
+09:45 - make sure we dispose to start we're
+09:49 - going to start with the start node on
+09:51 - the open list so open list and we have
+09:55 - the start node index and now while we
+09:59 - have nodes on the open list so while the
+10:01 - open list up link is bigger than 0 we're
+10:05 - going to grab our current path node and
+10:08 - the current one won't be the one with
+10:10 - the in lowest F cost so down here let's
+10:12 - make that function so here this we take
+10:14 - our open list and then receive our flat
+10:17 - array of our path nodes then we do a
+10:19 - simple cycle so we cycle through the
+10:21 - open list which again contains indexes
+10:23 - and not references so we go through down
+10:25 - 1 then we access the path node arrayed
+10:27 - on that index and if the F cost of this
+10:30 - one is lower than this one then this one
+10:32 - becomes in your most so there it is very
+10:34 - simple this returns the lowest cost F
+10:37 - node index so in here we simply use it
+10:41 - we pass in the open list and if at no
+10:43 - the right all right now here we have the
+10:46 - index for the node that we want to test
+10:48 - let's also grab the current node now we
+10:52 - test if this current node is the final
+10:54 - node then we have reached our
+10:55 - destination
+10:56 - so in order to do that we can calculate
+10:58 - the index of our end position node so we
+11:04 - calculate the end node in X using our
+11:05 - end position X&Y okay and then down here
+11:09 - if the current node index is the same as
+11:12 - the end node in X then we have reached
+11:14 - our destination
+11:16 - and we simply break out of the cycle if
+11:19 - we haven't reached our destination then
+11:22 - the first thing we do is remove the
+11:23 - current node from the open list so here
+11:32 - we cycle through the open list which
+11:34 - again is a list of integers for our
+11:36 - indexes then we check if we have the
+11:39 - current node in X and if so then we
+11:41 - remove it from the list on that position
+11:42 - all right so after we do that then we
+11:45 - need to add this list into the close
+11:46 - list so simply close lists and we add
+11:48 - this in X and now here following our
+11:52 - algorithm we need something else so we
+11:54 - need to cycle through all the neighbors
+11:56 - of this current node so for that let's
+11:59 - go up here in order to define an array
+12:01 - for all the neighbor offsets all right
+12:12 - so here we have our array with all of
+12:13 - our neighbor offsets so I left right up
+12:15 - down left down left up right down and
+12:18 - right up so we create this native right
+12:21 - and again always remember to dispose of
+12:23 - it now in here let's second through the
+12:27 - offsets
+12:37 - so we grabbed the neighbor offset then
+12:39 - we create a neighbor position which is
+12:41 - based on the current node was the
+12:43 - neighbor offset and now we need to
+12:45 - validate this position so we need to
+12:47 - know if this neighbor position is inside
+12:49 - of our grid let's make a function to do
+12:51 - that okay so we have a simple function
+13:03 - testing if it's above zero and under the
+13:06 - actual width and height so here as we
+13:09 - cycling through the neighbors if this
+13:14 - position we test the neighbor position
+13:17 - if it is not inside the grid then we
+13:22 - simply continue so we continue on to the
+13:26 - next neighbor offset and now if not then
+13:29 - we have a valid neighbor position now
+13:31 - here let's check if the close list
+13:32 - contains this index so it's also
+13:35 - completely the end for the neighbor
+13:37 - index so if the cause list already
+13:45 - contains this neighbor node index and we
+13:47 - already searched this one so we continue
+13:49 - if not then let's check if the node is
+13:51 - one kaboom if note is not welcome all
+13:58 - then we continue and finally if we go
+14:00 - through all of these then we have a
+14:02 - valid node so here and let's do our
+14:05 - algorithm alright so first we calculate
+14:18 - the attentive G cost so that is based on
+14:21 - the current node G cost was he dissing
+14:23 - cost from the current node onto this
+14:25 - neighbor position if that new G cost is
+14:28 - under the current G costs then we want
+14:30 - to update this neighbor node so we
+14:32 - update he came from index to be the
+14:34 - current node index we update the G cost
+14:37 - we calculate the F cost and again here
+14:39 - we're working with structs so after we
+14:41 - update our node we need to place it back
+14:43 - in the array so we do that and then we
+14:45 - add it onto
+14:46 - our open list alright so just like this
+14:48 - over here we have our pathfinding
+14:50 - algorithm and now after doing this cycle
+14:52 - one of two things happen whether we
+14:55 - found a path or we didn't find a path so
+14:57 - the way we know that is by looking at
+14:59 - the end node so if we're having a pet
+15:01 - node for the end node it shall be the
+15:03 - pet node array of the end node index and
+15:06 - we test if the end node that came from
+15:09 - node index if it is minus one then we
+15:12 - did not find a path and if not then we
+15:16 - did find the time now let's make a
+15:20 - function to build our path so if we have
+15:33 - a - wonder new we're going to return a
+15:34 - empty native list
+15:36 - so our into is going to be our path
+15:38 - position and if we have found a path
+15:40 - then we need to walk backwards to get
+15:42 - our actual path alright so there it is
+15:57 - we do a while we have a came from node
+15:59 - index in our current node we grab the
+16:02 - node in that index and we add that
+16:04 - position into our path and finally we
+16:06 - return the path all right so just like
+16:08 - this we have our path being calculated
+16:10 - now it's actually inverted but we won't
+16:12 - worry about that when we make a unit to
+16:14 - actually follow the path so up here if
+16:16 - we find a path let's calculate it and
+16:21 - right now we don't care about getting
+16:22 - the path backs we just want to calculate
+16:24 - it so after getting it which is
+16:26 - disposable and here at the end again
+16:29 - make sure you dispose on the native
+16:31 - arrays that you create all right so here
+16:33 - we have our East our algorithm
+16:35 - implemented solely using valley types so
+16:37 - that means that this is usable with
+16:39 - bursts nd job system but now let's first
+16:41 - make sure it actually works so for that
+16:44 - and let's make a test all the way up
+16:46 - here we are working with a simple model
+16:48 - behavior so let's make our start
+16:50 - function done start let's simply try to
+16:53 - find a path our grid is of size 4 by 4
+16:57 - so let's try to find a path from
+16:59 - zero zero on two and let's say three one
+17:04 - and down here when we come away the path
+17:06 - and let's make a debug log so we make
+17:09 - sure that the path is correct all right
+17:15 - that should do it
+17:16 - let's test any of there you go over here
+17:18 - in the console we can see that we have
+17:19 - our path being correctly calculated
+17:21 - again it's backwards but B path is
+17:23 - correct so we go from 0 0 to 1 0 so to
+17:26 - the right 2 to 1 so diagonal up and to 3
+17:29 - 1 to the right all right so the
+17:31 - algorithm appears to be working now
+17:33 - let's add some walkable areas to test it
+17:35 - so in our path finding in here we are
+17:37 - creating our grid so after we do that
+17:39 - let's make some walkable areas all right
+18:01 - so here we have some code adding some
+18:02 - walls
+18:03 - I just implemented this set is one
+18:05 - coupon function as you can see down here
+18:07 - we simply set our boolean to either true
+18:09 - or false and up here we first grab the
+18:12 - node on that position so this one on one
+18:14 - 0 we said is walkable to false and then
+18:16 - we update the node back in our path note
+18:19 - the right so we're setting a wall on 1 0
+18:21 - 1 1 and 1 2 so essentially we got a
+18:24 - vertical wall right next to the start
+18:25 - alright let's test and yep there we have
+18:28 - our path correctly going from start to
+18:30 - finish without going through the walls
+18:31 - awesome so now that our algorithm is
+18:34 - fully working let's make a bigger grid
+18:36 - and do a simple performance test
+18:50 - okay so here I had a simple performance
+18:53 - test so we have a grid size of 20 by 20
+18:56 - and we're completing the path from 0 0
+18:58 - to 19 19 and we're calculating that path
+19:01 - five times then we're simply on looking
+19:03 - into the logs in order to see the time
+19:04 - in milliseconds but before we run this
+19:07 - let's try it out on the path finding
+19:09 - that we did previously using objects
+19:11 - okay so here I am in that other project
+19:13 - here we have our path finding working
+19:16 - with our Platinum class so as you can
+19:18 - see we're using a bunch of reference
+19:19 - types in here and for a test we're doing
+19:21 - the same thing so calculating the path
+19:23 - from 0 0 to 19 19 on a grid of 20 by 20
+19:27 - and we're calculating that path five
+19:28 - times all right so let's test ok so here
+19:31 - we are and there we have the result
+19:33 - about 700 milliseconds now obviously
+19:36 - what I have implemented here has not
+19:37 - been optimized at all this is the most
+19:39 - straightforward implementation of the
+19:41 - a-star algorithm using objects you can
+19:43 - implement path finding with object
+19:45 - oriented code and get significantly
+19:47 - faster results which is some a little
+19:48 - bit of optimization but still let's take
+19:50 - this as our baseline so here we're
+19:52 - taking 700 milliseconds and now let's do
+19:55 - the exact same test with our that
+19:58 - oriented version any of their days over
+20:00 - here you can already see quite a big
+20:02 - improvement going from 700 milliseconds
+20:04 - down to just 1 so here we have this code
+20:06 - running on the main thread calculating
+20:08 - five paths one after the other now let's
+20:10 - put this code inside a job to make it
+20:12 - multi-threaded so we're going to
+20:15 - implement all this in our job struct
+20:19 - so we just implement a job and now here
+20:25 - inside the execute method we're going to
+20:27 - have essentially the contents of our
+20:28 - find path function and with jobs our
+20:36 - execute method does not have any
+20:37 - parameters we need to receive the
+20:38 - parameters out here as fields
+20:45 - okay there it is no errors everything is
+20:47 - working great all right so now up here
+20:49 - let's instantiate the job all right so
+20:58 - here we have the same thing to find it
+21:00 - start at zero zero at the end at 19 19
+21:02 - we'd find the job and then we run it all
+21:04 - right so let's test okay so here we are
+21:07 - and yet we still have the exact same
+21:08 - results that's because we were running
+21:10 - the job on the main thread and it's not
+21:12 - yet multi-threading in order to make
+21:13 - this multi thread instead of run we need
+21:15 - to call schedule and we need to schedule
+21:18 - all the jobs and then complete them all
+21:30 - all right so here it is we define an
+21:32 - array of job handles we set them through
+21:34 - our 5 we schedule all five jobs and then
+21:36 - we tell them all to complete all right
+21:38 - so fun let's test and if there it is now
+21:41 - it's indeed multi-threaded and it's
+21:42 - taking point 5 to point nine
+21:44 - milliseconds instead of the usual point
+21:46 - one point two to one point three and now
+21:48 - there is still one massive improvement
+21:50 - that we can do which is we can enable
+21:52 - the birth compound so appear using unity
+21:55 - dot burst and now down here on our jump
+21:58 - now since we already wrote all of our
+22:00 - code thinking about the limitations of
+22:01 - burst all we really need to do is add
+22:04 - the burst compile attribute and if there
+22:07 - it is this is all it takes
+22:08 - however here we did use one thing that
+22:11 - is not supported on burst which is only
+22:12 - in here on the neighbor offsets we
+22:14 - cannot use an into array inside of
+22:16 - bursts unlatches easily changes alright
+22:27 - so there it is very simple and again
+22:29 - everything else is already been made
+22:31 - with burst in mind so our struct only
+22:34 - uses valley types and everything should
+22:35 - work perfectly all right so let's
+22:37 - finally test our massive improvement any
+22:40 - of their you we have our purse being
+22:41 - finally compound and look at that we
+22:44 - have 0.05 milliseconds so there is the
+22:48 - insane improvement you get by combining
+22:50 - all of the dot stack so with the normal
+22:53 - unoptimized object-oriented pathfinding
+22:55 - we had this action takes 700
+22:58 - seconds and using dots with the job
+23:00 - system and burst we have it working in
+23:02 - 0.08 nine seconds so even without doing
+23:05 - any further special optimizations we
+23:08 - already have some insane speed so here
+23:10 - for an insane test I've made the grid
+23:12 - 100 by 100 so again going from 0 to 9999
+23:15 - and we're doing 50 jobs so this means
+23:18 - that we're running 50 pathfinding jobs
+23:20 - on the exact same frame so let's see how
+23:22 - long this takes and yep there's the
+23:24 - answer 50 units all searching for the
+23:26 - path on the exact same frame and it
+23:29 - taking 2 to 5 milliseconds so here we
+23:31 - have the profiler now let's look at a
+23:33 - frame where we're calculating a path so
+23:35 - let's look at one of these spikes and
+23:37 - yep over here we have a frame where
+23:39 - we're working on some of our jobs and
+23:41 - you have look at that all these jobs
+23:42 - being scheduled and executed using burst
+23:45 - and down here and look at only jump
+23:47 - threads and if there you go and look at
+23:49 - all of them all completely very busy so
+23:51 - we have tons of jobs all of them working
+23:53 - in parallel so here you can see the
+23:55 - insane performance gains you can get by
+23:57 - using the unity dot sack ok so here we
+24:00 - have implemented our superfast path
+24:02 - finding algorithm using unity dots with
+24:04 - the job system and the burst compound
+24:06 - now this video is already very long so
+24:08 - I'll leave it here for now but I won't
+24:10 - cover using the path finding combined
+24:12 - with the entity component system in the
+24:13 - next video we're going to set up on the
+24:16 - components and build a system that won't
+24:17 - run our path finding job and store the
+24:20 - resulting path in a component so that
+24:21 - the entity can follow it I'll also
+24:24 - optimize this code to see just how far
+24:26 - we can push this so if you're watching
+24:28 - this in the future check the links in
+24:29 - the description and if not then
+24:31 - hopefully that video won't be out by
+24:32 - next week this video is made possible
+24:34 - thanks to these awesome supporters go to
+24:36 - patreon.com/scishow to code monkey to
+24:39 - get some perks and help keep the videos
+24:40 - free for everyone as always you can
+24:42 - download the project files and utilities
+24:44 - from Unity karma calm subscribe the
+24:46 - channel for more unity tutorials plus
+24:48 - any question have in the comments and
+24:49 - I'll see you next time
+24:51 - [Music]
+
+Cleaned transcript:
+
+in this video we're going to implement a star path finding in unity dots we're going to implement the algorithm in a pure data oriented way which will allow us to benefit from the extreme performance of unity dots let's begin okay so in this video we want to implement a star using a data oriented design we want to benefit from massive performance from unity dots by using the job system and the burst compiler now previously I covered how to do a star where we made it the normal way using objects if you haven't seen it yet then go watch that video in there I cover the algorithm in more detail step by step here I'm going to do an overview of the algorithm and then start implementing it in unity dots paying close attention to how we can convert from object oriented into data oriented so before we get to the code let's first check out the theory the goal of the astar path finding algorithm is to search to find a path from A to B so the algorithm already detects one coupon and unwalkable areas and correctly identifies the insurance path from A to B our map won't be grid based from each grid position we can move in all eight directions on each node essentially we have three values first we have the G cost that is the walking cost from the start node so for example to go from this node into this node it has a cost of 1 and we can also move diagonally so from this node into this node has a cost of 1.4 now in order for our code to work with ends instead of floats we're simply going to multiply our values by 10 so horizontally we have a cost of 10 and diagonally cost of 14 then we have the H cost this is the heuristic cost to reach our final goal so it's essentially an estimate to try to reach the goal our calculation is simply assuming there are no 1 so moving straight towards our goal so in here our hitch cost more commonly going from here to here to here again this is just a basic guess to figure out which notes you prioritize and finally we have the F which is simply G + H so this combines our actual cost from the start combined with an estimate to reach the goal and we have our final number using this we can prioritize nodes with lower F since those are more likely to be closer to the goal the algorithm finally stops when our current node is our goal node so if we start here for we check on the neighbors these are unwalkable so they are ignored so he checks this one then checks these two neighbors then this one has a lower F value so it checks this one checks the neighbors four down then it starts locating that one and it says that this one is a go so we have our path so here as you can see that G cast is constantly increasing and the F cast is constantly decreasing then our path is traced back from the final node into our original so each node also knows what the previous path node was then for the algorithm to work we also have two lists for our notes the open list and the close list the open list is where we have all the nodes that are queued up for searching and the cause lists are all the notes that have already been searched so we keep going until we find the current node on the open list or our open list is empty so we no longer have anywhere to search so there's no path okay so now that we've got that the algorithm let's implement it again in this video we're focused on the unity dot specific implementation which means that are oriented and no objects so make sure to watch that other video first which will make the data oriented version much easier to follow I've also made a video covering the differences between reference types and value types that is one of the main differences between the objectoriented way and the data oriented way objects are reference types whereas here we're going to use structs which are value types so watch that video to see how they behave differently this video is made possible thanks to these awesome supporters go to patreon.com/scishow to code monkey to get some perks and help keep the videos free for everyone let's begin by making our script so a new csharp script and just call it cat finding and just for testing let's make a empty game object and attach our script onto it okay now the core of our pathfinding is to source some data on each squared position so let's begin by defining our pet node now first of all this will be a struct and College Pat node now inside the first thing we're going to need is the position so let's have an end for the X and then in for the Y and now since we're working with structs and not objects that means we're going to work a lot with indexes so let's also store a public and for the index then we have the standard a star path finding values so we have the G cast H cos and F cast the G cast is the actual move cast from the start node onto this node the H cast is the estimated cost from this node onto the end node and the F cost is simply G Plus H then we're also going to have a simple boolean for is welcome and lastly in order to calculate our path back from the end node then we need to know where we came from now in the objectoriented way here we we just saw our previous path node but we cannot use objects so instead we're going to define it as our index so this is the index of node previous to this one when we're completing our path all right so here we have our path node defined purely using value types so that means we can use this struct inside a burst compile job now up here let's make a testing function so a simple called fine path we're going to find a path and we're going to receive an into for the starting position and then into for the end position now the into is inside the new unity dot mathematics library and there it is so in here let's start off by creating our grid let's start off with just basic four by four grid and in order to store our grid we're going to use a flat native all right okay so we define our flat native Ray and then since we're dealing with native race we must remember to dispose of them so at the end we call this post all right now to initialize it in here we construct a new path node and now to set the starting Val so we set the x to this X same thing for the Y okay now to initialize the remaining values we're going to need the index so let's make a function to calculate that here it is very simple we just convert a x and y position into a flat in X so in here we can set the path node index to be are constantly indexed and a path length DX and one then we need to initialize our costs so first of all for the path no dodgy cost this is the cost from the start node onto this node so let's start off with all of them at max value now for the edge cost which is the heuristic cost in order to reach the end node so we're going to make a function to calculate that now we need to define the weight for the diagonal and the straight move cost so let's go up here to the final alright so here's our function to calculate a distance cost from A to B and now up here we can set our Edge cost it won't be calculate our distance cost from position a which will be this one so when into with this X and this y then the B position will be the end position so there's the H cost and now for the path node F cost we can calculate this inside of our struct so in here let's make a function and the F cost is simply the G cost was the H cost and up here we simply hopefully alright so lastly we just need the is welcome all for that one let's make them welcome so plot node that is welcome on let's set it to true and lastly we have the came from node index which we're going to use minus 1 as our invalid Val alright so here we have our pet node correctly set up now after its set up then we need to assign it to the index position in our flat rate so in the pattern of the array on the index of the index then we set this pattern oh okay so here we have our grid completely set up now after doing that let's grab our start node to grab that we calculate the index and up here we use our start position so this is our start node and for starters we're going to update the G cost since its start we're going to set it off to zero and then we need to recalculate the F cost and again always remember that here we are working with value types so what we're doing in here is simply modifying the copy we're not modifying what is actually inside of this array so after we modify it let's place it back in the array all right there it is now following our algorithm we're going to need an open list and a closed list and again we're working with structs so let's define our a race as list of int indexes instead of references and again make sure we dispose to start we're going to start with the start node on the open list so open list and we have the start node index and now while we have nodes on the open list so while the open list up link is bigger than 0 we're going to grab our current path node and the current one won't be the one with the in lowest F cost so down here let's make that function so here this we take our open list and then receive our flat array of our path nodes then we do a simple cycle so we cycle through the open list which again contains indexes and not references so we go through down 1 then we access the path node arrayed on that index and if the F cost of this one is lower than this one then this one becomes in your most so there it is very simple this returns the lowest cost F node index so in here we simply use it we pass in the open list and if at no the right all right now here we have the index for the node that we want to test let's also grab the current node now we test if this current node is the final node then we have reached our destination so in order to do that we can calculate the index of our end position node so we calculate the end node in X using our end position X&Y okay and then down here if the current node index is the same as the end node in X then we have reached our destination and we simply break out of the cycle if we haven't reached our destination then the first thing we do is remove the current node from the open list so here we cycle through the open list which again is a list of integers for our indexes then we check if we have the current node in X and if so then we remove it from the list on that position all right so after we do that then we need to add this list into the close list so simply close lists and we add this in X and now here following our algorithm we need something else so we need to cycle through all the neighbors of this current node so for that let's go up here in order to define an array for all the neighbor offsets all right so here we have our array with all of our neighbor offsets so I left right up down left down left up right down and right up so we create this native right and again always remember to dispose of it now in here let's second through the offsets so we grabbed the neighbor offset then we create a neighbor position which is based on the current node was the neighbor offset and now we need to validate this position so we need to know if this neighbor position is inside of our grid let's make a function to do that okay so we have a simple function testing if it's above zero and under the actual width and height so here as we cycling through the neighbors if this position we test the neighbor position if it is not inside the grid then we simply continue so we continue on to the next neighbor offset and now if not then we have a valid neighbor position now here let's check if the close list contains this index so it's also completely the end for the neighbor index so if the cause list already contains this neighbor node index and we already searched this one so we continue if not then let's check if the node is one kaboom if note is not welcome all then we continue and finally if we go through all of these then we have a valid node so here and let's do our algorithm alright so first we calculate the attentive G cost so that is based on the current node G cost was he dissing cost from the current node onto this neighbor position if that new G cost is under the current G costs then we want to update this neighbor node so we update he came from index to be the current node index we update the G cost we calculate the F cost and again here we're working with structs so after we update our node we need to place it back in the array so we do that and then we add it onto our open list alright so just like this over here we have our pathfinding algorithm and now after doing this cycle one of two things happen whether we found a path or we didn't find a path so the way we know that is by looking at the end node so if we're having a pet node for the end node it shall be the pet node array of the end node index and we test if the end node that came from node index if it is minus one then we did not find a path and if not then we did find the time now let's make a function to build our path so if we have a wonder new we're going to return a empty native list so our into is going to be our path position and if we have found a path then we need to walk backwards to get our actual path alright so there it is we do a while we have a came from node index in our current node we grab the node in that index and we add that position into our path and finally we return the path all right so just like this we have our path being calculated now it's actually inverted but we won't worry about that when we make a unit to actually follow the path so up here if we find a path let's calculate it and right now we don't care about getting the path backs we just want to calculate it so after getting it which is disposable and here at the end again make sure you dispose on the native arrays that you create all right so here we have our East our algorithm implemented solely using valley types so that means that this is usable with bursts nd job system but now let's first make sure it actually works so for that and let's make a test all the way up here we are working with a simple model behavior so let's make our start function done start let's simply try to find a path our grid is of size 4 by 4 so let's try to find a path from zero zero on two and let's say three one and down here when we come away the path and let's make a debug log so we make sure that the path is correct all right that should do it let's test any of there you go over here in the console we can see that we have our path being correctly calculated again it's backwards but B path is correct so we go from 0 0 to 1 0 so to the right 2 to 1 so diagonal up and to 3 1 to the right all right so the algorithm appears to be working now let's add some walkable areas to test it so in our path finding in here we are creating our grid so after we do that let's make some walkable areas all right so here we have some code adding some walls I just implemented this set is one coupon function as you can see down here we simply set our boolean to either true or false and up here we first grab the node on that position so this one on one 0 we said is walkable to false and then we update the node back in our path note the right so we're setting a wall on 1 0 1 1 and 1 2 so essentially we got a vertical wall right next to the start alright let's test and yep there we have our path correctly going from start to finish without going through the walls awesome so now that our algorithm is fully working let's make a bigger grid and do a simple performance test okay so here I had a simple performance test so we have a grid size of 20 by 20 and we're completing the path from 0 0 to 19 19 and we're calculating that path five times then we're simply on looking into the logs in order to see the time in milliseconds but before we run this let's try it out on the path finding that we did previously using objects okay so here I am in that other project here we have our path finding working with our Platinum class so as you can see we're using a bunch of reference types in here and for a test we're doing the same thing so calculating the path from 0 0 to 19 19 on a grid of 20 by 20 and we're calculating that path five times all right so let's test ok so here we are and there we have the result about 700 milliseconds now obviously what I have implemented here has not been optimized at all this is the most straightforward implementation of the astar algorithm using objects you can implement path finding with object oriented code and get significantly faster results which is some a little bit of optimization but still let's take this as our baseline so here we're taking 700 milliseconds and now let's do the exact same test with our that oriented version any of their days over here you can already see quite a big improvement going from 700 milliseconds down to just 1 so here we have this code running on the main thread calculating five paths one after the other now let's put this code inside a job to make it multithreaded so we're going to implement all this in our job struct so we just implement a job and now here inside the execute method we're going to have essentially the contents of our find path function and with jobs our execute method does not have any parameters we need to receive the parameters out here as fields okay there it is no errors everything is working great all right so now up here let's instantiate the job all right so here we have the same thing to find it start at zero zero at the end at 19 19 we'd find the job and then we run it all right so let's test okay so here we are and yet we still have the exact same results that's because we were running the job on the main thread and it's not yet multithreading in order to make this multi thread instead of run we need to call schedule and we need to schedule all the jobs and then complete them all all right so here it is we define an array of job handles we set them through our 5 we schedule all five jobs and then we tell them all to complete all right so fun let's test and if there it is now it's indeed multithreaded and it's taking point 5 to point nine milliseconds instead of the usual point one point two to one point three and now there is still one massive improvement that we can do which is we can enable the birth compound so appear using unity dot burst and now down here on our jump now since we already wrote all of our code thinking about the limitations of burst all we really need to do is add the burst compile attribute and if there it is this is all it takes however here we did use one thing that is not supported on burst which is only in here on the neighbor offsets we cannot use an into array inside of bursts unlatches easily changes alright so there it is very simple and again everything else is already been made with burst in mind so our struct only uses valley types and everything should work perfectly all right so let's finally test our massive improvement any of their you we have our purse being finally compound and look at that we have 0.05 milliseconds so there is the insane improvement you get by combining all of the dot stack so with the normal unoptimized objectoriented pathfinding we had this action takes 700 seconds and using dots with the job system and burst we have it working in 0.08 nine seconds so even without doing any further special optimizations we already have some insane speed so here for an insane test I've made the grid 100 by 100 so again going from 0 to 9999 and we're doing 50 jobs so this means that we're running 50 pathfinding jobs on the exact same frame so let's see how long this takes and yep there's the answer 50 units all searching for the path on the exact same frame and it taking 2 to 5 milliseconds so here we have the profiler now let's look at a frame where we're calculating a path so let's look at one of these spikes and yep over here we have a frame where we're working on some of our jobs and you have look at that all these jobs being scheduled and executed using burst and down here and look at only jump threads and if there you go and look at all of them all completely very busy so we have tons of jobs all of them working in parallel so here you can see the insane performance gains you can get by using the unity dot sack ok so here we have implemented our superfast path finding algorithm using unity dots with the job system and the burst compound now this video is already very long so I'll leave it here for now but I won't cover using the path finding combined with the entity component system in the next video we're going to set up on the components and build a system that won't run our path finding job and store the resulting path in a component so that the entity can follow it I'll also optimize this code to see just how far we can push this so if you're watching this in the future check the links in the description and if not then hopefully that video won't be out by next week this video is made possible thanks to these awesome supporters go to patreon.com/scishow to code monkey to get some perks and help keep the videos free for everyone as always you can download the project files and utilities from Unity karma calm subscribe the channel for more unity tutorials plus any question have in the comments and I'll see you next time

@@ -1,0 +1,2204 @@
+00:02 - [Music]
+00:04 - foreign
+00:08 - I'll walk you through building a live
+00:11 - chat application using python flask and
+00:14 - flask socket i o let's look at a quick
+00:17 - demo and you can see what you're going
+00:18 - to have finished and built by the end of
+00:20 - this video so I'm going to start by
+00:22 - creating a new chat room here by
+00:23 - clicking on create room this gives me a
+00:25 - four digit code for the room if I copy
+00:28 - that and paste this here and then enter
+00:29 - a name something like Joey and then I go
+00:32 - with join room you can see that I joined
+00:34 - the room and on the left hand side here
+00:35 - it says Joey has entered the room now I
+00:38 - can start messaging so I can say
+00:39 - something like Tim is the best okay I
+00:42 - can send that and then see it comes in
+00:43 - here say something like I agree
+00:46 - obviously this is happening in live time
+00:48 - and notice that I don't have to refresh
+00:50 - the page to see the new messages now if
+00:52 - we add additional clients more people
+00:54 - obviously could join the room I haven't
+00:55 - set up any limit but you could do that
+00:57 - if you want to and you can have other
+00:59 - chat rooms happening in parallel with a
+01:01 - different message log one also important
+01:03 - thing to note here is that if I refresh
+01:05 - the page what happens is I actually
+01:07 - disconnect from the chat room or the
+01:09 - socket and then I'll automatically
+01:11 - reconnect but I'll still have a history
+01:13 - of all the messages because we're saving
+01:15 - those so notice if I refresh here what
+01:17 - happens is it says that I left the room
+01:18 - and then it says that I joined again
+01:20 - because I left and rejoined instantly
+01:22 - and then it says here that I've entered
+01:24 - the room and just in terms of the
+01:25 - message history we can see everything
+01:27 - that was sent now this is a very cool
+01:29 - project you're going to learn quite a
+01:30 - bit about flask and flask socket i o I
+01:33 - will mention that this is not for
+01:35 - complete beginners I am going to assume
+01:37 - that you have some python experience and
+01:39 - if you don't have that or you're just
+01:40 - looking to get better at software
+01:41 - engineering and programming in general
+01:43 - then check out my course
+01:45 - programmingexpert.io and if you're
+01:47 - interested in web3 and blockchain
+01:48 - Technology I have another course
+01:50 - blockchain expert which will both be
+01:52 - linked in the description with that said
+01:54 - let's get into the video and learn how
+01:56 - to build a live chat room application
+01:58 - using flask flask socket IO and python
+02:01 - alright so I'm here in Visual Studio
+02:03 - code which is where I'm going to write
+02:05 - all of my code I'm using python version
+02:07 - 3.11 but feel free to use any version
+02:09 - that you want and the first thing we
+02:11 - need to do here to get started is
+02:13 - install flask and install flask socket i
+02:15 - o so I'm going to copy the command here
+02:17 - pip install flask paste that into my
+02:19 - terminal and hit enter and then I will
+02:22 - do the same with the second command here
+02:23 - even though I have both of them
+02:25 - installed already now for some reason
+02:27 - this pip command does not work for you I
+02:29 - will leave two videos on the screen that
+02:30 - show you how to fix that command 1 for
+02:32 - mac and one for Windows okay so now that
+02:35 - we've installed flask and flask socket i
+02:37 - o we're going to start by creating a
+02:38 - very basic flask web server and then
+02:41 - we're going to create our different HTML
+02:42 - templates and all the other stuff that's
+02:44 - involved now to give you a very quick
+02:46 - overview of exactly what we need to do
+02:48 - here we essentially need to use sockets
+02:51 - which are kind of a live way of
+02:52 - communicating rather than refreshing the
+02:55 - page or saving stuff in a database to
+02:57 - transmit messages between different chat
+02:59 - rooms and different clients so we're
+03:01 - going to have what's known as a socket
+03:03 - server which is going to be running on
+03:04 - our flask web server and then we're
+03:06 - going to have different clients which
+03:08 - are really just the web browsers that
+03:09 - connect to that server they're going to
+03:12 - send a message to our server our server
+03:14 - is going to look at what chat room
+03:15 - they're inside of and then it's going to
+03:17 - transmit that message to all of the
+03:18 - people that are in the same chat room
+03:20 - they're going to be listening for that
+03:21 - message on the front end so in
+03:23 - JavaScript and then they're going to be
+03:25 - displaying that on the screen so it's a
+03:27 - super you know 10 000 foot view of what
+03:29 - we're doing here but there is a few
+03:31 - setup steps involved so just follow
+03:32 - along with me we're going to get a basic
+03:34 - flask web app kind of set up here and
+03:36 - then we'll do all the socket stuff which
+03:37 - will come after we have kind of the main
+03:39 - I don't know boilerplate code written so
+03:42 - the first thing we're going to do here
+03:43 - is we're going to say from
+03:44 - flask and this actually in lower case
+03:47 - Import in uppercase flask and then
+03:50 - render template this is what we're going
+03:53 - to do to render the different HTML code
+03:54 - that we need we're then also going to
+03:56 - import request if I could type that
+03:59 - properly session and then redirect
+04:03 - next we're going to say from and this is
+04:05 - flask underscore socket IO we are going
+04:09 - to import join underscore room
+04:13 - leave underscore room
+04:16 - send Emit and actually we don't need
+04:18 - emit we just need sensory and then
+04:20 - socket IO with a capital i o then we are
+04:24 - going to import random we're going to
+04:26 - use this to generate those random Room
+04:28 - codes that you saw and we will say from
+04:30 - string import and then this is going to
+04:34 - be if I can spell this correctly ASCII
+04:37 - underscore and then uppercase which are
+04:39 - all the available characters we can
+04:41 - choose from when we are generating a
+04:43 - room code next we are going to
+04:45 - initialize our flask application to do
+04:47 - that we're going to say app is equal to
+04:49 - flask underscore underscore and then
+04:51 - this is name underscore underscore which
+04:53 - is the name of our python module then we
+04:56 - need to configure our flask app so we're
+04:58 - going to say app dot config and then
+05:00 - we're going to say our secret underscore
+05:02 - key
+05:03 - in all capitals is equal to and you can
+05:06 - just type in something random here
+05:08 - obviously in a production environment
+05:09 - you would want this to be a more secure
+05:11 - key but in our case we're just doing
+05:12 - development so it doesn't really matter
+05:14 - what we have there next we're going to
+05:16 - set up our socket i o kind of
+05:17 - integration so we're going to say socket
+05:19 - IO is equal to socket IO and then we're
+05:22 - going to pass our flask application and
+05:25 - then at the bottom of our program here
+05:26 - we're going to say if underscore
+05:28 - underscore name underscore underscore
+05:30 - equals underscore underscore main
+05:32 - underscore underscore in a string we're
+05:35 - going to say socket IO dot run our app
+05:38 - and we're going to run this with debug
+05:41 - equal to True okay so I know I just
+05:44 - wrote a fair amount of code there but
+05:45 - this is the basic setup for any flask
+05:47 - web server or application if you're not
+05:49 - familiar with flask this is a
+05:51 - lightweight web framework used in Python
+05:54 - to generate websites in our case we're
+05:56 - creating a website obviously using flask
+05:58 - and we're implementing all of the socket
+06:00 - stuff in our kind of flask back end and
+06:02 - then all the front-end code you see will
+06:04 - be what we write in HTML and JavaScript
+06:07 - okay so all this is doing again it's
+06:08 - just kind of initializing everything
+06:09 - setting up our main application and now
+06:12 - if I actually run this code by hitting
+06:14 - the play button or typing Python and
+06:16 - then the name of my file which is
+06:18 - main.pi
+06:19 - you'll see that it starts a development
+06:21 - web server here and unfortunately my
+06:24 - terminal kind of messed that up so let's
+06:25 - rerun it here and notice that we're
+06:27 - running on
+06:29 - 127.0.0.1 colon 5000.
+06:33 - this is otherwise known as localhost
+06:34 - Port 5000 so if I go to a web browser
+06:38 - and I open this up you'll see that we
+06:39 - actually get some output here it says
+06:41 - not found the requested URL was not
+06:43 - found on the server and that's because
+06:44 - we've yet to create a root so we don't
+06:47 - have anything kind of being returned
+06:48 - when we go to this page but our web
+06:49 - server is indeed working and running one
+06:53 - thing to note since we put this in debug
+06:55 - equals true that means any change that
+06:57 - we make to our web server that does not
+06:59 - break any of the code will actually
+07:01 - automatically refresh so we don't need
+07:03 - to continually keep re-running the
+07:05 - server but sometimes you'll see that the
+07:07 - server will stop because we do something
+07:08 - where it kind of breaks it in that case
+07:10 - yes you will need to rerun it so for
+07:12 - right now I am just going to stop the
+07:13 - server by hitting Ctrl C and once we get
+07:15 - some more code done we will rerun that
+07:17 - kind of leave it running and then we can
+07:19 - continually check the progress by
+07:20 - looking at our Google Chrome window
+07:23 - okay fantastic so the first thing that I
+07:25 - want to do here is create the two routes
+07:28 - that we're going to have for our website
+07:29 - so the first route is going to be our
+07:31 - home page and that's going to be where
+07:33 - we go to and we want to connect to or
+07:34 - create a new chat room and then we will
+07:36 - have a room page which will be where we
+07:38 - go to when we want to join the chat room
+07:40 - so to do this we're going to type at app
+07:44 - dot root and for our root we're going to
+07:47 - do slash it's just the home page root
+07:49 - and we're going to say methods is equal
+07:52 - to and we're going to put in all
+07:53 - capitals here post and get inside of a
+07:57 - list we then are going to type a
+08:00 - function so Define home and for now
+08:03 - we're going to return render underscore
+08:06 - template we're going to render the
+08:08 - home.html template which I will discuss
+08:10 - in a second so in case you are not
+08:12 - familiar with flask this is how you set
+08:14 - up different routes you use The
+08:15 - Decorator syntax which is at the or the
+08:18 - at symbol sorry and then app which is
+08:20 - the name of our application you type dot
+08:22 - root and then you put whatever the root
+08:24 - is going to be so in our case it's just
+08:25 - slash if you wanted slash home you would
+08:27 - type slash home now for the methods
+08:29 - these are the allowed methods that can
+08:31 - be sent to this root by default you just
+08:33 - have get which means you can retrieve
+08:35 - whatever this returns however I want to
+08:37 - have posts as well which allows us to
+08:39 - post data to this root because we are
+08:42 - going to be posting if we are creating
+08:43 - or joining a chat room we need to kind
+08:46 - of send that data back to this root
+08:47 - you'll see why we need that in a minute
+08:49 - but for now if figured we'd just kind of
+08:50 - write in this post and get what do you
+08:53 - call it data for now okay perfect so
+08:56 - inside of here we're returning render
+08:58 - templatehome.html we've yet to create
+09:00 - this but essentially that is going to
+09:01 - render a template file which is really
+09:04 - just our HTML code which will be
+09:06 - displayed on the screen so now we need
+09:08 - to actually write a bit of HTML code so
+09:09 - I'm going to make a new folder it's very
+09:11 - important that this folder is in the
+09:12 - same directory as your python file and
+09:15 - that you name it exactly as I have here
+09:17 - which is templates it needs to be plural
+09:19 - and it needs to be templates if you name
+09:21 - it anything else this will not work and
+09:24 - just let me zoom in a little bit here so
+09:25 - you guys can see this a bit better okay
+09:27 - so name it templates and then inside of
+09:29 - here we're going to create three files
+09:31 - the first one is going to be base.html
+09:33 - the second one is going to be home.html
+09:37 - and the last is going to be
+09:40 - room.html
+09:42 - okay so we will fill those in in a
+09:44 - second we're also going to create one
+09:46 - more directory here called Static
+09:48 - and inside of static we're going to
+09:50 - place any static assets like our CSS
+09:53 - style sheet so we're going to create a
+09:55 - new folder CSS and then inside of that
+09:57 - folder we're going to create a style
+10:00 - dot CSS file I'm just setting up these
+10:02 - initial files so we don't need to create
+10:04 - them later on we will fill them in in a
+10:06 - few minutes so again you want templates
+10:07 - you want these three files base home and
+10:09 - room and then you want a static folder
+10:11 - make sure it's called Static and it's in
+10:13 - the same setup that you see here another
+10:16 - folder called CSS and then inside of CSS
+10:19 - style.css if you wanted images or other
+10:22 - static assets then you would put them
+10:24 - inside of this static folder very
+10:26 - important that you have that otherwise
+10:27 - it's not going to work when you try to
+10:29 - load stuff like the style sheet okay so
+10:31 - now let's go to our base.html file now
+10:34 - the way that flask works when it comes
+10:36 - to rendering HTML is that you can
+10:38 - actually pass variables directly to the
+10:41 - HTML code that you are rendering so from
+10:44 - this render template function you can
+10:45 - pass some variables like
+10:47 - chats equals and then you know a list of
+10:49 - messages or something along those lines
+10:51 - and you can use something known as the
+10:53 - Jenga templating engine inside of your
+10:56 - HTML code which is kind of a variation
+10:58 - of your standard HTML to render
+11:01 - um kind of content that is served from
+11:03 - the server so see what I mean in a
+11:05 - minute but what we always do what we
+11:07 - typically do when we're creating a flask
+11:09 - or Django website is we create a
+11:10 - base.html file which acts as our base
+11:13 - template this is something that's going
+11:16 - to be like a generic style for the
+11:18 - entire website and then for our other
+11:20 - templates like home and room we just
+11:22 - override parts of the base templates
+11:24 - that we can reuse code throughout the
+11:26 - entire website without having to rewrite
+11:28 - it so you'll see what I mean in a minute
+11:29 - when I start writing our code but for
+11:31 - now we want to set up a boilerplate HTML
+11:33 - document so I'm going to type HTML colon
+11:36 - 5. for some reason my extension isn't
+11:39 - working typically it gives me an auto
+11:42 - completed document but I guess I'm just
+11:43 - going to have to type it out here so I'm
+11:45 - going to type doctype HTML ML and then
+11:49 - we're going to go with HTML we're going
+11:51 - to say our language is equal to em we're
+11:54 - going to end our HTML tag okay perfect
+11:57 - we're then going to create a head tag
+11:59 - and end the head tag inside of our head
+12:02 - tag we're going to create our meta tags
+12:04 - so we're going to have meta Char set
+12:07 - is equal to and then
+12:10 - utf-8 then we're going to create our
+12:13 - title so we'll just call this
+12:15 - chat app for now
+12:18 - okay slash title then we're going to
+12:22 - link to our style sheet so the link to
+12:24 - our style sheet we're going to type link
+12:25 - we'll end the link tag here we're going
+12:27 - to type Rel equals
+12:30 - style sheet and then the href for our
+12:33 - style sheet is going to be the following
+12:34 - make sure you type this exactly as I
+12:36 - have it we're going to do two sets of
+12:38 - curly braces which indicates a variable
+12:40 - in this janga templating engine we're
+12:42 - then going to type URL underscore four
+12:45 - and we're going to grab the URL for the
+12:47 - static directory now actually make sure
+12:50 - you do this in single quotation marks
+12:51 - otherwise you're going to get an error
+12:52 - because you have double quotation marks
+12:54 - here and uh you would have double inside
+12:56 - there if you didn't change them so make
+12:58 - sure it's single quotation mark sorry
+13:00 - then you're going to type file name
+13:02 - is equal to single quotation marks CSS
+13:06 - slash style dot CSS
+13:09 - okay so I know that's a fair amount of
+13:10 - code there but the url4 is going to
+13:12 - generate the dynamic URL for this static
+13:15 - directory then we're going to look in
+13:17 - the CSS directory find style.css and
+13:20 - this is the only way we're able to link
+13:21 - our style sheet here inside of our HTML
+13:24 - document okay next we are going to put a
+13:27 - script tag in here which allows us to
+13:29 - use the socket i o module which is
+13:32 - something in JavaScript so there's
+13:33 - actually a library that we need called
+13:34 - socket IO it's used in JavaScript and
+13:37 - we're going to use that to communicate
+13:38 - with our backend python web application
+13:41 - so let me find that quickly the way I
+13:43 - can do that is by going to the internet
+13:45 - typing flask socket IO alright I'm going
+13:48 - to go to the getting started
+13:50 - documentation and then notice here that
+13:52 - there's some sample code so we have a
+13:54 - CDN and then we have this kind of script
+13:56 - tag which we'll look at later for now
+13:58 - I'm going to copy this first script tag
+14:00 - again you can find this by just Googling
+14:02 - flask socket i o or by going to the URL
+14:05 - that's on my page is fairly easy to find
+14:07 - and then we're going to paste it in the
+14:09 - head tag here okay if you really want to
+14:12 - I'll zoom out and you guys can copy this
+14:13 - exact URL uh but I think it's going to
+14:16 - be easier if you just go to that website
+14:17 - I'll try to remember to put it in the
+14:19 - description but in case I don't just go
+14:22 - to the page that I have here okay you
+14:23 - guys can just find it from Google
+14:25 - all right so now that we have this
+14:27 - inside of our head the next thing we're
+14:29 - going to do is create our body tag so
+14:31 - we're going to say body like this
+14:34 - slash body and then inside of the body
+14:37 - we're going to create a div this is
+14:39 - going to have a class name of content
+14:42 - and we're going to end our div and
+14:44 - inside of here we're going to create
+14:45 - something known as a block which I'll
+14:47 - discuss in a second so to create the
+14:48 - block we're going to do our curly braces
+14:50 - and then two percent signs and we're
+14:52 - going to type block and then the name of
+14:54 - our block which is content and then
+14:56 - we're going to end the block by typing
+14:57 - percent
+14:59 - and then if we can do this here end
+15:02 - block
+15:03 - for some reason it keeps messing up
+15:05 - everything that I'm typing but you guys
+15:07 - get the idea
+15:09 - okay so what is a block well a block is
+15:11 - essentially a reusable part of our code
+15:14 - that can be overwritten so when I type
+15:16 - block content what that means is that in
+15:18 - one of my child templates which are
+15:21 - going to be home and root I can write
+15:22 - this same thing block content and
+15:24 - anything I put inside of that block will
+15:27 - override anything that is currently here
+15:29 - so this allows us to kind of dynamically
+15:31 - inject code into this existing HTML
+15:34 - template so we no longer need to rewrite
+15:37 - this whole HTML document structure the
+15:39 - script tag the link Etc so hopefully
+15:42 - that makes a bit of sense but that is
+15:43 - why we are writing these blocks okay so
+15:46 - now we're going to go to our home
+15:48 - template and we're going to start
+15:49 - writing some code here so the first
+15:51 - thing we need to do is extend our base
+15:53 - template and the way we do that is we
+15:55 - type percent percent
+15:57 - extends and then make sure you have
+15:59 - quotation marks here we're going to type
+16:00 - base dot HTML
+16:03 - okay so that means now we are going to
+16:05 - inherit all of the code that exists here
+16:07 - and be able to override these blocks so
+16:09 - I'm actually going to grab this block
+16:11 - I'm going to write the exact same thing
+16:12 - I had before so block content and block
+16:14 - and now anything I write here will
+16:16 - essentially show up inside of this
+16:18 - content div so now for my page here all
+16:22 - I'm going to have is a form and on that
+16:24 - form I'm going to have something that
+16:27 - says enter your name create a room or
+16:30 - join a room those are going to be the
+16:32 - options and the reason we need this
+16:33 - inside of a form is because based on
+16:35 - what you press in the input data you
+16:37 - have we need to receive that on our back
+16:38 - end and then handle that so we're going
+16:40 - to create a form we're going to end our
+16:43 - form
+16:44 - for the form we're going to say the
+16:46 - method
+16:48 - is equal to and then this is going to be
+16:50 - post
+16:51 - this means that whenever we hit the
+16:52 - submit button it's going to send a post
+16:54 - request to the root that we are
+16:56 - currently on which will be the home page
+16:57 - inside of here I'm going to type H3 I'm
+17:00 - going to end my H3 tag and I'm going to
+17:03 - say enter the chat room like that
+17:07 - just a header you can obviously change
+17:08 - this if you want then I'm going to make
+17:10 - a few divs here I am going to use a bit
+17:12 - of CSS styling but I'll try to keep it
+17:14 - nice and simple if you guys for the
+17:15 - first div block I'm going to have the
+17:18 - information for entering a name
+17:20 - so I'm going to create a label
+17:23 - and for the label I'm going to say Name
+17:24 - colon like that
+17:26 - and then let's end our label then I'm
+17:30 - going to have an input tag and this is
+17:32 - going to be a text input for the name of
+17:34 - our user so I'm going to type type equal
+17:37 - to text
+17:39 - placeholder is equal to pick a name
+17:42 - we're going to say name is equal to and
+17:46 - then name now it's important that you
+17:48 - have this because this is what we're
+17:49 - going to use to access the value inside
+17:52 - of our flask web server so whatever you
+17:56 - label your inputs or your buttons with
+17:58 - the name field by the way it's very
+18:00 - important that use name is what's going
+18:02 - to pop up as the key for the data that's
+18:04 - in the form data we're going to get when
+18:06 - we actually Analyze This post request I
+18:09 - know that sounds like a lot and probably
+18:10 - is gibberish to some of you but the name
+18:12 - is essentially how we identify this
+18:14 - element from python so make sure you
+18:16 - include name okay so we have name equal
+18:18 - to well name then last thing we're going
+18:20 - to have here is value is equal to
+18:23 - and we're gonna put inside of Double
+18:25 - quotation marks or double uh curly
+18:27 - braces sorry name now the reason I'm
+18:29 - doing this is because we are actually
+18:31 - going to pass to this template the name
+18:33 - that the user has typed in previously
+18:35 - that's because it's possible for them to
+18:37 - make a make a mistake story during the
+18:39 - form submission if that's the case I
+18:41 - don't want them to lose the input that
+18:42 - they had previously so I'm going to
+18:44 - re-inject it by kind of passing it to
+18:46 - this template you'll see what I mean in
+18:48 - just a minute now after this div I'm
+18:50 - going to create another div here and
+18:52 - let's end this just to kind of separate
+18:54 - our different inputs for this div I'm
+18:57 - going to have a class name which is
+18:58 - equal to join and this is going to
+19:00 - represent the join button and the text
+19:02 - input for the kind of room code that
+19:04 - you're going to be joining so I'm going
+19:06 - to have an input field here
+19:08 - and we're going to say type
+19:10 - is equal to text
+19:13 - placeholder is equal to room code name
+19:17 - is equal to code and then same thing
+19:19 - we're going to say value is equal to and
+19:22 - then inside of our curly braces and
+19:25 - double quotation marks we're going to
+19:26 - type code same explanation here as name
+19:30 - okay next we're going to have a button
+19:32 - we're going to say that the type is
+19:36 - equal to submit we're going to say the
+19:38 - name of this button very important again
+19:39 - that you have the name here is equal to
+19:41 - create the class of this button is
+19:44 - create and then we're going to say
+19:46 - creates a room as the value or the text
+19:49 - on the button and then we'll end our
+19:51 - button lastly we're going to add one
+19:53 - more button down here and this button is
+19:56 - going to be type
+19:57 - equal to submit name equal to and this
+20:02 - is going to be joined sorry I need to
+20:04 - actually swap these so we're going to
+20:07 - have this as join and the class here as
+20:11 - join and then this one
+20:13 - is going to be create and actually I'm
+20:15 - going to remove this class because I
+20:17 - realized I duplicated it here in the div
+20:19 - sorry for a bit of confusion there but I
+20:21 - just need to switch around the name so
+20:22 - this one is join and this one is create
+20:24 - and I realized that this now needs to
+20:27 - say join a room not create a room
+20:28 - because that doesn't make any sense all
+20:30 - right then we are going to say
+20:33 - create a room
+20:35 - and then slash button
+20:38 - okay I think that is better perfect so
+20:42 - now we have a base template and we can
+20:44 - have a look at well what this looks like
+20:46 - by running our web server
+20:48 - so to do that we're going to run our
+20:49 - code python main.pi we're going to go to
+20:52 - this URL and notice this is what we get
+20:55 - now this is not the best so it does call
+20:57 - for a little bit of CSS styling to do
+21:00 - that we're going to go to our style.css
+21:02 - file and start writing some code
+21:04 - so let's go here to style.css
+21:07 - I'll try to keep this fairly basic but
+21:09 - we do need to write a bit of kind of
+21:11 - responsive styling here so actually
+21:13 - apologize we're going to go back to home
+21:15 - and for our form we are going to
+21:18 - actually give this a class because we're
+21:20 - going to need to access that class to do
+21:22 - some styling so the class for our form
+21:25 - is going to be the following class is
+21:28 - equal to buttons I know that's not
+21:31 - really the best thing to name it but I
+21:33 - think that's fine for right now okay so
+21:35 - now that we have our class in here we're
+21:36 - going to start writing the CSS all right
+21:39 - so the first class that we're going to
+21:40 - style here is going to be our buttons
+21:42 - class which is really that form so we're
+21:44 - going to say buttons display is equal to
+21:47 - flex the flex direction is column so we
+21:52 - align our items in a column rather than
+21:54 - a row we're then going to align our
+21:56 - items Center and we are going to justify
+21:59 - our content Center as well this is
+22:01 - probably the easiest way to align things
+22:04 - in the middle of the screen you just go
+22:05 - align item Center justify content Center
+22:07 - and then you're going to align them
+22:08 - Center on both the vertical axis and the
+22:11 - horizontal axis then I'm going to type
+22:13 - Gap is equal to 10 pixels just to give a
+22:16 - 10 pixel gap between my different Flex
+22:18 - items and the flex items are going to be
+22:20 - the divs and the buttons that I have
+22:22 - inside of my form so if we look here at
+22:24 - home.html we have this element this
+22:27 - element this element and this element
+22:29 - all inside of here they're going to get
+22:30 - a 10 pixel Gap and be aligned in a
+22:33 - column
+22:34 - all right going back to style.css we
+22:36 - also need to style the join div so we're
+22:39 - going to say join we're going to say
+22:41 - display
+22:43 - Flex like this we're going to say the
+22:45 - flex direction is row and then we're
+22:48 - going to say the width
+22:50 - is equal to a hundred percent
+22:53 - okay then we're going to say dot create
+22:57 - and let's just quickly go back here to
+22:59 - home and do we have a class for create
+23:02 - we do not have a class for create so I'm
+23:04 - going to say class is equal to create
+23:08 - button so we just want to add a class to
+23:10 - this create button because I want to
+23:11 - extend its size to make it a bit larger
+23:13 - so we're going to say create dash button
+23:16 - and then it's going to be width and
+23:19 - we're going to make this 100
+23:21 - and that's actually all we need for this
+23:24 - first page styling so let's now refresh
+23:27 - our page and see what we get all right
+23:29 - so that looks a little bit better but we
+23:31 - can obviously improve this and I realize
+23:33 - that the way we need to improve that is
+23:34 - by adding some styling to this content
+23:38 - div so the way that we can do that is we
+23:40 - can go here to dot content and for
+23:44 - Content we can say display
+23:47 - Flex align item Center
+23:51 - and justify content Center
+23:54 - and that should ideally fix our elements
+23:56 - let's go back here and refresh and now
+23:58 - notice everything kind of gets packed in
+24:00 - here and that is much better okay so I'm
+24:02 - not going to explain the CSS too much uh
+24:04 - feel free to kind of pause the video and
+24:06 - you can copy it in here if you don't
+24:07 - already have it but there you go that is
+24:09 - going to be our home page
+24:11 - now that we have our home page we want
+24:13 - to handle what happens when you actually
+24:15 - press these different buttons so you'll
+24:17 - notice when I press them what happens is
+24:19 - actually a post request is sent to our
+24:22 - home root here but currently we're not
+24:24 - doing anything with that post request so
+24:27 - now what we want to do is handle the
+24:28 - post request by getting the different
+24:30 - form data that's being sent now the form
+24:32 - data that's being sent is all of our
+24:35 - inputs right and whatever button we
+24:37 - pressed so just to note here whatever
+24:39 - button you press the name of that button
+24:42 - is actually sent through as form data so
+24:45 - that way we'll know if we press the join
+24:47 - button or the create button from the
+24:49 - same form
+24:51 - so we're going to have to obviously
+24:52 - handle that if we are creating a new
+24:54 - room we're going to want to create that
+24:55 - room if we're joining a room we're going
+24:56 - to want to attempt to join that so to do
+24:59 - this we need to go to the top of our
+25:01 - home function here and we need to check
+25:03 - if the request dot method is equal to
+25:08 - post if it is we're going to do
+25:09 - something special otherwise we're just
+25:11 - going to render this home template now
+25:14 - the reason we can use this is because we
+25:16 - imported request obviously the method is
+25:18 - the type of request to either post or
+25:20 - get if it's equal to post then we need
+25:22 - to grab our form data so to get our form
+25:24 - data we're going to do the following
+25:25 - we're going to start by grabbing our
+25:27 - name and the way we do that is
+25:29 - saying request dot form
+25:31 - dot get
+25:33 - and then name
+25:34 - okay so we have this attribute.form on
+25:37 - our request object that has all of the
+25:39 - different named input Fields so it'll
+25:41 - have
+25:42 - if we go back here to home
+25:44 - we will have name as well as
+25:48 - code as well as join or create depending
+25:50 - on the button that we pressed
+25:52 - okay so we have name we have code is
+25:55 - equal to request dot form dot get and
+25:59 - then this is going to be code and then
+26:01 - we're going to have join
+26:03 - is equal to request not form dot get
+26:09 - and then join and then create is equal
+26:13 - to request
+26:15 - dot form
+26:17 - dot get
+26:19 - and then create
+26:21 - now what I'm going to do for both join
+26:23 - and create is I'm going to set the
+26:25 - default option here equal to false now
+26:27 - if you're not familiar with how the get
+26:28 - function works it's going to attempt to
+26:30 - get this out of a dictionary so the form
+26:32 - object is actually a python dictionary
+26:34 - now if you were to just try to access
+26:36 - code or name and it didn't exist in the
+26:38 - dictionary you would get an error we
+26:40 - want to avoid that error so instead we
+26:41 - use the safer method which is dot get
+26:43 - What DOT get will do is attempt to grab
+26:45 - the value associated with this key in
+26:47 - the dictionary if that key does not
+26:49 - exist it will return none now if you
+26:51 - don't want to return none instead you
+26:53 - want to return something else you can
+26:54 - set the default option which is what I'm
+26:56 - doing here so now if join doesn't exist
+26:58 - we're going to get false if create does
+27:01 - not exist we'll get false if either of
+27:03 - them do exist we'll get the value
+27:04 - associated with them the reason I'm
+27:07 - doing this is because join and create
+27:09 - are both going to have an empty value
+27:11 - it's just a button so the button doesn't
+27:13 - really have a value right it's just
+27:15 - giving me the key saying hey this button
+27:16 - is pressed doesn't really associate with
+27:19 - anything so I need to set this to false
+27:21 - just so that when I do a check here in a
+27:24 - second we can actually see if we had the
+27:27 - join key or if we had the create key in
+27:30 - our form there's other ways to do this
+27:32 - but I figured we can just do this for
+27:33 - now
+27:34 - okay so the first thing I'm going to do
+27:36 - here inside of my kind of if statement
+27:39 - block that I have is I'm going to check
+27:42 - if the user did not pass a name if they
+27:45 - didn't pass a name I want to give them
+27:46 - an error message and tell them they need
+27:48 - to need to enter a name sorry because
+27:50 - even if they are joining a room or
+27:52 - creating a room it doesn't matter they
+27:53 - need to give me some kind of name so
+27:55 - they need to have that so I'm going to
+27:56 - say if not name essentially meaning if
+27:59 - the name is empty if they didn't give me
+28:01 - a name whatever then I'm going to return
+28:04 - render template of home.html
+28:07 - but I'm going to pass error equal to and
+28:11 - then I will say please enter
+28:14 - a name so remember I told you that we
+28:16 - can pass data to the template and render
+28:18 - it in the template that's what we're
+28:20 - doing here we're passing an error
+28:22 - variable so now what I can do is I can
+28:25 - go to home.html and inside of my form or
+28:28 - outside of my form doesn't really matter
+28:29 - where we want to do this I can create a
+28:32 - UL tag
+28:34 - so this is going to be unordered list
+28:36 - and I'll just do another Li tag here
+28:40 - and inside of here I'm going to put
+28:41 - double
+28:43 - brackets and then error which will
+28:46 - access that error variable however I
+28:49 - only want to display this if we actually
+28:51 - have an error so the way I can do that
+28:52 - is I can type percent percent I can type
+28:55 - if error like that and then I can go
+28:58 - down here and I can type percent and
+29:00 - then end if so only if we do have an
+29:03 - error if the error Valley Value sorry is
+29:05 - truthy will we render what that error is
+29:08 - perfect so we now have the error
+29:10 - handling kind of done all right so
+29:12 - that's our first check if they don't
+29:13 - have a name the next thing we need to do
+29:15 - is we need to see if they are attempting
+29:16 - to join a room because if they're
+29:18 - attempting to join a room but they
+29:20 - didn't enter a code then obviously
+29:21 - that's an issue so I'm going to say if
+29:24 - joian does not equal false and not code
+29:29 - then we're going to do the same thing
+29:31 - except we're going to return render
+29:35 - template please enter a
+29:37 - room code perfect
+29:40 - okay
+29:41 - so now at this point we know that they
+29:44 - have a name and if they are trying to
+29:47 - join they did enter a code now what we
+29:49 - need to do is figure out what room
+29:52 - this user is going to be going into
+29:55 - if they enter the room then we know the
+29:57 - room code and we need to check if that
+29:58 - room actually exists if they didn't
+30:01 - enter a room then we need to actually
+30:03 - generate that room for them so we're
+30:05 - going to say room is equal to code like
+30:09 - that and that's because we're going to
+30:11 - grab whatever's inside of this code
+30:12 - variable however we're going to say if
+30:15 - create
+30:16 - does not equal false so if it's not the
+30:18 - default option meaning this key did
+30:20 - exist then what we're going to do is
+30:23 - we're going to create a new room for
+30:25 - them so we're going to say room is equal
+30:27 - to
+30:29 - generate
+30:30 - unique underscore code and we're going
+30:34 - to pass 4 here which is going to be the
+30:35 - length and this is a function that I'm
+30:37 - going to write in one second that's
+30:38 - going to generate a unique code for us
+30:40 - in fact we can do that now so let's
+30:42 - write a function up here I'm going to
+30:43 - say Define
+30:44 - generate underscore unique code we're
+30:49 - going to take in the length of the code
+30:50 - that we want to generate and we're going
+30:52 - to generate that however before I do
+30:54 - that I'm going to say rooms is equal to
+30:56 - a dictionary and this is where we're
+30:58 - going to store information about the
+30:59 - different rooms that we have like the
+31:01 - code associated with that room and then
+31:03 - any of the messages or people inside of
+31:05 - it reason we need that is because we
+31:07 - need to see if a room exists for a user
+31:09 - to be able to join it and if the room
+31:11 - already exists we obviously don't want
+31:12 - to generate a code that's the same as
+31:14 - one that exists if we're creating a new
+31:16 - one so here we'll generate a unique code
+31:18 - to do this I can say while true
+31:21 - code is equal to an empty string I can
+31:24 - then type 4 underscore in range and then
+31:27 - the length of our code underscore being
+31:29 - an anonymous variable so rather than
+31:31 - having something like I I do an
+31:33 - underscore because I don't actually care
+31:34 - about the iteration count here then I'm
+31:37 - going to type code plus equals random
+31:39 - dot choice and I'm going to choose from
+31:42 - my ASCII uppercase characters this just
+31:44 - gives me a list or actually a string of
+31:46 - all of the valid ASCII uppercase
+31:48 - characters I can randomly choose any of
+31:50 - those elements add that to my code and
+31:53 - then after my for loop after I've
+31:55 - generated one of whatever the desired
+31:56 - length is I can say if code is not in
+32:00 - rooms this checks if the code exists as
+32:02 - a key in this dictionary then I can
+32:05 - break
+32:06 - and I can return my code down here if it
+32:10 - did exist then I wouldn't break meaning
+32:11 - I would regenerate another code
+32:13 - okay so there we go we have generate
+32:15 - unique code that's working
+32:17 - now that we are generating the unique
+32:18 - code we're going to say rooms at room
+32:22 - is equal to and then we're going to
+32:24 - create a dictionary here which is
+32:26 - members
+32:27 - and this is going to be essentially the
+32:29 - number of people in the room which is
+32:30 - currently zero and then we're going to
+32:32 - say messages and this will be all the
+32:34 - messages that exist in the room and this
+32:36 - will be a list that we will fill in so
+32:39 - we're creating this room right so if
+32:40 - they're creating a new room we're going
+32:41 - to create that room by adding it to our
+32:43 - rooms dictionary and we're going to
+32:45 - store some data with that this is kind
+32:46 - of our boilerplate starting data
+32:48 - eventually we will add and change that
+32:51 - perfect now we're going to say elif code
+32:55 - not in rooms
+32:58 - like that then we are going to return a
+33:01 - redirect
+33:02 - and we're going to say that the room
+33:05 - does not exist
+33:08 - okay fantastic now the reason why I'm uh
+33:12 - doing this here is because if we
+33:14 - determined that they're trying to create
+33:15 - a new room
+33:16 - okay fine we're going to do this if this
+33:18 - is not the case if they're not creating
+33:20 - a room then they must be joining a room
+33:21 - and in that case if they're joining a
+33:24 - room and the code that they're trying to
+33:25 - join doesn't exist that room is not
+33:27 - existent then there's an error right so
+33:29 - we need to tell them what that error is
+33:30 - now remember though that for all of
+33:33 - these different
+33:34 - um
+33:35 - uh what do you call it cases here where
+33:37 - we have errors we still want to persist
+33:39 - whatever it was that the user typed in
+33:41 - so the name or the code we don't want
+33:42 - them to have to type that again so the
+33:44 - way that we need to do that is we need
+33:46 - to pass along with all of these renders
+33:48 - the variables code is equal to code and
+33:52 - name is equal to name the reason we need
+33:55 - to do that is because we need to pass it
+33:56 - back to the template because whenever
+33:58 - you send a post request you're
+33:59 - essentially refreshing the window so
+34:01 - it's going to get rid of anything that
+34:03 - they typed and then we need to give back
+34:05 - to them whatever they type so we can
+34:06 - re-enter that as the value for our input
+34:09 - field so if you look here right we have
+34:12 - code and we have name so we need to pass
+34:14 - that data back in which is what we're
+34:16 - doing here from our render template
+34:18 - function so for all of these I'm just
+34:20 - going to copy this in and obviously we
+34:22 - don't need this for this last render
+34:24 - template because this is only going to
+34:26 - happen
+34:27 - if this method was not a post request
+34:29 - now there's a few last things I need to
+34:31 - do here before I'm finished on line 44
+34:35 - I'm going to write session
+34:37 - room
+34:39 - is equal to and then the room that
+34:41 - they're going to be joining
+34:42 - and I'm going to type session name
+34:46 - is equal to the username that they typed
+34:48 - in now the reason I'm doing this here is
+34:50 - because a session is a semi-permanent
+34:53 - way to store information about a user I
+34:56 - don't want to do anything like logging
+34:57 - in or accounts it's a bit beyond the
+34:59 - scope of this tutorial so rather than
+35:01 - doing kind of advanced authentication
+35:02 - we're going to store data in a session
+35:04 - again a session can kind of be described
+35:07 - as temporary data that's stored on a
+35:09 - server the same the session can be
+35:11 - manipulated by the server so we can
+35:13 - clear it we can change the value and
+35:15 - this is a semi-permanent because it will
+35:17 - expire at some point in time yet secure
+35:19 - way to store user data so I have session
+35:22 - room is equal to room so I'm storing the
+35:24 - room code that this user is kind of in
+35:26 - or is going to be in in a second and
+35:28 - then I'm storing their names that I have
+35:30 - access to that now through any other
+35:31 - requests that they send me so to clear
+35:33 - your session data
+35:35 - um you usually you have to do that
+35:37 - directly from the server I think there's
+35:38 - some ways from the browser to force your
+35:40 - session data to be refreshed but this is
+35:43 - a little bit different than user cookies
+35:44 - okay
+35:45 - I'm not going to get too much into
+35:47 - exactly how the session works but if I
+35:50 - say kind of go out of the web browser
+35:52 - and come back in like a few minutes
+35:53 - later my session data will still be
+35:55 - there so between different requests it's
+35:57 - stored persistently so that I don't
+35:59 - constantly ask the user for a name every
+36:01 - single time they refresh the web page
+36:03 - same with the room code that they're
+36:05 - going to be in okay now one thing I want
+36:07 - to do here is show you how to clear the
+36:09 - session so actually at the very top here
+36:10 - when we go to the home page we're going
+36:12 - to say session dot clear now the reason
+36:14 - we're going to clear the session when
+36:15 - the user goes to the home page is so
+36:18 - that if they type in another room or
+36:19 - another name or they try to navigate
+36:21 - after going to the home page uh they
+36:24 - can't ideally I don't want the user to
+36:26 - be able to type in directly The Roots
+36:28 - like slash room slash home I want them
+36:30 - to go to the home page be directed to
+36:32 - the chat room and then be able to leave
+36:34 - the chat room and then join another chat
+36:36 - room so it's just kind of good practice
+36:37 - here when they go to the home page to
+36:39 - clear the session which is going to
+36:40 - delete anything that's inside of it and
+36:43 - then we can go from there
+36:45 - okay so last thing we're going to do
+36:47 - here after we determine the room and the
+36:49 - name is we are going to redirect the
+36:51 - user to a new page which is going to be
+36:53 - the chat room that they're joining so
+36:55 - we're going to say return
+36:58 - redirect and then URL underscore 4 and
+37:02 - this is going to be for room now we
+37:05 - haven't written this quite yet the room
+37:06 - root but this is going to be the name of
+37:08 - the function that we're redirecting to
+37:10 - so notice we have redirect and what else
+37:14 - do we have here sorry we don't have URL
+37:16 - for so I need to import URL for but we
+37:18 - have redirect and url4 which are two
+37:20 - functions which we're using here
+37:22 - and now we're going to Define another
+37:24 - root
+37:25 - which is app dot root this is going to
+37:28 - be slash room and then we're going to
+37:31 - say Define room
+37:33 - and now we're going to return
+37:35 - render template
+37:38 - in the template we're going to render is
+37:40 - room dot HTML
+37:42 - perfect so that is what we have uh now
+37:44 - so we're going to redirect to this root
+37:46 - which will then render this room.html
+37:49 - page which will then contain the chat
+37:51 - room code and then we will essentially
+37:53 - kind of join the user into the chat room
+37:55 - and then start chatting so this is where
+37:57 - we'll start getting into some of the
+37:58 - socket code after we write the HTML for
+38:00 - this room page and we kind of tested
+38:03 - what we've currently done so before we
+38:04 - go too much further let's test out what
+38:06 - we currently have by re-running the
+38:08 - server so we're going to go Python
+38:09 - main.pi and we're going to go here to
+38:12 - this root okay so let's open that up now
+38:15 - I've got it open twice since the session
+38:18 - is going to persist between different
+38:19 - browser tabs I'm going to open up an
+38:21 - incognito window just so that I can show
+38:23 - you this with two different sessions
+38:25 - because the Incognito session is going
+38:27 - to be different than the typical session
+38:29 - um hopefully that's clear but that's
+38:30 - kind of how that that works and also
+38:32 - session is another reason why for
+38:34 - example when you like log into Facebook
+38:36 - or you log into Instagram you go to a
+38:38 - website you go to quite often you don't
+38:39 - have to constantly like re-log in it's
+38:42 - because your data is stored in a session
+38:44 - a bunch of other data is stored there
+38:45 - too just to make your experience a bit
+38:47 - better okay so let's start by creating a
+38:49 - room and then we'll see if we can join
+38:50 - that room I know we're not really doing
+38:52 - that yet but you'll kind of get a feel
+38:54 - for how this input works so if I try to
+38:57 - test out the errors if I click click
+38:58 - create room you can see it renders the
+39:00 - error you know please enter a name join
+39:03 - a room same thing please enter a name if
+39:05 - I do something like Tim and then I hit
+39:06 - join a room it says please enter a room
+39:08 - code but notice Tim is still here now
+39:11 - same thing if I go with like hello and
+39:13 - then I go create room please enter name
+39:15 - but hello stays same with join room okay
+39:18 - so let's create a room so I'm gonna go
+39:20 - Tim and create room and then it
+39:22 - redirects me to the room page nice now
+39:25 - we don't know what the code was for this
+39:27 - room so I actually can't join it which
+39:29 - is what I was going to attempt to do you
+39:31 - can see that at least what we've written
+39:33 - so far uh is working
+39:35 - so we'll deal with kind of that room
+39:36 - code in a minute but for now I just want
+39:39 - to add one kind of guard Clause here in
+39:42 - our room root and make it so you can't
+39:44 - go to slash room unless you've actually
+39:47 - kind of done the registrations like
+39:48 - you've entered your name or you've
+39:50 - created a room or you've joined one from
+39:51 - the home page so the way we're going to
+39:53 - do that is we're going to say room is
+39:56 - equal to
+39:57 - session.get and we're going to get room
+40:01 - and we're going to say if
+40:02 - room is none
+40:04 - or session dot get name
+40:09 - uh is none
+40:12 - or
+40:13 - room is not in rooms then we're going to
+40:18 - return
+40:20 - redirect
+40:22 - URL underscore 4 and then home now the
+40:26 - reason I'm doing this is so that you
+40:27 - can't just directly go to that slash
+40:29 - room root it's only going to work if you
+40:32 - first went to this page and you entered
+40:34 - your name and you either generated a new
+40:36 - room or you joined an existing room so
+40:38 - that's why I'm doing all these checks
+40:39 - here uh so you can't just directly go to
+40:42 - this room page all right very good so
+40:44 - now that we have the room page root kind
+40:46 - of handle that we know how to navigate
+40:48 - there we're gonna go to our room.html
+40:51 - template and we're going to start
+40:52 - writing kind of the basic code here I
+40:55 - will have to write a bit of JavaScript
+40:56 - code we're not going to do all of that
+40:58 - this second for now I just want to get
+40:59 - like a kind of chat window set up as you
+41:01 - saw before and then once we have that we
+41:04 - can kind of add all the socket coding so
+41:06 - I know the socket stuff is coming later
+41:07 - but we need to set all this stuff up
+41:09 - stuff up first before the socket stuff
+41:11 - actually makes sense so I'm going to
+41:12 - type percent percent extends and then
+41:15 - base dot HTML
+41:17 - okay I'm then gonna go
+41:19 - two percent
+41:21 - and then block content
+41:24 - then I'm gonna end my block
+41:26 - super seven percent and block
+41:29 - same thing as before we're going to put
+41:30 - all of our code inside of here so we're
+41:32 - going to create a div
+41:33 - let's end the div to the class
+41:38 - is going to be message
+41:40 - Dash box we're then going to create a
+41:42 - header so we're going to say H2 and I'm
+41:45 - going to say chat room colon and then
+41:47 - we're going to put as a variable that
+41:48 - will enter into this template room
+41:51 - now this is just so we know what the
+41:53 - room code is so we could tell other
+41:54 - people to join then we're going to have
+41:57 - another div we're going to say class is
+42:00 - equal to messages and I think that's
+42:03 - fine for now actually we'll go with an
+42:06 - idea as well as messages so we can
+42:08 - access this from JavaScript
+42:11 - and then I'm going to say slash diff now
+42:13 - this is going to be an empty div but
+42:15 - this is where we're going to inject all
+42:16 - of our messages that we're getting from
+42:18 - our socket server so we won't have the
+42:20 - messages right away when we render the
+42:21 - page but we'll insert them into this div
+42:24 - next I'm going to create another div and
+42:27 - this is going to be for our input so
+42:30 - like for our actual message that we're
+42:32 - sending so I'm going to say class is
+42:35 - equal to inputs and inside of here I'm
+42:37 - going to type
+42:39 - input
+42:42 - okay this is going to be type
+42:44 - equal to text and this is going to be
+42:46 - the message box where we're actually
+42:48 - typing what we want to send right now
+42:50 - I'm just going to say rows is equal to 3
+42:52 - just so we have some multi-line
+42:53 - capability here for this input I'm going
+42:56 - to say placeholder is equal to
+42:59 - and then message and I'm going to say
+43:01 - name
+43:02 - is equal to message and then ID is equal
+43:06 - to message okay
+43:10 - so I know it's pretty repetitive but we
+43:11 - need all of that and then we're going to
+43:13 - create a button
+43:14 - okay let's
+43:16 - end our button
+43:18 - and for our button it's going to be type
+43:21 - equal to button although I don't know if
+43:23 - we actually need to put that but I will
+43:24 - for now the name is going to be send the
+43:28 - ID is going to be the send BTN and then
+43:32 - we're going to say on click is equal to
+43:34 - and we're going to call a JavaScript
+43:36 - function called send message which we'll
+43:39 - write in a second and then we'll have
+43:40 - the button say send
+43:42 - okay so we are actually pretty much done
+43:45 - the main content we need to have
+43:47 - lastly I'm going to add a script tag
+43:49 - here I'm going to say type is equal to
+43:52 - Text slash JavaScript
+43:56 - and I'm going to have another script tag
+43:58 - now the reason I want this is so that
+44:00 - the page updates without me having to
+44:01 - refresh to do that I do need to use
+44:03 - JavaScript and inside of here for now
+44:06 - we're going to say VAR
+44:08 - socket i o is equal to IO the reason we
+44:12 - can call IO is because we have the CDN
+44:14 - Library uh in our base.html okay so
+44:18 - that's why we needed that
+44:19 - and then we're going to have our
+44:21 - function
+44:22 - const
+44:23 - send message is equal to an arrow
+44:26 - function
+44:26 - if you're not familiar with JavaScript
+44:28 - this is a basic function this is just
+44:30 - another way to create one these would be
+44:32 - the parameters this is the body of the
+44:33 - function
+44:34 - and for now we'll just say console.log
+44:37 - send
+44:38 - okay we'll actually fill this in in a
+44:40 - minute but for now I'm just kind of
+44:41 - putting this boilerplate so that it
+44:43 - doesn't give us an error with this send
+44:44 - message function call
+44:46 - okay fantastic
+44:48 - so I think that's going to be good for
+44:51 - now
+44:52 - the next thing we need to do is do some
+44:53 - styling first we can obviously have a
+44:55 - look at uh well what this looks like so
+44:57 - let's run our code
+44:59 - let's go to this URL
+45:02 - let's go Tim and create a room and there
+45:05 - we go we get chat room now this is not
+45:08 - what we want the chat room to look like
+45:09 - but you can see we have our message box
+45:10 - we have send we have the chat room
+45:12 - header and then there is an empty div
+45:14 - that you can't see which is our messages
+45:15 - but I want to make that larger and have
+45:17 - it look as uh it did in the uh demo so
+45:21 - how are we going to do that well we're
+45:22 - gonna go to style.css and we're going to
+45:25 - fill in some of our styles so the first
+45:28 - style we're going to do is message box
+45:30 - this is the longest one
+45:33 - but
+45:34 - this is kind of the most stylistic
+45:36 - aspect of our website obviously you can
+45:38 - make this look better but I'll give you
+45:39 - some basic styling so we're going to say
+45:41 - border color
+45:43 - is black we're going to say the Border
+45:46 - width is two pixels I'm gonna say the
+45:49 - Border style is solid we're going to say
+45:54 - the Border radius is 10 pixels this
+45:57 - gives us those kind of rounded Corners
+45:59 - we're going to say the background color
+46:01 - is equal to and I'll go with white smoke
+46:04 - just slightly off-white color just so
+46:06 - you get some contrast I'm going to give
+46:08 - this a fixed height of 80 vertical
+46:11 - height which is vertical height of the
+46:13 - window then I'm going to go display Flex
+46:16 - I'm going to go flex direction of column
+46:20 - so we align all of our individual Flex
+46:22 - items in a column I'm going to give this
+46:24 - a fixed width of 80vw which is vertical
+46:27 - width and then I'm going to say align
+46:29 - items stretch so that all of our items
+46:32 - will stretch to fill their parent so
+46:35 - that they take up as much room as
+46:36 - possible in terms of the width Direction
+46:39 - okay fantastic now I'm going to say dot
+46:42 - messages I'm going to say overflow Dash
+46:46 - Y is scroll now this is that empty div
+46:49 - right so if we look here we have this
+46:51 - div messages and I want this to be a
+46:53 - fixed height and to be scrollable like
+46:56 - you would have in any kind of messaging
+46:57 - app right you have the bottom part which
+46:59 - is what you're actually sending your
+47:00 - messages it's fixed or kind of glued to
+47:03 - the screen whereas the scrolling part
+47:04 - where all the messages are well you can
+47:06 - scroll it so I need to kind of set that
+47:08 - overflow y scroll means I can scroll
+47:10 - through any overflow content that I have
+47:12 - I'm going to say Flex one which means
+47:14 - I'm going to take up a certain size of
+47:16 - the screen here
+47:17 - and I'm going to say with 100 percent
+47:21 - okay lastly we're going to type dot
+47:23 - inputs four dot inputs we're going to
+47:26 - say padding
+47:28 - is 10 pixel and then we're going to say
+47:30 - display
+47:32 - flex and this is the container that has
+47:34 - our kind of message text box
+47:37 - and actually excuse me here there's a
+47:39 - few other things that we need to do that
+47:40 - I haven't yet written so I'm going to do
+47:41 - H2 and H4 because we're going to have an
+47:44 - H4 header in a second uh actually are we
+47:47 - gonna have an H4
+47:48 - no we're not we're just gonna have an H2
+47:50 - so we'll just do H2 I'm going to say
+47:52 - text align
+47:54 - Center so that goes in the center of the
+47:57 - screen and then I'm going to go pound
+47:59 - message which is the ID of our message
+48:01 - box
+48:02 - and I'm just going to say that this is
+48:04 - flex one so that it will fill as much
+48:06 - space as it can in its parent
+48:09 - all right I think that's all we need I
+48:13 - know I just wrote a lot of CSS there it
+48:15 - is fairly basic CSS but that will give
+48:17 - us some decent styling so let's reopen
+48:20 - our
+48:21 - window here
+48:23 - and now let's go Tim create room and
+48:27 - there you go we get our chat box window
+48:30 - obviously you can make this look better
+48:32 - if you want but I think this is good
+48:34 - enough for now
+48:36 - all right so now that we have all that
+48:38 - let's go back to main.pi and let's start
+48:42 - handling some of our socket stuff so
+48:45 - really most of the kind of styling Pages
+48:47 - root are finished we need to do all of
+48:49 - our socket stuff now so the way that
+48:52 - sockets kind of work is that when you go
+48:54 - here to JavaScript and you initialize
+48:57 - socket i o you're going to directly
+48:59 - connect to the socket associated with
+49:01 - the server that the kind of website is
+49:03 - on so in this case we're going to
+49:04 - connect to the socket server associated
+49:06 - with our flask website which will be
+49:08 - hosted on localhost so as soon as we
+49:10 - connect there's an event that is emitted
+49:13 - to our backend server called connect so
+49:16 - the first thing we want to do is listen
+49:17 - for that connection event and when that
+49:19 - connection event occurs we want to put
+49:22 - the user into the specific room uh that
+49:25 - they're going to be in for the chat room
+49:26 - application so there's all different
+49:28 - kinds of stuff you can do here with
+49:30 - flask sockets right you can send
+49:32 - messages to everybody you can send
+49:33 - message to one individual client or you
+49:35 - can send it to rooms of clients which is
+49:37 - what we're doing in this case
+49:39 - so the way we do this is we type socket
+49:41 - IO dot on and then this is going to be
+49:46 - connect now the reason I'm doing socket
+49:48 - IO is because that's what I used as my
+49:51 - kind of initialization object for the
+49:52 - socket i o Library so I have socket i o
+49:55 - on connect I'm going to say Define and
+49:58 - we're just going to call this connect
+50:01 - now inside of connect we're just going
+50:03 - to take one parameter here auth we're
+50:05 - not going to use this but it is passed
+50:07 - so just put it here if you want to print
+50:08 - it out and look at it you can but it's
+50:10 - not really going to have any data for us
+50:11 - at this point and the first thing we're
+50:13 - going to do is we're going to look in
+50:15 - the session for the user's room and the
+50:18 - user's name so remember that we know
+50:20 - based on this Home Route that we wrote
+50:22 - here what room the user should be in and
+50:26 - what their name is we're going to use
+50:27 - that room code and we're going to use
+50:29 - that name to determine what actual room
+50:32 - to put them in at this point in time our
+50:35 - rooms are just kind of hard coded by us
+50:37 - but there's something known as a room in
+50:39 - flask socket i o hence join room and
+50:42 - leave room so we need to now kind of
+50:44 - connect the rooms that we've ridden with
+50:46 - the rooms in socket IO so we're going to
+50:49 - say room is equal to session dot get
+50:52 - and then room and then we're gonna say
+50:55 - name is equal to session.get and then
+50:59 - code uh no not code name sorry okay now
+51:04 - we're just going to quickly check to
+51:06 - make sure that they do actually have a
+51:07 - room and they do have a name this is to
+51:09 - make sure that someone is not attempting
+51:11 - to connect to our socket before going
+51:13 - through our home page you don't have to
+51:15 - write all of this but this is just kind
+51:17 - of a good measure to ensure we're not
+51:18 - going to get any weird errors so I'm
+51:20 - going to say if not room or not name
+51:22 - then simply return so I don't need to do
+51:25 - anything I'm not going to actually add
+51:26 - them into the room I'm not going to send
+51:28 - them a message unless they actually have
+51:30 - a room here in their session and they
+51:31 - have a name
+51:33 - lastly I'm going to say if room not in
+51:36 - rooms so if they are kind of in a room
+51:39 - right like if they have a room in their
+51:40 - session but it's not in the valid rooms
+51:43 - then I'm going to say leave room
+51:47 - this leave room function is from socket
+51:49 - IO just to make sure okay let's get you
+51:52 - out of that room because if you're in
+51:53 - one that doesn't exist well you need to
+51:54 - leave that and then we're going to send
+51:56 - a message here uh actually we don't need
+52:00 - to send a message sorry we're just going
+52:01 - to return I was going to send a message
+52:03 - that said this user has left the room
+52:04 - but if the room doesn't exist and
+52:06 - there's no point in having that message
+52:08 - all right now if all of this is not the
+52:12 - case so if we've got through these two
+52:13 - if statements we're going to say join
+52:15 - room
+52:16 - and we're going to pass the room code
+52:18 - that this user should join because at
+52:21 - this point we know the room exists so
+52:22 - we're going to tell socket IO put the
+52:24 - user inside of this room rooms are
+52:26 - really just collections of different
+52:27 - users that allow us to send messages
+52:29 - individually or kind of in a group to
+52:31 - all of the people in the same room then
+52:34 - we're going to send a message using the
+52:36 - send function this is how you kind of
+52:38 - emit a socket message to all the people
+52:40 - in a specific room and we're using this
+52:43 - send function right
+52:44 - so we're going to say send and we're
+52:46 - going to send a Json message it says
+52:49 - name
+52:49 - is equal to the name and the message
+52:53 - make sure this is in quotation marks
+52:55 - is equal to has
+52:58 - entered the room okay so we're going to
+53:01 - have whatever the person's name is and
+53:03 - then this is what we want to show
+53:04 - associated with their name
+53:05 - now where are we sending this to
+53:07 - well we're sending this to all of the
+53:10 - people in our room so we're going to say
+53:11 - two equals room
+53:13 - and I think
+53:15 - that's all we need for right now then
+53:17 - we're going to say room
+53:19 - s sorry at room and then
+53:23 - members
+53:25 - plus equals one
+53:26 - and I'm just going to do a little print
+53:28 - statement here so that we can kind of
+53:29 - debug this a bit better and I'm going to
+53:31 - do an F string and say name
+53:33 - joined
+53:35 - room and then whatever the room is okay
+53:38 - so we're getting the room code that this
+53:40 - user is kind of in we're getting the
+53:43 - name of this user we're making sure that
+53:45 - they actually do have a room and they do
+53:46 - have a name we're also making sure that
+53:47 - room exists if it doesn't then we'll
+53:49 - just make sure they're no longer inside
+53:50 - that room then we're going to say join
+53:52 - room which kind of puts this user in
+53:54 - that socket room right then we are
+53:57 - sending a message to the room that says
+53:59 - this user with this name just join the
+54:01 - room so everyone knows okay they're in
+54:03 - here and we're sending two equals room
+54:05 - now you can send this to one individual
+54:07 - person you can send this to everybody
+54:09 - there's all kinds of different socket
+54:11 - commands and functions you can use I'll
+54:13 - let you look those up from the socket i
+54:15 - o documentation but in our case we want
+54:17 - to send just to the chat room so we say
+54:18 - two equals and then whatever the room
+54:21 - code is obviously we're handling the
+54:23 - room codes socket IO is taking care of
+54:25 - sending to the people we need to send to
+54:28 - okay then we go rooms at the room
+54:30 - members plus equals one just because
+54:32 - we're gonna keep track of how many
+54:33 - people are currently inside of the room
+54:35 - notice that I only did this once someone
+54:37 - actually connected to the socket and
+54:39 - joined I didn't do it from this Home
+54:42 - Route if I were to say members equals
+54:44 - one here or I were to add the user to
+54:46 - the room that would be preemptive
+54:48 - because they're not actually in the
+54:50 - socket room yet at this point when
+54:52 - they're on the home page they haven't
+54:54 - connected to the socket server they're
+54:56 - just setting up what room they are about
+54:58 - to join a lot of people make this
+55:00 - mistake where they kind of initialize
+55:01 - the socket in the wrong place in our
+55:03 - case we only want to initialize it in
+55:05 - the actual chat room page which is why
+55:07 - I've kind of gone through the trouble of
+55:09 - doing all this is to show you how to
+55:11 - properly initialize the socket all right
+55:13 - so that is our connection route now we
+55:15 - can actually test this and see if this
+55:17 - works for now because from our room we
+55:20 - are initializing the socket so we'll
+55:22 - automatically connect now we can do some
+55:24 - stuff in the JavaScript as well to kind
+55:26 - of look at the messages for now though I
+55:28 - want to look at our server logs when we
+55:30 - start running this code and see if the
+55:32 - person actually joins the room we get
+55:34 - that kind of print statement when we go
+55:36 - through the home page so let's go here
+55:40 - and just notice right away that I get my
+55:43 - different uh kind of outputs here so you
+55:45 - guys can see those but it doesn't say
+55:47 - that the person joined the room yet
+55:49 - because again I haven't initialized the
+55:51 - socket but now if I go Tim and I create
+55:53 - a room
+55:54 - you'll see that it says Tim joined room
+55:56 - and then it gives me the room code it's
+55:59 - only doing that when I go to the room
+56:01 - page because that's where I initialize
+56:02 - the socket and you'll see some kind of
+56:04 - random messages related to joining the
+56:06 - socket creating the socket Etc don't
+56:08 - worry about that too much the point is
+56:10 - that I wanted to show you it's saying
+56:11 - that I joined so now the next event we
+56:14 - want to handle is leaving the room and
+56:16 - then we'll handle actually sending
+56:18 - messages and all of that okay so now
+56:20 - we're going to do leaving the room so
+56:22 - we're going to say socket IO dot on and
+56:24 - then I think this is disconnect and
+56:27 - we're going to say
+56:28 - Define
+56:30 - disconnect
+56:32 - and the same thing here I want to get
+56:33 - the room and the name of the user
+56:36 - so I'm going to say rooms equal to that
+56:38 - name is equal to this and then I'm just
+56:40 - going to say leave room and then have
+56:42 - the user leave through next I'm going to
+56:44 - check if the room the user left is in
+56:48 - our rooms then I'm going to say rooms at
+56:51 - room at members
+56:55 - minus equals one because someone just
+56:57 - left the room and then I'm going to
+56:58 - check if rooms at room
+57:02 - at
+57:03 - members is less than or equal to zero if
+57:07 - it is I'm gonna Dell rooms at room now
+57:11 - the reason I'm doing this is because if
+57:13 - every single person has left the room I
+57:15 - want to get rid of the room I don't want
+57:16 - to be storing that anymore if no one's
+57:18 - in the room so if everyone leaves we
+57:20 - delete the room and then if you guys
+57:21 - want to talk again you have to create a
+57:23 - new room that's the point of this little
+57:24 - block of code right here and that's why
+57:26 - I'm writing it then here after we have
+57:29 - this if statement we're going to send a
+57:30 - message similar to this
+57:32 - except this time it's going to say has
+57:34 - left the room
+57:36 - and then we're going to print
+57:39 - F string
+57:40 - name
+57:42 - has left
+57:44 - in the room
+57:47 - again just for debugging so we can see
+57:49 - if the user has left
+57:51 - all right let's run our code and I will
+57:54 - kind of explain what's going to happen
+57:56 - here so let's get that a little bigger
+57:58 - let's go to r127
+58:01 - okay let's create the room let's go Tim
+58:04 - create room now it says Tim join the
+58:06 - room perfect notice if I refresh what
+58:09 - happens it says Tim left the room and
+58:11 - then it brings me back to the home page
+58:13 - brings me back to the home page because
+58:15 - since I left the room when I refreshed
+58:17 - because the socket temporarily
+58:19 - disconnected it deleted the room the
+58:21 - room no longer existed so when I tried
+58:23 - to get in the room again because it was
+58:25 - refreshing that room route it brought me
+58:27 - back to the home page that was the whole
+58:28 - thing I was trying to set up so that
+58:30 - when you refresh if you're the only
+58:31 - person in the room you go back to the
+58:33 - home page because you've kind of deleted
+58:35 - the room because you've temporarily left
+58:36 - it now if we do the following so if I
+58:39 - set up an incognito window and I go
+58:41 - again to this case let's create a room
+58:43 - so let's go name create room uh now what
+58:47 - is the code it is msps so now let's try
+58:50 - to join this msps and I go with Joey and
+58:54 - I go join room it brings me into the
+58:57 - room so that works now if I refresh it
+59:00 - doesn't delete the room room and nothing
+59:02 - breaks because we have more than one
+59:05 - person currently in the room whereas if
+59:07 - I left the room so if I do this and then
+59:09 - I refresh now it kicks me out because I
+59:11 - was the only person in the room so
+59:13 - hopefully you guys appreciate the kind
+59:15 - of complexity here and attention to
+59:16 - detail with doing all that but that's
+59:18 - why I wanted to show you everything that
+59:19 - we just did so again if you only have
+59:21 - one person and you refresh or you leave
+59:23 - the room you close the browser tab then
+59:25 - you're going to be kicked out and the
+59:26 - room will be deleted if more than one
+59:28 - person is currently in there then it's
+59:29 - fine you can rejoin the room instantly
+59:31 - when you refresh so refreshes you leave
+59:33 - you reconnect and then you're fine and
+59:37 - if we look at our logs here you can see
+59:39 - that we have uh there's kind of quite a
+59:41 - bit going here but Joey has left the
+59:43 - room
+59:43 - Tim has left the room Joey has left the
+59:47 - room oh sorry Joey joined the room
+59:49 - Joey's left the room Tim has left the
+59:51 - room Joey has left the room okay so it
+59:53 - kind of shows you joining leaving
+59:54 - joining leaving uh Etc Joey joined Joey
+59:58 - left Joy joined Joy left all right
+60:01 - sorry that was a bit of a mouthful
+60:03 - okay so now we have the connecting and
+60:06 - disconnecting now what we want to do is
+60:08 - actually handle these send messages in
+60:11 - our HTML file so we're going to go back
+60:13 - to room and this is where we're going to
+60:15 - listen for these different socket events
+60:18 - so in JavaScript we're going to listen
+60:19 - for those events which are being emitted
+60:21 - by our socket server and we are going to
+60:24 - handle them and kind of print out a
+60:26 - message all right so let's go inside of
+60:27 - our script tag here because this is all
+60:29 - going to be JavaScript and we're going
+60:31 - to start by getting the location where
+60:33 - we want to insert our messages so we're
+60:34 - going to say const messages is equal to
+60:37 - document.getelement by ID and this is
+60:40 - going to be
+60:41 - messages accessing this div here
+60:45 - okay then we're going to create a
+60:47 - function I'm going to say const create
+60:49 - message is equal to I'm going to take a
+60:52 - name and the actual message and I'm
+60:55 - going to return here
+60:57 - some code that is essentially going to
+60:59 - be the HTML equivalent of a message that
+61:02 - I want to add into this messages div so
+61:05 - I'm going to say const
+61:06 - content is equal to I'm going to use
+61:09 - backticks here which are right below the
+61:11 - Escape character at least on most
+61:12 - keyboards and I'm going to type HTML
+61:15 - code inside of here so I'm going to say
+61:16 - div
+61:17 - slash div
+61:19 - inside of our div we are going to have a
+61:22 - span okay I'm going to say slash span
+61:26 - inside of the span we're going to have a
+61:29 - strong tag and then we're going to put
+61:31 - inside of a special variable here which
+61:35 - is dollar sign and then curly braces the
+61:37 - name where then I'm going to go
+61:40 - slash strong we're then going to have a
+61:42 - colon
+61:43 - and then we're going to put
+61:45 - a dollar sign special variable
+61:48 - and the message now I'm going to do
+61:50 - something else but for now you can see
+61:52 - that we have a div the div contains a
+61:54 - span the span contains our name and our
+61:56 - message now outside of the span
+61:59 - we're gonna have another span
+62:01 - this is going to be class
+62:03 - equal to muted
+62:05 - we're going to end the span tag
+62:07 - and inside we're going to put the
+62:09 - current JavaScript date so to do that
+62:12 - we're gonna go dollar sign new date like
+62:16 - that
+62:16 - dot two and then locale
+62:21 - like this string now there is a better
+62:24 - way to do what I'm doing here I'm
+62:26 - essentially just saying any type of
+62:27 - message is received the time it's
+62:29 - received at just put that on the screen
+62:32 - the issue with this approach is that
+62:34 - we're not saving when the original
+62:36 - message was actually sent we're just
+62:37 - handling when it was received on our end
+62:40 - which is a bit misleading because when
+62:42 - we refresh the page for example and get
+62:44 - older messages it's going to say all the
+62:46 - older messages were received at the time
+62:48 - we refresh the page which is not really
+62:50 - true but I'm just trying to keep this
+62:52 - simple for this example so really take
+62:54 - this more as okay you know this is how
+62:56 - you would like style a date element then
+62:58 - this is the best way to store the date
+63:00 - of the message if we really want to
+63:02 - destroy the date of the message we would
+63:03 - probably do that on the server and then
+63:05 - we would read the date of the message
+63:06 - and insert it here but I don't want to
+63:08 - deal with python date libraries at the
+63:10 - moment so we're just going to have it
+63:12 - inside of here hopefully that makes a
+63:14 - bit of sense what I'm doing but
+63:16 - I'm just putting the date that this
+63:17 - message was received so you have kind of
+63:19 - like what the message was who sent it
+63:20 - and then like kind of a fake date of you
+63:23 - know okay we just got the message at
+63:24 - this time so it works if you're
+63:26 - connected the entire time but if you
+63:27 - come uh like you know part way through
+63:29 - the the room or you come like you
+63:32 - refresh the page it's going to uh give
+63:34 - you the wrong date all right so we have
+63:37 - that uh the only thing I need to do now
+63:39 - is just for my div I'm going to say
+63:40 - class is equal to text and I think
+63:45 - that's all I need for my actual content
+63:47 - then I'm going to say messages dot inner
+63:50 - HTML
+63:52 - plus equals content like that so I'm
+63:56 - just creating the content that I want to
+63:58 - enter inside of this diff right
+64:00 - so we have our create message function
+64:02 - now inside of a special Handler here I'm
+64:07 - going to say socket IO dot on and I
+64:11 - think I called it socket oh yes I did
+64:13 - and we're going to say message now this
+64:16 - is the event that we're listening for
+64:18 - this means that the server transmitted a
+64:20 - message so we're listening for the
+64:22 - message event and then we're going to
+64:23 - have a callback function here which is
+64:25 - data
+64:27 - and then we have the body of our
+64:28 - function now inside of this function
+64:30 - we're going to say create message
+64:32 - and we're going to say data dot name and
+64:36 - data dot MSG or Dot message sir
+64:40 - okay so let's just kind of recap why
+64:42 - this is going to work so we're listening
+64:44 - for a message event which will be
+64:45 - transmitted from our python flask socket
+64:48 - server that's going to contain data data
+64:50 - is going to have whatever we sent in the
+64:52 - message so if you look here we have our
+64:54 - name and we have our message so that's
+64:55 - why I'm using the fields name and
+64:58 - message because I know that's on my data
+65:00 - or on the payload that's being sent here
+65:01 - to JavaScript I then call the create
+65:03 - message function which does exactly what
+65:05 - it says it creates a message for us
+65:07 - inside of that message div again there's
+65:10 - other ways to go about doing this I'm
+65:11 - just trying to keep it simple for this
+65:13 - video
+65:14 - all right so that is actually it for
+65:16 - listening to messages so at this point
+65:19 - we should be able to see users joining
+65:21 - and leaving the room and then we just
+65:24 - need to handle actually sending messages
+65:25 - which I'll show you in a second so is
+65:27 - our server still running it looks like
+65:29 - it is so let's open up two windows and
+65:34 - let's attempt to see if this is going to
+65:35 - work
+65:36 - so let's open this up
+65:39 - okay let's go Tim
+65:42 - create room notice that right away I get
+65:45 - Tim has entered the room and it tells me
+65:46 - the date we'll style this in a second
+65:48 - don't worry and the reason I get this
+65:49 - immediately is because I initialize the
+65:51 - socket and then once the socket's
+65:53 - initialized uh it sends that connection
+65:55 - event to my server the connection event
+65:57 - then sends to everyone in the chat room
+65:59 - that I have entered the chat room so I
+66:01 - ended up I end up printing that out
+66:02 - there's ways where we cannot show this
+66:04 - message if you don't want to but I think
+66:06 - it's fine to show that you've joined the
+66:08 - room
+66:09 - now over here we're going to say Joey
+66:12 - and we're going to enter the room which
+66:14 - has the code of kdlk we'll also pass
+66:18 - that code over here in a second but for
+66:20 - now
+66:21 - kdlk let's join and then notice it says
+66:24 - Joey has entered the room now if Joey
+66:26 - leaves the room it says Joey has left
+66:29 - perfect so we're getting uh kind of a
+66:31 - good ways through this we're actually
+66:32 - almost finished now
+66:33 - all right so first thing to do here as
+66:36 - like a slight fix let's go to our
+66:40 - room root and let's pass the code equal
+66:43 - to the room
+66:45 - okay so we actually know now on our web
+66:48 - page what the room code is okay that's
+66:51 - the first thing next we're going to go
+66:52 - to our HTML or a JavaScript actually and
+66:55 - we're now going to handle this send
+66:57 - message function for the send message
+66:59 - function we need to get the message that
+67:01 - the user sent so we're going to say cons
+67:03 - message is equal to document
+67:06 - dot get element
+67:08 - by ID
+67:10 - message
+67:11 - remember we have our message text box
+67:14 - right here with ID message okay
+67:16 - then we're going to say if
+67:20 - the message.value is equal to an empty
+67:23 - string we're simply going to return
+67:25 - because I don't want to send an empty
+67:27 - message I have to type something
+67:29 - if they don't have an empty message I'm
+67:31 - going to say socket IO dot emit
+67:34 - I'm going to omit the event which is
+67:37 - message okay so this is a special event
+67:38 - name you can call this whatever you want
+67:40 - in my case I'm calling it message you
+67:42 - could call it send you could call it new
+67:44 - text you can come up with different
+67:46 - names and listen for different events
+67:48 - we're only going to use this one event
+67:49 - which is message but come up with any
+67:51 - event name you want and listen for
+67:53 - different events if you're doing
+67:54 - different things with the socket right
+67:56 - that's how you get more complicated then
+67:58 - we're going to pass as a payload here
+68:00 - data
+68:01 - message dot value okay as Json data
+68:05 - that's what we're sending and
+68:06 - message.value is going to be well the
+68:08 - value of whatever is inside of our text
+68:10 - box
+68:11 - then we're just going to say
+68:12 - message.value is equal to an empty
+68:14 - string to just clear whatever it was
+68:16 - that we typed so that it kind of gets
+68:17 - rid of it
+68:18 - okay fantastic so now we'll be able to
+68:20 - send messages actually not quite close
+68:23 - but this will allow us to send but we
+68:25 - now need to receive the message from our
+68:27 - server and then send it to everyone in
+68:29 - the room so again what's kind of
+68:31 - Happening Here is we're connected to the
+68:33 - server we're not connected to all the
+68:35 - other individual peers although the
+68:38 - peers in our room the other clients are
+68:39 - connected to the server as well we're
+68:41 - not directly connected to them uh it's a
+68:43 - bit weird but our main communication
+68:45 - Point comes from the server so we're
+68:46 - going to send this message to the server
+68:49 - and then the server is going to transmit
+68:51 - that message out back to all of us so
+68:54 - now on the server
+68:55 - we're going to say at socket IO
+68:58 - dot on
+69:00 - message we're just going to call this
+69:02 - Define
+69:04 - message like this and now we're going to
+69:07 - handle that message and essentially
+69:08 - re-transmit it uh back to everyone else
+69:11 - so for the message we are going to say
+69:13 - data as our payload here we're going to
+69:16 - say room is equal to session dot get
+69:19 - room we need to know the room this user
+69:22 - is in that is sending us this message
+69:23 - we're going to say if room not in rooms
+69:27 - then return so for some reason someone's
+69:30 - sending us a message but they're in a
+69:31 - room that doesn't exist we don't care
+69:33 - we're just going to exit out otherwise
+69:35 - we're going to say the content of the
+69:37 - message we want to send is going to be
+69:39 - name is equal to session dot get name
+69:45 - and then message
+69:47 - is equal to data and then data like that
+69:53 - which is our message let me just make
+69:55 - sure that's true yeah so we have data
+69:59 - which is all of this then we have the
+70:00 - key data which is this okay so that's
+70:02 - what we're accessing we go data data and
+70:05 - data is our parameter here right so
+70:07 - that's our content that we now want to
+70:09 - send so we're now going to say send
+70:11 - content
+70:13 - to
+70:14 - the room
+70:16 - and then we're going to say rooms at
+70:18 - room
+70:20 - messages
+70:21 - dot append and then we're going to
+70:23 - append this content and this is where I
+70:25 - was saying if you want to store the date
+70:27 - of the message when it was actually sent
+70:28 - you would do that here on the server so
+70:30 - that you have that now stored in your
+70:33 - rooms really I should have done that but
+70:34 - I didn't so
+70:35 - forgive me take it as kind of homework
+70:37 - to try to do that on your own then I'm
+70:40 - going to say print
+70:41 - F string and I'm just going to go with
+70:46 - session dot get
+70:49 - name
+70:51 - said colon and then we'll do another F
+70:54 - string it's going to be data data
+70:58 - which is what they sent but make sure I
+70:59 - do this in single quotation marks and
+71:01 - same here so that I don't get an error
+71:03 - with my f strings okay
+71:06 - so I'm just printing so we have some
+71:08 - kind of logs here when we're debugging
+71:09 - again all we're really doing is we're
+71:11 - getting the room that the user is in
+71:13 - we're generating the content we want to
+71:14 - send which is whatever the user's name
+71:16 - is and whatever the message is which is
+71:17 - data data coming from the payload we're
+71:20 - then going to send that to everyone who
+71:21 - is in the room hence why we need to do
+71:23 - this on the server because we need to
+71:25 - know everyone that's inside of the room
+71:26 - and we need to know what room it is then
+71:28 - we're going to go to our rooms and we're
+71:30 - going to actually add whatever message
+71:32 - was sent so that we have a history of
+71:34 - all the messages in this room note that
+71:37 - if the server restarts you're going to
+71:38 - lose that history because we're storing
+71:40 - this in Ram if you wanted to you could
+71:42 - store it in a database but I'm not
+71:44 - worrying about that for this project
+71:46 - okay that's all we need for the uh the
+71:49 - server actually
+71:51 - and now that we have that
+71:53 - let's go to rim.html
+71:56 - and let's see if this works so let's run
+71:59 - our code
+72:00 - all right let's load this up let's copy
+72:03 - let's go to incognito
+72:05 - okay let's create a room so Tim great
+72:07 - room uh for some reason it's not telling
+72:11 - me the room uh okay why is that the case
+72:14 - let's have a quick look here ah we used
+72:17 - room not code so let's just change that
+72:19 - to be code so that it matches
+72:22 - now if we
+72:24 - refresh
+72:26 - Tim
+72:27 - create room gives us the room okay
+72:29 - perfect
+72:30 - now let's join this room so let's copy
+72:32 - it and join okay let's go with Joey join
+72:36 - the room and there we go Tim Joey let's
+72:39 - send a message
+72:40 - hey
+72:41 - and
+72:43 - looks like sending is not working
+72:46 - so let's go back to our HTML I have on
+72:50 - click is it on click or is it on press
+72:53 - that is the question that I always
+72:55 - forget let me look at my cheat sheet
+72:58 - here looks like it is on click
+73:01 - is our function called send message it
+73:04 - is called send message which means we
+73:06 - must have some kind of JavaScript error
+73:08 - here so let's see what our error is by
+73:11 - going here okay
+73:14 - inspect and we got an error it says
+73:17 - uncut reference message is not defined
+73:19 - in send message
+73:21 - const message if message.value
+73:24 - ah so the issue is we have three s's not
+73:27 - two okay so let's fix that and let's go
+73:31 - back here and refresh
+73:34 - and now let's send a message and notice
+73:38 - it shows up over here okay and then
+73:40 - we'll say hello
+73:43 - and that's because I didn't refresh this
+73:45 - one so let's go here and go hello and it
+73:48 - pops up over here
+73:49 - and then Tim and it is working so all of
+73:52 - our socket stuff is actually working the
+73:54 - last thing we need to do here is get the
+73:56 - message history because as you see when
+73:59 - I refresh I lose all of the history and
+74:01 - I want to maintain all the message
+74:03 - history so the way to do that is to send
+74:06 - all of the messages associated with the
+74:08 - room to that room when we are rendering
+74:11 - it so we're going to go back to main.pi
+74:13 - we're gonna go to our room root here and
+74:16 - now we're simply going to say messages
+74:18 - is equal to and this is going to be
+74:20 - rooms room
+74:23 - and then messages like that so that's
+74:26 - going to give us access to all the
+74:27 - messages and the variable messages
+74:28 - remember our messages are kind of like
+74:31 - Json format or python dictionary format
+74:33 - so now we're going to go to room.html
+74:35 - and what I'm going to do is going to
+74:37 - seem a bit weird here but I'm going to
+74:39 - create another script tag
+74:42 - um kind of inside of a for Loop so I'm
+74:44 - going to write a for Loop so percent
+74:46 - four and I'm going to say four MSG
+74:50 - in messages this is a Jenga for Loop I'm
+74:53 - going to go percent percent and N4 again
+74:56 - this is the variable we're passing in
+74:58 - and now
+75:00 - I'm going to call the create message
+75:02 - function from a script tag so I'm going
+75:05 - to go script
+75:09 - slash script
+75:10 - I'm gonna go
+75:12 - type equals Text slash JavaScript like
+75:18 - that and then we're going to call the
+75:20 - create message function and we're going
+75:23 - to pass
+75:24 - as our first variable message dot name
+75:27 - and as our second variable
+75:30 - message Dot message
+75:33 - okay let me explain why this works what
+75:36 - I want to do is I just want to
+75:37 - dynamically keep calling this create
+75:39 - message function for every message that
+75:41 - I have in my message history so I create
+75:43 - a for Loop to Loop through all of my
+75:45 - messages there's not really an easy way
+75:47 - to call the function other than to do
+75:49 - what I just did here so I create a
+75:50 - script tag and then inside the script
+75:51 - tag I call create message however notice
+75:54 - I'm doing this outside of all my divs
+75:56 - and I'm doing it beneath this script tag
+75:58 - because this function needs to be
+76:00 - defined before I can call it so that's
+76:03 - why I'm doing it now in terms of
+76:04 - accessing the data here I need to access
+76:07 - msg.name and message which are my
+76:10 - dictionary properties Inside of My
+76:12 - Double curly braces but I need to put
+76:14 - them in a string if I don't put them in
+76:16 - a string I'm going to get an error
+76:17 - because they're not a string type
+76:19 - they're just like raw text so I have to
+76:22 - wrap them in a string when I'm using
+76:23 - them inside of my JavaScript I know it's
+76:25 - a bit clunky that's just kind of how
+76:27 - Django works but now you'll see that I
+76:29 - will load all of my message history
+76:31 - whenever I go into the room before we
+76:34 - test that though let's quickly just
+76:35 - style the remaining elements that we
+76:36 - haven't styled so text and muted let's
+76:39 - go to style.css and let's style that so
+76:43 - for text we're going to say dot text
+76:45 - we're going to say display Flex this
+76:49 - because I want to push the date away
+76:50 - from the main text content we're going
+76:52 - to say the flex direction is rho we're
+76:55 - going to say align items Center I'm
+76:58 - going to say justify content space
+77:00 - between which just pushes this to it
+77:03 - essentially pushes the elements from the
+77:04 - left and right side directly to the left
+77:06 - and right side so it pushes them as far
+77:09 - apart as possible that's what space
+77:10 - between does then I'm going to say
+77:12 - padding left
+77:14 - 10 pixels and padding right
+77:18 - 10 pixels so that I have a bit of space
+77:20 - between the border and then I'm going to
+77:22 - go dot muted and this is going to be
+77:25 - font
+77:27 - size we'll make this 10 pixels and the
+77:31 - color can be dark gray
+77:34 - okay so that's the last styling that we
+77:36 - need let's rerun our code and let's give
+77:38 - this a final test so one two seven copy
+77:43 - paste okay pick nickname Tim great room
+77:47 - all right notice our styling looks a lot
+77:49 - better here obviously you can change it
+77:51 - if you want let's go here and go Joey
+77:53 - and join the room okay now let's go
+77:56 - hello world
+77:58 - all right
+77:59 - hi
+78:01 - yes okay you can see our messages now
+78:05 - let me refresh and look I get all of my
+78:07 - messages now the only thing we're losing
+78:09 - is has entered the room uh and has left
+78:11 - the room we can save that too if we want
+78:13 - but I figured it wasn't valuable to save
+78:14 - that because it's just kind of like a
+78:15 - joining leaving event which we don't
+78:17 - really care about so you get the entire
+78:19 - message history plus you get
+78:21 - um whatever the new messages like has
+78:23 - entered the room now notice the dates
+78:25 - are not correct because it's just
+78:26 - whenever I refreshed is when I get the
+78:28 - new date so that's why I'm saying if you
+78:30 - wanted to store the data on the server
+78:31 - you could do that and that would be a
+78:32 - bit better anyways that completes the
+78:35 - project everything is finished we've
+78:37 - created a live chat room using flask
+78:39 - Python and socket and I hope that you
+78:42 - have enjoyed and learned a lot there's
+78:44 - obviously a bunch more you could do to
+78:46 - make this project better but I think
+78:47 - this is a really great start for
+78:49 - creating a live chat room we did this in
+78:52 - under 90 minutes which is pretty
+78:53 - impressive and if you were able to
+78:55 - finish this entire project
+78:57 - um I applaud you this is not the easiest
+78:59 - thing in the world I know it's a bit
+79:00 - complicated but I hope that I was able
+79:02 - to kind of simplify it for you and make
+79:04 - it something that was attainable all of
+79:06 - this code will be available on GitHub
+79:08 - from the link in the description as a
+79:10 - reminder check out my course programming
+79:11 - expert and blockchain expert from the
+79:13 - link in the description if you enjoyed
+79:15 - make sure you leave a like subscribe to
+79:16 - the channel and I will see you in
+79:18 - another one
+79:21 - foreign
+79:26 - [Music]

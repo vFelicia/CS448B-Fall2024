@@ -1,0 +1,1087 @@
+00:00 - Learn more about the Web Authentication API
+00:02 - by building an app that implements
+00:04 - past key authentication.
+00:06 - The Web Authentication API lets you create
+00:08 - and use origin-scoped public key credentials
+00:11 - to authenticate users.
+00:13 - At the end of this course,
+00:14 - you will have an Express.js app
+00:16 - connected to a Postgres database
+00:19 - inside a Docker container.
+00:22 - Hello and welcome to this Dev Rhino video
+00:24 - here on the Free Code Camp channel.
+00:26 - So glad to see you.
+00:29 - In this tutorial,
+00:30 - we will learn more about the Web Authentication API
+00:33 - by building an Express.js app
+00:36 - that implements past key authentication.
+00:39 - To follow along,
+00:40 - you will need to have Docker installed and running.
+00:43 - You can head over to their website
+00:45 - to find the version that suits your environment.
+00:48 - Even though we're using Node.js in this tutorial,
+00:51 - you do not have to have it installed on your machine.
+00:55 - This tutorial will focus on the key concepts
+00:57 - involved in the implementation
+00:59 - of a public key pair credential system.
+01:02 - It does not dive into security,
+01:04 - any robust error handling,
+01:06 - data validation,
+01:08 - or any other authentication edge case.
+01:11 - By the end of the tutorial,
+01:13 - we will have created an app
+01:14 - that will allow the user to register
+01:17 - and create a pass key
+01:18 - with an authenticator of their choice.
+01:21 - They will also be able to log out
+01:23 - and log back in with their brand new pass key.
+01:25 - Now let's get started.
+01:28 - We can begin by creating a new folder for our project
+01:31 - and immediately changing into it.
+01:34 - Then we will create the config files
+01:36 - we'll need to work with Docker.
+01:38 - We'll create a Docker file,
+01:40 - a Docker Compose.yaml file,
+01:42 - and a.docker-ignore file.
+01:45 - Now let's open up the Docker file
+01:46 - to add an instruction
+01:48 - to pull the official Node.js image for version 19.
+01:52 - We will also add an instruction
+01:53 - to set the path to the working directory.
+01:56 - Over in the docker-compose.yaml file,
+01:59 - we will set the version to 3.8.
+02:02 - Then we will create our first service for our web server.
+02:05 - It will use port 3000
+02:07 - and persist data in a volume.
+02:10 - In the.docker-ignore file,
+02:12 - we will want to ignore node modules
+02:14 - and any NPM debugging logs.
+02:17 - That's the minimal config we need to get started.
+02:20 - We can now run the Docker Compose up command
+02:23 - to create our new container.
+02:25 - Now we can verify that Node.js was successfully installed
+02:28 - by entering our web container
+02:30 - and checking for the version.
+02:32 - If you see a similar printout, you're good to go.
+02:35 - While we're still in the web container shell,
+02:37 - let's initialize our project to use NPM.
+02:41 - Then we can install the express package as a dependency.
+02:44 - Now we can create a new index.js file
+02:47 - to act as the entry point to our application.
+02:51 - Then we can head to the express.js documentation
+02:54 - and copy over the example web server starter code.
+02:57 - We'll update the port constant
+02:59 - to use an environment variable
+03:01 - and also set the host variable
+03:03 - to listen to any available network interface.
+03:07 - Now we can start up our web server
+03:08 - by running the node index.js command.
+03:12 - If we open up local host port 3000 in our browser,
+03:15 - we should see the hello world text.
+03:18 - Let's head back to our web server code
+03:20 - and say hello to the universe instead.
+03:23 - If we go and refresh our browser now,
+03:25 - our changes are not reflected.
+03:27 - Our app has no way of rebuilding on the fly yet.
+03:31 - To introduce this behavior,
+03:32 - we can install the node mon package as a dev dependency.
+03:36 - Now with this package,
+03:37 - we can start our web server
+03:39 - by using the node mon command instead.
+03:42 - If we head to our browser now,
+03:43 - our changes are reflected upon refresh.
+03:46 - But what happens if we delete our node modules folder?
+03:50 - Perhaps a teammate has cloned the repository
+03:52 - and has not installed the dependencies.
+03:55 - If they try to run the web server,
+03:57 - they will see a message about missing packages.
+04:00 - They could always just reinstall them,
+04:02 - but this is kind of sad.
+04:03 - Let's improve the developer experience
+04:05 - by updating our Docker file
+04:07 - with an instruction to copy over the package.json files.
+04:11 - Then we can add another instruction to install dependencies.
+04:15 - So now whenever a new dev spins up this project,
+04:18 - they have all the dependencies they need.
+04:21 - We will also head over to the docker-compose.yaml file
+04:24 - and add a volume to persist the node modules between builds.
+04:28 - We should also add the startup command here too,
+04:31 - so that it maps to the docker-compose up command.
+04:35 - Now we can exit the web container and rebuild our app.
+04:38 - We can restart our app using the docker-compose up command.
+04:42 - If we head into our browser, nothing has visually changed.
+04:46 - However, our app is still functioning as expected,
+04:49 - which is a good sign.
+04:51 - To round this section out,
+04:52 - we will add some final touches to our docker file.
+04:55 - We can add a line for the starting command,
+04:58 - then we can add another instruction
+05:00 - that copies all the project files
+05:02 - from the host into the container.
+05:04 - These instructions won't make a difference
+05:06 - for our local setup,
+05:07 - but they will be useful if we ever deploy our app
+05:10 - to a service that doesn't support docker-compose.
+05:14 - This section is over and you're doing great.
+05:16 - Let's keep going.
+05:18 - In this section, we will set SQLize up as our ORM.
+05:23 - While our app is still running,
+05:24 - we can open a different terminal tab
+05:27 - and install the SQLize package.
+05:29 - Then we can also install the SQLize CLI package
+05:32 - as a dev dependency.
+05:34 - Once that is installed,
+05:35 - we can initialize SQLize for our project
+05:38 - using the CLI tool.
+05:40 - This command will create all the files we need.
+05:42 - However, they are not in the locations
+05:44 - that we'd like to have them in.
+05:46 - So let's do some housekeeping.
+05:48 - Let's create a couple of new directories called app and db.
+05:52 - Then let's move the models directory
+05:54 - into the new app directory.
+05:55 - We'll move the migrations folder into db
+05:58 - and the cdys folder into the db folder as well.
+06:02 - Then we will rename the config.json file to database.js.
+06:07 - Now we will open up the models index file
+06:09 - and make sure our config is pointing to the correct file.
+06:13 - We've made quite a few changes,
+06:14 - but SQLize expects the files it generates
+06:17 - to be found in specific locations.
+06:20 - So we need to create a SQLize RC config file
+06:23 - to overwrite the default paths that SQLize expects.
+06:27 - Finally, we need to update our database config file.
+06:31 - We'll convert the JSON to JavaScript
+06:34 - and store it in a constant called db settings,
+06:37 - which we will export.
+06:38 - We need to convert this file from JSON to JavaScript
+06:42 - so we can access environment variables.
+06:45 - We also change the dialect from MySQL to PostgreSQL.
+06:49 - By default, SQLize uses MySQL.
+06:53 - Let's set up a Postgres database for our application.
+06:57 - We've already started using environment variables
+07:00 - in our code, but we haven't actually defined them yet.
+07:04 - So let's create a.env file to store them.
+07:08 - The PG host will point to the database container
+07:11 - that we will create shortly.
+07:13 - PG port will be set to the default port for Postgres.
+07:17 - PG user will be the name of the user
+07:19 - that will connect to the database.
+07:22 - PG password will be the password
+07:24 - and PG database will be set to the name
+07:26 - we will give our database.
+07:28 - Once our variables are defined,
+07:30 - we can head into the docker-compose.yaml file
+07:33 - and tell our web service to pull them in.
+07:36 - Now we can set up a new service for our Postgres database.
+07:41 - We will not set up our own docker file for this service.
+07:45 - And instead we will use an official Postgres image.
+07:48 - We will also use the environment variables
+07:51 - from the.env file to set up our database.
+07:54 - The port will use the default Postgres port
+07:57 - and we will set up a named volume
+07:59 - to persist our database between builds.
+08:02 - Lastly, we will set the web service
+08:04 - to depend on this new DB service.
+08:07 - Now let's build our database container.
+08:10 - We can kill the server and rebuild the app.
+08:13 - Then we can start it up again.
+08:15 - We will access the shell of the new DB container
+08:18 - and use psql to connect to our database
+08:21 - using the credentials we have stored in our.env file.
+08:25 - If you see a similar output, your database has been set up.
+08:29 - We can also use a database client
+08:31 - to connect to our database.
+08:33 - We can use the same credentials
+08:35 - from our.env file here as well.
+08:38 - Our database is currently empty.
+08:41 - While we have seen how we can connect
+08:43 - to the database manually,
+08:45 - we should also give our web server
+08:47 - a way to connect programmatically.
+08:49 - Let's head back into the terminal
+08:51 - and install the Postgres package.
+08:53 - Then we can create a helpers folder in our DB directory.
+08:57 - Here we will create a little file
+08:59 - that will allow our code to access the database.
+09:02 - This file will define and export a module called DB.
+09:06 - This module will use SQLize
+09:08 - to create a new database connection
+09:11 - using the variables located in our.env file.
+09:15 - We will also set the dialect to PostgreSQL.
+09:19 - Now that our app can use SQLize to connect to the database,
+09:22 - let's generate our first SQLize model.
+09:25 - This will correspond to a database table.
+09:28 - We will run the model generate command
+09:30 - to create a user model.
+09:32 - We will give it a name and a single attribute for email.
+09:36 - This command will generate a new model file
+09:39 - and an accompanying migration file.
+09:42 - Let's open up our user model file
+09:44 - and add some more attributes.
+09:46 - We can see that our email attribute already exists,
+09:49 - which is expected.
+09:51 - Now let's improve it and tell SQLize
+09:53 - that it should be unique.
+09:55 - We can now add a new handle attribute
+09:57 - and the usual timestamp columns.
+10:00 - We want to follow a different convention
+10:02 - for the table names.
+10:03 - So let's also provide a new table name setting.
+10:06 - We can head over to our migration file
+10:09 - and update the table names in there as well.
+10:12 - Let's also tell the migration
+10:13 - that we need the email to be unique.
+10:16 - We can add the handle attribute here as well.
+10:19 - Now we have enough to migrate the database.
+10:22 - We can use the SQLize CLI tool to perform the migration.
+10:26 - Once the command executes,
+10:28 - we can see that the settings in our migration file
+10:31 - have been applied.
+10:32 - If we open up our database client,
+10:34 - we can see a new user's table
+10:36 - that contains all the columns we configured.
+10:40 - Let's set up a dedicated routes file
+10:42 - and our first controller.
+10:44 - In our terminal, let's create a new file
+10:46 - to organize our routes.
+10:49 - Within this new routes file,
+10:50 - we will import the express package
+10:52 - so that we can create a new router.
+10:55 - Now that we have a dedicated routes file,
+10:57 - we no longer need to put our routes in the index.js file.
+11:02 - Let's cut our only route from index.js
+11:05 - and paste it into the routes file.
+11:07 - And then let's import and use our routes file
+11:10 - within index.js.
+11:12 - Now let's create a new folder for our controllers.
+11:16 - Within the controllers folder,
+11:17 - we can create a new pages controller.
+11:20 - Introducing controllers will allow us
+11:22 - to further clean up our route handlers.
+11:25 - Inside the pages controller,
+11:27 - let's add a new action called welcome.
+11:30 - The new welcome action is a callback handler
+11:32 - that we will pass to our routes.
+11:35 - It takes a request, a response,
+11:37 - and the next callback as its arguments.
+11:40 - Within its body, it will check for a user.
+11:43 - If there is no user, it will render a welcome message.
+11:47 - If there is a user,
+11:48 - it will call the next function on the stack.
+11:51 - If this pattern looks familiar,
+11:53 - it's because this is just a regular old middleware function
+11:56 - that is commonly seen in Next.js apps.
+11:59 - Now we can head back into our routes file
+12:02 - and clean it up a little further.
+12:04 - We will import the pages controller
+12:06 - and set up the route route
+12:08 - so that it calls the welcome action
+12:10 - from the pages controller.
+12:12 - And with that, we now have the concept of routes
+12:15 - and controllers within our app.
+12:17 - Now let's configure our app
+12:19 - for front-end views and static assets.
+12:22 - We will be using the EJS and Express EJS layout packages
+12:27 - so we can hop into the terminal and install them.
+12:30 - Then we can head into the index.js file to configure them.
+12:34 - We will tell our app to use layouts
+12:37 - and we will set the path
+12:38 - to where all our view files will live.
+12:41 - Then we will set our default layout file
+12:43 - and also set our view engine to use EJS.
+12:47 - We are using the path package so we should import it.
+12:50 - Now that our app is configured to handle views,
+12:53 - let's create a folder for them.
+12:55 - We will start working on the global application layout first.
+12:59 - So let's create a folder and a file for it.
+13:02 - We can open up the application layout file
+13:04 - and add some boilerplate HTML markup to it.
+13:08 - There isn't much happening here.
+13:09 - We've just given it a title
+13:11 - and specified that it should be responsive.
+13:14 - The only interesting part is this template string.
+13:17 - This is the bit that will pull the body content
+13:19 - from our individual view files.
+13:22 - Now we can create our first real page.
+13:25 - Since we've already got a welcome controller action,
+13:28 - it only makes sense to create a new welcome view.
+13:31 - We will head to the project repository
+13:33 - and copy over the markup for our new welcome page.
+13:37 - HTML is out of scope for this tutorial,
+13:40 - so we will not go over this.
+13:42 - But please feel free to dive into it on your own
+13:45 - if you're interested.
+13:46 - Now that we have a proper welcome page,
+13:48 - we can head into the pages controller
+13:50 - and update the action to render it.
+13:53 - If we head into the browser now,
+13:55 - we can see the content we added for the welcome page.
+13:58 - Now let's work on giving our views some styles.
+14:01 - Back in the terminal,
+14:02 - we can create a new CSS file in the public folder.
+14:06 - Then we will head into the project repo
+14:09 - and copy over the ready-made CSS.
+14:12 - CSS is also out of scope for this video,
+14:15 - so we will not be explaining any of the styles.
+14:18 - Once we save the file and head into the browser,
+14:21 - we see that nothing happened.
+14:23 - That's because our app knows nothing
+14:25 - about this new style sheet we added.
+14:27 - So first we can head into our application layout file
+14:31 - and import our style sheet.
+14:32 - Then we can open up the index.js file
+14:35 - and configure our app to look for static assets
+14:38 - in the public folder.
+14:40 - Now when we go back to our browser and refresh,
+14:43 - we should see our styles coming through,
+14:45 - but our logo is broken.
+14:47 - Let's go back to the project repository
+14:49 - and download the images folder.
+14:51 - Then we can drag it into our local public folder.
+14:55 - Inside we have three custom cursor images
+14:58 - and a couple of different logos.
+15:00 - If we head back into our browser now,
+15:02 - our logo image should now be showing up.
+15:05 - Now let's create a page
+15:06 - that will hold our registration form.
+15:09 - If we head into the browser now
+15:10 - and click on the register button,
+15:12 - we're met with an error saying
+15:14 - the register route does not exist.
+15:16 - Well, this makes sense
+15:17 - because we haven't created a register route yet.
+15:20 - Let's open up our routes file and get to work.
+15:23 - We're importing the auth controller that doesn't exist yet.
+15:27 - Then we add a new get route handler
+15:29 - that calls an action called register,
+15:31 - which will live in the auth controller
+15:33 - that we will create now.
+15:35 - We can open up the new auth controller
+15:37 - and add the register action,
+15:39 - which will render the register view.
+15:42 - Then we will head into the project repo
+15:44 - and copy over the markup for the register view.
+15:47 - If we refresh our browser now,
+15:49 - our register page should be rendering correctly.
+15:53 - Now let's create a page for our login form.
+15:55 - Then we can add a route handler for the login route
+15:59 - and inside our auth controller,
+16:00 - we can add a login action that will render the login page.
+16:04 - Then we can head into the project repo
+16:07 - and copy over the markup for this login page.
+16:10 - Once that is saved, we can head back into the browser
+16:13 - and check it out.
+16:14 - It looks very similar to the register page,
+16:17 - but this is the login form.
+16:19 - Now let's set up the final page,
+16:20 - which will be the dashboard.
+16:22 - Let's add a new view file for it
+16:25 - and we will update the route route to take a second action.
+16:29 - Then we can create a new admin controller
+16:31 - and add a dashboard action,
+16:33 - which will render the dashboard page.
+16:36 - This dashboard action is the one we referenced
+16:38 - back in the routes file.
+16:40 - Now let's get the markup for the dashboard
+16:42 - and paste it into the view file.
+16:45 - We will not view the dashboard page in the browser for now.
+16:48 - It can be a nice little surprise
+16:50 - once we start implementing pass keys.
+16:53 - We've made it to another milestone.
+16:55 - We've covered a lot and you've been phenomenal.
+16:58 - Let's create a model and migration
+17:00 - for the public key credentials.
+17:03 - We already have a users table.
+17:05 - Now we need a public key credentials table
+17:08 - to store the public keys for each user.
+17:10 - We will use the model generate command
+17:12 - from the SQLI CLI tool,
+17:14 - giving it a model name and a single attribute,
+17:17 - which is the public key string.
+17:19 - This command will generate a model file
+17:22 - and an accompanying migration file.
+17:24 - We can open up the public key credentials model
+17:27 - and add a couple more attributes
+17:29 - for username and external ID.
+17:32 - These columns will help us identify public keys
+17:35 - and associate them to specific users.
+17:38 - And since we're following a different convention
+17:40 - for table names,
+17:41 - let's also configure the table name setting too.
+17:44 - We will add a belongs to association
+17:47 - because a public key should belong to a user record
+17:50 - through the user ID.
+17:52 - Now let's open up the migration file
+17:54 - and add the same attributes here as well.
+17:57 - Then we must also remember to update the table name
+18:00 - to match the new table name we set in the model file.
+18:03 - We've already stated that public key records belong to users.
+18:07 - So we should head into the user's model
+18:10 - and indicate that a user has many public key credentials.
+18:14 - Now we can migrate the database
+18:16 - so that our new changes can be applied.
+18:18 - If we open up our database client,
+18:21 - we can see a brand new table called public key credentials.
+18:25 - Our database is all set now.
+18:27 - Now let's configure Passport.js to handle authentication.
+18:32 - We will be creating a service
+18:34 - to organize our Passport.js related code.
+18:37 - Let's first install the base Passport package.
+18:41 - Then we can install the Passport Web Authent strategy package.
+18:45 - This will give us the ability to authenticate with pass keys.
+18:49 - Now we can create a new file
+18:51 - for a service in the services directory.
+18:54 - We will set up the module with an init method
+18:56 - that contains the three main functions we need to implement.
+19:00 - Now we can head into our routes file
+19:02 - and import our newly created Passport service.
+19:06 - We will also import the session challenge store
+19:09 - from the WebAuthn strategy package
+19:11 - because we will need this to generate challenges.
+19:14 - Then we can create a new instance of the Passport service
+19:18 - and a new instance of the session challenge store.
+19:22 - Then we can initialize the Passport service instance
+19:25 - and pass the challenge store to it.
+19:27 - Back in our Passport service file,
+19:29 - the first thing we need to do is configure Passport
+19:32 - to use the WebAuthn strategy.
+19:35 - The Passport use method accepts a callback.
+19:38 - We have created one that we have called
+19:40 - use WebAuthn strategy.
+19:42 - Within the function body,
+19:44 - we will return a new WebAuthn strategy instance,
+19:47 - which takes three pieces of information.
+19:50 - First, we will pass in the challenge store in an object.
+19:53 - Then we will pass in a verify callback
+19:56 - and a register callback.
+19:57 - We should also remember to import the Passport
+20:00 - and WebAuthn strategy packages at the top of the file
+20:04 - since we are using them.
+20:06 - The verify callback will be used when a user logs in
+20:09 - and the register callback will be used
+20:11 - when a user registers a new account.
+20:14 - Neither of these callbacks exist yet,
+20:16 - so we will need to create them.
+20:18 - We can start with the verify callback.
+20:21 - The end goal of this function is to look up a specified user
+20:24 - in the database and get their public key.
+20:27 - It will be an async function that takes in an ID,
+20:31 - user handle, and a done callback.
+20:34 - We've made it an async function
+20:35 - because it will be interacting with our database.
+20:39 - Within the body of the function,
+20:40 - we will create a database transaction.
+20:44 - If anything were to go wrong,
+20:45 - the database transaction will allow us to roll back
+20:48 - our actions without persisting the changes to the database.
+20:52 - We're using the DB helper,
+20:54 - so we should remember to import it at the top of the file.
+20:58 - Back in the function body,
+20:59 - we will use a try-catch statement.
+21:02 - If the actions within the try block are successful,
+21:05 - we will commit the transaction.
+21:07 - However, if we get an error,
+21:09 - we will drop into the catch block
+21:11 - and roll back the transaction.
+21:14 - Now let's put together our database interactions.
+21:17 - Back in the try block,
+21:18 - we will use SQLize to find one public key credentials record
+21:22 - from the database where the external ID
+21:25 - matches the ID value we passed into the verify function.
+21:29 - We must also remember to pass in the transaction
+21:32 - because we want this action
+21:34 - to be wrapped in a database transaction.
+21:36 - We're using the models object here,
+21:39 - so we should import it at the top of the file.
+21:42 - For some basic error handling,
+21:43 - we will send back an error message
+21:45 - if we cannot find the public key credentials.
+21:48 - Now let's try to find the specific user
+21:50 - that owns the public key credential.
+21:53 - We will also remember to pass the transaction
+21:55 - to this action as well
+21:57 - because we want it to be wrapped
+21:58 - within the same database transaction as our first action.
+22:02 - If we are unable to find the user,
+22:04 - we will send an error message saying as much.
+22:08 - We will also add another check
+22:09 - to ensure that the user handle we passed in
+22:12 - matches the user handle
+22:14 - for the user we retrieved from the database.
+22:17 - If all these actions are successful,
+22:19 - we will commit the transaction
+22:21 - and execute the done callback
+22:23 - with the credentials record and public key.
+22:26 - And now our verify function is complete.
+22:28 - We can collapse it and work on the register callback.
+22:31 - The end goal of this function is to create a new user
+22:35 - and a new associated public key credentials record
+22:38 - and persist them in the database.
+22:40 - It will be an async function that takes in a user,
+22:44 - ID, public key, and a done callback.
+22:47 - Within the body of the function,
+22:49 - we will create a database transaction.
+22:52 - If anything were to go wrong,
+22:54 - the database transaction will allow us to roll back
+22:56 - our changes without persisting any data to the database.
+23:00 - We will use a try catch statement.
+23:03 - If the actions within the try block are successful,
+23:06 - we will commit the transaction.
+23:08 - However, if we get an error,
+23:10 - we will drop into the catch block
+23:12 - and roll back the transaction.
+23:14 - Now let's put together our database interactions.
+23:17 - In the try block, we will attempt to create
+23:19 - a new user record in the database
+23:22 - using values from the user object
+23:24 - we passed into the register function.
+23:26 - We will also remember to pass the transaction
+23:29 - to this database interaction
+23:31 - because we want to be able to roll it back
+23:33 - if anything goes wrong.
+23:35 - For some basic error handling,
+23:37 - if we are unable to create a new user record,
+23:40 - we will send back an error message.
+23:42 - Next, we will try to create
+23:44 - a new public key credentials record
+23:46 - to associate with our new user record.
+23:50 - Again, we are passing in the transaction
+23:52 - because we want this action to be wrapped
+23:54 - within the same database transaction
+23:56 - as our user creation action.
+23:59 - If we are unable to create new credentials,
+24:02 - we will send back an error message.
+24:04 - If the actions within the try block are successful,
+24:07 - we will commit the transaction.
+24:09 - But if we get an error,
+24:10 - we will drop into the catch block
+24:12 - and roll back the action.
+24:14 - Now that the register function is also complete,
+24:17 - we can collapse it and move on.
+24:19 - Looking back at our notes,
+24:21 - the next task we need to work on
+24:22 - is to serialize the user to a token.
+24:25 - Serialization involves taking in a regular JavaScript object
+24:30 - containing user details
+24:31 - and converting that into an encrypted string,
+24:34 - which is also known as a token.
+24:36 - To achieve this,
+24:38 - we will use the serialize user method
+24:40 - from the passport package.
+24:42 - The serialize user method takes a callback,
+24:45 - so we will create a little callback function to pass to it.
+24:48 - We will just name it serialize user function
+24:51 - because naming is difficult.
+24:53 - When this callback function is executed,
+24:56 - it will call nodes processNextTick function,
+24:59 - which will invoke the done function
+25:01 - with the JavaScript object containing user details.
+25:05 - processNextTick is a Node.js thing
+25:07 - and is a little out of scope for our current tutorial.
+25:11 - The last thing we need for this passport service
+25:13 - is the ability to deserialize a user.
+25:17 - Deserialization involves reading
+25:19 - and extracting user information from a token.
+25:22 - We can use passport's deserialize user method here
+25:26 - and pass it a little callback function
+25:28 - that we will call deserialize user function.
+25:31 - This is very similar to the serialize user function,
+25:35 - but we send through the whole user object.
+25:38 - The WebAuthn API requires session support,
+25:41 - so let's set that up.
+25:43 - We can kick things off
+25:45 - by installing the express session package.
+25:48 - We can also install the connect session SQLize package
+25:52 - so we can use SQLize to store session data to our database.
+25:57 - Now we can head into the index.js file
+26:00 - and import the passport package,
+26:02 - the express session package,
+26:04 - and the connect session SQLize package.
+26:07 - We should also import the DB helper
+26:10 - since we will be storing session data in the database.
+26:14 - Now we can create a new instance of a session store
+26:17 - and configure it to use our existing database.
+26:21 - We will now configure our app to use the session.
+26:24 - We've set the secret to an environment variable
+26:27 - that doesn't exist yet, so we will come back to it.
+26:31 - We've also made sure to tell our app
+26:33 - to use the session store we created above,
+26:36 - and we've indicated that we'd like the cookies
+26:38 - to expire after one week.
+26:41 - In a real production system,
+26:43 - this is the place we would also add
+26:45 - more security related settings.
+26:47 - Finally, we will sync our session store
+26:50 - and also configure our app to use passport
+26:52 - to authenticate with sessions.
+26:55 - Now let's go back and add the session secret variable
+26:58 - to our.env file.
+27:00 - We're just using some random string.
+27:03 - In order to see our changes take effect,
+27:05 - we need to restart our server
+27:07 - that has been running in a different terminal tab.
+27:10 - If we visit our database client now,
+27:13 - we should see a new sessions table.
+27:15 - This is automatically generated for us.
+27:18 - If you are having trouble seeing the same results,
+27:21 - you may need to head into the browser and do a quick refresh.
+27:25 - Now our app supports sessions.
+27:28 - While we're in a configuration mood,
+27:30 - let's head back into index.js
+27:32 - and add a few more helpful settings.
+27:35 - We need our app to be able to work with JSON,
+27:38 - so let's configure it to use
+27:39 - the built-in express.json function.
+27:42 - We will also install and configure a package called Malta,
+27:46 - so we can submit multi-part form data.
+27:49 - Then we will also install and configure
+27:52 - the cookie parser package
+27:53 - so that our app knows how to parse cookies.
+27:56 - Finally, we should also configure our app
+27:59 - to handle any URLs that contain query param data.
+28:03 - We are now ready to take a high-level look
+28:06 - at how parse keys work.
+28:08 - Public key cryptography is not a new concept.
+28:11 - If you are familiar with RSA private and public keys,
+28:15 - these ideas may feel vaguely familiar to you.
+28:18 - However, parse keys are making the concept more mainstream
+28:21 - with the goal of replacing password authentication.
+28:25 - Pars keys are used in two different phases.
+28:28 - The first phase is the attestation phase
+28:31 - where the parse key is created
+28:32 - during the user registration process.
+28:35 - The second phase is the assertion phase
+28:37 - where the user's credentials are verified,
+28:40 - allowing them to log in.
+28:41 - During these two phases,
+28:43 - there are three main entities involved.
+28:45 - First is the authenticator, which could be a smartphone,
+28:49 - a password manager, or a USB device.
+28:52 - Next is the client, an example of which could be
+28:55 - a user interacting with their browser.
+28:58 - And finally, the relying party,
+29:00 - which could be your own server or the server
+29:02 - of another application that supports parse keys.
+29:06 - In the upcoming sections,
+29:07 - we will implement the two different phases.
+29:11 - Let's implement phase one
+29:12 - where a parse key is created upon user registration.
+29:16 - Before we dive into the code,
+29:18 - let's go over a quick summary of the main things
+29:21 - that happened between the client,
+29:23 - the authenticator, and the relying party.
+29:26 - First, the user submits the registration form,
+29:28 - prompting the client to request a challenge
+29:31 - from the relying party.
+29:33 - Secondly, the client calls
+29:34 - the navigator.credentials.create method.
+29:38 - This will prompt the authenticator
+29:40 - to use the challenge it receives
+29:42 - to create a new credential key pair.
+29:44 - The authenticator will pop up a dialogue
+29:47 - asking the user for verification.
+29:50 - In our case, this verification will be done
+29:52 - through a fingerprint.
+29:54 - Once the user is verified,
+29:56 - the private key is stored on the authenticator
+29:58 - and used to sign the challenge.
+30:01 - Then the public key, the signed challenge,
+30:03 - and the credential ID are sent back to the client.
+30:06 - Finally, the client sends the public key,
+30:09 - the signed challenge,
+30:10 - and the credential ID to the relying party.
+30:13 - The server verifies the signed challenge
+30:15 - using the public key
+30:17 - and the session information it receives.
+30:19 - If the verification process is successful,
+30:22 - the server will store the public key credentials
+30:25 - and user details in the database.
+30:27 - Now that we have an idea of the flow we want to achieve,
+30:31 - let's start working on the code.
+30:33 - Inside our code editor,
+30:35 - let's find our bearings
+30:36 - by taking a look inside the register view.
+30:39 - At the very bottom of the file,
+30:40 - we have imported two script files.
+30:43 - However, neither of them exist yet,
+30:45 - so we will need to create them.
+30:47 - First, we will create the attestation register script file.
+30:51 - Then we will create the base64url script file.
+30:55 - We will head into the project repository
+30:57 - and copy over the contents for the base64url script.
+31:01 - The original GitHub link for this little utility helper
+31:05 - can be found at the top of the file,
+31:07 - so you can get the code from the original project as well.
+31:11 - This base64url script will ensure that binary data
+31:15 - and URLs are properly encoded to plain text
+31:18 - to avoid ambiguity.
+31:20 - Once we've saved the file,
+31:22 - we can start working on our attestation register module.
+31:26 - We will create a new register class
+31:28 - that contains an init function.
+31:31 - We have left some notes to guide us.
+31:33 - The first three steps correspond
+31:35 - to the steps we saw in the section overview.
+31:38 - The fourth step is just a UX touch
+31:40 - where we redirect the user to the dashboard.
+31:43 - At the bottom of the file,
+31:44 - we will listen for the window object to load.
+31:47 - Once the window has loaded,
+31:49 - we will add an event listener to the registration form
+31:52 - so whenever it is submitted,
+31:54 - we will create a new instance of our register class
+31:57 - and call the init function.
+31:59 - We will also prevent the default behavior
+32:02 - that the browser gives to the form element.
+32:05 - Our first function will allow the client
+32:07 - to request a challenge from the server.
+32:10 - It will be an async function that we will call getChallenge.
+32:14 - In the body of this getChallenge function,
+32:16 - we will make a request to this endpoint
+32:18 - that doesn't exist yet.
+32:20 - It will be a post request
+32:22 - and we will send through the data a user submits
+32:25 - through the registration form.
+32:27 - Then at the end of the function,
+32:28 - we will return the JSON response.
+32:31 - Now let's go and add this register public key challenge
+32:34 - and point to the routes file.
+32:36 - We're adding a new post route handler
+32:39 - that calls the createChallengeFrom function
+32:41 - from the auth controller.
+32:43 - This action doesn't exist yet
+32:45 - so we can head into the auth controller and add it.
+32:48 - Within the body of this action,
+32:50 - we will return a middleware function.
+32:53 - Inside this middleware function body,
+32:55 - we will set up a user object.
+32:57 - We will set its ID to a UUID value we generate.
+33:01 - The name will be derived from the email address
+33:04 - the user sends through in the registration form.
+33:07 - We will also remember to import the UUID package
+33:11 - at the top of the file.
+33:12 - We haven't installed it yet,
+33:14 - but we will install it shortly.
+33:16 - We will then use the challenge method
+33:18 - from the challenge store to set up,
+33:20 - yep, you guessed it, a challenge.
+33:22 - The user object and the challenge will be returned
+33:25 - in the JSON response.
+33:27 - We have used the base64 URL package
+33:30 - to encode our user ID and challenge.
+33:33 - We also use this on the front end,
+33:35 - but this is the back end
+33:36 - so it needs its own copy of the package.
+33:39 - While we're here,
+33:40 - we will also install the UUID package from earlier.
+33:44 - We should also remember to import the base64 URL package
+33:48 - before we move on.
+33:50 - Now we can head back to our attestation register script
+33:53 - and work on the second step.
+33:55 - This is the step where the client will prompt
+33:57 - the authenticator to use the challenge
+33:59 - to generate a new credential key pair.
+34:02 - It will be an async function that will receive a challenge.
+34:06 - Then it will use the navigator credentials create function
+34:09 - to create a new credential key pair.
+34:12 - This navigator credentials create function
+34:15 - is part of the web authentication API from JavaScript.
+34:19 - At the end of the function,
+34:20 - we will return the newly created credentials.
+34:23 - You may have noticed that we passed in some options
+34:26 - that don't exist yet,
+34:27 - so we will need to create them.
+34:30 - The first key we set up in the options object
+34:33 - needs to be public key
+34:34 - because this is the type of credential
+34:36 - we are looking to create.
+34:38 - We will also set the name of the relying party
+34:41 - and then we will set up a user object
+34:43 - containing the user details.
+34:45 - Next, we will set the sign challenge we got
+34:48 - from the previous step.
+34:49 - And finally, we will set up an array of encrypted credentials
+34:53 - the relying party will accept.
+34:55 - Each of these correspond to a COS-E cryptographic algorithm
+35:00 - and are ordered with the most preferred algorithm
+35:03 - at the top of the list.
+35:05 - Finally, we will add an authenticator selection
+35:07 - that prefers user verification.
+35:10 - That's all we need for the second step.
+35:13 - Let's collapse the function and move on to our third step.
+35:16 - This step will send the credentials to the server
+35:18 - for verification and return the authenticated user.
+35:22 - We will create an async function
+35:24 - that takes in user credentials.
+35:26 - This request will also require us
+35:28 - to send through some options,
+35:30 - but we will build those in a separate function shortly.
+35:33 - We will use the fetch API to send a request
+35:36 - to the login public key endpoint that does not exist yet.
+35:40 - This request will be a post request
+35:42 - and we will pass along the options object
+35:44 - which we have yet to create.
+35:46 - Then we will return the response.
+35:49 - Now onto the options.
+35:50 - We'll set up a new function to build these.
+35:53 - The response field will contain some details
+35:56 - about the client data JSON and the attestation object.
+36:00 - We will also check if the authenticator supports
+36:03 - different types of transports.
+36:05 - Transports can include things like Bluetooth, USB
+36:08 - or smartphone desktop hybrids to name a few.
+36:12 - A full list of options are available in the documentation.
+36:16 - If the authenticator has transports,
+36:18 - we will set those in the options too.
+36:21 - Now let's work on the login public key endpoint.
+36:24 - We will head into the routes file
+36:26 - and add a new post route handler.
+36:28 - This handler has three actions configured.
+36:31 - When working with Express.js,
+36:33 - we are able to move through a stack of middleware.
+36:36 - So in this case, we will first use passport
+36:38 - to perform a check to see
+36:40 - if the user is authenticated correctly.
+36:43 - If they are, we will grant them admission
+36:45 - into the application.
+36:46 - If the check indicates the user is not authenticated,
+36:49 - then we will drop into the last middleware function
+36:52 - in this list and deny them entry.
+36:55 - This is very similar to border control at an airport.
+36:58 - None of these actions exist yet.
+37:00 - So we can head into the auth controller to create them.
+37:03 - At the very top of the controller,
+37:05 - we will set up our passport check.
+37:07 - This function will be using the authenticate method
+37:10 - from passport.
+37:11 - So we will remember to import passport
+37:13 - at the top of the file.
+37:15 - The authenticator method takes in the strategy
+37:18 - and an options object.
+37:19 - We are using the web authenticity
+37:22 - and setting up a couple of options
+37:24 - that are related to error messages.
+37:26 - Now we will work on admitting an authenticated user.
+37:30 - If they are eligible for entry,
+37:32 - we will set their destination to the route route.
+37:35 - This will bring them to the dashboard.
+37:37 - Then we can add the deny user function.
+37:40 - We will first check the status code to ensure
+37:42 - that it is not a 400 code so we can return early.
+37:47 - But if we do get a 400 code and the user is not found,
+37:51 - then we will indicate everything is not okay
+37:53 - and redirect the unauthenticated user to the login page.
+37:57 - This is all we need to authenticate a user.
+38:00 - The final step we need to complete the registration process
+38:04 - is to redirect the user to the appropriate page.
+38:08 - Our redirect function is pretty straightforward.
+38:10 - We will just set the window location's href value
+38:14 - to the destination we set when checking the user's passport.
+38:18 - Our registration flow is now complete.
+38:20 - So let's head into the browser to test it out.
+38:23 - We will use our cool email address to sign up.
+38:26 - The client will then prompt the authenticator
+38:29 - to seek verification from us.
+38:31 - There are different options available to us.
+38:34 - These options relate to the transports
+38:36 - we set in our options earlier.
+38:39 - If a user is on a Mac,
+38:40 - they can opt to use the built-in key chain.
+38:43 - They can also choose to authenticate using a QR code
+38:47 - which they can scan on their smartphone.
+38:49 - But for simplicity, we will use our Chrome profile.
+38:53 - However, all other methods will work too.
+38:56 - Once we hit continue,
+38:57 - we will be asked to scan our fingerprint.
+39:00 - And because our passport check was successful,
+39:03 - we can now see our empty dashboard.
+39:05 - We covered a lot of ground, but our registration is done.
+39:09 - Thanks for persevering, you're doing a great job.
+39:12 - Now let's add the ability for a user to log out.
+39:16 - In our browser,
+39:16 - we can see that we already have a logout button,
+39:20 - but if we click it now, the world will end.
+39:22 - We need to head back into our code
+39:24 - and wire things up first.
+39:26 - We will start in our routes file
+39:28 - and add a new post route handler for the logout route,
+39:31 - which we'll call the logout action which doesn't exist yet.
+39:35 - So we can hop over to our auth controller to add it.
+39:38 - The logout action will be a middleware function
+39:41 - which will use the logout method from the request
+39:44 - to log the user out and redirect them to the root route.
+39:48 - You may be surprised, but this is all we need.
+39:51 - Now, if we head back to the browser,
+39:53 - we can safely click on the button to log our user out.
+39:57 - Let's implement phase two,
+39:59 - where a passkey is used to authenticate a user
+40:02 - and sign them in.
+40:03 - Before we start writing the code,
+40:05 - let's see a quick summary of the main things
+40:08 - that happen between the client, the authenticator,
+40:11 - and the relying party in this phase.
+40:13 - First, the user submits the sign-in form,
+40:16 - prompting the client to request a new random challenge
+40:20 - from the relying party.
+40:22 - This first step is more or less the same
+40:24 - as the first step of the attestation phase.
+40:27 - Secondly, the client calls
+40:28 - the navigator credentials get method.
+40:31 - This will prompt the authenticator
+40:33 - to request verification from the user.
+40:36 - In our case, the verification will be done
+40:39 - through a fingerprint.
+40:40 - Once the user is verified,
+40:42 - the authenticator will use the private key
+40:45 - it had previously stored to sign the challenge.
+40:48 - Then it will send the sign challenge, the credential ID,
+40:52 - and the username back to the client.
+40:54 - The client then sends this data onwards
+40:57 - to the relying party.
+40:59 - The server verifies the sign challenge
+41:01 - with the public key it previously stored in the database.
+41:05 - If the verification is successful,
+41:07 - the server will find the correct user in the database
+41:10 - and log them into our application.
+41:13 - Now that we have an idea of the flow we want to achieve,
+41:16 - let's get to work on the code.
+41:18 - Inside our code editor,
+41:20 - let's orient ourselves by looking in the login view.
+41:24 - At the very bottom of the file,
+41:25 - we have imported two script files.
+41:28 - We handled the base 64 URL script in phase one,
+41:32 - but the assertion login script file does not exist yet,
+41:36 - so let's create it now.
+41:38 - We can open up our newly created file
+41:40 - and add a new login class that contains an init function.
+41:44 - We have left some notes to guide us.
+41:47 - In the first step,
+41:48 - we will check to see if our browser supports
+41:50 - conditional mediation for public key credentials.
+41:54 - The middle three steps correspond to steps we saw
+41:57 - in the phase two overview,
+41:59 - and the last step is a redirect function
+42:01 - that works exactly the same as the redirect function
+42:04 - we implemented in the registration phase.
+42:07 - At the bottom of the file,
+42:09 - we will listen for the window object to load.
+42:12 - We will then create a new login instance,
+42:14 - and if the browser supports pass keys,
+42:17 - we will initialize our new login instance.
+42:20 - As a first step,
+42:21 - we will check if the browser supports
+42:23 - conditional mediation for pass keys.
+42:26 - If the browser does not support this,
+42:28 - we will return early.
+42:30 - This conditional mediation will allow the browser
+42:33 - to find any available pass keys
+42:35 - and display them to the user in a dialog box.
+42:39 - If the browser does not support this,
+42:41 - it will not be able to find the available pass keys.
+42:44 - This will prevent the login process from completing.
+42:47 - For our second step,
+42:49 - the client will request a challenge from the server.
+42:52 - We will use the fetch API to make a request
+42:54 - to this endpoint that doesn't exist yet.
+42:57 - It will be a post request without anybody content.
+43:01 - Then we will return whatever response
+43:03 - we get back from the request.
+43:05 - Now let's go and add this login public key challenge
+43:08 - and point to the routes file.
+43:10 - We're adding a new post route handler
+43:12 - that calls the get challenge from function
+43:15 - from the auth controller.
+43:17 - This action doesn't exist yet,
+43:19 - so we can head into the auth controller and add it.
+43:22 - It will take in an instance of the challenge store
+43:24 - and it will return a middleware function.
+43:27 - In the body of the middleware function,
+43:29 - we will use the challenge method to create a new challenge.
+43:33 - If there is an error,
+43:34 - we will fall through to the next middleware on the stack.
+43:38 - If the challenge was created successfully,
+43:40 - we will send it back in the response body.
+43:43 - Now we can head back to our assertion login script
+43:46 - and work on the third step.
+43:48 - This is the step where we get the user's existing pass key
+43:51 - and use the sign challenge to authenticate on the server.
+43:55 - It will be an async function that will receive a challenge.
+43:59 - Then it will use the navigator credentials get function
+44:02 - to get an existing credential key pair from the user.
+44:06 - This navigator credentials get function
+44:08 - is also part of the web authentication API from JavaScript.
+44:13 - At the end of the function,
+44:14 - we will return the credentials we found.
+44:17 - You may have noticed that we passed in some options
+44:20 - that don't exist yet, so we will need to set them up.
+44:23 - Within the options, we have indicated
+44:25 - that we will be using conditional mediation
+44:28 - and our credentials are of the type public key.
+44:32 - Within the public key option,
+44:33 - we will send through the sign challenge.
+44:36 - Now we can move on to step four,
+44:38 - which will be the step where we use the credentials
+44:40 - to log the user in.
+44:42 - We will create an async function
+44:44 - that takes in user credentials.
+44:46 - This request will also require us
+44:48 - to send through some options,
+44:50 - but we will build those in a separate function shortly.
+44:54 - We will use the fetch API to send a request
+44:56 - to the login public key endpoint,
+44:58 - which we created in phase one.
+45:01 - This will be a post request
+45:02 - and we will pass along the options object
+45:05 - which we have yet to create.
+45:07 - Then we will return the response.
+45:09 - Now onto the options.
+45:11 - We'll set up a new function to build these.
+45:14 - The body will contain the user's credential ID,
+45:17 - then the response field will contain some details
+45:19 - about the client data JSON, authenticator data,
+45:23 - the signature, and the user's handle.
+45:26 - We will also check if the public key credential object
+45:30 - can give us any information about the type of authenticator
+45:33 - that was used to create our credential key pair.
+45:37 - If we are able to get this authenticator information,
+45:40 - we will set that in the options too.
+45:43 - Now we can collapse these completed functions
+45:45 - and work on our final step for phase two.
+45:49 - This step will redirect the user to the appropriate page.
+45:53 - This redirect function is exactly the same
+45:55 - as the one we implemented in phase one.
+45:58 - We have decided to duplicate it here
+46:00 - to keep each phase separate
+46:02 - and make the flow of information easier.
+46:05 - If you have strong feelings about dry code,
+46:08 - you may refactor it as you see fit.
+46:10 - Our login flow is now complete.
+46:12 - So let's head into the browser to check it out.
+46:15 - When we click on the email input field,
+46:17 - a little dialogue appears to display our available pass keys.
+46:22 - This is the conditional mediation
+46:24 - that we were checking for in our code.
+46:26 - Once we select our pass key,
+46:28 - we will be prompted for verification.
+46:30 - We can scan our fingerprint to verify.
+46:33 - And because our passport check was successful,
+46:36 - we are now back in our empty dashboard.
+46:39 - And our login button still works.
+46:41 - This concludes our implementation of phase two,
+46:44 - where we use our pass key to log in.
+46:47 - And there you have it.
+46:49 - In this tutorial,
+46:50 - we learned more about the web authentication API
+46:53 - by implementing pass keys in an Express.js app.
+46:57 - We also use Docker and Docker Compose
+47:00 - to manage our Node.js installation.
+47:03 - A text version of this tutorial can be found
+47:06 - on divrino.com and a repo can be found
+47:09 - on my GitHub account.
+47:11 - I'll leave both links in the description for this video.
+47:14 - If you learned something new while building this project,
+47:17 - please let me know in a comment
+47:19 - or like the video and subscribe to my channel.
+47:22 - Thank you for watching.
+47:23 - I appreciate you.

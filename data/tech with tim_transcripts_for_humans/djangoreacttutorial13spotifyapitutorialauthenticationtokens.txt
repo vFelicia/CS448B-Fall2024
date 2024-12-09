@@ -1,0 +1,1846 @@
+With timestamps:
+
+00:02 - [Music]
+00:08 - hello everybody and
+00:09 - welcome to another django and react
+00:11 - tutorial video
+00:13 - in part 13 of this series what we're
+00:15 - going to be doing is actually working
+00:16 - with the spotify
+00:17 - api now i want to give a warning before
+00:19 - we dive into anything
+00:21 - this is fairly complicated in fact this
+00:23 - is pretty advanced this took me a really
+00:25 - long time to figure out before filming
+00:27 - this video
+00:28 - and i just want to make sure that i'm
+00:29 - not giving you the impression that this
+00:30 - is easy or that
+00:31 - i came up with this you know within the
+00:33 - duration of the video this was pre-coded
+00:35 - this took me a long time to figure out
+00:37 - if you ever want to use these kind of
+00:38 - apis typically you have to do a lot of
+00:40 - reading and a lot of research on their
+00:42 - websites
+00:43 - a lot of trial and error and just kind
+00:44 - of messing around and trying to figure
+00:46 - things out which is exactly what i did
+00:47 - before this video
+00:49 - so i will leave links to most of the
+00:50 - resources that i use to discover this or
+00:52 - figure this out in the description in
+00:54 - case you're interested
+00:55 - but of course i'm going to try my best
+00:56 - to explain how everything works
+00:58 - so anyways let me talk about what we
+01:00 - actually need to do here and what kind
+01:02 - of the goal of this video
+01:03 - is so we want to be able to control a
+01:07 - user's music we want to be able to
+01:08 - pause it fast forward the song rewind
+01:10 - the song whatever we want control over
+01:12 - their music
+01:13 - now this requires two things from
+01:16 - spotify
+01:17 - first we need to register an application
+01:19 - with spotify so our actual website
+01:22 - we can refer to that as an application
+01:24 - we need to register that with spotify
+01:26 - and tell them hey
+01:28 - this is our app we're using user data
+01:30 - whatever we just need to tell them
+01:32 - that we have some application that's
+01:33 - using their api
+01:35 - then what we need to do is every single
+01:37 - user that's using our website and whose
+01:39 - music we're going to control
+01:41 - we need to give them to grant us
+01:43 - permission to use
+01:44 - and access their spotify information so
+01:47 - they need to give
+01:48 - our application explicit permission so
+01:51 - the basic kind of flow of things here is
+01:53 - going to be
+01:53 - we authenticate our application with
+01:56 - spotify
+01:57 - then the user authenticates our
+02:00 - application so it says hey
+02:02 - your application has access to my
+02:04 - information it can control the music
+02:06 - so on and so forth and then using that
+02:09 - authentication or using what we're going
+02:11 - to call
+02:11 - tokens and i'll talk about what those
+02:12 - are in a second we'll actually be able
+02:14 - to send requests to the spotify api
+02:17 - that will in turn control the user's
+02:19 - music
+02:20 - so that's kind of the flow and this
+02:22 - diagram in front of me somewhat
+02:23 - describes what's actually going to
+02:25 - happen
+02:25 - i'm going to try to kind of break this
+02:27 - down and walk through it but i just want
+02:28 - to talk to you about what we're doing
+02:30 - because if i don't it's just going to
+02:31 - seem really confusing if we go through
+02:33 - all the steps without kind of
+02:34 - tying them all together and seeing the
+02:35 - big picture so we have our application
+02:38 - on the left
+02:38 - spotify account services or service
+02:40 - which we're just going to call the
+02:42 - spotify api
+02:43 - then we have our user so we're going to
+02:45 - start by creating some application with
+02:47 - spotify that will be denoted by
+02:48 - application
+02:49 - our application is going to have a
+02:51 - client id it's also going to have a
+02:53 - client secret
+02:54 - it's pretty much the identifier for our
+02:56 - application so we start at the very
+02:58 - first step by requesting authorization
+03:01 - to
+03:01 - access data so we do that with spotify
+03:04 - we're pretty much saying hey spotify can
+03:06 - our application access
+03:08 - spotify information it's going to tell
+03:10 - us yes or it's going to tell us no
+03:11 - depending on if the information we send
+03:13 - it is correct
+03:14 - we need to send it this information so
+03:15 - the client id the response type
+03:18 - the redirect uri the state and the scope
+03:21 - now what's going to happen here is this
+03:23 - is going to display
+03:24 - a scope and prompt to the user to log in
+03:28 - now let's let me just break this down
+03:29 - because uh this is not too descriptive
+03:32 - so a scope is pretty much what you have
+03:34 - access to
+03:35 - what information you want to have access
+03:37 - to so do you want the user's email do
+03:39 - you want their library do you want their
+03:40 - playlist
+03:41 - whatever that's what you're putting in
+03:42 - the scope and well based on what scope
+03:45 - you send to spotify
+03:46 - spotify will show a different prompt to
+03:48 - the user to allow your application
+03:50 - access to that information
+03:52 - so imagine you go on some website and
+03:54 - you log in with facebook and then all of
+03:56 - a sudden it says
+03:56 - you know facebook wants to access or
+03:58 - sorry this third party application
+04:00 - wants to access this information do you
+04:02 - give it permission and then this is like
+04:04 - a facebook website that's popping up
+04:06 - right you press
+04:06 - yes i grant permission then it redirects
+04:09 - back to the other application so that's
+04:10 - where the redirect uri comes in
+04:13 - after this prompt appears on the screen
+04:16 - the user will log in to their spotify
+04:18 - account and then they will press yes i
+04:19 - authorize
+04:20 - this application which is our
+04:21 - application to have access to
+04:23 - this specific information then it will
+04:26 - redirect us
+04:27 - with the redirect uri back to our own
+04:30 - website
+04:30 - so at that point in time we go back to
+04:32 - our application and now the user's given
+04:35 - us
+04:35 - authorization to use their information
+04:38 - so what's actually going to happen is
+04:39 - we're going to be sent a code
+04:41 - and we use this code to actually request
+04:44 - what's known as a token
+04:46 - now this token is what we're going to
+04:47 - use whenever we send a request
+04:49 - to spotify to say hey we have access to
+04:52 - this user's information
+04:53 - because we have this special token and
+04:55 - if that special token matches what
+04:57 - spotify is stored on their end
+04:59 - then it will allow us to actually get
+05:01 - information so we're just
+05:02 - requesting some kind of token now i
+05:04 - don't know why they make it this
+05:05 - confusing but essentially it sends us
+05:07 - some code
+05:07 - we use that code to request a token then
+05:10 - we use that token to actually send
+05:11 - requests
+05:12 - so we say say here request access and
+05:15 - refresh
+05:15 - tokens so we send our client id we send
+05:18 - our client secret and we send this code
+05:20 - that was sent to us
+05:21 - from the user authorizing our
+05:23 - application
+05:24 - then what's going to happen is this
+05:25 - returns to us the access and refresh
+05:28 - tokens now
+05:29 - what these tokens are are the following
+05:31 - the access token is what we use to
+05:33 - access information
+05:34 - the refresh token is what we use to uh i
+05:37 - guess
+05:38 - ask for another token so our access
+05:41 - token expires after one hour so
+05:43 - after every hour we need to refresh this
+05:46 - token so we have to send not the access
+05:48 - token now
+05:49 - but the refresh token to spotify and
+05:51 - then it says okay
+05:52 - yep that was a valid refresh token and
+05:54 - it sends us back a new access token that
+05:56 - is valid
+05:58 - so that's the idea there and then it
+06:00 - tells us when this access token expires
+06:02 - but from my experience it always expires
+06:04 - after one hour anyways
+06:06 - once we now have access to a re uh uh
+06:08 - sorry
+06:09 - access and refresh token we are able to
+06:12 - send requests to the spotify api
+06:14 - and control the user's music so that's
+06:16 - kind of the flow
+06:17 - i know this is confusing we'll go
+06:19 - through it step by step but i just
+06:21 - wanted to break it down before we start
+06:22 - to make sure everyone's on the same page
+06:24 - and they know what we're about to do in
+06:25 - this probably hour or so long tutorial
+06:28 - so we're going to dive in we're going to
+06:29 - start coding but first a quick word from
+06:31 - our sponsor
+06:32 - algo expert so algo expert is the best
+06:35 - platform to use to prepare for your
+06:36 - software engineering coding interviews
+06:38 - as you guys know i work at algo expert
+06:41 - and i'm continually adding
+06:42 - new questions to the platform if you
+06:44 - guys are looking to ace your coding
+06:45 - interviews
+06:46 - check out algo expert from the link in
+06:47 - the description and use the discount
+06:49 - code
+06:49 - tech with tim for a discount on the
+06:52 - platform
+06:52 - all right so let's continue i'm going to
+06:55 - get out of this now
+06:56 - i'm actually going to go to this website
+06:58 - which is the developer.spotify.com so
+07:00 - kind of like the developer website
+07:03 - for spotify now i'll leave a link to
+07:04 - this in the description but go to this
+07:06 - site
+07:06 - and before you go here you actually need
+07:08 - to create a spotify account so it
+07:10 - doesn't matter if this is a premium
+07:11 - account or a free account
+07:13 - or whatever it doesn't matter all of
+07:14 - this will work once you come to this
+07:16 - website and you have the account
+07:18 - log into that account it's going to
+07:19 - bring into something that looks like
+07:20 - this
+07:21 - now you guys probably aren't going to
+07:22 - see any applications here these are my
+07:24 - different spotify applications and what
+07:26 - we're going to do is create
+07:27 - an app now this app is going to
+07:30 - represent our website so
+07:32 - this is the application that i was just
+07:33 - talking about in uh
+07:35 - in this diagram right here so this blue
+07:37 - application is this app that we're
+07:38 - making right now
+07:39 - so call this whatever you want i'm just
+07:41 - going to call this
+07:43 - tutorial one just because i already have
+07:45 - one named tutorial
+07:47 - then i think a description is required
+07:48 - so i'll just do tutorial one
+07:50 - all right i'll check the boxes press
+07:52 - create
+07:53 - okay so now it's going to show us a
+07:55 - client id
+07:56 - and a client secret now if we go back to
+07:58 - this diagram here
+08:00 - the first thing we send is the client id
+08:02 - so we need to keep track of both the
+08:03 - client id and the client secret
+08:05 - but we don't want this information to be
+08:07 - public like we don't want to store this
+08:08 - on the front end
+08:09 - we don't want anyone to see this other
+08:11 - than our application specifically this
+08:13 - client secret
+08:14 - we don't want anyone to see what this is
+08:17 - so keep that in mind
+08:18 - i'm showing you mine just for the
+08:19 - purpose of this tutorial but don't share
+08:21 - this with anyone else
+08:22 - okay so now that we have this page open
+08:24 - let's leave it open because we're going
+08:25 - to need to work on this
+08:26 - a few times but now we're going to go to
+08:28 - the code and then start working on
+08:29 - something else
+08:30 - so the first thing that i actually want
+08:32 - to do is i want to create a new
+08:34 - application
+08:34 - inside of my django project that's going
+08:37 - to handle all of the stuff
+08:38 - specific to spotify so we're going to
+08:40 - make a new app we're going to say python
+08:43 - manage.pi and then start app like that
+08:46 - and then we'll call this spotify for
+08:49 - simplicity
+08:50 - all right so let's make a new spotify
+08:52 - app you can see one's going to show up
+08:53 - right
+08:54 - here now the first thing we'll do inside
+08:56 - of this application is we'll just create
+08:57 - a few files that we need so we'll make
+08:59 - our urls.pi file
+09:01 - uh urls.pi like that we'll also make
+09:04 - another file inside of here
+09:06 - and we're going to call this credentials
+09:08 - or
+09:09 - yeah we'll call it credentials that's
+09:10 - fine so credentials.pie
+09:13 - now inside of credentials.pi this is
+09:15 - where this is where we are going to
+09:17 - store our spotify credentials so our
+09:19 - client id
+09:20 - our client secret and also the redirect
+09:23 - uri or the redirect url whatever you
+09:25 - want to call it
+09:26 - so the first thing i'm going to do
+09:27 - inside of here is to find some variables
+09:28 - i'm going to say client id is equal to
+09:31 - i'm going to put a string i'm going to
+09:32 - go to the website where the client id is
+09:34 - i'm going to copy it i'm going to paste
+09:36 - it in there alright so client id
+09:38 - then i'm going to say in all capitals
+09:40 - again client underscore
+09:42 - secret like that is equal to a string
+09:45 - then i'm going to go take my client
+09:47 - secret so let's grab it right here
+09:49 - copy it and paste it in
+09:52 - lastly i'm going to make my redirect
+09:55 - underscore
+09:56 - uri and this is just going to be equal
+09:58 - to an empty string for right now
+10:00 - we will change this later now i just
+10:02 - want to note here
+10:04 - that although i'm storing this
+10:05 - information in a file typically the
+10:07 - preferred way to do this
+10:08 - is through environment variables if you
+10:10 - knew if you know how to use environment
+10:12 - variables
+10:13 - feel free to use them but i'm not going
+10:15 - to use them for this tutorial just
+10:16 - because it
+10:17 - adds a layer of complexity that we
+10:19 - really don't need for this
+10:20 - this purpose anyways let's continue i'm
+10:22 - going to close the credentials.pi file
+10:24 - i can close the urls.pi file and now
+10:28 - what i want to do is start setting up
+10:29 - this authentication flow
+10:31 - so i need some endpoints or i need some
+10:33 - functions or something that can
+10:35 - send requests to spotify to authenticate
+10:38 - our application
+10:39 - as well as to authenticate a user so i'm
+10:42 - going to go
+10:42 - inside of my views.pi file inside of the
+10:45 - spotify application that we just created
+10:48 - i'm going to start by creating the first
+10:49 - view which is going to be the view that
+10:51 - can authenticate our application
+10:53 - or request access right so if we go back
+10:56 - and look at that diagram we're going to
+10:57 - be referring to this quite a bit
+10:59 - the first thing here this is what we
+11:00 - need to do request authorization to
+11:02 - access data using the client id the
+11:04 - redirect uri and the scope and all of
+11:06 - that
+11:06 - so what i'm going to do is remove this
+11:07 - comment i'm going to import a few
+11:10 - things i'm going to say from dot
+11:12 - credentials so that file we just wrote
+11:15 - import and i'm going to import
+11:16 - everything so redirect uri
+11:18 - i want the client secret and i also want
+11:22 - the client id like that next
+11:25 - i'm going to say from uh i guess this is
+11:28 - rest underscore
+11:29 - framework import and
+11:32 - sorry this is restframework.views
+11:35 - import api view then i'm going to make a
+11:39 - class
+11:39 - i'm going to say class auth url and this
+11:42 - will inherit from api
+11:44 - view and then i'm going to define a get
+11:46 - method this is going to take
+11:48 - self and request and an optional format
+11:50 - so format equals none
+11:52 - and inside of here we're going to start
+11:54 - writing out the request that we need to
+11:55 - send to the spotify api
+11:57 - so actually let's import one more thing
+11:59 - up here i'm going to say from
+12:02 - the request module in python which i
+12:04 - think
+12:05 - is by default installed maybe it's not
+12:08 - anyways just do yourself a favor because
+12:09 - i don't know if request is a default
+12:11 - module in python
+12:12 - and you can install it with pip so pip
+12:14 - install
+12:15 - requests i assume if you've made it this
+12:17 - far you know how to use pip um but yeah
+12:18 - install the request module although i
+12:20 - think it by default
+12:21 - comes installed anyways from requests
+12:24 - we're going to import
+12:26 - request with a capital r then we're
+12:28 - going to import post
+12:30 - this is just going to make it easier for
+12:31 - us to actually send a request
+12:33 - now the first thing i'm going to do is
+12:35 - inside of this get function i'm going to
+12:37 - say scopes
+12:39 - equals and i'm going to start writing
+12:40 - out a long scope in fact actually let me
+12:42 - just copy and paste it in because it's
+12:43 - not really worth me writing it out
+12:45 - you guys can pause and copy it but again
+12:47 - what the scope is
+12:48 - is what information we want to access so
+12:51 - we want the
+12:52 - user read playback state the user modify
+12:55 - playback state and the user read
+12:56 - currently playing
+12:58 - these are the things that we want
+12:59 - because this is what we actually want to
+13:00 - be able to do
+13:01 - with our application now if you wanted
+13:03 - to do more you would have to add all
+13:04 - those other specific
+13:06 - scopes now if you're wondering where you
+13:07 - find these scopes this is from the
+13:09 - spotify developer website so from the
+13:11 - documentation
+13:12 - i actually can't remember exactly where
+13:13 - i found all these scopes but you would
+13:15 - just have to look up look for those
+13:16 - on the spotify website anyways these are
+13:19 - the scopes that we need for this
+13:20 - application so i'm going to say
+13:21 - scopes like that next i'm going to say
+13:24 - url
+13:25 - is equal to request this should be a
+13:27 - uppercase actually as
+13:29 - the first one so we'll say request and
+13:31 - then the type of request is going to be
+13:33 - a get request
+13:34 - and we're going to send this to https
+13:37 - colon
+13:38 - slash and this is going to be
+13:42 - accounts.spotify.com
+13:44 - authorize like that this is the first
+13:46 - url that we need to hit and this is the
+13:48 - specific one that we hit when we're
+13:50 - requesting authorization
+13:52 - so let's do that then we're going to say
+13:54 - params
+13:55 - is equal to again this stands for
+13:57 - parameters and we're going to pass in
+13:58 - all of the required information
+14:01 - so if we go back here we need the client
+14:03 - id response type
+14:04 - direct redirect uri and state and scope
+14:08 - now we actually don't need state that is
+14:10 - a what do you call it
+14:12 - optional parameter to pass in here and
+14:14 - i'm not really going to talk about
+14:15 - exactly what it does but we can just
+14:16 - omit it for now
+14:17 - so we're going to say scope is equal to
+14:19 - scopes i guess we could have put this as
+14:21 - scope as well it doesn't matter
+14:23 - we're going to say response hyphen or
+14:26 - not hyphen
+14:27 - underscore type and we want this to be
+14:29 - equal to the string
+14:30 - code the reason for this is we are
+14:32 - requesting that we get sent a
+14:34 - code back that will allow us to
+14:36 - authenticate a user so we're taking the
+14:38 - code
+14:39 - next we're going to say redirect
+14:41 - underscore and then
+14:43 - uri like that and this is going to be
+14:45 - equal to the redirect
+14:47 - uri variable that we imported up above
+14:49 - so redirect uri
+14:51 - and if we want to change the redirect
+14:52 - redirect uri we'll go to the credentials
+14:54 - file to do that
+14:56 - next we are going to say that the client
+14:59 - underscore id is equal to the client id
+15:03 - like that remove the comma and then here
+15:06 - we'll say dot prepare
+15:07 - and then dot url now what this is going
+15:09 - to do is just
+15:10 - generate a url for us the output of this
+15:12 - will be a string
+15:14 - and the reason why i'm not actually
+15:15 - sending the request right now
+15:17 - is because what i want to do is i want
+15:18 - to have the front end
+15:20 - get this request so i want the front end
+15:22 - to get this url here and then send it
+15:25 - from there
+15:26 - you'll see why but essentially what this
+15:28 - view right here is going to do or what
+15:29 - this api endpoint is going to do for us
+15:31 - is just return a url that we can go to
+15:34 - to authenticate our spotify application
+15:38 - so we're preparing the url we have our
+15:40 - scopes and then finally we're going to
+15:42 - return from here
+15:43 - a response and we're going to say url
+15:47 - uh sorry this should be inside of curly
+15:49 - braces like that
+15:50 - i'm going to say url colon
+15:54 - url and then status is equal to status
+15:58 - and we need to import status so i think
+15:59 - this is from
+16:01 - where do i get status uh from
+16:05 - rest framework we already have that okay
+16:07 - so from
+16:08 - rest framework like that import
+16:12 - status okay now we're going to say
+16:14 - status dot http
+16:15 - underscore 200 underscore okay
+16:19 - all right and we also need to import
+16:20 - response my bad so we're going to say
+16:22 - import
+16:22 - status and import response
+16:25 - i think that's the right import but let
+16:27 - me just make sure nope of course that's
+16:29 - the wrong import we're going to say
+16:31 - from nope come on what's going on here
+16:33 - with my code
+16:35 - from rest framework dot
+16:39 - and i guess this is response
+16:43 - import response and this should be a
+16:45 - lowercase
+16:46 - okay so from rest framework dot response
+16:49 - import response
+16:50 - nice so now what we're doing is we've
+16:52 - just set up an api endpoint that will
+16:54 - return to us a url
+16:56 - and this url we will use uh to
+16:58 - authenticate our application you'll see
+16:59 - why we've done this in a second
+17:01 - but it's just required that we do it
+17:03 - this way now we're going to go to
+17:04 - urls.pi
+17:06 - and we're going to set up a url for this
+17:08 - auth
+17:09 - url view so let's just go to another
+17:11 - urls.pi file
+17:13 - not this one actually let's go to
+17:14 - frontend and let's just copy the
+17:16 - existing contents so we get these
+17:17 - imports in here already
+17:19 - now go over to my other urls inside of
+17:22 - spotify
+17:23 - paste that inside remove that
+17:26 - remove all this and we'll say path this
+17:29 - is going to be
+17:30 - slash get hyphen
+17:33 - off hyphen url you could call this
+17:35 - whatever you want but we'll just go with
+17:36 - get off url
+17:38 - and then we need to import so we'll say
+17:40 - from dot
+17:41 - views import auth
+17:45 - url like that then here we're going to
+17:48 - say auth url
+17:49 - dot as underscore view now actually i
+17:51 - just realized i have this slash here we
+17:53 - can remove that
+17:54 - but that's good that's all set up now
+17:56 - what i need to do is add a url
+17:58 - path for this spotify app from my main
+18:01 - application url so let's go to
+18:02 - musiccontroller urls.pi
+18:05 - here you can see that we're including
+18:06 - the frontend urls we also
+18:08 - want to include the spotify urls we're
+18:11 - going to say now if you go to spotify
+18:13 - slash
+18:14 - we're going to include spotify
+18:18 - dot urls there we go so now we can
+18:20 - actually hit
+18:21 - and reach that um url endpoint okay
+18:24 - great so now
+18:24 - we have the endpoint that actually gives
+18:27 - us a url
+18:28 - now we're not done yet of course there's
+18:30 - a lot more that we need to do the next
+18:31 - thing that we need to do is set up a
+18:33 - redirect uri this is also oftentimes
+18:36 - referred to as a callback
+18:38 - so essentially after we send the request
+18:40 - to this url
+18:42 - right here we need a callback or some
+18:44 - url
+18:45 - that this information gets returned to
+18:47 - so again let's go back to this diagram
+18:49 - make sure we understand
+18:50 - so we're sending this request so let's
+18:52 - say we're at this point right here
+18:53 - then the user logs in they authorize
+18:55 - their access
+18:57 - then what's going to happen is we get
+18:58 - returned code and state
+19:00 - so what we need is some endpoint or some
+19:03 - i guess a view or function or whatever
+19:05 - you want to call it
+19:06 - that can take in this code and do
+19:08 - something with
+19:09 - it so after we get the authorization
+19:12 - access we then need to send another
+19:14 - request
+19:15 - and get the access and refresh token so
+19:17 - that's what our callback needs to do
+19:19 - so when we pass the redirect url after
+19:21 - this is done it's going to send this
+19:23 - information to the redirect url or uri
+19:26 - anyways let's code out this function so
+19:28 - i'm not going to make this an api view
+19:30 - although we could make an api view but
+19:32 - i'm not going to
+19:33 - i'm going to say define spotify
+19:35 - underscore
+19:36 - callback like this and this is going to
+19:38 - be equal to
+19:39 - request and sorry it's going to have
+19:41 - requests as a parameter and it's going
+19:42 - to say
+19:43 - format equals none then inside of here
+19:47 - what i'm going to do is i'm going to get
+19:48 - the pieces of information from this
+19:50 - request that i want so the first thing
+19:51 - that i want is the code
+19:53 - this code is how we're actually going to
+19:55 - authenticate our user our
+19:57 - access story the refresh token and the
+19:58 - access token so we're going to say code
+20:00 - is equal to request.get.get
+20:03 - and then we want code like that then
+20:06 - we're going to say
+20:07 - error is equal to request.get.get
+20:11 - and error now we're actually not going
+20:12 - to do anything with this error but i
+20:13 - just wanted to show you how we can get
+20:15 - this
+20:15 - in case you want to see what the actual
+20:17 - error message is if for some reason
+20:19 - there is
+20:20 - an error then we will get a response
+20:22 - that does have an
+20:23 - error tag in it or error information in
+20:25 - that case we can
+20:26 - read this error and you know maybe
+20:27 - display it to the user and see what's
+20:29 - actually going wrong
+20:30 - anyways once we get this information now
+20:33 - what we're going to do is send a request
+20:34 - back to the spotify account service that
+20:37 - says hey give me the access token and
+20:39 - give me the refresh token so we're going
+20:40 - to say
+20:40 - response is equal to and we're going to
+20:43 - use
+20:43 - post which i imported up here from
+20:46 - requests
+20:47 - and inside of here we're going to post
+20:49 - to https colon slash
+20:51 - and then accounts dot spotify
+20:55 - dot com slash api slash token
+20:58 - again to find this url you would just
+21:00 - have to look at the spotify
+21:01 - documentation
+21:02 - we're going to say data and inside of
+21:04 - here we're going to pass all the data
+21:05 - that we need so we're going to pass the
+21:06 - client id
+21:07 - the client secret the grant type the
+21:09 - code and the redirect
+21:11 - uri so inside of here let's go ahead and
+21:13 - do this we're going to say
+21:15 - grant underscore type and this is going
+21:17 - to be equal to
+21:20 - authorization underscore
+21:22 - code like that because that's what we
+21:25 - want
+21:26 - then we're going to say code is equal to
+21:29 - sorry
+21:30 - the variable code that we had above then
+21:33 - we're going to say
+21:34 - that the redirect uri inside of a string
+21:38 - underscore uri is equal to the redirect
+21:41 - uri we're going to send now the client
+21:44 - id and the client secret as well so
+21:45 - client id
+21:47 - client id and finally client
+21:50 - underscore secret client underscore
+21:54 - secret all right then we're going to get
+21:56 - the json from this
+21:58 - so sorry that needs to be in lower cases
+22:01 - but by calling this post method right
+22:03 - here we will actually automatically send
+22:05 - the
+22:05 - request and then we will get the
+22:07 - response we'll convert that into json
+22:09 - so that's different from here because
+22:11 - we're not actually sending the request
+22:13 - in this api
+22:14 - we're simply generating a url so that we
+22:17 - can then send the request to that url
+22:19 - anyways you'll see when we use this it
+22:21 - will start making sense but
+22:23 - let's continue so now spotify callback
+22:25 - after we do this
+22:26 - what we want to do is we want to look at
+22:29 - this response we want to get the access
+22:30 - token
+22:31 - and the refresh token and all the other
+22:33 - information so we're going to say
+22:34 - access underscore token is equal to
+22:37 - response
+22:38 - and we're just going to get like this
+22:41 - the access
+22:42 - underscore token then we're going to say
+22:45 - the token underscore type
+22:47 - is equal to response.get
+22:51 - and token underscore type and you get
+22:53 - the idea we're going to continue to do
+22:54 - this for everything else so refresh
+22:56 - underscore token it's equal to
+22:58 - response.get
+22:59 - and then refresh underscore token
+23:03 - uh what else do we need we want the
+23:04 - expires in so we're going to say
+23:07 - expires underscore in is equal to
+23:09 - response
+23:10 - dot get expires underscore in
+23:14 - okay that's great uh and then finally
+23:17 - we'll get the error so we'll say error
+23:19 - is equal to response dot get and then
+23:22 - inside of here we will say error
+23:26 - all right so now we've gotten the
+23:27 - information that we want
+23:29 - now the question is what do we do with
+23:30 - this now so this is our callback
+23:33 - so after we send the request to this url
+23:35 - it will return the information to this
+23:37 - function right here
+23:38 - inside of this function we then send a
+23:40 - request using the code
+23:42 - to get access to the access token the
+23:44 - refresh token all the other information
+23:46 - that we want
+23:47 - so now what we actually need to do is we
+23:49 - need to store
+23:50 - this token now keep in mind that we need
+23:53 - to do this for multiple users right
+23:55 - every single time a user creates a new
+23:57 - room we need them to authenticate their
+23:59 - spotify
+24:00 - and hence we need to store multiple
+24:02 - tokens tokens for each user that's on
+24:04 - our website
+24:05 - so what we're going to do is we're going
+24:07 - to create a database that can actually
+24:09 - store all of these tokens
+24:10 - we're going to associate the user
+24:12 - session key or their session id
+24:15 - with their access token now keep in mind
+24:17 - that we only need the access token for
+24:19 - people that are hosts of the room
+24:21 - so if we can do that if we can store all
+24:23 - of the host access tokens and refresh
+24:25 - tokens
+24:26 - we're good we can use them whenever we
+24:28 - want and then of course if they have a
+24:29 - new session we'll have to get
+24:30 - a new access token refresh token and all
+24:33 - of that
+24:33 - anyways the point of me saying this is
+24:35 - that now we need to make a model so
+24:36 - we're going to go to models.pi
+24:38 - and just like we've done previously
+24:40 - we're going to make a model that can
+24:41 - store tokens so we're going to say class
+24:43 - we're going to call this uh spotify
+24:46 - token
+24:47 - like that and we're going to take as the
+24:50 - inheritance
+24:51 - models dot model
+24:54 - now inside of here we're going to say
+24:56 - the user is going to be equal to
+24:58 - models dot char field like that
+25:01 - and we'll say the max underscore length
+25:03 - is equal to 50
+25:05 - and unique is equal to true next we'll
+25:07 - say
+25:08 - created underscore act is equal to
+25:11 - models.datetime
+25:12 - field and we'll say auto add underscore
+25:16 - uh auto sorry it's auto now underscore
+25:19 - add equals
+25:20 - true like that and then we'll do the
+25:23 - refresh token
+25:24 - so say refresh underscore token is equal
+25:27 - to models dot char field max length
+25:31 - equals 150 characters i don't think it's
+25:33 - that long but just in case we got a
+25:34 - really long one let's do that
+25:36 - i'm going to copy this one more time for
+25:38 - the access token
+25:39 - so that and then we want to store it the
+25:41 - expires
+25:43 - underscore in so i'll be equal to models
+25:45 - dot
+25:46 - date time field and then we'll say
+25:49 - the token underscore type is equal to
+25:52 - the models
+25:53 - dot char field with the max underscore
+25:57 - length equal to 50. all right so that's
+26:00 - the information that we want to store in
+26:01 - this model
+26:02 - but now since we made a change to our
+26:04 - model we need to actually perform a
+26:06 - migration so this is actually a good
+26:08 - thing to show so let me just quit
+26:09 - my web app now let's go over here
+26:13 - and i'm going to just clear the screen
+26:14 - so it's easier i'm going to say
+26:16 - python manage dot pi
+26:19 - and then make migrations like that
+26:22 - so again whenever we make changes to our
+26:23 - database or we add a new model we need
+26:25 - to make migration so we say make
+26:27 - migrations
+26:28 - we should see migrations for api okay
+26:31 - alter field
+26:32 - okay that's not exactly what i wanted to
+26:35 - do
+26:36 - um all right let's try python manage.pi
+26:40 - migrate like that and see what that one
+26:41 - does so i realized i made a very small
+26:44 - mistake here when we added the spotify
+26:47 - app we forgot to add it to installed
+26:49 - apps so when i just did this migration
+26:51 - i guess i had made some minor change
+26:52 - that's why something actually happened
+26:54 - but it wasn't adding our new model and i
+26:55 - was like what's going on the reason why
+26:57 - i wasn't doing that is because i didn't
+26:58 - add this app to our installed apps
+27:00 - so let's go to music controller settings
+27:02 - and let's add this in
+27:03 - so what we need to do is just say
+27:05 - spotify dot apps
+27:07 - dot spotify and then config like that
+27:11 - now once we add this to the installed
+27:13 - apps if we run uh
+27:14 - python manage.pi make migrations we
+27:17 - should see that there we go create model
+27:19 - spotify token then after we make the
+27:21 - migrations we'll migrate
+27:23 - and there we go so it performed the
+27:24 - migrations and all was
+27:26 - good all right so hopefully that makes
+27:28 - sense you guys followed with that small
+27:30 - mistake
+27:30 - but now let's continue so now that we
+27:33 - have this model
+27:34 - what i want to do is as soon as i get
+27:36 - access to this information
+27:38 - i want to store it in the database so i
+27:40 - want to store it in this spotify token
+27:42 - model
+27:43 - and what i'm going to do is i'm going to
+27:44 - use the user let me go back to models
+27:46 - here
+27:47 - i'm going to use user right here i'm
+27:48 - going to store their session
+27:50 - key right just like we've done for the
+27:51 - rooms i'm going to have user storing the
+27:54 - session key so that way we can figure
+27:55 - out which user is associated
+27:57 - with each set of tokens okay awesome so
+28:00 - let's go back to views
+28:01 - and now we want to save these tokens so
+28:04 - what i'm going to do because things are
+28:05 - going to start to get a little bit messy
+28:07 - here if we do everything in one file
+28:09 - is i'm going to make a a new file inside
+28:11 - of spotify here i'm going to call this
+28:13 - util
+28:14 - dot pi standing for utilities right
+28:17 - so inside of here we're going to define
+28:18 - a function and what this function is
+28:20 - going to do
+28:21 - is save our token so it's either going
+28:22 - to save it in a brand new model or it's
+28:25 - going to update an existing model with
+28:27 - new tokens
+28:28 - so i'm just going to call this define
+28:30 - update underscore or
+28:31 - underscore create underscore user
+28:34 - underscore
+28:35 - tokens and again the point of this is
+28:37 - just to update or create user tokens and
+28:39 - store them in the database the first
+28:40 - thing i need is my session underscore
+28:42 - key
+28:43 - or my session id whatever i'll just call
+28:45 - it session id but i think it's probably
+28:46 - more appropriate as a
+28:48 - session key then we'll say we want the
+28:50 - access token that we would need to save
+28:52 - we need the token underscore type pretty
+28:54 - much everything that we had on the model
+28:56 - we're going to have to take in here then
+28:57 - we also
+28:58 - need expires underscore in and finally
+29:00 - we need our refresh
+29:02 - token so then what we're going to do is
+29:04 - we're going to say
+29:05 - tokens is equal to and we're going to
+29:07 - look to see if the existing user has
+29:10 - any currently existing tokens so this
+29:13 - leads me to another function that we're
+29:14 - going to write which is called define
+29:16 - get underscore user underscore tokens
+29:18 - and inside of here we're just going to
+29:19 - take the session underscore id
+29:22 - now we're going to import our model from
+29:24 - above so we're going to say from
+29:25 - dot models import
+29:28 - spotify oops spotify token like that
+29:32 - and then we're going to say user
+29:34 - underscore tokens
+29:35 - is equal to spotify token dot
+29:38 - objects dot filter and then user
+29:42 - is equal to session id so just checking
+29:46 - if we actually have
+29:47 - any tokens associated with the specific
+29:49 - user then we're going to say if user
+29:51 - underscore tokens dot exists
+29:53 - so if we do actually have any tokens
+29:54 - here we'll return
+29:57 - user tokens at index 0 because we know
+29:59 - we'll only ever have
+30:00 - one set of tokens for an existing user
+30:03 - otherwise we'll return
+30:05 - none so return none like that great so
+30:08 - now we can use this function so we'll
+30:09 - say tokens equals get user tokens
+30:12 - session id is what we'll pass here and
+30:15 - then
+30:15 - we'll say expires in is equal to
+30:19 - and i need to set something here so i
+30:21 - kind of got ahead of myself i should
+30:22 - have explained what's going on here
+30:23 - but when we actually get the request
+30:26 - back with these tokens so it's going to
+30:28 - send us the access token the token type
+30:29 - all this information right
+30:31 - expires in is actually going to be a
+30:34 - numeric value in fact it's going to be
+30:35 - equal to
+30:36 - 3 600. now this is telling us that
+30:39 - your token is going to expire in 3600
+30:42 - seconds which is
+30:43 - one hour so what we need to do is
+30:45 - convert this into a
+30:46 - time stamp because sure 3600 is useful
+30:49 - to
+30:50 - us but i don't want to just store 3600
+30:52 - right i want to store the time at which
+30:54 - our token
+30:55 - actually expires so i'm going to get the
+30:57 - current time
+30:58 - and then add an hour to it and store
+31:00 - that in the database so that way
+31:02 - it's really easy for me to check if the
+31:04 - token's expired i don't need to do any
+31:06 - other math i'm just storing the correct
+31:07 - value in the database
+31:09 - so to do this we need to actually import
+31:11 - something we're going to say
+31:12 - from django dot utils
+31:15 - import and it's called time zone like
+31:17 - this
+31:18 - now for expires in what i'm going to do
+31:20 - is say time zone dot now
+31:22 - this will give us the current time that
+31:24 - is related to the
+31:25 - current time zone that we're in so we'll
+31:27 - say time zone dot now
+31:29 - plus time delta and i need to import
+31:32 - time
+31:32 - delta this is from date time so we're
+31:34 - going to say from
+31:35 - date time import time delta like that
+31:38 - we're going to say seconds equals and
+31:41 - then
+31:41 - 3600 uh not 2600 sorry i
+31:45 - shouldn't put 3600 here i should put
+31:48 - expires
+31:49 - underscore in okay so this since we know
+31:52 - it's a numeric value and it's giving us
+31:53 - the amount of seconds we say okay
+31:55 - let's convert this number of seconds
+31:56 - into a time delta this just allows us to
+31:59 - add it to an actual
+32:00 - timestamp then we'll add it to
+32:02 - timezone.now
+32:03 - and then we'll use that and store that
+32:05 - in the database okay
+32:06 - great so next we're going to say if
+32:08 - tokens so if we actually do have tokens
+32:11 - associated with the current user
+32:12 - then rather than creating new tokens
+32:14 - we're just going to update the existing
+32:15 - ones we'll say tokens
+32:17 - dot access token is equal to i guess
+32:20 - this will be
+32:22 - access token then we will say tokens
+32:25 - dot refresh token is equal to the
+32:28 - refresh token
+32:29 - tokens dot expires underscore in is
+32:32 - equal to expires in
+32:34 - tokens dots what's the last one here
+32:38 - token underscore type equals token type
+32:41 - great then we're going to save this so
+32:43 - we're going to say tokens
+32:45 - dot save and we need to add the update
+32:48 - field so let's say update underscore
+32:49 - fields
+32:50 - is equal to and we'll update the access
+32:53 - token field
+32:54 - we'll update the refresh underscore
+32:58 - token field we'll update the expires
+33:01 - underscore
+33:02 - in field and finally the token type
+33:05 - although the token type should stay the
+33:06 - same
+33:07 - um like when we're updating this then
+33:10 - uh we will say else and under here
+33:13 - rather than updating all this
+33:15 - information we'll just create new tokens
+33:16 - so we'll say tokens
+33:18 - is equal to spotify token like that
+33:22 - and then we'll say user is equal to the
+33:24 - session id
+33:25 - we'll say the access token is equal to
+33:27 - the access token
+33:28 - we'll say the refresh token is equal to
+33:31 - the refresh token
+33:32 - we'll say the token type is equal to the
+33:34 - token type
+33:35 - and finally let's say expires in equals
+33:38 - expires in
+33:40 - great then we'll say tokens.save
+33:43 - and there we go we will have created
+33:44 - that in the database now the reason i'm
+33:46 - going through this quickly is just
+33:47 - because i've already shown almost all of
+33:48 - this syntax before in previous videos
+33:51 - so if for some reason this is really
+33:52 - confusing maybe consult some of the
+33:54 - other videos
+33:55 - anyways all we're doing again is just
+33:57 - updating or creating a new token
+33:59 - instance in the database awesome so now
+34:01 - that we have this util.pi file done
+34:04 - let's actually use this so let's go to
+34:06 - our views.pi
+34:07 - from inside of spotify and let's import
+34:09 - these uh these functions so let's say
+34:11 - from
+34:11 - dot util import and then we want to
+34:14 - import
+34:14 - update or create user tokens great
+34:18 - so now we will actually use that so
+34:20 - let's go down
+34:21 - into our spotify callback and let's call
+34:24 - update or create user tokens now let's
+34:26 - pass the information we need
+34:28 - the first piece of information we need
+34:30 - is actually the session key or the
+34:32 - session id whatever you want to call it
+34:34 - so to get that piece of information i'm
+34:36 - going to copy in a code snippet we've
+34:37 - seen many times now
+34:40 - and that is this we're going to say if
+34:42 - not
+34:43 - request dot session dot exists and then
+34:46 - request.session.sessionkey create it so
+34:48 - just make sure
+34:50 - that we do actually have a session key
+34:52 - because if we don't then this is going
+34:53 - to cause an error
+34:55 - anyways then we will pass the
+34:57 - request.session.sessionkey as the first
+34:59 - argument
+35:00 - and then we need to look at the other
+35:01 - order and it's telling us right here
+35:03 - access token token type expires in
+35:05 - refresh token so access token
+35:07 - the token type like that
+35:11 - the expires in and finally the refresh
+35:14 - token
+35:15 - all right so let's use that and then
+35:17 - we're almost done
+35:18 - we're at the very end of this function
+35:19 - what we want to do is return
+35:22 - the redirect and we're going to redirect
+35:26 - to our front end colon now i'll show you
+35:30 - how this works in a second but we need
+35:31 - to import the redirect function
+35:33 - so let's go up here and then i believe
+35:35 - this is from django.shortcuts we're
+35:37 - going to import redirect
+35:38 - i don't think we've used this before but
+35:40 - this is just how we redirect to a
+35:41 - different web page
+35:43 - so i know this is a lot to comprehend at
+35:46 - once
+35:46 - but this is our spotify callback so
+35:48 - let's let's go back to this
+35:50 - diagram here it's going to pass the code
+35:53 - to this function that we just wrote
+35:55 - then what we're doing inside of this
+35:56 - function is we're doing this step so
+35:58 - step number two we're sending the client
+36:00 - id
+36:00 - the secret the grant type the code and
+36:02 - the uri
+36:03 - and requesting the access token the
+36:05 - refresh tokens then it's returning
+36:07 - those tokens to us we're storing those
+36:09 - tokens in the database
+36:10 - and then what we need to do after this
+36:13 - step is we need to return back to our
+36:15 - original application so
+36:16 - the flow is from our front end we're
+36:19 - going to call
+36:20 - this api endpoint we are then going to
+36:22 - take the url that's returned to us and
+36:24 - we're going to redirect to that page
+36:26 - then from there that url once the user
+36:29 - is done
+36:30 - authorizing us we'll redirect to this
+36:32 - function right here
+36:34 - then from this function we'll send the
+36:35 - request for the tokens
+36:37 - store the tokens and then redirect back
+36:39 - to our original application
+36:41 - so that's why i'm redirecting to front
+36:43 - end colon now
+36:44 - there's a lot there's yeah a lot more
+36:46 - steps that we need to do here
+36:48 - but anyways hopefully that's a good
+36:49 - summary of what we've done so far so
+36:51 - let's go to urls.pi now inside of
+36:53 - spotify
+36:54 - and let's set up a path for that thing
+36:56 - that we just created so let's
+36:58 - import the spotify callback we also
+37:00 - could call this redirect whatever it
+37:01 - doesn't matter
+37:02 - i'm just going to say path i'm going to
+37:04 - call this redirect
+37:06 - and then i'm going to say that this is
+37:08 - just going to hit this function which is
+37:10 - spotify callback great so i don't think
+37:14 - uh yeah i think i did show you guys how
+37:15 - this worked at the beginning of the
+37:16 - tutorial series
+37:18 - anyways uh this is just a different type
+37:20 - of view right so we're just redirecting
+37:22 - to a different page
+37:22 - from this view now notice i'm doing
+37:25 - front end colon so
+37:26 - the way this works is that if we want to
+37:28 - redirect to a different app
+37:30 - right because right now i'm inside of
+37:32 - the spotify application if i want to
+37:34 - redirect to a page inside of the
+37:35 - front-end
+37:36 - application which is what i want to do i
+37:38 - put the name of the application
+37:40 - colon and then the page that i want to
+37:41 - go to so if i want to go to the room
+37:43 - page i would go
+37:44 - room like that but all i actually want
+37:46 - to do here is just redirect back to the
+37:48 - home page because we've already set it
+37:50 - up so that the home page
+37:51 - will redirect us to the correct page if
+37:53 - we're already in a room right
+37:55 - so if i just go to the front end home
+37:56 - page then i know i'm going to end up
+37:58 - going to the right place
+37:59 - anyways to make this work what you need
+38:02 - to do is go inside of the urls.pi file
+38:04 - for your frontend so go inside of
+38:06 - frontend to urls.pi
+38:08 - and you need to add a variable up here
+38:09 - called app underscore name
+38:11 - and set it equal to the frontend so or
+38:13 - you can set equal to whatever you want
+38:15 - but frontend is the correct name
+38:17 - the reason we're doing this is because
+38:18 - django needs to know that this urls.pi
+38:21 - file belongs to the frontend app it can
+38:23 - determine that because the folder it's
+38:24 - in
+38:25 - but this is just something that's
+38:26 - required to put inside of here so that
+38:28 - that method i just showed you actually
+38:29 - works
+38:30 - we also need to go inside a path we need
+38:32 - to name our path so i'm going to say
+38:34 - name is equal to and just an empty
+38:36 - string
+38:36 - the reason for this is because right now
+38:38 - we don't actually have a way of
+38:39 - identifying all of these paths sure we
+38:41 - can look at you know
+38:42 - the name of the actual path but we need
+38:44 - to give it a formal name
+38:46 - so that when we call the redirect
+38:48 - function we know which path we should
+38:50 - actually go to
+38:51 - in theory i could name this hello and
+38:53 - then if i redirected to frontend colon
+38:55 - hello it would bring me to the empty
+38:57 - string path
+38:58 - so anyways let's just leave it empty
+38:59 - string so that makes sense but now our
+39:01 - redirect should actually work
+39:03 - okay so now that we have that let's see
+39:06 - what we need to do
+39:07 - next okay so i was going to jump over
+39:09 - the front end but i realized that it
+39:10 - probably makes more sense just do all
+39:12 - the back end stuff first and then go
+39:13 - over
+39:14 - there so we need to write a few more
+39:16 - functions here that that have some
+39:18 - specific purpose
+39:19 - the first one is to check if a user is
+39:21 - currently authenticated so
+39:23 - obviously we don't want to keep asking
+39:25 - the user to authenticate if they're
+39:26 - already authenticated so we need
+39:28 - something that can tell us well
+39:29 - if they're authenticated so let's go to
+39:31 - util.pi
+39:32 - and the nice thing is that now that we
+39:34 - have these tokens stored in a database
+39:36 - we can just check if the current session
+39:38 - id so representing the user is in the
+39:40 - database
+39:41 - and if the token is expired or not if
+39:43 - the token's not expired they're
+39:44 - authenticated if it is expired we need
+39:46 - to
+39:47 - refresh it so let's write a function i'm
+39:49 - going to call this one is
+39:51 - spotify underscore authenticated like
+39:53 - that
+39:54 - we're going to take the session id now
+39:57 - maybe we just call it is authenticated
+39:58 - but
+39:59 - let's just be more specific and put
+40:00 - spotify there and inside of here
+40:02 - what i'm going to do is check if the
+40:03 - current session id so the user is
+40:05 - authenticated so we'll say tokens
+40:07 - equals and then get underscore user
+40:09 - underscore tokens that function that we
+40:11 - wrote up here
+40:12 - we'll pass the session underscore id and
+40:15 - then we'll just do a quick if statement
+40:16 - and say if tokens
+40:18 - so if tokens what we're going to do is
+40:20 - say date
+40:21 - is equal to tokens dot expires in in
+40:24 - fact maybe we'll call this expiry
+40:27 - because that probably makes a bit more
+40:28 - sense so we'll say expiry like that
+40:30 - and then if expiry because remember this
+40:33 - is a date time
+40:34 - object is less than or equal to the
+40:37 - current time zone dot now we already
+40:39 - imported this from above
+40:41 - then what we need to do is refresh this
+40:43 - token so we're pretty much saying
+40:45 - if the current expiry has passed right
+40:47 - if the current time has passed the
+40:48 - expiry
+40:49 - let's refresh this token then otherwise
+40:52 - so let's just fill this
+40:53 - if statement here actually i don't even
+40:55 - need the else i can just say return
+40:57 - false like that because you know if we
+40:59 - don't have any tokens then we are not
+41:01 - authenticated if we didn't get something
+41:02 - from the database
+41:03 - we are not authenticated so we return
+41:05 - false and then here we need to actually
+41:07 - refresh the token so
+41:09 - i'm going to write another function now
+41:11 - i'm going to say define
+41:12 - renew or we call it refresh underscore
+41:15 - spotify
+41:16 - underscore token okay so inside of here
+41:19 - we're going to send the requests that we
+41:21 - need to use to actually refresh our
+41:22 - token
+41:23 - unfortunately they don't have this
+41:25 - request in that nice little drawing
+41:26 - otherwise i would walk you through
+41:28 - why i've kind of picked the stuff that i
+41:30 - have but just trust me this is how you
+41:32 - actually refresh it and
+41:33 - anyways it's not too difficult we've
+41:35 - kind of done this already the first
+41:36 - thing i'm going to do is i'm going to
+41:37 - say tokens is equal to and then
+41:39 - get user token session id um you know
+41:42 - maybe if we want to save some time here
+41:44 - we could just pass the token so let's
+41:46 - actually just say
+41:47 - tokens like that and here inside this if
+41:50 - statement we'll call
+41:51 - refresh spotify no refresh underscore
+41:54 - spotify token and we'll just pass it the
+41:57 - tokens
+41:59 - now when i'm saying tokens i'm really
+42:00 - just talking about that model object
+42:02 - right
+42:02 - that is storing the tokens that's what's
+42:05 - being returned here i'm just calling it
+42:06 - tokens because it does have multiple
+42:08 - tokens in it
+42:09 - anyways we have tokens so we're going to
+42:11 - say that the
+42:13 - refresh token which is the one we really
+42:15 - need here is equal to
+42:16 - tokens dot refresh token again remember
+42:20 - this is just the model so we have
+42:21 - refresh token access token expiry token
+42:23 - so on so forth
+42:24 - then what we're going to do is we're
+42:25 - going to say response is equal to post
+42:28 - and here we're going to post to https
+42:30 - colon slash
+42:32 - accounts dot spotify.com
+42:35 - api token this is the same one that
+42:38 - we've used previously
+42:39 - and then we're going to say data is
+42:42 - equal to
+42:43 - we're going to send some information now
+42:45 - what we need to send here is the
+42:46 - following so the grant
+42:48 - type is going to be equal to our refresh
+42:51 - token so this is saying what do we want
+42:53 - what do we want we want a refresh token
+42:55 - or what are we sending sorry we're
+42:57 - sending the refresh token mybad
+42:59 - and if we looked at the other grant type
+43:00 - where was the other grant type is it in
+43:02 - this file or is it in
+43:03 - in views let's have a look yeah okay so
+43:06 - authorization code right so we're pretty
+43:07 - much telling it what to expect here
+43:09 - we're saying yeah we're sending an
+43:10 - authorization code and
+43:12 - here we're saying we're sending a
+43:14 - refresh token so my bad
+43:15 - okay and then we're going to say the
+43:17 - actual refresh token
+43:19 - is equal to the refresh token
+43:22 - then we want to send the client id so
+43:24 - we'll say the client underscore id
+43:26 - is equal to the client id which i think
+43:29 - i have imported no i don't have it
+43:30 - imported so let's
+43:31 - import that from above so from dot
+43:33 - credentials
+43:35 - import client underscore id
+43:38 - client underscore secret like that okay
+43:41 - so we'll send the client id
+43:43 - and then finally we'll send the client
+43:45 - underscore secret
+43:47 - so client secret like that great so now
+43:50 - we have that information
+43:52 - uh post okay that's fine
+43:55 - undefined variable oh i guess i didn't
+43:57 - import post sorry guys let's go to the
+43:58 - top and import post
+44:00 - so let's say from request
+44:04 - import post okay so post should be good
+44:06 - now awesome
+44:07 - we'll just convert this into json
+44:09 - because that will actually give us
+44:10 - the response and we'll say the new
+44:12 - access token
+44:14 - is equal to the response dot
+44:17 - get we're going to get the access
+44:19 - underscore
+44:20 - token so again this is returning to us a
+44:23 - new
+44:24 - access token and a new refresh token
+44:26 - that we can use
+44:28 - for our api okay so there we go
+44:31 - next we'll say the token underscore type
+44:33 - is equal to
+44:35 - response dot gets the token type this
+44:38 - may seem
+44:39 - uh not important or that we don't have
+44:40 - to do this because the token type really
+44:42 - should stay the same
+44:43 - all the time but in case spotify decides
+44:46 - to change something in the future it
+44:47 - just makes sense to do this
+44:48 - and then we'll say expires in is equal
+44:51 - to
+44:52 - response dot get
+44:56 - and we will get the expires hyphen
+44:59 - in and then lastly we'll say the refresh
+45:01 - underscore token
+45:03 - is equal to the response dot get
+45:07 - refresh token okay great so now we have
+45:10 - all that information
+45:11 - and lastly we will call our update or
+45:14 - create user tokens
+45:15 - and inside of here we'll just pass
+45:16 - everything so we'll start
+45:18 - ah so here this is the issue this is
+45:20 - where i need my session id
+45:22 - because i need to pass my session id to
+45:24 - my update or create user token so
+45:26 - anyways we'll pass session id
+45:28 - we'll change inside of here to be
+45:30 - session id
+45:32 - and then for our refresh token this will
+45:34 - have to be equal to
+45:37 - get user tokens we're going to have to
+45:39 - pass the session id
+45:43 - dot and then refresh token and then
+45:46 - sorry up here we're going to have to
+45:47 - change tokens to be
+45:49 - session id okay so hopefully you guys
+45:52 - see the changes there we're just
+45:53 - changing the parameter and that required
+45:54 - a few other small changes
+45:56 - anyways we're going to say update or
+45:57 - create user token i'm going to pass the
+45:59 - session
+46:00 - id i'm gonna pass the new access token
+46:02 - the token type
+46:04 - the expires in and the new refresh
+46:07 - token uh come on why is refresh token
+46:10 - not showing up did i
+46:11 - spell something wrong refresh token okay
+46:13 - i think
+46:15 - that is good all right
+46:18 - uh oh sorry this should be a string my
+46:21 - bad guys string needs to go inside of
+46:22 - this get
+46:23 - okay so that's actually it for
+46:24 - refreshing the spotify token
+46:27 - so now what we'll do is while we've
+46:28 - already had this here after we refresh
+46:30 - the spotify token
+46:32 - we will return true so this is just
+46:35 - checking so
+46:35 - okay do we have a token if we don't
+46:37 - return false because we're not
+46:38 - authenticated if we have a token but
+46:40 - it's expired then we are authenticated
+46:42 - we just need to refresh the token so
+46:43 - let's do that and then after we do that
+46:45 - we're all good we can return
+46:47 - true now of course if this isn't true
+46:49 - that just means that we have a
+46:50 - non-expired refresh token so we just
+46:52 - return true awesome so now one last
+46:56 - thing that we need to do here
+46:57 - we need to set up a view that can
+46:59 - actually tell us whether or not we are
+47:01 - authenticated so
+47:02 - this util right is returning true or
+47:04 - false this is python code but we need to
+47:06 - return some json
+47:08 - that our front end can actually
+47:09 - understand so let's go to views.pi
+47:12 - and let's make one more function here
+47:14 - and in fact we can make this a class
+47:15 - we'll say class
+47:16 - is authenticated like that
+47:19 - this will inherit from the api view and
+47:21 - we'll define a get method so to find get
+47:24 - self request and optional format equal
+47:27 - to none
+47:28 - now inside of here what we're going to
+47:30 - do is we're going to call this util
+47:32 - function
+47:33 - which is is spotify authenticated and
+47:35 - we'll just return some json response
+47:37 - to whoever's sending this to us telling
+47:39 - us whether you're authenticated or
+47:41 - not okay so we're going to say is
+47:44 - underscore authenticated is equal to and
+47:47 - then we need to import
+47:49 - from up here is spotify authenticated
+47:52 - so we'll call the is underscore spotify
+47:55 - authenticated
+47:56 - we'll pass in here the req sorry not
+47:59 - request the self
+48:00 - dot request dot
+48:03 - session dot session key that's all we
+48:06 - need for that
+48:07 - and then what we can do is simply return
+48:09 - a response so we'll say return
+48:12 - response inside of here we will say i
+48:15 - guess
+48:16 - status is equal to and then is
+48:18 - underscore authenticated and then we'll
+48:20 - say the status is equal to
+48:22 - status.http underscore 200 underscore
+48:25 - okay
+48:25 - all right so pretty straightforward but
+48:27 - this is just going to be an endpoint
+48:29 - that we can hit that will tell us
+48:30 - whether or not we are authenticated so
+48:32 - let's go to urls.pi and let's
+48:34 - set up the actual endpoint for this so
+48:36 - let's import this we'll say
+48:37 - is authenticated and then we want to
+48:41 - return a path
+48:42 - and we'll just say is hyphen
+48:44 - authenticated
+48:46 - and we'll say is authenticated.as view
+48:50 - all right so at this point in time the
+48:52 - backend is done there's a few
+48:53 - minor things we're going to do in the
+48:54 - future but that's fine we'll continue
+48:56 - moving on for right now and i understand
+48:58 - this video is getting long
+48:59 - if you guys are here congratulations
+49:02 - hopefully everything's making sense and
+49:03 - again
+49:04 - code link in the description in case i'm
+49:05 - going too fast for you so let's go
+49:08 - to components now inside of our front
+49:10 - end app
+49:11 - we're going to go to room.js so the idea
+49:14 - here is that as soon as we get into a
+49:16 - room
+49:17 - if we are the host of this room then
+49:20 - what we need to do
+49:21 - is immediately authenticate our spotify
+49:23 - right because we need a way to actually
+49:25 - control the music
+49:26 - so if the user is a host and the user
+49:28 - enters this room
+49:30 - then we need to check if they have
+49:31 - authenticated with spotify
+49:33 - if they have not we need to actually
+49:35 - authenticate them right so we need to
+49:36 - show them that web page that has the
+49:38 - prompt
+49:38 - and then they need to you know give us
+49:40 - the authorization or whatever it is
+49:42 - we need to take the tokens store them in
+49:44 - the database and then all will be good
+49:46 - but this needs to be handled from the
+49:47 - front end at least a part of this
+49:49 - so the first thing i'm going to do is
+49:51 - just add a variable to the state i'm
+49:52 - just going to call this
+49:54 - spotify authenticated and this will be
+49:58 - equal to
+49:59 - false then i'm going to make a method
+50:01 - i'm going to call this authenticate
+50:03 - spotify so authenticate
+50:06 - spotify like that and inside of here
+50:08 - we're going to send a request
+50:10 - to our backend we're going to ask if the
+50:12 - current user
+50:13 - is authenticated but only in the
+50:15 - situation where this user is a host
+50:17 - now what that means is that we need to
+50:19 - wait until this get
+50:21 - room details function has run before we
+50:23 - call this method
+50:24 - so inside of this dot then is actually
+50:27 - where i'm going to call this so
+50:28 - after we set the state then what i'm
+50:31 - going to do
+50:32 - is call this dot authenticate oops
+50:35 - this dot authenticate spotify but i'm
+50:37 - only going to call this
+50:38 - if the user is the host so we'll say if
+50:42 - this dot state dot is host
+50:45 - then we can call this right here
+50:49 - suite okay so that is what we'll do then
+50:52 - inside of authenticate spotify
+50:54 - we will send the request so inside of
+50:55 - here i'm just going to say fetch
+50:57 - and we're going to fetch the slash
+50:59 - spotify
+51:01 - slash is hyphen
+51:05 - authenticated if i can spell
+51:07 - this correctly this is a large word okay
+51:10 - fetch
+51:10 - spotify is authenticated now we will say
+51:13 - dot then
+51:14 - and we will take our response
+51:18 - like that and we will simply return
+51:22 - response dot json now we know that we're
+51:24 - never going to have an invalid response
+51:25 - because all we're ever doing is just
+51:27 - returning true or false
+51:28 - then we'll add another dot then and
+51:30 - we'll say then
+51:32 - data and then we will do something with
+51:34 - this data
+51:35 - so what are we going to do with the data
+51:37 - well we're going to start by setting the
+51:38 - state
+51:39 - of whatever was returned to us so
+51:41 - whether the user is authenticate or not
+51:42 - so we're going to say this
+51:43 - dot set state and inside of here we're
+51:45 - going to say uh i guess
+51:47 - what do we even call this spotify
+51:49 - authenticated and then i guess this is
+51:50 - going to be colon
+51:52 - data dot status because remember status
+51:55 - is what we returned
+51:56 - as the key that held either true or
+51:58 - false for whether the user was
+51:59 - authenticated
+52:01 - now after this this is where it gets
+52:03 - interesting if the user is not
+52:04 - authenticated we need to authenticate
+52:06 - them
+52:06 - so we're going to say if not
+52:10 - data dot status so then inside of here
+52:13 - what we'll do
+52:14 - is we'll say fetch and we will fetch the
+52:17 - url that we're going to use to
+52:18 - authenticate so slash spotify
+52:20 - slash get hyphen auth hyphen url
+52:23 - then we will say dot then
+52:27 - and we will take the response and simply
+52:31 - return the oops the response
+52:35 - dot json like that then we'll say dot
+52:38 - then again
+52:39 - and we'll say dot then and
+52:42 - data is equal to
+52:46 - and we're gonna do something interesting
+52:47 - inside of here so let me pause for one
+52:49 - second
+52:50 - so now at this point data is going to be
+52:52 - equal to or
+52:53 - sorry data dot url is going to be equal
+52:57 - to
+52:57 - the url that we need to use to
+52:59 - authenticate so pretty much
+53:00 - what happens is let's go to views again
+53:03 - if we have a look at spotify callback
+53:06 - or sorry not spotify callback but auth
+53:08 - url we see that we just return
+53:10 - the url right so the key url gives us
+53:12 - the url
+53:13 - and the url will be prepared by this
+53:16 - statement right here
+53:17 - so we will visit that url and then when
+53:20 - we visit that url we'll have the user
+53:22 - authenticate their spotify account
+53:24 - so that's like what we're going to do
+53:26 - inside of here so to do that we need to
+53:28 - say window
+53:29 - dot location dot replace and this is
+53:32 - another way to do a redirect that is not
+53:35 - like involved in react like this is
+53:37 - native to javascript
+53:38 - so we'll say window.location.replace and
+53:41 - inside of brackets we're going to say
+53:43 - data.url so what this will do is
+53:46 - redirect us
+53:47 - to this spotify authorization page then
+53:50 - from here
+53:50 - after the user authorizes us it will
+53:53 - redirect us
+53:54 - to the spotify callback so the spotify
+53:57 - callback will save the token
+53:58 - and redirect us to the front end and
+54:00 - then the front end will redirect us back
+54:03 - to the room page so that is kind of
+54:06 - what's going on here hopefully that
+54:07 - makes sense
+54:08 - but that's what this will do now there's
+54:10 - one thing we need to do we need to bind
+54:11 - this method to this keyword
+54:13 - so let's just quickly do that we'll say
+54:15 - this
+54:16 - dot i guess what is it what do we even
+54:19 - call this
+54:19 - authenticate spotify is equal to this
+54:23 - dot authenticate spotify
+54:25 - and then dot bind
+54:28 - to the this keyword okay so now that
+54:30 - that is bound to this keyword
+54:33 - this should work okay so i'm jumping in
+54:35 - here at kind of a random point i
+54:36 - apologize for the strange transition but
+54:38 - i had messed a few things up in anyways
+54:40 - i just have to come back here
+54:42 - so the last thing we need to do because
+54:43 - i just realized we forgot to do this
+54:45 - before we actually test this application
+54:47 - so we need to set the redirect uri
+54:49 - otherwise it's going to run into an
+54:50 - issue
+54:50 - so let's set the redirect uri and just
+54:52 - as a reminder we should set this
+54:54 - to slash spotify slash redirect because
+54:57 - that's where we want to go
+54:59 - after we authenticate or authorize our
+55:02 - application
+55:03 - so let's go to the credentials and let's
+55:06 - set this to http
+55:08 - colon slash and then 127.0.0.1
+55:14 - spotify slash redirect
+55:17 - all right so now what will happen is
+55:19 - after we hit the spotify authorization
+55:22 - page
+55:22 - we'll redirect to slash redirect which
+55:24 - as a refresher
+55:25 - is this right here the spotify callback
+55:28 - and then
+55:28 - this will redirect us to the home page
+55:30 - and all should be good
+55:32 - so let's try this now but actually this
+55:35 - reminds me i have this page open
+55:36 - we need to go to our spotify dashboard
+55:39 - so our developer dashboard
+55:41 - we need to go to edit settings on our
+55:43 - project and we need to authorize this
+55:44 - redirect url
+55:46 - so we just need to add the same thing we
+55:48 - just wrote in
+55:49 - redirect uris inside of the settings of
+55:52 - our app
+55:53 - so let's go to settings let's go to
+55:54 - redirect http
+55:58 - 127.0.0.1
+55:59 - sorry this is colon8000 bad we'll have
+56:01 - to add that to the other one
+56:03 - and then slash spotify slash
+56:07 - redirect and then we'll press add so
+56:09 - that should be good now let's just go
+56:10 - back here and let's add the colon 8000
+56:13 - because i forgot that so coin
+56:15 - 8000 let's save that there and now
+56:19 - we can try to run this so again i
+56:21 - apologize this is a lot before we run
+56:23 - anything but this is really what we need
+56:24 - to do before we could even test this
+56:26 - so now i'm going to go to 127 and okay
+56:29 - we're now inside the room page now i'm
+56:31 - just going to
+56:32 - clear my cache here and reset this so
+56:36 - that
+56:36 - we can test this from the beginning
+56:38 - let's go to create room
+56:40 - let's press create room and then boom we
+56:42 - get inside of the room
+56:43 - but for some reason it doesn't ask us to
+56:46 - authorize with spotify
+56:47 - and okay that would be because we're
+56:49 - already getting true because i
+56:50 - had messed with this previously anyways
+56:52 - to test this out again
+56:54 - i'm just going to go to an incognito
+56:55 - window and we'll go
+56:57 - now into the app i'm going to go create
+56:59 - a room and ready let's press create a
+57:01 - room and let's pray that this works
+57:03 - okay boom there we go it redirects us to
+57:06 - the spotify page here
+57:08 - not the cleanest redirect in the world
+57:09 - but it did bring us there and now i'm
+57:11 - just going to sign into my spotify
+57:12 - account i'm going to skip over this
+57:13 - because obviously i don't want you guys
+57:14 - to see my credentials
+57:15 - and then we will continue okay there we
+57:18 - go so i just signed in
+57:19 - i pressed authorize and then it brought
+57:21 - me back to this
+57:22 - page now i did actually just print
+57:24 - something out so we could see but
+57:26 - let's go to console we can see that this
+57:28 - true here is telling us that we are
+57:29 - indeed authorized all right guys so with
+57:32 - that i'm going to leave the video here
+57:34 - in the next video we'll do more with
+57:35 - this spotify api we'll actually set up a
+57:38 - nice interface so we can view the
+57:39 - current song
+57:40 - fast forward play pause all of that
+57:42 - anyways i hope you guys enjoyed if you
+57:44 - did make sure to leave a like subscribe
+57:45 - to the channel and i will see you in
+57:47 - another youtube
+57:48 - [Music]
+57:52 - video
+57:56 - you
+
+Cleaned transcript:
+
+hello everybody and welcome to another django and react tutorial video in part 13 of this series what we're going to be doing is actually working with the spotify api now i want to give a warning before we dive into anything this is fairly complicated in fact this is pretty advanced this took me a really long time to figure out before filming this video and i just want to make sure that i'm not giving you the impression that this is easy or that i came up with this you know within the duration of the video this was precoded this took me a long time to figure out if you ever want to use these kind of apis typically you have to do a lot of reading and a lot of research on their websites a lot of trial and error and just kind of messing around and trying to figure things out which is exactly what i did before this video so i will leave links to most of the resources that i use to discover this or figure this out in the description in case you're interested but of course i'm going to try my best to explain how everything works so anyways let me talk about what we actually need to do here and what kind of the goal of this video is so we want to be able to control a user's music we want to be able to pause it fast forward the song rewind the song whatever we want control over their music now this requires two things from spotify first we need to register an application with spotify so our actual website we can refer to that as an application we need to register that with spotify and tell them hey this is our app we're using user data whatever we just need to tell them that we have some application that's using their api then what we need to do is every single user that's using our website and whose music we're going to control we need to give them to grant us permission to use and access their spotify information so they need to give our application explicit permission so the basic kind of flow of things here is going to be we authenticate our application with spotify then the user authenticates our application so it says hey your application has access to my information it can control the music so on and so forth and then using that authentication or using what we're going to call tokens and i'll talk about what those are in a second we'll actually be able to send requests to the spotify api that will in turn control the user's music so that's kind of the flow and this diagram in front of me somewhat describes what's actually going to happen i'm going to try to kind of break this down and walk through it but i just want to talk to you about what we're doing because if i don't it's just going to seem really confusing if we go through all the steps without kind of tying them all together and seeing the big picture so we have our application on the left spotify account services or service which we're just going to call the spotify api then we have our user so we're going to start by creating some application with spotify that will be denoted by application our application is going to have a client id it's also going to have a client secret it's pretty much the identifier for our application so we start at the very first step by requesting authorization to access data so we do that with spotify we're pretty much saying hey spotify can our application access spotify information it's going to tell us yes or it's going to tell us no depending on if the information we send it is correct we need to send it this information so the client id the response type the redirect uri the state and the scope now what's going to happen here is this is going to display a scope and prompt to the user to log in now let's let me just break this down because uh this is not too descriptive so a scope is pretty much what you have access to what information you want to have access to so do you want the user's email do you want their library do you want their playlist whatever that's what you're putting in the scope and well based on what scope you send to spotify spotify will show a different prompt to the user to allow your application access to that information so imagine you go on some website and you log in with facebook and then all of a sudden it says you know facebook wants to access or sorry this third party application wants to access this information do you give it permission and then this is like a facebook website that's popping up right you press yes i grant permission then it redirects back to the other application so that's where the redirect uri comes in after this prompt appears on the screen the user will log in to their spotify account and then they will press yes i authorize this application which is our application to have access to this specific information then it will redirect us with the redirect uri back to our own website so at that point in time we go back to our application and now the user's given us authorization to use their information so what's actually going to happen is we're going to be sent a code and we use this code to actually request what's known as a token now this token is what we're going to use whenever we send a request to spotify to say hey we have access to this user's information because we have this special token and if that special token matches what spotify is stored on their end then it will allow us to actually get information so we're just requesting some kind of token now i don't know why they make it this confusing but essentially it sends us some code we use that code to request a token then we use that token to actually send requests so we say say here request access and refresh tokens so we send our client id we send our client secret and we send this code that was sent to us from the user authorizing our application then what's going to happen is this returns to us the access and refresh tokens now what these tokens are are the following the access token is what we use to access information the refresh token is what we use to uh i guess ask for another token so our access token expires after one hour so after every hour we need to refresh this token so we have to send not the access token now but the refresh token to spotify and then it says okay yep that was a valid refresh token and it sends us back a new access token that is valid so that's the idea there and then it tells us when this access token expires but from my experience it always expires after one hour anyways once we now have access to a re uh uh sorry access and refresh token we are able to send requests to the spotify api and control the user's music so that's kind of the flow i know this is confusing we'll go through it step by step but i just wanted to break it down before we start to make sure everyone's on the same page and they know what we're about to do in this probably hour or so long tutorial so we're going to dive in we're going to start coding but first a quick word from our sponsor algo expert so algo expert is the best platform to use to prepare for your software engineering coding interviews as you guys know i work at algo expert and i'm continually adding new questions to the platform if you guys are looking to ace your coding interviews check out algo expert from the link in the description and use the discount code tech with tim for a discount on the platform all right so let's continue i'm going to get out of this now i'm actually going to go to this website which is the developer.spotify.com so kind of like the developer website for spotify now i'll leave a link to this in the description but go to this site and before you go here you actually need to create a spotify account so it doesn't matter if this is a premium account or a free account or whatever it doesn't matter all of this will work once you come to this website and you have the account log into that account it's going to bring into something that looks like this now you guys probably aren't going to see any applications here these are my different spotify applications and what we're going to do is create an app now this app is going to represent our website so this is the application that i was just talking about in uh in this diagram right here so this blue application is this app that we're making right now so call this whatever you want i'm just going to call this tutorial one just because i already have one named tutorial then i think a description is required so i'll just do tutorial one all right i'll check the boxes press create okay so now it's going to show us a client id and a client secret now if we go back to this diagram here the first thing we send is the client id so we need to keep track of both the client id and the client secret but we don't want this information to be public like we don't want to store this on the front end we don't want anyone to see this other than our application specifically this client secret we don't want anyone to see what this is so keep that in mind i'm showing you mine just for the purpose of this tutorial but don't share this with anyone else okay so now that we have this page open let's leave it open because we're going to need to work on this a few times but now we're going to go to the code and then start working on something else so the first thing that i actually want to do is i want to create a new application inside of my django project that's going to handle all of the stuff specific to spotify so we're going to make a new app we're going to say python manage.pi and then start app like that and then we'll call this spotify for simplicity all right so let's make a new spotify app you can see one's going to show up right here now the first thing we'll do inside of this application is we'll just create a few files that we need so we'll make our urls.pi file uh urls.pi like that we'll also make another file inside of here and we're going to call this credentials or yeah we'll call it credentials that's fine so credentials.pie now inside of credentials.pi this is where this is where we are going to store our spotify credentials so our client id our client secret and also the redirect uri or the redirect url whatever you want to call it so the first thing i'm going to do inside of here is to find some variables i'm going to say client id is equal to i'm going to put a string i'm going to go to the website where the client id is i'm going to copy it i'm going to paste it in there alright so client id then i'm going to say in all capitals again client underscore secret like that is equal to a string then i'm going to go take my client secret so let's grab it right here copy it and paste it in lastly i'm going to make my redirect underscore uri and this is just going to be equal to an empty string for right now we will change this later now i just want to note here that although i'm storing this information in a file typically the preferred way to do this is through environment variables if you knew if you know how to use environment variables feel free to use them but i'm not going to use them for this tutorial just because it adds a layer of complexity that we really don't need for this this purpose anyways let's continue i'm going to close the credentials.pi file i can close the urls.pi file and now what i want to do is start setting up this authentication flow so i need some endpoints or i need some functions or something that can send requests to spotify to authenticate our application as well as to authenticate a user so i'm going to go inside of my views.pi file inside of the spotify application that we just created i'm going to start by creating the first view which is going to be the view that can authenticate our application or request access right so if we go back and look at that diagram we're going to be referring to this quite a bit the first thing here this is what we need to do request authorization to access data using the client id the redirect uri and the scope and all of that so what i'm going to do is remove this comment i'm going to import a few things i'm going to say from dot credentials so that file we just wrote import and i'm going to import everything so redirect uri i want the client secret and i also want the client id like that next i'm going to say from uh i guess this is rest underscore framework import and sorry this is restframework.views import api view then i'm going to make a class i'm going to say class auth url and this will inherit from api view and then i'm going to define a get method this is going to take self and request and an optional format so format equals none and inside of here we're going to start writing out the request that we need to send to the spotify api so actually let's import one more thing up here i'm going to say from the request module in python which i think is by default installed maybe it's not anyways just do yourself a favor because i don't know if request is a default module in python and you can install it with pip so pip install requests i assume if you've made it this far you know how to use pip um but yeah install the request module although i think it by default comes installed anyways from requests we're going to import request with a capital r then we're going to import post this is just going to make it easier for us to actually send a request now the first thing i'm going to do is inside of this get function i'm going to say scopes equals and i'm going to start writing out a long scope in fact actually let me just copy and paste it in because it's not really worth me writing it out you guys can pause and copy it but again what the scope is is what information we want to access so we want the user read playback state the user modify playback state and the user read currently playing these are the things that we want because this is what we actually want to be able to do with our application now if you wanted to do more you would have to add all those other specific scopes now if you're wondering where you find these scopes this is from the spotify developer website so from the documentation i actually can't remember exactly where i found all these scopes but you would just have to look up look for those on the spotify website anyways these are the scopes that we need for this application so i'm going to say scopes like that next i'm going to say url is equal to request this should be a uppercase actually as the first one so we'll say request and then the type of request is going to be a get request and we're going to send this to https colon slash and this is going to be accounts.spotify.com authorize like that this is the first url that we need to hit and this is the specific one that we hit when we're requesting authorization so let's do that then we're going to say params is equal to again this stands for parameters and we're going to pass in all of the required information so if we go back here we need the client id response type direct redirect uri and state and scope now we actually don't need state that is a what do you call it optional parameter to pass in here and i'm not really going to talk about exactly what it does but we can just omit it for now so we're going to say scope is equal to scopes i guess we could have put this as scope as well it doesn't matter we're going to say response hyphen or not hyphen underscore type and we want this to be equal to the string code the reason for this is we are requesting that we get sent a code back that will allow us to authenticate a user so we're taking the code next we're going to say redirect underscore and then uri like that and this is going to be equal to the redirect uri variable that we imported up above so redirect uri and if we want to change the redirect redirect uri we'll go to the credentials file to do that next we are going to say that the client underscore id is equal to the client id like that remove the comma and then here we'll say dot prepare and then dot url now what this is going to do is just generate a url for us the output of this will be a string and the reason why i'm not actually sending the request right now is because what i want to do is i want to have the front end get this request so i want the front end to get this url here and then send it from there you'll see why but essentially what this view right here is going to do or what this api endpoint is going to do for us is just return a url that we can go to to authenticate our spotify application so we're preparing the url we have our scopes and then finally we're going to return from here a response and we're going to say url uh sorry this should be inside of curly braces like that i'm going to say url colon url and then status is equal to status and we need to import status so i think this is from where do i get status uh from rest framework we already have that okay so from rest framework like that import status okay now we're going to say status dot http underscore 200 underscore okay all right and we also need to import response my bad so we're going to say import status and import response i think that's the right import but let me just make sure nope of course that's the wrong import we're going to say from nope come on what's going on here with my code from rest framework dot and i guess this is response import response and this should be a lowercase okay so from rest framework dot response import response nice so now what we're doing is we've just set up an api endpoint that will return to us a url and this url we will use uh to authenticate our application you'll see why we've done this in a second but it's just required that we do it this way now we're going to go to urls.pi and we're going to set up a url for this auth url view so let's just go to another urls.pi file not this one actually let's go to frontend and let's just copy the existing contents so we get these imports in here already now go over to my other urls inside of spotify paste that inside remove that remove all this and we'll say path this is going to be slash get hyphen off hyphen url you could call this whatever you want but we'll just go with get off url and then we need to import so we'll say from dot views import auth url like that then here we're going to say auth url dot as underscore view now actually i just realized i have this slash here we can remove that but that's good that's all set up now what i need to do is add a url path for this spotify app from my main application url so let's go to musiccontroller urls.pi here you can see that we're including the frontend urls we also want to include the spotify urls we're going to say now if you go to spotify slash we're going to include spotify dot urls there we go so now we can actually hit and reach that um url endpoint okay great so now we have the endpoint that actually gives us a url now we're not done yet of course there's a lot more that we need to do the next thing that we need to do is set up a redirect uri this is also oftentimes referred to as a callback so essentially after we send the request to this url right here we need a callback or some url that this information gets returned to so again let's go back to this diagram make sure we understand so we're sending this request so let's say we're at this point right here then the user logs in they authorize their access then what's going to happen is we get returned code and state so what we need is some endpoint or some i guess a view or function or whatever you want to call it that can take in this code and do something with it so after we get the authorization access we then need to send another request and get the access and refresh token so that's what our callback needs to do so when we pass the redirect url after this is done it's going to send this information to the redirect url or uri anyways let's code out this function so i'm not going to make this an api view although we could make an api view but i'm not going to i'm going to say define spotify underscore callback like this and this is going to be equal to request and sorry it's going to have requests as a parameter and it's going to say format equals none then inside of here what i'm going to do is i'm going to get the pieces of information from this request that i want so the first thing that i want is the code this code is how we're actually going to authenticate our user our access story the refresh token and the access token so we're going to say code is equal to request.get.get and then we want code like that then we're going to say error is equal to request.get.get and error now we're actually not going to do anything with this error but i just wanted to show you how we can get this in case you want to see what the actual error message is if for some reason there is an error then we will get a response that does have an error tag in it or error information in that case we can read this error and you know maybe display it to the user and see what's actually going wrong anyways once we get this information now what we're going to do is send a request back to the spotify account service that says hey give me the access token and give me the refresh token so we're going to say response is equal to and we're going to use post which i imported up here from requests and inside of here we're going to post to https colon slash and then accounts dot spotify dot com slash api slash token again to find this url you would just have to look at the spotify documentation we're going to say data and inside of here we're going to pass all the data that we need so we're going to pass the client id the client secret the grant type the code and the redirect uri so inside of here let's go ahead and do this we're going to say grant underscore type and this is going to be equal to authorization underscore code like that because that's what we want then we're going to say code is equal to sorry the variable code that we had above then we're going to say that the redirect uri inside of a string underscore uri is equal to the redirect uri we're going to send now the client id and the client secret as well so client id client id and finally client underscore secret client underscore secret all right then we're going to get the json from this so sorry that needs to be in lower cases but by calling this post method right here we will actually automatically send the request and then we will get the response we'll convert that into json so that's different from here because we're not actually sending the request in this api we're simply generating a url so that we can then send the request to that url anyways you'll see when we use this it will start making sense but let's continue so now spotify callback after we do this what we want to do is we want to look at this response we want to get the access token and the refresh token and all the other information so we're going to say access underscore token is equal to response and we're just going to get like this the access underscore token then we're going to say the token underscore type is equal to response.get and token underscore type and you get the idea we're going to continue to do this for everything else so refresh underscore token it's equal to response.get and then refresh underscore token uh what else do we need we want the expires in so we're going to say expires underscore in is equal to response dot get expires underscore in okay that's great uh and then finally we'll get the error so we'll say error is equal to response dot get and then inside of here we will say error all right so now we've gotten the information that we want now the question is what do we do with this now so this is our callback so after we send the request to this url it will return the information to this function right here inside of this function we then send a request using the code to get access to the access token the refresh token all the other information that we want so now what we actually need to do is we need to store this token now keep in mind that we need to do this for multiple users right every single time a user creates a new room we need them to authenticate their spotify and hence we need to store multiple tokens tokens for each user that's on our website so what we're going to do is we're going to create a database that can actually store all of these tokens we're going to associate the user session key or their session id with their access token now keep in mind that we only need the access token for people that are hosts of the room so if we can do that if we can store all of the host access tokens and refresh tokens we're good we can use them whenever we want and then of course if they have a new session we'll have to get a new access token refresh token and all of that anyways the point of me saying this is that now we need to make a model so we're going to go to models.pi and just like we've done previously we're going to make a model that can store tokens so we're going to say class we're going to call this uh spotify token like that and we're going to take as the inheritance models dot model now inside of here we're going to say the user is going to be equal to models dot char field like that and we'll say the max underscore length is equal to 50 and unique is equal to true next we'll say created underscore act is equal to models.datetime field and we'll say auto add underscore uh auto sorry it's auto now underscore add equals true like that and then we'll do the refresh token so say refresh underscore token is equal to models dot char field max length equals 150 characters i don't think it's that long but just in case we got a really long one let's do that i'm going to copy this one more time for the access token so that and then we want to store it the expires underscore in so i'll be equal to models dot date time field and then we'll say the token underscore type is equal to the models dot char field with the max underscore length equal to 50. all right so that's the information that we want to store in this model but now since we made a change to our model we need to actually perform a migration so this is actually a good thing to show so let me just quit my web app now let's go over here and i'm going to just clear the screen so it's easier i'm going to say python manage dot pi and then make migrations like that so again whenever we make changes to our database or we add a new model we need to make migration so we say make migrations we should see migrations for api okay alter field okay that's not exactly what i wanted to do um all right let's try python manage.pi migrate like that and see what that one does so i realized i made a very small mistake here when we added the spotify app we forgot to add it to installed apps so when i just did this migration i guess i had made some minor change that's why something actually happened but it wasn't adding our new model and i was like what's going on the reason why i wasn't doing that is because i didn't add this app to our installed apps so let's go to music controller settings and let's add this in so what we need to do is just say spotify dot apps dot spotify and then config like that now once we add this to the installed apps if we run uh python manage.pi make migrations we should see that there we go create model spotify token then after we make the migrations we'll migrate and there we go so it performed the migrations and all was good all right so hopefully that makes sense you guys followed with that small mistake but now let's continue so now that we have this model what i want to do is as soon as i get access to this information i want to store it in the database so i want to store it in this spotify token model and what i'm going to do is i'm going to use the user let me go back to models here i'm going to use user right here i'm going to store their session key right just like we've done for the rooms i'm going to have user storing the session key so that way we can figure out which user is associated with each set of tokens okay awesome so let's go back to views and now we want to save these tokens so what i'm going to do because things are going to start to get a little bit messy here if we do everything in one file is i'm going to make a a new file inside of spotify here i'm going to call this util dot pi standing for utilities right so inside of here we're going to define a function and what this function is going to do is save our token so it's either going to save it in a brand new model or it's going to update an existing model with new tokens so i'm just going to call this define update underscore or underscore create underscore user underscore tokens and again the point of this is just to update or create user tokens and store them in the database the first thing i need is my session underscore key or my session id whatever i'll just call it session id but i think it's probably more appropriate as a session key then we'll say we want the access token that we would need to save we need the token underscore type pretty much everything that we had on the model we're going to have to take in here then we also need expires underscore in and finally we need our refresh token so then what we're going to do is we're going to say tokens is equal to and we're going to look to see if the existing user has any currently existing tokens so this leads me to another function that we're going to write which is called define get underscore user underscore tokens and inside of here we're just going to take the session underscore id now we're going to import our model from above so we're going to say from dot models import spotify oops spotify token like that and then we're going to say user underscore tokens is equal to spotify token dot objects dot filter and then user is equal to session id so just checking if we actually have any tokens associated with the specific user then we're going to say if user underscore tokens dot exists so if we do actually have any tokens here we'll return user tokens at index 0 because we know we'll only ever have one set of tokens for an existing user otherwise we'll return none so return none like that great so now we can use this function so we'll say tokens equals get user tokens session id is what we'll pass here and then we'll say expires in is equal to and i need to set something here so i kind of got ahead of myself i should have explained what's going on here but when we actually get the request back with these tokens so it's going to send us the access token the token type all this information right expires in is actually going to be a numeric value in fact it's going to be equal to 3 600. now this is telling us that your token is going to expire in 3600 seconds which is one hour so what we need to do is convert this into a time stamp because sure 3600 is useful to us but i don't want to just store 3600 right i want to store the time at which our token actually expires so i'm going to get the current time and then add an hour to it and store that in the database so that way it's really easy for me to check if the token's expired i don't need to do any other math i'm just storing the correct value in the database so to do this we need to actually import something we're going to say from django dot utils import and it's called time zone like this now for expires in what i'm going to do is say time zone dot now this will give us the current time that is related to the current time zone that we're in so we'll say time zone dot now plus time delta and i need to import time delta this is from date time so we're going to say from date time import time delta like that we're going to say seconds equals and then 3600 uh not 2600 sorry i shouldn't put 3600 here i should put expires underscore in okay so this since we know it's a numeric value and it's giving us the amount of seconds we say okay let's convert this number of seconds into a time delta this just allows us to add it to an actual timestamp then we'll add it to timezone.now and then we'll use that and store that in the database okay great so next we're going to say if tokens so if we actually do have tokens associated with the current user then rather than creating new tokens we're just going to update the existing ones we'll say tokens dot access token is equal to i guess this will be access token then we will say tokens dot refresh token is equal to the refresh token tokens dot expires underscore in is equal to expires in tokens dots what's the last one here token underscore type equals token type great then we're going to save this so we're going to say tokens dot save and we need to add the update field so let's say update underscore fields is equal to and we'll update the access token field we'll update the refresh underscore token field we'll update the expires underscore in field and finally the token type although the token type should stay the same um like when we're updating this then uh we will say else and under here rather than updating all this information we'll just create new tokens so we'll say tokens is equal to spotify token like that and then we'll say user is equal to the session id we'll say the access token is equal to the access token we'll say the refresh token is equal to the refresh token we'll say the token type is equal to the token type and finally let's say expires in equals expires in great then we'll say tokens.save and there we go we will have created that in the database now the reason i'm going through this quickly is just because i've already shown almost all of this syntax before in previous videos so if for some reason this is really confusing maybe consult some of the other videos anyways all we're doing again is just updating or creating a new token instance in the database awesome so now that we have this util.pi file done let's actually use this so let's go to our views.pi from inside of spotify and let's import these uh these functions so let's say from dot util import and then we want to import update or create user tokens great so now we will actually use that so let's go down into our spotify callback and let's call update or create user tokens now let's pass the information we need the first piece of information we need is actually the session key or the session id whatever you want to call it so to get that piece of information i'm going to copy in a code snippet we've seen many times now and that is this we're going to say if not request dot session dot exists and then request.session.sessionkey create it so just make sure that we do actually have a session key because if we don't then this is going to cause an error anyways then we will pass the request.session.sessionkey as the first argument and then we need to look at the other order and it's telling us right here access token token type expires in refresh token so access token the token type like that the expires in and finally the refresh token all right so let's use that and then we're almost done we're at the very end of this function what we want to do is return the redirect and we're going to redirect to our front end colon now i'll show you how this works in a second but we need to import the redirect function so let's go up here and then i believe this is from django.shortcuts we're going to import redirect i don't think we've used this before but this is just how we redirect to a different web page so i know this is a lot to comprehend at once but this is our spotify callback so let's let's go back to this diagram here it's going to pass the code to this function that we just wrote then what we're doing inside of this function is we're doing this step so step number two we're sending the client id the secret the grant type the code and the uri and requesting the access token the refresh tokens then it's returning those tokens to us we're storing those tokens in the database and then what we need to do after this step is we need to return back to our original application so the flow is from our front end we're going to call this api endpoint we are then going to take the url that's returned to us and we're going to redirect to that page then from there that url once the user is done authorizing us we'll redirect to this function right here then from this function we'll send the request for the tokens store the tokens and then redirect back to our original application so that's why i'm redirecting to front end colon now there's a lot there's yeah a lot more steps that we need to do here but anyways hopefully that's a good summary of what we've done so far so let's go to urls.pi now inside of spotify and let's set up a path for that thing that we just created so let's import the spotify callback we also could call this redirect whatever it doesn't matter i'm just going to say path i'm going to call this redirect and then i'm going to say that this is just going to hit this function which is spotify callback great so i don't think uh yeah i think i did show you guys how this worked at the beginning of the tutorial series anyways uh this is just a different type of view right so we're just redirecting to a different page from this view now notice i'm doing front end colon so the way this works is that if we want to redirect to a different app right because right now i'm inside of the spotify application if i want to redirect to a page inside of the frontend application which is what i want to do i put the name of the application colon and then the page that i want to go to so if i want to go to the room page i would go room like that but all i actually want to do here is just redirect back to the home page because we've already set it up so that the home page will redirect us to the correct page if we're already in a room right so if i just go to the front end home page then i know i'm going to end up going to the right place anyways to make this work what you need to do is go inside of the urls.pi file for your frontend so go inside of frontend to urls.pi and you need to add a variable up here called app underscore name and set it equal to the frontend so or you can set equal to whatever you want but frontend is the correct name the reason we're doing this is because django needs to know that this urls.pi file belongs to the frontend app it can determine that because the folder it's in but this is just something that's required to put inside of here so that that method i just showed you actually works we also need to go inside a path we need to name our path so i'm going to say name is equal to and just an empty string the reason for this is because right now we don't actually have a way of identifying all of these paths sure we can look at you know the name of the actual path but we need to give it a formal name so that when we call the redirect function we know which path we should actually go to in theory i could name this hello and then if i redirected to frontend colon hello it would bring me to the empty string path so anyways let's just leave it empty string so that makes sense but now our redirect should actually work okay so now that we have that let's see what we need to do next okay so i was going to jump over the front end but i realized that it probably makes more sense just do all the back end stuff first and then go over there so we need to write a few more functions here that that have some specific purpose the first one is to check if a user is currently authenticated so obviously we don't want to keep asking the user to authenticate if they're already authenticated so we need something that can tell us well if they're authenticated so let's go to util.pi and the nice thing is that now that we have these tokens stored in a database we can just check if the current session id so representing the user is in the database and if the token is expired or not if the token's not expired they're authenticated if it is expired we need to refresh it so let's write a function i'm going to call this one is spotify underscore authenticated like that we're going to take the session id now maybe we just call it is authenticated but let's just be more specific and put spotify there and inside of here what i'm going to do is check if the current session id so the user is authenticated so we'll say tokens equals and then get underscore user underscore tokens that function that we wrote up here we'll pass the session underscore id and then we'll just do a quick if statement and say if tokens so if tokens what we're going to do is say date is equal to tokens dot expires in in fact maybe we'll call this expiry because that probably makes a bit more sense so we'll say expiry like that and then if expiry because remember this is a date time object is less than or equal to the current time zone dot now we already imported this from above then what we need to do is refresh this token so we're pretty much saying if the current expiry has passed right if the current time has passed the expiry let's refresh this token then otherwise so let's just fill this if statement here actually i don't even need the else i can just say return false like that because you know if we don't have any tokens then we are not authenticated if we didn't get something from the database we are not authenticated so we return false and then here we need to actually refresh the token so i'm going to write another function now i'm going to say define renew or we call it refresh underscore spotify underscore token okay so inside of here we're going to send the requests that we need to use to actually refresh our token unfortunately they don't have this request in that nice little drawing otherwise i would walk you through why i've kind of picked the stuff that i have but just trust me this is how you actually refresh it and anyways it's not too difficult we've kind of done this already the first thing i'm going to do is i'm going to say tokens is equal to and then get user token session id um you know maybe if we want to save some time here we could just pass the token so let's actually just say tokens like that and here inside this if statement we'll call refresh spotify no refresh underscore spotify token and we'll just pass it the tokens now when i'm saying tokens i'm really just talking about that model object right that is storing the tokens that's what's being returned here i'm just calling it tokens because it does have multiple tokens in it anyways we have tokens so we're going to say that the refresh token which is the one we really need here is equal to tokens dot refresh token again remember this is just the model so we have refresh token access token expiry token so on so forth then what we're going to do is we're going to say response is equal to post and here we're going to post to https colon slash accounts dot spotify.com api token this is the same one that we've used previously and then we're going to say data is equal to we're going to send some information now what we need to send here is the following so the grant type is going to be equal to our refresh token so this is saying what do we want what do we want we want a refresh token or what are we sending sorry we're sending the refresh token mybad and if we looked at the other grant type where was the other grant type is it in this file or is it in in views let's have a look yeah okay so authorization code right so we're pretty much telling it what to expect here we're saying yeah we're sending an authorization code and here we're saying we're sending a refresh token so my bad okay and then we're going to say the actual refresh token is equal to the refresh token then we want to send the client id so we'll say the client underscore id is equal to the client id which i think i have imported no i don't have it imported so let's import that from above so from dot credentials import client underscore id client underscore secret like that okay so we'll send the client id and then finally we'll send the client underscore secret so client secret like that great so now we have that information uh post okay that's fine undefined variable oh i guess i didn't import post sorry guys let's go to the top and import post so let's say from request import post okay so post should be good now awesome we'll just convert this into json because that will actually give us the response and we'll say the new access token is equal to the response dot get we're going to get the access underscore token so again this is returning to us a new access token and a new refresh token that we can use for our api okay so there we go next we'll say the token underscore type is equal to response dot gets the token type this may seem uh not important or that we don't have to do this because the token type really should stay the same all the time but in case spotify decides to change something in the future it just makes sense to do this and then we'll say expires in is equal to response dot get and we will get the expires hyphen in and then lastly we'll say the refresh underscore token is equal to the response dot get refresh token okay great so now we have all that information and lastly we will call our update or create user tokens and inside of here we'll just pass everything so we'll start ah so here this is the issue this is where i need my session id because i need to pass my session id to my update or create user token so anyways we'll pass session id we'll change inside of here to be session id and then for our refresh token this will have to be equal to get user tokens we're going to have to pass the session id dot and then refresh token and then sorry up here we're going to have to change tokens to be session id okay so hopefully you guys see the changes there we're just changing the parameter and that required a few other small changes anyways we're going to say update or create user token i'm going to pass the session id i'm gonna pass the new access token the token type the expires in and the new refresh token uh come on why is refresh token not showing up did i spell something wrong refresh token okay i think that is good all right uh oh sorry this should be a string my bad guys string needs to go inside of this get okay so that's actually it for refreshing the spotify token so now what we'll do is while we've already had this here after we refresh the spotify token we will return true so this is just checking so okay do we have a token if we don't return false because we're not authenticated if we have a token but it's expired then we are authenticated we just need to refresh the token so let's do that and then after we do that we're all good we can return true now of course if this isn't true that just means that we have a nonexpired refresh token so we just return true awesome so now one last thing that we need to do here we need to set up a view that can actually tell us whether or not we are authenticated so this util right is returning true or false this is python code but we need to return some json that our front end can actually understand so let's go to views.pi and let's make one more function here and in fact we can make this a class we'll say class is authenticated like that this will inherit from the api view and we'll define a get method so to find get self request and optional format equal to none now inside of here what we're going to do is we're going to call this util function which is is spotify authenticated and we'll just return some json response to whoever's sending this to us telling us whether you're authenticated or not okay so we're going to say is underscore authenticated is equal to and then we need to import from up here is spotify authenticated so we'll call the is underscore spotify authenticated we'll pass in here the req sorry not request the self dot request dot session dot session key that's all we need for that and then what we can do is simply return a response so we'll say return response inside of here we will say i guess status is equal to and then is underscore authenticated and then we'll say the status is equal to status.http underscore 200 underscore okay all right so pretty straightforward but this is just going to be an endpoint that we can hit that will tell us whether or not we are authenticated so let's go to urls.pi and let's set up the actual endpoint for this so let's import this we'll say is authenticated and then we want to return a path and we'll just say is hyphen authenticated and we'll say is authenticated.as view all right so at this point in time the backend is done there's a few minor things we're going to do in the future but that's fine we'll continue moving on for right now and i understand this video is getting long if you guys are here congratulations hopefully everything's making sense and again code link in the description in case i'm going too fast for you so let's go to components now inside of our front end app we're going to go to room.js so the idea here is that as soon as we get into a room if we are the host of this room then what we need to do is immediately authenticate our spotify right because we need a way to actually control the music so if the user is a host and the user enters this room then we need to check if they have authenticated with spotify if they have not we need to actually authenticate them right so we need to show them that web page that has the prompt and then they need to you know give us the authorization or whatever it is we need to take the tokens store them in the database and then all will be good but this needs to be handled from the front end at least a part of this so the first thing i'm going to do is just add a variable to the state i'm just going to call this spotify authenticated and this will be equal to false then i'm going to make a method i'm going to call this authenticate spotify so authenticate spotify like that and inside of here we're going to send a request to our backend we're going to ask if the current user is authenticated but only in the situation where this user is a host now what that means is that we need to wait until this get room details function has run before we call this method so inside of this dot then is actually where i'm going to call this so after we set the state then what i'm going to do is call this dot authenticate oops this dot authenticate spotify but i'm only going to call this if the user is the host so we'll say if this dot state dot is host then we can call this right here suite okay so that is what we'll do then inside of authenticate spotify we will send the request so inside of here i'm just going to say fetch and we're going to fetch the slash spotify slash is hyphen authenticated if i can spell this correctly this is a large word okay fetch spotify is authenticated now we will say dot then and we will take our response like that and we will simply return response dot json now we know that we're never going to have an invalid response because all we're ever doing is just returning true or false then we'll add another dot then and we'll say then data and then we will do something with this data so what are we going to do with the data well we're going to start by setting the state of whatever was returned to us so whether the user is authenticate or not so we're going to say this dot set state and inside of here we're going to say uh i guess what do we even call this spotify authenticated and then i guess this is going to be colon data dot status because remember status is what we returned as the key that held either true or false for whether the user was authenticated now after this this is where it gets interesting if the user is not authenticated we need to authenticate them so we're going to say if not data dot status so then inside of here what we'll do is we'll say fetch and we will fetch the url that we're going to use to authenticate so slash spotify slash get hyphen auth hyphen url then we will say dot then and we will take the response and simply return the oops the response dot json like that then we'll say dot then again and we'll say dot then and data is equal to and we're gonna do something interesting inside of here so let me pause for one second so now at this point data is going to be equal to or sorry data dot url is going to be equal to the url that we need to use to authenticate so pretty much what happens is let's go to views again if we have a look at spotify callback or sorry not spotify callback but auth url we see that we just return the url right so the key url gives us the url and the url will be prepared by this statement right here so we will visit that url and then when we visit that url we'll have the user authenticate their spotify account so that's like what we're going to do inside of here so to do that we need to say window dot location dot replace and this is another way to do a redirect that is not like involved in react like this is native to javascript so we'll say window.location.replace and inside of brackets we're going to say data.url so what this will do is redirect us to this spotify authorization page then from here after the user authorizes us it will redirect us to the spotify callback so the spotify callback will save the token and redirect us to the front end and then the front end will redirect us back to the room page so that is kind of what's going on here hopefully that makes sense but that's what this will do now there's one thing we need to do we need to bind this method to this keyword so let's just quickly do that we'll say this dot i guess what is it what do we even call this authenticate spotify is equal to this dot authenticate spotify and then dot bind to the this keyword okay so now that that is bound to this keyword this should work okay so i'm jumping in here at kind of a random point i apologize for the strange transition but i had messed a few things up in anyways i just have to come back here so the last thing we need to do because i just realized we forgot to do this before we actually test this application so we need to set the redirect uri otherwise it's going to run into an issue so let's set the redirect uri and just as a reminder we should set this to slash spotify slash redirect because that's where we want to go after we authenticate or authorize our application so let's go to the credentials and let's set this to http colon slash and then 127.0.0.1 spotify slash redirect all right so now what will happen is after we hit the spotify authorization page we'll redirect to slash redirect which as a refresher is this right here the spotify callback and then this will redirect us to the home page and all should be good so let's try this now but actually this reminds me i have this page open we need to go to our spotify dashboard so our developer dashboard we need to go to edit settings on our project and we need to authorize this redirect url so we just need to add the same thing we just wrote in redirect uris inside of the settings of our app so let's go to settings let's go to redirect http 127.0.0.1 sorry this is colon8000 bad we'll have to add that to the other one and then slash spotify slash redirect and then we'll press add so that should be good now let's just go back here and let's add the colon 8000 because i forgot that so coin 8000 let's save that there and now we can try to run this so again i apologize this is a lot before we run anything but this is really what we need to do before we could even test this so now i'm going to go to 127 and okay we're now inside the room page now i'm just going to clear my cache here and reset this so that we can test this from the beginning let's go to create room let's press create room and then boom we get inside of the room but for some reason it doesn't ask us to authorize with spotify and okay that would be because we're already getting true because i had messed with this previously anyways to test this out again i'm just going to go to an incognito window and we'll go now into the app i'm going to go create a room and ready let's press create a room and let's pray that this works okay boom there we go it redirects us to the spotify page here not the cleanest redirect in the world but it did bring us there and now i'm just going to sign into my spotify account i'm going to skip over this because obviously i don't want you guys to see my credentials and then we will continue okay there we go so i just signed in i pressed authorize and then it brought me back to this page now i did actually just print something out so we could see but let's go to console we can see that this true here is telling us that we are indeed authorized all right guys so with that i'm going to leave the video here in the next video we'll do more with this spotify api we'll actually set up a nice interface so we can view the current song fast forward play pause all of that anyways i hope you guys enjoyed if you did make sure to leave a like subscribe to the channel and i will see you in another youtube video you

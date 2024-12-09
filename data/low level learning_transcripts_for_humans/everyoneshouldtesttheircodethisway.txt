@@ -1,0 +1,251 @@
+With timestamps:
+
+00:00 - if you want to write code that is safe
+00:01 - from hackers and doesn't have memory
+00:02 - corruption vulnerabilities you should
+00:04 - use a language like rust and before you
+00:06 - go I understand that not Everyone likes
+00:08 - rust so if you're like me or you're a c
+00:10 - programmer it's good that you test your
+00:12 - code what if I told you that one of the
+00:13 - ways you can test your code to prevent
+00:15 - it from being vulnerable to hackers is
+00:17 - by screaming at it I mean literally just
+00:19 - yelling at your code today we're talking
+00:21 - about fuzzing which is the art of
+00:23 - literally yelling bad data at your code
+00:26 - and seeing where it falls over and then
+00:28 - fixing those bugs today we're going to
+00:29 - have a piece of code that I wrote we're
+00:31 - going to find a bug in it by yelling at
+00:33 - the code using a fuzzer let's get into
+00:35 - it I've got some code here that may seem
+00:37 - innocent to the untrained eye but hiding
+00:40 - deep inside of this code base is a bug
+00:42 - that if exploited could allow hackers to
+00:45 - take over the code which is bad for
+00:46 - anyone that eventually wants to use this
+00:48 - code so we're going to go through and
+00:50 - walk through the process of how you can
+00:52 - use buzzers to yell at this code to give
+00:55 - it malformed data and eventually find
+00:57 - the bug and then patch the bug in your
+00:59 - program so let's walk through what the
+01:01 - code does here we do the basic socket IO
+01:03 - stuff we create a TCP socket we bind it
+01:06 - to Port 1337 eventually we listen for a
+01:09 - client and then when that client comes
+01:10 - in we accept the client into a new
+01:13 - socket file descriptor and we receive
+01:15 - some blob of data from that client the
+01:17 - The Blob that we receive is into the
+01:19 - data buff buffer and we use the reques
+01:21 - size variable to denote how much data
+01:22 - we're going to receive so in this case
+01:24 - in the other header file it's 1024 bytes
+01:27 - we receive that data and eventually we
+01:28 - go forth and we par that request which
+01:30 - is happening in a separate file here in
+01:32 - request. C now the code is getting a
+01:34 - little more complicated here right and
+01:36 - this is where fuzzing is going to pay
+01:37 - off a lot you know we could do a static
+01:39 - code review of the code itself and try
+01:41 - to find the bug but a lot of the times
+01:43 - it's hard for us to wrap our head around
+01:45 - how the code behaves in the wild so
+01:47 - looking at a static code analysis like
+01:49 - this isn't going to do it for us we need
+01:50 - to test it dynamically so we have here
+01:53 - defined a tlv structure that's a type
+01:56 - length and eventually underneath that
+01:58 - value that comes in from the user and
+02:00 - then we parse that typ length value
+02:01 - header and then do something as a
+02:03 - function of the request they send us
+02:05 - here we have a magic header to make sure
+02:07 - that we get the right type of data from
+02:08 - the user if it's not the proper header
+02:10 - magic then we ignore the value we just
+02:12 - drop the request and move on with our
+02:14 - lives and then if it is the right magic
+02:16 - value we have to check the type of the
+02:18 - request the user sent us if they gave us
+02:20 - a hello we say hello if they say goodbye
+02:22 - we say goodbye but if they send us a
+02:24 - special message type message we go forth
+02:27 - and we parse that message and then take
+02:29 - some kind of action and then here is the
+02:31 - parse message where we copy in their
+02:34 - data to some buffer and eventually use
+02:36 - that to do additional processing so this
+02:38 - is my server at a high level and let's
+02:40 - show you guys it working run the server
+02:43 - waiting for a connection here I will
+02:44 - netcat to myself net cat Local Host 137
+02:47 - and I can send it some data so because
+02:49 - I'm not sending it the proper magic
+02:50 - value right it's going to drop the
+02:52 - connection here say bad magic and move
+02:53 - on to the next connection so I can use
+02:55 - like Echo for example to form a proper
+02:57 - packet I can say Echo NE and then the
+02:59 - header was
+03:01 - 45545 and then I can put that into the
+03:03 - data and see if I get something else
+03:05 - there so we got a Hello message there or
+03:07 - still not crashing the program so this
+03:09 - is the art of kind of making your own
+03:11 - fuzzer where you're like writing your
+03:13 - own known bad data into this thing but
+03:15 - it's kind of hard to get full code
+03:17 - coverage we want to make sure that we
+03:19 - hit every possible case in this program
+03:21 - and it's kind of hard and really painful
+03:23 - to do that manually you should be
+03:24 - writing code coverage tests that test
+03:26 - every case yourself but luckily there
+03:29 - are tools that are already exist to do
+03:30 - this for us now our fuzzing Target is
+03:32 - this request. C file right inside the
+03:34 - request. C file we want to test the
+03:37 - parse request function and give it just
+03:39 - we wanted to scream at this buffer here
+03:42 - we want to give as much data as we can
+03:43 - to the request buffer variable and see
+03:46 - if we can make the program fall over to
+03:48 - find bugs that way so there's actually a
+03:50 - really really cool tool called uh lib
+03:52 - fuzzer it's a tool by lvm now before we
+03:55 - go and find the bug in my code I want to
+03:56 - talk to you guys about my new course
+03:58 - website L level Academy I'm working on a
+04:00 - course right now called Zero to Hero C
+04:02 - programmer where I take you from having
+04:03 - no experience in C at all to a Master of
+04:06 - the C language and I've got a bunch of
+04:08 - other courses coming out like Network
+04:10 - code that doesn't suck and threads but
+04:12 - good as well as get good at Version
+04:14 - Control if any of those are interesting
+04:16 - to you go check out right now at low
+04:18 - level. Academy we see you guys there all
+04:20 - right let's go find that bug so lib
+04:21 - fuzzer is a fuzzing engine we're
+04:23 - essentially you're able to point the
+04:25 - fuzzer at a Target function and then the
+04:27 - fuzzer will go through and put in bad
+04:30 - data and try to get as much code
+04:31 - coverage as possible and possibly find
+04:33 - any edge cases that you weren't
+04:35 - considering and produce a crash that
+04:37 - that shows you where the bugs are right
+04:39 - so what we're going to do is we are
+04:40 - going to have the lib fuzzer fuzzer
+04:44 - compiled against our program here I
+04:45 - wrote actually a it's called a fuzzing
+04:47 - harness here what the fuzzing harness
+04:49 - does is it uses lm's lib fuzzer and it
+04:53 - takes in the header of that function uh
+04:55 - prototype and then we say pars request
+04:57 - I'm calling my data parsing function
+05:00 - from the user on data now this is an
+05:03 - entirely separate program that I'm going
+05:04 - to use to test to see if that function
+05:07 - has any bad code in it let run the uh
+05:09 - command to compile lib fuzzer so we say
+05:12 - the you know pieces of C code that we
+05:14 - want to compile together and we use f
+05:15 - sanitize equals fuzzer and that puts in
+05:17 - lib fuzzer into our code and we're going
+05:19 - to produce a fuzz binary so we can run
+05:22 - fuzz and what's Happening Here is lib
+05:23 - fuzzer is going to run and try to find
+05:25 - all the bad code in our code by by you
+05:28 - know fuzzing it by screaming at it
+05:30 - putting all this bad data into it and
+05:31 - trying to get as much code coverage as
+05:33 - possible and you can see pretty quickly
+05:36 - uh Li fuzzer is able to produce a
+05:38 - crashing State using the lib fuzzer what
+05:41 - it actually does is it produces a file
+05:44 - which represents the input that it took
+05:45 - to crash this program so let's take this
+05:49 - and Cat this let's do cat this file pump
+05:52 - into
+05:53 - xxd interesting so it found first of all
+05:56 - the magic bites that we had to do to get
+05:58 - into the processes execution and then
+06:00 - after that it found the magical two
+06:03 - value the two value is the request
+06:05 - message right because request message is
+06:07 - the type that calls parse message that's
+06:09 - our bad
+06:11 - function and then from here it put in a
+06:14 - number 40 it's 004 I wonder why that
+06:18 - crashes well to test this what we
+06:19 - actually can do as well is we can run
+06:22 - our server so we'll go to yell at your
+06:24 - code we'll run our server we're going to
+06:26 - do GDB on our server there we go after
+06:28 - after Brute Force ing through a couple
+06:30 - address already in uses we have our our
+06:31 - program running so we'll put that in the
+06:33 - background and we'll put that into
+06:34 - window 3 and now to test our crash we
+06:37 - can do is we can go to CDL code and
+06:39 - we're just going to cat our crash file
+06:41 - into netcat localhost 1337 so we're
+06:44 - going to take all the data from the
+06:46 - crashing input and send it to our server
+06:49 - bada bing there we go and now we should
+06:50 - have a crash Happening Here in uh Pond
+06:54 - debug which is GDB so now we can look at
+06:56 - our stack trace and see okay what was
+06:57 - the issue that we ran into
+07:00 - uh we had a crash that came from parse
+07:02 - message line 63 okay let's go back into
+07:05 - our
+07:06 - code line 63 is actually the return here
+07:10 - so something bad happened in this
+07:12 - function oh we can see here that you
+07:15 - know the hlen we are allowed to mem copy
+07:18 - an arbitrary length into a 64 byte
+07:20 - buffer so we can take this and now we
+07:22 - can say if hlen greater than 64 actually
+07:27 - less than 64 than let's do the mem copy
+07:30 - otherwise we don't do anything all right
+07:31 - so we can try this and let's see if this
+07:33 - fixes our bug and if lib fuzzer is able
+07:35 - to find any more problems go like this
+07:40 - fuzz o it found another crash I'm
+07:42 - interested in what this is actually oh
+07:44 - you know what's happening here it's
+07:45 - because the input is being looked at as
+07:47 - a signed value so we have to do uh wow
+07:51 - that's really interesting actually I
+07:52 - didn't think this was going to happen in
+07:53 - this video let's go ahead and patch that
+07:55 - so we'll do server request. C yes we
+07:57 - have to make the type of this and unsign
+08:00 - short wow that's pretty cool that's a
+08:03 - bug that I didn't even see in this code
+08:05 - playing that fuzz it's going to run
+08:07 - forever because in theory there are no
+08:08 - additional bugs in this program this is
+08:10 - a lib fuzzer this is a program going
+08:12 - that's going to take our code it's going
+08:14 - to try to get full coverage on it by
+08:15 - screaming at it as loud as it can
+08:17 - finding all the edge cases for us and we
+08:19 - can take those edge cases that are
+08:20 - produced as crash files and use them to
+08:23 - find more bugs in our code patch those
+08:25 - bugs and move on and if you think that
+08:28 - these lines here are fast go watch this
+08:30 - video about how switch statements are
+08:31 - even faster we'll see you there
+
+Cleaned transcript:
+
+if you want to write code that is safe from hackers and doesn't have memory corruption vulnerabilities you should use a language like rust and before you go I understand that not Everyone likes rust so if you're like me or you're a c programmer it's good that you test your code what if I told you that one of the ways you can test your code to prevent it from being vulnerable to hackers is by screaming at it I mean literally just yelling at your code today we're talking about fuzzing which is the art of literally yelling bad data at your code and seeing where it falls over and then fixing those bugs today we're going to have a piece of code that I wrote we're going to find a bug in it by yelling at the code using a fuzzer let's get into it I've got some code here that may seem innocent to the untrained eye but hiding deep inside of this code base is a bug that if exploited could allow hackers to take over the code which is bad for anyone that eventually wants to use this code so we're going to go through and walk through the process of how you can use buzzers to yell at this code to give it malformed data and eventually find the bug and then patch the bug in your program so let's walk through what the code does here we do the basic socket IO stuff we create a TCP socket we bind it to Port 1337 eventually we listen for a client and then when that client comes in we accept the client into a new socket file descriptor and we receive some blob of data from that client the The Blob that we receive is into the data buff buffer and we use the reques size variable to denote how much data we're going to receive so in this case in the other header file it's 1024 bytes we receive that data and eventually we go forth and we par that request which is happening in a separate file here in request. C now the code is getting a little more complicated here right and this is where fuzzing is going to pay off a lot you know we could do a static code review of the code itself and try to find the bug but a lot of the times it's hard for us to wrap our head around how the code behaves in the wild so looking at a static code analysis like this isn't going to do it for us we need to test it dynamically so we have here defined a tlv structure that's a type length and eventually underneath that value that comes in from the user and then we parse that typ length value header and then do something as a function of the request they send us here we have a magic header to make sure that we get the right type of data from the user if it's not the proper header magic then we ignore the value we just drop the request and move on with our lives and then if it is the right magic value we have to check the type of the request the user sent us if they gave us a hello we say hello if they say goodbye we say goodbye but if they send us a special message type message we go forth and we parse that message and then take some kind of action and then here is the parse message where we copy in their data to some buffer and eventually use that to do additional processing so this is my server at a high level and let's show you guys it working run the server waiting for a connection here I will netcat to myself net cat Local Host 137 and I can send it some data so because I'm not sending it the proper magic value right it's going to drop the connection here say bad magic and move on to the next connection so I can use like Echo for example to form a proper packet I can say Echo NE and then the header was 45545 and then I can put that into the data and see if I get something else there so we got a Hello message there or still not crashing the program so this is the art of kind of making your own fuzzer where you're like writing your own known bad data into this thing but it's kind of hard to get full code coverage we want to make sure that we hit every possible case in this program and it's kind of hard and really painful to do that manually you should be writing code coverage tests that test every case yourself but luckily there are tools that are already exist to do this for us now our fuzzing Target is this request. C file right inside the request. C file we want to test the parse request function and give it just we wanted to scream at this buffer here we want to give as much data as we can to the request buffer variable and see if we can make the program fall over to find bugs that way so there's actually a really really cool tool called uh lib fuzzer it's a tool by lvm now before we go and find the bug in my code I want to talk to you guys about my new course website L level Academy I'm working on a course right now called Zero to Hero C programmer where I take you from having no experience in C at all to a Master of the C language and I've got a bunch of other courses coming out like Network code that doesn't suck and threads but good as well as get good at Version Control if any of those are interesting to you go check out right now at low level. Academy we see you guys there all right let's go find that bug so lib fuzzer is a fuzzing engine we're essentially you're able to point the fuzzer at a Target function and then the fuzzer will go through and put in bad data and try to get as much code coverage as possible and possibly find any edge cases that you weren't considering and produce a crash that that shows you where the bugs are right so what we're going to do is we are going to have the lib fuzzer fuzzer compiled against our program here I wrote actually a it's called a fuzzing harness here what the fuzzing harness does is it uses lm's lib fuzzer and it takes in the header of that function uh prototype and then we say pars request I'm calling my data parsing function from the user on data now this is an entirely separate program that I'm going to use to test to see if that function has any bad code in it let run the uh command to compile lib fuzzer so we say the you know pieces of C code that we want to compile together and we use f sanitize equals fuzzer and that puts in lib fuzzer into our code and we're going to produce a fuzz binary so we can run fuzz and what's Happening Here is lib fuzzer is going to run and try to find all the bad code in our code by by you know fuzzing it by screaming at it putting all this bad data into it and trying to get as much code coverage as possible and you can see pretty quickly uh Li fuzzer is able to produce a crashing State using the lib fuzzer what it actually does is it produces a file which represents the input that it took to crash this program so let's take this and Cat this let's do cat this file pump into xxd interesting so it found first of all the magic bites that we had to do to get into the processes execution and then after that it found the magical two value the two value is the request message right because request message is the type that calls parse message that's our bad function and then from here it put in a number 40 it's 004 I wonder why that crashes well to test this what we actually can do as well is we can run our server so we'll go to yell at your code we'll run our server we're going to do GDB on our server there we go after after Brute Force ing through a couple address already in uses we have our our program running so we'll put that in the background and we'll put that into window 3 and now to test our crash we can do is we can go to CDL code and we're just going to cat our crash file into netcat localhost 1337 so we're going to take all the data from the crashing input and send it to our server bada bing there we go and now we should have a crash Happening Here in uh Pond debug which is GDB so now we can look at our stack trace and see okay what was the issue that we ran into uh we had a crash that came from parse message line 63 okay let's go back into our code line 63 is actually the return here so something bad happened in this function oh we can see here that you know the hlen we are allowed to mem copy an arbitrary length into a 64 byte buffer so we can take this and now we can say if hlen greater than 64 actually less than 64 than let's do the mem copy otherwise we don't do anything all right so we can try this and let's see if this fixes our bug and if lib fuzzer is able to find any more problems go like this fuzz o it found another crash I'm interested in what this is actually oh you know what's happening here it's because the input is being looked at as a signed value so we have to do uh wow that's really interesting actually I didn't think this was going to happen in this video let's go ahead and patch that so we'll do server request. C yes we have to make the type of this and unsign short wow that's pretty cool that's a bug that I didn't even see in this code playing that fuzz it's going to run forever because in theory there are no additional bugs in this program this is a lib fuzzer this is a program going that's going to take our code it's going to try to get full coverage on it by screaming at it as loud as it can finding all the edge cases for us and we can take those edge cases that are produced as crash files and use them to find more bugs in our code patch those bugs and move on and if you think that these lines here are fast go watch this video about how switch statements are even faster we'll see you there

@@ -1,0 +1,305 @@
+00:00 - hey guys what is up I love learning here
+00:01 - teaching you how to write better faster
+00:02 - and safer code today we're talking about
+00:04 - a weird thing that I think a lot of new
+00:05 - programmers struggle with header files
+00:07 - are this thing that we kind of learn on
+00:09 - day one we have to pound include
+00:10 - standardio.h but we don't really
+00:12 - understand why header files exist and
+00:15 - then when we go to make multi-module
+00:16 - programs that use multiple C files we
+00:19 - struggle to include header files in our
+00:21 - process and don't really know where
+00:22 - they're appropriate and not appropriate
+00:24 - today we're going to break down the
+00:25 - process of how the Linker Works under
+00:27 - the hood what the compiler expects when
+00:29 - you're using external functions and why
+00:31 - the header file ties all of this
+00:33 - together let's get right into it here we
+00:35 - have some C code that's doing some basic
+00:37 - C stuff we have our int main which is
+00:39 - our entry point to our program and it's
+00:40 - taking the standard main prototype we
+00:42 - have the number of arguments for our
+00:43 - program and the vector to those
+00:45 - arguments we print F hello world just
+00:47 - like we're used to but then we do
+00:48 - something funky we say that an INT x a
+00:51 - variable is equal to low level add which
+00:53 - is a function that we have not defined
+00:55 - yet it turns out the low level ad is
+00:57 - actually a function that is exposed in a
+00:59 - library that someone else me has written
+01:02 - called lib low level math.so and we
+01:05 - could go into and Cat this library.c and
+01:08 - figure out what that function does and
+01:10 - we also could in theory compile in
+01:12 - liblibrary.c into our program statically
+01:15 - by just including it into our build
+01:17 - process including this code in our code
+01:19 - and going from there but maybe this
+01:22 - library is closed Source maybe we have
+01:24 - to because of other dependencies in our
+01:26 - build process have to just depend on the
+01:28 - dot so file the problem with the code AS
+01:30 - written is if we try to compile this
+01:32 - we'll get a bunch of really nasty errors
+01:34 - now the interesting part about these
+01:35 - errors is that one is actually a compile
+01:37 - time error and the other is a link time
+01:40 - error the two of them being one an
+01:42 - implicit Declaration of a function
+01:43 - called the level add because again in
+01:45 - our code we have not defined this
+01:47 - function yet but we are calling it and
+01:49 - then two we try to link in this function
+01:52 - at link time after it compiles and the
+01:55 - Linker says hey you tried to run a
+01:57 - function called low-level ad I trusted
+01:59 - you knew what you were talking about
+02:00 - because I only called the implicit
+02:02 - declaration a warning but I got to the
+02:04 - Linker phase and I couldn't find the
+02:07 - symbol low level ad before we go any
+02:09 - further in this video I want to break
+02:10 - down what the two words compile time and
+02:13 - Link time mean I think they're kind of
+02:14 - tossed around a lot and go over the
+02:16 - heads of new programmers so let's kind
+02:18 - of break down what the compile process
+02:19 - looks like at compile time and Link time
+02:21 - and Define those two so we can
+02:23 - understand these two errors and how it
+02:25 - relates to the header file when you run
+02:26 - the traditional command to compile the
+02:28 - program we'll do GCC Tac o
+02:31 - um call my program p and we compile in P
+02:34 - dot C right and I'm truncating that
+02:36 - because my handwriting is terrible when
+02:37 - you actually invoke GCC taco and do the
+02:40 - whole command there are two things that
+02:42 - happened there's what is called a
+02:43 - compile pass where it compiles all of
+02:46 - your code into object files so compiler
+02:50 - produces objects objs and then the
+02:54 - Linker pass or the link phase takes all
+02:58 - the object files these are like an input
+03:00 - to the link phase and it outputs an
+03:03 - executable file and in some cases it
+03:05 - could also output a library file but the
+03:08 - final product of the link phase is one
+03:10 - of these two things now it's really
+03:13 - important to understand what is
+03:15 - happening specifically in each of these
+03:17 - phases and what the output is and how
+03:19 - the header file plays into that now when
+03:21 - you're writing code let's say that this
+03:22 - is our piece of code here right it's
+03:24 - it's a square and it has some code in it
+03:26 - and let's say in that code for example I
+03:28 - have a function called Foo right and
+03:31 - then inside of that function also I have
+03:32 - a function that's called add but add is
+03:35 - not defined so during the compile phase
+03:39 - right this is not the link phase this is
+03:41 - at compile time the compiler will throw
+03:43 - that first error that says hey you
+03:46 - implicitly Define the function add
+03:50 - but it won't throw an error yet what's
+03:52 - going to happen is the output of the
+03:54 - compile phase is this object file I like
+03:56 - to think of them as like a spiky ball
+03:58 - right so this ball is my let's say it's
+04:01 - my P dot o because if this came from my
+04:04 - P dot C file now it's P.O and the ball
+04:07 - has this Spike on it that's like an
+04:09 - arrow and the arrow is saying
+04:11 - essentially hey by the way guys I still
+04:13 - depend on the add function so let's say
+04:16 - now that the program also has another
+04:18 - file called M.C and the compile phase
+04:21 - produces an M.O object file and it has
+04:23 - no dependencies so our spiky ball
+04:25 - analogy is just a ball by itself right
+04:27 - so the compile phase will run and it
+04:29 - will compile all these programs
+04:30 - independently into objects once it's
+04:33 - done compiling then the Linker phase
+04:35 - comes in now the second phase the Linker
+04:37 - phase is to do kind of what the name
+04:39 - implies right it's to link all the
+04:41 - things together if we have our spiky
+04:43 - ball analogy where we have this one
+04:45 - object file here that depends on ADD and
+04:47 - maybe this other ball here the end
+04:50 - product the Linker wants to produce is
+04:52 - an executable that is just all of these
+04:54 - balls attached together in the proper
+04:57 - format so that all the dependencies are
+04:59 - met right this thing here is the output
+05:02 - of the Linker now the issue we ran into
+05:05 - before where it said undefined reference
+05:07 - to the thing is because the Linker was
+05:10 - unable to find where the dependency to
+05:12 - low level add was in all the object
+05:15 - files so we have a bunch of problems we
+05:17 - have to solve here now with our library
+05:19 - lib low level at math.so which again
+05:22 - could be a closed Source Library we are
+05:24 - given an open source header file the
+05:26 - header file acts as two things one for
+05:29 - us as a programmer it's kind of an API
+05:31 - that tells us how we can use the library
+05:33 - it has good documentation like what do
+05:36 - the parameters do and what does it
+05:37 - return and the internal functionality of
+05:39 - that could be a proprietary black box
+05:41 - that maybe the manufacturer doesn't want
+05:43 - us to know about or the authors want us
+05:45 - to know about but they expose to us how
+05:47 - do we use the function and then also it
+05:49 - exposes a a header guard basically this
+05:52 - prevents us from including the header
+05:53 - multiple times and having recursive
+05:55 - dependencies or circular requirements in
+05:56 - our Pro and our programs so don't worry
+05:58 - about that one too much but this is the
+06:00 - meat and potatoes so the reason we use
+06:02 - header files is it creates this symbol
+06:05 - in our program so that the compiler
+06:07 - doesn't yell at us when we try to
+06:09 - implicitly Define things and so by
+06:12 - including our libraries header file
+06:14 - using lib slash low levelmath.h which is
+06:17 - the path to the header file and again
+06:18 - these quotes mean it's a local file
+06:20 - that's in the current directory and
+06:22 - these carrots mean that it's a global
+06:23 - header file that exists somewhere else
+06:25 - in a library that we installed on the
+06:27 - system system lot
+06:28 - so by including that we will get rid of
+06:31 - one of the compiler errors now you see
+06:34 - our implicit declaration went away but
+06:36 - we still have this low level add error
+06:37 - let's talk about what happened there so
+06:39 - by adding this Line to Line one we
+06:42 - include a header file into the program
+06:43 - and that gives us the line that
+06:45 - essentially says low level add the
+06:47 - function is declared but we have not
+06:50 - defined the function yet and again a
+06:52 - definition is we say how the thing works
+06:55 - the Declaration is just saying that the
+06:57 - thing exists so this is a declaration
+06:59 - and not a definition so what we need to
+07:01 - do finally is you have to link against
+07:03 - the library by giving a link or flag to
+07:06 - GCC
+07:07 - the Laker flag is we have to do Tac L
+07:10 - and say low level math and then giving a
+07:13 - library directory of the print working
+07:15 - directory slash lib to tell it where to
+07:17 - look for this library and then now we
+07:19 - have a program by typing ldd that
+07:22 - depends on a few things depends on our
+07:23 - standard Linux libraries like Linux vdso
+07:25 - and libc and then the loader but then
+07:28 - also now our program depends on lib low
+07:31 - level math and then we can run our
+07:32 - program by saying LG Library path
+07:36 - equals print working directory print
+07:39 - working directory slash lib and then run
+07:42 - our program and we eventually run our
+07:45 - code and then we also Link in at runtime
+07:47 - the shared object and that calls the
+07:50 - external function that is defined in our
+07:52 - header file and this line of thinking
+07:54 - applies not only to using external
+07:56 - libraries like we just did before but
+07:58 - also using multi-module Code that we
+08:00 - write ourselves for example if I have my
+08:02 - main function here in a piece of code
+08:04 - called code.c but I want to write a
+08:06 - separate module that represents a
+08:08 - different kind of functionality that
+08:09 - shouldn't be in the same code AS main
+08:11 - what I can do is I can make another C
+08:13 - file and I can write the functionality
+08:15 - for that module here here the module
+08:17 - being some kind of client right maybe
+08:19 - this is a structure that gets allocated
+08:21 - when you connect from a server or
+08:22 - something so in client.c we are going to
+08:25 - also include client.h and that dot h
+08:28 - does the exact same thing it exposes the
+08:31 - API to the programmer of how the client
+08:34 - module is supposed to behave and how
+08:36 - they use the function reality so we
+08:37 - Define our public structures like what
+08:39 - the client even is here it's just some
+08:41 - buffer you can put other data in that
+08:43 - structure and then we declare what that
+08:44 - function does the function called create
+08:46 - client returns a client star okay
+08:49 - awesome and then when we want to
+08:50 - actually use create client in our code
+08:52 - all we have to do is pound include
+08:54 - client.h right there really simple now
+08:57 - there is one tweak we have to do to our
+08:58 - compilation process it will prevent
+09:00 - things from breaking now in a perfect
+09:02 - world maybe using a make file to
+09:04 - automate this process but instead of
+09:05 - doing the traditional GCC tac-o the
+09:08 - thing the thing.c we're going to skip
+09:10 - running the Linker step automatically
+09:12 - and only do the compilation step by
+09:14 - using the tax C Flag by using the tax C
+09:17 - flag we're going to say hey turn our
+09:18 - code.c into main.o the intermediate
+09:22 - object file and again that set that
+09:24 - spiky ball that has the arrow that says
+09:26 - hey by the way I depend on create client
+09:28 - don't forget about that and we do the
+09:30 - exact same thing on client.o right we
+09:33 - say GCC tax C so compile our client
+09:36 - client code into the client object file
+09:39 - and then to glue them all together we
+09:41 - invoke the Linker which is that third
+09:43 - and final stage here but says Hey output
+09:46 - the full binary our final program called
+09:48 - code and the sources are no longer C
+09:51 - code they're the intermediate object
+09:53 - files so we compile that and then we run
+09:56 - our code and you can't see it happening
+09:57 - but underneath the hood client.c is
+10:00 - getting ran and it's allocating the
+10:01 - client as defined in the C code and the
+10:04 - only thing that code.c knows about is is
+10:07 - what is exposed in the header file
+10:08 - that's how header files work if you
+10:10 - didn't know how they work now you do hey
+10:12 - guys before you go I am working on some
+10:14 - seriously awesome courses on my new
+10:16 - website low level dot Academy the
+10:18 - courses are going to range from
+10:19 - everything from Zero to Hero C
+10:20 - programming to threading and C to
+10:22 - network code that doesn't suck in seed
+10:24 - is how to get good at git if you're
+10:26 - interested in any of those go check out
+10:28 - sign up the first course Zero to Hero C
+10:30 - programmer starts October 1st we'll see
+10:33 - you there now another thing new
+10:34 - programmers want to learn about is if
+10:35 - it's okay to use numbers in their code
+10:38 - like our numbers allowed is are this at
+10:39 - legal go watch this video here while I
+10:41 - talk about how numbers can actually be
+10:43 - problematic in your code if you don't
+10:45 - use them correctly we'll see you there
+10:48 - so
+10:49 - go click on the video all right bye

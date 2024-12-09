@@ -1,0 +1,229 @@
+00:00 - welcome back to another Godot recipe
+00:02 - this time we're going to talk about how
+00:04 - to select multiple units on the screen
+00:06 - in the style of an RTS or real time
+00:08 - strategy game alright let's get started
+00:11 - so let's assume we've got our RTS unit
+00:14 - here that's set up so that if it's
+00:16 - selected when you click it will move to
+00:19 - the place you click now click to move is
+00:22 - pretty easy to implement and I've talked
+00:25 - about that in another recipe so I'm not
+00:28 - going to say anything about that here
+00:30 - we're not gonna worry about how this
+00:31 - unit works let's just assume you already
+00:33 - have a unit that can move to a target if
+00:36 - it's given a target and what we want to
+00:40 - talk about is how we deal with multiple
+00:42 - units like this ok so I've created a
+00:45 - world scene have instanced four units in
+00:47 - here and the way we want this input to
+00:49 - work is I want to be able to draw a
+00:52 - rectangle around some number of units
+00:55 - and whichever ones I have in this box
+00:59 - when I release are going to be the ones
+01:01 - that I select and then when I click the
+01:04 - selected units will move so let's begin
+01:07 - with a script attached to the world node
+01:09 - and a few variables we're going to need
+01:12 - we're going to need a variable that
+01:13 - keeps track of whether we are currently
+01:15 - dragging the mouse to create that box or
+01:19 - not we're gonna have a list or a an
+01:23 - array to contain all of the selected
+01:27 - units whichever units I've selected when
+01:30 - I release the mouse and then we're gonna
+01:33 - have a vector to keep track of where we
+01:36 - started dragging the drags start and
+01:41 - finally we need a rectangle because when
+01:46 - we let go of the mouse and we're ready
+01:49 - to select the units we need to detect
+01:52 - which units are inside of that rectangle
+01:55 - and so that means we're going to need a
+01:57 - rectangle shape 2d which is a collision
+01:59 - shape which knows how to detect
+02:01 - kinematic bodies which is what my units
+02:04 - are so we'll begin with the drawing of
+02:05 - the box somebody is the unhandled input
+02:08 - callback here which means that this will
+02:11 - be
+02:12 - detecting mouse clicks that haven't
+02:14 - already been consumed by the UI whatever
+02:16 - UI you might have in your game is going
+02:19 - to consume those inputs first and so
+02:22 - what we want to look for is if the event
+02:25 - is input mouse button and the events
+02:30 - button index is equal to button left so
+02:36 - if I click the left mouse button and if
+02:42 - that happened then either right this
+02:45 - event is a mouse click or a mouse
+02:47 - release right it's either a downer and
+02:49 - up event so if the event was the pressed
+02:53 - event then we want to start dragging but
+02:58 - only if we don't really have some
+03:00 - selected units so I'm going to say if
+03:02 - selected dot size is equal to zero then
+03:08 - we will start dragging so I'm gonna set
+03:10 - dragging equal to true and I'm gonna set
+03:12 - the drag start to the event dot position
+03:18 - now if the event wasn't pressed and I'm
+03:23 - dragging so I let go of the mouse when I
+03:26 - was dragging said I'm gonna set dragging
+03:29 - to false so that's all we need to do for
+03:32 - our click and drag just to highlight a
+03:36 - rectangle but it won't do us much good
+03:38 - if we can't actually see the rectangle
+03:39 - that we're drawing
+03:40 - so what we're also gonna do is we're
+03:42 - gonna say if we get an input mouse
+03:46 - motion and we're dragging then we're
+03:50 - gonna call update which is going to call
+03:53 - our draw method and in the draw method
+03:59 - is we're gonna draw our rectangle but
+04:02 - we're also going to put in if dragging
+04:03 - in here because two reasons one we might
+04:06 - want to draw some other things and
+04:09 - second is that when the node enters the
+04:12 - tree draw gets called so if I just draw
+04:15 - a rectangle in here we'll start the game
+04:17 - out with a rectangle already drawn on
+04:19 - the screen based on wherever the mouse
+04:21 - started and that's not going to look
+04:24 - good
+04:25 - so now we're going to draw a rectangle
+04:27 - so we're gonna call draw rect and pass
+04:31 - it a rectangle the rectangle that we're
+04:33 - going to use starts at the drag start
+04:36 - and it ends at the global mouth position
+04:43 - minus the drag start so the difference
+04:47 - is going to be the size of the rectangle
+04:49 - and then we'll do this on the next line
+04:53 - the color we're just going to use a gray
+04:56 - and then I'm gonna put false here
+05:00 - because I don't want the rectangle to be
+05:01 - filled I want it to be just an outline
+05:03 - of a rectangle but let's go ahead and
+05:05 - give this a shot and make sure we see
+05:08 - what we want to see okay so you can see
+05:11 - when I let go of the mouse I'm not the
+05:14 - the rectangle staying there right so we
+05:20 - also want to update when we let go of
+05:25 - the mouse so we should update here as
+05:28 - well and now I can draw and when I let
+05:33 - go the Box disappears so now we can find
+05:36 - out what units our rectangle collided
+05:39 - with and to do that we're going to use
+05:41 - the physics 2d direct space state and
+05:46 - this is an object that you can query in
+05:50 - Godot to get information from the
+05:52 - physics 2d server and the specifically
+05:55 - the function that we want is this
+05:57 - intersect shape intersects shape is
+06:00 - going to return an array of objects or
+06:04 - an array of dictionaries identifying the
+06:06 - objects that it collided with all we
+06:10 - need to do is give it some shape query
+06:12 - parameters which look like this and have
+06:15 - all sorts of info about how we want to
+06:18 - perform the collision and really all we
+06:21 - need for ours here is we need to set the
+06:23 - shape to our rectangle and we need to
+06:26 - set the transform to specify the
+06:29 - location of the rectangle all right so
+06:31 - over here in the code what we're going
+06:34 - to do is we're going to record our drag
+06:38 - end
+06:39 - we know where where we let go and
+06:42 - that'll let us set the size of our
+06:46 - collision shape that's the Select rect
+06:51 - extends and that's a drag and - drag
+06:56 - start and because in collision shapes
+07:00 - the extents are measured from the center
+07:02 - we need to divide by two okay and then
+07:08 - we're ready to do our query so we'll
+07:09 - start by getting the space let me do
+07:16 - that by getting the world 2d direct
+07:19 - space state and then our query that we
+07:24 - need to make is a physics 2d shape query
+07:29 - parameters new we call the set shape to
+07:38 - put our select rect in there and then we
+07:43 - need to set the transform by
+07:48 - constructing a transform 2d with a
+07:52 - rotation of 0 and the position will be
+07:55 - dragged End + drag start divided by 2
+08:01 - which gives us the center of our drag
+08:05 - rectangle so we want to put the shape at
+08:07 - the center of the rectangle that we
+08:08 - dragged and then we just do our query so
+08:12 - we'll set our selected variable remember
+08:15 - it's going to return an array to space
+08:19 - intersect shape query and now we have
+08:25 - array of dictionaries let's print
+08:28 - selected so we can see what that looks
+08:29 - like so I'll run the scene and I'm going
+08:35 - to draw the box over it and let go and
+08:37 - now down here in our output you can see
+08:40 - what it printed which was a bunch of
+08:46 - dictionaries right here we go the first
+08:49 - dictionary is that one so it has a
+08:51 - Collider
+08:52 - and then some metadata but the collider
+08:55 - is the key we want for each dictionary
+08:59 - it identifies the kinematic body that's
+09:02 - our unit and the first thing we want to
+09:06 - do when we've selected a bunch of shapes
+09:07 - is we want to set them all to be to
+09:11 - indicate they're they're selected right
+09:13 - the units have a selected property that
+09:15 - if it's true we'll draw a highlight
+09:18 - around them so let's just loop through
+09:21 - that selected array and each item
+09:28 - Collider selected equals true and let's
+09:37 - give that a try here real quick so now
+09:40 - when I draw the box around it they turn
+09:42 - highlighted okay we're almost done now
+09:45 - we just need to be able to give them all
+09:46 - a command to move so up here when we
+09:50 - clicked the mouse button down we checked
+09:54 - if we didn't have anything selected we
+09:56 - would drag so all our turn our
+09:59 - alternative here is if we do have
+10:01 - something selected and if we do we're
+10:04 - gonna give them each in order to move so
+10:06 - we'll loop through again that selected
+10:09 - array and set item dot Collider target
+10:14 - equal to our event position the place we
+10:19 - clicked and then we also need to
+10:22 - remember to set our selected property to
+10:27 - false so they won't be highlighted
+10:28 - anymore and then since we since we
+10:33 - clicked and gave them all in order let's
+10:36 - clear our selected array so we don't
+10:39 - have them selected anymore
+10:41 - depending on how you're doing your game
+10:42 - you want to might want to keep those
+10:44 - units selected so you can change this
+10:47 - you could use a different maybe
+10:49 - right-click makes them move you can
+10:51 - change this around but I'm just trying
+10:54 - to keep it simple for this demonstration
+10:56 - so there we go
+10:57 - if I select them and then click they're
+10:59 - all going to move to the spot I
+11:01 - specified let's just grab a couple of
+11:04 - them all right so you can
+11:06 - select as many as you need and they will
+11:15 - go where you tell them to go so
+11:19 - hopefully this helps you if you're
+11:20 - making something like an RTS and you
+11:24 - need to know how to select multiple
+11:26 - units thanks for watching and I'll see
+11:28 - you in a future video this tutorial is
+11:30 - part of my nugudo recipes website the
+11:33 - goal is to collect all the best tips and
+11:34 - lessons to help make you a better at
+11:36 - Godot developer if you like this video I
+11:38 - hope you'll go and check out the site
+11:39 - and make sure to hit subscribe so you'll
+11:41 - be notified whenever I release new
+11:43 - videos thanks for watching

@@ -1,0 +1,478 @@
+With timestamps:
+
+00:00 - [Music]
+00:09 - so now let's consider a following
+00:11 - scenario you have developed an
+00:13 - application feature you have tested it
+00:16 - and now you're ready to deploy it right
+00:18 - to deploy your application should be
+00:21 - packaged into its own docker container
+00:24 - so this means that we're gonna build in
+00:26 - docker image from our JavaScript no J's
+00:31 - backing application and prepare it to be
+00:34 - deployed on some environment to review
+00:37 - this diagram that we saw at the
+00:38 - beginning of the tutorial so we have
+00:40 - developed a JavaScript application we
+00:42 - have used the MongoDB docker container
+00:45 - to use it and now it's time to commit it
+00:48 - to the game right so in this case we're
+00:51 - gonna simulate these steps on the local
+00:54 - environment but still I'm gonna show you
+00:57 - how these steps actually work
+00:59 - so after commit you have a continuous
+01:02 - integration that runs so the question is
+01:05 - what does actually Jenkins do with this
+01:08 - application when it builds the
+01:10 - application so the JavaScript
+01:12 - application using the npm build etc it
+01:17 - packages it then in a docker image and
+01:21 - then pushes it into docker repository so
+01:26 - we're gonna actually simulate what
+01:28 - Jenkins does with their application and
+01:31 - how it actually packages it into a
+01:34 - docker image on the local environment so
+01:36 - I'm gonna do all this on my laptop but
+01:38 - it's basically the same thing that
+01:40 - Jenkins will do and then on later step
+01:43 - we're gonna push it we can actually push
+01:46 - the built image into a docker repository
+01:52 - in order to build a docker image from an
+01:56 - application we basically have to copy
+02:00 - the contents of that application into
+02:02 - the docker file could be an artifact
+02:04 - that we built in our case we just have
+02:06 - three files are we gonna copy them
+02:08 - directly in the image and we're gonna
+02:10 - configure it and in order to do that
+02:12 - we're gonna use a blueprint for building
+02:14 - images which is called
+02:16 - a docker file so let's actually see what
+02:19 - is a docker file and how it actually
+02:21 - looks like so as I mentioned docker file
+02:24 - is a blueprint for creating docker
+02:28 - images a syntax of a docker file is
+02:31 - super simple so the first line of every
+02:35 - dock file is from image so whatever
+02:39 - image you are building you always want
+02:41 - to base it on another image in our case
+02:45 - we have a JavaScript application with no
+02:47 - J's back-end so we are gonna need node
+02:50 - you know inside of our container so that
+02:54 - it can run our node application instead
+02:58 - of basing it on a Linux Alpine or some
+03:01 - other lower level image because then we
+03:04 - would have to install node ourselves on
+03:07 - it so we are taking a ready node image
+03:10 - and in order to see that let's actually
+03:12 - go to docker hub and search node here
+03:19 - and here you see there is a ready node
+03:22 - image that we can base our own image
+03:25 - from so here we have a lot of different
+03:27 - text so we can actually use one specific
+03:29 - one or we can just go with the latest if
+03:33 - we don't specify any take so what that
+03:36 - actually means basing our own image on a
+03:40 - node image is that we're gonna have node
+03:44 - installed inside of our image so when we
+03:48 - start a container and we actually get a
+03:50 - terminal of the container we can see
+03:53 - that node command is available because
+03:55 - there is no install there this is what
+03:57 - from node actually gives us so the next
+04:01 - one is we can configure environmental
+04:05 - variables inside our dock
+04:06 - file now as you know we have already
+04:09 - done this in the using the doctor and
+04:12 - comments or the docker composed so this
+04:14 - will be just an alternative to defining
+04:17 - environments of variables in a docker
+04:19 - compose for example I would say it's
+04:22 - better to define the environmental
+04:24 - variables externally in a docker compose
+04:26 - file because if something changes you
+04:29 - can actually override it you can change
+04:32 - the docker compose file and override it
+04:34 - instead of rebuilding the image but this
+04:37 - is an option
+04:38 - so this end command basically would
+04:40 - translate to setting the environmental
+04:43 - variables inside of the image
+04:45 - environment the next one is run
+04:49 - so all these capital case words that you
+04:53 - see from in and run they're basically
+04:56 - part of a syntax of a docker file so
+04:58 - using run basically you can execute any
+05:01 - kind of Linux commands so you see make
+05:05 - directory is a Linux command that
+05:08 - creates a home slash home slash app
+05:11 - directory very important to note here
+05:14 - this directory is going to live inside
+05:17 - of the container so when I start a
+05:19 - container from this image the slash home
+05:22 - slash app directory will be created
+05:25 - inside of the container and not on my
+05:27 - laptop not on the host so all these
+05:30 - commands that you have in docker file
+05:32 - will apply to the container environment
+05:35 - none of them will be affecting my hosts
+05:40 - environment or my laptop environment so
+05:42 - with run basically you can execute any
+05:44 - Linux comments that you want so that's
+05:47 - probably one of the most use ones and we
+05:50 - also have a copy command now you will
+05:53 - probably ask I can execute a copy come
+05:56 - in a Linux copy command using run yes
+05:59 - you could but the difference here is
+06:01 - that as I said all these commands in run
+06:04 - for example they apply to they get
+06:08 - executed inside of the container the
+06:11 - copy command that you see here it
+06:13 - actually executes on the host and you
+06:17 - see the first parameter is dot and
+06:20 - second parameter is slash home slash app
+06:23 - so source and the target so I can copy
+06:27 - files that I have on my hosts inside of
+06:30 - that container image because if I were
+06:34 - to execute run CP source destination
+06:39 - that command would execute inside of the
+06:42 - docker container but I have the files
+06:44 - that I want to copy on my host in the
+06:47 - last one
+06:48 - so from an CMD or command is always part
+06:53 - of the aqua file what commend does is
+06:55 - basically executes an entry point Linux
+06:59 - command so this line with the command
+07:01 - actually translates to node server js so
+07:06 - remember here we actually do node
+07:08 - services so we execute so we start a
+07:11 - node server with the nodejs
+07:13 - this is exactly what it does but inside
+07:16 - of the container so once we copy our
+07:18 - server JS and other files inside of a
+07:21 - container we can then execute node
+07:24 - server chase and we are able to do it
+07:26 - because we are basing on the node image
+07:29 - that already has node pre installed and
+07:32 - we are gonna see all this in action so
+07:35 - another question here what is the
+07:37 - difference between run and CMD because I
+07:39 - could also say run node server chase the
+07:43 - difference again is that CMD is an entry
+07:46 - point command so you can have multiple
+07:48 - run comments with the different Linux
+07:51 - commands but CMD is just one and that
+07:54 - marks for docker file that this is the
+07:57 - command that you want to execute as an
+07:59 - entry point so that basically runs the
+08:03 - server and that's it
+08:08 - so now let's actually create the
+08:10 - dockerfile and just like the Taku
+08:13 - compose file docker file is part of the
+08:16 - application code so I'm gonna create a
+08:18 - new file here and I'm gonna paste here
+08:23 - the contents so again we're basing off
+08:27 - note image and actually instead of just
+08:32 - having the latest node I'm gonna specify
+08:34 - a node version so I'm going to take 13 -
+08:39 - Alpine so all these that you see here
+08:42 - are text so I can use any of them as a
+08:44 - tag so I'm gonna say 13 - Alpine like
+08:52 - this so this is gonna be a specific node
+08:55 - image that I'm gonna use as my base
+08:59 - image let's actually stop here for a
+09:01 - moment and take a little bit of a deep
+09:04 - dive on this line so since we saw that
+09:07 - docker file is a blueprint for every for
+09:12 - any docker image that should actually
+09:14 - mean that every docker image that there
+09:17 - is on docker hub should be built on its
+09:20 - own docker file right so if we actually
+09:23 - go to let's actually look at one of the
+09:28 - latest versions which is 13 - alpine and
+09:31 - then let's click inside and as you see
+09:34 - this specific image has its own docker
+09:37 - file and here as you see we have the
+09:40 - same from that we just saw and this is
+09:43 - what this node official image is based
+09:47 - off which is a base image Alpine 3.10
+09:51 - right and then we have this
+09:53 - environmental variable set and all these
+09:55 - linux commands using run and some other
+10:00 - environmental variable and you have this
+10:03 - entry point which is a script so you can
+10:06 - also execute the whole shell script
+10:09 - instead of instead of separate commands
+10:11 - and you have this final comment right so
+10:15 - you don't have to understand any of this
+10:17 - I just want to demonstrate that every
+10:19 - image is based of
+10:22 - another base image right so in order to
+10:25 - actually visually comprehend how this
+10:28 - layers stacking works with images let's
+10:31 - consider this simplified visualization
+10:35 - so our own image that we're building up
+10:39 - with the version 1.0 is going to be
+10:42 - based on a node image with a specific
+10:44 - version that's why we're going to
+10:45 - specify from node 13 alpine and the node
+10:50 - 13 Alpine image as we saw in the
+10:54 - dockerfile is based on alpine based
+10:56 - image with the version 3.1
+10:59 - that's why it specifies from Alpine 3.10
+11:02 - so Alpine is lightweight based image
+11:06 - then we install node on top of it and
+11:08 - then we stole our own application on top
+11:10 - of it and basically this is how all the
+11:12 - images are built so now let's go back
+11:15 - and complete our docker file so we have
+11:17 - the from specified we have the
+11:21 - environmental variables specified and in
+11:24 - just a second we can actually see this
+11:27 - commands in action so let's copy that
+11:30 - and this is also very important docker
+11:33 - file has to be called exactly like that
+11:35 - you can't just give it any name it is
+11:38 - always called docker file starting with
+11:41 - a capital D and that's it it's a simple
+11:44 - text file so just save it like this and
+11:46 - here you even see the highlighting and
+11:49 - this docker icon
+11:55 - so now that we have a docker file ready
+11:58 - let's see how to actually use it so how
+12:01 - do we build an image out of it so in
+12:04 - order to build an image using docker
+12:06 - file we have to provide two parameters
+12:11 - one is we want to give our image a name
+12:15 - in the tag just like all the other
+12:17 - images have so we are gonna do it using
+12:20 - minus T so we're gonna call our image my
+12:24 - app and we're gonna give it a tag of 1.0
+12:28 - the TEC could be anything you can even
+12:31 - call it actually version 1 it wouldn't
+12:33 - matter so we're gonna do 1.0 and ii
+12:39 - required parameter actually is a
+12:42 - location of a docker file because we
+12:45 - want to tell docker here build an image
+12:48 - using this docker file and in this case
+12:51 - because we're in the same folder as the
+12:54 - docker file we're just gonna say current
+12:56 - directory when we execute this we're
+12:59 - gonna see that image is built and this
+13:03 - is an idea of the image that was built
+13:07 - because I already have note 13 Alpine on
+13:11 - my laptop
+13:12 - dishes use the the one I have lying
+13:16 - around locally for you if it's the first
+13:18 - time you will actually see that it's
+13:20 - pulling node image from the docker hub
+13:23 - so now with the docker images I can
+13:27 - actually see that my image is here it
+13:31 - says created two days ago I don't know
+13:32 - why but anyways so I have the image name
+13:36 - which is this one here and I have the
+13:39 - name of the image and the tag of the
+13:42 - image so if we go back to this diagram
+13:45 - that we saw in the review so basically
+13:48 - we've gone all these steps or we have
+13:50 - simulated some of the steps we've built
+13:51 - the JavaScript application using a
+13:53 - docker containers and once the
+13:56 - application is ready let's say we made
+13:59 - the commit and we're we just simulated
+14:03 - what Jenkins server also does so what
+14:06 - Jenkins does is actually it
+14:08 - takes the dockerfile that we create so
+14:11 - we have to commit the dockerfile
+14:13 - into the repository with the code and
+14:16 - Jenkins will then build a docker image
+14:20 - based on the docker file and what is an
+14:23 - important point here is that usually you
+14:25 - don't develop a loan you are in the team
+14:27 - so other people might want to have
+14:30 - access to that up-to-date image of your
+14:33 - application that you developed it could
+14:34 - be a test or maybe who wants to pull
+14:37 - that image and test it locally or you
+14:40 - want that image to be deployed on a
+14:42 - development server right in order to do
+14:45 - that you have to actually share the
+14:46 - image so it is pushed into a docker
+14:50 - repository and from there either people
+14:53 - can take it for example a tester maybe
+14:56 - want to download the image from there
+14:58 - and test it locally or a development
+15:00 - server can actually pull it from there
+15:06 - so let's actually just run a container
+15:08 - I'm just gonna say docker run the image
+15:12 - name obviously and a tank like this and
+15:18 - in this case I'm not gonna specify any
+15:21 - other options because we just want to
+15:23 - see what's going on inside of the
+15:24 - container so I'm just gonna run it okay
+15:28 - so the problem is that it can't find the
+15:30 - server JS file which is actually logical
+15:33 - because we are not telling it to look in
+15:37 - the correct directory so since we're
+15:39 - copying all the resources in this home
+15:42 - slash home slash app directory server JS
+15:45 - is gonna be there as well and this is
+15:49 - another topic whenever you adjust a
+15:52 - docker file you have to rebuild an image
+15:54 - because the old image cannot be
+15:57 - overwritten so to say so what I'm gonna
+16:00 - do now is actually I'm gonna delete the
+16:02 - one that I built so I'm gonna I'm gonna
+16:05 - actually take the image this is how you
+16:08 - delete an image but but I can delete it
+16:14 - because as it says the docker is used by
+16:17 - a stopped container so if I do docker PS
+16:21 - - a actually let's crap - my app like
+16:28 - this I have to first delete the
+16:32 - container so this is how you delete a
+16:34 - container it's toker
+16:35 - RM and once I've deleted the container I
+16:39 - can delete an image so the image
+16:42 - deletion is RM I like this so if I do
+16:46 - images now I see my image isn't there
+16:50 - okay so we've modified the docker file
+16:53 - so let's rebuild it now so talk a build
+16:59 - okay and let's see the image is here so
+17:07 - let's start it again so it's my app 1.0
+17:14 - and let's run it and you see the problem
+17:17 - is fixed at listening on port 3000 so
+17:21 - our app is running so this one here my
+17:25 - app 1.0 first of all we can see the logs
+17:28 - here like this we see that the app is
+17:33 - listening on port 3000 we know
+17:35 - everything is cool to actually just get
+17:37 - a little bit more inside let's enter the
+17:40 - containers or let's get the terminal the
+17:44 - command line terminal of the container
+17:45 - and look around there so I'm gonna say
+17:49 - docker exec interactive terminal I'm
+17:53 - gonna specify the container ID like this
+17:58 - and since being bash doesn't work we can
+18:03 - actually try shell so this is something
+18:07 - you will also encounter because some
+18:11 - containers do not have bash installed so
+18:14 - I have to connect using pin SH so one of
+18:20 - them has to work always so let's see in
+18:24 - which directory we are so we are in the
+18:26 - root directory and we see our virtual
+18:29 - file system there and as you see the
+18:31 - cursor changed as well so that means
+18:33 - we're inside of a container so now let's
+18:37 - actually check some of this stuff so
+18:39 - first of all we specified some
+18:41 - environmental variables here in the
+18:44 - docker file and this means that this
+18:47 - environmental variables have to be set
+18:49 - inside the docker environment so if we
+18:52 - do in we actually see the MongoDB
+18:55 - username this one here and MongoDB
+18:58 - password are set there's some other
+19:01 - environmental variables automatically
+19:03 - set we don't care about them so another
+19:06 - thing we can check is this directory
+19:08 - because remember because with this line
+19:11 - we actually created this slash home
+19:13 - slash AB directory so let's see slash
+19:16 - home slash app and as you can see the
+19:22 - director was created and with the next
+19:25 - line we copied everything in
+19:27 - current folder so if we actually go and
+19:30 - see reveal in finder so this is where
+19:35 - the dockerfile resides so basically we
+19:37 - copied everything that is inside of this
+19:40 - directory so all of this into the
+19:44 - container now we don't actually need to
+19:47 - have docker file and docker compose and
+19:51 - these other stuff in here because the
+19:54 - only thing we need are the Java Script
+19:56 - files or if we build a JavaScript
+19:58 - application artifact just an artifact so
+20:01 - let's go ahead and improve that so what
+20:05 - I'm gonna do is I'm gonna create an app
+20:07 - directory and I'm gonna copy just the
+20:12 - files that I'm gonna need for starting
+20:16 - an application inside of a container so
+20:19 - I'm gonna take those and the images as
+20:24 - well so all these are just external ones
+20:27 - we don't need them there and images the
+20:30 - index.html file package JSON server J's
+20:33 - and node modules are inside of app so
+20:36 - what we can do it now is instead of
+20:38 - copying the whole directory where the
+20:40 - docker file is I just want to copy all
+20:43 - the contents of EPP folder so what I'm
+20:48 - gonna do is I'm gonna say copy all the
+20:51 - contents and again because we modified a
+20:55 - docker file we need to recreate the
+20:58 - image in order to leave the docker
+21:01 - container terminal you can actually exit
+21:03 - so now we are on the hosts again so if I
+21:07 - do docker images again I have to first
+21:11 - delete the container and an image but in
+21:14 - order to delete the container I have to
+21:16 - first stop it so now I can remove the
+21:20 - container and now I can actually remove
+21:24 - the image that the container was based
+21:29 - on and let's check again so let's
+21:33 - actually execute that build command
+21:34 - again
+21:38 - so now that we have the image built
+21:41 - let's actually run it so I'm gonna say
+21:44 - my F one point zero and of course I
+21:49 - could have executed with a minus D in a
+21:52 - detached mode it doesn't matter now and
+21:54 - if I do it or PS I see my image
+21:58 - container running and now let's actually
+22:00 - enter the container again so my team and
+22:06 - as we learned it was in SH and again
+22:13 - we're gonna see the home app and here we
+22:20 - just have the contents of app directory
+22:23 - so no unnecessary docker file docker
+22:26 - compose etc files which is actually how
+22:28 - it's supposed to be or as I said because
+22:32 - I just had a couple of files here I
+22:34 - copied all of them but usually if you
+22:36 - have this huge application you would
+22:39 - want to compress them and package them
+22:42 - into an artifact and then copy that
+22:44 - artifact into a docker image container
+22:51 - okay but as I said this was just for
+22:54 - demonstration purposes because I just
+22:56 - wanted to show you how you can actually
+22:59 - start it as a container in how it should
+23:01 - look inside
+23:02 - and in this case we improved a couple of
+23:04 - things but usually we would start this
+23:05 - container from a docker compose as well
+23:08 - together with all the other docker
+23:10 - images that the application uses and it
+23:13 - also doesn't have any ports open so this
+23:16 - is just for demonstration purposes so in
+23:18 - the next video we're actually gonna see
+23:20 - how to create a private repository and
+23:23 - how to push images into that private
+23:27 - repository again we're gonna simulate
+23:28 - these from a local environments so I'm
+23:31 - gonna execute these comments from my
+23:33 - laptop but this is exactly the same
+23:36 - comments that Jenkins server will
+23:38 - execute thanks for watching the video I
+23:41 - hope it was helpful and if it was don't
+23:43 - forget to like it this is a video series
+23:45 - so I will create a new one every week so
+23:48 - if you want to be notified whenever and
+23:50 - video comes out then subscribe to my
+23:52 - channel if you have any questions if
+23:56 - something wasn't clear in the video
+23:57 - please post them in the comment section
+23:59 - below and I will try to answer them so
+24:01 - thank you and see you in the next video
+
+Cleaned transcript:
+
+so now let's consider a following scenario you have developed an application feature you have tested it and now you're ready to deploy it right to deploy your application should be packaged into its own docker container so this means that we're gonna build in docker image from our JavaScript no J's backing application and prepare it to be deployed on some environment to review this diagram that we saw at the beginning of the tutorial so we have developed a JavaScript application we have used the MongoDB docker container to use it and now it's time to commit it to the game right so in this case we're gonna simulate these steps on the local environment but still I'm gonna show you how these steps actually work so after commit you have a continuous integration that runs so the question is what does actually Jenkins do with this application when it builds the application so the JavaScript application using the npm build etc it packages it then in a docker image and then pushes it into docker repository so we're gonna actually simulate what Jenkins does with their application and how it actually packages it into a docker image on the local environment so I'm gonna do all this on my laptop but it's basically the same thing that Jenkins will do and then on later step we're gonna push it we can actually push the built image into a docker repository in order to build a docker image from an application we basically have to copy the contents of that application into the docker file could be an artifact that we built in our case we just have three files are we gonna copy them directly in the image and we're gonna configure it and in order to do that we're gonna use a blueprint for building images which is called a docker file so let's actually see what is a docker file and how it actually looks like so as I mentioned docker file is a blueprint for creating docker images a syntax of a docker file is super simple so the first line of every dock file is from image so whatever image you are building you always want to base it on another image in our case we have a JavaScript application with no J's backend so we are gonna need node you know inside of our container so that it can run our node application instead of basing it on a Linux Alpine or some other lower level image because then we would have to install node ourselves on it so we are taking a ready node image and in order to see that let's actually go to docker hub and search node here and here you see there is a ready node image that we can base our own image from so here we have a lot of different text so we can actually use one specific one or we can just go with the latest if we don't specify any take so what that actually means basing our own image on a node image is that we're gonna have node installed inside of our image so when we start a container and we actually get a terminal of the container we can see that node command is available because there is no install there this is what from node actually gives us so the next one is we can configure environmental variables inside our dock file now as you know we have already done this in the using the doctor and comments or the docker composed so this will be just an alternative to defining environments of variables in a docker compose for example I would say it's better to define the environmental variables externally in a docker compose file because if something changes you can actually override it you can change the docker compose file and override it instead of rebuilding the image but this is an option so this end command basically would translate to setting the environmental variables inside of the image environment the next one is run so all these capital case words that you see from in and run they're basically part of a syntax of a docker file so using run basically you can execute any kind of Linux commands so you see make directory is a Linux command that creates a home slash home slash app directory very important to note here this directory is going to live inside of the container so when I start a container from this image the slash home slash app directory will be created inside of the container and not on my laptop not on the host so all these commands that you have in docker file will apply to the container environment none of them will be affecting my hosts environment or my laptop environment so with run basically you can execute any Linux comments that you want so that's probably one of the most use ones and we also have a copy command now you will probably ask I can execute a copy come in a Linux copy command using run yes you could but the difference here is that as I said all these commands in run for example they apply to they get executed inside of the container the copy command that you see here it actually executes on the host and you see the first parameter is dot and second parameter is slash home slash app so source and the target so I can copy files that I have on my hosts inside of that container image because if I were to execute run CP source destination that command would execute inside of the docker container but I have the files that I want to copy on my host in the last one so from an CMD or command is always part of the aqua file what commend does is basically executes an entry point Linux command so this line with the command actually translates to node server js so remember here we actually do node services so we execute so we start a node server with the nodejs this is exactly what it does but inside of the container so once we copy our server JS and other files inside of a container we can then execute node server chase and we are able to do it because we are basing on the node image that already has node pre installed and we are gonna see all this in action so another question here what is the difference between run and CMD because I could also say run node server chase the difference again is that CMD is an entry point command so you can have multiple run comments with the different Linux commands but CMD is just one and that marks for docker file that this is the command that you want to execute as an entry point so that basically runs the server and that's it so now let's actually create the dockerfile and just like the Taku compose file docker file is part of the application code so I'm gonna create a new file here and I'm gonna paste here the contents so again we're basing off note image and actually instead of just having the latest node I'm gonna specify a node version so I'm going to take 13 Alpine so all these that you see here are text so I can use any of them as a tag so I'm gonna say 13 Alpine like this so this is gonna be a specific node image that I'm gonna use as my base image let's actually stop here for a moment and take a little bit of a deep dive on this line so since we saw that docker file is a blueprint for every for any docker image that should actually mean that every docker image that there is on docker hub should be built on its own docker file right so if we actually go to let's actually look at one of the latest versions which is 13 alpine and then let's click inside and as you see this specific image has its own docker file and here as you see we have the same from that we just saw and this is what this node official image is based off which is a base image Alpine 3.10 right and then we have this environmental variable set and all these linux commands using run and some other environmental variable and you have this entry point which is a script so you can also execute the whole shell script instead of instead of separate commands and you have this final comment right so you don't have to understand any of this I just want to demonstrate that every image is based of another base image right so in order to actually visually comprehend how this layers stacking works with images let's consider this simplified visualization so our own image that we're building up with the version 1.0 is going to be based on a node image with a specific version that's why we're going to specify from node 13 alpine and the node 13 Alpine image as we saw in the dockerfile is based on alpine based image with the version 3.1 that's why it specifies from Alpine 3.10 so Alpine is lightweight based image then we install node on top of it and then we stole our own application on top of it and basically this is how all the images are built so now let's go back and complete our docker file so we have the from specified we have the environmental variables specified and in just a second we can actually see this commands in action so let's copy that and this is also very important docker file has to be called exactly like that you can't just give it any name it is always called docker file starting with a capital D and that's it it's a simple text file so just save it like this and here you even see the highlighting and this docker icon so now that we have a docker file ready let's see how to actually use it so how do we build an image out of it so in order to build an image using docker file we have to provide two parameters one is we want to give our image a name in the tag just like all the other images have so we are gonna do it using minus T so we're gonna call our image my app and we're gonna give it a tag of 1.0 the TEC could be anything you can even call it actually version 1 it wouldn't matter so we're gonna do 1.0 and ii required parameter actually is a location of a docker file because we want to tell docker here build an image using this docker file and in this case because we're in the same folder as the docker file we're just gonna say current directory when we execute this we're gonna see that image is built and this is an idea of the image that was built because I already have note 13 Alpine on my laptop dishes use the the one I have lying around locally for you if it's the first time you will actually see that it's pulling node image from the docker hub so now with the docker images I can actually see that my image is here it says created two days ago I don't know why but anyways so I have the image name which is this one here and I have the name of the image and the tag of the image so if we go back to this diagram that we saw in the review so basically we've gone all these steps or we have simulated some of the steps we've built the JavaScript application using a docker containers and once the application is ready let's say we made the commit and we're we just simulated what Jenkins server also does so what Jenkins does is actually it takes the dockerfile that we create so we have to commit the dockerfile into the repository with the code and Jenkins will then build a docker image based on the docker file and what is an important point here is that usually you don't develop a loan you are in the team so other people might want to have access to that uptodate image of your application that you developed it could be a test or maybe who wants to pull that image and test it locally or you want that image to be deployed on a development server right in order to do that you have to actually share the image so it is pushed into a docker repository and from there either people can take it for example a tester maybe want to download the image from there and test it locally or a development server can actually pull it from there so let's actually just run a container I'm just gonna say docker run the image name obviously and a tank like this and in this case I'm not gonna specify any other options because we just want to see what's going on inside of the container so I'm just gonna run it okay so the problem is that it can't find the server JS file which is actually logical because we are not telling it to look in the correct directory so since we're copying all the resources in this home slash home slash app directory server JS is gonna be there as well and this is another topic whenever you adjust a docker file you have to rebuild an image because the old image cannot be overwritten so to say so what I'm gonna do now is actually I'm gonna delete the one that I built so I'm gonna I'm gonna actually take the image this is how you delete an image but but I can delete it because as it says the docker is used by a stopped container so if I do docker PS a actually let's crap my app like this I have to first delete the container so this is how you delete a container it's toker RM and once I've deleted the container I can delete an image so the image deletion is RM I like this so if I do images now I see my image isn't there okay so we've modified the docker file so let's rebuild it now so talk a build okay and let's see the image is here so let's start it again so it's my app 1.0 and let's run it and you see the problem is fixed at listening on port 3000 so our app is running so this one here my app 1.0 first of all we can see the logs here like this we see that the app is listening on port 3000 we know everything is cool to actually just get a little bit more inside let's enter the containers or let's get the terminal the command line terminal of the container and look around there so I'm gonna say docker exec interactive terminal I'm gonna specify the container ID like this and since being bash doesn't work we can actually try shell so this is something you will also encounter because some containers do not have bash installed so I have to connect using pin SH so one of them has to work always so let's see in which directory we are so we are in the root directory and we see our virtual file system there and as you see the cursor changed as well so that means we're inside of a container so now let's actually check some of this stuff so first of all we specified some environmental variables here in the docker file and this means that this environmental variables have to be set inside the docker environment so if we do in we actually see the MongoDB username this one here and MongoDB password are set there's some other environmental variables automatically set we don't care about them so another thing we can check is this directory because remember because with this line we actually created this slash home slash AB directory so let's see slash home slash app and as you can see the director was created and with the next line we copied everything in current folder so if we actually go and see reveal in finder so this is where the dockerfile resides so basically we copied everything that is inside of this directory so all of this into the container now we don't actually need to have docker file and docker compose and these other stuff in here because the only thing we need are the Java Script files or if we build a JavaScript application artifact just an artifact so let's go ahead and improve that so what I'm gonna do is I'm gonna create an app directory and I'm gonna copy just the files that I'm gonna need for starting an application inside of a container so I'm gonna take those and the images as well so all these are just external ones we don't need them there and images the index.html file package JSON server J's and node modules are inside of app so what we can do it now is instead of copying the whole directory where the docker file is I just want to copy all the contents of EPP folder so what I'm gonna do is I'm gonna say copy all the contents and again because we modified a docker file we need to recreate the image in order to leave the docker container terminal you can actually exit so now we are on the hosts again so if I do docker images again I have to first delete the container and an image but in order to delete the container I have to first stop it so now I can remove the container and now I can actually remove the image that the container was based on and let's check again so let's actually execute that build command again so now that we have the image built let's actually run it so I'm gonna say my F one point zero and of course I could have executed with a minus D in a detached mode it doesn't matter now and if I do it or PS I see my image container running and now let's actually enter the container again so my team and as we learned it was in SH and again we're gonna see the home app and here we just have the contents of app directory so no unnecessary docker file docker compose etc files which is actually how it's supposed to be or as I said because I just had a couple of files here I copied all of them but usually if you have this huge application you would want to compress them and package them into an artifact and then copy that artifact into a docker image container okay but as I said this was just for demonstration purposes because I just wanted to show you how you can actually start it as a container in how it should look inside and in this case we improved a couple of things but usually we would start this container from a docker compose as well together with all the other docker images that the application uses and it also doesn't have any ports open so this is just for demonstration purposes so in the next video we're actually gonna see how to create a private repository and how to push images into that private repository again we're gonna simulate these from a local environments so I'm gonna execute these comments from my laptop but this is exactly the same comments that Jenkins server will execute thanks for watching the video I hope it was helpful and if it was don't forget to like it this is a video series so I will create a new one every week so if you want to be notified whenever and video comes out then subscribe to my channel if you have any questions if something wasn't clear in the video please post them in the comment section below and I will try to answer them so thank you and see you in the next video

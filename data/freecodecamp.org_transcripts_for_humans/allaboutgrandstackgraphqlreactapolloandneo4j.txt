@@ -1,0 +1,911 @@
+With timestamps:
+
+00:00 - so i'm going to be talking about full
+00:01 - stack
+00:02 - development with the grand stack which
+00:05 - is graphql react apollo and neo4j
+00:08 - database
+00:10 - so my name is will i work at neo4j which
+00:14 - is an open source graph database
+00:16 - i don't work on the
+00:18 - the core engineering team for neo4j
+00:21 - instead the the team i work on build
+00:23 - integrations
+00:25 - so making sure that you can use neo4j
+00:28 - with your favorite web development
+00:29 - framework that you can move data back
+00:31 - and forth from different
+00:33 - data processing frameworks tools like
+00:35 - that
+00:37 - and so what i'm going to talk about
+00:38 - today uh is largely the the most recent
+00:41 - integration that
+00:43 - i've been working on which is a neo4j
+00:45 - graphql integration which makes up a big
+00:47 - part of the of the grand stack
+00:50 - but
+00:52 - if you get bored while uh while i'm
+00:54 - talking um you can go to bit.lee
+00:58 - graph hacker
+00:59 - and there's a little challenge there
+01:02 - basically it will take you to
+01:04 - an apollo launch pad which is a tool for
+01:06 - building a graphql service in the
+01:08 - browser
+01:09 - and there's just a couple of steps to
+01:11 - follow basically just connect uh connect
+01:14 - that launchpad to a hosted neo4j
+01:16 - instance and
+01:18 - get the graphql service working
+01:21 - and then just tweet us about it and
+01:23 - we'll send you one of these cool
+01:25 - neo4j graphql hacker t-shirts
+01:29 - and you don't have to do it while i'm
+01:30 - talking you can can do it later too
+01:34 - cool so uh so what do i want to talk
+01:35 - about uh well i want to talk about this
+01:37 - this idea of the grand stack
+01:39 - [Music]
+01:40 - so these these technologies that we can
+01:42 - use together to build uh to build full
+01:45 - stack applications
+01:47 - because most of most of us are
+01:48 - developers i want to talk about
+01:51 - focus on the the how we do this so we're
+01:53 - going to go through
+01:55 - go through some code samples of how we
+01:57 - can build a full stack
+01:59 - grand stack application
+02:01 - but first of all
+02:04 - what what is the the grand stack what
+02:06 - are these components uh so the first
+02:09 - component of the grand stack is graphql
+02:11 - how many people have used graphql at all
+02:15 - okay cool so that's
+02:17 - maybe like a
+02:18 - i call that like two-thirds of the
+02:19 - audience
+02:21 - so graphql
+02:22 - is this new paradigm for building apis
+02:26 - it's an alternative for building rest
+02:28 - apis
+02:29 - it's very focused around a schema
+02:32 - definition so we start by defining
+02:33 - schema we define the the types that are
+02:36 - available the fields available on these
+02:38 - types
+02:40 - and then
+02:41 - we can select
+02:43 - from the schema
+02:44 - on the client which fields we want in
+02:46 - our query
+02:50 - the other component uh say the next
+02:52 - component is react how many people use
+02:56 - react
+02:58 - okay that's that's a lot of folks cool
+03:00 - so as you all know react is this this
+03:02 - javascript library for building user
+03:04 - interfaces for web native
+03:08 - vr
+03:10 - very much focused on on components that
+03:12 - encapsulate data and
+03:14 - logic
+03:17 - uh and then we have apollo
+03:19 - how many people have used any of the
+03:20 - apollo tooling
+03:23 - a few folks yeah so apollo is not just a
+03:26 - single tool apollo is instead a suite of
+03:29 - tools for working with graphql
+03:33 - so you see apollo show up both on on the
+03:36 - client side with things like apollo
+03:38 - client and then also on
+03:41 - server side tooling
+03:43 - for building a graphql service things
+03:45 - like performance monitoring
+03:48 - and mocking so
+03:51 - when we say apollo in this example today
+03:53 - we're going to look at the apollo
+03:55 - clients
+03:56 - specifically the react integration for
+03:58 - apollo client but really there are lots
+04:01 - of different apollo projects that help
+04:02 - with
+04:03 - working with graphql throughout the
+04:05 - throughout the stack
+04:07 - and then the final component
+04:09 - is neo4j database how many people have
+04:12 - used neo4j
+04:15 - okay okay a few
+04:16 - so neo4j is
+04:19 - is a native graph database what that
+04:20 - means is that we
+04:22 - use the
+04:24 - property graph to store model and query
+04:27 - data as a graph so nodes are the
+04:29 - entities in the in the graph
+04:31 - relationships connect them
+04:33 - we can store arbitrary key value pair
+04:35 - properties on nodes and relationships
+04:38 - we use the the cipher query language for
+04:41 - working with data in neo4j you can see
+04:43 - an example at the bottom of the screen
+04:45 - there
+04:46 - and then we have client drivers
+04:48 - in lots of different languages for
+04:50 - working with neo4j so
+04:53 - in the example today we'll be using the
+04:54 - javascript driver for neo4j
+04:58 - cool so those are the individual
+04:59 - components of
+05:01 - of the grand stack how do they how do
+05:03 - they fit together
+05:05 - well let's look at
+05:07 - a simple example
+05:09 - let's
+05:10 - consider a super simple movie
+05:13 - search and recommendation web app
+05:17 - so
+05:18 - what are the the requirements for this
+05:20 - well a user should be able to search
+05:23 - by title
+05:25 - and then view some movie details for any
+05:28 - matching
+05:29 - movies
+05:30 - and then we also want to show
+05:31 - personalized recommendations so for for
+05:34 - this movie that a user searched for what
+05:36 - are some other movies that the user
+05:38 - might like and if you're familiar with
+05:40 - with graph databases this kind of
+05:42 - recommendation query is really easy to
+05:45 - express in a graph so if you've
+05:47 - if you use
+05:49 - amazon or ecommerce things people who
+05:52 - bought this also bought this
+05:54 - for movies someone who viewed and rated
+05:57 - this movie highly also rated these other
+05:59 - movies highly that's a simple example we
+06:01 - can do much more complex things
+06:04 - but that's the the general idea
+06:06 - okay so with that sort of uh that
+06:08 - application in mind
+06:10 - how do the the piece of the grand stack
+06:13 - fit together
+06:14 - well
+06:16 - we have react
+06:18 - on the front end the user types in their
+06:20 - movie river runs through it hits search
+06:24 - and the apollo client
+06:26 - integration in this case sends a graphql
+06:29 - query to our graphql service
+06:32 - our graphql server has logic uh in there
+06:35 - to query our neo4j database to look up
+06:39 - movies by title and that data comes back
+06:43 - to apollo client
+06:45 - the react integration for apollo client
+06:48 - binds the
+06:50 - graphql query
+06:51 - result to the props for our view for our
+06:55 - component and and the views rendered
+06:58 - okay so that's that's how
+07:01 - those pieces fit together let's look at
+07:03 - that in a bit more detail
+07:05 - starting starting at the data layer so
+07:07 - starting with uh with neo4j
+07:11 - so
+07:12 - since
+07:13 - since everyone is familiar with neo4j i
+07:15 - want to spend just a little bit of time
+07:16 - talking about
+07:18 - what is neo4j
+07:19 - and i think the best way to explain
+07:21 - something is often in the form of a
+07:24 - tweet
+07:25 - so here's neo4j in 140 characters
+07:29 - i guess i could redo this in in 280 now
+07:33 - so neo4j is open source software that
+07:36 - stores and queries data as nodes and
+07:38 - relationships using the cipher query
+07:40 - language with index free adjacency
+07:44 - okay
+07:45 - so there's
+07:47 - there's a bit going on there let's
+07:48 - dissect that a bit so first of all neo4j
+07:50 - is is open source software
+07:52 - all the code is on github we can we can
+07:54 - go build it from source we
+07:56 - can we can download it we can
+08:00 - use the docker image for neo4j so lots
+08:02 - of different ways to to get neo4j
+08:06 - neo4j is primarily database so focused
+08:09 - on
+08:10 - modeling storing and querying data
+08:12 - so when we we write some data to neo4j
+08:15 - it's durably committed
+08:17 - to disk neo4j is is not just an
+08:20 - in-memory processing framework it's it's
+08:22 - very much a database
+08:26 - okay so it allows us to store inquiry
+08:27 - data as nodes and relationships
+08:32 - so we said that
+08:33 - nodes these are the the entities or the
+08:36 - objects in the graph and relationships
+08:39 - connect them so relationships are our
+08:40 - first class citizens in the data model
+08:44 - and we can store
+08:45 - key value pairs so properties attributes
+08:48 - both on
+08:49 - nodes and relationships
+08:52 - and if you look at this
+08:54 - this data model this might look somewhat
+08:56 - familiar if you've been following the
+08:58 - news recently
+09:00 - so this is the data model
+09:02 - from the paradise papers
+09:05 - data leak so this was leaked data from
+09:09 - in this case a law firm in the bahamas
+09:11 - that had lots of information on
+09:14 - rich people that had connections to
+09:16 - offshore legal entities
+09:18 - and the the data journalists that were
+09:21 - working with this leaked data
+09:24 - they use neo4j to make sense of the
+09:27 - connections
+09:28 - to these offshore legal entities and
+09:30 - this makes sense if you think of
+09:32 - a person who has some shareholder
+09:34 - interest in a legal entity that is the
+09:37 - beneficiary of another legal entity that
+09:40 - is a shareholder in uh an offshore trust
+09:43 - and things like this where there's a
+09:45 - very long path to get the ultimate
+09:47 - beneficial owner um so that kind of data
+09:51 - makes a lot of sense to work with in a
+09:53 - graph
+09:56 - so we
+09:57 - we model store and query the data as
+10:00 - nodes and relationships using the cipher
+10:02 - query language so here's a cipher
+10:04 - example
+10:06 - and this this again this is querying the
+10:08 - the paradise papers data set so this is
+10:10 - saying
+10:11 - find
+10:13 - addresses
+10:14 - in london
+10:16 - find all of the officers so in this case
+10:18 - the people find all the people with
+10:20 - addresses in london
+10:22 - and then uh for those people find all of
+10:25 - the legal entities that they're
+10:26 - connected to so you can see
+10:29 - that cypher is very much about pattern
+10:31 - matching in that first line in the match
+10:33 - statement we're defining
+10:35 - a graph patterns we define nodes within
+10:38 - parentheses relationships within
+10:39 - brackets
+10:41 - and we're basically traversing the graph
+10:43 - to find paths that match this pattern of
+10:46 - people with addresses in london and
+10:48 - their connections to offshore entities
+10:51 - and if we run this in in neo4j browser
+10:54 - we get this graph visualization
+10:56 - okay so these are all the people that
+10:58 - addresses in london that have
+11:00 - connections to offshore legal entities
+11:02 - from the paradise papers
+11:04 - and this is useful to sort of see where
+11:06 - there are some highly connected clusters
+11:08 - we can see a couple of connected
+11:10 - clusters there there's something
+11:11 - something interesting going on there
+11:13 - someone that has lots of connections to
+11:15 - legal entities
+11:17 - okay that's interesting but oftentimes
+11:20 - the answer to our question is not a
+11:23 - graph visualization maybe it's the
+11:25 - result of an aggregation or maybe it's
+11:27 - tabular data
+11:29 - so we can modify our query slightly to
+11:32 - ask a different question
+11:34 - in this case
+11:36 - we're saying okay for all these people
+11:38 - with addresses in london that have some
+11:40 - connection to offshore legal entities
+11:43 - uh what are the most common
+11:44 - jurisdictions for those offshore legal
+11:47 - entities so for people in london
+11:49 - uh where do they like to
+11:52 - hide their money offshore uh well
+11:54 - bermuda is the most common offshore
+11:58 - jurisdiction followed by the cayman
+11:59 - islands mauritius is on the list as well
+12:03 - so the point there is just that
+12:05 - graph queries are not just about
+12:07 - graph visualizations
+12:09 - we can do sort of the same things that
+12:12 - you would expect from other query
+12:13 - languages like sql
+12:16 - and that kind of thing
+12:18 - cipher is part of the opencypher project
+12:20 - so it's an open query language that is
+12:23 - implemented by
+12:24 - other databases other
+12:26 - processing frameworks we can use cipher
+12:29 - with spark for example
+12:32 - okay
+12:33 - so back to our tweet um so neo4j input
+12:35 - source software stores and queries data
+12:37 - is nodes and relationships using cipher
+12:39 - with index free adjacency so this last
+12:42 - part
+12:43 - index free adjacency is an important
+12:46 - performance characteristic of graph
+12:48 - databases
+12:49 - what this means is that when we traverse
+12:51 - from one node to any other through a
+12:54 - relationship that we're connected to
+12:56 - we're not doing an index lookup that
+12:59 - means that the performance then of a
+13:01 - local graph traversal is a constant time
+13:04 - operation it's not dependent on the
+13:06 - overall size of the data so our query is
+13:08 - on a data set of you know a few million
+13:10 - nodes then can scale to one with several
+13:13 - billion nodes so we can scale these
+13:15 - queries to very very large data sets
+13:17 - this is a really important performance
+13:19 - characteristic of graph databases it's
+13:21 - very different from other
+13:23 - types of databases
+13:26 - okay so that was my neo4j and 140
+13:29 - characters overview
+13:31 - if you're interested in playing around
+13:33 - with neo4j or that paradise papers data
+13:35 - set as well
+13:37 - neo4j sandbox is a good a good example
+13:40 - of a way to spin up neo4j instance with
+13:43 - some different data sets
+13:44 - they're hosted on aws with some example
+13:47 - queries you can can play around and get
+13:48 - started
+13:51 - okay so
+13:52 - let's take a look at um
+13:54 - at some data in
+13:56 - neo4j since we
+13:58 - said we want to build out our
+14:00 - movie recommendation
+14:02 - app and i said we were going to look at
+14:05 - data about
+14:06 - movies and and user
+14:09 - ratings but
+14:10 - but i lied
+14:12 - instead let's look at some data about
+14:15 - russian twitter trolls
+14:19 - uh so
+14:22 - so again if you've been following the
+14:23 - the news
+14:25 - at least this has been
+14:26 - been big in the us i think in europe too
+14:29 - but there's been an investigation to
+14:30 - russia's meddling
+14:32 - with uh the u.s election
+14:35 - especially through social media and so
+14:37 - twitter twitter released a list of 3000
+14:40 - screen names that are tied to russia
+14:43 - and then promptly
+14:44 - suspended those accounts which deleted
+14:46 - all of the tweets from twitter.com and
+14:48 - from the
+14:49 - twitter api so we can't really figure
+14:51 - out what those 3 000
+14:53 - russian
+14:54 - trolls were tweeting about
+14:57 - but i i found some of them on internet
+14:59 - archive um so i scraped internet archive
+15:02 - for all the tweets i could find by these
+15:04 - russian trolls and put them in
+15:08 - neo4j
+15:10 - um
+15:11 - so here's the
+15:12 - here's the schema
+15:14 - uh that we have so we have uh we have a
+15:17 - tweet
+15:18 - uh
+15:19 - a tweet
+15:21 - was posted by a user
+15:23 - so user posted a tweet then we have
+15:25 - hashtags we have urls that the tweet
+15:29 - might contain
+15:30 - oh and then i also ran some uh some
+15:32 - simple natural language processing like
+15:34 - entity extraction to find any any people
+15:37 - organization or locations that
+15:40 - any of these tweets mention
+15:43 - so let's look at uh look at an example
+15:45 - query
+15:47 - so for one user this is
+15:49 - 10 underscore gop so this was an account
+15:52 - that was
+15:53 - intended to look like a
+15:58 - political party of the state of
+15:59 - tennessee in the u.s
+16:01 - but was very much not
+16:04 - so we can say okay show me all of the
+16:07 - tweets posted by
+16:09 - this user and that have a hashtag and
+16:12 - show me all of the the hashtags uh for
+16:15 - these tweets
+16:17 - and we can get back uh sort of this this
+16:19 - sort of visualization so here's the user
+16:22 - it's posted
+16:24 - posted some tweets
+16:26 - so here's something about
+16:29 - civil rights that trump is
+16:32 - taking away
+16:33 - we can see some of the the hashtags that
+16:35 - are used
+16:38 - we can see here that here's several
+16:41 - tweets from this user that
+16:43 - that use the hashtag barcelona so we can
+16:45 - sort of get an idea of what what this
+16:48 - account was was tweeting about
+16:51 - uh and we can we can run queries over
+16:53 - the the full date data set so
+16:56 - uh this one is interesting what are uh
+16:59 - what are the most common
+17:01 - uh hashtags that are used
+17:04 - and for some reason there's a lot of a
+17:06 - lot of tweets that we captured
+17:09 - in german
+17:11 - targeting i think things going around
+17:14 - around merkel's reelection in germany
+17:17 - we can also look at the
+17:20 - hashtags used together most frequently
+17:22 - uh which i think is also interesting and
+17:24 - again we get a lot of a lot of german
+17:26 - tweets there
+17:28 - okay so that's the that's the data set
+17:30 - that i actually want to work with
+17:32 - instead of instead of movies so
+17:34 - keep that that data set in mind and
+17:37 - we'll talk about how to build a graphql
+17:38 - service
+17:39 - on top of this
+17:42 - so
+17:43 - so first of all let's talk a little bit
+17:45 - about about graphql so we said that
+17:47 - graphql is
+17:49 - this new paradigm for building apis it's
+17:52 - not really a query language for
+17:55 - a database necessarily but
+17:57 - instead it's a query language for api so
+18:01 - it's a way of
+18:02 - specifying
+18:04 - data
+18:05 - and then
+18:06 - querying the data
+18:08 - but
+18:09 - limited support for what we would think
+18:10 - of as
+18:12 - query so like there's no support for
+18:13 - aggregations or filtering
+18:16 - things like that
+18:19 - and then there's also a big community of
+18:21 - tools built around graphql so graphical
+18:24 - which we'll look at in a second is this
+18:26 - sort of in-browser ide for working
+18:29 - working with graphql we already
+18:31 - mentioned
+18:32 - mocking and
+18:33 - performance
+18:35 - so the the schema is really important in
+18:38 - graphql it defines what data is
+18:40 - available and then a client for any
+18:43 - given request
+18:45 - selects only the data that
+18:47 - that the client is interested in
+18:50 - from the schema and
+18:52 - this reduces than the amount of data
+18:53 - that's sent sent over the wire and it
+18:55 - also allows the client to pick the data
+18:58 - it needs to render a particular view
+19:01 - and these are the the two reasons that
+19:04 - that facebook created graphql originally
+19:06 - was to
+19:07 - be able to render a review with a single
+19:09 - round trip request and to
+19:12 - reduce the data sent sent over the wire
+19:14 - so this was particular to
+19:18 - facebook's native apps over slow
+19:20 - networks where this sort of network
+19:22 - latency is really obvious when you have
+19:24 - multiple requests to render a view
+19:27 - graphql also makes this this observation
+19:29 - that your application data is a graph
+19:32 - and we'll come back to this in a minute
+19:34 - because i think this is pretty important
+19:37 - so here's a graphql query um we're
+19:39 - looking up a business by id and then
+19:41 - we're specifying uh some fields that we
+19:44 - that we want to grab
+19:45 - uh okay so so what's the the graph piece
+19:48 - of this well
+19:50 - graphql makes this this observation that
+19:52 - your application data is a graph uh sort
+19:56 - of irrespective of how we store that uh
+19:58 - on the back end but when we're talking
+20:00 - about our application data in the client
+20:03 - that that's a graph and and we're
+20:04 - traversing it with graphql so we're
+20:06 - starting from the business we're then
+20:09 - seeing okay what are the the categories
+20:11 - connected to this business uh okay for
+20:13 - those category objects what are the the
+20:15 - name property associated with that and
+20:17 - so on so we're traversing traversing
+20:19 - this graph
+20:22 - and we get back get back our results
+20:25 - notice that the the shape of our result
+20:27 - matches uh matches our query because
+20:29 - those are the fields that we we
+20:30 - specified that we're interested in
+20:33 - so this this observation that your
+20:34 - application data is a graph is
+20:36 - interesting because it implies then
+20:38 - uh that if you're not using a graph
+20:41 - database on the back end if we're using
+20:42 - a relational database or a document
+20:44 - database then there's some sort of
+20:46 - mapping and translation that has to
+20:49 - occur from
+20:50 - our application data graph
+20:52 - graphql to how we're storing and
+20:55 - modeling that data
+20:56 - in the back end
+21:00 - let's take a look at
+21:04 - graphical so we can sort of see
+21:08 - our data being queried live so here's
+21:10 - graphical this is sort of this this in
+21:12 - browser ide
+21:14 - for working
+21:15 - with graphql
+21:17 - and this is querying the the neo4j
+21:19 - database
+21:21 - that i have running so
+21:23 - let's just grab
+21:25 - the first three tweets so we're querying
+21:27 - for
+21:28 - uh
+21:29 - hashtag politics finding uh
+21:32 - the first three tweets grabbing the text
+21:34 - but we can also see
+21:35 - all the other hashtags
+21:38 - uh in the tweet and so on so you can see
+21:40 - how our response is changing as we're
+21:42 - adding
+21:43 - adding more fields here
+21:52 - skip some of these slides and talk about
+21:55 - how we build a graphql service
+21:58 - so
+22:00 - so the first thing we do is define a
+22:01 - schema
+22:02 - and then we define resolver functions
+22:05 - that define how we fetch
+22:08 - data for that schema
+22:11 - here's our movie schema but let's take a
+22:13 - look at
+22:15 - our
+22:17 - russian twitter troll schema
+22:20 - it looks like this
+22:21 - uh so we have uh
+22:24 - it's pretty simple we have three types
+22:25 - we have tweets we have a user we have a
+22:27 - hashtag
+22:30 - and we also have a link
+22:31 - and you can see the fields that are
+22:32 - available so we have so a tweet has has
+22:35 - a text it has a permalink
+22:37 - and our fields can reference other types
+22:40 - so a tweet has an author that's that's a
+22:43 - user here
+22:45 - and then the other important thing that
+22:46 - we define in our graphql schema is the
+22:50 - entry point for our graphql service so
+22:53 - here we have two entry points so these
+22:55 - are the the queries the graphql queries
+22:57 - that we can run
+22:58 - we can start
+22:59 - by looking up hashtags
+23:01 - by
+23:02 - by tag or we can do tweets by text so
+23:06 - search the
+23:07 - text of tweets to find tweets
+23:13 - and we define we define our schema using
+23:15 - the schema definition language which is
+23:17 - this sort of language agnostic way of
+23:19 - defining a schema
+23:21 - okay and then we said our resolver
+23:23 - function has the logic for fetching
+23:25 - fetching that data
+23:27 - so this is what a typical resolver
+23:28 - function looks like
+23:30 - where for our entry point we define how
+23:33 - in this case
+23:35 - a cipher query to look up a
+23:38 - movie by title
+23:40 - but then we have some other fields that
+23:42 - that's not resolving so things like our
+23:44 - recommended movies we have to have
+23:45 - another query to find our recommended
+23:47 - movies
+23:48 - our genres are in another
+23:50 - another node so we need to have another
+23:51 - query to find our genres so if we end up
+23:54 - with a non-trivial graphql query what we
+23:57 - end up with are
+23:59 - lots of these different queries that are
+24:01 - multiple round trips to the database so
+24:04 - we end up having to batch these
+24:06 - for performance
+24:08 - and this is typical for
+24:10 - for really any graphql implementation so
+24:14 - what we wanted to look at was well could
+24:17 - we build a neo4j graphql integration
+24:20 - that offers some uh some developer
+24:23 - productivity benefits right like
+24:24 - implementing those resolvers seems kind
+24:27 - of tedious we're just sort of
+24:29 - writing
+24:30 - cipher queries there and if we do this
+24:32 - with a relational database we're writing
+24:33 - sql or we're writing our orm queries
+24:36 - so is there a way that we could
+24:37 - translate graphql to cipher
+24:41 - and then not have to write those
+24:42 - resolver functions and then would this
+24:45 - give us better performance because we
+24:48 - can just generate a single cipher query
+24:50 - so that's one round trip to the database
+24:51 - rather than having to to batch a bunch
+24:53 - of queries
+24:55 - and then could we expose cipher through
+24:58 - graphql because graphql is somewhat
+25:00 - limited in support for projections
+25:02 - aggregations
+25:04 - so these are the things we wanted to uh
+25:06 - we wanted to explore
+25:09 - and so we built
+25:10 - what we call neo4j graphql js
+25:13 - which
+25:14 - is a integration for graphql neo4j that
+25:17 - basically takes the graphql schema
+25:22 - and
+25:24 - uses this to drive what the neo4j data
+25:27 - model should be
+25:30 - which then allows us to translate
+25:32 - arbitrary
+25:33 - cipher queries
+25:35 - to i'm sorry arbitrary graphql queries
+25:38 - to cipher
+25:42 - what this means is that for any any
+25:44 - given graphql query there's just a
+25:47 - single cipher query so a single round
+25:48 - trip to the database uh and neo4j has a
+25:51 - has a very smart cipher execution engine
+25:54 - so those end up being being optimized
+25:57 - pretty well
+25:59 - and then we can also
+26:00 - expose cipher in graphql
+26:03 - with a
+26:06 - cipher directive so in our schema
+26:09 - definition we can annotate any of these
+26:11 - fields so this is a this is a field
+26:13 - called similar
+26:14 - on
+26:15 - on our movie type
+26:17 - so we said we needed to generate
+26:20 - movie recommendations for a movie so
+26:23 - this field similar in this case we're
+26:25 - just looking for movies that have the
+26:26 - same genre um but we could have a much
+26:29 - more complex query there looking at user
+26:31 - ratings or something like that and that
+26:33 - then becomes a computed field
+26:38 - uh so that's this idea of the the cipher
+26:40 - schema directive and that still
+26:43 - is just one cipher query that we are are
+26:46 - able to generate uh that computed field
+26:49 - essentially becomes a sub query in our
+26:51 - cipher query
+26:54 - um okay so we thought we thought that
+26:56 - was was pretty good
+26:58 - and
+26:59 - if we if we take a look
+27:03 - here um
+27:07 - this so this is the uh
+27:09 - graphql server implementation
+27:12 - uh
+27:13 - that i was hitting when i was running
+27:15 - graphical here so my russian twitter
+27:18 - data
+27:20 - and
+27:21 - this is the only code to uh
+27:24 - to implement my resolver so i don't i
+27:26 - don't have to write any cipher there
+27:29 - basically all i'm doing is calling
+27:31 - the neo4j graphql integration passing
+27:34 - along the graphql query and any
+27:36 - parameters
+27:37 - and our integration is is generating uh
+27:40 - the cipher behind the scenes these are
+27:42 - these are the generated queries um so
+27:44 - here you can see we were looking for
+27:48 - the hashtag politics and looking for any
+27:49 - tweets that have that hashtag and and so
+27:51 - on
+27:52 - um
+27:54 - so anyway so so i think this was really
+27:55 - cool
+27:57 - this
+27:57 - was a big
+28:00 - a big i think
+28:01 - developer productivity boost um it
+28:03 - allows you
+28:04 - also still to have the flexibility of
+28:07 - querying other services so if you
+28:09 - want to fetch data from another
+28:12 - another database you can do that as well
+28:14 - just implement your own resolver rather
+28:15 - than calling out to the
+28:17 - to the integration
+28:20 - cool so that's that's the neo4j graphql
+28:23 - integration
+28:24 - um i'm about out of time so i'm going to
+28:26 - going to skip over this this react piece
+28:28 - i think we're all pretty familiar with
+28:30 - react
+28:31 - the only thing i want to say about about
+28:33 - the react apollo integration
+28:36 - is that apollo clients the react
+28:38 - integration for pal client is really
+28:39 - neat because it allows us to basically
+28:41 - bind a component's props to a graphql
+28:44 - query that's sort of the only missing
+28:47 - piece here
+28:48 - and my
+28:50 - my super simple
+28:51 - react app that i wrote
+28:54 - in just a few minutes as you can see
+28:56 - with no no styling or anything uh
+28:59 - basically just allows us to search by uh
+29:01 - by hashtag so all it's doing is
+29:03 - uh binding our uh
+29:06 - tweet list
+29:08 - uh
+29:09 - props to uh to a graphql query
+29:12 - anyway the code is is uh is online if
+29:15 - anyone wants to check that out
+29:17 - um i just want to mention a couple of
+29:19 - things um one
+29:21 - is that these sorts of uh integrations
+29:23 - that we're building these are largely
+29:27 - feedback driven so this if this sounds
+29:30 - uh like an interesting project like
+29:31 - something that you might uh want to play
+29:33 - around with please do
+29:35 - and then let us know what you think
+29:37 - are there features that would be helpful
+29:39 - let us know we can build them
+29:42 - because really our goal is to sort of
+29:43 - figure out
+29:44 - what sort of the sort of integrations
+29:46 - like this make sense to make it easier
+29:48 - to build
+29:49 - to build cool applications
+29:51 - so i'll mention just just a couple of
+29:53 - resources uh the neo4j sandbox which i
+29:56 - mentioned before is a great way to get
+29:57 - started with neo4j
+29:59 - it has this data set for movies and
+30:02 - movie recommendations that power the the
+30:04 - movie app that i didn't really talk
+30:07 - about but as other other data sets as
+30:09 - well
+30:11 - that are really fun and
+30:13 - this
+30:14 - portal grandstack.io this is
+30:17 - sort of a landing page that collects
+30:20 - lots of information about these
+30:21 - integrations that we're working on uh
+30:24 - has documentation and tutorials for
+30:26 - these different different projects so if
+30:28 - you want to
+30:29 - get started looking at looking at grand
+30:31 - stack apps or any of these integrations
+30:33 - that i talked about that's a good place
+30:35 - to
+30:36 - to start
+30:39 - cool
+30:42 - so that uh
+30:44 - that is what i have to say yeah question
+30:47 - yeah yeah so the question is uh there's
+30:49 - this other database called d graph
+30:52 - um
+30:52 - why would i why would i use neo and
+30:55 - instead of d graph
+30:56 - for a graphql integration so so d graph
+31:01 - is um
+31:02 - is a triple store it it's not quite the
+31:06 - same thing as a graph database but um
+31:09 - for intensive purposes it's very similar
+31:11 - um
+31:12 - they
+31:12 - they use something kind of like graphql
+31:16 - for their query language um they call it
+31:19 - uh
+31:20 - graphql plus minus i think
+31:23 - so they
+31:24 - they sort of have added some things to
+31:27 - to their flavor of graphql and like
+31:29 - they've added some
+31:31 - some filtering functions and things like
+31:34 - this
+31:35 - and the the problem with that is
+31:38 - because it's not graphql it means that
+31:41 - uh that doesn't work with any of the
+31:43 - other graphql tools so you you can't
+31:45 - just uh like wire up apollo clients to
+31:48 - it because it's
+31:50 - uh it's not graphql so things will break
+31:52 - there's actually um
+31:54 - i won't bring it up here but there's a
+31:56 - really good
+31:57 - github issue or some of the apollo folks
+31:59 - basically said hey you say this is
+32:01 - graphql but it doesn't work with any of
+32:02 - our tooling
+32:04 - what's going on so so anyway so that's
+32:07 - that's one thing that i think is a bit
+32:09 - confusing about d graph is it's not
+32:10 - actually
+32:12 - not actually graphql that you know is
+32:15 - compliant with the spec that works with
+32:17 - other graphql tooling in the ecosystem
+32:19 - um
+32:20 - but having said that the
+32:23 - what they've done with the the graphql
+32:25 - language is really interesting um
+32:26 - because they've taken taken an
+32:28 - interesting query language and sort of
+32:30 - added missing functionality i just don't
+32:31 - think they've done it in a way that
+32:32 - plays well with other tooling um so so
+32:35 - anyway the the answer to uh to your
+32:37 - question is sort of for if i want to
+32:39 - build a graphql
+32:41 - app with uh
+32:43 - with neo4j or
+32:45 - or d-graph
+32:47 - you know an important consideration is
+32:50 - how does it work with other
+32:53 - other tooling in the ecosystem and so
+32:55 - the these cipher schema directives um
+32:59 - these are sort of the the built-in way
+33:02 - in the
+33:04 - graphql
+33:05 - spec to sort of extend graphql so this
+33:08 - means that we're sort of extending
+33:10 - graphql by annotating these fields but
+33:13 - we're doing in a way that uh is
+33:14 - compliant with the spec and that means
+33:16 - that it'll work with all of the other uh
+33:18 - graphql tooling in the ecosystem
+33:20 - well thank you uh there's no more
+33:23 - questions
+33:25 - [Applause]
+
+Cleaned transcript:
+
+so i'm going to be talking about full stack development with the grand stack which is graphql react apollo and neo4j database so my name is will i work at neo4j which is an open source graph database i don't work on the the core engineering team for neo4j instead the the team i work on build integrations so making sure that you can use neo4j with your favorite web development framework that you can move data back and forth from different data processing frameworks tools like that and so what i'm going to talk about today uh is largely the the most recent integration that i've been working on which is a neo4j graphql integration which makes up a big part of the of the grand stack but if you get bored while uh while i'm talking um you can go to bit.lee graph hacker and there's a little challenge there basically it will take you to an apollo launch pad which is a tool for building a graphql service in the browser and there's just a couple of steps to follow basically just connect uh connect that launchpad to a hosted neo4j instance and get the graphql service working and then just tweet us about it and we'll send you one of these cool neo4j graphql hacker tshirts and you don't have to do it while i'm talking you can can do it later too cool so uh so what do i want to talk about uh well i want to talk about this this idea of the grand stack so these these technologies that we can use together to build uh to build full stack applications because most of most of us are developers i want to talk about focus on the the how we do this so we're going to go through go through some code samples of how we can build a full stack grand stack application but first of all what what is the the grand stack what are these components uh so the first component of the grand stack is graphql how many people have used graphql at all okay cool so that's maybe like a i call that like twothirds of the audience so graphql is this new paradigm for building apis it's an alternative for building rest apis it's very focused around a schema definition so we start by defining schema we define the the types that are available the fields available on these types and then we can select from the schema on the client which fields we want in our query the other component uh say the next component is react how many people use react okay that's that's a lot of folks cool so as you all know react is this this javascript library for building user interfaces for web native vr very much focused on on components that encapsulate data and logic uh and then we have apollo how many people have used any of the apollo tooling a few folks yeah so apollo is not just a single tool apollo is instead a suite of tools for working with graphql so you see apollo show up both on on the client side with things like apollo client and then also on server side tooling for building a graphql service things like performance monitoring and mocking so when we say apollo in this example today we're going to look at the apollo clients specifically the react integration for apollo client but really there are lots of different apollo projects that help with working with graphql throughout the throughout the stack and then the final component is neo4j database how many people have used neo4j okay okay a few so neo4j is is a native graph database what that means is that we use the property graph to store model and query data as a graph so nodes are the entities in the in the graph relationships connect them we can store arbitrary key value pair properties on nodes and relationships we use the the cipher query language for working with data in neo4j you can see an example at the bottom of the screen there and then we have client drivers in lots of different languages for working with neo4j so in the example today we'll be using the javascript driver for neo4j cool so those are the individual components of of the grand stack how do they how do they fit together well let's look at a simple example let's consider a super simple movie search and recommendation web app so what are the the requirements for this well a user should be able to search by title and then view some movie details for any matching movies and then we also want to show personalized recommendations so for for this movie that a user searched for what are some other movies that the user might like and if you're familiar with with graph databases this kind of recommendation query is really easy to express in a graph so if you've if you use amazon or ecommerce things people who bought this also bought this for movies someone who viewed and rated this movie highly also rated these other movies highly that's a simple example we can do much more complex things but that's the the general idea okay so with that sort of uh that application in mind how do the the piece of the grand stack fit together well we have react on the front end the user types in their movie river runs through it hits search and the apollo client integration in this case sends a graphql query to our graphql service our graphql server has logic uh in there to query our neo4j database to look up movies by title and that data comes back to apollo client the react integration for apollo client binds the graphql query result to the props for our view for our component and and the views rendered okay so that's that's how those pieces fit together let's look at that in a bit more detail starting starting at the data layer so starting with uh with neo4j so since since everyone is familiar with neo4j i want to spend just a little bit of time talking about what is neo4j and i think the best way to explain something is often in the form of a tweet so here's neo4j in 140 characters i guess i could redo this in in 280 now so neo4j is open source software that stores and queries data as nodes and relationships using the cipher query language with index free adjacency okay so there's there's a bit going on there let's dissect that a bit so first of all neo4j is is open source software all the code is on github we can we can go build it from source we can we can download it we can use the docker image for neo4j so lots of different ways to to get neo4j neo4j is primarily database so focused on modeling storing and querying data so when we we write some data to neo4j it's durably committed to disk neo4j is is not just an inmemory processing framework it's it's very much a database okay so it allows us to store inquiry data as nodes and relationships so we said that nodes these are the the entities or the objects in the graph and relationships connect them so relationships are our first class citizens in the data model and we can store key value pairs so properties attributes both on nodes and relationships and if you look at this this data model this might look somewhat familiar if you've been following the news recently so this is the data model from the paradise papers data leak so this was leaked data from in this case a law firm in the bahamas that had lots of information on rich people that had connections to offshore legal entities and the the data journalists that were working with this leaked data they use neo4j to make sense of the connections to these offshore legal entities and this makes sense if you think of a person who has some shareholder interest in a legal entity that is the beneficiary of another legal entity that is a shareholder in uh an offshore trust and things like this where there's a very long path to get the ultimate beneficial owner um so that kind of data makes a lot of sense to work with in a graph so we we model store and query the data as nodes and relationships using the cipher query language so here's a cipher example and this this again this is querying the the paradise papers data set so this is saying find addresses in london find all of the officers so in this case the people find all the people with addresses in london and then uh for those people find all of the legal entities that they're connected to so you can see that cypher is very much about pattern matching in that first line in the match statement we're defining a graph patterns we define nodes within parentheses relationships within brackets and we're basically traversing the graph to find paths that match this pattern of people with addresses in london and their connections to offshore entities and if we run this in in neo4j browser we get this graph visualization okay so these are all the people that addresses in london that have connections to offshore legal entities from the paradise papers and this is useful to sort of see where there are some highly connected clusters we can see a couple of connected clusters there there's something something interesting going on there someone that has lots of connections to legal entities okay that's interesting but oftentimes the answer to our question is not a graph visualization maybe it's the result of an aggregation or maybe it's tabular data so we can modify our query slightly to ask a different question in this case we're saying okay for all these people with addresses in london that have some connection to offshore legal entities uh what are the most common jurisdictions for those offshore legal entities so for people in london uh where do they like to hide their money offshore uh well bermuda is the most common offshore jurisdiction followed by the cayman islands mauritius is on the list as well so the point there is just that graph queries are not just about graph visualizations we can do sort of the same things that you would expect from other query languages like sql and that kind of thing cipher is part of the opencypher project so it's an open query language that is implemented by other databases other processing frameworks we can use cipher with spark for example okay so back to our tweet um so neo4j input source software stores and queries data is nodes and relationships using cipher with index free adjacency so this last part index free adjacency is an important performance characteristic of graph databases what this means is that when we traverse from one node to any other through a relationship that we're connected to we're not doing an index lookup that means that the performance then of a local graph traversal is a constant time operation it's not dependent on the overall size of the data so our query is on a data set of you know a few million nodes then can scale to one with several billion nodes so we can scale these queries to very very large data sets this is a really important performance characteristic of graph databases it's very different from other types of databases okay so that was my neo4j and 140 characters overview if you're interested in playing around with neo4j or that paradise papers data set as well neo4j sandbox is a good a good example of a way to spin up neo4j instance with some different data sets they're hosted on aws with some example queries you can can play around and get started okay so let's take a look at um at some data in neo4j since we said we want to build out our movie recommendation app and i said we were going to look at data about movies and and user ratings but but i lied instead let's look at some data about russian twitter trolls uh so so again if you've been following the the news at least this has been been big in the us i think in europe too but there's been an investigation to russia's meddling with uh the u.s election especially through social media and so twitter twitter released a list of 3000 screen names that are tied to russia and then promptly suspended those accounts which deleted all of the tweets from twitter.com and from the twitter api so we can't really figure out what those 3 000 russian trolls were tweeting about but i i found some of them on internet archive um so i scraped internet archive for all the tweets i could find by these russian trolls and put them in neo4j um so here's the here's the schema uh that we have so we have uh we have a tweet uh a tweet was posted by a user so user posted a tweet then we have hashtags we have urls that the tweet might contain oh and then i also ran some uh some simple natural language processing like entity extraction to find any any people organization or locations that any of these tweets mention so let's look at uh look at an example query so for one user this is 10 underscore gop so this was an account that was intended to look like a political party of the state of tennessee in the u.s but was very much not so we can say okay show me all of the tweets posted by this user and that have a hashtag and show me all of the the hashtags uh for these tweets and we can get back uh sort of this this sort of visualization so here's the user it's posted posted some tweets so here's something about civil rights that trump is taking away we can see some of the the hashtags that are used we can see here that here's several tweets from this user that that use the hashtag barcelona so we can sort of get an idea of what what this account was was tweeting about uh and we can we can run queries over the the full date data set so uh this one is interesting what are uh what are the most common uh hashtags that are used and for some reason there's a lot of a lot of tweets that we captured in german targeting i think things going around around merkel's reelection in germany we can also look at the hashtags used together most frequently uh which i think is also interesting and again we get a lot of a lot of german tweets there okay so that's the that's the data set that i actually want to work with instead of instead of movies so keep that that data set in mind and we'll talk about how to build a graphql service on top of this so so first of all let's talk a little bit about about graphql so we said that graphql is this new paradigm for building apis it's not really a query language for a database necessarily but instead it's a query language for api so it's a way of specifying data and then querying the data but limited support for what we would think of as query so like there's no support for aggregations or filtering things like that and then there's also a big community of tools built around graphql so graphical which we'll look at in a second is this sort of inbrowser ide for working working with graphql we already mentioned mocking and performance so the the schema is really important in graphql it defines what data is available and then a client for any given request selects only the data that that the client is interested in from the schema and this reduces than the amount of data that's sent sent over the wire and it also allows the client to pick the data it needs to render a particular view and these are the the two reasons that that facebook created graphql originally was to be able to render a review with a single round trip request and to reduce the data sent sent over the wire so this was particular to facebook's native apps over slow networks where this sort of network latency is really obvious when you have multiple requests to render a view graphql also makes this this observation that your application data is a graph and we'll come back to this in a minute because i think this is pretty important so here's a graphql query um we're looking up a business by id and then we're specifying uh some fields that we that we want to grab uh okay so so what's the the graph piece of this well graphql makes this this observation that your application data is a graph uh sort of irrespective of how we store that uh on the back end but when we're talking about our application data in the client that that's a graph and and we're traversing it with graphql so we're starting from the business we're then seeing okay what are the the categories connected to this business uh okay for those category objects what are the the name property associated with that and so on so we're traversing traversing this graph and we get back get back our results notice that the the shape of our result matches uh matches our query because those are the fields that we we specified that we're interested in so this this observation that your application data is a graph is interesting because it implies then uh that if you're not using a graph database on the back end if we're using a relational database or a document database then there's some sort of mapping and translation that has to occur from our application data graph graphql to how we're storing and modeling that data in the back end let's take a look at graphical so we can sort of see our data being queried live so here's graphical this is sort of this this in browser ide for working with graphql and this is querying the the neo4j database that i have running so let's just grab the first three tweets so we're querying for uh hashtag politics finding uh the first three tweets grabbing the text but we can also see all the other hashtags uh in the tweet and so on so you can see how our response is changing as we're adding adding more fields here skip some of these slides and talk about how we build a graphql service so so the first thing we do is define a schema and then we define resolver functions that define how we fetch data for that schema here's our movie schema but let's take a look at our russian twitter troll schema it looks like this uh so we have uh it's pretty simple we have three types we have tweets we have a user we have a hashtag and we also have a link and you can see the fields that are available so we have so a tweet has has a text it has a permalink and our fields can reference other types so a tweet has an author that's that's a user here and then the other important thing that we define in our graphql schema is the entry point for our graphql service so here we have two entry points so these are the the queries the graphql queries that we can run we can start by looking up hashtags by by tag or we can do tweets by text so search the text of tweets to find tweets and we define we define our schema using the schema definition language which is this sort of language agnostic way of defining a schema okay and then we said our resolver function has the logic for fetching fetching that data so this is what a typical resolver function looks like where for our entry point we define how in this case a cipher query to look up a movie by title but then we have some other fields that that's not resolving so things like our recommended movies we have to have another query to find our recommended movies our genres are in another another node so we need to have another query to find our genres so if we end up with a nontrivial graphql query what we end up with are lots of these different queries that are multiple round trips to the database so we end up having to batch these for performance and this is typical for for really any graphql implementation so what we wanted to look at was well could we build a neo4j graphql integration that offers some uh some developer productivity benefits right like implementing those resolvers seems kind of tedious we're just sort of writing cipher queries there and if we do this with a relational database we're writing sql or we're writing our orm queries so is there a way that we could translate graphql to cipher and then not have to write those resolver functions and then would this give us better performance because we can just generate a single cipher query so that's one round trip to the database rather than having to to batch a bunch of queries and then could we expose cipher through graphql because graphql is somewhat limited in support for projections aggregations so these are the things we wanted to uh we wanted to explore and so we built what we call neo4j graphql js which is a integration for graphql neo4j that basically takes the graphql schema and uses this to drive what the neo4j data model should be which then allows us to translate arbitrary cipher queries to i'm sorry arbitrary graphql queries to cipher what this means is that for any any given graphql query there's just a single cipher query so a single round trip to the database uh and neo4j has a has a very smart cipher execution engine so those end up being being optimized pretty well and then we can also expose cipher in graphql with a cipher directive so in our schema definition we can annotate any of these fields so this is a this is a field called similar on on our movie type so we said we needed to generate movie recommendations for a movie so this field similar in this case we're just looking for movies that have the same genre um but we could have a much more complex query there looking at user ratings or something like that and that then becomes a computed field uh so that's this idea of the the cipher schema directive and that still is just one cipher query that we are are able to generate uh that computed field essentially becomes a sub query in our cipher query um okay so we thought we thought that was was pretty good and if we if we take a look here um this so this is the uh graphql server implementation uh that i was hitting when i was running graphical here so my russian twitter data and this is the only code to uh to implement my resolver so i don't i don't have to write any cipher there basically all i'm doing is calling the neo4j graphql integration passing along the graphql query and any parameters and our integration is is generating uh the cipher behind the scenes these are these are the generated queries um so here you can see we were looking for the hashtag politics and looking for any tweets that have that hashtag and and so on um so anyway so so i think this was really cool this was a big a big i think developer productivity boost um it allows you also still to have the flexibility of querying other services so if you want to fetch data from another another database you can do that as well just implement your own resolver rather than calling out to the to the integration cool so that's that's the neo4j graphql integration um i'm about out of time so i'm going to going to skip over this this react piece i think we're all pretty familiar with react the only thing i want to say about about the react apollo integration is that apollo clients the react integration for pal client is really neat because it allows us to basically bind a component's props to a graphql query that's sort of the only missing piece here and my my super simple react app that i wrote in just a few minutes as you can see with no no styling or anything uh basically just allows us to search by uh by hashtag so all it's doing is uh binding our uh tweet list uh props to uh to a graphql query anyway the code is is uh is online if anyone wants to check that out um i just want to mention a couple of things um one is that these sorts of uh integrations that we're building these are largely feedback driven so this if this sounds uh like an interesting project like something that you might uh want to play around with please do and then let us know what you think are there features that would be helpful let us know we can build them because really our goal is to sort of figure out what sort of the sort of integrations like this make sense to make it easier to build to build cool applications so i'll mention just just a couple of resources uh the neo4j sandbox which i mentioned before is a great way to get started with neo4j it has this data set for movies and movie recommendations that power the the movie app that i didn't really talk about but as other other data sets as well that are really fun and this portal grandstack.io this is sort of a landing page that collects lots of information about these integrations that we're working on uh has documentation and tutorials for these different different projects so if you want to get started looking at looking at grand stack apps or any of these integrations that i talked about that's a good place to to start cool so that uh that is what i have to say yeah question yeah yeah so the question is uh there's this other database called d graph um why would i why would i use neo and instead of d graph for a graphql integration so so d graph is um is a triple store it it's not quite the same thing as a graph database but um for intensive purposes it's very similar um they they use something kind of like graphql for their query language um they call it uh graphql plus minus i think so they they sort of have added some things to to their flavor of graphql and like they've added some some filtering functions and things like this and the the problem with that is because it's not graphql it means that uh that doesn't work with any of the other graphql tools so you you can't just uh like wire up apollo clients to it because it's uh it's not graphql so things will break there's actually um i won't bring it up here but there's a really good github issue or some of the apollo folks basically said hey you say this is graphql but it doesn't work with any of our tooling what's going on so so anyway so that's that's one thing that i think is a bit confusing about d graph is it's not actually not actually graphql that you know is compliant with the spec that works with other graphql tooling in the ecosystem um but having said that the what they've done with the the graphql language is really interesting um because they've taken taken an interesting query language and sort of added missing functionality i just don't think they've done it in a way that plays well with other tooling um so so anyway the the answer to uh to your question is sort of for if i want to build a graphql app with uh with neo4j or or dgraph you know an important consideration is how does it work with other other tooling in the ecosystem and so the these cipher schema directives um these are sort of the the builtin way in the graphql spec to sort of extend graphql so this means that we're sort of extending graphql by annotating these fields but we're doing in a way that uh is compliant with the spec and that means that it'll work with all of the other uh graphql tooling in the ecosystem well thank you uh there's no more questions

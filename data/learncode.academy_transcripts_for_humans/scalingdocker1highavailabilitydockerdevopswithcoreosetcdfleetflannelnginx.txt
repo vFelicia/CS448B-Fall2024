@@ -1,0 +1,268 @@
+With timestamps:
+
+00:00 - okay these videos are going to be fun
+00:02 - here because we're going to be moving
+00:04 - beyond basic docker of how to create a
+00:06 - container how to create an image and run
+00:08 - a container and we're going to be
+00:09 - talking about high availability and
+00:11 - really scaling a production app with
+00:13 - docker and that involves several new
+00:15 - pieces of technology uh but it's really
+00:18 - it's pretty simple um it's a lot of fun
+00:20 - it takes a while to really wrap your
+00:21 - head around it but once you do wrap your
+00:23 - head around it it's pretty simple and a
+00:26 - lot of fun so here's what we're going to
+00:28 - be building and i'll give you this link
+00:30 - and i'll give you a link to the gist
+00:31 - where i have all the code that i'm going
+00:33 - to be using here as well which is pretty
+00:34 - much copy and paste code
+00:36 - but we're going to be creating a core os
+00:38 - cluster so coreos is our operating
+00:40 - system that we're going to use instead
+00:41 - of say ubuntu linux
+00:43 - coreos is linux and we're going to run
+00:45 - four core os machines that are going to
+00:47 - cluster together and kind of act like
+00:49 - one machine in a lot of ways and then
+00:51 - we're going to start running docker
+00:52 - containers on this cluster
+00:55 - so we're going to run web app 1 and that
+00:56 - will get assigned to a machine and we're
+00:58 - going to run a copy of that web app too
+00:59 - that'll get assigned to another machine
+01:02 - and then we're going to say run engine x
+01:04 - to load balance between the two
+01:06 - and then we'll maybe even run a second
+01:08 - engine x so that way in case this one
+01:10 - fails over we've got a second engine x
+01:12 - that automatically load balances between
+01:14 - the two so multiple levels of fail over
+01:16 - here
+01:17 - and then just to make it really cool
+01:19 - we're gonna put a public-facing nginx
+01:21 - proxy in front of them that
+01:23 - automatically creates sub-domains for
+01:25 - these services so say
+01:27 - we want to be access able to access this
+01:29 - at someapp.mywebsite.com
+01:32 - well these app this nginx instance will
+01:34 - automatically register that a sub domain
+01:37 - needs to be created to load balance
+01:39 - between those two copies of nginx if i
+01:42 - haven't confused you already you're in
+01:44 - for a great time uh here's those links
+01:46 - and let's go and get into it first part
+01:48 - which we're going to cover in this video
+01:49 - is what is a core os cluster and how do
+01:51 - i start this thing up
+01:53 - so we're going to do it with
+01:54 - digitalocean it's very simple here's
+01:56 - pretty much a visual
+01:58 - of what core os is so again it's a linux
+02:00 - operating system it basically boots up
+02:03 - to docker doesn't really run a lot of
+02:05 - services and the other big thing that
+02:07 - they did so imagine all these blue boxes
+02:10 - are capacity to run docker containers
+02:12 - um
+02:14 - and then the other thing they did is
+02:15 - they took the configuration part out of
+02:17 - the operating system so that etc folder
+02:20 - that etsy folder really doesn't exist
+02:23 - instead there's a service called a
+02:25 - service called etsyd that they all share
+02:28 - and so instead of looking for all the
+02:30 - configuration that looks to the ncd
+02:32 - service they're all going to look to the
+02:34 - exact same service and all your
+02:36 - configuration for all your apps and
+02:38 - everything lives in here instead
+02:40 - so whether you run a copy of web one
+02:44 - here here here or here it knows how to
+02:47 - look to etcd and find out where all the
+02:49 - databases are that it should talk to so
+02:51 - that's very cool
+02:53 - it also means that your configuration
+02:55 - for each computer is really really light
+02:58 - here's a cloud config yaml this is all
+03:00 - you need to create a core os machine is
+03:02 - a cloud config yaml
+03:04 - and this is as complicated as it gets
+03:08 - really the minimum you need is you need
+03:09 - to tell it how to access xcd which is
+03:12 - this chunk right here and then we're
+03:13 - also going to be running a few other
+03:15 - services we're going to be running etcd
+03:17 - when it starts we're going to be running
+03:19 - fleet when it starts which is what we're
+03:20 - going to use to schedule out all of our
+03:23 - docker containers
+03:25 - and we'll get into that later and we're
+03:26 - also going to be running flannel which
+03:27 - is what helps docker containers docker
+03:29 - containers discover each other and talk
+03:31 - to each other
+03:33 - so let's go and get started to get
+03:34 - started you basically you need your
+03:36 - cloud config file and you can copy and
+03:38 - paste this one this is the one in the
+03:40 - gist the only thing you need to do is
+03:42 - change this discovery url to be your
+03:45 - discovery url
+03:46 - and by your you just copy this url right
+03:49 - here and this will generate one
+03:52 - and so
+03:53 - i'm going to go ahead and do this and
+03:55 - it's going to be size equal three and
+03:56 - you see every time i refresh it creates
+03:58 - a new url for me so i'm just going to
+03:59 - snatch that url
+04:02 - i'm going to paste it in and now here's
+04:04 - my cloud config file so every core os
+04:07 - machine i create gets this cloud config
+04:09 - file i'm going to go to digitalocean
+04:11 - which is a very easy way to do this i'm
+04:14 - going to create my first droplet
+04:17 - call it coreos1
+04:20 - pick core os
+04:21 - it's going to be let's pick the stable
+04:23 - version you want to enable private
+04:25 - networking because these things these
+04:26 - guys need to be able to talk to each
+04:27 - other you're going to click on user data
+04:30 - and you're going to paste in that cloud
+04:32 - config and it's very important that you
+04:33 - have this comment right here there we go
+04:35 - that's all i need i'm going to give it
+04:37 - one of my ssh keys so i can ssh in
+04:41 - and it's booting up coreos machine one
+04:44 - now let's go ahead and create coreos 2.
+04:47 - now if you haven't used digitalocean
+04:48 - before i it's really my favorite
+04:51 - cloud provider i'll put a link for ten
+04:54 - dollars of free
+04:56 - um i guess credit uh that you can do
+04:59 - these referral things with digitalocean
+05:01 - where you get you can give away ten
+05:02 - dollars of free credit if you use that i
+05:04 - get twenty five dollars of free credit
+05:06 - but no worries you don't have to use it
+05:08 - um make sure i spell it right i have
+05:11 - plenty of credit as it is right now so
+05:14 - so here's a third core os machine
+05:18 - and we'll run a fourth one and then be
+05:20 - done
+05:21 - so i'm starting up four machines right
+05:22 - now they'll all take roughly a minute to
+05:26 - start
+05:28 - coreos4
+05:31 - pick stable
+05:35 - give it the cloud config
+05:37 - give it my ssh key and we're good
+05:40 - okay so these are all creating right now
+05:43 - and so now remember this discovery url i
+05:45 - generated the one that's in my cloud
+05:47 - config i can copy that out
+05:50 - and i can actually look at this
+05:53 - and you'll see that now machines are
+05:55 - starting to show up they're starting to
+05:57 - register themselves to the cluster i'm
+05:58 - going to keep refreshing here real quick
+06:00 - i should see a second and a third appear
+06:02 - here soon and you also notice that this
+06:05 - is a private ip address this is an
+06:07 - in-house digitalocean private ip address
+06:10 - so even if someone were to somehow
+06:12 - maliciously access this url here they
+06:14 - can't really do anything malicious with
+06:16 - it because they don't have access to
+06:17 - these ip addresses only your core os
+06:20 - clusters can do this only your core os
+06:23 - nodes can do this on your digital ocean
+06:24 - machine so i should see three of these
+06:26 - register but not the fourth
+06:29 - and that's because when i generated my
+06:31 - discovery token here i gave it a size
+06:33 - equals three
+06:35 - which means the first three that
+06:36 - register are all going to run at cd any
+06:39 - ones after that are not going to
+06:41 - actually run at cd
+06:43 - they're going to reference the existing
+06:46 - etcd and the reason is is well it's like
+06:48 - a clustering we don't need a hundred
+06:50 - machines running etcd for failover we
+06:53 - really only need three to five machines
+06:55 - running fcd for failover and you do
+06:58 - always want that to be a
+07:00 - an odd number three five seven and you
+07:02 - really don't need more than three five
+07:04 - seven nine most of the time so here's
+07:07 - kind of
+07:07 - here's the two ways you'll go about
+07:10 - running core os in production
+07:12 - you'll either run this way
+07:14 - which is i'm gonna run say five no a
+07:16 - five node cluster and all five are gonna
+07:19 - run at cd and they're also going so
+07:22 - they're gonna be running xd for failover
+07:24 - so if this machine goes down
+07:26 - um xed still has all of its existing you
+07:29 - know information
+07:32 - and then also all five of these machines
+07:34 - are going to run my docker applications
+07:36 - so that's kind of your smaller way of
+07:38 - doing it in production
+07:39 - your bigger way of doing it in
+07:40 - production is to run five dedicated sed
+07:44 - machines in your cluster and then all
+07:47 - the other ones in your cluster um do not
+07:49 - run ncd at all they are just your
+07:52 - workers and so really your procedure for
+07:55 - spinning this up is about the same as
+07:57 - what we just did your cloud config just
+07:59 - looks slightly different for this guy it
+08:01 - says only run at cd
+08:02 - and your cloud config for these guys
+08:04 - says we're not going to run ncd we're
+08:06 - just going to you know talk to it so
+08:08 - that's basically all you need to know
+08:10 - about etcd core os they're running right
+08:12 - now
+08:13 - i've got three copies of ncd going and
+08:16 - now i can ssh into any one of these
+08:18 - machines
+08:19 - let's go ahead and check it out um
+08:23 - and i'm going to go ssh core at core is
+08:25 - the default user that digitalozen uses
+08:28 - i gave it my ssh key if you remember
+08:30 - when i created the machines i gave it
+08:32 - one of my ssh keys so i can
+08:34 - automatically ssh in any box
+08:37 - and then i have docker running so i can
+08:39 - do docker ps nothing's running and then
+08:41 - i can also look at etcd etcd
+08:44 - xcd control i can list that i can see
+08:47 - all the keys
+08:49 - so right now there's just kind of some
+08:50 - configuration information that they're
+08:52 - all sharing right now this will look
+08:54 - identical on any one of my four machines
+08:56 - then i also have access to fleet if you
+08:58 - remember in my cloud config i told it we
+09:00 - also want to run fleet and flannel so i
+09:03 - can also run fleet control
+09:06 - list
+09:06 - machines and there you go i see all four
+09:09 - machines not just the three that are
+09:10 - running at cd so all four of these
+09:13 - machines are wired up to fleet and i can
+09:15 - now use fleet to run services let's get
+09:17 - into that in the next video
+
+Cleaned transcript:
+
+okay these videos are going to be fun here because we're going to be moving beyond basic docker of how to create a container how to create an image and run a container and we're going to be talking about high availability and really scaling a production app with docker and that involves several new pieces of technology uh but it's really it's pretty simple um it's a lot of fun it takes a while to really wrap your head around it but once you do wrap your head around it it's pretty simple and a lot of fun so here's what we're going to be building and i'll give you this link and i'll give you a link to the gist where i have all the code that i'm going to be using here as well which is pretty much copy and paste code but we're going to be creating a core os cluster so coreos is our operating system that we're going to use instead of say ubuntu linux coreos is linux and we're going to run four core os machines that are going to cluster together and kind of act like one machine in a lot of ways and then we're going to start running docker containers on this cluster so we're going to run web app 1 and that will get assigned to a machine and we're going to run a copy of that web app too that'll get assigned to another machine and then we're going to say run engine x to load balance between the two and then we'll maybe even run a second engine x so that way in case this one fails over we've got a second engine x that automatically load balances between the two so multiple levels of fail over here and then just to make it really cool we're gonna put a publicfacing nginx proxy in front of them that automatically creates subdomains for these services so say we want to be access able to access this at someapp.mywebsite.com well these app this nginx instance will automatically register that a sub domain needs to be created to load balance between those two copies of nginx if i haven't confused you already you're in for a great time uh here's those links and let's go and get into it first part which we're going to cover in this video is what is a core os cluster and how do i start this thing up so we're going to do it with digitalocean it's very simple here's pretty much a visual of what core os is so again it's a linux operating system it basically boots up to docker doesn't really run a lot of services and the other big thing that they did so imagine all these blue boxes are capacity to run docker containers um and then the other thing they did is they took the configuration part out of the operating system so that etc folder that etsy folder really doesn't exist instead there's a service called a service called etsyd that they all share and so instead of looking for all the configuration that looks to the ncd service they're all going to look to the exact same service and all your configuration for all your apps and everything lives in here instead so whether you run a copy of web one here here here or here it knows how to look to etcd and find out where all the databases are that it should talk to so that's very cool it also means that your configuration for each computer is really really light here's a cloud config yaml this is all you need to create a core os machine is a cloud config yaml and this is as complicated as it gets really the minimum you need is you need to tell it how to access xcd which is this chunk right here and then we're also going to be running a few other services we're going to be running etcd when it starts we're going to be running fleet when it starts which is what we're going to use to schedule out all of our docker containers and we'll get into that later and we're also going to be running flannel which is what helps docker containers docker containers discover each other and talk to each other so let's go and get started to get started you basically you need your cloud config file and you can copy and paste this one this is the one in the gist the only thing you need to do is change this discovery url to be your discovery url and by your you just copy this url right here and this will generate one and so i'm going to go ahead and do this and it's going to be size equal three and you see every time i refresh it creates a new url for me so i'm just going to snatch that url i'm going to paste it in and now here's my cloud config file so every core os machine i create gets this cloud config file i'm going to go to digitalocean which is a very easy way to do this i'm going to create my first droplet call it coreos1 pick core os it's going to be let's pick the stable version you want to enable private networking because these things these guys need to be able to talk to each other you're going to click on user data and you're going to paste in that cloud config and it's very important that you have this comment right here there we go that's all i need i'm going to give it one of my ssh keys so i can ssh in and it's booting up coreos machine one now let's go ahead and create coreos 2. now if you haven't used digitalocean before i it's really my favorite cloud provider i'll put a link for ten dollars of free um i guess credit uh that you can do these referral things with digitalocean where you get you can give away ten dollars of free credit if you use that i get twenty five dollars of free credit but no worries you don't have to use it um make sure i spell it right i have plenty of credit as it is right now so so here's a third core os machine and we'll run a fourth one and then be done so i'm starting up four machines right now they'll all take roughly a minute to start coreos4 pick stable give it the cloud config give it my ssh key and we're good okay so these are all creating right now and so now remember this discovery url i generated the one that's in my cloud config i can copy that out and i can actually look at this and you'll see that now machines are starting to show up they're starting to register themselves to the cluster i'm going to keep refreshing here real quick i should see a second and a third appear here soon and you also notice that this is a private ip address this is an inhouse digitalocean private ip address so even if someone were to somehow maliciously access this url here they can't really do anything malicious with it because they don't have access to these ip addresses only your core os clusters can do this only your core os nodes can do this on your digital ocean machine so i should see three of these register but not the fourth and that's because when i generated my discovery token here i gave it a size equals three which means the first three that register are all going to run at cd any ones after that are not going to actually run at cd they're going to reference the existing etcd and the reason is is well it's like a clustering we don't need a hundred machines running etcd for failover we really only need three to five machines running fcd for failover and you do always want that to be a an odd number three five seven and you really don't need more than three five seven nine most of the time so here's kind of here's the two ways you'll go about running core os in production you'll either run this way which is i'm gonna run say five no a five node cluster and all five are gonna run at cd and they're also going so they're gonna be running xd for failover so if this machine goes down um xed still has all of its existing you know information and then also all five of these machines are going to run my docker applications so that's kind of your smaller way of doing it in production your bigger way of doing it in production is to run five dedicated sed machines in your cluster and then all the other ones in your cluster um do not run ncd at all they are just your workers and so really your procedure for spinning this up is about the same as what we just did your cloud config just looks slightly different for this guy it says only run at cd and your cloud config for these guys says we're not going to run ncd we're just going to you know talk to it so that's basically all you need to know about etcd core os they're running right now i've got three copies of ncd going and now i can ssh into any one of these machines let's go ahead and check it out um and i'm going to go ssh core at core is the default user that digitalozen uses i gave it my ssh key if you remember when i created the machines i gave it one of my ssh keys so i can automatically ssh in any box and then i have docker running so i can do docker ps nothing's running and then i can also look at etcd etcd xcd control i can list that i can see all the keys so right now there's just kind of some configuration information that they're all sharing right now this will look identical on any one of my four machines then i also have access to fleet if you remember in my cloud config i told it we also want to run fleet and flannel so i can also run fleet control list machines and there you go i see all four machines not just the three that are running at cd so all four of these machines are wired up to fleet and i can now use fleet to run services let's get into that in the next video

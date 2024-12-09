@@ -1,0 +1,365 @@
+00:00 - welcome back to godot recipes this time
+00:02 - we're going to be looking at how to make
+00:03 - a rolling cube
+00:04 - in 3d rolling a cube is trickier than it
+00:08 - seems at first because we can't rotate
+00:10 - the cube
+00:10 - around its center that won't look right
+00:13 - it looks like the edge goes into the
+00:15 - ground
+00:16 - what we want to do is rotate it around
+00:18 - its edge
+00:24 - like that the problem is which edge
+00:27 - which edge we rotate around depends on
+00:29 - which direction we're moving in
+00:31 - if i'm moving to the right like this i
+00:33 - can rotate along that right
+00:35 - bottom edge but if i'm moving to the
+00:37 - left i'm going to need to rotate along
+00:39 - the
+00:40 - bottom left edge now in preparing this
+00:42 - video i
+00:43 - tried a few different approaches to
+00:47 - implementing this rolling uh
+00:50 - and there were really three main ones
+00:53 - that i experimented with
+00:55 - first the pure math solution where we
+00:58 - calculate
+01:00 - transforms and rotate the transforms
+01:02 - around depending on which edge we're
+01:04 - rotating around
+01:05 - the second approach i used was to put an
+01:07 - animation player
+01:09 - on the cube and use that to manipulate
+01:13 - the pivot point and the rotation
+01:16 - and then lastly i tried it using some
+01:20 - helper nodes
+01:21 - that we then just move to the right
+01:24 - position
+01:24 - and then rotate that node and that last
+01:27 - solution is the one i found to be the
+01:28 - most flexible so that's the one i'm
+01:29 - going to demonstrate in this video
+01:32 - so here's our node setup i'm starting
+01:33 - with a kinematic body
+01:36 - you could totally do this with an area
+01:38 - or with a rigid body
+01:40 - depending on what type of game you're
+01:43 - going for
+01:44 - so the changes would be minor i'm going
+01:46 - to stick with the kinematic body it's
+01:48 - simpler
+01:49 - but feel free to experiment
+01:52 - and then i have a pivot node this is
+01:54 - just a spatial that i'm going to use to
+01:56 - be the pivot that we're going to rotate
+01:57 - around
+01:58 - and i've made the mesh instance a child
+02:01 - of that pivot so that when the pivot
+02:03 - rotates
+02:03 - so does the mesh then we also have our
+02:06 - collision shape
+02:07 - and we've got a tween that we're going
+02:08 - to use to do the
+02:11 - animation now since this cube is always
+02:13 - going to be on the ground
+02:15 - i'd like the position of the cube to be
+02:18 - the bottom
+02:18 - center of the cube not the center of the
+02:21 - cube
+02:22 - so i'm going to take the mesh instance
+02:24 - and i'm going to move it up one
+02:26 - and i'm also going to take the collision
+02:27 - shape and move it up one so that way now
+02:30 - our cube position right is right down
+02:33 - there at the bottom center
+02:34 - and the pivot is there as well but the
+02:37 - mesh is offset and the collision shape
+02:39 - is offset both by one
+02:40 - in y okay so now we're ready to
+02:44 - script our movement and here we're going
+02:46 - to break it down into three steps
+02:48 - so the first step is that we need to put
+02:50 - the pivot
+02:51 - at the corner that we want at the edge
+02:54 - that we want
+02:55 - to move in so say we're moving to the
+02:56 - right we want to take the pivot
+02:58 - and move it one unit to the right and
+03:01 - the mesh instance one unit to the left
+03:04 - so everything looks
+03:06 - unmoved but the pivot is now at the
+03:09 - correct
+03:09 - corner so that's step one step two is to
+03:13 - actually
+03:13 - animate the rotation so we'll take the
+03:15 - pivot and we'll animate it rotating
+03:18 - 90 degrees and now the cube
+03:21 - looks like it's in the right position
+03:23 - but we haven't actually moved the
+03:24 - kinematic body
+03:25 - all right so what we really want at the
+03:27 - end is that the kinematic body
+03:29 - is two units to the right since the cube
+03:32 - is a size of two
+03:33 - and so we're gonna as the third step
+03:37 - put our kinematic body two units to the
+03:40 - right
+03:41 - and then reset everything so the pivot
+03:44 - rotation gets undone
+03:46 - its movement gets undone and the mesh
+03:48 - instance
+03:50 - also gets undone right and now
+03:52 - everything is reset
+03:53 - back where we started with the pivot at
+03:56 - the bottom center
+03:57 - everything is good but our cube has
+03:59 - moved two units to the right
+04:02 - so let's look at our script so we've
+04:04 - attached a script to our kinematic body
+04:07 - and we have a variable here called speed
+04:09 - that's going to be how fast you roll
+04:11 - so you can increase or decrease that to
+04:13 - change your rolling speed
+04:15 - i've got a couple of variables here to
+04:17 - reference the various nodes the pivot
+04:19 - node the mesh node
+04:21 - and the tween node and then in our
+04:24 - physics process we're going to
+04:26 - check the keys so that we can hold down
+04:29 - the right arrow key
+04:30 - and we will keep rolling continuously
+04:33 - until we
+04:34 - let go so we're just going to check the
+04:35 - inputs here and each
+04:38 - one will call the roll function to roll
+04:40 - in that direction
+04:42 - now let's look at the roll function so
+04:44 - the first thing we're going to do
+04:45 - is if the tween is active that means
+04:48 - we're in the middle of an animation
+04:50 - we're rolling to a new spot so we don't
+04:53 - want to start rolling
+04:54 - again until that finishes so if the
+04:56 - tween is active we're going to just
+04:58 - return
+04:59 - and then we're going to do those three
+05:01 - steps i talked about so the first step
+05:03 - is to offset the pivot and the mesh
+05:06 - right the pivot if we're moving right we
+05:08 - offset the pivot to the right
+05:10 - and the mesh in the opposite direction
+05:13 - and then step two
+05:15 - is to animate that rotation so we want
+05:17 - to rotate
+05:18 - the pivot around
+05:21 - the right axis and so the axis we're
+05:25 - going to get is the
+05:26 - direction we're going the cross product
+05:29 - with the down vector is going to give us
+05:31 - the axis we want to rotate around and
+05:34 - then we interpolate that property
+05:36 - the transform basis of the pivot from
+05:39 - its starting position
+05:40 - to its itself rotated 90 degrees around
+05:44 - that axis
+05:46 - how long it's going to take is one
+05:48 - divided by speed so
+05:49 - you make that speed number bigger it
+05:51 - will happen faster
+05:54 - and then i highly recommend you play
+05:56 - around with which transition types you
+05:57 - use
+05:58 - i like the way the quad one looks but
+06:01 - you can
+06:02 - go crazy with all of them and try them
+06:03 - out like even do the bounce one where
+06:05 - it'll bounce when it hits the end and so
+06:07 - on
+06:08 - we start the tween and then we wait for
+06:10 - it to finish
+06:12 - so that once the tween is finished then
+06:15 - we can do step three which is to
+06:18 - put everything back and be ready for the
+06:20 - next move so we actually move the
+06:22 - kinematic body
+06:24 - two spaces in the direction
+06:27 - stick the pivot back at zero zero zero
+06:30 - stick the mesh back at
+06:33 - its original starting position which was
+06:35 - one unit up
+06:37 - okay and now everything will be reset
+06:39 - and ready to start
+06:40 - again so let's look at how that looks
+06:43 - okay if we try it out on our test scene
+06:45 - here you'll see that
+06:47 - we're almost there but there's one thing
+06:49 - that's a little odd
+06:51 - the cube is rolling but you might notice
+06:53 - that it's squishing a little bit
+06:55 - you can especially see it when we move
+06:56 - to the side
+06:58 - see that it shrinks a little bit and
+07:00 - then expands again
+07:02 - as it rolls well the reason that's
+07:04 - happening is because of the way the
+07:06 - tween is interpolating
+07:08 - the basis from its zero rotation
+07:12 - to its 90 rotation and we can actually
+07:14 - see this if we set it a little slower
+07:17 - and make the speed a little slower you
+07:19 - can see how it's
+07:20 - shrinking and then growing again and
+07:23 - there's a couple of different ways we
+07:25 - can fix
+07:25 - that one is that we could go into our
+07:28 - script here
+07:30 - and instead of rotating the full 90
+07:32 - degrees
+07:33 - we could rotate 40 and then
+07:36 - a 45 and then another 45 and that would
+07:39 - work fine
+07:40 - what i don't like about that is having
+07:42 - two separate interpolations means you
+07:44 - can't really
+07:46 - it makes it messy to deal with the
+07:47 - different transitions and getting a
+07:49 - smooth
+07:50 - if you don't use linear you're not going
+07:52 - to get a smooth
+07:53 - rotation so what's better is to take the
+07:58 - take that tween node and connect its
+08:02 - tween step signal and that tween step
+08:06 - signal is called every frame while the
+08:10 - tween is running and so what we'll do
+08:12 - there is we'll just tell that to take
+08:14 - the pivot.transform
+08:21 - and orthonormalize it which is the same
+08:23 - as resetting its
+08:25 - scale which remember the basis takes
+08:28 - into account the rotation and the scale
+08:31 - we want the scale to get
+08:33 - reset and that's going to fix that
+08:36 - problem
+08:37 - now you'll see i left it on the slow
+08:38 - motion so now it just looks like it's
+08:42 - rotating all the way around
+08:45 - now you might also notice that
+08:49 - the other problem we have is that if
+08:51 - your texture of your cube
+08:53 - it's not symmetrical then you see it's
+08:56 - got this little
+08:58 - text up here in the corner after i move
+09:00 - the rotation of the mesh resets
+09:02 - so it looks like it snaps back
+09:06 - and if your cube were say different
+09:08 - colors on each side
+09:10 - you'd also have that problem too where
+09:12 - you want to see
+09:13 - you want that rotation to be preserved
+09:16 - and we could do that in a couple of ways
+09:18 - we could add another
+09:20 - pivot node around the mesh instance that
+09:23 - that we can then keep the rotation or we
+09:26 - can reset the
+09:27 - rotation or preserve that rotation at
+09:30 - the end after we rotate
+09:31 - and that's what we're going to do is
+09:32 - we're just going to go here to that step
+09:34 - 3
+09:35 - and we're going to add a
+09:38 - couple of lines that will as it's
+09:41 - resetting
+09:42 - preserve that rotation of the met
+09:46 - of the mesh so we grab its
+09:49 - global basis its basis in global space
+09:53 - and then reset everything right
+09:56 - resetting the pivot
+09:58 - resets the rotation of the mesh but then
+10:01 - we can stick it back here by
+10:03 - applying that basis again so now
+10:05 - everything gets moved to the right place
+10:07 - but we preserve that
+10:08 - rotation that the mesh made and now if
+10:11 - we run it you'll see that the mesh stays
+10:15 - rotated but we have a problem the next
+10:18 - time we rotate
+10:20 - right the mesh gets offset weird and
+10:23 - that's because the mesh is rotated
+10:25 - so up here when we translated it now
+10:28 - it's translating in the wrong direction
+10:30 - so we need to make this global translate
+10:34 - and then we translate it without taking
+10:38 - into account the rotation and now
+10:41 - we see that rotation gets preserved the
+10:43 - mesh will be oriented
+10:46 - so the texture looks right no matter how
+10:48 - we roll
+10:49 - [Music]
+10:50 - okay one last thing i want to talk about
+10:52 - and that's collisions so these red cubes
+10:54 - are static bodies and of course i'm
+10:56 - going to pass right through them
+10:58 - because we're not using move and slide
+11:01 - or movement collide to move our
+11:02 - kinematic body we're just
+11:05 - advancing it two units and so we're
+11:07 - going to be
+11:08 - going through these solid objects and
+11:11 - really this is grid based movement right
+11:14 - we don't want to move any
+11:16 - half increments or anything like that we
+11:17 - want to move exactly two units every
+11:19 - time we move
+11:20 - so we don't really need collisions in
+11:23 - the sense of
+11:24 - move until you hit something we need
+11:26 - just you can roll there
+11:28 - or you can't the space you want to move
+11:29 - into is occupied or it isn't
+11:31 - and so we can fix that if we go to
+11:34 - our cube's code and remember we could be
+11:38 - doing this with a
+11:40 - kinematic body or any other other kind
+11:43 - of
+11:43 - body as well so we're going to just cast
+11:46 - a ray forward
+11:48 - so we get the world space and we call
+11:51 - intersect ray with from the middle of
+11:54 - our cube
+11:55 - to something forward in that direction
+12:00 - and instead of multiplying by 2 i'm
+12:02 - multiplying by 2.5 to give us a little
+12:04 - extra margin
+12:06 - because we might be offset from an
+12:08 - object by
+12:09 - one and we don't want to roll into that
+12:11 - one either
+12:13 - and then self just excludes the
+12:15 - kinematic body itself
+12:17 - from the ray collision and if we get a
+12:20 - collision we return so that means you
+12:21 - can't move there so you're not allowed
+12:22 - to move and that's all we need to do
+12:25 - to make it so that those cubes will be
+12:28 - solid
+12:28 - now if i go over here and i'm holding
+12:30 - down the key i can't
+12:32 - can't go through this cube from any
+12:34 - direction
+12:36 - all right that's it so i hope this gives
+12:39 - you some
+12:39 - cool ideas for things to do with rolling
+12:41 - cubes in your game you can see i've done
+12:43 - some examples here i've got a big
+12:45 - enemy cube rolling around there i've
+12:48 - made some
+12:49 - uh squares with a grid map that you can
+12:52 - roll on and change their color
+12:54 - all sorts of things you can do drop off
+12:57 - here
+12:58 - make it fall down to the next level and
+12:59 - so on
+13:01 - let me know in the comments what you
+13:02 - come up with i look forward to seeing
+13:04 - them and i'll see you in the next video

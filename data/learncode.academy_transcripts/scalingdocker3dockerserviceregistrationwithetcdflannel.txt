@@ -1,0 +1,264 @@
+00:01 - okay so we have our coros cluster
+00:02 - running and we can now use Fleet to run
+00:06 - multiple copies of our web apps and this
+00:08 - brings us to kind of the biggest
+00:11 - difficulty that a lot of developers have
+00:13 - when moving to a Services microservices
+00:15 - architecture is oh my goodness this IP
+00:18 - address for web 2 could change if this
+00:21 - machine dies Fleet is going to
+00:23 - reschedule web 2 over here so now web 2
+00:25 - has a brand new IP address and a brand
+00:27 - new Port so how do I handle that and we
+00:31 - basically need to bring in service
+00:32 - Discovery that's really two phases to be
+00:35 - solved is Service
+00:37 - registration you know uh so eted is
+00:40 - basically going to be our Hub the
+00:41 - internal eted it's going to be our Hub
+00:43 - we're going to register that these
+00:44 - Services exist and our running and then
+00:47 - engine X our load balancer is going to
+00:50 - query eted and discover those services
+00:52 - and kind of watch that for for changes
+00:55 - so whenever Services arrive or depart
+00:58 - engine X is going to reload its configur
+01:00 - ation and restart itself uh so let's
+01:03 - handle that first step of Service
+01:05 - registration to do that coros gives us a
+01:07 - great tool called flannel um and you see
+01:10 - in the cloud config file we've started
+01:11 - flannel here and what flannel is going
+01:14 - to do is it's going to give a unique IP
+01:16 - address to every single Docker container
+01:18 - that runs um and it's going to be an
+01:21 - internal IP address like a 10.0 do IP
+01:24 - address so it's only accessible to
+01:27 - Services running in this coros cluster
+01:29 - it's not going to be accessible outside
+01:31 - which also solves another cool problem
+01:32 - for us uh when some app runs we don't
+01:35 - have to expose any public ports anymore
+01:38 - we only have to expose internal ports to
+01:41 - my Docker container uh so right
+01:45 - now our SU app at service is doing a an
+01:49 - uppercase P which says Hey expose all
+01:52 - the ports that my node sample app is
+01:54 - exposing and create a dynamic port for
+01:57 - them uh that's accessible public let's
+02:00 - kind of just go through this real
+02:02 - quick um so let's I can list
+02:05 - units I have nothing
+02:08 - running so let's go ahead and start uh
+02:10 - sum app at one through four so let's get
+02:14 - four copies of SU app running
+02:17 - here great still got those area messages
+02:20 - I need to look into what those are uh so
+02:22 - fleets control list
+02:26 - units great I've got four of them
+02:28 - running on four different machines
+02:30 - um and so let's go ahead and SSH into
+02:33 - this
+02:38 - guy have that handle it for
+02:40 - me and I'll do a Docker PS so that's
+02:43 - automatically it's exposing Port 3000
+02:45 - which is getting mapped to
+02:47 - 32770 externally that is available uh to
+02:51 - anyone that has access to this coreos
+02:52 - cluster which if you remember on digital
+02:54 - ocean is everybody in the world uh
+02:57 - because these are all public of course
+02:59 - you can fix that with with IP tables uh
+03:01 - but a cool thing is is using flannel
+03:03 - we're not even going to have to do that
+03:04 - anymore uh but let me show you real
+03:06 - quick uh so if I were to kill this node
+03:09 - let's say I were to go to digital otion
+03:11 - and just send the power off signal to
+03:13 - this machine anything running on that
+03:15 - machine flannel would reassign to
+03:16 - another machine really quickly pretty
+03:19 - much as soon as it noticed that that
+03:20 - service died uh but then they'd have a
+03:22 - new IP address and they certainly have a
+03:25 - new Docker report as well um so what
+03:28 - flannel does is flannel actually
+03:30 - assigned this guy an internal IP address
+03:33 - so let me go ahead and grab that out
+03:34 - let's go Docker
+03:36 - exec uh sum app one I'm going to run a
+03:39 - command within sum app
+03:41 - one and I'm just going to run IP address
+03:47 - list so you can see if I look at my
+03:49 - ethernet zero I've got this IP address
+03:52 - that has been given to me so now I can
+03:55 - just ping
+03:56 - this port 3000 actually I'll just ping
+03:59 - it yep it's working um and then let me
+04:03 - go to a different
+04:06 - machine and let's see Fleet control list
+04:11 - units I'm going to go to a completely
+04:13 - different machine a completely different
+04:15 - container some app at
+04:20 - three and let's get into that app let's
+04:24 - go
+04:26 - Docker
+04:28 - exec it I want to do an interactive
+04:30 - terminal and we're going to go into SU
+04:33 - app
+04:35 - 4 so I'm going to open up a bash
+04:37 - terminal basically within my suap 4
+04:39 - container
+04:41 - wh did I do the wrong one yep I did at
+04:46 - three so suap 3 is the container that's
+04:49 - running on this machine okay there we go
+04:50 - now I'm in suap suap 3 now let's do a
+04:54 - curl let's actually curl this IP address
+04:55 - Port 3,000 because we don't even care
+04:58 - about an externally exposed IP address
+05:01 - and there you go I've got my HTML
+05:03 - document from my other web service
+05:05 - running on my other container uh the two
+05:07 - things that are great about flannel is
+05:09 - one we don't have to use Docker Link at
+05:11 - all so if you're familiar with Docker
+05:13 - link Docker link you know you can link
+05:15 - two containers together and it'll set a
+05:17 - bunch of environment variables that tell
+05:18 - you all how to talk to them uh but now
+05:21 - we don't even have to worry about that
+05:23 - we just have to register each web
+05:26 - service with its accessible
+05:28 - IP
+05:30 - and the port is always going to be 3,000
+05:32 - on any of our web containers so how do
+05:34 - we actually register this come on let's
+05:35 - get to the meat and potatoes here let me
+05:37 - get out of here so there's basically two
+05:39 - ways to register this one we are going
+05:41 - to register this to etsd internally so
+05:43 - we're going to use ETD
+05:45 - control and we're just going to set a
+05:47 - key and then other services can get a
+05:50 - key or they can watch it uh so the the
+05:53 - two ways of doing this is you can either
+05:56 - have your SU app service actually handle
+05:58 - this so so in this case I'm running a
+06:00 - node.js application that node.js
+06:02 - application could automatically register
+06:05 - its IP address and Port 3000 to eted all
+06:09 - I have to do is kind of give it um I
+06:13 - just have to mount the eted control as a
+06:16 - volume within the container but it's not
+06:18 - really the best practice for a service
+06:20 - to handle its own registration um what
+06:23 - you want to do instead is a sidekick
+06:25 - service so we're going to create a suap
+06:27 - discovery service and this will kind of
+06:29 - link to every instance of a web service
+06:33 - and then it will run alongside and it
+06:35 - can monitor the service for us and when
+06:38 - the service goes up or down we're going
+06:40 - to either add or remove a key from eted
+06:43 - so here's what that file looks
+06:45 - like it's got a description we're going
+06:47 - to announce sum app one we're going to
+06:49 - bind to SU app one and then we're going
+06:52 - to start up after whop we're going to
+06:53 - start up after SU app one has started
+06:55 - and then we have this Fleet uh
+06:57 - configuration here which says it's a
+06:59 - machine of sum app one so that means
+07:01 - whenever we start stop sum app one then
+07:06 - it's automatically going to start and
+07:07 - stop some app Discovery at one so that
+07:10 - means basically once we've kind of
+07:12 - loaded up this service we don't have to
+07:14 - manually control it anymore it will
+07:16 - automatically be a slave of some app one
+07:19 - so here's what that's doing if you're
+07:21 - good at bash script you're going to see
+07:23 - that it's basically just going to run a
+07:26 - loop every 45 seconds it's going to run
+07:28 - ETD control set this key right here
+07:32 - Services SU app Upstream SU app one and
+07:36 - it's going to run this Docker inspect
+07:38 - command and get the IP address of SU app
+07:41 - one I'll show you that command real
+07:42 - quick let's do that SSH
+07:45 - [Music]
+07:48 - again so I can just run Docker inspect
+07:51 - we're going to get the network settings
+07:52 - and IP address from SU app 3 there's the
+07:54 - IP address so it's just going to get
+07:56 - that IP address add Port 3000 to it and
+07:59 - then it's going to give it a timeout of
+08:01 - 60 seconds so this key is going to
+08:03 - expire after 60 seconds but we're going
+08:05 - to heartbeat update this thing every 45
+08:07 - seconds and then if this service ever
+08:10 - stops then we're going to remove that
+08:12 - key from etcd okay simple enough let's
+08:15 - go ahead and submit
+08:17 - this uh SU app
+08:24 - Discovery at so we're submitting this to
+08:28 - Fleet control and then uh let's go ahead
+08:30 - and start four copies of
+08:37 - it so we do have to kind of create these
+08:40 - either by doing a fleet control start or
+08:42 - Fleet control load um let me show you
+08:46 - what just happened too if I go Fleet
+08:48 - control list unit files we only
+08:52 - submitted one unit file and that was the
+08:54 - discovery at file and whenever you
+08:56 - create a new number from a dis from an
+08:59 - at file then it what it does is it
+09:01 - actually clones that file uh so you have
+09:04 - a copy of it so these copies did not
+09:07 - exist until I ran Fleet control load or
+09:09 - Fleet control Start If I had not run
+09:11 - those there'd be no companion Services
+09:15 - there'd be no Sidekicks for these all
+09:17 - there would be is a sidekick for this
+09:19 - guy right here which we never actually
+09:21 - run so I had to do a run or a start to
+09:24 - create those sidekick files and from now
+09:26 - on whenever I do a sum at one service
+09:28 - start or stop then it will automatically
+09:31 - start or stop its companion as well and
+09:34 - if you'll notice the companion service
+09:35 - also got loaded on the exact same
+09:37 - machine so uh sidekick one got put on
+09:41 - the same IP address as some app one
+09:43 - sidekick two got put on the same IP as
+09:46 - some app 2 and so and so so basically
+09:49 - they're linked as far as Fleet is
+09:51 - concerned this service and this service
+09:53 - are coupled together uh so let's go do
+09:55 - Fleet
+09:56 - control list units
+10:01 - we've got them running so they're all
+10:02 - running uh let's go ahead and ssh in and
+10:05 - see what etsd looks
+10:11 - like so ety
+10:14 - D LS
+10:17 - recursive so these are all my ETD keys
+10:19 - and you'll see that it is now created a
+10:21 - Services folder with some app in it
+10:24 - upstream and we've got four upstreams
+10:27 - that are set let's go ahead and look at
+10:28 - one of these
+10:34 - there we go so that's an IP address for
+10:36 - some app 3 some app 2 some app one and
+10:41 - some app four so now we can spin up an
+10:44 - engine X instance that watches this
+10:46 - folder right here and when anything
+10:48 - changes it reloads itself hopefully you
+10:51 - got this you this is the one of again
+10:53 - this is the most complicated piece um
+10:56 - understanding Service registration to me
+10:58 - is the toughest part
+10:59 - uh service Discovery is a lot easier
+11:01 - than Service registration uh so let's go
+11:04 - ahead and move on to service Discovery
+11:07 - and engine X

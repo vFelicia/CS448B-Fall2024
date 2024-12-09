@@ -1,0 +1,317 @@
+With timestamps:
+
+00:00 - okay I'm back I just saw a question in
+00:02 - the live chat that's going on right now
+00:04 - saying what's a memory leak guess what
+00:06 - you're gonna find out what a memory leak
+00:08 - is in this video in particular how to
+00:10 - manage memory if you using tensorflow
+00:13 - not JSF here's the thing I live in a
+00:15 - world where I generally program either
+00:17 - in processing which is built on top of
+00:19 - Java or I program in Java and be fought
+00:22 - with the p5 library in the language
+00:24 - JavaScript and I don't have to worry
+00:28 - about memory management I mean often do
+00:30 - but most of the time I don't there's
+00:31 - something my friend my friend Liv lives
+00:36 - in the computer their name is garbage
+00:38 - collector and the garbage collector just
+00:40 - kind of is always there checking to see
+00:42 - if I'm using any of my variables anymore
+00:44 - and if I'm not collects that memory and
+00:47 - reallocates it for somebody else a
+00:48 - memory leak is something in your program
+00:51 - which continues to allocate memory over
+00:54 - and over again and yet where you don't
+00:57 - need to you need to remember that stuff
+00:59 - and so you're filling up the computer's
+01:01 - memory and it's just to infinity and
+01:04 - eventually the memory will be full and
+01:06 - your program will crash your computer
+01:07 - will crash I mean maybe it's not a leak
+01:09 - technically if you can keep if you do
+01:11 - you need to save all that stuff but most
+01:13 - the time like if you're creating a
+01:15 - variable that's just keeping track of
+01:17 - the computers to a score in a game and
+01:19 - you're reallocating new memory for that
+01:22 - score over and over and over again and
+01:24 - you don't need the old score you should
+01:26 - be allocate that memory and if you're
+01:28 - programming in like a low-level language
+01:29 - like C or C++ you sometimes have to
+01:32 - manage this memory yourself higher-level
+01:34 - languages that are more apps that have a
+01:35 - layer of abstraction the browser is
+01:37 - there to protect us I think the Java
+01:40 - Virtual Machine they have a garbage
+01:42 - collector that handles some of this
+01:43 - memory Madren tests are dope flow chess
+01:46 - is in this sort of funny in-between
+01:48 - place and we're programming in
+01:49 - JavaScript but tensorflow digest is
+01:51 - doing some highly manual management of
+01:54 - the memory of your GPU to do all this
+01:57 - fast math operations so we have to make
+01:58 - sure we carefully think about how our
+02:02 - allocating memory and explicitly
+02:03 - deallocate memory so that's what I want
+02:05 - to look at so let's take a look we're
+02:07 - going to do
+02:07 - this is gonna be exciting we're gonna
+02:08 - make a memory leak happen and then we're
+02:10 - gonna fix it
+02:11 - yay all right so uh what so this is the
+02:15 - car that I had before let's actually
+02:17 - keep this this is kind of interesting
+02:20 - but what I'm gonna do instead is I'm
+02:23 - gonna take all of this code and I'm
+02:28 - going to put it in draw what's draw you
+02:33 - might ask though again there's no reason
+02:35 - for me there's no particular reason why
+02:37 - I need to be using p5 the p5 library
+02:40 - with tension Fletch s right now but one
+02:43 - of the things that p5 library has it has
+02:44 - this animation loop if you write the
+02:46 - function draw it's going to execute that
+02:48 - function 30 times per second 60 frames
+02:50 - per second depending on the situation so
+02:52 - I just want to hit save and now I'm just
+02:55 - gonna hit refresh so in theory this is
+02:57 - chugging along right now so the question
+03:00 - is how do i look at how much I mean
+03:03 - there's I don't see anything like I
+03:04 - could like maybe what I want to do is do
+03:06 - like console dot log hello just to make
+03:10 - sure it's like running and we could see
+03:12 - the hairs I'm seeing hello over and over
+03:14 - again over here over and over again in
+03:16 - the console so it looks like it the
+03:18 - programs running fine it's running fast
+03:19 - no problem let's look and see what
+03:21 - memory it's actually using so there's a
+03:23 - lot of tools up here whoops no here that
+03:26 - I don't really know how to use for
+03:28 - evaluating the performance of your
+03:31 - webpage in the developer tools I'm gonna
+03:34 - go and you up here under window and go
+03:36 - to task manager one of the nice things
+03:37 - about tattle oh my goodness we
+03:39 - definitely have a memory leak okay I
+03:42 - think and I think I filled it up I think
+03:45 - probably the GP so the memory footprint
+03:48 - so let me scroll this over here so we
+03:50 - can see these are the various things the
+03:52 - browser is this is the browser as a
+03:53 - whole so this is the regular computer's
+03:55 - memory the tensorflow documentation tabs
+03:58 - using 94 megabytes
+03:59 - fifa but the GPU which is just filled
+04:02 - its way up to 2 gigabytes really fast
+04:04 - let's try let's try setting the
+04:08 - framerate 2 to 1 and refresh the page
+04:15 - and let me go back to the task manager
+04:17 - and maybe now we can see
+04:20 - Wow it's already at two gigabytes okay
+04:24 - so something was going on with the
+04:26 - browser probably I had filled up the
+04:28 - memory somewhere else so I just actually
+04:30 - quit Chrome and restarted it so now you
+04:33 - can see the GPU is using thirty two
+04:36 - point eight megabytes of memory which
+04:38 - isn't that much and maybe over time it's
+04:40 - gonna like to go up because I make it oh
+04:42 - oh actually no it's not
+04:44 - because I also in testing things I
+04:46 - commented out sorry I comments without
+04:48 - all the tensor stuff so let me put the
+04:50 - tensor stuff back in right and now let's
+04:53 - take a look at the GPU memory so I'm
+04:56 - gonna close the task manager I'm gonna
+04:59 - hit refresh now I'm gonna go to the task
+05:02 - manager again and I'm gonna look here
+05:05 - that's it I'm gonna look here at this
+05:06 - number so we can see I'm using some
+05:10 - memory maybe it's gonna go up maybe not
+05:13 - but the thing is I've got very I'm using
+05:15 - like a very small amount of numbers so
+05:18 - really what tensorflow digest is
+05:19 - designed to work with the reason one is
+05:21 - to work with large amounts of numbers so
+05:23 - let me go back to my code and let me
+05:25 - just say what if instead of having 15
+05:27 - numbers I'm gonna have 15,000 which
+05:34 - would be 500 by 300 so I'm gonna have a
+05:37 - 5 to 500 by 300 matrices transpose one
+05:40 - of them and do matrix multiplication so
+05:42 - let's do that
+05:44 - let me now let me hit refresh one weird
+05:46 - it's very hard to demonstrate whoops oh
+05:49 - not 50 150 thousand 15 that whoops oh
+05:53 - that should actually be a hundred fifty
+05:55 - thousand let's do that one hundred fifty
+05:57 - thousand that's what I meant
+05:58 - let me hit refresh let me go back to the
+06:02 - task manager and now let's look at that
+06:06 - memory it's going up little by little
+06:10 - it's going up now let's say I was trying
+06:12 - to do that 30 frames per second let's
+06:16 - get rid of this frame rate 1 hit save
+06:18 - close the task manager the task manager
+06:21 - I feel like needs to be and I'm gonna go
+06:22 - back and open up the task manager of my
+06:25 - last time demonstrating this and now I
+06:27 - really want to see this memory leak I
+06:29 - want to see this number go up 63 66
+06:33 - okay so I let this run for a little bit
+06:36 - we could really see the memory leak is
+06:37 - happen happening you know this is only
+06:39 - gonna go up it's never gonna go down so
+06:42 - one of the things now there's uh I'm
+06:44 - using the task manager the truth of the
+06:46 - matter is and I'm just gonna I'm gonna
+06:48 - type in here no loop just to shut this
+06:50 - off for a second the truth of the matter
+06:52 - is tensorflow digest provides us with a
+06:55 - mechanism to check this as well so I can
+06:58 - also say TF dot memory let's actually go
+07:01 - to the API API reference memory TF
+07:08 - memory and I can look at the number of
+07:14 - bytes allocated the number of tensors
+07:16 - this tight kind of thing so let's
+07:18 - actually look at let's just look at
+07:19 - number of tensors so I can say I think
+07:21 - TF memory dot num tensors I can do maybe
+07:26 - it's just is it a function or is it of
+07:28 - property let's try this console.log this
+07:33 - oh let me get rid of the hello so you
+07:42 - can see here these are all the tensors
+07:43 - being stored and they're going up and up
+07:45 - and up the good news is there is a way
+07:49 - to get rid of tensors that you don't
+07:51 - need anymore there are two functions
+07:53 - okay probably there might be more than
+07:54 - this but there's two functions that I
+07:56 - want to talk about as they relate to
+07:57 - memory management there is the function
+08:00 - called dispose and there's the function
+08:03 - called tidy and there they do the same
+08:05 - thing they clean up memory that's not
+08:08 - used but they do it in a different way
+08:09 - so let's look at how that works so
+08:13 - coming back over here if I go into my
+08:15 - code and I say like these are all my
+08:18 - tensors a b b b and c i'm gonna call
+08:21 - this v underscore t cuz that's actually
+08:24 - like sometimes I feel like a naming
+08:26 - convention like transposed to B this is
+08:28 - my own naming convention and I'm gonna
+08:30 - say a dot dispose B dot dispose C dot
+08:36 - dispose and B underscore t dot dispose
+08:39 - so this is me manually despo after you
+08:44 - know this is like
+08:46 - something meaningful here like I want to
+08:50 - do something meaningful with these
+08:51 - tensors and then I'm done with them I
+08:53 - want to dispose them so now let's run
+08:57 - this again I'm gonna hit refresh and
+08:59 - look zero zero zero zero the agro tensor
+09:03 - stored in memory and in fact if I go to
+09:06 - the task manager we should see load up
+09:12 - please that the GPU process is not
+09:15 - growing it's at 229 megabytes and it's
+09:19 - not getting any higher there is no
+09:20 - longer a memory leak
+09:22 - we have correct fixed the memory leak
+09:24 - the thing is so that's good that's step
+09:27 - one we've talked about dispose the thing
+09:32 - is you might be writing a program using
+09:34 - tension flow to ask more you're just
+09:35 - making tensors like crazy you're just
+09:39 - tense or happy and so really having to
+09:41 - manually keep track on everything and
+09:43 - call dispose on everything can become
+09:45 - rather unwieldy and that's where TF tidy
+09:49 - comes in so TF tidy is a function that
+09:53 - you don't call on a particular tensor
+09:55 - but it allows you to wrap a bunch of
+09:58 - code in that will get cleaned up when it
+10:01 - ends what I mean by that is I can say TF
+10:04 - tidy my stuff and then I can write a
+10:09 - function called my stuff where I do all
+10:12 - of this so what this is doing is it's
+10:16 - saying execute this function my stuff
+10:19 - but make sure you tidy it up after
+10:22 - you're done so let me run this and see
+10:24 - what happens
+10:26 - and you can see I still have zeros and
+10:30 - just to be sure that this function is
+10:32 - running and now we could see that
+10:36 - function is running here's the thing
+10:37 - you're not gonna see anywhere in any
+10:40 - tension luggage as examples it written
+10:42 - this way so you noticed yeah I'm just
+10:44 - going to do a couple quick steps here I
+10:45 - wrote a named function and past it into
+10:49 - TF tidy I could more likely you're gonna
+10:52 - see an anonymous function that doesn't
+10:54 - have a name passed into TF tidy like
+10:57 - this
+10:58 - and even more likely than that you're
+11:00 - going to see that arrow syntax so I
+11:01 - encourage you to check my video on arrow
+11:03 - syntax but this is what you're typically
+11:05 - gonna see this is ah
+11:07 - inside of the draw loop every time I
+11:10 - want to do some stuff some meaningful
+11:13 - stuff with my tensors but whatever I do
+11:16 - I want that to be cleaned up alright
+11:18 - let's test this one last time we've got
+11:21 - TF tidy
+11:22 - I'll hit refresh and once again zero
+11:26 - tensors let's put one constant test
+11:33 - equals TF oh no whoa look at this this
+11:37 - should be tensors 2d by the way I'm
+11:39 - surprised it didn't pick up it didn't
+11:41 - give me an error there oh I think that's
+11:43 - the same error that we filed a bug
+11:45 - report at and that's been fixed maybe
+11:47 - and maybe I'm not using the most recent
+11:49 - version of tensorflow jjs is there a
+11:54 - point xi no but when there is one that
+11:58 - will be fixed signor me so now I'm going
+12:03 - to go in here and I'm gonna say TF
+12:05 - tensor to D values shape and I'm gonna
+12:10 - run this oops
+12:12 - to lower case D and now we can see ah
+12:15 - I'm creating all these tensors I have a
+12:18 - memory leak these are getting cleaned up
+12:20 - but I could you know manually dispose of
+12:24 - this one I everything's been cleaned up
+12:27 - or last piece this one could go inside
+12:30 - of Tidy and then there we go alright and
+12:36 - by the way I'm the chat is reminding me
+12:38 - that there is a function called TF keep
+12:41 - so I probably
+12:42 - if inside of TF tidy I could use TF keep
+12:45 - if I have all this stuff happening but I
+12:47 - want to make sure to keep this one so
+12:49 - this could get very complex very fast
+12:51 - and I'm really trying to just give you a
+12:52 - cursory overview here and hopefully as I
+12:55 - start to build some examples where I'm
+12:57 - trying to do stuff with tensor flow not
+12:58 - chess it'll make a bit more sense as
+13:00 - we're using this stuff in the world okay
+13:03 - thanks for watching see you in a what's
+13:06 - next on my list
+13:07 - oh the layers API alright so I'm gonna
+13:10 - talk about the layers
+13:11 - be i next
+13:16 - [Music]
+13:19 - you
+
+Cleaned transcript:
+
+okay I'm back I just saw a question in the live chat that's going on right now saying what's a memory leak guess what you're gonna find out what a memory leak is in this video in particular how to manage memory if you using tensorflow not JSF here's the thing I live in a world where I generally program either in processing which is built on top of Java or I program in Java and be fought with the p5 library in the language JavaScript and I don't have to worry about memory management I mean often do but most of the time I don't there's something my friend my friend Liv lives in the computer their name is garbage collector and the garbage collector just kind of is always there checking to see if I'm using any of my variables anymore and if I'm not collects that memory and reallocates it for somebody else a memory leak is something in your program which continues to allocate memory over and over again and yet where you don't need to you need to remember that stuff and so you're filling up the computer's memory and it's just to infinity and eventually the memory will be full and your program will crash your computer will crash I mean maybe it's not a leak technically if you can keep if you do you need to save all that stuff but most the time like if you're creating a variable that's just keeping track of the computers to a score in a game and you're reallocating new memory for that score over and over and over again and you don't need the old score you should be allocate that memory and if you're programming in like a lowlevel language like C or C++ you sometimes have to manage this memory yourself higherlevel languages that are more apps that have a layer of abstraction the browser is there to protect us I think the Java Virtual Machine they have a garbage collector that handles some of this memory Madren tests are dope flow chess is in this sort of funny inbetween place and we're programming in JavaScript but tensorflow digest is doing some highly manual management of the memory of your GPU to do all this fast math operations so we have to make sure we carefully think about how our allocating memory and explicitly deallocate memory so that's what I want to look at so let's take a look we're going to do this is gonna be exciting we're gonna make a memory leak happen and then we're gonna fix it yay all right so uh what so this is the car that I had before let's actually keep this this is kind of interesting but what I'm gonna do instead is I'm gonna take all of this code and I'm going to put it in draw what's draw you might ask though again there's no reason for me there's no particular reason why I need to be using p5 the p5 library with tension Fletch s right now but one of the things that p5 library has it has this animation loop if you write the function draw it's going to execute that function 30 times per second 60 frames per second depending on the situation so I just want to hit save and now I'm just gonna hit refresh so in theory this is chugging along right now so the question is how do i look at how much I mean there's I don't see anything like I could like maybe what I want to do is do like console dot log hello just to make sure it's like running and we could see the hairs I'm seeing hello over and over again over here over and over again in the console so it looks like it the programs running fine it's running fast no problem let's look and see what memory it's actually using so there's a lot of tools up here whoops no here that I don't really know how to use for evaluating the performance of your webpage in the developer tools I'm gonna go and you up here under window and go to task manager one of the nice things about tattle oh my goodness we definitely have a memory leak okay I think and I think I filled it up I think probably the GP so the memory footprint so let me scroll this over here so we can see these are the various things the browser is this is the browser as a whole so this is the regular computer's memory the tensorflow documentation tabs using 94 megabytes fifa but the GPU which is just filled its way up to 2 gigabytes really fast let's try let's try setting the framerate 2 to 1 and refresh the page and let me go back to the task manager and maybe now we can see Wow it's already at two gigabytes okay so something was going on with the browser probably I had filled up the memory somewhere else so I just actually quit Chrome and restarted it so now you can see the GPU is using thirty two point eight megabytes of memory which isn't that much and maybe over time it's gonna like to go up because I make it oh oh actually no it's not because I also in testing things I commented out sorry I comments without all the tensor stuff so let me put the tensor stuff back in right and now let's take a look at the GPU memory so I'm gonna close the task manager I'm gonna hit refresh now I'm gonna go to the task manager again and I'm gonna look here that's it I'm gonna look here at this number so we can see I'm using some memory maybe it's gonna go up maybe not but the thing is I've got very I'm using like a very small amount of numbers so really what tensorflow digest is designed to work with the reason one is to work with large amounts of numbers so let me go back to my code and let me just say what if instead of having 15 numbers I'm gonna have 15,000 which would be 500 by 300 so I'm gonna have a 5 to 500 by 300 matrices transpose one of them and do matrix multiplication so let's do that let me now let me hit refresh one weird it's very hard to demonstrate whoops oh not 50 150 thousand 15 that whoops oh that should actually be a hundred fifty thousand let's do that one hundred fifty thousand that's what I meant let me hit refresh let me go back to the task manager and now let's look at that memory it's going up little by little it's going up now let's say I was trying to do that 30 frames per second let's get rid of this frame rate 1 hit save close the task manager the task manager I feel like needs to be and I'm gonna go back and open up the task manager of my last time demonstrating this and now I really want to see this memory leak I want to see this number go up 63 66 okay so I let this run for a little bit we could really see the memory leak is happen happening you know this is only gonna go up it's never gonna go down so one of the things now there's uh I'm using the task manager the truth of the matter is and I'm just gonna I'm gonna type in here no loop just to shut this off for a second the truth of the matter is tensorflow digest provides us with a mechanism to check this as well so I can also say TF dot memory let's actually go to the API API reference memory TF memory and I can look at the number of bytes allocated the number of tensors this tight kind of thing so let's actually look at let's just look at number of tensors so I can say I think TF memory dot num tensors I can do maybe it's just is it a function or is it of property let's try this console.log this oh let me get rid of the hello so you can see here these are all the tensors being stored and they're going up and up and up the good news is there is a way to get rid of tensors that you don't need anymore there are two functions okay probably there might be more than this but there's two functions that I want to talk about as they relate to memory management there is the function called dispose and there's the function called tidy and there they do the same thing they clean up memory that's not used but they do it in a different way so let's look at how that works so coming back over here if I go into my code and I say like these are all my tensors a b b b and c i'm gonna call this v underscore t cuz that's actually like sometimes I feel like a naming convention like transposed to B this is my own naming convention and I'm gonna say a dot dispose B dot dispose C dot dispose and B underscore t dot dispose so this is me manually despo after you know this is like something meaningful here like I want to do something meaningful with these tensors and then I'm done with them I want to dispose them so now let's run this again I'm gonna hit refresh and look zero zero zero zero the agro tensor stored in memory and in fact if I go to the task manager we should see load up please that the GPU process is not growing it's at 229 megabytes and it's not getting any higher there is no longer a memory leak we have correct fixed the memory leak the thing is so that's good that's step one we've talked about dispose the thing is you might be writing a program using tension flow to ask more you're just making tensors like crazy you're just tense or happy and so really having to manually keep track on everything and call dispose on everything can become rather unwieldy and that's where TF tidy comes in so TF tidy is a function that you don't call on a particular tensor but it allows you to wrap a bunch of code in that will get cleaned up when it ends what I mean by that is I can say TF tidy my stuff and then I can write a function called my stuff where I do all of this so what this is doing is it's saying execute this function my stuff but make sure you tidy it up after you're done so let me run this and see what happens and you can see I still have zeros and just to be sure that this function is running and now we could see that function is running here's the thing you're not gonna see anywhere in any tension luggage as examples it written this way so you noticed yeah I'm just going to do a couple quick steps here I wrote a named function and past it into TF tidy I could more likely you're gonna see an anonymous function that doesn't have a name passed into TF tidy like this and even more likely than that you're going to see that arrow syntax so I encourage you to check my video on arrow syntax but this is what you're typically gonna see this is ah inside of the draw loop every time I want to do some stuff some meaningful stuff with my tensors but whatever I do I want that to be cleaned up alright let's test this one last time we've got TF tidy I'll hit refresh and once again zero tensors let's put one constant test equals TF oh no whoa look at this this should be tensors 2d by the way I'm surprised it didn't pick up it didn't give me an error there oh I think that's the same error that we filed a bug report at and that's been fixed maybe and maybe I'm not using the most recent version of tensorflow jjs is there a point xi no but when there is one that will be fixed signor me so now I'm going to go in here and I'm gonna say TF tensor to D values shape and I'm gonna run this oops to lower case D and now we can see ah I'm creating all these tensors I have a memory leak these are getting cleaned up but I could you know manually dispose of this one I everything's been cleaned up or last piece this one could go inside of Tidy and then there we go alright and by the way I'm the chat is reminding me that there is a function called TF keep so I probably if inside of TF tidy I could use TF keep if I have all this stuff happening but I want to make sure to keep this one so this could get very complex very fast and I'm really trying to just give you a cursory overview here and hopefully as I start to build some examples where I'm trying to do stuff with tensor flow not chess it'll make a bit more sense as we're using this stuff in the world okay thanks for watching see you in a what's next on my list oh the layers API alright so I'm gonna talk about the layers be i next you

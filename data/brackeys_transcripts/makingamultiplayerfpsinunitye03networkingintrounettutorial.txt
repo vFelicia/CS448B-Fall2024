@@ -1,0 +1,683 @@
+00:00 - thanks for tuning in at
+00:03 - braies hello everyone and welcome to the
+00:05 - third video on making a multiplayer FPS
+00:07 - in unity in this video we're going to be
+00:09 - putting aside making the character for a
+00:12 - bit to focus on networking so we'll
+00:15 - finally add some networking
+00:16 - functionality to our game that means
+00:18 - that we'll set up a network manager and
+00:20 - instantiate a player prefab into a
+00:23 - network scene and we'll also talk a bit
+00:25 - about local player Authority and those
+00:27 - kind of Concepts and I'll make be making
+00:30 - a short presentation on how unet
+00:33 - actually works in terms of programming
+00:35 - and uh how clients connect to a server
+00:38 - and all that kind of stuff so uh before
+00:41 - we get started I quickly want to mention
+00:43 - that I've now added the multiplayer FPS
+00:46 - tutorial project to GitHub so if you
+00:49 - want to uh download any of um the files
+00:52 - or the entire project you can go here
+00:55 - links is links are in the description
+00:57 - and if you want to uh have the exact
+01:00 - version that I'm currently on or a
+01:02 - previous uh version you can go under
+01:04 - commits here and I'll try and name the
+01:07 - these according uh to the video so uh
+01:11 - there should be a version saying uh
+01:12 - video 3 video 4 and and so on and uh the
+01:17 - there's also a test branch that you can
+01:19 - use if you want to see what I'm working
+01:21 - on for future videos also I've gone
+01:25 - ahead and completely redone uh the
+01:27 - Donate system I thought it was really
+01:28 - bad before and a lot of you guys have
+01:30 - said that you wanted a better way uh to
+01:33 - kind of support the videos so you can go
+01:35 - to bre.com donate and fill out the forms
+01:38 - here if you want to make a donation it
+01:40 - truly helps me out a lot and uh yeah so
+01:43 - thanks a lot and uh let's dive into
+01:46 - today's video so let me start by
+01:48 - explaining a bit about how unit actually
+01:51 - works so I've made this model here that
+01:53 - displays uh kind of how unet is split up
+01:56 - into two apis application programming
+01:59 - inter inter faes the first one is the
+02:02 - highlevel API and this is what we are
+02:05 - going to be using uh this provides a
+02:07 - bunch of classes and methods that we are
+02:10 - going to be using to apply networking to
+02:13 - our game the high level API HL API is
+02:17 - built on top of what is called the
+02:20 - transport layer this is this is much
+02:22 - more Bare Bones and lowlevel and this
+02:25 - takes care of a bunch of stuff behind
+02:28 - the scenes so the transport layer can be
+02:31 - directly accessed but that's not
+02:33 - something we are going to be doing and
+02:35 - basically this takes care uh the high
+02:38 - level API uh connects to the transport
+02:41 - layer and takes care of stuff like
+02:43 - distributed object management and state
+02:46 - state synchronization along with a lot
+02:48 - of other stuff like message cues and all
+02:51 - that so if that sounds very technical to
+02:53 - you well then you're in luck because
+02:55 - that's not something we need to care
+02:57 - about uh in our instance so the trans
+02:59 - Port layer gives great control uh but
+03:02 - it's also very technical and therefore
+03:04 - uh we'll be fine of uh by using the HL
+03:08 - API so on top of the HL API Unity has
+03:11 - gone ahead and made some components for
+03:13 - us uh for example we have the network
+03:16 - manager the network identity the network
+03:19 - transform component and uh a bunch of
+03:22 - others and these are basically
+03:24 - Suggestions by unity of how you could
+03:26 - implement the HL API in your game so
+03:29 - these do a lot of of stuff for us and uh
+03:32 - they are going to be need to uh be
+03:35 - customized uh in some kind of way so um
+03:39 - basically what we're going to be doing
+03:40 - later not in this video is we're going
+03:42 - to override or extend these components
+03:45 - to create our own custom scripts uh that
+03:48 - has exactly the functionality that we
+03:50 - going to be needing we might add on to
+03:52 - these components or uh decide to do
+03:55 - stuff in a different way that makes more
+03:57 - sense uh but basically these don't need
+04:00 - to be used at all you can create a game
+04:03 - uh a multiplayer game by only scripting
+04:06 - uh or making your own components that
+04:08 - communicate with the HLA
+04:10 - API so uh that's kind of how uh the uh
+04:14 - unet programming functions and uh
+04:18 - basically uh if we take a look at how
+04:22 - the uh networking in unity actually
+04:25 - works well unit is based off of the
+04:28 - principle that one of the clients
+04:30 - meaning one of the players is the host
+04:33 - so uh you you have seen this in a lot of
+04:36 - games for example uh Call of Duty uses
+04:39 - this principle of naming one of the
+04:41 - clients the hosts and if that clients
+04:44 - client then leaves another client
+04:46 - becomes the host uh so this uh is a
+04:49 - pretty neat way of doing things because
+04:51 - basically we have this uh client here
+04:54 - called the local client because that's
+04:56 - part of the host and we have also the
+04:59 - server sitting on the same
+05:01 - machine and this machine then has an IP
+05:05 - address and here have just used a sample
+05:08 - IP address this is what an IP address
+05:10 - could look like and then all of the
+05:13 - clients or all of the other players that
+05:15 - want to connect to this host well they
+05:17 - basically connect to that IP address to
+05:20 - the server which then connects locally
+05:23 - to that client if needed so let's say
+05:25 - that this client wants to shoot this
+05:28 - client well he connects to the IP
+05:30 - address to the server and the server
+05:33 - connects back to that client so if this
+05:36 - client needed to connect to this client
+05:39 - will he maybe shoot that client by going
+05:42 - to the IP address going through the
+05:44 - server and then the server will talk to
+05:47 - the client here so everything goes
+05:49 - through the server which sits on the
+05:51 - host's machine cool so now that you have
+05:55 - this understanding I might present to
+05:57 - you a problems because uh well a lot of
+06:01 - modern games don't use this kind of IP
+06:04 - address you don't want to be uh typing
+06:06 - in an IP address every time you want to
+06:08 - connect to a player I mean if you want
+06:11 - to play over the Internet uh you want
+06:13 - some kind of U matchmaking
+06:15 - system and when using this kind of setup
+06:19 - uh we have some issues with firewall pre
+06:22 - preventing connections and all that so
+06:25 - to solve this Unity has created uh a
+06:28 - matchmaking service is uh which is
+06:31 - called the unity relay server and here
+06:34 - all of the clients connect to a server
+06:37 - that is hosted by unity which then
+06:39 - communicates to the host and that means
+06:42 - that Unity takes care of Ip matching and
+06:46 - it solves issues with firewall and net
+06:50 - configurations and uh you don't need to
+06:52 - know exactly what this uh means and how
+06:54 - it's solved but just know that we won't
+06:57 - have any issues with connecting that
+06:59 - will have to be solved uh by the clients
+07:02 - they can just connect and this is not
+07:05 - something we are going to be integrating
+07:06 - today it is something I hope to
+07:08 - integrate in a later video uh but
+07:11 - basically Unity hasn't uh released uh or
+07:14 - announced what the prices on using this
+07:17 - will be a a very common thing to do is
+07:20 - have a limit on the number of concurrent
+07:22 - users that uh you can have on this
+07:25 - system uh before you need to pay but
+07:28 - Unity hasn't released any uh information
+07:30 - on this so I won't go ahead and and and
+07:33 - say anything yet about what this will
+07:35 - cost uh and uh how many uses you can
+07:38 - have for free if any so we'll see about
+07:41 - that but for now let's focus on setting
+07:43 - up some networking locally on this
+07:46 - machine so the first thing that we are
+07:49 - going to be doing here is adding the
+07:51 - central networking component uh by unity
+07:54 - so let's create an empty game object
+07:56 - over here and let's uh call this uh the
+08:00 - network manager and uh that's without a
+08:04 - t let's reset the transform on this and
+08:07 - just drag it to the top of the hierarchy
+08:09 - there let's go ahead and hit an add
+08:12 - component here and let's add the network
+08:16 - manager that's the one and this
+08:18 - basically is a component made by unity
+08:21 - that can do a bunch of different stuff
+08:23 - well it sets up the scene here uh to do
+08:27 - networking and you you have a bunch of
+08:31 - different info here on how you want this
+08:34 - set up and for now we can ignore this uh
+08:37 - and you also have the ability to use
+08:39 - this component for spawning in players
+08:41 - so you can add a player prefab here
+08:43 - which is what we are going to be doing
+08:45 - so we have this a network manager and we
+08:48 - also have a network manager HUD and what
+08:51 - this does is right now when we hit
+08:53 - play we see that well nothing has really
+08:56 - happened and we just have this player
+08:58 - and he's not on a network in any way so
+09:01 - let's just go ahead and drag this player
+09:03 - into a prefab and then delete him from
+09:06 - the scene and uh now let's look at the
+09:09 - network manager well basically we need
+09:11 - some way of interfacing with the network
+09:14 - manager script and unity has created
+09:16 - this component that we can use while
+09:18 - testing called the network manager HUD
+09:20 - so this creates a head head up display
+09:23 - uh and you can enable it and disable it
+09:26 - here and you can also play with the
+09:28 - offset if you want it uh some places on
+09:30 - the screen and this will just give us uh
+09:33 - some uh some uh a UI uh that will allow
+09:38 - us to uh connect uh using the network
+09:41 - manager but we need to add a camera here
+09:44 - uh which will show the scene when we are
+09:46 - not playing so uh when we don't have a
+09:49 - player yet and we are in kind of the
+09:51 - lobby where we want to choose what we
+09:53 - want to uh connect to well then we want
+09:55 - to have some kind of camera that just uh
+09:58 - views our level so let's right click
+10:00 - here and hit create camera let's reset
+10:04 - the transform on
+10:06 - this and uh let's uh rename this to
+10:09 - maybe scene
+10:11 - camera let's also make this the default
+10:14 - camera so this let's tag this as main
+10:18 - camera and uh let's drag it up and
+10:22 - out uh maybe up some more and let's
+10:26 - rotate it down to view our scene and
+10:29 - I'll just switch to Global up
+10:32 - here and uh that looks okay whoops I
+10:36 - screwed up the rotation here so that's 0
+10:38 - 0 0 and then rotate it down on the
+10:42 - X something like that and you can see in
+10:44 - the game view here how that looks and I
+10:47 - think that's going to be fine uh for now
+10:49 - I might drag it up a bit more and then
+10:52 - rotate it along the Y and I think that
+10:55 - looks just fine and you can see here
+10:58 - that I Skyped box looks very boring here
+11:00 - so let's change this from Skybox to
+11:02 - solid color and let's just make this
+11:05 - some kind of gray or uh deep blue here
+11:08 - just temporarily at least we'll make it
+11:11 - look some like uh that it's going to be
+11:16 - fine and this looks a bit washed out but
+11:18 - we'll have a look at at creating some uh
+11:21 - more awesome Graphics later and uh we
+11:24 - want an audio listener and all of that
+11:26 - on this component so now that we have
+11:28 - that here uh and uh we save the scene
+11:31 - here and hit play you can see that uh
+11:34 - this um the network manager HUD is now
+11:38 - displayed here and we can choose to
+11:40 - either uh create an a host here or join
+11:45 - as a client and then we specify an e IP
+11:47 - address and local local host here is
+11:50 - just um the name of a certain IP address
+11:54 - meaning on the local uh system and uh
+11:57 - you can also choose server only only uh
+11:59 - which we are not going to be messing
+12:01 - with uh right now so and you can see
+12:03 - here we can enable the Matchmaker we'll
+12:05 - get into all of that stuff so now that
+12:08 - we have that we can uh create select
+12:11 - land host here but it says that we have
+12:13 - to add a player prefab so let's go ahead
+12:16 - and do that so inside of our network
+12:18 - manager we have this spawn info Tab and
+12:22 - uh we have this player prefab slot so
+12:25 - let's go ahead and drag in our player
+12:27 - and it will give us an error here it
+12:29 - will say that the player prefab must
+12:31 - have a network identity so this is
+12:34 - another component created by unity and
+12:37 - uh the network identity is a component
+12:40 - that we add to all networked objects in
+12:44 - our scene so stuff that we want to
+12:46 - communicate on the network in any way
+12:49 - are going to need a network identity
+12:51 - component so we add that and it has two
+12:55 - uh toggles here the first one is server
+12:57 - only we don't want that because we're
+12:59 - going to control this player so we want
+13:02 - it to sit on the uh local client and
+13:06 - then we have local player Authority and
+13:09 - this makes sense for us because we are
+13:12 - uh controlling the player locally on our
+13:15 - system and then we're sending the
+13:17 - movement information and other stuff out
+13:20 - through the server to the other clients
+13:22 - so they can updated on their systems and
+13:24 - therefore we want to check this local
+13:26 - player Authority because we have the
+13:28 - authority of the movement locally and
+13:31 - then we send it out through the
+13:33 - network cool so we can clear the console
+13:36 - there and that's basically all that we
+13:38 - need to add in order to add it to the
+13:41 - network manager slot so we'll just drag
+13:43 - it in there under the player prefab and
+13:46 - we'll uh have Auto uh create player
+13:49 - prefab and um we have the ability to
+13:52 - specify where we want the uh player to
+13:55 - be created because right now it's just
+13:57 - going to be created on this 0 mic uh so
+14:01 - in the middle of our scene so let's
+14:03 - instead add a few objects or at least
+14:06 - two uh for where our player will be
+14:10 - spawned so let's uh create an empty
+14:12 - object here and uh let's name this spawn
+14:17 - point and uh let's just uh add a
+14:20 - component to this and uh if we search
+14:23 - Network here we find the network start
+14:26 - position and that's just the only that's
+14:29 - the only component that we need to add
+14:31 - and let's also create a gizmo for this
+14:33 - so let's just select an icon con here
+14:36 - and maybe make that blue and you can see
+14:38 - now that it says spawn point here so uh
+14:41 - we'll just have it sit on uh 00 Z then
+14:45 - uh set the Y to one because we want him
+14:48 - to spawn a bit up in the air and um
+14:51 - let's the uh blue arrow here is probably
+14:54 - the way that the player is going to be
+14:56 - facing so let's uh give this an x amount
+15:00 - or I'm sorry a z amount
+15:03 - [Music]
+15:04 - of5 duplicate this rename this to spawn
+15:09 - point two and let's rename this to spawn
+15:12 - point one and maybe just drag this down
+15:15 - so they're right by each other and we
+15:18 - can maybe actually make them a child of
+15:20 - the network manager so spawn point2 here
+15:23 - we're going to set the Z to five and we
+15:26 - going to rotate him 180° inre on the Y
+15:30 - oops and if we change this to local you
+15:33 - can see how that uh worked so now these
+15:36 - two uh objects are facing each other uh
+15:40 - and they are 10 units um they have a
+15:42 - distance of 10 units so this way um we
+15:46 - can go into our network manager and we
+15:49 - can change the player spawn method to
+15:51 - round robin and this will basically uh
+15:54 - first choose one of the spawn points and
+15:57 - then uh the next player that creates uh
+15:59 - will just uh choose the next spawn point
+16:01 - and the next one and then Loop uh so
+16:03 - when we only have two this will make
+16:05 - sure that we will switch between the two
+16:08 - uh which is pretty uh cool because then
+16:09 - we will also always spawn opposite of
+16:13 - each
+16:14 - other cool uh so now that we have this
+16:17 - in place uh we can go ahead and hit play
+16:19 - on this and we can select land host and
+16:23 - we are spawned into the scene but uh we
+16:26 - get a a small warning here is saying
+16:28 - that there are two audio listeners in
+16:31 - the scene and that's because our scene
+16:33 - camera is still active and if we were to
+16:36 - go ahead and try and uh build this and
+16:39 - uh let's actually do that now uh there
+16:42 - will be a couple of issues so uh if we
+16:46 - go to a file build settings and just add
+16:49 - in our main level into the uh builds
+16:53 - list here and one second my phone is
+16:55 - going off so I'll just uh turn that off
+16:59 - so we add this to the list and uh now
+17:02 - basically we have to select the target
+17:05 - platform I'm going to build for Windows
+17:07 - uh 86 and development build is fine and
+17:11 - uh then we can hit build and run and we
+17:13 - can choose some place to build it you
+17:14 - can see I've made a test build here
+17:16 - already but basically I've gone into my
+17:18 - project folder created a folder called
+17:20 - builds and just named this one build one
+17:24 - now hit save on that hit yes to replace
+17:27 - it and uh it's just going to build here
+17:29 - and it should go pretty
+17:32 - quickly and uh once it's done it's going
+17:36 - to open up uh the window here I'm just
+17:38 - going to select windowed and maybe a bit
+17:40 - smaller of a client here and then hit
+17:42 - play and we get this window and uh now
+17:45 - we can hit play in the Z in the unity
+17:48 - here and these basically represent each
+17:52 - uh or two different players or two
+17:54 - different comp computers or clients that
+17:57 - want to play with each each other so on
+17:59 - the first one here in unity we can
+18:01 - select host and we get dropped into the
+18:03 - scene and here we can select client and
+18:06 - you can see now that we are facing each
+18:09 - other and this actually was rotated
+18:12 - wrongly but we are standing opposite of
+18:15 - each other and uh staring down each
+18:18 - other's barrel and uh that's awesome
+18:21 - however uh you can see in unity right
+18:23 - now it's complaining that there are
+18:24 - three audio listeners in the scene and
+18:26 - that's because we have on on this local
+18:29 - client here uh we have
+18:32 - both a uh a camera on the one player a
+18:36 - camera on the other player and the scene
+18:38 - camera and there's another issue with
+18:40 - this and that is that the player motor
+18:43 - and controller is enabled for both the
+18:46 - players on both the systems so when I go
+18:49 - ahead and move here you can see that the
+18:52 - other player is moving too so both
+18:56 - players are responding to
+18:58 - input and uh that's of course something
+19:01 - we need to take care of but there's one
+19:03 - more issue because if we go in here
+19:06 - neither of the players have moved so
+19:10 - what is going wrong here well basically
+19:12 - we need to uh kind of disable the
+19:15 - components that uh sit on the other
+19:19 - objects meaning uh the ones that are not
+19:21 - controlled by the system uh so that we
+19:25 - don't affect other clients uh when with
+19:28 - our input and also we need to kind of
+19:31 - network uh how the movement should go so
+19:34 - we need to add some kind of component
+19:37 - that will uh transmit our position and
+19:40 - rotation uh over the network so there's
+19:42 - a bunch of stuff we need to do here and
+19:45 - in order to kind of set this up we
+19:47 - create a script uh let's call this the
+19:50 - player setup script so under the player
+19:52 - here we'll add the uh
+19:55 - player
+19:57 - setup new script and let's just make
+20:00 - that of type
+20:01 - c and in this script if we double click
+20:04 - it to open it up in visual
+20:06 - studio um basically we are going to be
+20:09 - creating uh some lists for objects and
+20:13 - components that we want to disable uh
+20:16 - when uh there uh for all other um
+20:21 - players in the scene uh than the one
+20:24 - that we
+20:25 - control so um I hope that you can follow
+20:28 - me on this so let's just uh remove the
+20:30 - using system collections namespace we're
+20:32 - not going to be needing that and then uh
+20:35 - let's just uh remove uh these two
+20:38 - methods for now so let's start by
+20:40 - creating a list of components that we
+20:43 - want to disable so uh let's make this an
+20:47 - array so all components in unity are
+20:50 - derived from Behavior so if we want to
+20:53 - kind of make this very general we could
+20:55 - make the uh a reference to the player
+20:57 - motor the play play a controller in each
+20:59 - their variable and then disable them uh
+21:01 - but I'm just going to create this array
+21:03 - so we can just add in any kind of
+21:04 - component and don't need to add anything
+21:07 - to the script each time so let's make a
+21:10 - behavior here and that's going to be an
+21:12 - array and let's uh call this our
+21:16 - um components to
+21:21 - disable and uh let's close that off and
+21:24 - then in our start
+21:27 - method
+21:28 - basically what we want to do here uh is
+21:31 - we want to check if we are in the
+21:33 - network uh or if we are the local player
+21:37 - so in order to do this we need to access
+21:41 - Unity networking so first off we need to
+21:44 - include the namespace up here we need to
+21:46 - uh be using Unity engine. networking and
+21:50 - all of the high level API sits within
+21:53 - this namespace but we also need to
+21:56 - derive from net n work
+21:59 - Behavior so this will allow us uh this
+22:02 - script to act as an object that is
+22:06 - networked and we'll have the API up here
+22:10 - so now basically all we need to do is
+22:13 - check if we are not is local player so
+22:17 - if if is local player is equal to false
+22:20 - so if we are not the uh player or if if
+22:24 - this object isn't controlled by the
+22:27 - system well then we want to go ahead and
+22:29 - disable all of these components so we'll
+22:32 - just Loop through that array so we'll
+22:34 - say uh for in I equals z i is less than
+22:40 - components to disable do
+22:43 - length
+22:45 - i++ and then we want to say components
+22:47 - to disabled. enabled
+22:51 - oops do
+22:53 - enabled uh whoops we want to take the I
+22:58 - [Applause]
+23:01 - and set that equal to false so um
+23:04 - basically what we're doing here is we're
+23:06 - saying in the start method when the
+23:08 - player spawned we want to check if we
+23:11 - are controlling the player and if not
+23:13 - well then we want to disable all of
+23:15 - these components so um we basically Loop
+23:18 - through the list and Set uh the uh the
+23:23 - uh component that we're currently
+23:24 - looking at enable state to false cool so
+23:29 - that's basically all uh we need to do uh
+23:32 - in uh scripting here uh we could also
+23:34 - start uh disabling the camera but let's
+23:37 - do that in a sec so let's minimize that
+23:41 - and you can say that there's a warning
+23:44 - here uh saying that it will never be
+23:46 - assigned to and that's because we need
+23:48 - to mark this as a serialized field so
+23:51 - that will allow us to access it in the
+23:53 - inspector here and assign stuff to it so
+23:56 - now the player setup when uh multiobject
+23:59 - editing is not
+24:01 - supported there we go so that just
+24:03 - needed to update you can see that we
+24:05 - have this network channel and network
+24:07 - send interval information and that comes
+24:09 - when deriving from Network behavior that
+24:11 - can just be ignored but we also have
+24:13 - this array and let's just increase the
+24:15 - size on this we want to disable a bunch
+24:18 - of things so if we are not controlling
+24:21 - on this object well then we don't want
+24:24 - to have a motor and we don't want to
+24:26 - have a controller
+24:28 - and we do not want to have some kind of
+24:31 - camera or uh so we want to disable the
+24:35 - camera component or an audio listener so
+24:38 - those are the components that we need to
+24:40 - disable but these components sit on as
+24:44 - another object so we need some kind of
+24:46 - way of dragging them in here and for the
+24:48 - camera that's pretty simple you can
+24:50 - simply drag uh the object in here or add
+24:53 - him to uh back into the scene and then
+24:56 - uh browse here and simply drag the
+24:59 - camera in and that will uh simply drag
+25:02 - the first component that sits on the
+25:04 - object into the slot but how do we
+25:06 - access the audio listener well that's
+25:08 - actually pretty simple we can go ahead
+25:10 - and lock this inspector so now that we
+25:12 - set uh select another object it's just
+25:14 - going to stay on that object and then we
+25:16 - can create a new inspector so we hit add
+25:19 - tab
+25:20 - inspector and uh let's just drag it over
+25:23 - here and uh that is going to change
+25:26 - unless you log it so now we can go on
+25:28 - the camera here and we can take the
+25:30 - audio listener and drag it in there so
+25:33 - you can just keep the inspector here or
+25:35 - you can just uh close it here I don't
+25:37 - think we're going to be needing it again
+25:38 - in this tutorial and then we can unlock
+25:41 - this so uh now that we have these
+25:44 - components uh to uh disable added uh we
+25:48 - can hit apply and we can uh Delete the
+25:51 - player and uh we can try this out but I
+25:54 - assure you this should be working uh so
+25:57 - let's just go ahead and add some
+25:58 - functionality for disabling this scene
+26:01 - camera well basically when do we want to
+26:04 - disable the scene camera well we only
+26:06 - want to disable the camera if we are the
+26:09 - local player so uh we don't want to uh
+26:13 - disable or enable the camera each time
+26:16 - another another player joins we want to
+26:18 - disable this local camera uh when we
+26:21 - join so therefore we can simply add an L
+26:24 - statement
+26:25 - here where we disable the camera and
+26:28 - because we marked it as a main camera we
+26:31 - remember we added the tag there we can
+26:33 - simply say uh camera.
+26:37 - main. game object do set active and set
+26:42 - this to
+26:43 - false uh so that that's all we need to
+26:46 - do and uh in the future we're not going
+26:49 - to be doing this under the player setup
+26:51 - because the camera uh the scene camera
+26:53 - doesn't really have anything to do with
+26:55 - the player but for now we can just add
+26:57 - this fun functionality here um so that's
+27:00 - basically all we have to do uh but we
+27:02 - also have to reenable it once we
+27:04 - disconnect uh so in order to do that uh
+27:08 - let's make a reference to this camera
+27:10 - first of all so let's make a camera
+27:12 - variable here and that's just going to
+27:13 - be private and let's call this uh seam
+27:16 - camera and then here in the
+27:20 - start will uh set
+27:24 - whoops we okay I'm just going to write
+27:26 - this again we'll set C camera equal to
+27:29 - camera.
+27:31 - Main and then down here we'll say that
+27:35 - if seen camera so if it's actually found
+27:39 - a camera it's not equal it's not going
+27:42 - to be equal to null and then we can
+27:44 - simply say scene
+27:47 - camera. Game object. set active and then
+27:50 - we can disable it so this will make sure
+27:53 - that even though it doesn't find the
+27:54 - camera we don't get any errors and then
+27:57 - if we want to reenable this we can use
+27:59 - the handy function provided by unity uh
+28:03 - called on disable and this is also
+28:06 - called when the object is destroyed and
+28:09 - in here we can simply say that if scene
+28:11 - camera is not equal to
+28:14 - null well then we want to say scene
+28:17 - camera. game object.
+28:20 - setactive and then true so then we
+28:23 - enable uh the object again and uh this
+28:27 - of course uses set active we could also
+28:29 - just enable the component U which might
+28:32 - be something that we want to do but on
+28:35 - enabling and disabling the whole object
+28:37 - we don't need need to do anything with
+28:39 - the uh audio listeners so uh this is
+28:41 - going to work just fine so uh that was
+28:44 - all for the player setup script now
+28:47 - let's save this and build this and
+28:51 - building the player here and by the way
+28:52 - the shortcut that I'm using is contrl B
+28:56 - let's hit play on this
+28:58 - and U play in the game and let's select
+29:03 - host and select client and we need to
+29:07 - turn here you can see now that we are
+29:10 - not getting any errors in the console
+29:13 - and if we inspect in the hierarchy here
+29:16 - the scene camera is disabled and uh the
+29:19 - player that we own has both its player
+29:22 - motor and the player controller and its
+29:24 - camera but the other player here doesn't
+29:27 - have any of these components
+29:31 - enabled so this means that when we now
+29:34 - move in the game we are the only one
+29:37 - moving
+29:39 - however it still doesn't update so we
+29:42 - need some kind of way of sending this
+29:45 - information over in the network and
+29:47 - that's what we're going to be looking at
+29:49 - in the next video so that was basically
+29:51 - all for this video I hope you enjoyed it
+29:53 - a lot and were able to follow along with
+29:55 - the concepts uh if not you're going to
+29:58 - get the hang of this uh don't worry um
+30:01 - networking is very different from other
+30:03 - kinds of programming and can be pretty
+30:06 - hard to uh get a grasp on because you
+30:08 - have to kind of think of so many
+30:10 - different players connecting and
+30:12 - interacting with each other so I hope
+30:14 - that this made some kind of sense and uh
+30:17 - if you couldn't get the programming site
+30:19 - to work of course check out the GitHub
+30:22 - page uh it's called multiplayer FPS
+30:24 - tutorial and there should be a link in
+30:26 - the description and if you enjoy this
+30:28 - series a lot and want to support me of
+30:30 - course you can go to bre.com donate and
+30:33 - um yeah make a donation it helps out a
+30:36 - lot so I hope to go fulltime in the near
+30:39 - future and uh this is the kind of stuff
+30:41 - that helps me do that so thanks a lot
+30:43 - for watching this video and I'm looking
+30:45 - forward to seeing you in the next
+30:47 - [Music]
+30:56 - one all

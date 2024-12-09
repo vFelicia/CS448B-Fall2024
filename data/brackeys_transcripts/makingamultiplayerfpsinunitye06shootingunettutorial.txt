@@ -1,0 +1,601 @@
+00:00 - thanks for tuning in at brakus hello
+00:04 - everyone and welcome to video number six
+00:05 - on making a multiplayer FPS in unity in
+00:08 - this video we'll finally do some
+00:10 - shooting so we're not going to be doing
+00:13 - the graphics for the shooting and we're
+00:15 - not going to be doing any damaging of
+00:17 - the players either but we are going to
+00:19 - get the actual shooting mechanic in
+00:21 - place so we'll create a system for you
+00:23 - registering input find out array doing
+00:27 - some collision checking with layer masks
+00:29 - and finally we'll notify the player the
+00:32 - server that a player has been hit so
+00:35 - that the server can send out a debug log
+00:38 - statement saying that this player has
+00:40 - been hit to all clients that's kind of
+00:43 - how far I hope to get today and before
+00:46 - we get started I of course want to
+00:47 - mention that you can get the full
+00:50 - project folder with all of the previous
+00:53 - versions on github links in the
+00:55 - description and also if you have any
+00:57 - questions and can't get that to work
+00:58 - within i suggest you visit the practice
+01:00 - forum so let's get started so let's
+01:03 - start by making a player shoot script so
+01:06 - let's select our player hit add
+01:07 - component and type in player shoot and
+01:10 - simply create that we can then double
+01:12 - click it to open it up in Visual Studio
+01:15 - and also I want to go into the project
+01:18 - panel here and create another script
+01:20 - which is going to be the player weapon
+01:23 - script and this is simply going to be a
+01:25 - fairly empty class that's just going to
+01:28 - store a couple of members that will host
+01:31 - information about our weapon at least
+01:34 - for now so let's double click that - and
+01:36 - now we should have these two so in the
+01:38 - player shoot script here instead of
+01:40 - using system dark elections we want to
+01:42 - be using unity engine dot networking and
+01:46 - of course want to derive from network
+01:49 - behavior as we've done with any network
+01:52 - networked object and I simply want to
+01:56 - delete all of this and the first thing
+01:59 - we want is is basically a reference to
+02:02 - our player camera because when we are
+02:04 - shooting array we wanted to shoot from
+02:06 - the exact center of the camera and
+02:09 - therefore we need a reference to it
+02:12 - so let's make this a serialized field so
+02:16 - we can make it private but still drag
+02:18 - something into it in the inspector and
+02:19 - it's going to be a pirate
+02:22 - private camera and we'll just call this
+02:25 - cam and just to make sure that we've
+02:28 - actually inserted a cam into this slot
+02:31 - we'll just check in the start function
+02:33 - if cam is equal to null and if it is
+02:36 - well then we want to throw an error so
+02:38 - debug that lock error and we want to
+02:41 - just say no camera referenced and we can
+02:47 - maybe just tell ourselves that it's the
+02:50 - player shoot component saying this and
+02:52 - then we can simply disable the component
+02:56 - there we go then of course we want our
+03:00 - current weapon and at some point we want
+03:02 - to do some our weapon swapping and also
+03:04 - a way to swap the graphics of the weapon
+03:07 - but for now our player weapon class will
+03:09 - simply store stuff like damage so we
+03:12 - need a public and we will just make this
+03:14 - public for now so that we can access it
+03:16 - in other scripts and this is going to be
+03:19 - applic player weapon and we'll just call
+03:22 - this weapon and simply close that off
+03:25 - we'll fill in the values in the
+03:27 - inspector then we can hop into our
+03:29 - player weapon component here and remove
+03:32 - the system to our collections namespace
+03:34 - and make sure it doesn't derive from
+03:36 - anything this way we have a standard
+03:38 - public class inside of this public class
+03:41 - we want to create a pub a few members so
+03:44 - the first one is going to be a public
+03:46 - string and this will store the name of
+03:48 - our our weapon and we could make this a
+03:52 - charged laser or a more modern name
+03:56 - we'll just call this a Glock and I'm
+04:00 - sorry but I don't know any model names
+04:02 - for Glocks I'm sure that there are so
+04:05 - many different ones but this will do for
+04:08 - now the weapon fanatics are probably
+04:10 - going to call me out on that so then
+04:12 - we're going to have a public float
+04:14 - storing the damage you can make that an
+04:16 - integer if you want but I like to have
+04:18 - the have full control over that and a
+04:21 - public float storing the rain
+04:23 - Jen will just default that to 200 so
+04:25 - that's quite a long range here change my
+04:31 - mind good and of course we can do stuff
+04:34 - like fire rate whether it's single fire
+04:36 - burst and we can do shotgun stuff and
+04:39 - all of that and we'll definitely have a
+04:42 - look at some of that stuff at least
+04:43 - later but for now this is all we're
+04:46 - going to need so let's say that head
+04:48 - into the player oh I forgot one
+04:51 - important detail and this is very
+04:53 - important we need to tag this class as a
+04:56 - system dot serializable class so this
+05:00 - class needs to be serializable because
+05:03 - what that means is unity will know how
+05:06 - to save and load this class and that way
+05:09 - we can change these values in the
+05:11 - inspector if it doesn't if we don't tag
+05:14 - this as a serializable class we won't be
+05:17 - able it won't even show up as a variable
+05:21 - in the inspector so that's very
+05:22 - important when dealing with classes in
+05:24 - unity so next up let's let's create the
+05:30 - update method here so void update and in
+05:33 - here we simply want to check if we've
+05:35 - gotten some input so if input that
+05:37 - getbutton
+05:38 - and for now would you do a get button
+05:41 - down so this is a single fire weapon and
+05:44 - the button that we want to check for is
+05:47 - the fire one and this is again one of
+05:49 - those default inputs as defined in unity
+05:53 - and actually I want to change this a bit
+05:55 - so if we go under edit project settings
+05:58 - and then input you can see the fire 1
+06:02 - input here and you can see that it has
+06:06 - this positive button left control and I
+06:09 - think that's super annoying so let's
+06:10 - remove that so we don't shoot whenever
+06:12 - we press control we simply want to be
+06:14 - able to shoot using the mouse key and we
+06:18 - of course want this to be key or mouse
+06:20 - button cool
+06:23 - then we can head back into visual studio
+06:25 - and if we get this button down well then
+06:29 - we want to call some kind of shoot oops
+06:31 - not player shoot some kind of shoot
+06:33 - method going here and I think it's time
+06:39 - to go ahead and make that now and this
+06:41 - is just going to be a private method of
+06:44 - course cold shoot and it's not going to
+06:46 - take in the arguments and this is where
+06:49 - we do our actual ray cast so let's start
+06:53 - by making a private ray cast hit I will
+06:57 - just call this hit and we want to make
+07:00 - this variable because the way unity ray
+07:02 - casting works is that we send out a ray
+07:05 - by calling a method and we have this out
+07:09 - variable and what this means is that we
+07:11 - define this ray cast hit we declare this
+07:14 - here and then we put it in as an
+07:17 - argument to the function and the
+07:20 - function will then fill out information
+07:22 - into this variable so basically the hit
+07:25 - variable here will store information
+07:27 - about what we've hit and a lot of other
+07:30 - stuff where we hit it then and all that
+07:32 - so now we can simply say that if physics
+07:36 - dot ray cast so if we hit something with
+07:40 - the rate that we are going to be
+07:41 - shooting here then the then this logic
+07:46 - here will be called so we hit something
+07:51 - so shooting in Ray Ray's in unity is
+07:54 - quite a bit of syntax actually so if
+07:56 - physics that Ray cast and then we want
+07:59 - to define the start of our ray and that
+08:02 - is going to be our can dot transform dot
+08:07 - position that's a vector three of the
+08:09 - position of the camera then we want to
+08:12 - have the direction you can see just how
+08:17 - many overloads this has so we want the
+08:20 - direction that we want to shoot in and
+08:22 - that is going to be can don't transform
+08:24 - dot forward and then we want to input I
+08:29 - think it's time to input either the max
+08:32 - distance or out the hit I think it's out
+08:35 - hit then the distance
+08:37 - and the distance here is going to be
+08:39 - weapon dot range and finally we want
+08:44 - some kind of layer mask so we'll define
+08:47 - that up here so basically when we're
+08:51 - shooting out array we want to be able to
+08:53 - control what the array will hit so we
+08:56 - won't only want this to be able to hit
+08:58 - objects that we can actually see not
+09:01 - visible collide invisible colliders or
+09:04 - anything like that and we want it to be
+09:07 - able to hit other players we don't want
+09:09 - it to hit triggers and things that we
+09:13 - only use for controlling gameplay State
+09:15 - and we don't want it to hit ourselves so
+09:18 - in order to make sure that this won't
+09:20 - happen we create another serialize field
+09:23 - and this is going to be a private layer
+09:27 - mask I will just call this mask and this
+09:30 - will allow us in unity to control what
+09:32 - we hit and we simply put that in here so
+09:36 - I think this is the correct order if not
+09:39 - we'll get an error so we've simply hit
+09:42 - something and we know everything about
+09:44 - what we hit we've hit by using the hit
+09:46 - variable here so you can see if I if I
+09:49 - do a dot there we have the point we've
+09:52 - hit the normal that we've hit of the
+09:54 - surface the collider that we hit the
+09:57 - distance to the point we hit and and all
+10:00 - that stuff that's a lot of useful
+10:03 - information and we can do a lot of stuff
+10:05 - based on that information okay so for
+10:09 - now we can simply do a debug log
+10:11 - statement here saying that we hit and
+10:14 - then plus hit dot Collider dot name cool
+10:23 - so now I've saved that and everything
+10:26 - here should be working and now when we
+10:29 - hit back into unity we want to select
+10:32 - our player and make sure that we fill in
+10:34 - some of these settings so we can expand
+10:37 - our player here and drag in the camera
+10:40 - we can see that we now have the weapon
+10:41 - here and that's a glog with the damage
+10:44 - of ten and a range of 100 and we have
+10:47 - this mask and for now we want to set
+10:49 - that equal
+10:50 - to everything and if we go in and test
+10:55 - this now there's a great chance that
+10:56 - this will just hit our own player but
+10:58 - that's fine but we just want to make
+11:00 - sure that this is working so if we hit
+11:02 - play and select land host and look down
+11:07 - at the console here and then click you
+11:09 - can see we actually hit the floor
+11:10 - prototype that's great so we didn't hit
+11:13 - our player there and you can see if I
+11:16 - just shoot into the air we don't hit a
+11:18 - thing and it's the same when we shoot at
+11:21 - these cubes because they don't actually
+11:22 - have any colliders so maybe we should
+11:25 - actually just go ahead and quickly
+11:27 - create some colliders for them so simply
+11:28 - select all three and we can actually
+11:30 - just add a box Collider for all three
+11:34 - simultaneously so now that we have that
+11:37 - in place we can go in and hit play and
+11:38 - maybe shoot some of those so shoot one
+11:45 - there and you can see that it says down
+11:48 - here what we've hit so that's perfect
+11:49 - don't worry we'll do a mouse lock at
+11:52 - some point it's really annoying right
+11:54 - now it doesn't lock to the center of the
+11:56 - screen I know great so now that we have
+12:00 - that in place we want to make we want to
+12:03 - assign our player to a certain layer
+12:06 - once we set him up and all other players
+12:10 - to another layer this way every local
+12:13 - client with hat will have a setup where
+12:17 - their own local player is on one layer
+12:20 - and all other remote clients or remote
+12:23 - players on another layer and this way we
+12:26 - can simply set the mask here to only hit
+12:30 - remote players and not local player so
+12:34 - if that sounds weird fine but I'll just
+12:38 - show you actually how easy this is one
+12:40 - thing I will go ahead and do is simply
+12:42 - tag our player as player because we're
+12:44 - probably going to be needing that at
+12:46 - some point and it also just looks really
+12:48 - clean so under the layer here we don't
+12:51 - have enough layers to work with already
+12:52 - so let's go ahead and add a new one we
+12:55 - want to have a local player layer and a
+12:59 - remote player layer
+13:02 - and of course we could just go ahead and
+13:05 - assign that in here and we are going to
+13:07 - do that for the local player yes change
+13:12 - children but we want to assign it the or
+13:16 - change this to remote player through the
+13:19 - player setup script so if we double
+13:21 - click this we can see that we have this
+13:24 - code that in the start method will check
+13:27 - if we are not the local player and then
+13:29 - it wants to disable a bunch of
+13:30 - components and if we are well then we
+13:33 - want to disable the scene camera well we
+13:36 - can simply use this to change the layer
+13:38 - also so first off let's just organize
+13:41 - this into a separate function I mean the
+13:43 - component disabling here so we'll just
+13:45 - make a void disable components just so
+13:51 - our start function won't get too crazy
+13:53 - here so just put that in there that
+13:56 - looks cleaner and then here we'll simply
+13:58 - call disable components and then we'll
+14:03 - make a another method here and we'll
+14:06 - call that assign remote layer and we'll
+14:13 - call that in here so if it's not a local
+14:17 - player when then we want to assign it to
+14:19 - a route to the remote later on this
+14:23 - client so and in order to do this all we
+14:27 - have to do is specify the name of the
+14:30 - remote layer so we'll just make that a
+14:32 - serialized field up here
+14:35 - so string remote layer name I will
+14:43 - default that to remote player and then
+14:49 - down here we are calling that here we
+14:52 - can simply say that I believe layers are
+14:57 - stored on the game object so game object
+14:59 - layer yep equals layer mask dot layer to
+15:05 - name or name to layer and in here we'll
+15:08 - simply put the layer the remote layer
+15:14 - name there we go
+15:16 - so basically we have to write it we
+15:18 - can't just set it directly because a
+15:20 - game object that layer once an index or
+15:23 - an integer value because all layers are
+15:26 - assigned numbers and they're just
+15:30 - represented in the unity editor by
+15:32 - strings but they are in fact numbers and
+15:34 - therefore we need to call this utility
+15:36 - function that will take the string and
+15:39 - convert it to the index that we want and
+15:42 - then put that back into the game object
+15:44 - dot layer so now that we have this in
+15:47 - place we should be able to see if we are
+15:50 - connect multiple clients that we are
+15:53 - able to hit each other and that they're
+15:55 - the layers assigned are correct so let's
+15:59 - try and build this by hitting control B
+16:00 - or command B if you're on the Mac and
+16:04 - this should hopefully be working so it's
+16:09 - opening up there and we can start the
+16:11 - game in unity hit land host start the
+16:16 - game here hit land client and if I just
+16:21 - hit into unity here and have a look in
+16:25 - the scene view we have this one player
+16:27 - this is our local player that's the one
+16:30 - that's spawned first on this client and
+16:34 - then we have the other remotely
+16:35 - connected player and you can see that's
+16:37 - on the remote player layer and of course
+16:39 - if we were able to inspect the
+16:42 - properties fry this player we would see
+16:45 - that this situation was reversed good so
+16:50 - if we now hit into unity here we should
+16:52 - be able to hit each other here so if I
+16:56 - shoot him that is not working oh yeah it
+17:03 - is it worked but for some reason I also
+17:06 - hit the floor there I don't know but it
+17:09 - when it went through for some reason
+17:11 - let's just have a look at that that's
+17:12 - kind of weird behavior such registering
+17:15 - twice here oh that's because we are
+17:18 - shooting for both players of course I
+17:20 - don't know what I was thinking there so
+17:23 - that's because we have to go in and
+17:25 - disable the component we'll look at that
+17:26 - in a sec but you can see that it says we
+17:28 - hit the player there
+17:30 - and that's all that we need so now that
+17:33 - we know that this is working what isn't
+17:37 - working is that we don't have any checks
+17:39 - inside of our players chute to see to
+17:42 - make sure that we only do this for the
+17:44 - local client because when I when we get
+17:46 - the input down we don't want to fire on
+17:49 - other players behalf which was what we
+17:51 - just did so we could do a check in here
+17:54 - saying that if we are not local player
+17:57 - and all that but instead what I want to
+18:02 - do is use the same method that we've
+18:04 - done for other components which is
+18:06 - simply adding them to the components to
+18:08 - disable array so let's just expand that
+18:10 - to one more and drag in the player chute
+18:14 - and that should be on so now when we
+18:17 - save this and build this and put that
+18:21 - there and run this here land host and
+18:25 - here client I'm just going to go into
+18:28 - unity here and shoot the player will see
+18:32 - that there's only a debug deadlock
+18:35 - statement being called here what you
+18:37 - will also notice if we go in here and
+18:39 - shoot around shoot the player then shoot
+18:42 - here and shoot over there
+18:44 - we've hit a bunch of things this console
+18:47 - dot log or this console doesn't update
+18:50 - so currently we are only written
+18:53 - registering this shooting and the fact
+18:57 - that we've hit something locally on the
+19:00 - client we need a way to send this
+19:02 - information out to the server and that's
+19:05 - what we'll do next so when we want to
+19:08 - send this information about what we've
+19:10 - hit and the fact that we've hit a player
+19:12 - out to the server so that the server can
+19:15 - distribute it among the clients we need
+19:17 - some kind of way of recognizing
+19:19 - different players and therefore I want
+19:22 - to introduce the concept of a unique
+19:26 - identifier some kind of ID that will
+19:29 - allow us to know what player belongs to
+19:33 - where and it's actually very simple
+19:37 - because right now when we spawn a player
+19:39 - in here you can see that they are all
+19:41 - called player clone
+19:43 - well when we attach a network identity
+19:47 - object a component to an object that's
+19:50 - going to have a unique identifier
+19:52 - already this has an ID it's just not
+19:55 - showing anywhere so for the sake of
+19:57 - convenience let's take this ID and let's
+20:00 - add it to the player name that way we
+20:04 - can simply check for objects with a
+20:07 - certain player name in order to tell
+20:10 - them that where they were here they
+20:12 - should apply damage or whatever we want
+20:14 - to do so in order to do this let's again
+20:18 - go into our player setup script and this
+20:20 - is starting slowly to become a longer
+20:23 - script and in here depend no matter if
+20:27 - we were registered as a local player or
+20:31 - not we want to set the name of the
+20:34 - player so in order to do this let's
+20:37 - simply get a reference to the network
+20:43 - identity component and we want to simply
+20:47 - do this without checking if it's there
+20:49 - or anything because whenever we have a
+20:51 - network behavior well that requires that
+20:55 - component so we don't even need to type
+20:57 - require component up here that's kind of
+21:00 - done already so let's get a string ID
+21:06 - and set that equal to get component of
+21:10 - type network identity and then we simply
+21:16 - want to say dot net ID and close that
+21:24 - off and I think we should go ahead and
+21:26 - combine this with the fact that it's a
+21:29 - player so let's simply type player plus
+21:34 - and then get the net ID and I want to
+21:37 - have a space in here also you could also
+21:39 - create a variable up here for the name
+21:42 - of the player sort of say other than the
+21:45 - ID but I think this is fine hook
+21:48 - hard-coding it here for now in a future
+21:50 - video I want to keep track of what
+21:53 - players are currently in the game and
+21:55 - all
+21:55 - that now that we have this string we
+21:58 - simply want to assign it to the object
+21:59 - so we can simply going in here and say
+22:02 - transform dot name equals underscore ID
+22:06 - and that's basically all we have to do I
+22:09 - mean it's that easy so let's create a
+22:11 - void here and we'll simply call this the
+22:15 - register player because that's basically
+22:19 - what we're doing we assigning him an ID
+22:22 - to make him unique and therefore
+22:24 - registering him on in the scene so
+22:30 - register player and later we'll register
+22:33 - him to some kind of dictionary and then
+22:36 - we want to assume you can paste those in
+22:39 - there so now when we apply and so the
+22:43 - gland host you can see that he's
+22:44 - registered as player one and the next
+22:46 - one is going to be player two you get
+22:48 - the system cool
+22:50 - so now inside of our player shoot script
+22:53 - we can go ahead and call a method on the
+22:56 - server and simply give it the ID so this
+22:59 - here is a local method and therefore I
+23:02 - want to mark it as client so this is
+23:04 - only called on the client and never on
+23:07 - the server but the next thing here is
+23:11 - going to be what is called a command so
+23:14 - therefore we want to mag it as a command
+23:16 - and it's a good idea when having command
+23:19 - functions when naming command functions
+23:22 - to start them with the CMD just to know
+23:25 - that it's a command that we're working
+23:27 - with and commands are basically methods
+23:30 - that are called only on the server so
+23:34 - this here is going to be player shot or
+23:38 - player has been shot or till server
+23:40 - player is shot you can call it whatever
+23:43 - you want
+23:44 - I'm simply going to say player shot and
+23:46 - then we want to insert some kind of ID
+23:49 - and inside of this command all we do is
+23:53 - we say debug deadlock and then we will
+23:56 - say ID plus has been shot that's all we
+24:04 - need to do here for now later we'll do
+24:06 - damaging so in here if we
+24:09 - actually hit something and we want to
+24:14 - check if it's a player that we've hit so
+24:16 - if hit done tagged hit Collider tag is
+24:25 - equal to player we could do something
+24:29 - like that we could also check if on the
+24:32 - layer then the object resides on is
+24:35 - equal to remote player we can do a bunch
+24:38 - of stuff here but I think we'll just
+24:40 - check if it's if it has a tag of player
+24:44 - and we could of course not hardcore
+24:48 - code this I don't want this to show up
+24:50 - in the inspector but I think I will
+24:52 - declare that up here so let's just make
+24:55 - this a private and it's going to be a
+24:58 - constant and it's going to be a string
+25:01 - and we'll simply call this the player
+25:04 - tag and set it equal to player like this
+25:08 - and then we can simply take that player
+25:10 - tag and input it there and then we want
+25:14 - to call our command player shot and we
+25:17 - wanted to give hit dot Collider dot
+25:22 - there we go finally so let me just want
+25:27 - run through this so if we register some
+25:30 - input we shoot and this is called on all
+25:33 - local clients but because we've made
+25:36 - sure that the components is disabled for
+25:39 - all other than the local client it's
+25:41 - only cold on the client that is actually
+25:44 - doing the shooting and then we shoot out
+25:46 - array and if it hits we check if it hit
+25:49 - a player and if it did we call a method
+25:53 - on the server called player shot where
+25:56 - we give it the ID which is also the name
+25:59 - in the hierarchy as an argument and then
+26:03 - here on this server will print out that
+26:07 - this certain player with this ID has
+26:10 - been shot so what you could also do here
+26:14 - if you wanted to then let's say remove
+26:18 - that object or damage it in some way
+26:20 - this we could use came out
+26:22 - find and then insert the ID here and
+26:25 - that would give us the object so that we
+26:27 - can then destroy it so we could go in
+26:29 - here and say we want to destroy this
+26:32 - game object dot fine and that would kill
+26:35 - off the player but we're not going to do
+26:38 - that because of two things first off we
+26:40 - have been talking about what happens
+26:42 - when players die and all that so simply
+26:44 - holding this the D straw method wouldn't
+26:46 - be a good idea and also game object that
+26:50 - find is really slow and therefore we are
+26:52 - going to add this player dictionary
+26:54 - later that will pair players with IDs
+26:58 - and remove them when they disconnect and
+27:00 - all that so now that we've saved that we
+27:03 - have the player setup working we have
+27:05 - the player weapon everything should be
+27:07 - working and if we just go ahead and hit
+27:10 - play here you can see that nothing is
+27:14 - happening when we just shoot around so
+27:16 - let's go ahead and build this so that we
+27:18 - can test it up with another client and
+27:21 - the cool thing that we should be seeing
+27:24 - now is that when we hit a player here it
+27:26 - should throw a console log here also so
+27:31 - we have that like working we want to
+27:33 - slick host here and client here and
+27:36 - let's go ahead and shoot our player
+27:38 - shall we and it's not updating for some
+27:42 - reason it's not updating in here either
+27:47 - so something is going on I'm just going
+27:53 - to check what is wrong here and then
+27:55 - I'll get back to you in a second
+27:56 - okay so I found this really dumb mistake
+27:58 - that I made and you've probably known
+28:00 - all that all along but this of course
+28:02 - doesn't want to be in quotation marks
+28:05 - this is just a variable so let's make
+28:08 - that player tag so that we don't search
+28:11 - for a tag of player tag that would just
+28:14 - be stupid so let's try this again remove
+28:18 - that Bildad and finally it should be
+28:21 - working
+28:22 - hopefully it's in some way so let's set
+28:27 - like land host let's select client let's
+28:30 - go over here and the shooter player
+28:32 - there we go so it says player 1 has been
+28:35 - shot
+28:36 - and player 1 is the editor client and
+28:39 - again if I shift over here and shoot the
+28:41 - other guy it says player 2 has been shot
+28:43 - and you can see just how clean that is
+28:45 - now the client knows now the server
+28:48 - knows and therefore all clients have the
+28:51 - ability to update their game state based
+28:54 - on the fact that someone has been shot
+28:56 - so that's the end of this video I hope
+28:59 - you liked it and I'll see you in the
+29:01 - next one

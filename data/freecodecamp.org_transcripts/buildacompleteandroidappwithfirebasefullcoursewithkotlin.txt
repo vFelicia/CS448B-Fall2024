@@ -1,0 +1,2368 @@
+00:00 - we're going to build an app which allows
+00:01 - you to update your status using only
+00:03 - emoji and you can see the emoji status
+00:06 - of everyone else using the app
+00:08 - we'll be wiring up several core firebase
+00:11 - components including authentication
+00:13 - cloud functions and firestore so you can
+00:15 - take what you learn here and apply it to
+00:17 - pretty much anything else that you're
+00:18 - building
+00:22 - [Music]
+00:27 - the app we're building in this series i
+00:28 - think is really cute it's called emoji
+00:30 - status and it combines a bunch of really
+00:33 - important firebase services in a nice
+00:35 - package
+00:36 - the idea of the app is that we can use
+00:38 - emoji to broadcast a status or a story
+00:42 - emojis are unicode characters and
+00:44 - they've become really popular as a means
+00:46 - of communication in the past few years
+00:48 - because more and more phones are able to
+00:50 - render them properly
+00:51 - in this video i'll go through the app in
+00:53 - a bit more detail i'll talk about the
+00:55 - architecture and then we'll actually
+00:57 - start coding in the next video
+00:59 - i'm also planning on publishing this app
+01:01 - which is super exciting and so i'll
+01:02 - leave a link for that when it gets
+01:04 - approved in the description right below
+01:05 - the like button
+01:09 - i have the app running here in the
+01:11 - emulator and the only way that we allow
+01:12 - the user to create an account or sign
+01:14 - into their account on emoji status is
+01:17 - through google and because i've already
+01:18 - previously authenticated via google i'm
+01:20 - able to hit that button automatically go
+01:22 - into the main screen of our application
+01:24 - and in fact we only really have the
+01:26 - login screen and main screen so this is
+01:27 - pretty much all there is
+01:29 - and i've signed in as myself rahul
+01:31 - pandey and
+01:32 - what you're seeing here is my status my
+01:34 - most recent updated status along with
+01:37 - the most recent status for every other
+01:39 - user in the app
+01:40 - and what you can look in up here in the
+01:42 - menu is i can log out or i can actually
+01:45 - update my status so let's say i want to
+01:47 - update it
+01:48 - to i'm playing uh
+01:51 - you know basketball
+01:53 - and i'm not doing so hot so i'm crying
+01:56 - about it tap okay
+01:58 - and then that update gets sent
+01:59 - immediately to firestore which gets
+02:02 - shown in our recycler view over here the
+02:05 - other cool thing about this is that as
+02:06 - soon as anyone in the app updates their
+02:08 - status that will also be immediately
+02:10 - reflected in our app for example my
+02:12 - friend branner branner bispus he's
+02:14 - actually been making some banana bread
+02:15 - and so
+02:16 - let's say that he updates his status
+02:19 - and right away as soon as he published
+02:21 - it it got updated on our end in the
+02:24 - emulator here
+02:26 - we're going to build exactly this the
+02:28 - published version of the app has a few
+02:29 - extra features which i'm happy to walk
+02:31 - through if people are interested but the
+02:33 - only other thing i want to do in this
+02:34 - video is walk through the architecture
+02:36 - and how the pieces fit together
+02:39 - like i mentioned in the intro there are
+02:40 - three firebase services that we'll use
+02:42 - to power our emoji status app first is
+02:45 - firebase authentication for signing and
+02:47 - sending out of our app next is firebase
+02:49 - cloud functions which allows us to
+02:51 - execute code on a server some javascript
+02:53 - code on the server whenever an event
+02:55 - happens in our app
+02:57 - and then third is cloud firestore which
+02:59 - is
+03:00 - essentially the database for our app and
+03:01 - so hopefully in the next few minutes
+03:03 - you'll see how these different pieces
+03:05 - fit together
+03:07 - the first is firebase authentication
+03:09 - users need an identity in your app
+03:12 - basically any meaningful app is going to
+03:15 - want to associate the data that the user
+03:17 - creates in the app to
+03:19 - some sort of server or some data in the
+03:21 - cloud just so that if i wipe the data on
+03:23 - my phone or if i get a new phone
+03:25 - and when i sign into the app i expect my
+03:27 - experience to be similar to what it was
+03:29 - before and so for that you need to have
+03:31 - some way of creating a unique identity
+03:34 - for your user
+03:36 - there are three broad options for
+03:38 - logging in at least as presented from
+03:39 - the firebase authentication tool one is
+03:43 - you can allow the user to sign up by
+03:45 - email and password
+03:46 - second you can use a federated identity
+03:48 - provider for example google facebook
+03:51 - twitter github etc or third you can use
+03:54 - phone number sign up and we're gonna be
+03:56 - talking about
+03:58 - the federated identity provider and in
+04:00 - particular we're going to be allowing
+04:01 - users to sign into the app using google
+04:05 - and the reason i prefer this method is
+04:07 - because with email password no one wants
+04:09 - to remember another password right so
+04:11 - typically if you already are signed into
+04:13 - google or facebook it's the easiest way
+04:15 - to get people into your app and the
+04:17 - second thing is that the use of google
+04:20 - sign-in or facebook sign-in allows us to
+04:22 - bootstrap the user profile we get
+04:24 - information about the user that we
+04:26 - probably wouldn't have gotten
+04:28 - with the phone number sign up approach
+04:29 - or email password sign up approach and
+04:31 - in particular what i'm talking about is
+04:33 - the display name of the user and the
+04:35 - photo url of the user so a profile
+04:37 - picture
+04:38 - and that kind of makes your app feel
+04:40 - more complete
+04:42 - so one of the annoying things about
+04:44 - firebase authentication is that once you
+04:46 - sign in to the app once you create an
+04:47 - account in the app that user entity
+04:49 - that's created has a fixed set of
+04:51 - properties such as the email name and
+04:54 - photo however if you want to store
+04:57 - anything else about the user for example
+04:58 - in our app we want to store the string
+05:01 - of emoji representing that user status
+05:03 - or maybe you could imagine we want to
+05:05 - store the updated time of that status or
+05:07 - any number of other things that is your
+05:09 - responsibility you have to store other
+05:11 - properties on your own and that's where
+05:13 - cloud firestore comes in cloud firestore
+05:15 - is going to be the database which
+05:18 - keeps track of the user along with their
+05:20 - status
+05:22 - there's one more annoyance about
+05:24 - firebase authentication which is that
+05:26 - the currently signed in user can only
+05:28 - get information about themselves but if
+05:30 - you think back to the main screen of our
+05:32 - application we want to be able to query
+05:34 - for all the other users in our
+05:36 - application and so in order to do that
+05:38 - we again have to now every time a user
+05:41 - is created in our app we have to
+05:43 - create a user document or a user entry
+05:46 - in our database in firestore
+05:48 - and store the data for that user
+05:52 - so here's what this will look like we're
+05:54 - going to have firestore we're going to
+05:55 - have a collection called users and
+05:57 - inside of the user's collection are
+05:58 - various documents each document
+06:00 - represents one user for example here is
+06:04 - brainer bispus my friend and they have a
+06:06 - certain status which is represented by
+06:08 - that field called emojis
+06:12 - and so this is where firebase cloud
+06:14 - functions comes in as soon as firebase
+06:17 - authentication tells us that a new user
+06:19 - has been created then we want to trigger
+06:22 - a cloud function to run to automatically
+06:24 - add another document to the user
+06:26 - collection so in general cloud functions
+06:28 - allow us to run code when certain events
+06:31 - are triggered
+06:32 - and so in our application we're going to
+06:34 - be running some javascript code when the
+06:36 - user account is created
+06:38 - and that is what is going to be adding
+06:40 - to the user's collection with some
+06:42 - default emoji status which the user can
+06:44 - then update
+06:47 - so hopefully now this architecture
+06:49 - diagram makes more sense we have
+06:51 - firebase authentication which is in
+06:52 - charge of signing and signing out and
+06:54 - whenever a new account is created that's
+06:57 - going to trigger a message to firebase
+07:00 - cloud functions and firebase cloud
+07:01 - functions is then going to create a new
+07:04 - user document which will be put inside
+07:06 - of cloud firestore and that will get
+07:09 - sent down to our client our android app
+07:12 - which is where it's going to be shown in
+07:13 - the recycler view and if i click on that
+07:16 - edit icon that pencil icon in the menu
+07:18 - and i update my status that will send a
+07:20 - message up to firestore to say hey i
+07:22 - want to update my emoji status and send
+07:24 - that out to all the other clients as
+07:25 - well
+07:28 - so
+07:29 - even though there's actually a few
+07:30 - moving pieces here the whole app is less
+07:32 - than 200 lines of code
+07:34 - um and the way i want to build this out
+07:36 - with you is first in the next video
+07:38 - we're going to be building the login
+07:39 - flow then
+07:41 - we're going to create a new user
+07:42 - document with a cloud function so
+07:44 - whenever the user signs up we're going
+07:47 - to create a new user document then we're
+07:49 - going to implement that list of users in
+07:51 - a recycler view and we're going to query
+07:53 - from firestore to get that data
+07:55 - then we're going to be allowing the user
+07:56 - to update their status using that edit
+07:58 - icon
+07:59 - and finally we're going to restrict the
+08:01 - entry of what you can put in that edit
+08:04 - text
+08:04 - to only be emoji
+08:07 - one thing worth mentioning is that i'm
+08:09 - really focusing this series on how does
+08:11 - an android app interact with all these
+08:13 - different firebase services
+08:15 - so the reason the app is less than 200
+08:16 - lines of code is i'm writing almost all
+08:19 - the logic in the single file main
+08:21 - activity.kotlin if you really wanted to
+08:23 - publish this to the play store i would
+08:25 - recommend breaking things apart into
+08:27 - different files or different classes
+08:28 - just to keep the app more maintainable
+08:30 - i also would recommend that you have
+08:32 - some familiarity with android you don't
+08:34 - need it but it would definitely help for
+08:36 - understanding if you have done a little
+08:38 - bit of android programming before if you
+08:40 - have any questions or feedback as you go
+08:42 - through it i would love to connect with
+08:43 - you i'm at
+08:45 - rponde1234 on twitter youtube and
+08:47 - linkedin and finally i wanted to just
+08:49 - mention a big thank you to free code
+08:51 - camp there's a huge transformation in
+08:53 - the world of education going on right
+08:55 - now and i think it's pretty awesome that
+08:57 - all of you are able to learn so much
+08:59 - valuable content through free code camp
+09:01 - and i'm really happy to be part of that
+09:02 - as well
+09:05 - the goal for this video is to allow the
+09:07 - user to create a new account or sign in
+09:09 - to their existing account using google
+09:11 - sign-in with firebase authentication and
+09:13 - once they've signed in they should
+09:14 - navigate to a new screen which is the
+09:16 - main activity and on that screen they
+09:18 - have a menu option to log out
+09:21 - so what i have here is essentially just
+09:23 - a new project i call the emoji status
+09:26 - app and there are only two activities so
+09:28 - the only thing i really did after
+09:29 - creating the empty project template is i
+09:31 - added one more activity called login
+09:32 - activity
+09:34 - and login activity is the one where i
+09:36 - added these intent filters so when you
+09:38 - start the app the first thing that we're
+09:40 - seeing
+09:41 - in the emulator here is the login
+09:43 - activity and our goal now is to
+09:45 - integrate firebase authentication and
+09:46 - add a button so that when they hit that
+09:47 - button and successfully authenticate
+09:49 - they'll navigate to this main activity
+09:52 - which
+09:53 - is for now just an empty activity
+09:55 - the first thing we'll do is create a new
+09:57 - firebase project for our application so
+09:59 - go to console.firebase.google.com
+10:02 - and hit this add project button i'll
+10:03 - call this the same as what i called my
+10:05 - project which is emoji status app
+10:08 - hit continue
+10:10 - let's disable analytics for now just
+10:12 - because we don't really care about it
+10:14 - and then create project and this will
+10:16 - take a minute or two to finish all right
+10:18 - so once it's set up hit continue
+10:21 - and we're going to get started with the
+10:23 - android version of this so the app
+10:26 - package name is something that you set
+10:28 - up when you were creating your project
+10:30 - so for me it's it's this
+10:32 - edu stanford arcade honda followed by
+10:34 - the app name
+10:35 - i'll leave the app nickname blank and
+10:37 - what you need here is a debug signing
+10:39 - certificate sha1 and this is needed
+10:42 - because we're going to be using google
+10:43 - sign in so if you hit this link then
+10:46 - you'll actually see how you can do it
+10:48 - based on your platform i'm on a mac so
+10:50 - what i'm going to do i'm going to copy
+10:52 - this
+10:54 - so i have the terminal open over here so
+10:57 - i'm going to copy that hit enter and the
+10:59 - default keystore password is just
+11:02 - android
+11:03 - and then here you can actually see print
+11:05 - out the different certificate
+11:06 - fingerprints the one we care about is
+11:08 - the sha one so i'll copy that
+11:11 - now go back to the setup and paste that
+11:14 - in here
+11:15 - now we can register app and then what
+11:17 - this is going to do is it's going to
+11:19 - create the project for us and put all of
+11:21 - the information we need to associate our
+11:23 - android app to firebase in this
+11:25 - googleservices.json so download that
+11:29 - and then in android studio open up the
+11:32 - project
+11:33 - window the project tool window and we
+11:35 - want to drag the google
+11:36 - googleservices.json
+11:37 - into the app directory so i have over
+11:40 - here i'm going to drag this into app and
+11:43 - i have a confirmation dialog
+11:45 - hit enter that's good let's go back here
+11:49 - and hit next
+11:52 - all right so in order to add the
+11:53 - firebase software development kit sdk
+11:56 - there are a few modifications we need to
+11:58 - make both at the project level
+12:00 - build.gradle file along with the app
+12:02 - level build.gradle file
+12:04 - so in the project level the only one
+12:06 - that
+12:07 - i found that i need to add is this one
+12:08 - class path copy that now let's open up
+12:10 - android studio and instead of create all
+12:12 - scripts remember there are two build up
+12:14 - gradles we're going to be modifying
+12:16 - initially the one the project level
+12:18 - and we're going to be adding this line
+12:19 - for the class path google services
+12:22 - now we go back and at the app level
+12:25 - build our griddle file we're gonna we're
+12:27 - gonna add this apply plug-in line
+12:30 - open up the build.gradle at the app
+12:32 - level
+12:34 - and add that over here
+12:36 - and then in the dependency section this
+12:38 - is where we're going to eventually add
+12:40 - all the libraries for firebase but we're
+12:42 - going to do that later just tap sync now
+12:44 - to make sure that succeeded
+12:47 - cool so now let's hit next and then
+12:50 - let's continue to the console
+12:52 - so i closed all other tabs except for
+12:54 - the console tap on this button here for
+12:56 - go to docs
+12:58 - and we care about android
+13:00 - and in particular if you scroll down you
+13:02 - want authentication
+13:04 - go into the android section
+13:06 - and google sign in so we're going to
+13:08 - follow pretty much this guide over here
+13:10 - the first step is we already did the
+13:11 - first couple here the next thing we need
+13:13 - to do is add the dependencies
+13:15 - for firebase auth so i'm going to copy
+13:17 - that
+13:18 - go into the build.gradle
+13:20 - and add it right over here and one thing
+13:23 - is that because we're using kotlin we
+13:25 - can use the kotlin version of this
+13:26 - library so you just add dash ktx here
+13:30 - and tap on sync now to make sure i
+13:32 - didn't screw anything up
+13:33 - all right looks good
+13:35 - and we already did the shot one
+13:36 - fingerprint
+13:38 - and one thing we need to do is in the
+13:39 - firebase console we need to enable
+13:41 - google sign-in so go back to here go to
+13:43 - authentication sign in method
+13:45 - and we want to enable google sign-in
+13:49 - you need to add in a project support
+13:51 - email
+13:52 - tap on save
+13:55 - okay that's enabled now
+13:57 - so one thing you can do here now is open
+13:59 - up the google sign-in to your android
+14:01 - app but we're going to borrow some
+14:03 - pieces from here
+14:06 - the first thing i want to do actually is
+14:07 - i want to integrate in the sign in
+14:09 - button into our app this ui so copy that
+14:13 - go into the activity log into xml which
+14:16 - represents the ui for the
+14:19 - login activity
+14:20 - and in the design tab
+14:22 - i'm going to just drag out a text view
+14:24 - into the constraint layout
+14:26 - have this be let's say 100
+14:31 - from the top and it's centered
+14:32 - horizontally that looks good and let's
+14:34 - make the text here say emoji status
+14:40 - and i want this to be large because it's
+14:42 - the title of our application
+14:44 - so make this display one maybe
+14:47 - and we'll also update the font let's
+14:48 - make it
+14:50 - sans-serif medium to make it a little
+14:52 - bit darker cool so now we can go into
+14:55 - the code tab and let's paste in the
+14:58 - xml for that google sign in button
+15:01 - and one thing i want to do is just
+15:03 - update the id to make it more match the
+15:05 - style i like to use in a kotlin app
+15:06 - which is btn sign in
+15:09 - let's see what this is complaining about
+15:11 - this view is not constrained yeah so we
+15:12 - now let's go back into
+15:14 - the design section and figure out how to
+15:17 - constrain it
+15:19 - um i'm gonna import center it
+15:20 - horizontally
+15:22 - this is a little hard to do because
+15:24 - we're not seeing the actual ui here so
+15:25 - first what you should do is build the
+15:27 - app and this at least should show up in
+15:29 - the ui
+15:30 - cool now we see it and i want the top
+15:32 - constraint to be below the
+15:35 - text view and i wanted to have a margin
+15:38 - let's make it like 32
+15:40 - that looks pretty good cool and so if we
+15:42 - actually run the app now hopefully we
+15:44 - should see the google sign-in button
+15:47 - awesome then nothing happens when we
+15:48 - click on it which makes sense we need to
+15:49 - add the click listener next so when the
+15:52 - user taps on the button what we're going
+15:53 - to do is launch an intent
+15:55 - to sign in with google and that intent
+15:57 - is going to be created for us using the
+16:00 - google sign-in library so if we go back
+16:02 - to the guides then go back to the
+16:04 - firebase guide and we're going to copy
+16:06 - this these are options to configure
+16:07 - google sign-in this is the kotlin code
+16:09 - tab so now we're going to go into login
+16:12 - activity in the oncreate method
+16:15 - just paste that in
+16:16 - you'll probably need to import some
+16:17 - things and one thing i'll just help to
+16:20 - demystify a little bit here is that we
+16:22 - have a request id token and we never
+16:24 - defined this string but if you actually
+16:26 - go into the definition click the
+16:28 - definition of here you can see that
+16:30 - we're
+16:31 - getting these values xml
+16:33 - the string is coming from google
+16:35 - services so when we integrate the
+16:36 - library we're getting all of these
+16:39 - strings automatically so that's one
+16:42 - thing one nice thing that the library
+16:43 - takes care of for you
+16:45 - the next thing we need is the google
+16:46 - sign-in client and you can get that by
+16:49 - calling the static method on google sign
+16:50 - in you say dot get client and you pass
+16:53 - in the context and the options which we
+16:55 - just defined gso
+16:58 - so we capture that into a local variable
+16:59 - called client
+17:01 - and now we can
+17:02 - hook up the click listener on the button
+17:04 - so we called the id of that button
+17:06 - button sign in so i'll say btn sign in
+17:08 - dot set on click listener
+17:10 - i wanted to pause quickly here because i
+17:13 - wanted to explain what you can do if you
+17:14 - are seeing btn sign in highlighted in
+17:17 - red android studio is complaining that
+17:19 - there is no variable defined btn sign in
+17:22 - and the reason you might be seeing this
+17:24 - is because
+17:25 - more recent versions of android studio
+17:27 - have changed how the activity should
+17:29 - reference views that are defined in the
+17:32 - layout file and so let me show you in a
+17:34 - really simple way how you can fix this
+17:36 - so what you want to do at the top of the
+17:38 - class inside of the activity you're
+17:40 - going to declare a private late init var
+17:43 - and call it the same as what the
+17:44 - variable is called so in our case it's
+17:46 - btn sign in and it's going to be of type
+17:48 - button
+17:51 - now what you want to do is
+17:53 - after the set content view line in the
+17:55 - oncreate function
+17:57 - we are going to
+17:58 - set the value of this to be find view by
+18:01 - id and here we're going to reference the
+18:03 - id of that view so it'll be r.id.btn
+18:07 - sign in and now you can see that the red
+18:09 - error went away and we should be able to
+18:11 - proceed exactly as
+18:13 - i'm showing in the tutorial so as you go
+18:15 - through this whole series anytime you're
+18:17 - referencing anything from the layout
+18:19 - file you you might want to do something
+18:21 - like this just because that will be
+18:22 - future proof regardless of what android
+18:25 - studio version you're on okay now let's
+18:27 - go back to the way i was doing it in the
+18:29 - series but don't get confused by this
+18:32 - and we're going to create a sign in
+18:34 - intent here
+18:36 - and the intent is coming from
+18:38 - the client dot sign in intent and so now
+18:42 - we need to start an activity but it's
+18:44 - not just starting at activity we also
+18:46 - want to get the result of that activity
+18:48 - did the authentication of google succeed
+18:50 - or fail so that's why we're going to
+18:51 - call start activity for result and that
+18:53 - requires two parameters one which is the
+18:55 - intent which we just defined sign in
+18:57 - intent and the second is a request code
+18:59 - which can be kind of any arbitrary
+19:01 - number so i'm going to define it as a
+19:03 - constant called rc
+19:05 - google sign in
+19:08 - and we're going to define that inside of
+19:10 - a companion object which is basically a
+19:12 - way to hold all the constants or static
+19:14 - variables in your class so i'll say
+19:16 - private
+19:17 - companion object
+19:19 - rc sign in and then this is going to be
+19:22 - private const valve and you can kind of
+19:24 - pick whatever you like i'm going to make
+19:26 - mine 4926
+19:28 - and then one more i'll add
+19:30 - is a tag because we're also going to be
+19:32 - logging some things
+19:34 - and the convention i always use is the
+19:36 - tag name is always the class name
+19:39 - okay so when star activity for result
+19:42 - executes that's going to launch the
+19:43 - google sign in flow and that flow is
+19:45 - going to give us a response in order to
+19:47 - capture that response we need to
+19:49 - override a method called
+19:50 - onactivityresult in order to help with
+19:52 - that let's go back to the guide
+19:54 - and scroll down a bit and here you can
+19:56 - see the onactivityresult so i'm going to
+19:59 - copy that
+20:01 - and paste it in right below the oncreate
+20:04 - method so right here
+20:06 - and then we called the request code rc
+20:09 - google sign in so i'm going to change
+20:11 - that
+20:12 - and you'll also you're going to have to
+20:13 - import some things
+20:15 - [Music]
+20:19 - well i'm just going to clean this up a
+20:20 - little bit um and basically what's
+20:22 - happening here is that if the request
+20:24 - code of the on activity result is the
+20:25 - same one that we launched with that
+20:27 - means that we heard back from the google
+20:29 - sign in intent
+20:30 - then the sign in was successful then
+20:33 - we're going to call this method firebase
+20:34 - auth with google so in order to define
+20:36 - that again let's go back to the guide
+20:40 - and here is firebase auth with google so
+20:42 - let's copy that
+20:43 - i'm going to define it as another
+20:45 - function here
+20:48 - and again we're gonna have to import
+20:49 - some things
+20:50 - here we need to define the firebase auth
+20:53 - library so again go back to the guide
+20:55 - and
+20:56 - right here um
+20:58 - we're gonna have a late init var auth at
+21:00 - the very top
+21:02 - [Music]
+21:04 - and then this auth is equal to firebase
+21:06 - auth is going to be how we initialize it
+21:09 - that happens in the oncreate method
+21:11 - let's import firebase auth
+21:15 - and then inside of the oncreate
+21:17 - we'll
+21:19 - set it equal
+21:20 - [Music]
+21:24 - and the thing that we skipped over here
+21:26 - on number three is when the activity
+21:28 - starts up the first thing we want to do
+21:29 - is check if these are signed in because
+21:31 - if they're already signed in we don't
+21:32 - want to show them the login ui we want
+21:33 - to show them directly the main ui so
+21:35 - we're going to actually copy this
+21:40 - so onstart is a lifecycle method on the
+21:42 - activity which happens
+21:44 - after the oncreate so we're going to
+21:47 - execute this and we're going to have
+21:48 - this update ui method
+21:50 - which we can just define create function
+21:52 - update ui which is
+21:54 - takes in a user as a parameter
+21:57 - and we'll fill that in in just a little
+21:58 - bit but going back down here let's
+22:00 - finish off what we were doing here so
+22:02 - now we have the firebase auth defined
+22:04 - they're doing some sort of asynchronous
+22:06 - requests here to look at the credential
+22:09 - and then see if we can actually update
+22:12 - firebase our project create an account
+22:14 - or sign in to an existing account with
+22:16 - this credential
+22:17 - um i don't want to use a snack bar i
+22:19 - just want to use a toast so i'm going to
+22:21 - say toast
+22:23 - this and then copy the message
+22:25 - authentication failed
+22:28 - and the length can be short that's fine
+22:30 - and then that's all we need so
+22:33 - if in the success case we call update ui
+22:35 - with the user in the fail case we call
+22:37 - it with null so we need to be able to
+22:39 - handle the null firebase user here which
+22:41 - is what this question mark indicates
+22:43 - all right so we're almost done now um
+22:45 - what we want to do in update ui is we
+22:47 - want to actually update the ui which
+22:48 - basically means we want to navigate to
+22:50 - the main activity
+22:52 - i'll leave that as a comment here
+22:54 - and there are two cases here right one
+22:56 - is if the user is null that means
+22:58 - we shouldn't navigate to the main
+22:59 - activity they should try again and
+23:00 - figure out how to log in properly so in
+23:03 - this case
+23:04 - we're going to just log something at
+23:06 - warning level and you want to return
+23:08 - early here otherwise if we've gone past
+23:11 - that if statement that means that we
+23:12 - want to actually go to the main activity
+23:15 - and so in order to do that we say start
+23:16 - activity and we pass in an intent here
+23:20 - and the intent is going to be um two
+23:22 - parameters one it's going to be the
+23:24 - context the second parameter is the
+23:26 - destination where do we want the user to
+23:28 - end up and we want the user to end up
+23:30 - looking at the main activity so i'll say
+23:31 - main activity
+23:32 - [Music]
+23:33 - and the last thing i want to do which is
+23:35 - actually a common bug that i've seen
+23:37 - with login uis is that we want to finish
+23:39 - the activity here and what that means is
+23:42 - we don't want this login ui to show up
+23:46 - in the back stack once the user has gone
+23:48 - to the main activity and so by having
+23:50 - this line here finished that means that
+23:52 - we're going to close down the login
+23:53 - activity and that'll make a lot more
+23:54 - sense to the user if they click back
+23:57 - from the next screen
+23:59 - let's try it
+24:02 - all right so i'm going to hit sign in
+24:05 - and i'm going to log in with my personal
+24:07 - account
+24:08 - and let's open up logcat and just see
+24:12 - what happens i'm only going to filter by
+24:14 - login activity
+24:15 - [Music]
+24:16 - and it's okay we can see that we did
+24:18 - call
+24:20 - firebase auth with google with some
+24:21 - token and then we got a success in the
+24:24 - sign in with credentials which is
+24:26 - awesome and so we did properly navigate
+24:28 - to the main activity which is where
+24:29 - we're seeing hello world
+24:31 - and let's check that this worked by
+24:32 - going into the firebase console
+24:34 - go into authentication and now we do see
+24:37 - that there's one user signed into the
+24:39 - app
+24:40 - great the last thing i want to do in
+24:41 - this video is i would like to add a menu
+24:43 - option in the main activity menu so that
+24:46 - we can actually allow the user to log
+24:47 - out of their account the way that works
+24:49 - is go back into android studio
+24:52 - and i'm going to create a
+24:54 - menu resource directory so make a new
+24:57 - android resource directory
+24:59 - of type
+25:00 - menu
+25:02 - and inside of here we're going to create
+25:03 - a new menu resource file called menu
+25:06 - main
+25:06 - [Music]
+25:08 - and we're going to drag out a menu item
+25:11 - and the title will be log out
+25:15 - and the id can be mi menu item log out
+25:18 - that's all that we need to do from the
+25:20 - menu perspective now we need to tell the
+25:22 - main activity that this is the menu that
+25:23 - you should be using in the menu bar so
+25:26 - go into main activity
+25:29 - and there's a function here that we want
+25:31 - to override called oncreate
+25:33 - options menu
+25:35 - and so here
+25:37 - we're going to say menu inflator this
+25:39 - menu inflator is an attribute on the
+25:41 - contacts so that's why we can just
+25:42 - call it like that we call dot inflate
+25:45 - and you pass in the menu
+25:46 - resource id so it's going to be r dot
+25:49 - menu dot menu main
+25:51 - and the menu which is the parameter that
+25:53 - we pass in right here and this function
+25:56 - returns a boolean so we're going to
+25:57 - return true here just to indicate that
+26:00 - we provided the menu that should be
+26:02 - inflated
+26:03 - now we want to get notified when the
+26:05 - user has tapped on that menu option
+26:08 - for that we're going to call on options
+26:11 - item selected we're going to override
+26:13 - this method
+26:14 - and here the idea is that we're going to
+26:16 - check if the item selected which is the
+26:18 - parameter here if the id of that
+26:21 - is equal to
+26:23 - dot id dot
+26:24 - mi logout which is the id we provided to
+26:26 - that log out menu option
+26:28 - in this case i'm going to just log.i log
+26:30 - at info level
+26:32 - that we did log out
+26:34 - and this now requires defining a tag so
+26:37 - let's do that at the top we're gonna
+26:38 - again have a private
+26:40 - companion object
+26:42 - with a tag private cost val tag
+26:46 - and we're gonna have it be the class
+26:48 - name
+26:48 - [Music]
+26:51 - and now we need to simply log out the
+26:53 - user
+26:54 - log out the user in order in order to do
+26:57 - that we're going to do something quite
+26:58 - similar to
+26:59 - login activity in order to retrieve the
+27:01 - firebase authentication
+27:04 - instance so go back into login activity
+27:06 - and remember how we have this late init
+27:08 - var auth which is a handle on a firebase
+27:10 - auth object
+27:12 - i want to copy that over
+27:15 - and then inside of the oncreate method
+27:18 - we actually initialize it
+27:21 - so oncreate we initialize that
+27:25 - and now all we need to do is call this
+27:27 - method off dot sign out
+27:30 - and once the user has signed out we want
+27:31 - to navigate them back into the login
+27:34 - activity because they have no business
+27:35 - now being in our app in the main
+27:36 - activity right so i'll say val logout
+27:40 - intent is equal to intent and then same
+27:43 - thing here we need to have two
+27:45 - parameters
+27:46 - one which is the contacts which is going
+27:49 - to be this referring to the activity
+27:51 - and the destination for where we want
+27:53 - the user to go which is going to be
+27:54 - login activity
+27:56 - [Music]
+27:59 - and one other kind of nuanced bug here
+28:02 - is that if they do log out we want to
+28:04 - clear the whole back stack right we
+28:06 - don't not only do we not want this main
+28:07 - activity to show up in the back stack
+28:08 - but anything prior to that we also want
+28:10 - to do to dismiss and so for that there
+28:13 - are some flags that you can set
+28:15 - on the
+28:16 - logout intent so i'll say
+28:18 - logoutinintent.flags is equal to
+28:20 - intent dot flag activity new task
+28:24 - or
+28:24 - intent flag
+28:27 - activity clear task
+28:30 - so with these flags set on the intent
+28:32 - now we can call start activity with this
+28:35 - intent
+28:38 - all right that was a lot let's try it
+28:40 - out and see if it works
+28:42 - i'm going to open up logcat and now
+28:44 - let's look at logs by main activity
+28:46 - which is the log that we have right here
+28:49 - so we should hopefully now see a menu
+28:51 - option which is great and it should show
+28:54 - log out so if we tap on that then
+28:56 - hopefully we see the log out which is
+28:58 - great and we do navigate properly now
+29:01 - into the login ui so that's awesome we
+29:04 - now have the basics of authentication
+29:05 - and sign-in working in our app using
+29:07 - google
+29:08 - the next step is whenever a new user
+29:10 - account is created that's when we want
+29:12 - to trigger
+29:13 - the cloud function to run which will
+29:15 - automatically add that user into
+29:17 - firestore and firestore is what is going
+29:19 - to be powering the list of users and
+29:22 - their emojis
+29:24 - in this view in the last video we were
+29:27 - able to set up our app to allow the user
+29:29 - to create a new account or sign into
+29:31 - their account using google the fun part
+29:33 - starts in this video we're going to
+29:35 - write some cloud functions which will
+29:37 - automatically trigger some code to run
+29:39 - every time a new user account is created
+29:42 - and the reason we need to do this is
+29:43 - because we can't store custom properties
+29:46 - such as the emoji status inside of the
+29:48 - same data where authentication data
+29:50 - lives so we're going to have a separate
+29:52 - collection in firestore
+29:54 - which stores the name of the user along
+29:57 - with the emoji status
+29:59 - and that user is going to be created via
+30:02 - a cloud function
+30:04 - and so the very first thing i want to do
+30:05 - is inside of our firebase console
+30:09 - we're going to enable cloud firestore
+30:11 - because we're going to have a cloud
+30:12 - function which will write to cloud
+30:14 - firestore so we're going to create the
+30:16 - database here
+30:17 - start it in test mode which basically
+30:19 - means it's less secure but we're
+30:21 - allowing everyone to read and write from
+30:23 - the database as long as
+30:24 - they're within a certain time range so
+30:26 - tap on next and then pick a firestore
+30:29 - location closest to you i'm in the us so
+30:30 - this is the best one for me tap on
+30:32 - enable
+30:34 - so now we have our empty cloud virus
+30:37 - store and the idea is that we're not
+30:39 - going to populate this collection
+30:41 - through the client and instead cloud
+30:43 - functions will add users into a user's
+30:46 - collection that we're going to have in
+30:47 - cloud firestore so the interesting thing
+30:49 - about this episode of this series is
+30:51 - that we're actually not going to write
+30:52 - any android kotlin code
+30:55 - all the cloud functions are going to be
+30:56 - written in javascript and it's going to
+30:58 - be a separate directory or project
+31:00 - altogether and so don't worry if you're
+31:01 - not experienced with javascript i'm
+31:03 - certainly no expert but i'll explain
+31:06 - things as much as i can and it's
+31:08 - actually only a few lines of code so it
+31:09 - shouldn't be that difficult
+31:11 - so open up this link for go to the docs
+31:13 - again and actually we can close out the
+31:14 - other tabs because we don't need to look
+31:16 - at the authentication stuff again and
+31:18 - what we're going to do is now look at
+31:20 - the documentation for
+31:22 - cloud functions
+31:24 - and tap on get started so because we're
+31:26 - going to be writing in
+31:27 - javascript we're going to have to
+31:29 - install some new software in our
+31:31 - environment if you scroll down we
+31:33 - already have a firebase project
+31:36 - and
+31:37 - we're going to now set up node.js and
+31:39 - the firebase command line tool
+31:41 - so i already have the firebase tools
+31:43 - installed npm is a node package manager
+31:45 - it's a way to
+31:48 - once you have node
+31:49 - which is a javascript environment then
+31:52 - you can add packages onto node and so
+31:54 - there's a tool called firebase tools
+31:56 - which i already installed
+31:59 - if you don't have that just google for
+32:00 - how to install node or npm and then come
+32:03 - back when when you're done now what you
+32:05 - want to do is log into firebase and i
+32:08 - think i've already done this but let's
+32:09 - check
+32:11 - so tap firebase login
+32:14 - and okay so i'm already logged in this
+32:15 - is my email so that's good
+32:17 - now what you want to do is you want to
+32:19 - create a new directory which is going to
+32:21 - hold your cloud functions code
+32:24 - so what i did is i went to the same
+32:25 - directory where i had created the
+32:27 - android studio project and i made a new
+32:29 - folder a new directory in that same
+32:31 - parent directory and i have the same
+32:34 - name but i appended cloud to it this is
+32:35 - a brand new directory
+32:37 - which has nothing in it and so what i'm
+32:39 - going to do here is run this firebase
+32:41 - init functions
+32:43 - call
+32:44 - and what this will do is it will prompt
+32:47 - you to set up this firebase cloud
+32:49 - functions project so i'm going to tap an
+32:50 - existing project link it to an existing
+32:52 - firebase project that we have
+32:53 - and ours is emoji status app
+32:57 - and you can use either javascript or
+32:58 - typescript typescript is basically a
+33:00 - kind of javascript with types
+33:03 - essentially we're not going to worry
+33:04 - about that for now so just pick
+33:05 - javascript
+33:06 - do you want to use eslint which is
+33:08 - basically a linter to catch probable
+33:10 - bugs and that's always seems like a good
+33:12 - thing so tap on yes and then you want to
+33:14 - install dependencies with npm now tap on
+33:16 - yes we do this will take a second or two
+33:18 - to download all the dependencies
+33:20 - once that's done now if you look at all
+33:23 - the files in this directory it created a
+33:25 - bunch of things for you and they're kind
+33:27 - of documented over here in the guide
+33:30 - and so what i want to do now is i'm
+33:32 - going to open up this project this
+33:34 - directory in vs code or your editor of
+33:36 - choice so i have the directory opened up
+33:39 - in vs code right over here and what
+33:41 - we're going to do initially just is
+33:43 - uncomment out the starter code
+33:45 - and
+33:46 - we'll play around with just this for the
+33:48 - first minute and then we'll
+33:50 - do our trigger based on when a new user
+33:53 - joins our application what this is doing
+33:55 - though is basically
+33:57 - over http which basically means over the
+33:59 - internet when we receive a request we
+34:01 - want to send back
+34:03 - hello from firebase as a response
+34:06 - one other thing i want to do before we
+34:07 - test that out though is if you scroll
+34:09 - down you can import the required modules
+34:11 - and initialize an app and so we're going
+34:14 - to copy these bottom lines over here
+34:17 - but if you go back so we have uh
+34:20 - functions is equal to require base
+34:22 - firebase functions
+34:23 - we also want the firebase admin sdk
+34:26 - because this is what is going to allow
+34:27 - us to create a new user document when we
+34:30 - get that point so just copy that in and
+34:31 - we're going to use that
+34:32 - later so now i want to come back to this
+34:35 - we want to test out this hello world
+34:38 - function which is uh functions.https
+34:41 - basically being able to respond with
+34:43 - this text whenever
+34:44 - someone hits the corresponding url
+34:47 - endpoint in order to test this out you
+34:49 - can actually use something called the
+34:50 - firebase cloud function emulator so
+34:53 - we're going to skip all this tutorial
+34:55 - stuff and just go down here and here it
+34:57 - says emulate execution of your function
+35:00 - so tap on or copy and paste this command
+35:03 - firebase emulator to start go into your
+35:05 - terminal
+35:07 - well so what this is now saying is that
+35:09 - all
+35:10 - emulators are ready and you can actually
+35:11 - you can see the logs from localhost 4000
+35:14 - so i'm going to go to that url
+35:16 - and here you can see some of the ui
+35:18 - associated with the emulator i'm going
+35:21 - to go into the log section because
+35:22 - that's the one that we care about
+35:23 - and now i want to actually
+35:25 - trigger the this function to run and the
+35:28 - way we can do that is if you go back
+35:29 - again to the terminal there should be a
+35:32 - url here
+35:34 - so one thing i forgot doing is you have
+35:36 - to actually save this
+35:37 - file index.js and then once you do that
+35:40 - then you should see an output when you
+35:42 - start the emulator for the url in order
+35:45 - to hit that function which is the https
+35:48 - function so i'm going to copy this
+35:52 - and now if we go
+35:54 - into the browser and hit that url then
+35:57 - you can see the text that we wrote hello
+35:59 - from firebase
+36:00 - and if you look over here we can see the
+36:03 - log output going back to vs code
+36:05 - what we're logging is we're saying hello
+36:07 - logs and that's what you're seeing from
+36:08 - the logs right here
+36:10 - and you're also seeing execution time
+36:12 - but the actual response that we send
+36:13 - back is hello from firebase
+36:15 - and so this is the proof that we are
+36:17 - able to talk to a cloud function at
+36:19 - least locally
+36:20 - the next thing i want to do is just show
+36:22 - how do you
+36:23 - send back an emoji
+36:25 - as part of the response as opposed to
+36:27 - just plain text
+36:28 - and this took a little bit of googling
+36:30 - but it's actually not that hard all you
+36:31 - need to do is
+36:32 - for
+36:33 - sending back an emoji as a response you
+36:36 - can say my favorite emoji is and then
+36:38 - you have this backslash u which is
+36:40 - indicating this is a unicode character
+36:42 - and you put in the code of the unicode
+36:45 - so in my case i like pandas a lot so i'm
+36:47 - going to say
+36:48 - 1f43c
+36:50 - so now if i go back and hit this url
+36:53 - again
+36:54 - now we see the panda is updated
+36:59 - so the objective now is we want to have
+37:01 - this
+37:02 - a cloud function run when a new user is
+37:04 - created and the way we can do that is we
+37:06 - can say exports
+37:09 - dot and then you can name this function
+37:10 - whatever you want i'm going to call it
+37:12 - add user to firestore
+37:14 - [Music]
+37:17 - and here
+37:19 - is where we are going to indicate to
+37:22 - cloud functions that this function
+37:24 - should be run automatically
+37:26 - every time
+37:28 - a new user is created so we say oncreate
+37:31 - [Music]
+37:33 - and this takes in as a parameter the new
+37:35 - user which has just been created
+37:38 - and here is where we define the body of
+37:39 - the function so this code will get run
+37:41 - every time
+37:42 - the new user has been created
+37:45 - and the job here is simply that we want
+37:46 - to add a new document into the user's
+37:49 - collection of firestore with the
+37:50 - information about this user
+37:52 - and so the way this works is we first
+37:54 - get a reference to the the user so we'll
+37:57 - save our user's ref
+38:00 - the admin dot firestore
+38:06 - dot collection and we're going to create
+38:07 - a new collection if it doesn't exist
+38:09 - already called users
+38:12 - now all we have to do is return the
+38:15 - setting of this new information in this
+38:18 - user user's collection so the user's ref
+38:22 - dot
+38:23 - doc and the parameter here is we're
+38:25 - creating a new document with this
+38:27 - particular id and the id will be the uid
+38:31 - of the user who just got created this
+38:33 - user here so i'll say
+38:35 - user dot uid
+38:37 - and i want to call the set method
+38:41 - and inside of set we set the different
+38:44 - parameters of this new user document so
+38:47 - the first is going to be display name
+38:49 - which is just the display name of the
+38:50 - user which we are getting from google
+38:53 - and second is going to be the list of
+38:54 - emojis which is their status
+38:57 - and so here we have the opportunity to
+38:59 - set a default emoji status for every new
+39:02 - user in our app and so you can kind of
+39:03 - make this whatever you want what i did
+39:05 - is i just picked out three emojis that i
+39:06 - thought were cute a panda which is the
+39:08 - same one from before
+39:09 - a herb emoji and a heart so basically
+39:12 - pandas love eating plants or bamboo or
+39:14 - whatever so we have this default emojis
+39:18 - so now what we can do is deploy this to
+39:21 - the cloud to our actual firebase project
+39:23 - and then try creating an account one
+39:25 - more time
+39:26 - so in order to deploy this what we can
+39:28 - do is go back to the
+39:30 - documentation
+39:32 - and we're now going to deploy functions
+39:34 - to a prod environment so i'm going to
+39:36 - copy this
+39:39 - hit control c to exit out of the local
+39:42 - emulation
+39:46 - and then we're going to say firebase
+39:48 - deploy dash dash only functions
+39:51 - and one thing that you'll notice here as
+39:53 - an error is that we don't have the
+39:54 - proper account setup to be able to
+39:56 - deploy cloud functions we need to
+39:59 - upgrade our plan to be pay as you go so
+40:01 - what you can do is this is actually
+40:02 - pretty easy to update you can just hit
+40:03 - that link
+40:04 - and then right now instead of being on
+40:06 - the spark plan which is free we're going
+40:07 - to modify this to be on the blaze plan
+40:10 - and don't worry it's still actually it's
+40:11 - unless you're using
+40:13 - unless you have a meaningful number of
+40:14 - users in your app this will still be
+40:16 - free so it really shouldn't matter in
+40:19 - terms of
+40:20 - you having to pay a bunch of money so
+40:22 - i'm just going to go ahead and purchase
+40:23 - it and if you are concerned you can set
+40:25 - a budget alert so i only want i want to
+40:27 - get alert alerted
+40:28 - as soon as i spend ten dollars so i say
+40:31 - set budget alert
+40:32 - and you can close it okay so let's try
+40:34 - it one more time i'm gonna rerun the
+40:36 - same function the same command firebase
+40:38 - deploy functions
+40:42 - and so while that's running one thing we
+40:43 - can do is if we go back to our console
+40:46 - the true test of what we just did is
+40:48 - if we create a new user account that
+40:50 - should now trigger a cloud function and
+40:52 - that cloud function should now
+40:53 - show something in cloud firestore
+40:56 - so in order to test that path we need to
+40:58 - actually create a new user so i'm going
+41:00 - to delete the user that we already have
+41:02 - and then
+41:03 - log into our app again and then that
+41:06 - should trigger this path so i did that i
+41:08 - deleted the user now it's going to cloud
+41:10 - firestore and when we go back to our app
+41:12 - now
+41:13 - let's see if it finished
+41:15 - okay so http error 403 i think this
+41:17 - happens under this because we just
+41:18 - upgraded our account let's try one more
+41:20 - time
+41:25 - so going back to the terminal looks like
+41:27 - we did deploy successfully now
+41:29 - so if we go into our running emulator
+41:32 - let's log out
+41:33 - because this user actually doesn't exist
+41:35 - in reality anymore so now if we sign
+41:38 - into the app
+41:40 - let's see if this works but that should
+41:42 - trigger is a new user being created
+41:46 - okay so that seems like it worked
+41:48 - because we were able to navigate to the
+41:49 - main activity so if i refresh this page
+41:51 - we should now see
+41:52 - that user which is me show up okay
+41:54 - that's great now if we go to cloud
+41:56 - firestore
+41:57 - and now we do see
+41:58 - a new user collection user's collection
+42:00 - which is awesome and here we have this
+42:02 - document which is a display name of the
+42:04 - user who just signed in which is me
+42:06 - along with our default emojis it's
+42:08 - amazing
+42:11 - this is a indication that we have this
+42:13 - kind of
+42:14 - end-to-end flow working which involves
+42:16 - authentication cloud functions and
+42:18 - firestore in the next video our job is
+42:20 - to
+42:21 - update this main activity ui to read
+42:24 - from cloud firestore read all this data
+42:26 - and show it in this screen
+42:30 - in the last video we wrote a few lines
+42:32 - of javascript code so we had some cloud
+42:34 - functions and basically what this did is
+42:36 - every time a new user was created we
+42:38 - added a new user document into firestore
+42:41 - so now we're done writing all the
+42:42 - javascript that we're going to need for
+42:44 - this app i'm going to exit that and
+42:46 - let's come back to our application
+42:49 - and the idea for this video is we want
+42:50 - to render a recyclerview which shows the
+42:53 - list of all the users in the app along
+42:56 - with their status and this is simply
+42:57 - going to be querying that user's
+42:59 - collection that we just created and one
+43:02 - thing before we actually start coding is
+43:04 - i want to show you what i did here is i
+43:07 - created some fake users so basically
+43:09 - here's the here's my actual user with
+43:12 - the default emojis but i also went ahead
+43:14 - and just added a few other documents to
+43:15 - make the app more interesting while we
+43:17 - don't really have other users so let me
+43:19 - show you what i did i can just say auto
+43:21 - id
+43:22 - the field the first field is going to be
+43:24 - display name
+43:25 - it's going to be of type string and how
+43:27 - we make elon musk a user for our app
+43:31 - and the second field will be emojis and
+43:33 - elon musk is probably thinking a lot
+43:35 - about cars and rocket ships right so i'm
+43:37 - going to paste in
+43:38 - those two emojis and then tap on save
+43:41 - cool so that added one more user
+43:42 - document to the collection
+43:44 - with the fields that we just declared
+43:46 - so let's go back now to android studio
+43:49 - and inside of main activity we want to
+43:52 - basically have a recycler view here
+43:54 - which fetches that data and displays it
+43:57 - the first thing i want to do is go into
+44:00 - the corresponding layout file for main
+44:01 - activity we don't need the hello world
+44:04 - and instead i'm going to drag out a
+44:05 - recyclerview
+44:07 - so we're going to add a dependency for
+44:08 - that so tap on ok
+44:11 - that'll take a second or two to finish
+44:14 - and then i'm going to make the width and
+44:15 - height be matched parent basically i
+44:17 - want this recycler view to take up the
+44:18 - whole screen height
+44:20 - i'm going to give this an id of rv users
+44:24 - go back to main activity and the idea
+44:26 - here is we now want to set up the
+44:28 - recycler view properly with an adapter
+44:30 - and layout manager
+44:32 - so when your data is coming from
+44:33 - firestore as it is in our app then
+44:36 - firebase actually has a really nice
+44:37 - library which makes it a little bit
+44:39 - simpler to set up your recyclerview and
+44:41 - this is the page i have open here so if
+44:43 - you if you google for firebase ui for
+44:45 - android you should be able to find this
+44:46 - page
+44:47 - and this is what we're going to use to
+44:48 - power our recycler view if you want a
+44:50 - refresher on recyclerview and how it
+44:52 - works which will be helpful to
+44:54 - understand what we're doing here i'll
+44:55 - leave a pointer for a video i created
+44:57 - about that topic in the description
+45:01 - so using this uh library all we need to
+45:04 - do is we're going to add a dependency
+45:06 - here for using firebase ui with cloud
+45:08 - firestore so copy that
+45:12 - let's go into android studio and open up
+45:14 - the build.gradle file which is in the
+45:16 - app module paste that tap on sync now
+45:21 - and now what you should do is hit the
+45:23 - link for firebase ui for cloud firestore
+45:27 - and the first thing we need like most
+45:29 - other recycler apps need is a model what
+45:31 - is the data we're trying to render in
+45:33 - each row or each element of the
+45:35 - recyclerview and the data we're trying
+45:37 - to render is one user so we're going to
+45:40 - have a data class in kotlin which
+45:41 - represents a user
+45:43 - object
+45:44 - so
+45:45 - ideally this really should be its own
+45:47 - class but just for the sake of
+45:48 - expediency and kind of to make it all
+45:50 - fit together nicely i'm going to define
+45:52 - it right here inside of main activity so
+45:54 - i'm going to define a data class here
+45:55 - called user
+45:57 - and there will be two attributes on this
+45:59 - user the first is going to be a
+46:03 - um
+46:04 - a string which is for the display name
+46:08 - and one of the things that's important
+46:09 - to note about these data classes is that
+46:11 - if you're trying to map them with a
+46:13 - firestore data object you need to have a
+46:15 - default value for each
+46:17 - element of the data class i'm going to
+46:19 - set this equal to empty string
+46:21 - and then the other attribute is called
+46:24 - emojis
+46:26 - [Music]
+46:27 - is also a string
+46:29 - and also has a default value of empty
+46:30 - string and these names should match up
+46:33 - exactly with whatever you called it
+46:35 - inside of the document over here so make
+46:36 - sure that that's consistent so that that
+46:38 - mapping can happen automatically for you
+46:40 - all right so now we have the
+46:43 - model defined
+46:45 - now we want to actually make a query and
+46:47 - the way the query is going to work is
+46:48 - we're going to have to get an instance
+46:50 - of
+46:50 - firestore in our application and then
+46:53 - query on the user's collection and then
+46:55 - if you want to order by something but by
+46:57 - first name for example or limit it
+46:59 - somehow you can do that here
+47:02 - so the first thing we need to do is add
+47:04 - the dependency for firestore on android
+47:08 - [Music]
+47:11 - so i'm going to use the docs and
+47:14 - let's
+47:16 - um make sure you're on the kotlin tab
+47:19 - and we're going to copy this
+47:22 - go into again the app level build.gradle
+47:25 - and tap on sync now
+47:29 - and so the way you reference firestore
+47:31 - is really simple actually you just copy
+47:33 - this and then you put that at the top of
+47:34 - your
+47:35 - class where you want to reference
+47:39 - firestore
+47:40 - you have to import this
+47:43 - great so now we have access to firestore
+47:45 - with db so if we go back to the guide
+47:47 - about firebase ui here's what
+47:50 - the query might look like this is in
+47:51 - java code so if you do a little bit of
+47:53 - translation so in our case it's going to
+47:55 - be val query
+47:56 - is equal to
+47:58 - dv dot collection and then our
+48:00 - collection is called users and that's
+48:02 - actually all i want you can kind of
+48:03 - customize this if you want but for now i
+48:05 - just want to get all the users in that
+48:06 - collection
+48:07 - [Music]
+48:11 - so the next thing is we now need to set
+48:13 - some firestore recycler options
+48:16 - parameterized by the data and
+48:18 - this will take in the query
+48:22 - and then we're going to call the build
+48:23 - method this is a builder class and we
+48:24 - call dot bill to actually get an
+48:25 - instance of this
+48:27 - so i'll call
+48:29 - val
+48:29 - [Music]
+48:31 - options
+48:32 - is equal to fire store recycler options
+48:36 - [Music]
+48:38 - import that
+48:40 - builder and this is again parameterized
+48:42 - by the data class so i'll say user
+48:45 - and then we have to set the query
+48:47 - [Music]
+48:51 - so in set query it takes in two
+48:52 - parameters one which is actual query and
+48:54 - second is the
+48:56 - data that you expect to get from that
+48:57 - query in an hour case we expect to get a
+49:00 - list of users so we're going to specify
+49:02 - here user class.java
+49:04 - and one really important point here is
+49:06 - that you need to specify
+49:07 - a lifecycle owner basically you need to
+49:10 - tell firestore when should this query be
+49:12 - active and when should it stop
+49:14 - and the way we do that is by setting a
+49:16 - lifecycle owner is going to be the
+49:18 - activity like the the parent class and
+49:20 - so to reference that we'll just say this
+49:23 - and then we call build
+49:26 - so the next thing we need is an adapter
+49:29 - for the recycler view and the adapter is
+49:30 - responsible for telling us how can we
+49:32 - take the data that we have and bind it
+49:34 - to a view which is going to be shown in
+49:37 - the ui
+49:38 - if you scroll down here you can kind of
+49:40 - take a look at what an adapter might
+49:41 - look like
+49:44 - so going back to the code
+49:46 - what i'm going to write here is a val
+49:48 - adapter
+49:50 - is equal to
+49:51 - and we're going to create a subclass of
+49:53 - the parent class
+49:56 - firestore recycler adapter and just
+49:58 - implement the methods inline again if if
+50:01 - we were kind of doing this in a more
+50:02 - proper way i would actually recommend
+50:04 - exporting this into a separate class but
+50:07 - just for the sake of kind of keeping
+50:08 - things simple i'm defining both the data
+50:10 - class and the recycler view adapter
+50:12 - right here in line
+50:14 - so i'll just say
+50:15 - object which means i'm going to create a
+50:18 - instance of this class say firestore
+50:22 - recycler adapter
+50:24 - [Music]
+50:30 - import that
+50:31 - and then this is parameterized by by two
+50:33 - things one which is a type and that's
+50:34 - going to be user
+50:36 - and then second we need a view holder
+50:39 - and this view holder is
+50:41 - an object which holds on to each view of
+50:43 - the recycler view so one row of the
+50:45 - recycler view essentially and we're
+50:47 - going to define that we're going to call
+50:49 - it user view holder
+50:51 - [Music]
+50:52 - and then this is going to take in
+50:54 - options and then we actually
+50:56 - have to implement methods here so first
+50:58 - let's define userviewholder
+51:00 - and userviewholder is simply going to
+51:02 - just be a subclass of the recyclerview
+51:04 - viewholder so i'm going to define that
+51:06 - up here class userviewholder
+51:10 - is a subclass of recyclerview.viewholder
+51:12 - [Music]
+51:15 - viewholder
+51:17 - and then we need to add the constructor
+51:19 - parameter which interstudio will do for
+51:21 - us okay
+51:22 - cool so now
+51:23 - we've
+51:24 - defined that
+51:26 - um
+51:27 - so now
+51:28 - the subclass of firestore cycle adapter
+51:31 - has to implement certain methods and
+51:32 - that's what this is complaining about so
+51:34 - just tap this on implement methods
+51:37 - implement methods helper and there are
+51:39 - two methods we need to override so
+51:40 - select both of them
+51:42 - and the job here is in
+51:43 - oncreateviewholder we need to use a
+51:46 - layout inflator to create a new view and
+51:49 - on bind view holder we need to take the
+51:50 - data at this position and bind it into
+51:53 - this view holder
+51:55 - again to really make this expedient and
+51:58 - quick i'm going to use a built-in
+51:59 - android layout
+52:01 - for the concrete view holder and if you
+52:03 - wanted to customize the layout at all
+52:04 - then you should
+52:05 - create your own layout but just to keep
+52:07 - things simple there's an inbuilt one
+52:08 - that
+52:09 - will fit our needs so i'm going to say
+52:12 - layout inflator
+52:14 - dot from and we need to pass in a
+52:15 - context here so i'm going to pass in
+52:17 - this at main activity which is
+52:19 - referencing the activity
+52:21 - and then inflate
+52:22 - and here's the
+52:24 - inbuilt layout that we're going to use
+52:26 - it's going to be a two
+52:27 - text view
+52:29 - layout
+52:30 - android.r
+52:32 - android.layout.simple list item2
+52:35 - then the next parameter is the parent
+52:37 - which is the parameter that was passed
+52:39 - in and finally attached to root we're
+52:40 - going to pass in false here because the
+52:42 - recyclerview will take care of attaching
+52:44 - it or detaching it
+52:46 - so capture that into a return value
+52:48 - called view and then we're going to
+52:50 - return a new view holder and the view
+52:52 - holder takes in as a parameter if you
+52:54 - remember from up here the view holder
+52:56 - takes it as a parameter of view and so
+52:58 - we're going to return here a new view
+53:00 - holder it's a new user view holder with
+53:03 - that view
+53:04 - [Music]
+53:06 - and then finally we need to now bind the
+53:07 - data so there are two text views as part
+53:10 - of this inbuilt layout let me show you
+53:13 - if i go to the definition here
+53:14 - let me only look at the code tab
+53:17 - so this is a two line list item and
+53:19 - there's basically a text view here which
+53:21 - is a little bit larger and then there's
+53:23 - another one which has an id of text two
+53:25 - which is a little bit smaller
+53:28 - so
+53:28 - going back into main activity we're
+53:30 - going to grab references to these two
+53:32 - text views so val tv name is going to be
+53:35 - the top one
+53:37 - and this is going to be a text view
+53:42 - is going to be
+53:43 - um
+53:44 - inside of the
+53:46 - view from the view holder we're going to
+53:48 - find a view by the id which is the one
+53:50 - that we just looked at android r dot id
+53:53 - dot text
+53:54 - one then there's one more which is text
+53:57 - 2 and this is going to be the
+54:00 - textview where we're going to place all
+54:02 - the emojis
+54:05 - so now in terms of binding the data
+54:07 - properly all we need to do is in the
+54:09 - text view for the name we need to set
+54:11 - the text attribute to be
+54:13 - the
+54:15 - name of the user so we actually have
+54:16 - that passed in as a parameter here
+54:19 - uh called model so i'll say model dot
+54:22 - display name
+54:23 - and then for the
+54:24 - text view for the emojis we again are
+54:26 - going to call the other
+54:28 - attribute on the user model the
+54:30 - model.emojis
+54:32 - this should be tv emojis.text
+54:36 - all right that's pretty much it so now
+54:38 - all we have to do is let's use the
+54:39 - adapter at in reference to the recycler
+54:41 - view so we called the recyclerview
+54:43 - we had we gave an id of rv users so i'm
+54:46 - going to say rvusers.adapter is equal to
+54:48 - adapter
+54:50 - and the very last step is when you set a
+54:51 - layout manager
+54:53 - on the recycler view let's say linear
+54:55 - layout manager
+54:58 - [Music]
+55:00 - import that and linear layout manager
+55:02 - takes in one parameter at least the
+55:05 - version that we're using which is a
+55:06 - contact so i'll pass them this
+55:08 - okay moment of truth let's see if this
+55:09 - works we just wrote a lot of code
+55:12 - to open up the emulator and hopefully
+55:13 - now because we um are passing this query
+55:17 - into the adapter it should automatically
+55:19 - fetch the data and show it
+55:22 - all right so that didn't work and
+55:24 - it turns out that the reason was
+55:25 - actually because
+55:27 - i wasn't properly adding in
+55:29 - the internet permission so what we can
+55:31 - do is go into the manifest file and
+55:33 - start typing user's permission and the
+55:35 - very first recommendation here is you
+55:37 - need internet permission
+55:39 - so now that we've done that let's go
+55:40 - back and run the app one more time
+55:44 - okay and now you can see that we do get
+55:46 - this data back so all of the
+55:50 - information from cloud firestore
+55:52 - is here and then one thing we can try
+55:54 - which is super cool
+55:55 - is if we go
+55:57 - over here um and we had elon musk
+56:00 - thinking about the car and the rocket
+56:01 - ship which you can see over here let's
+56:03 - edit this
+56:04 - and maybe elon musk is not thinking
+56:07 - about that right now he's thinking about
+56:09 - pretzels and
+56:11 - being happy so
+56:14 - do that an update
+56:16 - and immediately you can see how in our
+56:18 - app elon musk his status got updated and
+56:21 - that's the power of firestore and kind
+56:23 - of the way we have this set up is that
+56:25 - every time there's a change we're
+56:26 - automatically
+56:27 - instructing the adapter how to query for
+56:30 - the data we get that and we bind the
+56:33 - data properly so that's one of the
+56:34 - things we get for free out of the box
+56:37 - with this integration
+56:39 - and the same thing works actually if a
+56:41 - new user is created
+56:43 - so if a new user signs into our app
+56:46 - then we would get a new
+56:48 - document in the user's collection and we
+56:50 - would automatically get that data sent
+56:52 - down to all the clients who are using
+56:54 - this recyclerview
+56:56 - so
+56:57 - now we have a way to see all the users
+56:59 - and their status which is super cool the
+57:01 - next step is we want to be able to allow
+57:03 - users to update their status right so in
+57:05 - the next video we're going to add one
+57:06 - more menu item
+57:07 - which allows the user to write a new
+57:09 - emoji status and then send it to
+57:11 - firestore
+57:13 - in the last video we built the
+57:15 - functionality to allow the user to read
+57:18 - statuses for themselves and all other
+57:20 - users but there's no way to allow the
+57:22 - user to update their own status so
+57:24 - that's what we're going to fix in this
+57:26 - video we're going to add one more menu
+57:28 - icon here which is a pencil icon which
+57:29 - indicates that the user can edit it and
+57:32 - modify their status so to get started
+57:34 - let's open up android studio
+57:37 - and go to the
+57:39 - menu main which is what we had
+57:42 - added for the logout option so we're
+57:44 - going to add one more menu item here
+57:47 - and
+57:48 - the title of this menu option is going
+57:51 - to be
+57:52 - edit status
+57:54 - but no one's actually going to see the
+57:55 - text because we're going to add an icon
+57:58 - so the id first of all is going to be mi
+58:01 - edit which is menu icon edit
+58:03 - and we're going to add a new icon here
+58:05 - so to do that android 3 is a pretty
+58:07 - powerful way
+58:08 - to create your own vector assets which
+58:10 - is exactly what we're going to use using
+58:12 - a lot of kind of open source icons
+58:15 - so i'm going to go to drawable right
+58:16 - click on it tap on new
+58:19 - vector asset and then in terms of clip
+58:21 - art we're going to search for something
+58:23 - called edit
+58:24 - which is this pencil icon
+58:26 - and i'm going to just call this
+58:29 - ic edit
+58:31 - then tap on next and it'll automatically
+58:34 - add it into the drawable folder
+58:37 - so now that we've added that that'll be
+58:39 - the icon so i'll just start typing
+58:41 - drawable ic edit
+58:43 - and one important thing here is we don't
+58:45 - want this to be
+58:46 - buried inside of the overflow menu
+58:49 - for the main activity menu instead we
+58:51 - want it to be shown as an action so in
+58:54 - the show as action tap on always and tap
+58:56 - apply and so what that did is that it
+58:59 - brought up this menu option into the top
+59:01 - level so if we run the app now we can
+59:04 - see what this looks like we could
+59:06 - hopefully see one more menu option here
+59:08 - which is the edit pencil icon awesome so
+59:10 - in order to register something and do
+59:13 - something when this icon is clicked
+59:15 - let's go back into main activity
+59:19 - let me exit a few of these tabs
+59:23 - and in the on options item selected
+59:26 - we're going to have one more condition
+59:28 - here
+59:29 - for if the item id selected is equal to
+59:32 - the one that we just added r.id.mi
+59:36 - edit
+59:37 - and in this case let's add a log
+59:39 - statement just so we know what's
+59:40 - happening
+59:43 - so the objective here is we want to show
+59:45 - a
+59:46 - alert dialog
+59:48 - uh which allows the user to update their
+59:50 - status so i'll say show alert dialog
+59:53 - to edit status
+59:57 - and i'm going to delegate the work of
+59:58 - that actually to a method called show
+60:00 - alert dialog
+60:02 - and then this is not defined yet but if
+60:04 - we click on this red light bulb then
+60:06 - android studio will define it for us
+60:08 - and so the way we can create an alert
+60:10 - dialog in android is actually pretty
+60:12 - straightforward we're going to
+60:15 - define a variable called dialog and this
+60:17 - is going to be we're going to use the
+60:19 - alert dialog builder this is the builder
+60:21 - pattern
+60:22 - and i'll say alert dialog and then we're
+60:24 - going to use the one from android x
+60:26 - appcompat
+60:28 - dot builder
+60:31 - and then this takes in the builder takes
+60:32 - it as a parameter of the contacts so
+60:34 - we'll pass in the activity which is an
+60:35 - example of a context
+60:37 - and then we'll just set various
+60:38 - properties on here for example set title
+60:42 - and the title we'll pass in is update
+60:45 - your emoji
+60:48 - and then another
+60:48 - [Music]
+60:50 - example of what we want to set on the
+60:52 - alert dialog is the negative button
+60:56 - we'll say cancel
+60:58 - and then the listener we have to pass
+60:59 - into the center here we're going to pass
+61:01 - in null
+61:02 - and set positive button
+61:05 - and they'll be okay
+61:07 - and again the listener will be null
+61:08 - because we're going to be attaching
+61:10 - the information about what to do when
+61:12 - this positive button is clicked a little
+61:14 - bit later on
+61:15 - then we'll say
+61:17 - dot show
+61:19 - and in order to attach that listener
+61:22 - when the positive button is clicked
+61:24 - that's what we're going to do right here
+61:25 - we'll say dialog dot get button
+61:29 - dialog interface
+61:30 - [Music]
+61:32 - dot positive button
+61:34 - and then set a click listener so this
+61:37 - code gets
+61:38 - executed every time
+61:42 - the positive button is clicked so i'll
+61:43 - just leave a log statement for that
+61:46 - say clicked on positive button
+61:49 - [Music]
+61:52 - right now you can see that there's no
+61:53 - way for the user to actually input
+61:55 - anything right because we haven't set up
+61:57 - a edit text here but i just want to show
+61:58 - you what this looks like first so now if
+62:00 - i tap on this edit icon you can see that
+62:03 - we have this dialog popup it says update
+62:05 - your emojis and right now if i
+62:07 - tap on these like the options nothing
+62:10 - really happens
+62:12 - so what we want to do now is actually
+62:13 - have a view show up in that alert dialog
+62:16 - where the user can input their new
+62:18 - status
+62:20 - and so the way this works is you can
+62:21 - have another method on the builder
+62:23 - called set view
+62:25 - and we're going to pass in the edit text
+62:27 - here
+62:29 - and i'm actually going to create the
+62:30 - edit text manually
+62:32 - programmatically right here but of
+62:34 - course if you wanted to do something a
+62:35 - little fancier with
+62:37 - having control easy control over like
+62:39 - things like the margin or padding i'd
+62:41 - recommend you actually define an xml
+62:43 - layout file where you can define the
+62:45 - edit text but just for the sake of
+62:47 - expediency again
+62:49 - i'm going to define it right here so
+62:50 - i'll say val edit text is equal to a new
+62:53 - edit text
+62:54 - and then this edit text that we're
+62:56 - creating in kotlin code takes in
+62:58 - uh context and for now i actually don't
+63:01 - want to be concerned at all about
+63:04 - how do we restrict the input of this
+63:06 - edit text to only be emoji so that'll be
+63:08 - something that we to do we mark as a
+63:10 - to-do
+63:11 - for the next video
+63:15 - [Music]
+63:20 - [Music]
+63:22 - but for now now we have this edit text
+63:24 - so when the user clicks on the positive
+63:27 - button we want to extract the value out
+63:29 - of that edit text so i'll say
+63:30 - edittext.text.2string
+63:35 - and then save that into a variable
+63:38 - which is called
+63:40 - emojis and entered
+63:42 - so this is the what the user desires to
+63:45 - update their status with right this
+63:46 - emoji that they just entered
+63:48 - if this input is blank which basically
+63:51 - means
+63:52 - is blank as kind of a helper function in
+63:54 - kotlin is blank means either is the
+63:56 - status empty or is it just consisting of
+63:59 - white space so if they said space space
+64:01 - space that's not something that's valid
+64:03 - then we want to tell the user this is
+64:05 - invalid
+64:08 - cannot submit empty text
+64:11 - [Music]
+64:13 - and then you want to return here
+64:16 - there's one more thing that we need in
+64:18 - order to update the signed in user which
+64:20 - is of course we need to sign in user
+64:21 - right so i'm going to grab the user
+64:24 - current user
+64:28 - and that's coming from the firebase
+64:29 - authentication object
+64:32 - and if the current user is null which it
+64:34 - really shouldn't be because you only
+64:36 - ever see the main activity if you've
+64:37 - logged in from
+64:39 - the the previous activity login activity
+64:41 - but just as a error handling we should
+64:43 - just make sure that if this is null then
+64:45 - we want to return early again
+64:47 - so i'll copy this toast
+64:49 - and just update the message here to say
+64:53 - no signed in user
+64:55 - let me fix the spelling
+64:57 - [Music]
+64:59 - okay so we'll return early here as well
+65:01 - so here if we've gotten past both of
+65:03 - these
+65:04 - if statements now we want to update the
+65:08 - update firestore
+65:09 - with the new emojis
+65:14 - so here what we can do is say
+65:16 - db.collection
+65:20 - on the user's collection we want to find
+65:22 - the corresponding user and the way we do
+65:24 - that we do that
+65:25 - is we find the document which has that
+65:27 - user's id because if you think back to
+65:30 - our cloud function the document that we
+65:32 - created has the same uid as the
+65:35 - user that we just created so i'll say
+65:37 - currentuser.uid
+65:40 - and we want to now update this user with
+65:43 - certain data
+65:44 - and there are a couple ways you could
+65:46 - input the data here the way i like which
+65:48 - is i think the simplest is you can just
+65:50 - put in pairs of
+65:52 - data so you can say the field path which
+65:54 - is
+65:55 - in our case emojis that's what we call
+65:57 - the attribute name
+65:58 - and the value of this
+66:00 - key is going to be emojis entered
+66:04 - and once this is done you can now
+66:06 - dismiss the dialog
+66:09 - [Music]
+66:12 - awesome let's try it
+66:14 - so now hopefully we should see kind of a
+66:16 - very plain edit text in the alert dialog
+66:18 - and when we tap on the ok button the
+66:20 - positive button we should be able to get
+66:22 - the value out of the edit text and then
+66:24 - update
+66:24 - the emoji
+66:27 - so
+66:28 - okay i think we built the app properly
+66:29 - if we go back to firestore let's look at
+66:32 - my user and right now i have this panda
+66:35 - herb and heart icon so i'm gonna
+66:38 - update
+66:40 - my emojis with something simple like i'm
+66:43 - really in love so i have those three and
+66:46 - now you can see it updated here and also
+66:49 - in firestore you can see it got updated
+66:51 - immediately as well
+66:52 - so it seems like that works
+66:54 - so the downside of this is that you know
+66:57 - we're not actually restricting the input
+66:59 - here so i could just say hello tap okay
+67:01 - and actually we do update the status
+67:04 - here to be hello and it shows up in the
+67:07 - app as well which we don't want we want
+67:08 - to restrict the input of that edit text
+67:11 - to only be emojis so that'll be the job
+67:13 - for the next video
+67:16 - the job for this video is we would like
+67:18 - to be able to restrict the input for
+67:20 - what the user is allowed to enter in the
+67:21 - text view to only be emoji so right now
+67:24 - we're kind of in a bad state where the
+67:26 - user has entered in hello i've entered
+67:27 - in hello and we actually updated the
+67:29 - status as hello and that defeats the
+67:31 - purpose of the app right the purpose of
+67:32 - the app is to be creative and and funny
+67:35 - with different statuses that are only
+67:37 - consisting of emojis
+67:39 - let's go to interstudio and fix this
+67:41 - we're going to add some filters on the
+67:43 - edit text so let me show you what that
+67:45 - looks like there's an attribute here
+67:47 - called filters and this basically is
+67:49 - telling the edit text how can you
+67:51 - restrict the input of the edit text
+67:53 - which is exactly what we want and this
+67:55 - filters attribute will take in an array
+67:57 - of filters
+67:59 - i want to point out here that there are
+68:00 - actually two separate filters that we
+68:02 - want to apply one is the emoji
+68:04 - restriction and the second is a length
+68:06 - restriction so first is the emoji
+68:08 - restriction that one's actually a little
+68:09 - bit harder so i'm going to punt on that
+68:11 - for now i'll get to it in a minute the
+68:13 - input length is actually very simple to
+68:15 - implement we don't want people to have
+68:17 - statuses which are you know tens or
+68:19 - dozens of characters
+68:20 - long dozens of emojis long instead we
+68:23 - really want to be concise about how many
+68:25 - emojis we're allowing people to have
+68:27 - and the way we can do that is with the
+68:29 - inbuilt filter called a length filter so
+68:32 - i'll say
+68:32 - length filter
+68:34 - is equal to
+68:35 - input
+68:36 - filter dot length filter and here you
+68:40 - specify what is the maximum length that
+68:42 - you're allowing and we're going to allow
+68:44 - i'm just going to put a 9 here and the
+68:46 - reason we're saying 9 is because each
+68:48 - emoji is actually a unicode and a
+68:50 - unicode character actually consists of
+68:52 - multiple characters compared to plain
+68:54 - text so i'm no expert in unicode
+68:56 - but i can leave some pointers to some
+68:57 - documentation but what i found is that
+68:59 - most unicode characters are at least two
+69:02 - characters long or up to four characters
+69:04 - long and so when i say a max of nine
+69:07 - that essentially means that we're
+69:08 - allowing a maximum of four unicode
+69:11 - characters or
+69:13 - potentially as little as two if you got
+69:14 - unlucky and you picked two unicode
+69:16 - characters which equate to four
+69:19 - characters so that's the first filter
+69:21 - that we're going to apply length filter
+69:24 - the second one we're going to have is an
+69:27 - emoji filter this is a custom one that
+69:28 - we're going to define
+69:30 - called emoji filter
+69:31 - [Music]
+69:33 - and i'm going to make a new class out of
+69:34 - this emoji filter
+69:38 - i'm going to define this as a separate
+69:39 - class and again you can sense the
+69:42 - pattern here i'm going to define it
+69:43 - inside of main activity you should
+69:44 - probably be defining this into a
+69:46 - separate class together just for
+69:47 - cleanliness but
+69:49 - just because it'll all fit together in
+69:51 - main activity i'm going to do it right
+69:52 - here so i'm going to define the inner
+69:54 - class here
+69:56 - called emoji filter
+69:58 - this is going to be a subclass so it's
+70:00 - going to inherit from input filter
+70:04 - [Music]
+70:05 - and you have to override certain methods
+70:07 - here so i'm going to have entertainer
+70:09 - help us with that there's a method here
+70:10 - called filter
+70:12 - and there's a bunch of parameters here
+70:13 - which i'll explain a little bit about
+70:16 - let me put this all in one line just
+70:18 - make it a little bit more readable
+70:21 - but basically the idea here is that
+70:23 - whatever is attempted to be inputted in
+70:26 - the edit text that is going to be this
+70:28 - source parameter this first parameter
+70:31 - and if we allow this input to be added
+70:34 - to the edit text we're going to simply
+70:36 - return source
+70:37 - so
+70:39 - if the
+70:40 - added
+70:41 - text is valid
+70:44 - return
+70:45 - [Music]
+70:46 - source
+70:48 - if it's invalid
+70:51 - then we want to return empty string
+70:54 - basically meaning that whatever you
+70:55 - inputted is not allowed go back to just
+70:58 - empty string so that we essentially
+70:59 - don't modify whatever is already there
+71:01 - in the edit text and you'll notice here
+71:03 - that the return value of this method is
+71:06 - car sequence and it's valid to return a
+71:09 - string here because a string is actually
+71:12 - a type of car sequence so let me show
+71:14 - that to you if i just type in string and
+71:16 - then i'm able to go to the definition
+71:17 - you can see that the string class
+71:19 - inherits from car sequence that's why
+71:22 - you're allowed to just return empty
+71:23 - string
+71:24 - in certain codepaths
+71:27 - okay so hopefully that makes sense uh
+71:29 - with this pseudocode
+71:31 - now the question is how can we identify
+71:34 - what is valid emoji based on this source
+71:37 - variable right
+71:39 - and the reason why
+71:41 - source here is a car sequence and not a
+71:43 - car you might think okay i can only
+71:44 - really add one character at a time in
+71:46 - edit text
+71:48 - that's actually not entirely true
+71:49 - because when you have suggestions in the
+71:52 - keyboard on android you can actually add
+71:55 - in certain whole words and so the source
+71:57 - might be multiple characters together
+71:59 - which is why it's a car sequence and not
+72:01 - just a single car and similarly
+72:03 - an emoji is not one character it's
+72:05 - actually multiple characters tied
+72:07 - together
+72:09 - so the way i want to build this is
+72:10 - actually start with the invalid cases
+72:12 - first so first of all if source is null
+72:15 - because this is a nullable car sequence
+72:17 - right
+72:18 - or
+72:19 - if
+72:20 - the source is blank which basically
+72:22 - means that it's just kind of empty text
+72:24 - then i want to return empty string
+72:26 - basically no need to modify whatever is
+72:29 - already in the edit text
+72:30 - [Music]
+72:32 - otherwise i want to just add a log
+72:33 - statement here so i say log i
+72:37 - at info level and then i just want to
+72:39 - kind of help us to debug what's
+72:41 - happening here i'll say added text
+72:43 - source
+72:44 - [Music]
+72:48 - it has a length of let's print out how
+72:50 - long this car sequence is
+72:53 - [Music]
+72:56 - and now i can just say return
+72:58 - source
+73:00 - for now
+73:02 - all right so let's just make sure that
+73:03 - we're using this emoji filter i'm gonna
+73:05 - put it inside of the array of
+73:07 - filters
+73:09 - and we're about to finish this to do so
+73:11 - i'm gonna get rid of that as well okay
+73:13 - so let me try the app right now and just
+73:15 - see what happens based on
+73:17 - the logs that we see
+73:19 - let's open up logcat and i'm going to
+73:21 - filter for
+73:23 - main activity
+73:25 - [Music]
+73:26 - okay so if i open up the edit text and i
+73:29 - start typing t for example so we are
+73:32 - able to add a t and t like we expect has
+73:35 - a length of one character
+73:37 - however if i start using one of the
+73:39 - autocomplete options such as thanks here
+73:41 - then you can see the added text is the
+73:44 - whatever is remaining after we chop off
+73:46 - the t which is hanks and that has like
+73:47 - the five characters
+73:49 - and now let's actually just go back a
+73:51 - little bit
+73:52 - and
+73:53 - add in an emoji like like this one
+73:55 - so here you can see this emoji of the
+73:57 - crying face has a length of two
+73:58 - characters and there are a couple let me
+74:01 - see if i can find one like this one
+74:03 - uh this ribbon emoji has a length of
+74:06 - three characters that's what i was
+74:07 - saying that the emojis actually have
+74:08 - variable lengths some are two some are
+74:09 - three and then there's a few that are
+74:11 - actually four and so we want to make
+74:12 - sure that we accommodate that scenario
+74:16 - now the question is how do we make sure
+74:17 - that the input is valid emojis so one
+74:21 - thing we can look at is
+74:23 - is the character that's added
+74:25 - have length of more than one character
+74:27 - but that's not a perfect way of
+74:29 - filtering out only emojis because like
+74:30 - we saw if you add something from the
+74:32 - autocomplete that will also give you
+74:34 - something with more than one character
+74:36 - and the way we're going to approach this
+74:38 - which i think is the more robust way is
+74:40 - we're going to iterate through each
+74:42 - character of this source and check the
+74:44 - type of it each character has a type and
+74:47 - what i have found based on some googling
+74:49 - is that every character of an emoji has
+74:51 - a certain type of character and we're
+74:53 - going to check
+74:55 - based on iterating through this car
+74:56 - sequence whether each character fits
+74:59 - that one of those valid types and so let
+75:00 - me just show you what are the valid
+75:02 - types
+75:03 - so i'm going to define a list here
+75:05 - called valid
+75:06 - car types
+75:08 - and this is going to be a list of
+75:11 - and then oh it's going to be character
+75:14 - dot surrogate these are static variables
+75:16 - defined on the character class so
+75:19 - surrogate is one of them
+75:21 - and the other two i found are
+75:23 - non-spacing mark and character dot other
+75:25 - symbol
+75:26 - these are the three that i found
+75:28 - which
+75:29 - encompass what are possible unicode
+75:31 - characters
+75:33 - so turns out i was actually wrong and
+75:35 - there are
+75:36 - a couple other valid character types
+75:39 - that
+75:39 - make up emoji and so i'm going to leave
+75:41 - a link to this just in the description
+75:44 - and here you can see i did a lot more
+75:45 - testing and i found that there are some
+75:47 - emoji characters which have other
+75:49 - character types and you might want to
+75:51 - include this if you want a more robust
+75:52 - way of checking for valid emoji
+75:56 - and then one thing i want to do is i
+75:57 - want to map this
+75:59 - so right now you can see that these are
+76:00 - all of type byte and i want to actually
+76:02 - make all of these of type
+76:04 - int so this this valid card types is a
+76:07 - list of integer
+76:10 - and the reason i want it to be a list of
+76:11 - integer is because when we get the
+76:14 - type of each input character from source
+76:16 - it's going to be of type integer
+76:18 - so now our job is simply to iterate
+76:20 - through
+76:21 - each character each input character in
+76:24 - source
+76:25 - and get the
+76:27 - type of that that's what i was referring
+76:28 - to as character dot get type
+76:32 - and i'm going to look at the type of
+76:33 - input character save that into a
+76:34 - variable called val type
+76:37 - and for debugging purposes why don't we
+76:38 - log something here
+76:39 - [Music]
+76:42 - so um
+76:43 - [Music]
+76:45 - character type
+76:46 - [Music]
+76:47 - and then print out the character type
+76:48 - here which is type
+76:53 - cool and then
+76:55 - what we want to do here is check is this
+76:57 - type does it actually exist inside of
+76:59 - valid character types if the answer is
+77:02 - no that means that this whatever is
+77:04 - being added is not a valid emoji and we
+77:06 - should not be allowed to add it to that
+77:08 - a text so i'll say if
+77:10 - valid card types
+77:12 - contains
+77:14 - um type
+77:17 - so if the list of valid card types
+77:19 - doesn't have type inside of it that
+77:21 - means that you know this is incorrect
+77:23 - this is not valid so i'll say context is
+77:28 - this dot main activity
+77:30 - only and we'll tell the user only emojis
+77:32 - are allowed
+77:38 - and then
+77:39 - return empty string basically
+77:40 - invalidating whatever they've inputted
+77:42 - and just returning empty string if we've
+77:44 - gotten to the end that means that
+77:46 - the added text is valid and then these
+77:49 - other branches up here
+77:51 - are if this is invalid
+77:54 - so let's try it now and let's just see
+77:55 - what the log statements tell us about
+77:57 - the type of each character
+77:59 - we'll run this
+78:01 - go into the emulator and let's open up
+78:03 - vlogcat
+78:07 - okay so now if i add in t we should
+78:09 - hopefully not be allowed to input that
+78:10 - because it's not of the proper type so
+78:12 - type in t and yeah we do see this toast
+78:14 - message which has only emojis are
+78:15 - allowed and the edit text is not
+78:17 - modified which is awesome if you look at
+78:18 - the logs you can see that the added text
+78:20 - has one character and the type of this
+78:22 - character is is uh two and if you look
+78:25 - at the surrogate has type 19
+78:29 - non-spacing mark is six and other
+78:31 - symbols 28. so it's 19 6 and 28. so
+78:35 - basically every character of a unicode
+78:38 - should be one of those and let's test
+78:39 - that right if i now go to the emoji
+78:42 - section and i
+78:43 - do this birthday gift
+78:46 - so here you can see
+78:47 - the birthday gift has two characters and
+78:49 - each are typed surrogate which is this
+78:51 - 19 and the other one which had three
+78:54 - characters that ribbon
+78:56 - has the first two characters of type 19
+78:59 - which is surrogate and the last one of
+79:01 - non-spacing mark this is how we're able
+79:03 - to really be able to distinguish
+79:05 - emojis are valid and things like letters
+79:08 - are not that didn't work and also things
+79:09 - like autocomplete which do have
+79:11 - length of more than one character even
+79:13 - though they're not allowed because
+79:15 - the character type there is not going to
+79:16 - be one of the three that we have put
+79:18 - into the allow list
+79:20 - so now if we go back to the app i tap ok
+79:25 - so now instead of hello we updated the
+79:27 - status and that it's also updated
+79:29 - properly in firestore so now this is a
+79:31 - really good way of sanitizing the input
+79:33 - and only allowing
+79:34 - emoji
+79:36 - so if you built out at this point
+79:38 - exactly what we have over here i would
+79:40 - love to hear from you this is a really
+79:42 - kind of cute simple app which actually
+79:44 - integrates a bunch of firebase services
+79:47 - and if we revisit this initial
+79:48 - architecture diagram hopefully it all
+79:50 - makes a little bit more sense now
+79:51 - firebase authentication will trigger a
+79:53 - function in firebase cloud functions
+79:55 - whenever a new account is created that
+79:57 - will create the new user document in the
+80:00 - user's collection and that will get sent
+80:03 - down to all the clients which are
+80:04 - listening for updates on the user's
+80:06 - collection and finally we just finished
+80:09 - the logic to
+80:10 - allow users to update their status and
+80:13 - that's restricted to only being emojis
+80:16 - so the cool thing about this is that
+80:17 - there's so many ways you could extend
+80:19 - this and improve this app to make your
+80:20 - own uh the published version of the app
+80:23 - that i have i did a couple things one is
+80:24 - i improved the ui
+80:26 - and i also added sorting by update time
+80:28 - right because right now we are
+80:30 - whenever you update the status it just
+80:31 - kind of updates in place but you would
+80:33 - like to be able to bring the users who
+80:36 - updated the status most recently to the
+80:37 - very top of the list so that's something
+80:39 - that
+80:40 - you could very easily do just by adding
+80:42 - an updated time attribute and also you
+80:44 - could do other things like maybe users
+80:46 - want the ability to
+80:48 - increase the length of their status and
+80:49 - that could kind of be a premium feature
+80:51 - you could have have people uh who update
+80:54 - their status frequently get that
+80:56 - functionality or it could be a paid
+80:57 - feature there's a bunch of things that
+80:58 - you could kind of be creative with or
+81:00 - experiment with so if you do any of
+81:02 - these i would love to check out your app
+81:04 - and play with it as well drop me a
+81:06 - comment and let me know
+81:08 - that's all i had for this series i hope
+81:10 - you enjoyed building it and you can take
+81:11 - the concepts here and apply it to
+81:13 - whatever else you want to build in the
+81:14 - future
+81:15 - i'll leave links to all the code that we
+81:18 - wrote along with documentation that we
+81:20 - referenced in the description
+81:22 - don't forget to
+81:23 - hit that like button and subscribe if
+81:25 - you have any questions or comments let
+81:26 - me know and i'll help as much as i can
+81:29 - until next time see you later bye

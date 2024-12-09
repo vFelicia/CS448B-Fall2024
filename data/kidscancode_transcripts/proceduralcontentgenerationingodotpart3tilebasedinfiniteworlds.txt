@@ -1,0 +1,357 @@
+00:00 - welcome back to my series on procedural
+00:02 - generation using Godot 3.0 in this video
+00:06 - we're gonna look at generating random
+00:08 - Maps as you explore them if you download
+00:12 - the starting project from the link below
+00:14 - you'll get the following scenes already
+00:17 - set up and ready for us to to make this
+00:19 - project so we're gonna start by using
+00:22 - the isometric tile map this is the tile
+00:25 - set that we talked about in the previous
+00:27 - video isometric Road tile set with roads
+00:30 - for all 16 possible combinations and
+00:35 - what we're gonna do is we're gonna make
+00:39 - it so that you start out so you're
+00:41 - standing on this square this is the
+00:42 - starting square and when you move to
+00:44 - another tile we're going to randomly
+00:46 - pick a tile that goes there and then
+00:50 - when you step to the next one we're
+00:51 - gonna pick a different one and we'll
+00:53 - make sure we always pick one that
+00:55 - matches so we don't really don't ever
+00:57 - get something like that you know we
+01:01 - don't ever get a mismatched tile so the
+01:05 - maze will rename this two roads but
+01:10 - we'll this is going to be the scene that
+01:14 - we'll do our main exploring and our main
+01:17 - right our main code in okay we also have
+01:20 - a truck scene and this scene contains
+01:22 - the vehicle to the player be driving so
+01:25 - this is gonna be the player and we're
+01:26 - gonna move from square to square driving
+01:28 - this little truck around and it's using
+01:30 - an animated sprite to display the
+01:32 - different art for the the car facing in
+01:37 - the different directions and we're
+01:39 - basically going to only use north south
+01:40 - east west but it does have some for the
+01:43 - all eight directions so that is our
+01:48 - starting setup all right so I'm gonna
+01:51 - briefly review the code for the truck
+01:53 - because what I want to focus on for this
+01:56 - is writing the code for the map so this
+01:59 - the code for the truck is going to be as
+02:02 - follows we're just going to review it
+02:03 - real quickly so we have some constants
+02:06 - here like we did in the map video
+02:10 - designating what north south east and
+02:12 - west
+02:13 - values are in our tileset then we have a
+02:17 - mapping that maps those to the
+02:19 - animations so that if the player moves
+02:21 - north we can change the truck to show
+02:23 - the north-facing image four moves we
+02:28 - have a mapping from the direction we
+02:30 - want to go into what vector that
+02:31 - represents in the tile space so moving
+02:35 - one back one space north is negative one
+02:38 - in Y and then we're gonna have a
+02:41 - variable that keeps a reference to the
+02:44 - map itself the tile map which is going
+02:46 - to be in the parent scene we're going to
+02:49 - keep track of our map position that's
+02:51 - what tile we're on right we don't
+02:53 - actually care that we are in isometric
+02:57 - space or orthogonal space it doesn't
+02:59 - matter to the player they're just moving
+03:01 - from one tile to the next if they're on
+03:04 - tile number four comma three and they
+03:06 - move to the right they're gonna be on
+03:07 - tile five comma three in and if that in
+03:09 - the display space looks orthogonal that
+03:13 - doesn't matter to the player speed is
+03:17 - how fast our animation is going to
+03:18 - happen it's going to take one second to
+03:20 - move from one Square to the next square
+03:21 - so you can speed up or slow down your
+03:24 - movement speed and then we're gonna have
+03:26 - a flag here that keeps track of whether
+03:27 - we're already moving that way when we
+03:29 - are in the middle of a move animation
+03:32 - and we press a key another move won't
+03:34 - get kicked off we're only allowed to
+03:35 - move when we've stopped moving now we
+03:39 - have a check here a function that will
+03:41 - check to see if a movie is allowed so
+03:44 - when we press North we don't want to be
+03:47 - able to move north if it's blocked so
+03:50 - this is going to do that comparison
+03:52 - right we're gonna get the ID of the cell
+03:55 - like we did previously in them in the
+03:57 - maze function and we're going to compare
+04:00 - that with the for with the direction
+04:03 - that we wanted to go in and if that east
+04:06 - wall is on it's set to a one then this
+04:11 - is gonna be this is gonna be true so we
+04:13 - will return that can move is false
+04:14 - otherwise the move is allowed then we
+04:17 - have our input which is going to ignore
+04:20 - things if we're already moving otherwise
+04:23 - it's going to move in the direction
+04:26 - matching the key we
+04:27 - pressed and then here's our move
+04:29 - function itself alright if we can't
+04:32 - we're not allowed to move we will do
+04:34 - nothing then we will change to the
+04:38 - animation that matches the direction we
+04:41 - will increment our move our map position
+04:44 - by whatever vector we're moving in and
+04:46 - then we're going to check if the square
+04:49 - we're moving into is a negative one and
+04:52 - in tile maps and negative one means an
+04:55 - empty square so if we're moving into an
+04:57 - empty square we're going to tell the map
+04:59 - to generate a tile we're going to tell
+05:02 - our parent to generate a tile and that's
+05:03 - the code we're going to be writing in a
+05:04 - few minutes and then after that we just
+05:07 - need to do a little tween animation to
+05:11 - change our position from the current
+05:12 - position to the destination which is one
+05:15 - tile over the center of one tile over
+05:18 - plus a little bit for the size of the
+05:21 - truck itself and that's it when the
+05:24 - animation finishes moving goes back to
+05:26 - false and we're allowed to move again so
+05:28 - you'll see how this works in a few
+05:29 - minutes when we start working on the map
+05:30 - so let's instance a truck in our scene
+05:34 - and you can drag it and put it there
+05:37 - we're gonna place it on the starting
+05:39 - cell via code anyway so don't worry
+05:42 - about getting it centered and perfect
+05:43 - but it's gonna start on our one starting
+05:46 - square and you can pick whatever
+05:47 - starting Square you want and then the
+05:51 - truck has a camera attached to it so it
+05:53 - will follow that the camera will follow
+05:56 - the truck as it drives around so you
+05:57 - will be able to explore essentially
+05:59 - infinitely in whatever direction the
+06:02 - roads take you so we need to start
+06:04 - working on the code now for how we're
+06:07 - going to generate this now we're gonna
+06:09 - start with some of the same information
+06:12 - that we have used before and that's our
+06:16 - constants and our mappings from between
+06:19 - vectors and directions and you notice we
+06:23 - use the same ones over in the truck
+06:24 - script too so this is kind of thing that
+06:27 - if you're using it a lot you could make
+06:29 - this an auto load put it in a in a
+06:31 - singleton that you can access from
+06:33 - everywhere but for right now with our
+06:35 - for these small demos I'm okay with
+06:38 - copying and pasting it and having it in
+06:39 - two places we're never going to
+06:40 - change what North is we've defined North
+06:42 - as the one first digit East as the
+06:46 - second digit and so on so and then we
+06:49 - have a reference to our Tao map so that
+06:51 - we can use that and then in our ready
+06:56 - we're going to set the truck map - the
+07:02 - map right we want we added a we added a
+07:07 - property to the truck that references
+07:09 - the map so we'll give it that reference
+07:12 - we're gonna set the trucks map position
+07:16 - to our starting tile which we put at
+07:19 - zero zero so we're gonna just stick with
+07:21 - that and then the truck dot position
+07:25 - this is the starting pixel position on
+07:29 - the screen we're gonna find that by map
+07:32 - to world and we use the trucks map
+07:36 - position right and then we're gonna add
+07:41 - that off step so that it's at the center
+07:44 - of the tile and you'll see when we run
+07:47 - it that's gonna stick our truck right
+07:49 - there at the center of the tile to start
+07:51 - now if we try to move we're gonna get an
+07:54 - error because our truck script when we
+07:56 - move tries to call generate tile because
+07:58 - as soon as we move we're gonna move into
+08:00 - an empty tile so we're going to add that
+08:08 - now what does and we want to generate it
+08:11 - whatever location we're moving into
+08:13 - right when we call it we're gonna call
+08:15 - it to generate the tile that we're
+08:17 - moving into so I'm going to generate a
+08:19 - tile at this location and that means we
+08:23 - need to find all the tiles that will fit
+08:27 - in that location so in the case of this
+08:30 - situation right when we move to this
+08:32 - spot right the tiles that fit there like
+08:36 - for example 9 does not right 8 does not
+08:40 - 7 would be fine right so we needed to go
+08:43 - through and find out whichever ones have
+08:45 - the same tile the same top wall value on
+08:51 - this side as this cell that we're moving
+08:53 - out
+08:54 - has on its opposite side so we're going
+09:00 - to get a we're going to make a function
+09:02 - called find valid tiles that will return
+09:07 - a list of the cells that fit in that
+09:09 - spot and then we'll set our map location
+09:17 - to that so cell and we'll pick a random
+09:20 - value out of it and that will do it
+09:30 - and now how do we find those valid tiles
+09:36 - so this function returns all tiles that
+09:42 - all valid tiles sorry valid tiles for a
+09:47 - given so so we need to check all of them
+09:55 - right so we need to check all tiles from
+09:57 - 0 through 15 and see if any of them will
+10:04 - fit so first we have to get each of
+10:08 - their neighbors each of that cells
+10:12 - neighbors all right so we have to check
+10:21 - charge spacers neighbors if they exist
+10:24 - right there may not have one so we think
+10:27 - about it we might have a situation like
+10:32 - let's say we had this we have a curved
+10:37 - road here we have a straight road coming
+10:41 - out like that and then it cursed this
+10:43 - way and has that so now if we move on to
+10:48 - we move on to this spot right when we
+10:53 - move here the tile that we pick has to
+10:56 - match this side this side and this side
+11:00 - right which is how we're going to
+11:03 - determine what fits
+11:04 - so there's actually only a couple of
+11:07 - tiles that
+11:07 - fit there right this one will fit there
+11:10 - the curve going out will fit there where
+11:14 - is that one alright that will fit there
+11:16 - right because it needs to be solid on
+11:19 - these two sides and open on this side
+11:21 - and then this side is it is can be any
+11:24 - okay so now in our code what we can do
+11:29 - is if the the cell is there right so
+11:33 - first we're gonna have a we're gonna set
+11:35 - a flag here right we're gonna assume it
+11:38 - doesn't match right and then we're in
+11:42 - and each of those keys right each of the
+11:47 - vectors each of the directions right
+11:50 - neighbor ID is map gets L we want to get
+11:55 - that cell we want to get cell the cell
+12:00 - we're currently in plus n right we're
+12:02 - gonna check all the neighbors alright so
+12:06 - if that neighbor ID is not equal to zero
+12:11 - right that means if it's not a empty
+12:14 - tile then we want to see if there is a
+12:17 - wall match between the neighbor tile
+12:20 - that we're checking and the tile we're
+12:26 - trying to place right which would be I
+12:28 - so if those two things have their walls
+12:32 - matching and in the maze tutorial we
+12:35 - talked about how you can take the
+12:38 - neighbor ID and you can do a bitwise and
+12:43 - with the cell walls value and compare
+12:48 - that with the same thing with the other
+12:51 - cell right ones negative one is positive
+12:54 - because of the opposite and then if this
+12:59 - here returns zero that means that there
+13:03 - the wall is open so this what this
+13:06 - returns zero and this returns zero that
+13:08 - means they're both open so that matches
+13:10 - and then this would return non zero and
+13:13 - non zero and that's the only problem
+13:16 - you're gonna have is this will miss some
+13:18 - matches
+13:21 - and to show you how let me do a quick
+13:22 - demo so I'm gonna do this in the Python
+13:24 - shell real quick just because Python
+13:27 - does the bitwise operators the same way
+13:29 - and I can just demonstrate this real
+13:30 - quickly so let's say our cell we're
+13:32 - looking at is number 15 right that's the
+13:35 - one that has walls on all four sides so
+13:37 - that means if we say I and one the north
+13:41 - wall we're gonna get one if we say I and
+13:44 - two well we know that wall is there too
+13:47 - so what do you think it's going to
+13:49 - return you might think it would return
+13:50 - one cuz but this isn't a true or false
+13:53 - test so it returns two and so on and so
+13:57 - when you test the the west wall for
+13:59 - example you get an eight well that means
+14:01 - that if we're trying to match two tiles
+14:05 - we might have a situation where we're
+14:06 - trying to compare is two equal to eight
+14:08 - and that's no good that would mean that
+14:13 - the east and west wall it doesn't think
+14:16 - the east and west wall values match up
+14:17 - right one of these is less one of these
+14:19 - is the east so the way to to fix that is
+14:23 - to do it's just divide by the value
+14:26 - you're comparing right then you're gonna
+14:28 - get it one and then now our answers will
+14:32 - be zero or one if we were on tile number
+14:35 - zero for example i % eight or eight
+14:38 - that's going to be zero so that's what
+14:41 - we need to do here so these two
+14:44 - comparisons they have to be divided by
+14:49 - the same value which leads to a fairly
+14:52 - long line but it does solve our problem
+14:55 - okay so now we if those two things match
+15:01 - then we have a match right if these two
+15:04 - values are equal either both zero or
+15:06 - both one then his match can be true
+15:11 - otherwise is match is gonna be false and
+15:16 - we have to set it to false because we
+15:18 - might have checked one side remember
+15:21 - we're doing this right if we check this
+15:22 - side and find a match and this matches
+15:24 - but the one we then when we check this
+15:26 - wall
+15:27 - it doesn't match then the whole tile has
+15:30 - to be thrown away right because it has
+15:31 - to match all the sides
+15:33 - so we said as match to false if we find
+15:36 - a mismatch between two walls and if that
+15:40 - happened since we found a mismatch we
+15:43 - might as well break because there's no
+15:44 - point in testing any of the other walls
+15:45 - if we found one that doesn't match the
+15:47 - whole tile has to get tossed out so now
+15:51 - what we can do is if so if we got
+15:55 - through all of that and as matches true
+15:57 - we want to add it to our list of tiles
+15:59 - so if we found a match and we haven't
+16:03 - already added it all right if we find a
+16:07 - match and it's not in the list already
+16:09 - actually I realize we got to make a we
+16:13 - need a variable to store all these all
+16:19 - right we're returning a an array of the
+16:22 - valid tiles so so if we found a match
+16:24 - and it's not already in the list of
+16:27 - matches then we'll append it and at the
+16:33 - end we can return valid tiles ok let's
+16:39 - give it a shot
+16:42 - so there I am if I press the right arrow
+16:44 - key I'm gonna move east move on to that
+16:48 - square if I press the down arrow key I'm
+16:50 - gonna move south oh and there we go it
+16:53 - filled in what goes there
+16:56 - press right down see I'm now I am
+17:01 - exploring up got a dead end there I can
+17:04 - go down all right now I have an infinite
+17:13 - random world I can explore I can just
+17:16 - keep going and I know that the tiles
+17:21 - will always match up right so what do
+17:23 - you think's gonna happen if I go east
+17:25 - here all right the only one that would
+17:28 - fit in that spot was that one all right
+17:31 - so that's our infinitely generated world
+17:35 - and the next video will talk about some
+17:38 - more things we can do with this now that
+17:39 - we have the basic functionality working
+17:50 - you

@@ -1,0 +1,501 @@
+00:00 - so in this video we're gonna talk about
+00:01 - what ingress is and how you should use
+00:05 - it and also what are different use cases
+00:07 - for ingress so first of all let's
+00:15 - imagine a simple kubernetes cluster
+00:17 - where we have a part of my application
+00:20 - and it's corresponding service my app
+00:24 - service so the first thing you need for
+00:25 - a UI application is to be accessible
+00:28 - through a browser right so for external
+00:30 - requests to be able to reach your
+00:33 - application so one way to do that an
+00:37 - easy way is through an external service
+00:38 - where basically you can access the
+00:41 - application using HTTP protocol the IP
+00:44 - address of the node in the port however
+00:48 - this is good for test cases and if you
+00:52 - want to try something very fast but this
+00:55 - is not what the final product should
+00:57 - look like the final product should be
+00:58 - like this so you have a domain name for
+01:01 - application and you want a secure
+01:03 - connection using HTTPS so the way to do
+01:06 - that is using commander this component
+01:08 - called ingress so you'll have my app
+01:11 - ingress and instead of external service
+01:14 - you would instead have an internal
+01:17 - service so you would not open your
+01:19 - application through the IP address and
+01:21 - the port and now if the request comes
+01:24 - from the browser it's gonna first reach
+01:27 - to the ingress and ingress then we'll
+01:28 - redirect it to the internal service and
+01:30 - then it will eventually end up with the
+01:33 - pot so now let's actually take a look
+01:35 - and see how external service
+01:37 - configuration looks like so that you
+01:39 - have a practical understanding so first
+01:42 - of all if you want to know in more
+01:44 - details how Cabrera's llamó files are
+01:46 - written and what the syntax looks like
+01:48 - for different components then I have a
+01:50 - separate video so you can check it out
+01:52 - but here to just to understand the main
+01:55 - concepts so you have the service which
+01:57 - is of type load balancer this means we
+02:00 - are opening it to public by assigning an
+02:03 - external IP address to the service and
+02:05 - this is the port number that user can
+02:09 - access the application at so basically
+02:12 - IP address
+02:13 - the external IP address and the port
+02:15 - number that you specify here again if
+02:18 - you want to know more details about each
+02:20 - attribute then check out my kubernetes
+02:23 - GML video now with ingress of course it
+02:28 - looks differently so let's go through
+02:30 - the syntax of ingress basically have a
+02:32 - kind ingress instead of a service and in
+02:35 - the specification where the whole
+02:37 - configuration happens you have so-called
+02:40 - rules or routing rules and this
+02:43 - basically defines that in the main
+02:45 - address or all the requests to that host
+02:48 - must be forwarded to an internal service
+02:52 - so this is the host that user will enter
+02:55 - in the browser and in ingress use define
+02:58 - a mapping so what happens when that
+03:00 - requests or that host gets issued you
+03:03 - redirect it internally to a service the
+03:06 - path here basically means the URL path
+03:09 - so everything after the domain name so
+03:12 - slash whatever path comes after that you
+03:15 - can define those rules here and we'll
+03:17 - see some different examples of the path
+03:20 - configuration later and as you see here
+03:22 - in this configuration we have an HTTP
+03:25 - protocol so later in this video I'm
+03:29 - gonna show you how to configure HTTP
+03:31 - connection using English component so
+03:34 - right now in the specification we don't
+03:36 - have anything configured for the secure
+03:39 - connection it's just ad HTTP and one
+03:41 - thing to note here is that this HTTP
+03:44 - attribute here does not correspond to
+03:46 - this one here this is a protocol that
+03:49 - the incoming request gets forwarded to
+03:53 - to the internal service so this is
+03:55 - actually the second step and not to
+03:58 - confuse it with this one and now let's
+04:00 - see how the internal service to that
+04:03 - ingress will look like so basically back
+04:06 - end is the targets where the request the
+04:09 - incoming request will be redirected and
+04:11 - the service name should correspond the
+04:14 - internal service name like this and the
+04:16 - port should be internal service port and
+04:20 - as you see here the only difference
+04:22 - between the external and internal
+04:23 - services is that here in internal
+04:26 - service I don't have
+04:27 - the third ports which is the note ports
+04:29 - starting from 30 thousands we now have
+04:31 - that attribute here and the type is a
+04:34 - default type not a load balancer but
+04:36 - internal service type which is cluster
+04:38 - IP so this should be a valid domain
+04:42 - address so you can just write anything
+04:44 - here it has to be first of all valid and
+04:46 - you should map that domain name to IP
+04:50 - address of the node that represents an
+04:54 - entry point to your kubernetes cluster
+04:55 - so for example if you decide that one of
+04:58 - the nodes inside the kubernetes cluster
+05:00 - is going to be the entry point then you
+05:03 - should map this to the IP address of
+05:05 - that note or and we will see that later
+05:08 - if you configure a server outside of the
+05:10 - kubernetes cluster that will become the
+05:13 - entry points to your kubernetes cluster
+05:15 - then you should map this hostname to the
+05:18 - IP address of that server so now that we
+05:21 - saw what kubernetes ingress components
+05:24 - looks like let's see how to actually
+05:25 - configure ingress in the cluster so
+05:29 - remember this diagram I showed you the
+05:31 - beginning so basically you have a pod
+05:33 - service and corresponding ingress now if
+05:37 - you create that ingress components alone
+05:40 - that won't be enough for ingress routing
+05:45 - rules to work what you need in addition
+05:47 - is an implementation for ingress and
+05:50 - that implementation is called ingress
+05:52 - controller so the step one will be to
+05:54 - install an ingress controllers which is
+05:57 - basically another pod or another set of
+06:00 - parts that run on your note in your
+06:03 - kubernetes cluster and thus evaluation
+06:06 - and processing of ingress routes so the
+06:09 - yellow file that I showed you with the
+06:11 - ingress component is basically this part
+06:15 - right here and this has to be
+06:17 - additionally installed in components
+06:19 - cluster so what is ingress controller
+06:22 - exactly the function of ingress
+06:25 - controller is to evaluate all the rules
+06:28 - that you have defined in your cluster
+06:29 - and this way to manage all the
+06:32 - redirections so basically this will be
+06:34 - the entry point in the cluster for all
+06:37 - the requests to that domain or
+06:40 - the main rules that you've configured
+06:42 - and this will evaluate all the rules
+06:45 - because you may have 50 rules or 50
+06:47 - ingress components created in your
+06:49 - cluster it will evaluate all the rules
+06:52 - and decide based on that which
+06:54 - forwarding rule applies for that
+06:57 - specific request so in order to install
+06:59 - this implementation of ingress in your
+07:02 - cluster you have to decide which one of
+07:05 - many different third-party
+07:06 - implementations you want to choose from
+07:09 - I'll put a link of the holism
+07:11 - description where you see different
+07:13 - kinds of English controllers you can
+07:15 - choose from there is one from kubernetes
+07:18 - itself which is kubernetes nginx ingress
+07:20 - controller but there are others as well
+07:22 - so once we install ingress controller in
+07:25 - your cluster you're good to go
+07:27 - create ingress rules and the whole
+07:30 - configuration is gonna work so now that
+07:32 - I've shown you how ingress can be used
+07:35 - in a Cabana this cluster there is one
+07:37 - thing that I think is important to
+07:39 - understand in terms of setting up the
+07:41 - whole cluster to be able to receive
+07:44 - external requests now first of all you
+07:47 - have to consider the environment where
+07:49 - you come in at these cluster is running
+07:51 - if you are using some cloud service
+07:54 - provider like Amazon Web Services Google
+07:57 - cloud lino there are a couple more that
+08:00 - have out-of-the-box coronated solutions
+08:03 - or they have their own virtualized load
+08:06 - balances etc your cluster configuration
+08:09 - would look something like this
+08:11 - so you would have a cloud load balancer
+08:14 - that is specifically implemented by that
+08:16 - cloud provider and external requests
+08:20 - coming from the browser will first hit
+08:22 - the load balancer and that load balancer
+08:26 - then will redirect the requests to
+08:28 - ingress controller now this is not the
+08:31 - only way to do it even in cloud
+08:33 - environment you can do it in a couple of
+08:35 - different ways but this is one of the
+08:37 - most common strategies an advantage of
+08:40 - using cloud provided for that is that
+08:43 - you don't have to implement a load
+08:46 - balancer yourself so with minimal effort
+08:50 - probably on most cloud providers you
+08:52 - will have the load balancer up and run
+08:54 - and ready to receive those requests and
+08:57 - forward those requests into your
+08:59 - cabinets cluster so very easy setup now
+09:02 - if you are deploying your humanities
+09:05 - cluster on a bare metal environment then
+09:08 - you would have to do that part yourself
+09:11 - so basically you would have to configure
+09:12 - some kind of entry point to your
+09:14 - cabinets cluster yourself and there's a
+09:17 - whole list of different ways to do that
+09:18 - and I'm gonna put that also in the
+09:20 - description
+09:20 - but generally speaking either inside of
+09:24 - a cluster or outside is a separate
+09:27 - server you will have to provide an entry
+09:31 - point and one of those types is an
+09:34 - external proxy server which can be a
+09:37 - software or hardware solution that will
+09:41 - take a role of that load balancer in an
+09:43 - entry point to your cluster so basically
+09:47 - what this would mean is that you will
+09:49 - have a separate server and you would
+09:52 - give this a public IP address and you
+09:54 - would open the ports in order for the
+09:56 - requests to be accepted and this proxy
+10:00 - server then will act as an entry point
+10:03 - to your cluster so this will be the only
+10:05 - one accessible externally so none of the
+10:09 - servers in your kubernetes cluster will
+10:10 - have publicly accessible IP address
+10:13 - which is obviously a very good security
+10:15 - practice so all the requests will enter
+10:18 - the proxy server and that will then
+10:21 - redirect the request to ingress
+10:22 - controller and English controller will
+10:25 - then decide which ingress rule applies
+10:28 - to that specific request and the whole
+10:31 - internal request forwarding will happen
+10:33 - so as I said there are different ways to
+10:36 - configure that and to set it up
+10:39 - depending on which environment you are
+10:40 - and also which approach you choose but I
+10:43 - think it's a very important concept to
+10:45 - understand how the whole cluster setup
+10:47 - works so in my case since I'm using mini
+10:51 - cube to demonstrate all this on my
+10:53 - laptop the setup will be pretty easy and
+10:56 - even though this might not apply exactly
+10:58 - to your cluster setting still you will
+11:00 - see in practice how all these things
+11:02 - work so the first thing is to install
+11:05 - ingress controller in mini cube and the
+11:07 - way to do that is
+11:08 - by executing mini cube add-ons enable
+11:13 - ingress so what this does is
+11:15 - automatically configures or
+11:18 - automatically starts the kubernetes
+11:20 - nginx implementation of ingress
+11:23 - controller so that's one of the many
+11:25 - third-party implementations which you
+11:27 - can also safely use in production
+11:29 - environments not just mini cube but this
+11:32 - is what mini cube actually offers you
+11:34 - out of the box so with one simple
+11:37 - command ingress controller will be
+11:39 - configured in your cluster and if you do
+11:42 - cube CT I'll get pod in a cube system
+11:45 - namespace you will see the nginx ingress
+11:47 - controller pod running in your cluster
+11:50 - so once I have English controller
+11:51 - installed now I can create an ingress
+11:54 - rule that the controller can evaluate so
+11:57 - let's actually head over to the command
+11:59 - line where I'm gonna create ingress rule
+12:01 - for kubernetes dashboard component so in
+12:04 - my mini cube cluster
+12:05 - I have kubernetes dashboard which is
+12:09 - right now not accessible externally so
+12:12 - what I'm gonna do is since I already
+12:14 - have internal service for kubernetes
+12:16 - dashboard and a pod for that I'm gonna
+12:20 - configure an ingress rule for the
+12:23 - dashboard so I can access it from a
+12:25 - browser using some domain name so I'm
+12:30 - gonna so this shows me all the
+12:34 - components that I have in CONUS
+12:36 - dashboard and since I already have
+12:38 - internal service for kubernetes
+12:40 - dashboard in the pod that's running I
+12:43 - can now create an ingress rule in order
+12:47 - to access my kubernetes dashboard using
+12:50 - some hostname so let's go ahead and do
+12:52 - that so I'm gonna create an ingress for
+12:56 - Communities dashboard so these are just
+12:59 - metadata the name it's gonna be
+13:01 - dashboard ingress and the namespace it's
+13:03 - gonna be in the same namespace as a
+13:05 - service and pod so in the specification
+13:08 - we are gonna define the rules so the
+13:12 - first rule is the hostname I'm just
+13:15 - gonna call I'm gonna define dashboard
+13:19 - com
+13:21 - and the HTTP forwarding to internal
+13:25 - service path let's leave it at all path
+13:30 - and this is the back end of the service
+13:33 - so service name will be what we saw here
+13:37 - so this is the service name and service
+13:42 - port is what the service listens so this
+13:49 - is actually 80 right here and this will
+13:52 - be it that's the ingress configuration
+13:54 - for forwarding every request that is
+13:59 - directed to dashboard comm to internal
+14:03 - kubernetes dashboard service and we know
+14:05 - it's internal because its type is
+14:06 - cluster IP so no external IP address so
+14:10 - obviously I just made up host name
+14:13 - dashboard comm it's not registered
+14:16 - anywhere and I also didn't configure
+14:19 - anywhere which IP address this host name
+14:23 - should resolve to and this is something
+14:25 - that you will always have to configure
+14:26 - so first of all let's actually create
+14:29 - that ingress rule
+14:30 - so keep CTL apply and it's called
+14:35 - dashboard ingress mo see English was
+14:41 - created so if I do get increase in the
+14:46 - name space I should see my ingress here
+14:51 - and as you see address is now empty
+14:54 - because it takes a little bit of time to
+14:56 - assign the address to ingress so we'll
+15:01 - have to wait for that to get the IP
+15:03 - address that will map to this host so
+15:07 - I'm just gonna watch this and it's I see
+15:11 - that address was assigned so what I'm
+15:14 - gonna do now is that I'm gonna take that
+15:16 - address and in my if you see hosts file
+15:26 - at the end I'm gonna define that mapping
+15:29 - so that IP address will be mapped to
+15:33 - dashboard comm and again this works
+15:37 - locally if I'm gonna type dashboard calm
+15:39 - in the browser this will be the IP
+15:41 - address that it's gonna be mapped to
+15:45 - which basically means that the request
+15:48 - will come in to my mini cube cluster
+15:50 - will be handed over to English
+15:52 - controller and English controller then
+15:55 - we'll go and evaluate this rule that
+15:56 - I've defined here and forward that
+15:59 - request to service so this is all the
+16:02 - configuration we need so now I'm gonna
+16:04 - go and and enter dashboard comm and I
+16:11 - will see my kubernetes dashboard here so
+16:15 - embrace also has something called a
+16:17 - default back-end so if I do cube CTL
+16:20 - describe ingress the name of the ingress
+16:27 - in the namespace
+16:31 - I'll get this output and here there is
+16:36 - an attribute called default back-end
+16:38 - that maps to default HTTP back-end port
+16:43 - 80 so what this means is that whenever a
+16:46 - request comes into the communities
+16:48 - cluster that is not mapped to any
+16:50 - back-end so there is no rule for mapping
+16:53 - the request 20 to a service then this
+16:57 - default back-end is used to handle that
+17:01 - request so obviously if you don't have
+17:04 - this service created or defined in your
+17:08 - cluster
+17:08 - kubernetes will try to forward it to the
+17:11 - service it won't find it and you would
+17:13 - get some default error response so for
+17:17 - example if I entered some path that I
+17:21 - haven't configured I just get page not
+17:24 - found so a good usage for that is to
+17:27 - define custom error messages when pages
+17:30 - and found when request comes in that you
+17:33 - can handle or the application can handle
+17:35 - so that users still sees meaningful
+17:38 - error message or
+17:40 - just the custom page where you can
+17:41 - redirect them to your home page or
+17:43 - something like this so all you have to
+17:45 - do is create an internal service with
+17:48 - the same name so default they should be
+17:50 - back-end and the port number and also
+17:54 - create a pod or application that sends
+17:58 - that error custom error message response
+18:01 - so till now I have shown you what
+18:03 - ingress is and how you can use it I've
+18:06 - also shown you a demo of how to create
+18:07 - an ingress rule in mini cube but we've
+18:11 - used only very basic ingress ml
+18:14 - configuration just a simple forwarding
+18:17 - to one internal service with one path
+18:21 - but you can do much more with ingress
+18:24 - configuration than just basic forwarding
+18:28 - and in the next section we'll gonna go
+18:31 - through more use cases of how you can
+18:34 - define more fine granular routing for
+18:37 - applications inside kubernetes cluster
+18:39 - so the first thing is defining multiple
+18:43 - paths of the same host so consider
+18:47 - following use case Google has one domain
+18:51 - but has many services that it offers so
+18:54 - for example if you have a Google account
+18:56 - you can use its analytics you can use it
+18:59 - shopping you have a calendar you have a
+19:01 - Gmail etc so all of these are separate
+19:04 - applications that are accessible with
+19:07 - the same domain so consider you have an
+19:10 - application that does something similar
+19:12 - so you offer two separate applications
+19:15 - they're part of the same ecosystem but
+19:18 - you still want to have them on separate
+19:21 - URLs so what you can do is that in rules
+19:24 - you can define the host which is my app
+19:27 - calm and in the paths section you can
+19:30 - define multiple paths so if user wants
+19:33 - to access your analytics application
+19:35 - then they have to enter my Abe comm
+19:38 - slash analytics and that will forward
+19:41 - the request to internal an analytic
+19:43 - service and the pot or if they want to
+19:46 - access the shopping application then the
+19:49 - URL for that would be my F comm slash
+19:52 - shopping
+19:53 - so this way you can do forwarding with
+19:56 - one ingress of the same host to multiple
+19:59 - applications using multiple paths
+20:01 - another use case is when instead of
+20:05 - using URLs to make different
+20:09 - applications accessible some companies
+20:12 - use subdomains so instead of having my
+20:15 - app comm slash analytics they create a
+20:18 - subdomain analytics dot my app comm so
+20:22 - if you have your application configured
+20:24 - that way your configuration will look
+20:27 - like this so instead of having one host
+20:28 - like in the previous example and
+20:30 - multiple paths here inside now you have
+20:34 - multiple hosts where each host
+20:36 - represents a subdomain and inside you
+20:39 - just have one path that again redirects
+20:42 - the request to analytic service pretty
+20:44 - straightforward
+20:45 - so now in the same request setting you
+20:47 - have analytic service and a part behind
+20:51 - it another request will look like this
+20:54 - using a subdomain instead of path and
+20:57 - one final topic that I mentioned that
+21:00 - we'll cover here is configuring TLS
+21:02 - certificate till now we've only seen
+21:05 - ingress configuration for HTTP requests
+21:08 - but it's super easy to configure HTTP
+21:11 - forwarding in ingress so the only thing
+21:14 - that you need to do is define attribute
+21:17 - called TLS above the rules section with
+21:20 - host which is the same host as right
+21:22 - here and the secret name which is a
+21:26 - reference of a secret that you have to
+21:28 - create in a cluster that holds that TLS
+21:31 - certificate so the secret configuration
+21:34 - would look like this so the name is the
+21:38 - reference right here and the data or the
+21:41 - actual contents contain TLS certificate
+21:44 - and TLS key if you've seen my other
+21:47 - videos where I create different
+21:49 - components like secret you probably
+21:52 - notice the type additional type
+21:54 - attribute here in kubernetes there is a
+21:57 - specific type of a secret called TLS so
+22:01 - I'll have to use that type when you
+22:03 - create a TLS secret and there are three
+22:06 - notes to me to be made here one is that
+22:09 - the keys of this data have to be named
+22:12 - exactly like that the values are the
+22:16 - actual file contents of the certificate
+22:18 - or key contents and not the file path or
+22:21 - location so you have to put the whole
+22:23 - content here basics before encode it and
+22:26 - the third one is that you have to create
+22:29 - the secret in the same namespace as the
+22:32 - ingress component for it to be able to
+22:34 - use that otherwise you can't reference a
+22:37 - secret from another namespace and these
+22:40 - four lines is all you need to configure
+22:43 - mapping of an HTTP request to that host
+22:47 - to internal service thanks for watching
+22:50 - the video I hope it was helpful and if
+22:52 - it was don't forget to like it if you
+22:54 - want to be notified whenever a new video
+22:56 - comes out then subscribe to my channel
+22:58 - if you have any questions if something
+23:01 - wasn't clear in the video please post
+23:03 - them in the comment section below and I
+23:05 - will try to answer them so thank you and
+23:08 - see you in the next video

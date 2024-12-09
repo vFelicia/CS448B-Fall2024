@@ -1,0 +1,362 @@
+00:00 - hi welcome today in this video we're
+00:04 - going to look at flow field following
+00:06 - and processing what is flow field
+00:08 - following well it is one of Reynolds
+00:09 - steering behaviors if you if you're
+00:13 - watching videos before after that's
+00:14 - where we are a whole lot of videos about
+00:15 - steering behaviour and here we have from
+00:17 - Reynolds website this is the example of
+00:19 - flow field following and what we see is
+00:21 - we have a two dimensional grid of
+00:23 - vectors so everywhere in this space
+00:25 - behind me there's a vector pointing in a
+00:27 - given direction and remember the central
+00:30 - question we're asking with every
+00:31 - steering behavior example is what is the
+00:35 - vehicle's desired velocity in this case
+00:37 - this vehicle moving around this space it
+00:40 - it's moving around and looks below it
+00:41 - there's like an arrow painted on the
+00:44 - ground and that arrow represents its
+00:45 - desired velocity now Reynolds actually
+00:47 - does something a little bit different
+00:49 - than what I what I do in my example
+00:50 - where the vehicle actually looks ahead
+00:52 - it looks in the direction it's moving
+00:54 - and looks ahead and looks at the arrow
+00:57 - on the ground in front of it but it's
+00:59 - for simplicity's sake we're just gonna
+01:00 - look at the arrow below us it's a small
+01:02 - detail there but one to consider okay so
+01:04 - this is what we're looking at how do we
+01:06 - implement this in processing and what
+01:08 - kinds of applications and exciting
+01:10 - results can we get from doing that so
+01:12 - let's sort of move over here for a
+01:14 - second and and think about what it is
+01:16 - we're doing so the cold so we have a
+01:21 - processing window and what we're going
+01:24 - to say is if we could say every single
+01:26 - pixel in this window represents a vector
+01:29 - but we're not going to do that that's
+01:30 - too many vectors too many vectors notes
+01:33 - aren't too many vectors so what we're
+01:34 - going to do instead is we're going to
+01:37 - subdivide the the window so here you can
+01:42 - see you know you could imagine if this
+01:44 - were 1 2 3 4 5 6 7 8 like 800 by 1 2 3 4
+01:50 - by if this window was 800 by 480 cells
+01:54 - is 10 by 10 pixels so you're going to
+01:57 - see in the example we're going to have a
+02:00 - variable I think I called it resolution
+02:03 - or finding it afloat or an INT but that
+02:06 - tells us how much to scale down for
+02:08 - every ten pixels in the window there's a
+02:10 - particular arrow going in a certain
+02:12 - direction and we could start by saying
+02:13 - hey everywhere on this screen everywhere
+02:16 - in this space there's just an arrow
+02:18 - pointing to the right or there's an
+02:20 - arrow pointing in a random direction or
+02:21 - there's an arrow pointing according to
+02:22 - Perlin noise or some other algorithm and
+02:25 - and what you what you're gonna see is
+02:27 - we're gonna use perla noise and a few
+02:28 - different things but this is a nice if
+02:30 - you're looking for creating some type of
+02:32 - fluid system meandering path of a river
+02:36 - or if you simply want to examine that
+02:38 - contours of an image and have things
+02:41 - flow around those contours this could be
+02:44 - a model that you could use and we're
+02:45 - gonna see that as we get to the actual
+02:46 - example so what do we need we know we
+02:49 - have a vehicle and the vehicle is able
+02:51 - to calculate a steering forest according
+02:53 - to desired velocity now we're gonna need
+02:55 - a class called a knot in my example I
+03:00 - called it flow field and the flow field
+03:03 - of this is just a plug here that I'm
+03:04 - bumping into hi the flow field as the
+03:07 - class is stores all the data for this
+03:10 - representation right here what do we
+03:12 - need well what does this look like to
+03:14 - you it looks to me like a
+03:16 - two-dimensional array now you you might
+03:18 - be saying to yourself I hey I don't know
+03:21 - what a two-dimensional array is
+03:22 - if so stay tuned I will link below to a
+03:26 - tutorial about 2d arrays and as well a
+03:28 - perhaps another video somewhere that
+03:30 - I've made when I make it or if I already
+03:31 - made it I don't recall but what is it
+03:35 - two dimensional array just to sort of
+03:36 - briefly get us up to speed here right a
+03:38 - one-dimensional array we're quite
+03:40 - familiar with we could say hey P vector
+03:43 - bracket bracket vectors this is a
+03:47 - one-dimensional array at every element
+03:49 - in that array as an index this is vector
+03:52 - 0 vector 1 vector 2 vector 3 vector 4
+03:54 - vector 5 that's a one-dimensional array
+03:56 - a two-dimensional array allows us just
+03:58 - to think ah instead of this linear list
+04:00 - of data of items of vectors let's have a
+04:03 - matrix of them and instead of each one
+04:05 - having a singular index 0 1 2 3 4 5 we
+04:08 - could say hey this vector here is vector
+04:12 - 3 comma 1 index instead of index simply
+04:17 - through
+04:17 - it's index three comma one it's a
+04:19 - two-dimensional grid of information the
+04:22 - truth you know underneath the hood and
+04:24 - the computer it's really just
+04:25 - everything's just linear information but
+04:27 - this is how we get to think of it and
+04:29 - this is how we get to write our code
+04:30 - going off on tangents okay so what does
+04:33 - that look like you're going to see that
+04:37 - we are going to make a two-dimensional
+04:39 - array of vectors so this is the core
+04:43 - piece of data that's going to be in the
+04:44 - flow field class it's a two-dimensional
+04:47 - array of vectors a two-dimensional array
+04:50 - of vectors and everywhere as soon as a
+04:52 - vehicle is here right the vehicle has an
+04:56 - XY location which is in pixels and we
+04:59 - need to know which arrow should it look
+05:03 - up in this case we can see it's 4 comma
+05:06 - 2
+05:06 - but maybe it's location did I say 10 I
+05:11 - meant 100 Wow there's got to be some way
+05:15 - of like going back and like dubbing my
+05:17 - voice over and the tape Rahul's today so
+05:20 - that was my April Fool's joke to get
+05:21 - that wrong if it's 800 pixels and we
+05:24 - only have eight spots that would be 100
+05:28 - pixels each anyway so what are probably
+05:31 - we're not going to make them that big
+05:32 - I've kind of gone off the deep end here
+05:34 - but if we know the object's location is
+05:38 - that XY we simply need to divide by that
+05:41 - resolution resolution if it happens to
+05:43 - be a 430 pixels
+05:45 - comma 203 pixels if we divide each of
+05:48 - those by 100 what do we get 4 comma 2
+05:52 - that's the values we need to look up in
+05:54 - our two-dimensional array and then that
+05:56 - vector we pull out of the 2 dimensional
+05:57 - array becomes the desired velocity then
+06:01 - we calculate steering and boom we're
+06:02 - done okay so this is kind of the map
+06:04 - this is the framework of course the
+06:07 - really interesting stuff is the question
+06:09 - of how do you calculate your flow field
+06:11 - I'm gonna give you a few little examples
+06:13 - of how to do that and ultimately a
+06:15 - couple exercises for how you could
+06:16 - extend that further but really this is
+06:18 - the case where we have an example that
+06:19 - you can use verbatim and just look for
+06:21 - the place where the flow field is being
+06:23 - calculated and adjust that ok so let's
+06:27 - take a look at the example
+06:30 - so uh so this is Reynolds and now we're
+06:32 - gonna switch to processing and here
+06:35 - we've got it so look at this this is
+06:37 - exactly what I was talking about we have
+06:38 - a flow field class which has a
+06:40 - two-dimensional array of vectors and
+06:41 - it's columns and rows to keep track of
+06:43 - how many columns and how many rows in
+06:45 - that grid and it also has a resolution
+06:46 - that resolution variable tells us what
+06:49 - is the relationship between the number
+06:51 - of columns and rows to the width and
+06:53 - height of the window and we can see that
+06:54 - right down here the number of columns is
+06:56 - with divide the resolution the number of
+06:57 - rows is height divided brilliant perfect
+07:00 - hooray okay so when we run this example
+07:03 - what do we actually see so what we're
+07:06 - seeing here and I guess it's a little
+07:07 - bit light but I don't know how the
+07:10 - quality of these videos is only zoom in
+07:11 - a little bit you can see I have on the
+07:13 - window I've I've drawn a line to
+07:15 - represent the vector in each one of
+07:17 - those spots and if I click the mouse
+07:19 - here I'm adding a vehicle and you can
+07:21 - see now this vehicle is following those
+07:23 - lines so there's two things we need to
+07:25 - look at one is how are all those lines
+07:27 - calculated and then how does the vehicle
+07:29 - look up those line by lines I mean
+07:31 - vectors how are all those vectors
+07:32 - calculated and how does the vehicle look
+07:36 - up it the vector for its desired
+07:38 - velocity so let's take a look at both of
+07:40 - those things in the code the first one
+07:41 - we said is how do we calculate all of
+07:44 - those vectors well let me just do
+07:46 - something here I'm going to change this
+07:48 - to zero so what I'm actually doing is
+07:50 - I'm making up an angle and every single
+07:52 - vector is made from that angle P vector
+07:56 - dot from angle theta so what if every
+07:58 - angle is zero look what we have we have
+08:00 - a whole lot of lines just pointing all
+08:03 - to the right what if every angle was PI
+08:06 - divided by 4 we have a whole bunch of
+08:08 - lines all pointing 45 degrees below what
+08:11 - if every line was a random angle between
+08:14 - negative PI / 4 and PI / 4 let's run
+08:20 - this again we have a whole lot of random
+08:23 - angles mostly pointing to the right so
+08:25 - you can see here we're starting to get
+08:26 - something even just with this simple
+08:28 - flow feel when I click something we
+08:29 - almost have like this illusion of this
+08:31 - intelligent behavior when these vehicles
+08:34 - are moving according to some they're
+08:36 - like in water are they're flocking
+08:38 - there's some kind of almost close to
+08:40 - there so you can see how just by picking
+08:42 - angles and you can think of what if I
+08:44 - you
+08:44 - sign or cosigner try to get them all in
+08:47 - a spiral pattern
+08:48 - how could you calculate those angles a
+08:49 - nice way of doing it is just to use
+08:51 - Perlin noise and when we see we've got
+08:54 - pearly noise here and I'll put a whole
+08:56 - bunch of vehicles and we see that we've
+08:58 - got this nice kind of smooth path so
+09:01 - what's going on with perla noise
+09:02 - remember perla noise is random but every
+09:06 - value is similar to the two values
+09:08 - around it and here we have perla noise
+09:10 - in a two dimensional space every angle
+09:12 - is similar to the angle above loads left
+09:14 - to right and diagonally but it's
+09:16 - different so we have this really nice
+09:17 - behavior where we have this kind of
+09:19 - smooth randomness and almost has this
+09:21 - quality of a flow of water of lava
+09:24 - there's lots of things you could do with
+09:26 - this so so so oh I forgot the last thing
+09:31 - so I just wanted to briefly point out in
+09:32 - the code then where is the vehicle
+09:34 - looking up its desired velocity that was
+09:36 - the second thing we wanted to say and
+09:37 - there is a function called follow and uh
+09:41 - it calls a function called lookup so the
+09:45 - flow field has in it a function called
+09:47 - lookup that can receive a location on
+09:49 - the screen and pass back the vector at
+09:51 - that location and when we go to look at
+09:54 - that function look up here it is it's
+09:57 - very simple we're saying hey divided by
+10:00 - resolution divided by resolution hey
+10:02 - constrain to make sure we're not off the
+10:05 - screen we don't want to be off the array
+10:06 - and return that vector so this is really
+10:09 - what we're doing here we're making a
+10:11 - bunch of vectors in a two-dimensional
+10:15 - array all the vehicles are there in the
+10:16 - space they look up the vectors below
+10:18 - themselves those become the desired
+10:20 - velocity steering was desired minus
+10:22 - current velocity and apply that steering
+10:25 - force and we've got flow field following
+10:27 - now what are some things you might do
+10:29 - here so an exercise to yourself you
+10:31 - might think these are all well and good
+10:33 - but what would happen if the flow field
+10:35 - animated over time what if it actually
+10:37 - changed it wasn't the same and one way
+10:40 - that we can do that and I'm going to not
+10:42 - show you the code but you can make this
+10:43 - an exercise for yourself is what if you
+10:46 - used three dimensional Perlin noise so
+10:48 - instead of write two-dimensional perla
+10:53 - noise we're seeing a slice of time of
+10:54 - all the Perlin noise values now we're
+10:56 - seeing the third dimension as
+10:58 - / frames of animation so look at this we
+11:00 - almost get this like strange hair like
+11:03 - behavior I mean we drew this in a
+11:05 - different way we have an interesting
+11:06 - simulation just on our own but using
+11:08 - this as flow field following once we
+11:09 - drop the vehicles in here you can see
+11:11 - and if I take that away look we're gonna
+11:13 - spend a lot of time trying to get a nice
+11:15 - flocking behavior where the vehicles
+11:17 - actually look at their neighbors and
+11:18 - move away and of a line and all
+11:21 - that stuff we almost have that here just
+11:22 - with simple a Perlin noise flow field in
+11:24 - whoa take this into three dimensions and
+11:26 - have the stuff fly around in three
+11:28 - dimensions and you've really got
+11:29 - something there too so that's something
+11:30 - to think of the other thing that you
+11:32 - might occur to you is oK we've got this
+11:34 - two dimensional grid right what other
+11:38 - what stuff that we programmed with all
+11:40 - the time is a two dimensional grid
+11:42 - pixels let's think about this for a
+11:44 - second or have an eraser I've got to
+11:46 - find it there it is so let's think about
+11:50 - something we have a flow field right
+11:57 - which is a 2-dimensional grid of vectors
+11:59 - what if I have an image like a
+12:02 - silhouette of a person this is like a
+12:03 - strange weird nonsensical alien ghost
+12:07 - okay a silhouette of a strange alien
+12:09 - that came from outer space what if I
+12:12 - could make a flow field where the
+12:14 - vectors all followed the contours of
+12:17 - that image or all pointed towards the
+12:19 - image are out from the image could I
+12:21 - analyze the pixels of an image what if I
+12:24 - looked at every pixel and looked at its
+12:26 - neighbors and had the vector always
+12:29 - point from - the brightest pixel and or
+12:32 - the pixel most similar or pixel most
+12:34 - different or you know so doing edge
+12:37 - detection there's some image processing
+12:38 - algorithms can you translate can you map
+12:41 - a pixel color to the angle of a vector
+12:44 - or a pixels relationship to its
+12:46 - neighbors to the angle of a vector so I
+12:48 - don't actually have a solution to this
+12:49 - exercise currently in the github
+12:51 - repository although at some point in the
+12:52 - future when this video is made or
+12:54 - changed or you're watching it maybe
+12:56 - there will be one but this I think is a
+12:58 - great exercise can you think of a
+13:00 - creative way of defining a flow field
+13:02 - three dimensional Perlin noise from an
+13:05 - image from depth data from a Kinect
+13:06 - sensor from some other from some other
+13:09 - piece of data
+13:11 - from you can imagine creating a kind of
+13:16 - pliable surface that you're measuring
+13:18 - its topology with with the Kinect and
+13:20 - then turning that into a flow field so
+13:21 - you project on and stuff flows around it
+13:23 - I'm just kind of going crazy with maybe
+13:25 - obvious ideas I don't know but so
+13:27 - hopefully this helps you understand what
+13:29 - a flow field is how flow field works and
+13:31 - gives you some ideas for projects you
+13:33 - might make from it and I look forward to
+13:34 - you sharing some of those with I don't
+13:37 - know people okay I think I was recording
+13:40 - I was and the audio seems to be working
+13:42 - so hopefully we'll be watching this
+13:43 - later bye

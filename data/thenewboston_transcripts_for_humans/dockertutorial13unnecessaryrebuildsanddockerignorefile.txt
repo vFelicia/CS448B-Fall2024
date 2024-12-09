@@ -1,0 +1,467 @@
+With timestamps:
+
+00:00 - all right y'all welcome back and in this
+00:02 - tutorial we're going to be talking about
+00:04 - unnecessary rebuilds and also docker
+00:06 - ignore if we got time
+00:08 - however before we get to that i also
+00:11 - want to mention that i'm using an ide
+00:13 - someone in my last video i believe it
+00:16 - was they recommended to use an ide and i
+00:19 - thought it was a good idea it makes it a
+00:20 - little bit easier to read with you know
+00:23 - a little bit prettier formatting
+00:25 - and it also creates a more realistic
+00:27 - development environment so either way
+00:29 - i'm using webstorm however if you want
+00:31 - to follow along with any ide that you
+00:33 - want or you can continue using nano or
+00:35 - vim or whatever in the console then
+00:38 - that's fine too
+00:39 - all right now with all that said let's
+00:42 - just go ahead and first off we're just
+00:44 - going to start the project just to run
+00:46 - it and make sure that you know we don't
+00:47 - get any new errors since we did swap
+00:50 - environments so on that note i'm going
+00:52 - to go ahead and docker run and of course
+00:54 - we need a port map just like we did
+00:56 - before localhost 8080 to the containers
+00:59 - port 8080
+01:01 - and then it is just called the new
+01:03 - boston bucky's website go ahead and hit
+01:06 - enter and okay listen up port 8080 and
+01:09 - check it out
+01:10 - so this is our beautiful website right
+01:13 - now hey now brown cow
+01:15 - but the thing is that i don't know if i
+01:17 - told you guys this but this is actually
+01:18 - placeholder text
+01:20 - and that is because this website is
+01:22 - actually going to be all about bacon boy
+01:25 - do i love bacon
+01:26 - so of course we don't really need hey
+01:29 - now brown cow
+01:31 - so what i'm going to do instead is just
+01:32 - give them a big old
+01:34 - bacon
+01:35 - right when they hit the home page you
+01:36 - know got to get them in the mood of love
+01:39 - and bacon
+01:40 - so updated that
+01:43 - okay it looks like it didn't work
+01:45 - actually okay this is
+01:46 - yeah the file saved everything is good
+01:49 - let me just try that again
+01:51 - huh
+01:52 - okay so having a bit of an issue here i
+01:55 - am updating my source code however when
+01:58 - i go back
+01:59 - and look at the website and refresh it
+02:01 - nothing is updating
+02:03 - so
+02:04 - what is going on right here
+02:07 - well it turns out that whenever we
+02:10 - update our source code then what we need
+02:11 - to do is we need to rebuild our image
+02:14 - so i'm just going to close down that
+02:16 - container and just to make sure that you
+02:19 - know what i just told you is correct
+02:20 - let's go ahead and we'll do
+02:22 - docker build
+02:24 - and then we'll just tag it again as the
+02:26 - new boston
+02:29 - bucky's website in the build context
+02:32 - again it's the same so just gonna hit
+02:34 - period okay that was going fast it's
+02:37 - looking like this last that run npm
+02:39 - install is actually taking a long time
+02:41 - huh so that's interesting but either way
+02:44 - let's just go ahead and run this again
+02:47 - and see if the website actually updated
+02:52 - okay so this is a good thing it now
+02:54 - after we rebuilt it it updated the
+02:56 - website to bacon
+02:58 - and
+02:59 - okay what does this mean so what this
+03:01 - means is that anytime we have a change
+03:04 - in our source code then we're going to
+03:06 - need to rebuild the image
+03:08 - all right so that's
+03:09 - it's feeling like kind of a pain already
+03:11 - almost slowing down our development
+03:12 - process a bit
+03:14 - but another thing before we get into
+03:17 - figuring out how to fix that another
+03:19 - thing that i noticed here is that
+03:21 - whenever we ran this step of rebuilding
+03:24 - our image
+03:25 - then what happened is i noticed that
+03:28 - okay this step is cached this step went
+03:30 - pretty fast right here
+03:32 - however on this step right here run npm
+03:34 - install it look like it took three
+03:36 - seconds so it appears what is happening
+03:39 - is that anytime we make any small change
+03:42 - to our source code even if it's
+03:44 - completely unrelated to
+03:46 - which packages we require or which
+03:49 - dependencies we need to install i mean
+03:51 - even if we make this small change from
+03:53 - hey now brown cow to bacon
+03:55 - it is causing
+03:57 - docker to essentially have to reinstall
+04:00 - all of these npm dependencies
+04:02 - so
+04:03 - why is that the case because to me that
+04:06 - seems very inefficient so let's go ahead
+04:08 - and take a closer look at how this build
+04:11 - process works
+04:12 - so check it out whenever docker builds
+04:15 - an image from a docker file and by the
+04:17 - way this content right here i
+04:20 - essentially just took
+04:22 - everything in the docker file and just
+04:24 - split it out into
+04:26 - little components that i can move around
+04:28 - so anyways this is the contents of the
+04:30 - dockerfile in case you are you know just
+04:32 - uh trying to follow my diagram here so
+04:35 - now let's go ahead and take a look at
+04:36 - this build process in a little bit more
+04:38 - detail
+04:39 - so docker images are built in layers and
+04:43 - each layer is essentially an instruction
+04:46 - from this docker file so what the heck
+04:48 - am i talking about well it's easier if
+04:50 - we kind of take it step by step and kind
+04:52 - of see what's going on in the background
+04:54 - so whenever we want to build this image
+04:57 - then what's going to happen is docker is
+04:59 - going to start with our base image and
+05:00 - it's going to create a container from
+05:02 - that
+05:04 - now with this container
+05:06 - docker is then going to run this first
+05:08 - statement and after it runs this it's
+05:11 - going to stop the container and then
+05:14 - it's going to save the changes
+05:16 - and then with
+05:17 - essentially this updated container it is
+05:20 - going to generate a new image
+05:22 - from that now with this new image and
+05:25 - this sounds uh a little bit redundant
+05:28 - but then with this new image docker is
+05:30 - going to spin up another container
+05:33 - from this image and then this process is
+05:36 - essentially going to repeat
+05:38 - so docker is going to run this statement
+05:40 - now which is the copying of the source
+05:42 - code over into the container
+05:44 - and then
+05:45 - once this is done it's going to stop the
+05:47 - container save the changes
+05:49 - and then
+05:50 - essentially with those changes create a
+05:53 - new image from it
+05:55 - and again this process is going to
+05:57 - repeat for this instruction and also
+05:58 - this instruction
+06:00 - so we essentially end up
+06:03 - actually let me copy that
+06:04 - we essentially end up with something
+06:07 - like this
+06:09 - for the final image and once docker
+06:11 - builds the final image then what it does
+06:14 - is it creates the id and it tags it with
+06:17 - well whatever we tagged it in this case
+06:18 - it was the new boston bucky's website
+06:21 - and that is essentially how you end up
+06:23 - with this final image now a very
+06:26 - important thing to point out about this
+06:27 - entire process in this is actually why
+06:30 - whenever we change source code it was
+06:32 - triggering uh these npm packages to
+06:34 - reinstall again
+06:35 - is this
+06:36 - so whenever you rebuild a previously
+06:40 - built image
+06:41 - the only layers that are rebuilt are the
+06:43 - ones that have changed so in the example
+06:46 - that we saw we changed some source code
+06:48 - in our project
+06:50 - and that was right here it said hey now
+06:53 - brown cow and we changed it to bacon
+06:55 - now since we changed that source code
+06:58 - then this step essentially changed
+07:00 - because in this step we're taking all of
+07:02 - the source code and essentially copying
+07:05 - it over to the container so if the input
+07:07 - changed then the output change all right
+07:10 - so i guess it makes sense that for this
+07:11 - step it wasn't able to use the last
+07:14 - cached version of this
+07:16 - but why did this change well that's
+07:19 - because of another bit of logic and that
+07:21 - is if one layer
+07:23 - needs to be rebuilt then docker is also
+07:26 - going to rebuild all of the subsequent
+07:29 - layers or essentially all the layers on
+07:31 - top of it or on the bottom of it if
+07:33 - you're looking at this one so from
+07:35 - docker's point of view whenever we said
+07:38 - that okay yes we're updating this string
+07:40 - of text to say hey now brown cow we
+07:42 - changed it to say bacon now and now we
+07:44 - want to rebuild this image what docker
+07:47 - said is okay what i'm going to do is
+07:49 - start with this base image in okay
+07:51 - worker user app it looks like this was
+07:53 - all the same so we can just use the
+07:55 - cache version of this
+07:56 - and for this next step copying oh
+07:59 - oh what is this it looks like a bit of
+08:01 - source code has changed so this is going
+08:05 - to uh require me to rerun this again i
+08:07 - can't just use the cache version of
+08:09 - course because you know the input
+08:11 - differs and that also means that
+08:13 - everything that comes after this which
+08:14 - is npm install and npm start this also
+08:17 - needs to be updated
+08:19 - now this makes sense in the sense of how
+08:22 - docker builds these containers and these
+08:24 - images so on and so forth but from a
+08:26 - development point of view it's pretty
+08:28 - inefficient to have to reinstall all the
+08:30 - packages anytime we just change one bit
+08:32 - of source code so let's go ahead and pop
+08:34 - back open our ide and see if we can fix
+08:37 - this somehow
+08:39 - now actually before i do this let's go
+08:41 - ahead and just confirm
+08:43 - our kind of working hypothesis here
+08:46 - and all right so what i'm going to do is
+08:48 - just change this to
+08:50 - tuna
+08:52 - and then we are just gonna go ahead and
+08:54 - build it again
+08:56 - and okay so
+08:58 - it looks like yes indeed it did get the
+09:01 - cached step for step number two
+09:04 - and then whenever we copied over the
+09:06 - source code in every subsequent step it
+09:08 - did not use the cache version
+09:10 - now what i'm going to do is just change
+09:12 - nothing now and just rebuild this again
+09:15 - so okay well that was a lot faster it
+09:17 - looks like everything took 0 seconds so
+09:19 - in this case it uses cache version of
+09:22 - step number two and three
+09:24 - and four alright so now that we are able
+09:26 - to verify that i'm not lying
+09:28 - about this let's go ahead and figure out
+09:31 - how we can fix it well let's think about
+09:34 - this so when do we actually need to
+09:37 - rerun this step run npm install
+09:40 - well we really only need to rerun it if
+09:43 - the contents of our package.json has
+09:46 - changed
+09:47 - since if this has changed then it
+09:49 - essentially means that our dependencies
+09:51 - have changed and it's probably a good
+09:53 - time then to reinstall it so how can we
+09:56 - say that
+09:57 - well instead of just copying all of our
+10:00 - files over and then running this after
+10:02 - we can kind of break it down into
+10:04 - separate steps so what i'm going to do
+10:06 - is i'm going to move this copy statement
+10:08 - i'm actually going to copy it so we are
+10:10 - moving files over before this npm
+10:13 - install and also after
+10:15 - so
+10:15 - why are we doing this well check it out
+10:18 - instead of copying all the files over
+10:20 - right here what i want to do is i just
+10:22 - want to copy over one file and that's
+10:24 - that
+10:25 - package.json so what these steps are
+10:28 - saying now is this
+10:29 - after we run these commands what we're
+10:31 - going to be doing is we're going to be
+10:32 - copying over this one file package.json
+10:36 - to our container and then we're going to
+10:38 - run this command to install those
+10:41 - dependencies
+10:42 - now what we're going to be doing here is
+10:44 - after that's done we're just going to
+10:45 - copy all other files over to this
+10:48 - container you know just like we have
+10:49 - before and then start up our project
+10:52 - from this command right there so if
+10:54 - everything is working correctly and our
+10:56 - theory is correct then what would happen
+10:59 - now is that whenever we made updates to
+11:01 - our source code then
+11:03 - whenever we went to rebuild our image
+11:05 - all of these steps right here should
+11:07 - just be able to run off the old cached
+11:09 - version
+11:10 - and then the only steps that should need
+11:12 - to be updated are this step and
+11:16 - subsequently this step right here so
+11:18 - let's go ahead and test our theory right
+11:20 - now so we'll put a tuna we'll change it
+11:22 - to corn
+11:24 - and now i'm just going to go ahead and
+11:25 - rebuild that
+11:27 - and all right so this was interesting
+11:29 - that even though we changed our entire
+11:30 - docker file around that this step was
+11:32 - still cached
+11:34 - and since we reordered these then these
+11:36 - aren't going to be cash but take a note
+11:37 - of what's happening right now
+11:39 - so step two is the only one that's cash
+11:42 - three four and five are not they're
+11:43 - pretty much brand new however when i go
+11:46 - and change this to book on
+11:49 - and then rerun this again just go ahead
+11:51 - and clear this out and rebuild that
+11:54 - check it out so now instead of having to
+11:57 - reinstall all your dependencies so on
+11:59 - and so forth step two
+12:01 - three and five
+12:03 - now
+12:04 - are running off the cached version and
+12:06 - if you can see over here on the right
+12:08 - each one of those took zero seconds
+12:10 - which was an improvement from about that
+12:12 - three seconds before and the only real
+12:14 - work that docker needs to do is this
+12:17 - last step where it copies over
+12:20 - those remaining source code files right
+12:22 - now we only have one but of course in a
+12:24 - bigger project we will have more than
+12:26 - one so now that we have our beautiful
+12:28 - image built let me actually go ahead and
+12:30 - run this container and i'm actually
+12:33 - gonna shell in and show you something so
+12:35 - i'm gonna do
+12:37 - docker run
+12:38 - and i want to get an interactive shell
+12:40 - so what i'm going to do is pass in that
+12:42 - it flag
+12:44 - and then same thing as before
+12:46 - what we're doing 8080
+12:49 - map it to 8080
+12:51 - and it is the new boston slash
+12:53 - bucky's website
+12:56 - and also i'm gonna
+12:58 - have shell is default command all right
+13:00 - so it looks like we are shelled into our
+13:02 - container and now let me just go ahead
+13:04 - and list out all the files that we have
+13:06 - all right copied over the docker file uh
+13:09 - index.js or pax.json generated that log
+13:12 - file as well
+13:13 - known modules so this is a directory
+13:16 - that essentially whenever we install our
+13:18 - dependencies from package.json then it
+13:20 - sticks up all unknown modules all right
+13:22 - so this looks all good and
+13:24 - wait a minute what's that
+13:26 - idea wait this is one of my ide files
+13:31 - huh
+13:32 - okay so this is actually an issue
+13:35 - this directory right here idea where did
+13:37 - it come from
+13:38 - well you may not see it in i say
+13:42 - may not you definitely will not see it
+13:45 - however check this out all right so in
+13:49 - this tab right here i'm shelled into the
+13:50 - container in here i'm just not shelled
+13:53 - into anything this is actually my own
+13:55 - local computer
+13:57 - and in this directory that i have my
+13:58 - project set up as i have this hidden
+14:01 - folder right here which is pretty much
+14:04 - just some ide settings but either way
+14:07 - it wasn't something that i intended to
+14:09 - copy over whenever i generated this
+14:11 - image
+14:12 - so
+14:14 - how do i say that okay in this step
+14:18 - right here whenever i copy everything
+14:20 - over from the build context which is
+14:22 - essentially
+14:23 - uh this folder right here to the
+14:25 - container
+14:26 - to ignore any of those hidden files well
+14:30 - in this case what we can do is we can
+14:32 - create a docker ignore file
+14:34 - and this is actually very simple
+14:36 - if you
+14:37 - start it with a period and then you just
+14:39 - write docker ignore
+14:41 - this it actually works pretty much the
+14:43 - same as git ignore files if you're
+14:45 - familiar with those but essentially what
+14:47 - it's going to do is whenever docker is
+14:50 - generating these images
+14:52 - then it's going to look in the build
+14:54 - context which just means whatever
+14:56 - directory your docker file's in right
+14:58 - now
+14:59 - and it's going to look for a file called
+15:01 - docker ignore now if it finds a file
+15:03 - called docker ignore it's going to read
+15:05 - the contents of this file
+15:07 - and the contents of this file is
+15:09 - basically instructions to say these are
+15:12 - the files or folders that you should
+15:14 - ignore
+15:15 - and that's us talking to docker so in
+15:17 - this case what we're saying is hey
+15:19 - docker whenever you copy everything over
+15:22 - ignore this idea file right here all
+15:26 - right pretty cool so now let's go ahead
+15:28 - and see if this worked so i'm gonna exit
+15:30 - out of here
+15:32 - and alright so now let me just go ahead
+15:35 - and build this again and now when it's
+15:37 - being built this new image should be
+15:40 - built with no idea files copied over
+15:43 - and to test that
+15:46 - let me just run the image generate a
+15:49 - container from it and shell in again and
+15:51 - now this time if you do ls la we can now
+15:54 - see that our
+15:56 - idea directory is no longer copied over
+16:00 - and in fact we did get this docker
+16:01 - ignore file but that's all right point
+16:04 - being that what i wanted to demonstrate
+16:06 - is whenever you are essentially just
+16:08 - trying to build an image and you have
+16:10 - unwanted files or folders copied over
+16:12 - then you could stick them in a docker
+16:14 - ignore file and well it's pretty
+16:16 - self-explanatory docker is going to
+16:18 - ignore those files whenever you run that
+16:20 - process
+16:22 - all right so
+16:24 - in an upcoming video what we're also
+16:26 - going to be doing is i'm going to be
+16:27 - showing you how to enable live reloading
+16:30 - so that you don't have to manually build
+16:33 - new containers every single time you
+16:34 - want to update your source code but
+16:36 - anyways that is a topic for another
+16:39 - tutorial for now thank you for watching
+16:40 - don't forget to subscribe and i will see
+16:42 - y'all later
+
+Cleaned transcript:
+
+all right y'all welcome back and in this tutorial we're going to be talking about unnecessary rebuilds and also docker ignore if we got time however before we get to that i also want to mention that i'm using an ide someone in my last video i believe it was they recommended to use an ide and i thought it was a good idea it makes it a little bit easier to read with you know a little bit prettier formatting and it also creates a more realistic development environment so either way i'm using webstorm however if you want to follow along with any ide that you want or you can continue using nano or vim or whatever in the console then that's fine too all right now with all that said let's just go ahead and first off we're just going to start the project just to run it and make sure that you know we don't get any new errors since we did swap environments so on that note i'm going to go ahead and docker run and of course we need a port map just like we did before localhost 8080 to the containers port 8080 and then it is just called the new boston bucky's website go ahead and hit enter and okay listen up port 8080 and check it out so this is our beautiful website right now hey now brown cow but the thing is that i don't know if i told you guys this but this is actually placeholder text and that is because this website is actually going to be all about bacon boy do i love bacon so of course we don't really need hey now brown cow so what i'm going to do instead is just give them a big old bacon right when they hit the home page you know got to get them in the mood of love and bacon so updated that okay it looks like it didn't work actually okay this is yeah the file saved everything is good let me just try that again huh okay so having a bit of an issue here i am updating my source code however when i go back and look at the website and refresh it nothing is updating so what is going on right here well it turns out that whenever we update our source code then what we need to do is we need to rebuild our image so i'm just going to close down that container and just to make sure that you know what i just told you is correct let's go ahead and we'll do docker build and then we'll just tag it again as the new boston bucky's website in the build context again it's the same so just gonna hit period okay that was going fast it's looking like this last that run npm install is actually taking a long time huh so that's interesting but either way let's just go ahead and run this again and see if the website actually updated okay so this is a good thing it now after we rebuilt it it updated the website to bacon and okay what does this mean so what this means is that anytime we have a change in our source code then we're going to need to rebuild the image all right so that's it's feeling like kind of a pain already almost slowing down our development process a bit but another thing before we get into figuring out how to fix that another thing that i noticed here is that whenever we ran this step of rebuilding our image then what happened is i noticed that okay this step is cached this step went pretty fast right here however on this step right here run npm install it look like it took three seconds so it appears what is happening is that anytime we make any small change to our source code even if it's completely unrelated to which packages we require or which dependencies we need to install i mean even if we make this small change from hey now brown cow to bacon it is causing docker to essentially have to reinstall all of these npm dependencies so why is that the case because to me that seems very inefficient so let's go ahead and take a closer look at how this build process works so check it out whenever docker builds an image from a docker file and by the way this content right here i essentially just took everything in the docker file and just split it out into little components that i can move around so anyways this is the contents of the dockerfile in case you are you know just uh trying to follow my diagram here so now let's go ahead and take a look at this build process in a little bit more detail so docker images are built in layers and each layer is essentially an instruction from this docker file so what the heck am i talking about well it's easier if we kind of take it step by step and kind of see what's going on in the background so whenever we want to build this image then what's going to happen is docker is going to start with our base image and it's going to create a container from that now with this container docker is then going to run this first statement and after it runs this it's going to stop the container and then it's going to save the changes and then with essentially this updated container it is going to generate a new image from that now with this new image and this sounds uh a little bit redundant but then with this new image docker is going to spin up another container from this image and then this process is essentially going to repeat so docker is going to run this statement now which is the copying of the source code over into the container and then once this is done it's going to stop the container save the changes and then essentially with those changes create a new image from it and again this process is going to repeat for this instruction and also this instruction so we essentially end up actually let me copy that we essentially end up with something like this for the final image and once docker builds the final image then what it does is it creates the id and it tags it with well whatever we tagged it in this case it was the new boston bucky's website and that is essentially how you end up with this final image now a very important thing to point out about this entire process in this is actually why whenever we change source code it was triggering uh these npm packages to reinstall again is this so whenever you rebuild a previously built image the only layers that are rebuilt are the ones that have changed so in the example that we saw we changed some source code in our project and that was right here it said hey now brown cow and we changed it to bacon now since we changed that source code then this step essentially changed because in this step we're taking all of the source code and essentially copying it over to the container so if the input changed then the output change all right so i guess it makes sense that for this step it wasn't able to use the last cached version of this but why did this change well that's because of another bit of logic and that is if one layer needs to be rebuilt then docker is also going to rebuild all of the subsequent layers or essentially all the layers on top of it or on the bottom of it if you're looking at this one so from docker's point of view whenever we said that okay yes we're updating this string of text to say hey now brown cow we changed it to say bacon now and now we want to rebuild this image what docker said is okay what i'm going to do is start with this base image in okay worker user app it looks like this was all the same so we can just use the cache version of this and for this next step copying oh oh what is this it looks like a bit of source code has changed so this is going to uh require me to rerun this again i can't just use the cache version of course because you know the input differs and that also means that everything that comes after this which is npm install and npm start this also needs to be updated now this makes sense in the sense of how docker builds these containers and these images so on and so forth but from a development point of view it's pretty inefficient to have to reinstall all the packages anytime we just change one bit of source code so let's go ahead and pop back open our ide and see if we can fix this somehow now actually before i do this let's go ahead and just confirm our kind of working hypothesis here and all right so what i'm going to do is just change this to tuna and then we are just gonna go ahead and build it again and okay so it looks like yes indeed it did get the cached step for step number two and then whenever we copied over the source code in every subsequent step it did not use the cache version now what i'm going to do is just change nothing now and just rebuild this again so okay well that was a lot faster it looks like everything took 0 seconds so in this case it uses cache version of step number two and three and four alright so now that we are able to verify that i'm not lying about this let's go ahead and figure out how we can fix it well let's think about this so when do we actually need to rerun this step run npm install well we really only need to rerun it if the contents of our package.json has changed since if this has changed then it essentially means that our dependencies have changed and it's probably a good time then to reinstall it so how can we say that well instead of just copying all of our files over and then running this after we can kind of break it down into separate steps so what i'm going to do is i'm going to move this copy statement i'm actually going to copy it so we are moving files over before this npm install and also after so why are we doing this well check it out instead of copying all the files over right here what i want to do is i just want to copy over one file and that's that package.json so what these steps are saying now is this after we run these commands what we're going to be doing is we're going to be copying over this one file package.json to our container and then we're going to run this command to install those dependencies now what we're going to be doing here is after that's done we're just going to copy all other files over to this container you know just like we have before and then start up our project from this command right there so if everything is working correctly and our theory is correct then what would happen now is that whenever we made updates to our source code then whenever we went to rebuild our image all of these steps right here should just be able to run off the old cached version and then the only steps that should need to be updated are this step and subsequently this step right here so let's go ahead and test our theory right now so we'll put a tuna we'll change it to corn and now i'm just going to go ahead and rebuild that and all right so this was interesting that even though we changed our entire docker file around that this step was still cached and since we reordered these then these aren't going to be cash but take a note of what's happening right now so step two is the only one that's cash three four and five are not they're pretty much brand new however when i go and change this to book on and then rerun this again just go ahead and clear this out and rebuild that check it out so now instead of having to reinstall all your dependencies so on and so forth step two three and five now are running off the cached version and if you can see over here on the right each one of those took zero seconds which was an improvement from about that three seconds before and the only real work that docker needs to do is this last step where it copies over those remaining source code files right now we only have one but of course in a bigger project we will have more than one so now that we have our beautiful image built let me actually go ahead and run this container and i'm actually gonna shell in and show you something so i'm gonna do docker run and i want to get an interactive shell so what i'm going to do is pass in that it flag and then same thing as before what we're doing 8080 map it to 8080 and it is the new boston slash bucky's website and also i'm gonna have shell is default command all right so it looks like we are shelled into our container and now let me just go ahead and list out all the files that we have all right copied over the docker file uh index.js or pax.json generated that log file as well known modules so this is a directory that essentially whenever we install our dependencies from package.json then it sticks up all unknown modules all right so this looks all good and wait a minute what's that idea wait this is one of my ide files huh okay so this is actually an issue this directory right here idea where did it come from well you may not see it in i say may not you definitely will not see it however check this out all right so in this tab right here i'm shelled into the container in here i'm just not shelled into anything this is actually my own local computer and in this directory that i have my project set up as i have this hidden folder right here which is pretty much just some ide settings but either way it wasn't something that i intended to copy over whenever i generated this image so how do i say that okay in this step right here whenever i copy everything over from the build context which is essentially uh this folder right here to the container to ignore any of those hidden files well in this case what we can do is we can create a docker ignore file and this is actually very simple if you start it with a period and then you just write docker ignore this it actually works pretty much the same as git ignore files if you're familiar with those but essentially what it's going to do is whenever docker is generating these images then it's going to look in the build context which just means whatever directory your docker file's in right now and it's going to look for a file called docker ignore now if it finds a file called docker ignore it's going to read the contents of this file and the contents of this file is basically instructions to say these are the files or folders that you should ignore and that's us talking to docker so in this case what we're saying is hey docker whenever you copy everything over ignore this idea file right here all right pretty cool so now let's go ahead and see if this worked so i'm gonna exit out of here and alright so now let me just go ahead and build this again and now when it's being built this new image should be built with no idea files copied over and to test that let me just run the image generate a container from it and shell in again and now this time if you do ls la we can now see that our idea directory is no longer copied over and in fact we did get this docker ignore file but that's all right point being that what i wanted to demonstrate is whenever you are essentially just trying to build an image and you have unwanted files or folders copied over then you could stick them in a docker ignore file and well it's pretty selfexplanatory docker is going to ignore those files whenever you run that process all right so in an upcoming video what we're also going to be doing is i'm going to be showing you how to enable live reloading so that you don't have to manually build new containers every single time you want to update your source code but anyways that is a topic for another tutorial for now thank you for watching don't forget to subscribe and i will see y'all later

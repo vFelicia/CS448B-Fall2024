@@ -1,0 +1,4798 @@
+00:01 - what is up everybody today you're going
+00:03 - to learn how to go from a paper to a
+00:04 - fully functional implementation of deep
+00:06 - deterministic policy gradients if you're
+00:09 - not familiar with deep deterministic
+00:10 - policy gradients or ddpg for short it is
+00:13 - a type of deep reinforcement learning
+00:15 - that is used in environments within
+00:16 - continuous action spaces you see most
+00:18 - environments have discrete action spaces
+00:20 - this is the case with say the atari
+00:23 - library say like breakout or space
+00:26 - invaders where the agent can move left
+00:27 - right it can shoot
+00:29 - but it can move left right and shoot by
+00:31 - fixed discrete intervals fixed amounts
+00:33 - right in other environments like say
+00:35 - robotics
+00:36 - the robots can move a continuous amount
+00:38 - so it can move in anywhere from you know
+00:41 - zero to one minus one to plus one
+00:43 - anything along a continuous number
+00:44 - interval and this poses a problem for
+00:47 - most deep reinforcement learning methods
+00:49 - like say q learning which works
+00:50 - spectacularly well in discrete
+00:53 - environments but cannot tackle
+00:55 - continuous action spaces now if you
+00:56 - don't know what any of this means don't
+00:57 - worry i'm going to give you the rundown
+00:59 - here in a second but for this set of
+01:01 - tutorials you're going to need to have
+01:03 - installed the openai gym you'll need
+01:06 - python 3.6 and you also need tensorflow
+01:09 - and pi torch other packages you'll need
+01:11 - include
+01:12 - matpotlib to handle the plotting of the
+01:15 - learning curve which will allow us to
+01:16 - see the actual learning of the agent as
+01:19 - well as numpy to handle your typical
+01:21 - vector operations
+01:23 - now
+01:24 - here i'll give you a quick little
+01:26 - rundown of reinforcement learning so the
+01:28 - basic idea is that we have an agent that
+01:30 - interacts with some environment and
+01:32 - receives a reward the rewards kind of
+01:34 - take the place of labels and supervised
+01:36 - learning in that they tell the agent
+01:37 - what is good what is it that it is
+01:40 - shooting for in the environment and so
+01:42 - the agent will attempt to maximize the
+01:44 - total rewards over time
+01:46 - uh by solving something known as the
+01:48 - bellman equation we don't have to worry
+01:50 - about the actual mathematics of it but
+01:51 - just so you know for your future
+01:53 - research the algorithms are typically
+01:55 - concerned with solving the bellman
+01:56 - equation which tells the agent the
+01:58 - expected future returns assuming it
+02:00 - follows something called its policy so
+02:02 - the policy is the probability that the
+02:04 - agent will take a set of actions given
+02:06 - it's in some state s it's basically
+02:08 - probability distribution
+02:10 - now many types of algorithms such as q
+02:13 - learning will attempt to solve the
+02:15 - bellman equation by finding what's
+02:16 - called the value function the value
+02:18 - function or the action value function in
+02:20 - this case maps the current state and set
+02:23 - of possible actions to the expected
+02:25 - feature returns the agent expects to
+02:27 - receive so in other words the agent says
+02:29 - hey i'm in some state meaning some
+02:31 - configuration of pixels on the screen in
+02:33 - the case of the atari gym atari library
+02:35 - for instance
+02:37 - and says okay if i take one or another
+02:39 - action what is the expected future
+02:41 - return assuming that i follow my policy
+02:44 - actor critic methods are slightly
+02:45 - different and that they attempt to learn
+02:47 - the policy directly and
+02:49 - recall the policy is a probability
+02:51 - distribution that tells the agent what
+02:54 - the probability of selecting an action
+02:55 - is given it's in some state s
+02:59 - so these two algorithms have a number of
+03:01 - strengths between them
+03:03 - and deep deterministic policy gradients
+03:05 - is a way to marry the strengths of these
+03:07 - two algorithms into something that does
+03:09 - really well for discrete action sorry
+03:11 - continuous action spaces you don't need
+03:13 - to know too much more than that
+03:14 - everything else you need to know i'll
+03:15 - explain in their respective videos so in
+03:17 - the first video you're going to get to
+03:19 - see how
+03:20 - i go ahead and read papers and then
+03:22 - implement them
+03:23 - on the fly
+03:26 - and in the second video you're going to
+03:27 - see
+03:28 - the implementation of deep deterministic
+03:30 - policy gradients in pi torch in a
+03:32 - separate environment both these
+03:34 - environments are in
+03:36 - both these environments are continuous
+03:38 - and so they will demonstrate the power
+03:40 - of the algorithm quite nicely
+03:42 - you don't need a particularly powerful
+03:44 - gpu but you do need some kind of gpu to
+03:46 - run these
+03:47 - as it does take a considerably long time
+03:50 - even on a gpu so you will need at least
+03:54 - a
+03:54 - like say a maxwell class gpu or above so
+03:57 - something from the 700 series on nvidia
+03:59 - side unfortunately neither of these uh
+04:03 - frameworks really work well with amd
+04:04 - cards so if you have those you would
+04:06 - have to figure out some sort of clues to
+04:08 - get the opencl implementation to
+04:10 - transcompile to cuda that's just a
+04:12 - technical detail
+04:13 - i don't have any information on that so
+04:15 - you're on your own sorry so this is a
+04:17 - few hours of content grab a snack a
+04:20 - drink and watch this at your leisure
+04:23 - it's best to watch it in order i
+04:25 - actually did the videos in a separate
+04:26 - order a reverse order on my channel just
+04:28 - so i could get it out
+04:29 - so i did the implementation of pytorch
+04:31 - first and then the video on implementing
+04:33 - the paper in tensorflow second but it
+04:35 - really is best for a new audience to go
+04:38 - from the
+04:39 - paper paper video to the pie torch video
+04:42 - so i hope you like it leave any comments
+04:45 - questions suggestions issues down below
+04:47 - i'll try to address as many as possible
+04:50 - you can check out the code for this on
+04:52 - my github and you can find many more
+04:53 - videos like this on my youtube channel
+04:55 - machine learning with phil i hope you
+04:57 - all enjoy it let's get to it
+04:59 - what is up everybody in today's video
+05:01 - we're going to go from the paper on deep
+05:03 - deterministic policy gradients all the
+05:05 - way into a functional implementation in
+05:07 - tensorflow so you're going to see how to
+05:09 - go from a paper to a real world
+05:11 - implementation all in one video grab a
+05:13 - snack a drink because this is going to
+05:14 - take a while let's get started
+05:23 - so the first step in my process really
+05:25 - isn't anything special i just read the
+05:27 - entirety of the paper
+05:29 - of course starting with the abstract the
+05:30 - abstract tells you what the paper is
+05:32 - about at a high level it's just kind of
+05:34 - an executive summary
+05:36 - introduction is where the authors will
+05:38 - pay homage to other work in the field
+05:40 - kind of set the stage for what
+05:42 - is going to be presented in the paper as
+05:44 - well as the need for it
+05:46 - uh the background kind of expands on
+05:48 - that and you can see here it gives us a
+05:50 - little bit of mathematical equations
+05:53 - and you will get a lot of useful
+05:55 - information here this won't talk too
+05:57 - much about useful nuggets on
+05:58 - implementation but it does set the stage
+06:00 - for the mathematics you're going to be
+06:01 - implementing
+06:02 - which is of course critical for any deep
+06:05 - learning or in this case deep
+06:07 - reinforcement learning paper
+06:08 - implementation
+06:10 - the algorithm is really where all the
+06:11 - meat of the problem is it is in here
+06:14 - that they lay out the exact steps you
+06:15 - need to take to
+06:17 - implement the the algorithm right that's
+06:19 - why it's titled that way so uh this is
+06:22 - the section we want to read most
+06:23 - carefully and then of course they will
+06:26 - typically give a table where they
+06:28 - outline the actual algorithm and
+06:30 - oftentimes
+06:31 - if i'm in a hurry i will just jump to
+06:34 - this
+06:35 - because i've done this enough times that
+06:37 - i can read this what is called
+06:38 - pseudocode if you're not familiar with a
+06:40 - pseudocode it's just an english
+06:42 - representation of computer code
+06:44 - so we will
+06:46 - typically use that when we outline a
+06:47 - problem and it's often used in papers of
+06:49 - course
+06:50 - so
+06:51 - typically i'll start here reading it and
+06:53 - then work backward by reading through
+06:54 - the paper to see what i missed
+06:56 - but of course it talks about the
+06:58 - performance across a whole host of
+07:00 - environments and of course all of these
+07:03 - have in common that they are continuous
+07:05 - control so
+07:06 - uh
+07:07 - what that means is that the
+07:10 - action space is a vector whose elements
+07:13 - can vary
+07:14 - on a continuous real number line instead
+07:16 - of having discrete actions of 0 1 2 3 4
+07:19 - 5
+07:21 - so that is the really motivation behind
+07:23 - deep deterministic policy grades is that
+07:25 - allows us to use deep reinforcement
+07:27 - learning to tackle these types of
+07:28 - problems
+07:29 - and in today's video we're going to go
+07:30 - ahead and tackle the i guess pendulum
+07:33 - swing up also called the pendulum
+07:35 - problem
+07:36 - reason being is that
+07:38 - while it would be awesome to start out
+07:40 - with something like the
+07:41 - bipedal walker you never want to start
+07:43 - out with maximum complexity you always
+07:45 - want to start out with something very
+07:46 - very small and then scale your way up
+07:48 - and the reason is that you're going to
+07:49 - make mistakes and it's most easy to
+07:51 - debug most
+07:53 - quick to debug very simple environments
+07:55 - that execute very quickly so
+07:57 - the pendulum problem only has i think
+07:59 - three elements in its state vector and
+08:01 - only a single action so or maybe it's
+08:03 - two actions i forget but either way it's
+08:05 - very small problem uh relative to
+08:07 - something like the bipedal walker or
+08:09 - many of the other environments you could
+08:11 - also use the
+08:12 - continuous version of the card poll or
+08:14 - something like that that would be
+08:15 - perfectly fine i've just chosen the
+08:16 - pendulum for this particular video
+08:17 - because we haven't done it before
+08:20 - so it's in here that they give a bunch
+08:21 - of plots of all of the
+08:24 - performance of their algorithm of the
+08:25 - various sets of constraints placed upon
+08:28 - it and and different implementations so
+08:29 - you can get an idea and one thing you
+08:32 - notice right away um it's always
+08:33 - important to look at plots because they
+08:35 - give you a lot of information visually
+08:36 - right it's much easier to gather
+08:38 - information from plots in his text you
+08:40 - see that right away they have a scale of
+08:43 - one so that's telling you it's relative
+08:44 - performance and you have to read the
+08:46 - papers relative to what
+08:48 - i don't like that particular approach
+08:50 - they have similar data in a table form
+08:55 - and in here you see a whole bunch of
+08:57 - environments they used and there's a
+08:58 - broad broad variety they wanted to show
+09:01 - that the algorithm has a wide arena of
+09:03 - applicability which is a typical
+09:06 - technique and papers they want to show
+09:07 - that this is relevant right if they only
+09:09 - showed a single environment
+09:11 - people reading it would say well that's
+09:12 - all well and good you can solve one
+09:13 - environment but what about these dozen
+09:15 - other environments
+09:17 - right and part of the motivation behind
+09:19 - reinforcement learning is generality can
+09:21 - as can we model real learning and
+09:24 - biological systems such that it mimics
+09:26 - the generality of biological learning
+09:28 - one thing you notice right away is that
+09:29 - these numbers are not actual scores so
+09:33 - that's one thing i kind of take note of
+09:35 - and
+09:36 - causes me to raise an eyebrow so
+09:39 - you have to wonder the motivation behind
+09:41 - that why would the authors express
+09:44 - scores in a ratios a couple different
+09:46 - reasons one is because they want to
+09:48 - just to make all the numbers look
+09:50 - uniform maybe the people reading the
+09:52 - paper
+09:53 - wouldn't be familiar with each of these
+09:55 - environments so they don't know what a
+09:56 - good score is and that's a perfectly
+09:58 - valid reason another possibility is they
+10:00 - want to hide poor performance i don't
+10:02 - think that's going on here but it does
+10:04 - make me raise my eyebrow whenever i see
+10:06 - it
+10:07 - one exception is the torx which is a
+10:09 - totally open
+10:10 - race car simulator environment i don't
+10:12 - know if we'll get to that on this
+10:13 - channel that would be a pretty cool
+10:14 - project
+10:15 - but that would take me a few weeks to
+10:16 - get through
+10:18 - but right away you notice that they have
+10:21 - a whole bunch of environments these
+10:22 - scores are all relative to one and one
+10:24 - is the score that the agent gets on a
+10:27 - planning algorithm which they also
+10:29 - detail later on
+10:31 - so those are the results
+10:33 - and they talk more about i don't think
+10:35 - we saw the
+10:36 - headline but they talk about related
+10:38 - work which talks about other algorithms
+10:40 - that are similar and their shortcomings
+10:42 - right they don't ever want to talk up
+10:44 - other algorithms you always want to talk
+10:46 - up your own algorithm to make yourself
+10:47 - sound good
+10:48 - you know why else would you be writing a
+10:50 - paper in the first place and of course a
+10:52 - conclusion to tie everything together
+10:53 - references
+10:54 - i don't usually go deep into references
+10:57 - if there is something that i feel i
+10:59 - really really need to know i may look at
+11:00 - a reference but i don't typically bother
+11:02 - with them if you were a phd student then
+11:05 - it would behoove you to go into the
+11:07 - references because you must be an
+11:08 - absolute expert on the topic and for us
+11:11 - we're just you know hobbyists i'm a
+11:13 - youtuber so i don't go into too much
+11:16 - depth with the background information
+11:20 - and the next most important bit of the
+11:22 - paper are the experimental details and
+11:24 - it is in here
+11:25 - that it gives us the
+11:27 - parameters and architectures for the
+11:30 - networks so this is where if you saw my
+11:32 - previous video where i did the
+11:33 - implementation of ddpg in pi torch in
+11:35 - the continuous lunar lander environment
+11:37 - this is where i got
+11:39 - most of this stuff it was almost
+11:40 - identical with a little bit of tweaking
+11:42 - i left out some stuff from this paper
+11:44 - but
+11:45 - pretty much all of it came from here
+11:48 - in particular the
+11:49 - hidden layer sizes 400 and 300 units
+11:53 - as well as the initialization of the
+11:56 - parameters from uniform distribution of
+11:59 - the given ranges
+12:01 - so
+12:02 - just to recap this was a really quick
+12:04 - overview of the paper
+12:06 - just showing my process of what i look
+12:08 - at
+12:10 - the
+12:11 - most important parts are the
+12:13 - details of the algorithm as well as the
+12:15 - experimental details
+12:18 - so as you read the paper
+12:21 - like i said i gloss over the
+12:23 - introduction because i don't really i
+12:25 - kind of already understand the
+12:26 - motivation behind it i get the idea it
+12:29 - says it basically tells us that um you
+12:32 - can't really handle
+12:34 - just continuous action spaces with dq
+12:36 - networks
+12:37 - we already know that
+12:38 - and it says you know you can discretize
+12:40 - the state space but then you end up with
+12:42 - really really huge actions sorry you can
+12:43 - discretize the action space but then you
+12:45 - end up with a you know whole bootloader
+12:46 - actions you know what is it 2187 action
+12:50 - so it's intractable anyway and they say
+12:52 - what we present you know a model free of
+12:54 - policy algorithm
+12:56 - and uh then it comes down to this
+12:58 - section where it says the network is
+13:01 - trained off policy with samples from a
+13:02 - replay buffer to minimize correlations
+13:05 - very good and train with the target
+13:07 - queue network to give consistent targets
+13:09 - during temporal difference backups so in
+13:12 - this work we make use of the same ideas
+13:14 - along with batch normalization so this
+13:17 - is a key chunk of text and this is why
+13:18 - you want to read the whole paper because
+13:20 - sometimes you'll embed stuff in there
+13:22 - that you may not otherwise catch so
+13:24 - uh as i'm reading the paper what i do is
+13:26 - i take notes and you can do this in
+13:28 - paper you can do it in you know text
+13:31 - document in this case we're using the
+13:32 - editor so that way i can show you what's
+13:34 - going on and it's a natural place to put
+13:36 - this stuff because that's where you can
+13:36 - implement the code anyway let's hop over
+13:38 - to the editor
+13:39 - and you'll see what i take notes
+13:41 - so right off the bat we always want to
+13:43 - be thinking in terms of what sort of
+13:44 - classes and functions will we need to
+13:46 - implement this algorithm so the paper
+13:48 - mentioned a
+13:50 - replay buffer as well as a target queue
+13:53 - network so
+13:54 - the target queue network
+13:56 - for now we don't really know what it's
+13:58 - going to be but we can write it down so
+14:00 - we'll say we'll need a
+14:02 - replay buffer class
+14:05 - and
+14:06 - need a class for a target queue network
+14:10 - now i would assume that if you're going
+14:12 - to be implementing a paper of this
+14:14 - advanced uh difficulty you'd already be
+14:17 - familiar with q learning where you know
+14:18 - that the target network is just another
+14:21 - instance of a generalized network uh the
+14:23 - difference between the target and
+14:24 - evaluation networks are you know the way
+14:27 - in which you update their weights so
+14:30 - right off the bat we know that we're
+14:32 - going to have a single class at least
+14:34 - one if you know something about actor
+14:35 - critic methods you'll know that you'll
+14:36 - probably have two different classes one
+14:38 - for an actor one for a critic because
+14:39 - those two architectures are generally a
+14:40 - little bit different
+14:42 - but what do we know about q networks we
+14:44 - know that q networks are
+14:46 - um
+14:46 - state action value functions right
+14:48 - they're not just value functions so the
+14:50 - critic in the actor critic methods is
+14:52 - just a state value function in general
+14:55 - whereas here we have a q network which
+14:56 - is going to be a function of the state
+14:58 - and action so we know that it's a
+15:00 - function of s and a so we know right off
+15:03 - the bat it's not the same as a critic
+15:05 - it's a little bit different
+15:07 - and it also said
+15:09 - well we will use
+15:11 - we will use batch norm so batch
+15:14 - normalization is just a way of
+15:16 - normalizing inputs to prevent divergence
+15:18 - in a model i think it was discovered in
+15:21 - 2015 2014 something like that
+15:25 - uh so they will use that so we'll need
+15:26 - that in our network so we know at least
+15:28 - right off the bat a little bit of an
+15:29 - idea of what the network is going to
+15:30 - look like so let's go back to the paper
+15:31 - and see what other little bits of
+15:32 - information we can glean from the text
+15:33 - before we take a look at the algorithm
+15:36 - uh reading along
+15:37 - we can say
+15:41 - blah blah bl
+15:42 - features simplicity it requires only a
+15:45 - straightforward actor critic
+15:46 - architecture and very few moving parts
+15:50 - and then they talk it up and say can
+15:52 - learn policies that exceed the
+15:53 - performance of the planner you know the
+15:55 - planning algorithm
+15:56 - uh even learning from pixels which we
+15:58 - won't get to in this particular
+15:59 - implementation
+16:01 - so then okay no real other nuggets there
+16:06 - the background talks about the
+16:08 - mathematical structure of the algorithm
+16:10 - so
+16:11 - uh
+16:12 - this is really important if you want to
+16:14 - have a really deep in-depth knowledge of
+16:17 - the topic uh if you already know enough
+16:19 - about the background you would know that
+16:22 - you know the formula for discounted
+16:23 - future rewards you should know that if
+16:25 - you've done
+16:26 - a whole bunch of reinforcement learning
+16:27 - algorithms if you haven't then
+16:28 - definitely read through this section
+16:32 - to get the full idea of the background
+16:35 - and the motivation behind the
+16:36 - mathematics
+16:37 - other thing to note is it says the
+16:38 - action value function is used in many
+16:40 - algorithms we know that from dbq
+16:43 - learning
+16:44 - and then it talks about the re cursive
+16:46 - relationship known as the bellman
+16:47 - equation that is known as well
+16:49 - other thing to note what's interesting
+16:51 - here and this is the next nugget is if
+16:53 - the target policy is deterministic we
+16:56 - can describe it as a function mu
+16:57 - and so you see that in the remainder of
+17:00 - the paper like in the algorithm they do
+17:02 - indeed make use of this parameter mu so
+17:06 - that tells us right off the bat that our
+17:08 - policy is going to be deterministic now
+17:11 - if you have
+17:12 - you could probably guess that from the
+17:13 - title right
+17:15 - deep deterministic policy gradients
+17:17 - right so you would guess from the name
+17:19 - that the policy is deterministic but
+17:20 - what does that mean exactly so a
+17:22 - stochastic policy is one in which the
+17:26 - software maps the
+17:28 - probability of taking an action to a
+17:29 - given state so you input a set of state
+17:32 - and out comes a probability of selecting
+17:33 - an action and you select an action
+17:36 - according to that probability
+17:37 - distribution so that right away bakes in
+17:40 - a solution to the explore exploit
+17:42 - dilemma so long as all probabilities are
+17:44 - finite right so so as long as a
+17:46 - probability of taking an action for all
+17:48 - states doesn't go to zero there is some
+17:51 - element of exploration involved in that
+17:53 - algorithm
+17:55 - q learning handles the explore exploit
+17:57 - dilemma by using epsilon greedy action
+18:00 - selection where you have a random
+18:01 - parameter that tells you
+18:03 - how often to select a random number
+18:05 - sorry random action and then you select
+18:07 - a greedy action the remainder of the
+18:09 - time of course policy gradients don't
+18:11 - work that way they typically use a
+18:13 - stochastic policy but in this case we
+18:15 - have a deterministic policy so you have
+18:16 - to wonder right away
+18:18 - okay we have a deterministic policy how
+18:19 - are we going to handle the explore
+18:20 - exploit dilemma so let's go back to our
+18:23 - text editor and
+18:24 - make a note of
+18:26 - that we just want to say that the
+18:30 - the policy is deterministic
+18:34 - how to handle
+18:36 - explore exploit
+18:39 - and that's a critical question right
+18:40 - because if you only take
+18:42 - what are perceived as the greedy actions
+18:44 - you never get a really good coverage of
+18:46 - the parameter space of the problem and
+18:47 - you're going to converge on a
+18:48 - sub-optimal strategy so this is a
+18:51 - critical question we have to answer in
+18:52 - the paper so let's head back to the
+18:54 - paper and see how they handle it
+18:56 - so we're back in the paper and you can
+18:58 - see the reason they introduced that
+19:00 - deterministic policies to avoid an inner
+19:01 - expectation or maybe that's just a
+19:03 - byproduct i guess it's not accurate to
+19:04 - say that's the reason they do it
+19:06 - but what's neat is it says the
+19:08 - expectation depends only on the
+19:09 - environment means it's possible to learn
+19:11 - q to the mu meaning q is a function of
+19:13 - mu off policy using transitions which
+19:16 - are generated from a different
+19:18 - stochastic policy beta so right there we
+19:21 - have off policy learning which is say
+19:23 - explicitly
+19:24 - with a stochastic policy so we are
+19:26 - actually going to have two different
+19:27 - policies in this case
+19:29 - so then this already answers the
+19:31 - question of how we go from a
+19:33 - deterministic policy to solving the
+19:35 - export dilemma and the reason is that
+19:37 - we're using a stochastic policy to learn
+19:39 - the greedy policy or a sorry a purely
+19:42 - deterministic policy
+19:45 - and of course they talk about the
+19:46 - parallels with q learning because there
+19:49 - are many between the two algorithms
+19:51 - and you get to the loss function which
+19:53 - is of course critical to the algorithm
+19:55 - and
+19:56 - this y of t parameter then of course
+19:58 - they talk about
+20:00 - what q learning has been used for they
+20:02 - use they make mention of
+20:04 - deep neural networks which is of course
+20:06 - what we're going to be using that's
+20:07 - where the deep comes from uh and talks
+20:10 - about the atari games which we've talked
+20:11 - about on this channel as well
+20:13 - um
+20:14 - and uh importantly they say
+20:17 - uh
+20:18 - the the two changes that they introduced
+20:20 - in q learning which is the concept of
+20:21 - the replay buffer and this the target
+20:23 - network uh which of course they already
+20:24 - mentioned before they're just
+20:25 - reiterating and reinforcing what they
+20:27 - said
+20:28 - that's why we want to read the
+20:29 - introduction and background type
+20:30 - material to get
+20:32 - a solid idea of what's going to happen
+20:33 - so now we get to the algorithmic portion
+20:36 - and this is where all of the magic
+20:38 - happens so
+20:40 - they again reiterate that it's not
+20:41 - possible to apply q learning to
+20:43 - continuous action spaces
+20:44 - uh
+20:45 - because you know reasons right it's
+20:47 - pretty obvious you have an infinite
+20:48 - number of actions that's a problem
+20:51 - um
+20:53 - then they talk about the deterministic
+20:55 - policy gradient algorithm which we're
+20:57 - not going to go too deep into right for
+20:58 - this for this video we don't want to do
+21:00 - a full thesis we don't want to do a full
+21:02 - doctoral dissertation on the field we
+21:04 - just want to know how to implement it
+21:06 - and get moving so
+21:08 - this goes through and gives you
+21:10 - an update for the gradient
+21:13 - of this parameter j
+21:15 - and gives it in terms of the gradient
+21:17 - of q which is the state action value
+21:20 - function and the gradient of the
+21:23 - policy the deterministic policy mu
+21:26 - other thing to note here is that this
+21:27 - gradients these gradients are over two
+21:30 - different parameters so the gradient of
+21:32 - q is with respect to the actions
+21:35 - such that the action a equals mu of s of
+21:39 - t so what this tells you is that
+21:42 - q is actually a function not just of the
+21:46 - state but is
+21:48 - intimately related to that policy mu so
+21:52 - it's not um
+21:54 - it's not an action chosen according to
+21:55 - an arg max for instance it's an action
+21:57 - short chosen according to the output of
+21:59 - the other network
+22:01 - and for the update of mu it's just the
+22:05 - gradient with respect to the weights
+22:06 - which you would kind of expect
+22:09 - so
+22:11 - they talk about another algorithm nfqca
+22:14 - i don't know what that is honestly mini
+22:16 - batch version blah blah our contribution
+22:19 - here is to provide modifications to dpg
+22:21 - inspired by the success of dqn which
+22:23 - allow it to use neural network function
+22:25 - approximators to learn in large state
+22:27 - and action spaces online we call it ddpg
+22:30 - very creative
+22:32 - as they say again we use a replay buffer
+22:34 - to address the issues of correlations
+22:36 - between samples generated on subsequent
+22:38 - steps within an episode
+22:40 - finite size cache size r
+22:45 - transition sample from the environment
+22:46 - so we know all of this so if you don't
+22:48 - know all of it what you need to know
+22:49 - here is that you have state action
+22:52 - reward and then new state transitions so
+22:54 - what this tells the agent is
+22:56 - started in some state s
+22:58 - took some action received some reward
+23:00 - and ended up in some new state why is
+23:02 - that important it's important because in
+23:06 - in anything that isn't dynamic
+23:08 - programming you're really trying to
+23:09 - learn the
+23:11 - state probability distributions you're
+23:13 - trying to learn the probability of going
+23:14 - from one state to another and receiving
+23:16 - some reward along the way if you knew
+23:18 - all those beforehand then you could just
+23:21 - simply solve a set a very very large set
+23:23 - of equations for that matter to arrive
+23:26 - at the optimal solution right if you
+23:27 - knew all those transitions you say okay
+23:29 - if i start in this state
+23:30 - and take some action i'm going to end up
+23:32 - in some other state with certainty
+23:34 - then you'd say well what's the most
+23:35 - advantageous state what state is going
+23:37 - to give me the largest reward and so you
+23:39 - could kind of construct some sort of
+23:41 - algorithm for traversing the set of
+23:42 - equations to maximize your reward over
+23:44 - time now of course you often don't know
+23:46 - that and that's the point of the replay
+23:48 - buffer is to learn that through
+23:50 - experience and interacting with the
+23:52 - environment
+23:54 - and it says when the replay buffer was
+23:55 - full all the samples were discarded okay
+23:57 - that makes sense it's finite size it
+23:59 - doesn't grow indefinitely
+24:00 - at each time step actor and critic are
+24:03 - updated by sampling a mini batch
+24:05 - uniformly from the buffer so it operates
+24:07 - exactly according to q learning
+24:09 - it does a uniform sampling
+24:12 - random sampling of the buffer and uses
+24:14 - that to update the actor and critic
+24:16 - networks
+24:18 - what's critical here is that
+24:20 - combining this statement
+24:22 - with the topic of the previous paragraph
+24:24 - is that when we write our replay buffer
+24:26 - class it must sample
+24:28 - states at random so what that means is
+24:32 - you don't want to sample
+24:33 - a sequence of subsequent steps and the
+24:35 - reason is that there are large
+24:36 - correlations between those steps right
+24:39 - as you might imagine and those
+24:40 - correlations can cause you to get
+24:41 - trapped in little knicks nooks and
+24:43 - crannies of parameter space and really
+24:45 - cause your algorithm to go wonky so you
+24:47 - want to sample that uniformly so that
+24:48 - way you're sampling across many many
+24:50 - different episodes to get a really good
+24:52 - idea of the
+24:54 - i guess the breadth of the parameter
+24:56 - space to use kind of loose language
+25:00 - and then it says directly implementing q
+25:02 - learning with neural networks prove to
+25:04 - be unstable many environments and
+25:05 - they're they're going to talk about
+25:07 - using the the target network okay but
+25:10 - modified for actor critic
+25:13 - using soft target updates rather than
+25:15 - directly copying the weights so in q
+25:17 - learning we directly copy the weights
+25:18 - from the evaluation to the target
+25:20 - network
+25:21 - here it says we create a copy of the
+25:23 - actor and critic networks q prime and mu
+25:26 - prime respectively they're used for
+25:28 - calculating the target values
+25:31 - the weights of these target networks are
+25:32 - then updated by having them slowly track
+25:34 - the learned networks theta prime goes to
+25:37 - theta
+25:38 - theta times tau plus one minus tau times
+25:41 - theta prime with tau much much less than
+25:43 - one
+25:44 - this means that the target values are
+25:46 - constrained to change slowly greatly
+25:48 - improving the stability of learning
+25:50 - okay so this is our next little nugget
+25:52 - so let's head over to the paper and make
+25:54 - to our text editor and make note of that
+25:58 - what we read was that the we have two
+26:01 - not in caps we don't want to shout we
+26:02 - have
+26:03 - two networks
+26:05 - um
+26:06 - uh target networks
+26:09 - sorry we have
+26:10 - two actor and two critic networks
+26:14 - a target
+26:16 - for each
+26:18 - updates are soft according to
+26:22 - theta equals tau times theta
+26:25 - plus
+26:27 - one minus tau
+26:30 - times uh
+26:32 - theta
+26:33 - prime
+26:35 - so
+26:36 - sorry this should be theta prime so this
+26:38 - is the update rule for the
+26:41 - parameters of our target networks and we
+26:43 - have two target networks one for the
+26:45 - actor and one for the critic so we have
+26:48 - a total of four
+26:50 - deep neural networks and so this is why
+26:52 - the algorithm runs so slowly even on my
+26:55 - beastly rig
+26:56 - it runs quite slowly even in the lunar
+26:59 - lander and a continuous lunar lander
+27:00 - environment
+27:03 - i've done the bipedal walker and it took
+27:05 - about 20 000 games to get something that
+27:07 - approximates a decent score so this is a
+27:09 - very very slow algorithm
+27:11 - and that 20 000 games took uh i think
+27:13 - about a day to run so quite slow um
+27:17 - but nonetheless quite powerful the only
+27:18 - method we have so far of implementing
+27:21 - uh deep reinforcement learning and
+27:22 - continuous control environments so hey
+27:24 - you know
+27:25 - beggars can't be choosers right
+27:27 - but we know
+27:29 - just to recap that we're going to use
+27:31 - four networks
+27:33 - two that are on policy into off policy
+27:36 - and the updates are going to be soft uh
+27:39 - with
+27:43 - with
+27:44 - tau much less than one if you're not
+27:45 - familiar with mathematics
+27:47 - this double less than or double greater
+27:49 - than sign means much less than or much
+27:51 - greater than
+27:52 - uh respectively so
+27:53 - what that means is that tau is going to
+27:55 - be of order .01 or smaller right 0.1
+27:58 - isn't much smaller that's kind of
+28:00 - smaller 0.01 i would consider much
+28:02 - smaller they use we'll see in the
+28:05 - in the
+28:06 - details we'll see what value they use
+28:08 - but you should know that it's of order
+28:09 - 0.01 or smaller
+28:12 - and the reason they do this is to allow
+28:14 - the
+28:15 - updates to happen very slowly to get
+28:16 - good conversions as they said in the
+28:18 - paper so let's head back to the paper
+28:19 - and see what other nuggets we can glean
+28:20 - before getting to the
+28:22 - outline of the algorithm
+28:24 - and then in the very next sentence they
+28:25 - say this simple change moves the
+28:26 - relative unstable problem of learning
+28:28 - the action value function closer to the
+28:30 - case of supervised learning a problem
+28:32 - for which a robust solution exists
+28:34 - we found that having both the target mu
+28:36 - prime and q prime was required to have
+28:37 - stable targets y i in order to
+28:39 - consistently train the critic without
+28:41 - divergence
+28:42 - this may slow learning since the target
+28:44 - networks delay the propagation of value
+28:46 - estimates however in practice we found
+28:47 - this was always greatly outweighed by
+28:49 - the stability of learning and i found
+28:50 - that as well you don't get a whole lot
+28:52 - of diversions but it does take a while
+28:53 - to train
+28:55 - then they talk about learning in low
+28:57 - dimensional and higher dimensional
+28:58 - environments
+29:00 - and they do that to talk about
+29:02 - the need for feature scaling so
+29:05 - one approach to the problem
+29:07 - which is the
+29:09 - ranges of
+29:10 - variations in parameters right so in
+29:12 - different environments like in the
+29:13 - mountain car you can go from
+29:16 - plus minus 1.6 like minus 1.6 to 0.4
+29:19 - something like that and the velocities
+29:21 - are plus or minus 0.07 so you have a
+29:23 - two-order magnitude variation there in
+29:25 - the parameters that's kind of large even
+29:27 - in that environment and then when you
+29:28 - compare that to other environments
+29:30 - where you can have parameters that are
+29:32 - much larger in the order hundreds you
+29:34 - can see that there's a pretty big issue
+29:35 - with
+29:36 - the
+29:37 - scaling of the inputs to the neural
+29:39 - network which we know from our
+29:40 - experience
+29:41 - that neural networks are highly
+29:42 - sensitive to the scaling between inputs
+29:45 - so
+29:46 - it says their solution that problem is
+29:48 - to manually scale the features so
+29:50 - they're in similar
+29:51 - across
+29:52 - environments and units
+29:54 - and they do that by using
+29:56 - batch normalization and it says this
+29:58 - technique normalizes each dimension
+30:00 - across the samples in a mini batch dev
+30:02 - unit mean and variance and also
+30:04 - maintains a running average of the mean
+30:06 - and variance used for normalization
+30:07 - during testing during exploration and
+30:09 - evaluation so in our case
+30:12 - training and testing are slightly
+30:14 - different than in the case of supervised
+30:16 - learning so supervised learning you
+30:18 - maintain different data sets or
+30:21 - shuffled subsets of it of a single data
+30:23 - set to do training and evaluation
+30:26 - and of course in the evaluation phase
+30:27 - you'd perform no
+30:29 - wait updates of the network you just see
+30:31 - how it does based on the training
+30:33 - in
+30:34 - reinforcement learning you can do
+30:35 - something similar where you have a set
+30:36 - number of games where you train the
+30:38 - agent to achieve some set of results and
+30:41 - then you turn off the learning and
+30:43 - allow it to just choose actions based
+30:46 - upon whatever policy it learns and if
+30:48 - you're using batch normalization in pi
+30:50 - torch in particular there are
+30:52 - significant differences in
+30:54 - how batch normalization is used in the
+30:56 - two different uh phases so you have to
+30:58 - be explicit in
+30:59 - uh
+31:00 - setting training or evaluation mode
+31:02 - in particular in pi torch they don't
+31:05 - track statistics in evaluation mode
+31:07 - which is why when we wrote the
+31:10 - ddpg algorithm in pi torch we had to
+31:12 - call the eval and train functions so
+31:14 - often
+31:16 - okay so we've already established we'll
+31:17 - need batch normalization so everything's
+31:19 - kind of starting to come together we
+31:20 - need a replay network batch
+31:21 - normalization we need
+31:23 - uh four networks right we need two we
+31:26 - need two
+31:27 - each of a target
+31:29 - of an actor and two each of a critic so
+31:33 - half of those are going to be used for
+31:34 - on policy and have them are going to be
+31:35 - used for off policy for the targets
+31:39 - and then it says we scroll down
+31:41 - a major challenge
+31:43 - of learning in continuous action spaces
+31:45 - is exploration
+31:46 - an advantage of off policy algorithms
+31:48 - such as ddpg is that we can treat the
+31:50 - problem of exploration independently
+31:52 - from the learning algorithm we
+31:54 - constructed an exploration policy mu
+31:56 - prime by adding noise sampled from a
+31:58 - noise process n to our actor policy
+32:03 - okay so right here is telling us
+32:04 - what the basically the target
+32:07 - uh
+32:08 - actor function is it's mu prime is
+32:11 - basically
+32:12 - mu plus some noise n
+32:16 - n can be chosen to suit the environment
+32:18 - as detailed in the supplementary
+32:20 - materials we use in orenstein woolenbeck
+32:23 - process to generate temporally
+32:24 - correlated exploration for exploration
+32:27 - efficiency and physical control problems
+32:29 - with inertia
+32:30 - if you're not familiar with physics
+32:31 - inertia just means the
+32:33 - um
+32:33 - tendency of stuff to stay in motion it
+32:36 - has to do with like
+32:38 - environments that move like the walkers
+32:39 - the cheetahs stuff like that the ants
+32:43 - okay so we've kind of uh got one other
+32:46 - nugget to add to our text editor let's
+32:48 - head back over there and write that down
+32:51 - okay so
+32:52 - uh the
+32:54 - target
+32:56 - actor
+32:57 - is
+32:59 - just the
+33:00 - um evaluation we'll call it that for
+33:02 - lack of a better word evaluation actor
+33:04 - plus some noise process
+33:07 - they used
+33:08 - ornstein uh uh i don't think i spelled
+33:12 - that correctly um
+33:15 - we'll need to look that up
+33:18 - uh that
+33:19 - i've already looked it up um
+33:21 - my background is in physics so it made
+33:23 - sense to me it's basically
+33:25 - a
+33:26 - noise process that models the motion of
+33:28 - of browning particles which are just
+33:30 - particles that move around
+33:31 - uh under the influence of their
+33:32 - interaction with other particles in some
+33:35 - type of medium like a lossless medium
+33:37 - like a perfect food or something like
+33:38 - that
+33:40 - and in the orange seed ulumbat case they
+33:42 - are temporally correlated meaning each
+33:43 - time step is related to the time step
+33:45 - prior to it and i haven't thought about
+33:47 - it before but that's probably important
+33:49 - for the case of markov decision
+33:51 - processes right so in mdps the
+33:55 - current state is only related to the
+33:56 - prior state and the action taken you
+33:58 - don't need to know the full history of
+33:59 - the environment
+34:00 - uh so i wonder if that was chosen that
+34:02 - way if there's some underlying physical
+34:03 - reason for that uh just kind of a
+34:05 - question of cursing me off the top of my
+34:06 - head i don't know the answer to that if
+34:08 - someone knows play drop the answer in
+34:10 - the comments i would be very curious to
+34:12 - see the answers so
+34:13 - uh we have enough nuggets here so just
+34:16 - to summarize we need a replay buffer
+34:18 - class
+34:20 - we'll also need a class for the noise
+34:23 - right
+34:26 - so we'll need a class for noise a class
+34:28 - for the replay buffer
+34:30 - we'll need a class for the target q
+34:32 - network and we're going to use batch
+34:34 - normalization
+34:35 - the policy will be deterministic so what
+34:38 - that means in practice is that the
+34:40 - policy will output the actual actions
+34:41 - instead of the probability of selecting
+34:43 - the actions so
+34:44 - the
+34:45 - policy will be limited by whatever the
+34:48 - action space of the environment is so we
+34:50 - need some way of taking that into
+34:52 - account
+34:53 - so
+34:55 - so deterministic policy means
+34:58 - outputs the actual action instead
+35:02 - of a probability
+35:06 - we'll need a way to bound the actions to
+35:09 - the
+35:10 - environment
+35:11 - environment limits
+35:14 - and of course these notes don't make it
+35:15 - into the final code these are just kind
+35:16 - of things you think of as you are
+35:18 - reading the paper uh you would want to
+35:20 - put all your questions here
+35:22 - uh i don't have questions since i've
+35:23 - already implemented it but this is kind
+35:24 - of my thought process as i went through
+35:26 - it the first time
+35:28 - as best as i can model it after having
+35:29 - finished the problem
+35:32 - and you can also use a sheet of paper
+35:33 - that's some kind of magic about writing
+35:34 - stuff down on paper but we're going to
+35:36 - use the code editor because i don't want
+35:37 - to use an overhead projector to show you
+35:38 - guys a freaking sheet of paper this
+35:40 - isn't grade school here so
+35:42 - let's head back to the paper and
+35:44 - uh take a look at the actual algorithm
+35:46 - to get some real sense of what we're
+35:48 - going to be implementing
+35:50 - the
+35:50 - the results really aren't super
+35:52 - important to us yet uh we will use that
+35:55 - later on if we want to debug the model
+35:57 - performance but the fact that they
+35:58 - express it relative to a planning
+36:00 - algorithm makes it difficult right
+36:02 - so
+36:03 - scroll down to the data really quick
+36:06 - so
+36:07 - they give another thing to note i didn't
+36:10 - talk about this earlier but i guess now
+36:11 - is a good time
+36:13 - is
+36:14 - the stipulations on this tr on this
+36:16 - performance data says performance after
+36:18 - training across all environments for at
+36:20 - most 2.5 million steps so i said earlier
+36:24 - i had to train the bipedal walker for
+36:25 - around 20 000 games
+36:27 - that's around um
+36:29 - times
+36:30 - i think that's around
+36:32 - about about two and a half million steps
+36:34 - or so i think it was actually on fifteen
+36:36 - thousand steps so maybe around three
+36:38 - million steps something like that
+36:40 - we report both the average and best
+36:42 - observed across five runs so
+36:45 - why would they use five runs so if this
+36:47 - was a super duper algorithm and
+36:49 - which none of them are this isn't a
+36:51 - slight on their algorithm this isn't
+36:52 - meant to be snarky or anything what it
+36:54 - tells us is that they had to use five
+36:56 - runs because there is some element of
+36:58 - chance involved so
+37:00 - you know in one problem with deep
+37:02 - learning is the problem of
+37:05 - uh replicability right it's hard to
+37:07 - replicate other people's results if
+37:09 - particularly if you use system clocks as
+37:11 - seeds for random number generators right
+37:14 - using the system clock to to see the
+37:16 - random number generator guarantees that
+37:17 - if you run the simulation at even a
+37:20 - millisecond later right
+37:22 - that you're going to get different
+37:24 - results because you're going to be
+37:25 - starting with different sets of
+37:26 - parameters now you will get
+37:27 - qualitatively similar results
+37:29 - right you'll be able to repeat
+37:31 - the
+37:32 - the general idea of the experiments but
+37:34 - you won't get the exact same results
+37:37 - it's kind of what it's an objection to
+37:39 - the whole deep learning phenomenon it
+37:40 - makes it kind of not scientific but
+37:42 - whatever it works
+37:43 - uh has an enormous success so we won't
+37:45 - quibble about semantics or you know
+37:47 - philosophical problems but we just need
+37:49 - to know
+37:50 - for our purposes that
+37:52 - even these people that invented the
+37:54 - algorithm had to run it several times to
+37:56 - get some idea of what was going to
+37:58 - happen because the algorithm is
+37:59 - inherently probabilistic and so they
+38:01 - report averages and best case scenarios
+38:04 - so
+38:05 - that's another little tidbit and
+38:08 - they included
+38:09 - results for both the low dimensional
+38:11 - cases where you receive just a state
+38:12 - vector from the environment as well as
+38:14 - the pixel inputs
+38:15 - we won't be dealing with pixel inputs
+38:16 - for this particular
+38:18 - video but maybe we'll get to them later
+38:20 - i'm trying to work on that as well
+38:22 - so these are the results and the
+38:24 - interesting tidbit here is that it's
+38:25 - probabilistic it's going to take five
+38:26 - runs so okay fine
+38:29 - other than that we don't really care
+38:30 - about results uh for now we'll take a
+38:32 - look later but
+38:34 - uh that's not really our concern at the
+38:36 - moment so
+38:38 - now we have a series of questions we
+38:39 - have answers to all those questions we
+38:41 - know how we're gonna handle the explore
+38:42 - exploit dilemma we know the purpose of
+38:44 - the target networks we know how we're
+38:46 - going to handle the noise we know how
+38:48 - we're going to handle the replay buffer
+38:50 - um
+38:51 - and we know what the policy actually is
+38:53 - going to be it's the actual prop it's
+38:55 - the actual actions the agent is going to
+38:57 - take so we know a whole bunch of stuff
+38:58 - so it's time to look at the algorithm
+39:00 - and see how we fill in all the details
+39:03 - so
+39:04 - randomly initialize a critic network and
+39:06 - actor network with weights
+39:09 - theta
+39:10 - super q theta super mu so
+39:13 - this is handled by whatever library you
+39:15 - use you don't have to manually
+39:16 - initialize weights but we do know from
+39:18 - the supplemental materials that they do
+39:22 - constrain these updates to be within
+39:24 - sorry these initializations to be within
+39:26 - some range so
+39:27 - put a note in the back of your mind that
+39:28 - you're going to have to constrain these
+39:30 - a little bit
+39:32 - and then it says initialize target
+39:34 - network q prime and mu prime with
+39:36 - weights
+39:38 - that are
+39:40 - equal to the original network so
+39:43 - theta super q prime gets initialized
+39:45 - with theta super q and theta mu prime
+39:47 - gets initialized with theta super mu so
+39:51 - uh
+39:52 - we will be updating the weights right
+39:54 - off the bat for the target networks with
+39:56 - the evaluation networks
+39:59 - an initializer replay buffer r now this
+40:01 - is an interesting question how do you
+40:03 - initialize that replay buffer so i've
+40:04 - used a couple different methods
+40:06 - uh you can
+40:08 - just initialize it with all zeros and
+40:10 - then if you do that
+40:12 - when you perform the learning you want
+40:13 - to make sure that you have
+40:15 - a
+40:16 - number of memories that are greater than
+40:17 - or equal to the
+40:19 - mini batch size of your training so that
+40:20 - way you're not sampling the same states
+40:22 - more than once right if you
+40:25 - have 64 memories in a batch that you
+40:27 - want to sample but you only have 10
+40:29 - memories in your replay buffer then
+40:31 - you're going to sample
+40:32 - let's say 16 memories and you're going
+40:33 - to sample each of those memories four
+40:35 - times right so then that's no good so
+40:38 - the question becomes if you update if
+40:40 - you initialize your replay buffer with
+40:42 - zeros then you have to make sure that
+40:44 - you don't learn until you exit the
+40:46 - warm-up period where the warm-up period
+40:48 - is just a number of steps equal to your
+40:49 - replay buffer uh your buffer sample size
+40:53 - or you can initialize it with the actual
+40:57 - environmental play now this takes quite
+40:58 - a long time uh you know the replay
+41:00 - buffers are border a million so if you
+41:02 - let the uh the algorithm take in lane
+41:04 - steps at random then it's going to take
+41:06 - a long time i always use zeros and then
+41:08 - you know just wait until the agent fills
+41:11 - up the mini batch size of memories
+41:14 - uh just a minor detail there
+41:17 - then it says
+41:18 - for some number of episodes do so a for
+41:20 - loop initialize a random process n for
+41:24 - action exploration so this is something
+41:26 - now reading it i actually made a little
+41:28 - bit of a mistake so
+41:30 - uh in my
+41:31 - previous implementation i didn't reset
+41:34 - the noise process at the top of every
+41:37 - episode uh so it's explicit here i must
+41:40 - have missed that line um
+41:42 - and i've looked at other people's code
+41:44 - some do some don't but it worked uh
+41:47 - within uh how many episodes was it uh
+41:50 - within a uh
+41:51 - under a thousand episodes the agent
+41:52 - managed to beat the continuous orlando
+41:54 - environment so is that critical maybe
+41:56 - not um and i think i mentioned that in
+41:58 - the video
+42:00 - receive your initial state observation
+42:02 - s1 so for each step of the episode t
+42:05 - equals one to capital t due select the
+42:07 - action a sub t equals mu
+42:10 - the policy
+42:11 - plus n sub t according to the current
+42:14 - policy and exploration noise okay
+42:17 - so that's straightforward just use just
+42:20 - feed the state forward what does that
+42:21 - mean it means feed the state forward
+42:22 - through the network
+42:24 - receive the
+42:25 - vector output of the action and add some
+42:28 - noise to it okay
+42:30 - execute that action and receive and
+42:32 - observe reward and new state
+42:35 - simple
+42:36 - store the transition you know the old
+42:38 - state action reward a new state in your
+42:40 - replay buffer are okay that's
+42:43 - straightforward
+42:45 - uh each time step sample a random mini
+42:48 - batch of n transitions
+42:50 - from the replay buffer
+42:52 - and then you want to use that set of
+42:53 - transitions to set y sub i equals so i
+42:57 - is
+42:58 - sorry having difficulties here so i is
+43:00 - each step of
+43:02 - that uh is each element of that mini
+43:05 - batch of transitions
+43:07 - so you want to basically loop over that
+43:09 - set or do a vectorized implementation
+43:11 - looping is more straightforward that's
+43:13 - what i do i always opt for the most
+43:15 - straightforward and not necessarily most
+43:18 - efficient way
+43:19 - of doing things the first time through
+43:21 - because you want to get it working first
+43:23 - and worry about implementation uh sorry
+43:25 - efficiency later
+43:27 - so set y sub i equals r sub i plus gamma
+43:30 - where gamma is your
+43:31 - discount factor times q prime
+43:34 - of the new state sub i plus 1
+43:37 - uh times uh where the action is chosen
+43:40 - according to mu prime
+43:42 - uh given some weights theta super mu
+43:45 - prime and theta super q prime so
+43:48 - uh what's important here is
+43:50 - that and this isn't immediately clear if
+43:52 - you're reading this for the first time
+43:54 - what's this very important detail
+43:57 - so it's the action
+44:00 - uh must be chosen according to the
+44:03 - target
+44:04 - actor network
+44:06 - so you actually have q as a function of
+44:08 - the state as well as the output
+44:11 - excuse me of another network
+44:14 - that's very important
+44:15 - update the critic by minimizing the loss
+44:18 - uh basically a weighted average of that
+44:20 - y sub i minus the
+44:23 - output from the
+44:25 - actual q network where the a sub i's are
+44:29 - from the actually
+44:31 - the actions you actually took during the
+44:32 - course of the episode so this a sub i is
+44:36 - from the replay buffer
+44:38 - and
+44:39 - these actions
+44:40 - right are chosen according to the target
+44:42 - actor network
+44:44 - so
+44:45 - uh for each learning step you're gonna
+44:46 - have to do a feed forward pass
+44:49 - of not just this target q network but
+44:52 - also the target actor network as well as
+44:55 - the evaluation critic network i hope i
+44:58 - said that right so the feed forward pass
+45:00 - of the target critic network as well as
+45:02 - the target actor network and the
+45:04 - evaluation critic network as well
+45:08 - and then it says update the actor policy
+45:10 - using the sample policy gradient this is
+45:11 - the hardest step in the whole thing this
+45:13 - is the most confusing part
+45:14 - so it says the gradient is equal to 1
+45:16 - over n times the sum so a a mean
+45:19 - basically whenever you see one over n
+45:20 - times the sum that's a mean
+45:22 - the gradient with respect to actions of
+45:25 - q
+45:26 - uh where the actions are chosen
+45:28 - according to the policy mu of the
+45:30 - current states s times the gradient with
+45:32 - respect to the weights of mu
+45:35 - where you just input the set of states
+45:38 - okay so that'll be a little bit tricky
+45:40 - to implement so and this is part of the
+45:42 - reason i chose tensorflow for this
+45:43 - particular video is because
+45:45 - tensorflow allows us to calculate
+45:47 - gradients explicitly
+45:49 - in pi torch you may have noticed that
+45:50 - all i did was
+45:52 - set q to be a function of the
+45:55 - [Music]
+45:56 - the
+45:57 - current state as well as the actor
+45:59 - network and so
+46:01 - i allowed pytorch to handle the chain
+46:02 - rule this is effectively a chain rule so
+46:05 - let's let's scroll up a little bit to
+46:07 - look at that because this kind of gave
+46:09 - me pause the first 10 times i read it so
+46:12 - this is the hardest part to implement
+46:14 - if you scroll up
+46:16 - you see that this exact same expression
+46:18 - appears here right and this is in
+46:20 - reference to this so it's a gradient
+46:23 - with respect to the weights theta super
+46:25 - mu
+46:26 - of q of s and a
+46:28 - uh such that you're choosing an action a
+46:30 - according to the policy mu
+46:33 - so really what this is is the chain rule
+46:34 - so it's the
+46:36 - uh this gradient is a proportional to a
+46:38 - gradient
+46:39 - this quantity times a gradient of the
+46:41 - other quantity it's just the chain rule
+46:42 - from calculus so
+46:45 - in the
+46:46 - in the pi torch paper we implemented
+46:48 - this version
+46:50 - and these are these are equivalent it's
+46:52 - perfectly valid to do one or the other
+46:53 - so in pi torch we did this version today
+46:56 - we're going to do this particular
+46:58 - version
+47:00 - so that's good to know
+47:01 - all right so
+47:03 - next step
+47:04 - on each time step you want to update the
+47:06 - target networks according to this solved
+47:07 - update rule
+47:09 - so theta super cubed prime gets updated
+47:11 - as tau times theta super q plus one
+47:14 - minus tau theta super q prime and
+47:16 - likewise for theta super mu prime
+47:19 - and then just end the two loops so
+47:21 - in practice this looks very very simple
+47:23 - but what do we know off the bat we need
+47:25 - a class for our replay network
+47:28 - we need a class for our noise process
+47:31 - we need a class for the actor in a class
+47:32 - for the critic now you could think that
+47:34 - perhaps they're the same but when you
+47:36 - look at the details which we're going to
+47:38 - get to in a minute you realize you need
+47:39 - two separate classes so you need at
+47:41 - least one class to handle the deep
+47:42 - neural networks
+47:44 - so you have at least three classes and i
+47:46 - always add in an agent class on top as
+47:48 - kind of an interface between the
+47:49 - environment and the deep neural networks
+47:52 - so that's four and we're gonna end up
+47:54 - with five but that's four right off the
+47:55 - bat
+47:57 - so now that we know the algorithm let's
+47:58 - take a look at the supplemental details
+48:02 - uh supplemental information to see
+48:03 - precisely the architectures and
+48:05 - parameters used
+48:07 - so we scroll down so here are the
+48:09 - experimental details uh these atom
+48:12 - for learning the neural network
+48:13 - parameters for the learning rate of 10
+48:14 - to the minus 4 and 10 to the minus 3 for
+48:16 - the actor and critic respectively so
+48:18 - they tell us the learning rates 10 to
+48:19 - the minus 4 10 to the minus 3 for our
+48:21 - critic
+48:22 - for q the critic we included l2 weight
+48:25 - decay of 10 to the minus 2
+48:28 - and use a discount factor of gamma
+48:30 - 0.99 so that gamma is pretty typical but
+48:33 - this important thing is that for q and
+48:36 - only q not mu we included l2 weight
+48:38 - decay of 10 to the minus 2 and use a
+48:40 - discount factor of gamma of
+48:42 - 0.99 that's an important detail
+48:45 - for the soft target updates we use tau
+48:47 - equals 0.001 so one part in a thousand
+48:51 - that is indeed very very small
+48:53 - okay fine
+48:54 - the neural networks use the rectified
+48:56 - non-linearity for all hidden layers okay
+49:00 - the final output layer of the actor was
+49:03 - a tangent hyperbolic layer to bound the
+49:05 - actions now
+49:07 - tan hyperbolic goes from minus one to
+49:09 - plus one so
+49:11 - in environments in which you have
+49:14 - um
+49:15 - bounds of plus or minus two let's say
+49:17 - you're going to multiplicative factor
+49:20 - uh so that's just something to keep in
+49:21 - mind
+49:22 - the low dimensional networks up but that
+49:25 - doesn't um that doesn't impact the
+49:28 - tension hyperbolic it just means there's
+49:29 - a multiplicative factor and they're
+49:30 - related to your environment
+49:33 - the low dimensional networks had two
+49:34 - hidden layers with 400 and 300 units
+49:37 - respectively about 130 000 parameters
+49:40 - actions were not included until the
+49:43 - second hidden layer of q so when you're
+49:46 - calculating the critic function q
+49:49 - you aren't actually
+49:51 - passing forward the action from the very
+49:53 - beginning you're including it as a
+49:54 - separate input at the second hidden
+49:56 - layer of cue that's very important
+49:58 - that's a very important implementation
+50:00 - detail
+50:02 - and this is when learning from pixels we
+50:03 - use three convolution layers which we
+50:05 - don't need to know right now we're not
+50:06 - using pixels yet
+50:08 - and followed by two fully connected
+50:10 - layers the final layer weights and
+50:12 - biases
+50:14 - both the actor and critic were
+50:15 - initialized from a uniform distribution
+50:17 - of plus or minus
+50:19 - three by ten to the minus three for the
+50:21 - low dimensional case
+50:24 - this was this was to ensure that the
+50:26 - initial outputs for the policy and value
+50:27 - estimates were near zero
+50:29 - the other layers were initialized from
+50:31 - uniform distribution of plus or minus
+50:33 - one over square root of f where f is the
+50:35 - fan in the layer fanon is just the
+50:36 - number of input units
+50:39 - and the other layer oh i already heard
+50:40 - that
+50:41 - the um
+50:43 - the
+50:46 - the actions were not included into the
+50:48 - fully connected layers that's for the
+50:50 - convolutional
+50:51 - uh case so here right now i'm
+50:54 - experiencing some confusion reading this
+50:55 - so
+50:57 - um
+51:00 - it says the other layers are initialized
+51:01 - from uniform distributions related to
+51:03 - the fan in the actions were not included
+51:05 - into the fully connected layers
+51:08 - so i'm guessing since we're talking
+51:09 - about fully connected layers they're
+51:10 - talking about the
+51:13 - pixel case right because otherwise
+51:14 - they're all fully connected you know it
+51:16 - wouldn't make sense to say specify fully
+51:18 - connected layers
+51:19 - uh so this gives me a little bit of
+51:21 - confusion is this statement referring to
+51:24 - the way i initially interpreted it uh it
+51:26 - is referring to both cases for the state
+51:29 - vector and pixel case
+51:31 - but whatever i'm going to interpret it
+51:33 - that way because it seemed to work
+51:35 - but there's ambiguity there and this is
+51:36 - kind of an example of how reading papers
+51:39 - can be a little bit confusing at times
+51:41 - because the wording isn't always clear
+51:42 - maybe i'm just tired maybe i've been
+51:44 - rambling for about 50 minutes and
+51:47 - my brain is turning to mush that's quite
+51:49 - probable actually but anyway we train
+51:52 - with mini match sizes of 64 with low
+51:53 - dimensional problems and 16 on pixels
+51:56 - with a replay buffer of 10 to the six
+51:59 - for the exploration noise process we use
+52:01 - temporally correlated noise in order to
+52:02 - explore well in physical environments
+52:04 - that have momentum warrants in the
+52:05 - olympic process with theta equals 0.15
+52:08 - and sigma equals 0.2 and it tells you
+52:10 - what it does
+52:11 - all well and good okay so these are the
+52:13 - implementation details we need 400 units
+52:15 - and 300 units for our hidden layers atom
+52:18 - optimizer 10 to the minus 4 for the
+52:20 - actor 10 to the minus 3 for the critic
+52:22 - for the critic we need an l2 weight
+52:23 - decay of 10 to the minus 2 discount
+52:25 - factor of gamma 0.99
+52:27 - and for the soft update factor we need
+52:29 - 0.001 and we need updates uh we need
+52:32 - initializations that are proportional to
+52:34 - the one over the square root of fanon
+52:35 - for the
+52:36 - lower layers and plus minus point zero
+52:39 - zero three
+52:40 - uh zero zero yeah zero zero three for
+52:42 - the final output layers of our fully
+52:45 - connected networks
+52:47 - okay so that's a lot of details we have
+52:49 - everything we need to start implementing
+52:50 - the paper uh and that only took us about
+52:53 - 50 minutes
+52:54 - it was much shorter than when i read it
+52:56 - took me quite a while so
+52:58 - let's head back up to the algorithm here
+53:01 - and we will keep that up as reference
+53:03 - for the remainder of the video because
+53:05 - that's quite critical so
+53:08 - let's go ahead and head back to our
+53:12 - code editor and start coding this up
+53:13 - we'll start with the easy stuff first
+53:16 - so let's start coding and we will start
+53:19 - with the
+53:20 - probably one of the most confusing
+53:22 - aspects of the problem with the
+53:23 - orenstein ulembek action noise now
+53:25 - you can go ahead and do a google search
+53:28 - for it and you'll find a wikipedia
+53:29 - article that talks a lot about the
+53:31 - physical processes behind a lot of
+53:32 - mathematical derivations and that's not
+53:34 - particularly helpful so if you want to
+53:36 - be a physicist i invite you to read that
+53:38 - and check it out it's got some pretty
+53:39 - cool stuff it took me back to my grad
+53:41 - school days but we have a different
+53:42 - mission in mind for the moment the
+53:44 - mission now is to find a code
+53:46 - implementation of this that we can use
+53:48 - in our problem so
+53:50 - if you then do a google search for
+53:51 - orenstein ulembek
+53:53 - github as in you want to find someone's
+53:55 - github example for it you end up with a
+53:58 - nice example from the open ai baseline
+54:01 - library uh that shows you the precise
+54:04 - form of it so let me show you that one
+54:05 - second
+54:06 - so you can see it here uh in the in the
+54:09 - github
+54:10 - there is a whole class for this right
+54:12 - here that i've highlighted
+54:14 - and this looks to do precisely what we
+54:16 - want it has a previous plus a delta term
+54:20 - and a dt term so it looks like it's
+54:22 - going to create correlations through
+54:24 - this x previous term
+54:26 - there's a reset function to reset the
+54:28 - noise which we may want to use
+54:31 - and there's this representation which
+54:32 - we'll probably skip because we know what
+54:34 - we're doing and it's not really critical
+54:36 - for this particular application though
+54:38 - it would be nice if you were writing a
+54:39 - library as these guys were so they
+54:41 - included the representation
+54:43 - method so so let's go ahead and code
+54:45 - that up in the editor
+54:47 - and that will
+54:48 - tackle our first class
+54:50 - so i'm going to leave the notes up there
+54:52 - for now uh they do no harm they're just
+54:54 - comments at the top of the file so
+54:56 - the first thing we'll need is to import
+54:58 - numpy as np
+55:00 - we know we can go ahead and start and
+55:02 - say import tensorflow as tf we're going
+55:04 - to need tensorflow
+55:07 - we may need something like os to handle
+55:09 - model saving so we can go ahead and
+55:12 - import that as well
+55:14 - just a fun fact it is considered good
+55:17 - practice to import your
+55:19 - system level packages first and followed
+55:22 - by your
+55:23 - library packages second in numerical
+55:25 - order followed by your own personal code
+55:28 - in numerical order
+55:31 - so that's the imports that we need to
+55:33 - start let's go ahead and code up
+55:36 - our class we'll call it ou action noise
+55:39 - and that'll just be derived from the
+55:40 - base object
+55:43 - so the initializer will take a mu
+55:46 - a sigma now they said they used a
+55:48 - default value
+55:50 - of i believe 0.15
+55:53 - and a theta of
+55:55 - 0.2
+55:57 - a dt term something like 1 by 10 to the
+56:00 - minus 2
+56:01 - and our x naught will save as none
+56:05 - and again if you have any doubts on that
+56:07 - just go check out the open ai baselines
+56:09 - for it
+56:10 - their implementation is probably correct
+56:12 - right
+56:13 - i'll give them the benefit of the now
+56:15 - so
+56:18 - go ahead and save your parameters as
+56:20 - usual
+56:24 - so we have a mu a theta a dt
+56:27 - a sigma
+56:32 - and x0
+56:34 - and we'll go ahead and call the reset
+56:36 - function at the top
+56:38 - now they override the call method
+56:40 - and what this does is it enables you to
+56:43 - say noise equals oh you action noise
+56:47 - and then when you want to
+56:49 - get the noise you just say
+56:52 - our noise equals noise you can use the
+56:54 - parenthesis that's what overall writing
+56:56 - call does
+56:58 - that's a good little tidbit to know
+57:01 - so we want do you implement the equation
+57:03 - that they gave us it's l self dot x
+57:06 - previous plus
+57:08 - sub dot theta times
+57:10 - mu minus x previous
+57:13 - times
+57:14 - self.dt
+57:16 - plus
+57:18 - sigma times
+57:21 - numpy
+57:22 - dot square root
+57:24 - self.dt times numpy random normal
+57:28 - with a size of
+57:30 - mu
+57:32 - and set the x previous to the current
+57:35 - value that's how you create the temporal
+57:36 - correlations and return the value of the
+57:39 - noise
+57:40 - so
+57:41 - we don't have a value for x previous so
+57:43 - we have to set that with the reset
+57:45 - function
+57:47 - which takes no parameters
+57:52 - self.x previous equals x naught if
+57:55 - self.x
+57:56 - not is
+57:58 - not none else
+58:00 - numpy zeros like
+58:03 - uh self.mu
+58:05 - and that's it for the noise function
+58:07 - that's pretty straightforward
+58:09 - uh so that's all well and good so we
+58:12 - have one one function down so
+58:15 - uh we've taken care of the noise sorry
+58:17 - one class now we've taken care of the
+58:18 - noise and now we can move on to the
+58:20 - replay buffer so this will be something
+58:22 - similar to what i've implemented in the
+58:23 - past there are many different
+58:25 - implementations and ways of implementing
+58:27 - this
+58:28 - many people will use a built-in python
+58:31 - data structure called a dq or a deck i
+58:33 - think it's dq is the pronunciation
+58:35 - basically it's a q
+58:37 - that you fill up over time and that's
+58:39 - perfectly valid uh you can do that
+58:42 - there's no reason not to i prefer using
+58:44 - a set of arrays
+58:47 - and
+58:49 - using numpy to facilitate that
+58:51 - the reason being that we can tightly
+58:52 - control the data types of the
+58:55 - stuff that we're saving for this
+58:57 - pendulum environment it doesn't really
+58:59 - matter but as you get more involved in
+59:00 - this field you will see that you are
+59:02 - saving stuff that
+59:04 - has varying sizes so if you're trying to
+59:06 - save images let's say from the one of
+59:09 - the atari libraries or a mujoko
+59:12 - environment or something like that
+59:14 - hope i pronounce that correctly uh
+59:15 - you'll see that this
+59:18 - memory can explode quite quickly you can
+59:19 - eat into your ram so the ability to
+59:22 - manipulate the underlying data type
+59:24 - representation whether you want to use
+59:27 - single or double precision for either
+59:29 - your floating point numbers or integers
+59:31 - is critical to memory management
+59:33 - as well as taking advantage of some
+59:35 - other optimizations for nvidia gpus
+59:38 - in the touring class and above so i
+59:41 - always use the numpy arrays because it's
+59:42 - a clean implementation that allows
+59:44 - manipulation of data types you can use
+59:46 - the dq if you want
+59:48 - it's perfectly valid
+59:52 - so our separate class
+59:53 - has its own initializer of course
+59:56 - so we're going to want to pass in a
+59:57 - maximum size
+59:59 - the input shape and the number of
+60:02 - actions
+60:03 - right because we have to store the state
+60:05 - action reward and new state tuples we're
+60:08 - also going to want to facilitate the use
+60:11 - of the done flag so we'll have an extra
+60:13 - parameter in here and the reason behind
+60:15 - that is
+60:16 - intimately related to how the
+60:19 - how the bellman equation is calculated
+60:21 - it took me a second to think of that
+60:23 - at the end of the episode the agent
+60:24 - receives no further rewards and so the
+60:27 - expected future reward the discounted
+60:29 - feature reward if you will is
+60:30 - identically zero so
+60:32 - you have to multiply the
+60:34 - reward for the next state by zero if
+60:37 - that next state follows the terminal
+60:39 - state if your current state is terminal
+60:40 - and the next state is following the
+60:41 - terminal state so you don't want to take
+60:42 - into account anything from that the
+60:44 - expected future rewards because they're
+60:46 - identically zero so we need a done flag
+60:48 - this is all i wanted to say
+60:51 - so we save our parameters
+60:56 - um
+60:58 - uh yeah we only need to save that we can
+60:59 - say cell dot mem counter equals zero and
+61:01 - that'll keep track of the position of
+61:03 - our most recently saved memory
+61:06 - state memory an array of numpy
+61:08 - zeros mem size by input shape
+61:13 - uh
+61:14 - new state memory
+61:18 - same same deal you know it's just just
+61:21 - totally the same
+61:25 - good grief okay so now we have the let's
+61:29 - say action memory and that's numpy zero
+61:31 - self.mem size by
+61:34 - self.n actions
+61:36 - uh we didn't save an actions did we so
+61:38 - we'll just call it n actions
+61:40 - we have the
+61:42 - reward memory and that's just a scalar
+61:44 - value
+61:45 - so that only gets
+61:47 - shape self mem size
+61:50 - we also need the terminal memory
+61:55 - terminal memory
+61:57 - and that'll be
+61:58 - shape self.men size
+62:02 - and i have numpyfloat32 if i recall
+62:04 - correctly that is due to the
+62:07 - data types in the pi torch
+62:08 - implementation it's probably not
+62:09 - necessary here in the tensorflow
+62:11 - implementation but i left it the same
+62:13 - way just to be consistent it doesn't
+62:15 - hurt anything
+62:16 - so next we need a function to store a
+62:18 - current transition so that'll take a
+62:21 - state action reward
+62:24 - new state and a done flag as input
+62:28 - so the index of where we want to store
+62:30 - that memory
+62:31 - is the memory counter modulus the
+62:34 - mem size so for any mem counter less
+62:38 - than mem size this just returns mem
+62:40 - counter
+62:41 - for anything larger than mem size it
+62:43 - just wraps around so
+62:45 - if you have a million memories all the
+62:48 - way up from zero to 999 999 it will be
+62:52 - uh that number and then once it's a
+62:54 - million it wraps back around to zero and
+62:56 - then one and two and so on and so forth
+62:58 - and so that way you're overriding
+62:59 - memories at the earliest part of the
+63:01 - array with the newest memories
+63:03 - precisely as they describe in the paper
+63:06 - uh if you're using the dq mem method
+63:09 - then i believe you would just uh pop it
+63:11 - off of the left i believe now don't
+63:13 - quote me because i haven't really used
+63:14 - that implementation but from what i've
+63:16 - read that's how it operates
+63:18 - new state memory sub index
+63:22 - equal state underscore
+63:24 - reward memory
+63:26 - equals sub index
+63:30 - is reward
+63:32 - as action memory
+63:37 - now keep in mind that the actions in
+63:39 - this case are arrays themselves so it's
+63:41 - an array of arrays just keep that in the
+63:43 - back of your mind so that you can
+63:45 - visualize the problem we're trying to
+63:46 - solve here
+63:47 - next up we have the terminal memory
+63:50 - now a little twist here is that we want
+63:52 - this to be
+63:54 - one minus int of done so done is either
+63:57 - true or false so you don't want to count
+63:59 - the rewards after the episode has ended
+64:02 - so when
+64:04 - done is true
+64:05 - you want to multiply by zero so one
+64:07 - minus into true is one minus
+64:10 - one which is zero and when it's not over
+64:13 - it's one minus zero which is just one so
+64:15 - it's precisely behavior we want
+64:17 - and finally you want to increment mem
+64:19 - counter by one every time you store
+64:22 - m new memory
+64:24 - next we need a function to sample our
+64:27 - buffer
+64:28 - and we want to pass in a batch size
+64:31 - alternatively you could make batch size
+64:32 - a member variable of this class it's not
+64:35 - really a big deal i just did it this way
+64:38 - for whatever reason i chose to do it
+64:40 - that way so what we want to do is we
+64:42 - want to find the
+64:44 - uh minimum either
+64:46 - so let's back up for a second so what we
+64:48 - want is to
+64:49 - sample the memories from either the
+64:51 - zeroth position all the way up to the
+64:53 - most filled memory the last filled
+64:55 - memory so if you have
+64:57 - less than the max memory you want to go
+65:00 - from zero to
+65:02 - uh mem counter otherwise you want to
+65:04 - sample anywhere in that whole interval
+65:06 - so
+65:07 - max mem equals
+65:09 - the minimum above of either mem counter
+65:12 - or mem
+65:14 - size and the reason you don't want to
+65:15 - just use mem counter is that mem counter
+65:17 - goes larger than mem size so
+65:20 - if you try to tell it to select
+65:22 - something from the range
+65:25 - uh mem counter when mem counter is
+65:26 - greater than mem size you'll end up
+65:28 - trying to access elements of the array
+65:30 - that aren't there and it'll throw an
+65:31 - error so that's why you need this step
+65:35 - next you want to take a random choice
+65:37 - of uh from zero to maximum of size batch
+65:40 - size
+65:42 - so then you just want to gather those
+65:44 - states from the respective arrays
+65:49 - like so
+65:50 - i forgot the self of course
+65:54 - new states
+65:59 - actions
+66:04 - rewards
+66:08 - and call it terminal
+66:15 - batch
+66:16 - i believe that's everything and you want
+66:18 - to return the states
+66:19 - actions
+66:21 - rewards new states
+66:24 - and terminal
+66:27 - okay so
+66:30 - so now we are done with the replay
+66:32 - buffer class so that's actually pretty
+66:34 - straightforward and if you've seen some
+66:36 - of my other videos on deep q learning
+66:37 - then you've seen pretty much the same
+66:39 - implementation i just typically kept it
+66:41 - in the aging class then uh we i'm kind
+66:44 - of refining my approach getting more
+66:45 - sophisticated over time so it makes
+66:46 - sense to stick it in its own class
+66:49 - so we're already like 40 of the way
+66:51 - there we got five classes in total so
+66:53 - that's good news so
+66:55 - next up we have to contend with the
+66:56 - actor and critic networks so
+66:59 - we'll go ahead and start with the actor
+67:01 - and um
+67:03 - from there keep in mind that we have two
+67:05 - actor networks and we're going to have
+67:07 - to contend with some of the
+67:08 - peculiarities and
+67:10 - way tensorflow likes to do stuff so
+67:12 - let's get started
+67:14 - the actor and of course in
+67:18 - tensorflow you don't derive from any
+67:19 - particular class where in pytorch you
+67:21 - would derive from nn.module
+67:26 - don't know what i'm doing there definite
+67:30 - so we'll need a learning rate number of
+67:32 - actions
+67:33 - a name and the name is there to
+67:35 - distinguish the regular atro network
+67:37 - from the target actor network
+67:40 - input dimms we're going to want to pass
+67:43 - it a session so tensorflow has the
+67:45 - um
+67:46 - construct of the session which houses
+67:48 - the graph and all the variables and
+67:49 - parameters and stuff like that
+67:51 - you can have each class having its own
+67:54 - session but it's more tidy to pass in a
+67:56 - single session to each of the classes
+68:00 - a number of dimensions for the first
+68:02 - fully connected layers so of course i
+68:03 - should be 400
+68:05 - if we're going to implement the paper
+68:07 - precisely fc2 dims is 300
+68:10 - an action bound a batch size that
+68:13 - defaults to 64.
+68:15 - a checkpoint directory
+68:17 - and the purpose of that is to save our
+68:20 - model and in the case of the
+68:23 - pendulum doesn't really matter because
+68:25 - it's so quick to run but in general you
+68:27 - want a way of saving these models
+68:28 - because it can take a long time to run
+68:31 - so we'll save our learning rate number
+68:33 - of actions
+68:38 - all of the parameters we passed in
+68:41 - dot
+68:43 - fc1 dimms
+69:02 - and the purpose of this action bound is
+69:04 - to accommodate environments where the
+69:07 - action is either greater than
+69:09 - plus or minus negative one so if you can
+69:11 - go from plus or minus two then the
+69:13 - tangent hyperbolic is only going to
+69:14 - sample like half your range right from
+69:16 - plus minus one and so you won't have an
+69:18 - action bound and there's a
+69:18 - multiplicative factor to make sure that
+69:20 - you can sample the full range of actions
+69:22 - available to your agent
+69:26 - and we need to say that checkpoint der
+69:31 - and finally we want to call a build
+69:33 - network function well it's not final but
+69:35 - we'll call the build network function
+69:37 - next up
+69:38 - since we have to do the
+69:41 - soft cloning the soft update rule for
+69:44 - the
+69:44 - target actor class and target critic
+69:47 - then we know that we have to find a way
+69:49 - of keeping track of the parameters in
+69:51 - each network so
+69:53 - we're going to keep track of them here
+69:55 - in the variable params
+69:58 - and it's tensorflow.trainable variables
+70:00 - with a scope of self.name so the
+70:04 - we have a single session a single graph
+70:06 - and you're going to have multiple deep
+70:08 - neural networks within that graph we
+70:10 - want we don't want to update the
+70:13 - critic network when we're trying to do
+70:14 - the actual network and vice versa right
+70:16 - we want those to be independent and so
+70:17 - we scope them with their own name so
+70:19 - that tensorflow knows hey this is a
+70:21 - totally different set of parameters from
+70:22 - this one and that'll aid in copying
+70:24 - stuff later and also make sure that
+70:26 - everything is nice and tidy
+70:30 - and the scope is what facilitates that
+70:36 - we'll also need a saver object to save
+70:38 - the
+70:39 - model
+70:41 - let's make a checkpoint file
+70:43 - and that's where we use os
+70:46 - and that will clone into checkpointer
+70:49 - and the name plus underscore
+70:51 - ddpg.checkpoint
+70:54 - so this will automatically scope the
+70:56 - save files for us so that way we don't
+70:59 - confuse the parameters for the
+71:01 - target actor and actor or critic and
+71:03 - target critic or even actor and critic
+71:05 - for that matter
+71:07 - very important
+71:09 - so we're going to calculate some
+71:11 - gradients and we're going to do that by
+71:12 - hand so we're going to need a series of
+71:15 - functions that will facilitate that and
+71:19 - the first of which is the
+71:21 - unnormalized
+71:23 - actor gradients
+71:26 - and that is
+71:28 - given my tensorflow.gradients
+71:30 - self.mu
+71:31 - self.params
+71:33 - and minusself.action
+71:36 - gradient
+71:38 - so we're going to calculate so mu will
+71:41 - be the mu from the paper the actual
+71:44 - actions of the agent params are our
+71:46 - network parameters and this action
+71:49 - gradient so let's go back to the paper
+71:51 - for a second so we can get some idea
+71:52 - what i'm talking about here so if we
+71:54 - look at the algorithm we can see that
+71:56 - we're going to need these
+71:58 - gradients of the critic function with
+72:00 - respect to the actions taken
+72:03 - we're also going to need the gradient of
+72:05 - the actual mu with respect to the
+72:07 - weights of the network so we're passing
+72:09 - in into tensorflow gradients this
+72:12 - function mu
+72:13 - uh the parameters to get the gradient
+72:15 - with respect to those parameters and
+72:17 - then we're gonna have to calculate the
+72:18 - gradient of the critic with respect to
+72:21 - the actions taken so we'll have to
+72:23 - calculate this later that's a
+72:25 - placeholder that's the minus self.action
+72:27 - gradient and we're going to calculate
+72:28 - that in the learning function um
+72:31 - but that's where all of that comes from
+72:32 - so now let's go back to the code editor
+72:34 - and continue
+72:36 - so that's our unnormalized actor
+72:37 - gradients and unnormalized is just
+72:39 - because we're going to take 1 over the
+72:41 - sum 1 over n times the sum
+72:46 - we need a function for performing that
+72:48 - normalization so the actor gradients
+72:51 - has to be this parameter has to be a
+72:53 - list so we cast it as a list and we're
+72:55 - just going to map a lambda function
+72:58 - into x tf.div
+73:00 - x and batch size
+73:10 - no big deal there
+73:12 - so optimize is our optimization step
+73:18 - and of course that's the atom optimizer
+73:20 - we want to optimize with the learning
+73:22 - rate of self.learning rate
+73:24 - and we want to apply gradients so
+73:28 - typically you'd use dot minimize loss
+73:30 - but in this case we're calculating our
+73:32 - gradients manually so we need to apply
+73:33 - those gradients
+73:35 - and what do we want to apply we want to
+73:36 - apply the
+73:37 - actor gradients
+73:39 - to the params
+73:42 - and i would encourage you to go look at
+73:44 - the
+73:45 - tensorflow code for all of these the
+73:47 - video is getting a little bit long
+73:48 - already up to like an hour and 20 hour
+73:50 - and 10 20 minutes something like that so
+73:52 - i'm not going to go through all the
+73:53 - documentation for tensorflow feel free
+73:55 - to look that up
+73:57 - i had to when i was building this out so
+74:00 - next up we need to build our network
+74:06 - so
+74:08 - this is how we're going to handle the
+74:09 - scoping
+74:10 - tf.variable
+74:12 - underscore scope self.name so that way
+74:14 - every network gets its own scope
+74:17 - we need a placeholder for the input
+74:21 - that'll be a 32-bit floating number
+74:24 - shape of
+74:26 - none which is batch size
+74:28 - input dimms
+74:30 - dms that won't work
+74:32 - let's put this on its own line
+74:34 - and we're going to give it a name it's
+74:37 - not critical the name
+74:38 - parameter is just for
+74:42 - debugging if something goes wrong then
+74:43 - you can kind of trace where it went
+74:44 - wrong makes life a little bit easier
+74:47 - the action gradient is also a
+74:48 - placeholder that is what we're going to
+74:50 - calculate in the learn function for the
+74:51 - agent
+74:55 - and
+74:57 - that gets a shape of
+75:00 - none by and actions
+75:02 - so it'll be the gradient of q with
+75:04 - respect to each action so it has number
+75:06 - of dimensions with of actions
+75:09 - and so those are our two placeholder
+75:11 - variables now we get to construct the
+75:13 - actual network so let's handle the
+75:15 - initialization first
+75:17 - so f1 is the fan in
+75:19 - it's one divided by numpy square root
+75:22 - fc1 dimms
+75:24 - um and our dense one
+75:28 - tf layers
+75:30 - dot dense
+75:31 - and that takes self.input as input
+75:34 - with self.fc1 dims as units
+75:37 - our kernel initializer
+75:40 - equals random ah i forgot an import it's
+75:43 - random uniform
+75:45 - one second minus f1 to f1
+75:48 - and the bias initializer
+75:52 - currentl no that's not right kernel bias
+75:55 - initializer
+75:57 - random
+75:59 - uniform
+76:00 - minus f1 to f1
+76:02 - that gets two parentheses so
+76:05 - we have to come back up to our imports
+76:08 - uh import tensor
+76:11 - flow dot
+76:13 - uh
+76:15 - initializers no
+76:18 - so we have to come back up here and say
+76:19 - from tensorflow.initializers
+76:22 - initial
+76:25 - iser's import random uniform
+76:29 - and now we're good to go
+76:31 - let's come back down here
+76:35 - we have dense one now we want to do the
+76:37 - batch normalization so
+76:39 - batch one equals tf layers
+76:42 - batch normalization
+76:45 - dense one and that doesn't get
+76:46 - initialized
+76:49 - so now let's uh activate
+76:53 - our first layer
+76:55 - and that's just the value activation of
+76:57 - the batch normal batch normed now it is
+77:00 - an open debate from what i've read
+77:02 - online about whether or not you should
+77:05 - do the activation
+77:06 - before or after the batch normalization
+77:10 - i'm in the camp of doing it after
+77:13 - the activation after the batch norm
+77:15 - that's because um the radioactivation
+77:18 - function at least at least in the case
+77:20 - of ryu so in rel you you lop off
+77:23 - everything lower than zero so your
+77:25 - statistics might get skewed to be
+77:26 - positive instead of maybe they're zero
+77:29 - maybe they're negative who knows so i
+77:30 - think the batch norm is probably best
+77:32 - before the activation and indeed this
+77:34 - works out this is something you can play
+77:36 - with uh so go ahead and fork this repo
+77:38 - and play around with it and see how much
+77:40 - of a difference it makes for you maybe i
+77:42 - missed something when i try to do it the
+77:43 - other way it's entirely possible i miss
+77:45 - stuff all the time
+77:46 - so you know it's something you can
+77:48 - improve upon
+77:49 - that's how i chose to do it and it seems
+77:51 - to work and who knows maybe other
+77:53 - implementations work as well
+77:55 - so now let's add some
+77:58 - space so f2 is one over
+78:02 - square root
+78:03 - sc2 dimms
+78:07 - dense two
+78:09 - is similar that takes layer one
+78:11 - activation as input
+78:13 - with sc2 dimms
+78:16 - we don't need that i'm going to come up
+78:18 - here and
+78:20 - copy this
+78:23 - there we go except we have to change f1
+78:26 - to f2
+78:31 - perfect
+78:34 - then we have
+78:36 - batch two
+78:41 - and that takes dense two as input
+78:44 - your two activation
+78:47 - batch two
+78:51 - now finally we have the output layer
+78:54 - which is the actual policy of our agent
+78:56 - the deterministic policy of course
+78:58 - and from the paper that gets initialized
+79:00 - with the value of 0.003
+79:04 - and we're going to call this
+79:06 - mu that gets layered two activation as
+79:10 - input
+79:12 - and that needs n actions as the number
+79:15 - of output units
+79:17 - what's our activation that is tangent
+79:20 - hyperbolic tanch
+79:22 - and i will
+79:25 - go ahead and copy the
+79:30 - initializers here of course that gets f3
+79:33 - not f2
+79:37 - perfect can i tab that i can okay
+79:40 - so that is mu
+79:42 - and then we want to take into account
+79:44 - the fact that our environment
+79:46 - may very well
+79:47 - require actions that have values plus
+79:50 - greater than plus or minus one
+79:52 - so self.mu
+79:54 - is tf.multiply with mu
+79:56 - and the action bound
+79:59 - an action bound would be you know
+80:01 - something like two it needs to be
+80:02 - positive so that way you don't flip the
+80:04 - actions
+80:05 - but that's pretty straightforward so now
+80:07 - we've built our network built our
+80:09 - network
+80:10 - next thing we need is a way of getting
+80:12 - the
+80:13 - actual actions out of the network so we
+80:15 - have a prediction function that takes
+80:17 - some inputs
+80:19 - and you want to return
+80:21 - self.sess.run
+80:23 - self.mu
+80:24 - with a feed dictionary of
+80:27 - self.input
+80:29 - and pass in inputs that's all that is
+80:32 - there is to uh passing the doing the
+80:35 - feed forward kind of an interesting
+80:36 - contrast to how pytorch does it with
+80:39 - the explicit construction of the
+80:40 - feedboard function this just runs the
+80:42 - session on this and then goes back and
+80:45 - finds all the associations between the
+80:47 - respective variables
+80:49 - nice and simple
+80:50 - now we need a function to train
+80:53 - and that'll take inputs and gradients
+80:57 - this is what will perform the actual
+80:58 - back propagation through the network
+81:01 - and you want to run
+81:02 - self.optimize that's our
+81:04 - function that accommodates learning
+81:08 - with a feed dictionary of
+81:11 - inputs inputs
+81:14 - and
+81:16 - self.action gradient
+81:18 - gradients
+81:20 - so that is also reasonably
+81:22 - straightforward so
+81:24 - you know let's
+81:26 - format that a little bit better
+81:28 - all right so that is our training
+81:29 - function
+81:31 - next we need two functions to
+81:33 - accommodate the loading and the saving
+81:34 - of the model so
+81:36 - define save checkpoint
+81:40 - print
+81:47 - then you want to say self.saver.save
+81:51 - very creative
+81:52 - you want to save the current session to
+81:54 - the checkpoint file
+81:58 - and the
+81:59 - load checkpoint function is the same
+82:01 - thing just in reverse
+82:05 - so
+82:06 - here we want to print
+82:08 - loading
+82:09 - checkpoint
+82:12 - self.saver.restore.session
+82:17 - and
+82:17 - the checkpoint
+82:20 - file so that will
+82:22 - you can only call this after
+82:23 - instantiating the agent so it will have
+82:25 - a default session
+82:27 - with some initialized values and you
+82:29 - want to load the variables from the
+82:31 - checkpoint file into that checkpoint
+82:34 - and that is it for the actor class this
+82:36 - is reasonably straightforward the only
+82:38 - real mojo here is the
+82:40 - actor gradients and this is just two
+82:42 - functions that accommodate the fact that
+82:44 - we're going to manually calculate the
+82:46 - gradient of the critic with respect to
+82:48 - the actions taken
+82:50 - so let's go ahead and do the critic
+82:52 - class next
+82:53 - uh that is also very similar so
+82:59 - that again derives from the base object
+83:02 - gets an initializer
+83:05 - and it's pretty much the same number of
+83:07 - actions a name
+83:09 - input dimms a session
+83:11 - sc1 dimms
+83:14 - sc2 dimms
+83:16 - a batch size will default to 64 and a
+83:20 - checkpointer will default to this
+83:23 - just a note you have to do a make dur on
+83:26 - this temp slash gdp ddpg first otherwise
+83:30 - it'll bark at you
+83:31 - not a big deal just something to be
+83:32 - aware of since it's identical let's go
+83:35 - ahead and copy a good chunk of this
+83:38 - stuff here
+83:39 - uh what exactly is the same
+83:42 - all of this
+83:44 - now we need the checkpoint file let's
+83:45 - grab that
+83:47 - control c
+83:48 - come down here
+83:50 - ctrl v voila it is all the same so very
+83:53 - straightforward um
+83:56 - nothing
+83:57 - too magical about that so now let's
+83:58 - handle the optimizer
+84:00 - because we already have a we've already
+84:02 - called the function to build our network
+84:03 - we can define our optimizer so
+84:05 - self.optimize
+84:08 - tftrain.adam optimizer
+84:10 - and we're going to minimize the
+84:13 - the loss
+84:16 - which we will calculate in the build
+84:18 - network function
+84:20 - and we also need uh the function to
+84:22 - actually calculate the gradients of q
+84:24 - with respect to a so
+84:26 - we have self.action gradients
+84:30 - self.q
+84:32 - and
+84:32 - actions
+84:34 - let's build our network
+84:40 - with tnsrtf
+84:42 - variable scope self.name
+84:47 - so now we need our placeholders again we
+84:49 - need sub.input
+84:52 - placeholder
+84:56 - float32
+84:58 - we need a shape
+85:01 - none
+85:02 - by input dimms
+85:04 - now
+85:06 - if you're not too familiar with
+85:07 - tensorflow specifying none in the first
+85:09 - dimension tells tensorflow you're going
+85:10 - to have some type of batch of inputs and
+85:12 - you don't know what that batch size
+85:14 - would be beforehand so just expect
+85:16 - anything
+85:18 - and
+85:19 - uh
+85:20 - let's delete that say
+85:22 - oh you need a comma for sure
+85:24 - and say name equals
+85:27 - uh
+85:28 - inputs
+85:30 - here we go
+85:31 - did i forget a comma up here let's just
+85:33 - make sure
+85:36 - i did not
+85:38 - okay
+85:39 - so
+85:40 - we also need the actions
+85:43 - because remember we only take into
+85:45 - account the actions
+85:46 - uh on the second hidden layer of the
+85:49 - critic neural network
+85:54 - i have float 342
+85:56 - shape
+85:57 - none by and actions
+86:04 - name of actions
+86:06 - now much like with q learning we have a
+86:08 - target value
+86:10 - let me just go back to the paper really
+86:12 - quick and show you what that precisely
+86:13 - will be
+86:15 - so that target value will be this
+86:17 - quantity here and we will calculate that
+86:19 - in the learning function
+86:21 - as we
+86:22 - as we get to the agent class so let's go
+86:24 - back to the code editor and finish this
+86:26 - up
+86:27 - so q target is just another placeholder
+86:31 - and that's a floating point number
+86:36 - none by one it's a scalar so it is shape
+86:38 - batch size by one
+86:41 - and we will call it
+86:44 - targets
+86:46 - okay so now we have a pretty similar
+86:49 - setup to the actor network so let's go
+86:51 - ahead and come up here
+86:54 - and copy this
+86:57 - no not all that just this
+86:59 - and come back down here
+87:02 - so f1 we recognize
+87:04 - that's just the fan in
+87:06 - uh we have a
+87:07 - dense layer for the inputs and we want
+87:09 - to initialize that with a random number
+87:12 - uh pretty straightforward
+87:14 - then we can come up to
+87:15 - f2 and copy that as
+87:18 - as well sorry the second layers
+87:21 - it'll be a little bit different but
+87:22 - we'll handle that momentarily
+87:26 - so now f2
+87:28 - the layer 2 is pretty similar
+87:31 - the only real difference is that we want
+87:33 - to get rid of that activation and the
+87:35 - reason we want to get rid of that
+87:36 - activation is because after we do the
+87:38 - batch norm we have to take into account
+87:39 - the actions so we need another layer
+87:42 - so action in
+87:44 - tf layers dense
+87:47 - uh it's going to take in self-don
+87:48 - actions which will pass in from the
+87:50 - learning function
+87:53 - and that's going to output fc2 dimms
+87:58 - with a rally activation
+88:01 - so then our state actions
+88:03 - will be the
+88:06 - uh the addition of the batch two
+88:09 - and the action in
+88:13 - and then we want to go ahead and
+88:16 - activate that
+88:20 - okay so this is something else i pointed
+88:22 - out in my pie torch video where this is
+88:24 - a point of debate with the way i've
+88:25 - implemented this i've done it a couple
+88:27 - different ways i've done the different
+88:28 - variations and this is what i found to
+88:29 - work uh i'm doing a double activation
+88:32 - here so i'm activating the relu i'm
+88:34 - doing the value activation on the
+88:35 - actions in
+88:36 - on the output of that that dense layer
+88:38 - and then i'm activating the sum now
+88:41 - the
+88:43 - the value function is non-commutative
+88:44 - with respect to the addition function so
+88:47 - the value of the sum is different than
+88:48 - the sum of the values and you can prove
+88:50 - that to yourself
+88:51 - on a sheet of paper
+88:53 - but it's debatable on whether or not the
+88:55 - way i've done it is correct it seems to
+88:57 - work so i'm going to stick with it for
+88:58 - now
+88:59 - again fork it clone it uh change it up
+89:02 - see how it works
+89:03 - and improve it for me that would be
+89:05 - fantastic then make a pull request and
+89:07 - i'll disseminate that to the community
+89:09 - so
+89:10 - we have our
+89:12 - state actions now we need to calculate
+89:14 - the actual output of the layer
+89:16 - and an f3 is our uniform initializer for
+89:20 - our final layer which is
+89:22 - self.q
+89:24 - that's all layers.dense that takes state
+89:27 - actions as input
+89:28 - outputs a single unit
+89:30 - and we have the
+89:33 - kernel initializers and
+89:35 - bias initializers
+89:37 - similar to up here
+89:42 - let's paste that
+89:46 - there we go that's a little bit better
+89:48 - still got a whole bunch of white space
+89:49 - there all right so
+89:51 - we are missing one thing and that one
+89:53 - thing is the regularizer so as i said in
+89:56 - the paper they have
+89:57 - l2 regular regularization on the critic
+90:00 - so we do that with kernel regular iser
+90:05 - equals tf keras regularizers
+90:09 - dot l2 or the value of zero zero one uh
+90:13 - zero one sorry
+90:15 - so
+90:16 - that is that for the q and notice that
+90:19 - it outputs one unit
+90:21 - and it outputs a single unit because
+90:23 - this is a scalar value you want the
+90:25 - value of
+90:26 - the particular state action pair
+90:28 - finally we have the loss function
+90:33 - and that's just a mean squared error
+90:36 - error
+90:38 - q target and q so q target is the
+90:41 - placeholder
+90:43 - up here and that's what we'll pass in
+90:45 - from the learn function from the agent
+90:46 - and self.q is the output of the deep
+90:49 - neural network
+90:51 - okay so now similar to our critic
+90:54 - we have a prediction function
+90:57 - it takes inputs and actions
+91:01 - and you want to return
+91:02 - self.sess.run
+91:05 - self.q
+91:08 - or the feed dictionary
+91:11 - of
+91:12 - sub.input inputs
+91:15 - and
+91:17 - actions
+91:18 - oops
+91:20 - next you need a training function
+91:24 - and that's slightly more complicated
+91:25 - than the
+91:27 - actor visa takes in the inputs actions
+91:29 - and a target
+91:31 - and you want to return
+91:35 - self.ss.run
+91:37 - self.optimize
+91:41 - with a feed dictionary
+91:44 - of
+91:46 - sub.input inputs
+91:50 - self.actions actions
+91:53 - and q target
+92:00 - spacing that's a little wonky whatever
+92:01 - we'll leave it
+92:03 - that's a training function next we need
+92:05 - a function to get the action gradients
+92:06 - and that'll run that action gradients
+92:09 - operation up above
+92:10 - so let's get that
+92:15 - again takes inputs and actions as input
+92:18 - and you want to return
+92:20 - self.session.run
+92:22 - self.action ingredients
+92:26 - with a its own feed dictionary
+92:29 - equals
+92:30 - self.input
+92:33 - inputs and self.actions actions
+92:40 - and then we also have the save and load
+92:42 - checkpoint functions which are identical
+92:44 - to the actor so let's just
+92:47 - copy and paste those
+92:50 - there we go
+92:52 - so
+92:54 - that is it for the critic class so now
+92:57 - we have most of what we need we have our
+93:00 - our
+93:02 - our noise our replay buffer our actor
+93:05 - and our critic now all we need is our
+93:08 - agent now the agent is what ties
+93:10 - everything together it handles the
+93:11 - learning functionality it will house the
+93:13 - noise the memory
+93:15 - the replay buffer as well as the four
+93:17 - different deep neural networks
+93:21 - and that derives from the base object
+93:25 - initializer is a little bit long
+93:28 - and that takes an alpha and a beta these
+93:31 - are the learning rates for the actor and
+93:32 - critic respectively recall from what we
+93:34 - read in the paper they use 0 0 0 1 and 0
+93:38 - 0 1 for both networks
+93:41 - we need input dimms tau the environment
+93:44 - that's how we're going to get the action
+93:45 - bounds
+93:46 - a gamma of 0.99 for the paper in this
+93:50 - case we need number of actions equals 2
+93:55 - a mem size
+93:57 - for our memory
+93:59 - of 1 million
+94:02 - layer 1 size of 400 a layer 2 size of
+94:05 - 300
+94:07 - and a batch size of 64.
+94:10 - so of course we want to save all of our
+94:12 - parameters
+94:16 - uh we'll need the memory
+94:19 - and that's just a replay buffer max size
+94:23 - whoops
+94:25 - input dimms and number of actions
+94:28 - we will need a batch size
+94:33 - here's where we're going to store the
+94:35 - session
+94:36 - and this is so that we have a single
+94:38 - session for all four networks
+94:43 - and i
+94:45 - and believe
+94:45 - believe don't quote me on this but
+94:47 - i tried it with an individual network
+94:50 - for sorry an individual session for each
+94:52 - network and it was very unhappy when i
+94:54 - was attempting to copy over parameters
+94:56 - from one network to another i figured
+94:58 - there were some scoping issues uh so i
+95:00 - just simplified it by having a single
+95:02 - session there's no real reason that i
+95:04 - can think of to have more than one
+95:07 - and that is an actor that gets
+95:10 - alpha a number of actions the name is
+95:12 - just actor input dims
+95:15 - the session
+95:18 - layer one size layer two size
+95:21 - action space
+95:23 - dot high and that's our action bounce
+95:25 - the action space dot high
+95:28 - next we have a critic
+95:31 - that gets beta and actions its name is
+95:35 - just critic
+95:37 - but dims
+95:38 - self.session
+95:42 - layer 1 size layer 2 size and we don't
+95:45 - pass in anything about the environment
+95:46 - there
+95:47 - so now we can just copy these
+95:51 - and instead of actor it is
+95:55 - target actor
+95:59 - and let's go ahead and clean up and be
+96:02 - consistent with our
+96:04 - pet bait style guides
+96:06 - always important
+96:08 - that actually makes you stand out i've
+96:10 - worked on projects where the manager was
+96:13 - quite happy to see that i had a somewhat
+96:15 - strict adherence to it um just something
+96:18 - to take note of
+96:21 - so then we have a target critic as well
+96:27 - and we will clean up
+96:28 - this
+96:31 - and so that is all four of our deep
+96:34 - neural networks that's pretty
+96:35 - straightforward
+96:37 - so now we need noise
+96:41 - that's an ou action noise
+96:44 - with
+96:45 - mu equals numpy zeros
+96:48 - in the shape and
+96:50 - actions
+96:53 - so now
+96:54 - we need operations to perform the soft
+96:57 - updates so
+96:59 - uh the first time i tried it i defined
+97:01 - it as its own separate function
+97:05 - and that was a disaster
+97:07 - it was a disaster because it would get
+97:09 - progressively slower at each soft update
+97:12 - and i don't quite know the reason
+97:15 - for that i just know that that's what
+97:17 - happened and so when i moved it into the
+97:19 - initializer and defined one operation
+97:22 - i'm guessing it's because it adds every
+97:23 - time you call it it probably adds
+97:25 - something to the graph so that adds
+97:26 - overhead to the calculation that's my
+97:28 - guess i don't know that's accurate it's
+97:29 - just kind of how i reasoned it but
+97:31 - anyway let's go ahead and
+97:34 - define our update operations here
+97:38 - so what we want to do is iterate
+97:41 - over our target critic
+97:44 - parameters
+97:46 - and call the assignment operation what
+97:48 - we want to assign
+97:50 - we want to assign the
+97:52 - product of
+97:54 - critic frames
+97:57 - and self.tau
+98:01 - plus
+98:02 - give that multiply
+98:04 - self dot target critic
+98:07 - param sub i
+98:09 - times or and
+98:12 - um no that should be a sorry a comma
+98:17 - comma and
+98:19 - one minus cell dot tau
+98:22 - so we get two
+98:25 - let's hit
+98:27 - do that
+98:29 - and that is a list comprehension
+98:32 - for i and range length of
+98:35 - target critic
+98:36 - dot params
+98:38 - now it's that
+98:40 - you don't need that
+98:42 - i don't believe no
+98:43 - so then we have a similar operation for
+98:46 - the actor
+98:51 - we just want to swap
+98:52 - actor and critic
+98:55 - target actor
+99:07 - uh i did the same thing here didn't i
+99:10 - target actor
+99:13 - and up here
+99:16 - dot params
+99:18 - okay
+99:19 - target actor
+99:20 - actor and then target actor
+99:24 - there so now we have our update
+99:28 - solved update operations
+99:30 - according to the paper
+99:32 - uh finally we have constructed all the
+99:35 - graphs uh you know for the whole
+99:38 - four networks so we have to initialize
+99:41 - our variables
+99:43 - self.session.run
+99:44 - tf global variables
+99:47 - initializer
+99:49 - you can't really run anything without
+99:50 - initializing it
+99:52 - and as per the paper at the very
+99:54 - beginning we want to update the
+99:56 - network parameters
+100:02 - and
+100:04 - at the beginning we
+100:06 - want to pass in the we want the target
+100:09 - networks to get uh updated with the
+100:12 - uh full ver the full value of the critic
+100:16 - of the evaluation networks and so i'm
+100:18 - passing in a parameter of first equals
+100:21 - true
+100:22 - so since it's confusing let's do that
+100:24 - first that function first update network
+100:27 - parameters
+100:28 - um
+100:31 - first we'll default to false
+100:33 - so if first
+100:34 - we need to say old tau equals self.tau
+100:38 - i need to save the old value of tau to
+100:40 - set it again so that i can reset it
+100:42 - so that's how it goes one and say
+100:45 - self.target
+100:47 - critic.session.run
+100:49 - update
+100:50 - critic
+100:52 - self.target actor.session.run
+100:56 - self dot update
+100:58 - actor
+100:59 - and
+101:00 - as i recall this is important which
+101:02 - section you use to run the
+101:05 - update
+101:07 - although maybe not since i'm using only
+101:09 - one session
+101:10 - if you want to play around with it go
+101:11 - ahead
+101:14 - and then go ahead and reset the tau to
+101:16 - the old value because you only want to
+101:19 - do
+101:20 - this particular update where you
+101:22 - update the target network with the
+101:24 - original network
+101:25 - full values on the first term on the
+101:27 - first
+101:29 - go through otherwise
+101:31 - just go ahead
+101:34 - and run the
+101:36 - update function
+101:44 - boom so next we need a way of storing
+101:47 - transitions
+101:50 - uh self state action reward
+101:54 - ah
+101:55 - new state and done
+101:58 - so self.memory
+102:01 - transition
+102:02 - you want to store all this stuff
+102:05 - this is just an interface from one class
+102:07 - to another
+102:09 - you know this may or may not be great
+102:10 - computer science practice but it works
+102:14 - next we want a way of choosing an action
+102:16 - and that should take a state as input
+102:19 - since we
+102:21 - have defined the
+102:23 - input variable to be shape batch size by
+102:25 - n actions
+102:27 - you want to reshape the state to be
+102:32 - one by
+102:33 - sorry it should be one by
+102:36 - the observation space
+102:40 - new axis all
+102:43 - and that's because we have the
+102:45 - come up here for the
+102:47 - actor network just so we're clear
+102:50 - it is because this
+102:51 - has shape none by input dimms so if you
+102:55 - just pass in the observation vector that
+102:57 - has shape input dimms and it's going to
+102:59 - get
+103:00 - uh it's going to get uppity with you so
+103:02 - you just have to reshape it
+103:04 - because you're only passing in a single
+103:05 - observation to determine what action to
+103:07 - take
+103:08 - so mu
+103:09 - actor.predict
+103:11 - state
+103:12 - uh noise
+103:14 - equals self.noise
+103:16 - mu prime
+103:18 - u is mu plus noise
+103:21 - return
+103:22 - sub-zero so
+103:24 - this returns a tuple uh so you want the
+103:26 - zeroth element
+103:29 - so now we have the learning function and
+103:30 - of course this is where all the magic
+103:32 - happens
+103:33 - so if you have not um
+103:37 - filled up the memory then you want to go
+103:40 - ahead and bail out
+103:45 - otherwise you want to go ahead and
+103:47 - sample your memory
+103:55 - so the memory.sample buffer
+103:58 - batch
+104:00 - size
+104:05 - so next we need to do the update from
+104:08 - the paper so let's go back to the paper
+104:10 - and make sure we are clear on that
+104:14 - so we need to um
+104:16 - we already sampled this so we need to
+104:18 - calculate this and to do that we're
+104:20 - going to need the
+104:22 - q prime the target critic network uh
+104:26 - as
+104:27 - output as well as the output from the
+104:29 - target actor network
+104:30 - and then we'll use that to update the
+104:32 - loss for the critic and then we're going
+104:34 - to need the output from the critic as
+104:37 - well as from the
+104:39 - actor network so we need to
+104:41 - basically pass states and actions
+104:44 - through all four networks to get the
+104:46 - training function
+104:47 - the learning function
+104:49 - so let's go ahead and head back to the
+104:50 - code editor and do that
+104:52 - so our critic value for
+104:54 - q prime so q critic value underscore
+104:58 - sub.targetcritic.predict
+105:01 - and you want to pass in the new states
+105:03 - and you also want to pass in the actions
+105:05 - that come from the target actor
+105:11 - new state
+105:13 - i need one extra parenthesis there
+105:17 - so then we want to calculate the y sub
+105:19 - i's for the targets so that's an empty
+105:21 - list for j and range
+105:24 - self.batch size
+105:27 - target.append reward
+105:33 - critic value underscore j
+105:36 - times done sub j
+105:38 - and that's where the
+105:39 - kept harping on getting no rewards after
+105:42 - the terminal state that's where that
+105:43 - comes from uh when done is
+105:47 - true then it's one minus true which is
+105:50 - zero so you're multiplying this quantity
+105:51 - by zero so you don't take into account
+105:54 - the value of the next state right which
+105:56 - is calculated up here you only take into
+105:57 - account the most recent reward
+106:00 - as you would want
+106:01 - so then we just want to reshape that
+106:06 - target
+106:08 - into something that is batch size by one
+106:10 - that's to be consistent with our
+106:11 - placeholders
+106:13 - and now we want to call the
+106:16 - critictrain function
+106:19 - right because we have everything we need
+106:20 - we have the states actions and targets
+106:22 - with states and actions from the replay
+106:24 - buffer and the target from this
+106:26 - calculation here
+106:28 - very easy
+106:29 - now we need to do the actor update so
+106:33 - the action outs
+106:36 - self.actor.predict
+106:38 - we get the predictions from the actor
+106:39 - for the states
+106:41 - our grads
+106:42 - the gradients
+106:44 - get action
+106:45 - gradients
+106:47 - state
+106:48 - a outs that'll get the remember that
+106:51 - i'll do a feed forward and get the
+106:53 - gradient of the
+106:55 - critic with respect to the actions taken
+107:00 - and then you want to train the actor
+107:03 - state
+107:04 - and grads the gradients it's a tuple so
+107:07 - you want to de-reference it and get the
+107:09 - zeroth element and then finally you want
+107:11 - to update network
+107:13 - parameters
+107:16 - okay so that is it for the learn
+107:19 - function now we have two other
+107:21 - bookkeeping functions to handle which is
+107:23 - save models
+107:27 - and
+107:28 - this will save all of our models so a
+107:30 - self.actor.save
+107:32 - checkpoint
+107:34 - self.target actor
+107:36 - save checkpoint
+107:39 - critic
+107:48 - and a function to load models
+107:53 - sounds like a dog fine out there
+107:56 - so we want to load checkpoints instead
+107:58 - of saving them
+108:03 - load checkpoint
+108:06 - load
+108:08 - and load
+108:09 - so that is it for the uh agent class it
+108:13 - only took about an hour so we're up to
+108:15 - about two hours for the video so longest
+108:17 - one yet so uh this is an enormous amount
+108:20 - of work this is already 310 lines of
+108:22 - code if you've made it this far
+108:23 - congratulations this is no mean feat
+108:25 - this took me you know a couple weeks to
+108:27 - hammer through
+108:28 - but we've gotten through it in a couple
+108:29 - hours so
+108:31 - this is all there is to the
+108:34 - implementation now we have to actually
+108:35 - test it so let's open up a new file
+108:39 - and save that
+108:41 - as
+108:43 - main tensorflow.pi
+108:47 - and what we want to do now is
+108:50 - go ahead and test this out in the
+108:51 - pendulum environment
+108:56 - called tensorflow original
+109:00 - import our agent we need jim we need
+109:04 - um
+109:06 - do we need numpy for this
+109:08 - uh yes
+109:10 - we do
+109:11 - we need we don't need tensorflow
+109:14 - from utils import plot learning
+109:18 - and
+109:19 - we don't need os so
+109:22 - we will have a score history
+109:25 - now you know what i don't want to do
+109:28 - that way let's save
+109:31 - name equals
+109:33 - main
+109:35 - now we want to say
+109:37 - env gym.make
+109:41 - banju
+109:42 - lom
+109:43 - v0
+109:45 - uh
+109:46 - agent
+109:47 - equals
+109:49 - agent
+109:50 - it gets
+109:52 - a learning rate of zero zero zero one
+109:58 - a beta of
+110:00 - zero one
+110:02 - we put dems three
+110:06 - three tau
+110:08 - zero
+110:09 - pass in our environment
+110:12 - batch size 64. i'm being verbose here
+110:17 - and it looks like when i ran this i
+110:19 - actually used different layer sizes
+110:23 - well that's an issue for
+110:25 - hyper parameter tuning
+110:27 - i just want to demonstrate that this
+110:29 - works
+110:31 - and actions equals one so
+110:35 - when i got good results for this i
+110:37 - actually used 800 by 600
+110:39 - and i cut these learning rates in half
+110:41 - but we'll go ahead and use the values
+110:43 - from the paper
+110:46 - sometimes i do
+110:47 - hyper parameter tuning other thing we
+110:49 - need to do is set our random seed
+110:54 - you know we can just put it here
+110:55 - whatever
+110:56 - the reason we want to do this is for
+110:59 - replicability and i have yet to see an
+111:01 - implementation of this where they don't
+111:02 - set the random seed and i've tried it
+111:05 - without it and you don't get very good
+111:07 - sampling of your replay buffer so this
+111:09 - seems to be a critical step and most
+111:10 - implementations i've seen on github do
+111:12 - the same thing
+111:13 - so
+111:15 - let's go ahead and play our episodes
+111:18 - say a thousand games
+111:21 - enemy that reset we forgot our score
+111:23 - history of course
+111:25 - that's to keep track of the scores over
+111:27 - the course of our games
+111:30 - don is
+111:32 - false and the score for the episode is
+111:35 - zero
+111:37 - let's play the episode say act
+111:39 - agent i choose action
+111:42 - takes obs as input
+111:44 - new state reward
+111:47 - done info equal cnb dot step
+111:51 - act
+111:54 - agent dot remember ops act reward new
+111:57 - state
+111:58 - and done i guess the int done really
+112:01 - isn't necessary we take care of that in
+112:02 - the replay buffer fun uh funk class but
+112:05 - you know
+112:06 - doesn't hurt to be
+112:08 - explicit
+112:09 - and then you wanna uh we wanna learn on
+112:12 - each time step because this is a
+112:13 - temporal difference method
+112:15 - keep track of your score and set your
+112:17 - old state to be the new state so that
+112:19 - way when you choose an action on the
+112:20 - next step you are using the most recent
+112:22 - information
+112:24 - finally at the end of every episode
+112:26 - you want to append that score to the
+112:28 - score history and
+112:30 - print episode
+112:33 - i
+112:35 - score
+112:36 - percent.2f
+112:38 - score
+112:41 - uh 100 game average
+112:44 - percent.2f
+112:46 - percent numpy mean score
+112:50 - history
+112:52 - um last hundred games
+112:55 - minus 100 on
+112:58 - one more
+113:00 - and at the end
+113:02 - equals
+113:04 - pendulum
+113:06 - dot png
+113:08 - plot learning
+113:11 - plot learning
+113:12 - uh score history
+113:16 - file name and a window of 100. the
+113:19 - reason i chose a window of 100 is
+113:22 - because many environments define find
+113:26 - solved as trailing 100 games over some
+113:29 - amount the pendulum doesn't actually
+113:31 - have a
+113:32 - a solved amount
+113:34 - so
+113:35 - what we get is actually on par with some
+113:37 - of the best results people have on the
+113:39 - leaderboard so it looks like it does
+113:40 - pretty well so
+113:43 - that is it for the main function let's
+113:45 - go ahead and head to the terminal and
+113:47 - see how many typos i made
+113:50 - all right here we are let's go ahead and
+113:52 - run
+113:53 - the main file
+113:55 - uh invalid syntax i have an extra
+113:57 - parenthesis i'm just going to delete
+113:58 - that really quick
+114:00 - run that
+114:03 - ah i have the star out of place let's go
+114:05 - back to the code editor and handle that
+114:08 - so
+114:09 - it looks like it is online
+114:11 - 95
+114:14 - which is here
+114:19 - all right back to the terminal let's try
+114:21 - it again
+114:24 - and it says
+114:27 - line 198
+114:28 - invalid syntax oh it's because it's a
+114:31 - comma instead of a colon
+114:33 - all right i'll fix that
+114:34 - once more
+114:38 - all right so that was close
+114:41 - so actor object
+114:42 - has no attribute input dimms line 95.
+114:46 - ah okay that's easy let's head back
+114:49 - so it's in line 95
+114:53 - just means i forgot to save
+114:56 - input dimms
+115:03 - and that probably means i forgot it in
+115:05 - the critic as well since i did a cut and
+115:07 - paste
+115:09 - uh
+115:10 - yes it does
+115:16 - all right now we'll go back to the
+115:17 - terminal hopefully that's the last one
+115:20 - all right
+115:21 - moment of truth
+115:24 - critic takes one positional argument but
+115:26 - seven were given good grief okay one
+115:29 - second
+115:31 - so that is of course in the agent
+115:33 - function
+115:35 - so
+115:36 - i have line two thirty four
+115:41 - one two three four five six seven
+115:44 - parameters indeed
+115:46 - so critic takes learning rate number of
+115:48 - actions name input dim session
+115:51 - interesting one two three four five six
+115:55 - seven
+115:57 - what have i done
+115:58 - oh
+115:59 - that's why uh
+116:03 - it's class critic of course all right
+116:05 - let's go back to the terminal and see
+116:06 - what happens
+116:08 - name action bound is not defined
+116:11 - and that is in the
+116:15 - line 148 okay
+116:18 - line 148
+116:21 - that is in the critic ah that's because
+116:23 - i don't need it there let's delete it
+116:25 - that was just for the actor it's because
+116:26 - i cut and pasted always dangerous i
+116:28 - tried to save a few keystrokes to save
+116:30 - my hands and ended up wasting time
+116:32 - instead all right let's go back to the
+116:33 - terminal
+116:34 - all right
+116:40 - actor has no
+116:42 - attribute inputs
+116:44 - that is on line
+116:47 - 126.
+116:49 - self.inputs it's probably self.input
+116:53 - yes
+116:55 - that's why i do the same thing here
+116:58 - okay
+117:06 - perfect and it runs so
+117:09 - i'll let that run for a second but i let
+117:11 - it run for a thousand games earlier and
+117:14 - this is the output i got now keep in
+117:15 - mind it's with slightly different
+117:16 - parameters
+117:18 - the point here isn't that whether or not
+117:21 - we can replicate the results because we
+117:22 - don't even know what the results really
+117:24 - were because they express it as a
+117:26 - fraction of a planning
+117:28 - a fraction of the performance of a
+117:29 - planning agent so who knows what that
+117:31 - really means
+117:32 - i did a little bit of hyper parameter
+117:34 - tuning all i did was double the number
+117:36 - of input units and have the learning
+117:37 - rate
+117:38 - and i ended up with something that looks
+117:40 - like this so you can see it gets around
+117:42 - 150 or so steps
+117:45 - it gets around 150 or so steps to solve
+117:47 - and if you check the leaderboards it
+117:49 - it shows that that's actually a
+117:51 - reasonable number some of the best
+117:52 - environments only have 152 steps some of
+117:54 - them do a little bit better sorry best
+117:56 - agents
+117:57 - solve it 152 steps or achieve a best
+117:59 - score of 150 steps but it's pretty
+118:01 - reasonable so so the default
+118:04 - implementation looks like it's very very
+118:06 - slow to learn
+118:07 - uh you can see how it's kind of starts
+118:09 - out bad gets worse and then gets starts
+118:12 - to get a little bit better so that's
+118:13 - pretty typical you see this you know
+118:15 - oscillation and performance over time
+118:17 - pretty frequently
+118:18 - but that is that that is how you go from
+118:20 - an imp uh paper to a full implementation
+118:23 - in about two hours of course it took me
+118:26 - you know many you know a couple uh many
+118:28 - times that uh to get this set up for you
+118:30 - guys but um
+118:32 - i hope this is helpful i'm going to milk
+118:34 - this for all it's worth this has been a
+118:35 - tough project so i'm going to present
+118:37 - many many more environments in the
+118:38 - future i may even do a video like this
+118:40 - for pytorch i have yet to work on a
+118:43 - keras implementation for this
+118:45 - but there are many more
+118:46 - ddpg videos to come so subscribe to make
+118:49 - sure you don't miss that
+118:51 - leave a comment share this if you found
+118:52 - it helpful that helps me immensely i
+118:54 - would really appreciate it and i'll see
+118:55 - you all in the next video
+119:01 - welcome back everybody in this tutorial
+119:03 - you are going to code a deep
+119:04 - deterministic policy grading agent to
+119:06 - beat the continuous lunar lander
+119:07 - environment in pytorch no prior
+119:10 - experience needed you don't need to know
+119:11 - anything about deep reinforcement
+119:12 - learning you just have to follow along
+119:14 - let's get started
+119:21 - so we start as usual with our imports
+119:23 - we'll need os to handle file operations
+119:25 - and all this stuff from torch that we've
+119:27 - come to expect as well as numpy i'm not
+119:30 - going to do a full overview of the paper
+119:32 - that will be in a future video where i
+119:34 - will show you how to go from the paper
+119:35 - to an actual implementation of deep
+119:37 - deterministic policy gradients so make
+119:39 - sure you subscribe so you don't miss
+119:41 - that but in this video we're just going
+119:42 - to get the very high level overview the
+119:45 - 50 000
+119:46 - foot view if you will that will be
+119:47 - sufficient to get an agent to beat the
+119:49 - continuous lunar liner environment so
+119:51 - that's good enough
+119:52 - so the gist of this is we're going to
+119:53 - need several different classes so we'll
+119:55 - need a class to encourage exploration in
+119:58 - other words a type of noise
+120:00 - and you might have guessed that from the
+120:01 - word deterministic it means that the
+120:03 - policy is deterministic as in it chooses
+120:05 - some action with certainty and so if it
+120:08 - is purely
+120:09 - deterministic you can't really explore
+120:10 - so we'll need a class to handle that
+120:12 - we'll also need a class to handle the
+120:14 - replay memory because deep deterministic
+120:16 - policy gradients works by combining the
+120:18 - magic of actor critic methods with the
+120:20 - magic of deep q-learning which of course
+120:23 - has a replay buffer
+120:25 - and we'll also need um
+120:27 - classes for our critic and our actor as
+120:30 - well as the agent so
+120:32 - that's kind of a mouthful we'll handle
+120:34 - them one bit at a time and we will start
+120:36 - with the noise so
+120:38 - this class is called ou action noise
+120:42 - and the ou stands for orenstein
+120:44 - willembeck so that is a type of noise
+120:47 - from physics that models the motion of a
+120:49 - brownian particle meaning a particle
+120:51 - subject to a random walk based on
+120:53 - interactions with other nearby particles
+120:55 - it gives you a temporarily correlated
+120:57 - meaning correlated in time set type of
+121:00 - noise that centers around a mean of zero
+121:04 - so
+121:05 - we're going to have a number of
+121:06 - parameters
+121:07 - a mu a sigma a theta
+121:11 - if i could type that would be fantastic
+121:13 - as well as a dt as in the differential
+121:15 - with respect to time and an initial
+121:17 - value that will get an original value of
+121:19 - none so if you want to know more about
+121:21 - it then just go ahead and check out the
+121:22 - wikipedia article but the overview i
+121:25 - gave you is sufficient for
+121:27 - this tutorial
+121:29 - so of course we want to save all of our
+121:31 - values
+121:33 - um
+121:36 - x0
+121:37 - and we want to call a reset function so
+121:40 - the reset function will reset the
+121:42 - temporal correlation which you may want
+121:43 - to do that from time to time turns out
+121:45 - it's not necessary for our particular
+121:46 - implementation
+121:48 - but it is a good function to have
+121:50 - nonetheless
+121:51 - so next we're going to override the call
+121:53 - function uh if you aren't familiar with
+121:55 - this
+121:56 - this allows you to say
+121:58 - noise equals ou action noise
+122:01 - and then call
+122:03 - noise so that allows you to instead of
+122:05 - saying noise.get noise just say noise
+122:07 - with parentheses or whatever the name of
+122:09 - the object is so that's overriding the
+122:11 - call function so we'll have an equation
+122:14 - for that x previous
+122:16 - plus theta times
+122:19 - the quantity mu minus
+122:22 - self.x previous times
+122:24 - self.dt
+122:27 - plus
+122:28 - self.sigma
+122:31 - times numpy square root
+122:33 - of self dt times mp random normal
+122:38 - size equals mu shape so it's a type of
+122:42 - random normal noise
+122:44 - that is correlated in time through this
+122:46 - mu minus x previous term
+122:48 - um
+122:50 - and every time you calculate a new value
+122:52 - you want to set the old value the
+122:54 - previous value to the new one and go
+122:56 - ahead and return the value
+122:58 - so the reset function
+123:02 - all that does is check to make sure
+123:04 - x0 exists if it doesn't it sets it equal
+123:06 - to some
+123:07 - zero value so so x previous equals so x
+123:12 - naught if
+123:13 - is not none
+123:15 - else numpy zeros like in the shape of
+123:19 - self.mu
+123:21 - that's it for the action noise again
+123:23 - this will be used in our
+123:25 - actor class to add in some exploration
+123:27 - noise to the action selection
+123:29 - next we need the replay buffer class
+123:33 - and this is pretty straightforward it's
+123:35 - just going to be a set of numpy arrays
+123:36 - in the shape of the
+123:39 - action space numpa the observation space
+123:42 - and rewards so that way we can have a
+123:45 - memory of events that have happened so
+123:46 - we can sample them during the learning
+123:48 - step
+123:49 - if you haven't seen my videos on deep q
+123:51 - learning please check those out they
+123:52 - will make all of this much more clear as
+123:54 - well as checking out the videos on actor
+123:56 - critic methods because this again
+123:58 - ddpg kind of combines after critic with
+124:00 - deep q learning so that will really be
+124:02 - helpful for you
+124:04 - i'll go ahead and link those here as
+124:06 - well so that way you
+124:08 - can get edumacated so
+124:11 - um scroll down a bit we want to save our
+124:14 - mem size
+124:15 - as max size
+124:17 - so the mem counter will start out as
+124:20 - zero again this is just going to be a
+124:21 - set of arrays that keep track or
+124:23 - matrices in this case that keep track of
+124:25 - the
+124:26 - state reward action transitions
+124:30 - and that will be in shape mems size so
+124:32 - however number of memories we want to
+124:34 - store and input shape so
+124:37 - if you are relatively new to python this
+124:39 - star
+124:40 - uh variable idiom it isn't a pointer if
+124:43 - you're coming from c or c plus plus it
+124:44 - is uh
+124:46 - an idiom that means to unpack a tuple so
+124:48 - this makes our class extensible so we
+124:50 - can pass in a list of a single element
+124:52 - as in the case of the lunar lander and
+124:54 - continuously landing environment that
+124:55 - we'll use today or later on when we get
+124:58 - to the continuous car racing environment
+125:00 - we'll have images from the screen so
+125:03 - this will accommodate both types of
+125:04 - observation vectors it's a way of making
+125:06 - stuff
+125:07 - extensible
+125:09 - and the new state memory is of course
+125:11 - the same shape so we just copy it
+125:15 - it looks like i am missing a
+125:19 - parenthesis somewhere
+125:21 - i guess we'll find it when i uh go ahead
+125:23 - and run the program so
+125:25 - oh
+125:26 - it's not self.init it's def there we go
+125:29 - definite perfect so
+125:32 - we'll also need an action memory
+125:36 - and that of course will also be an array
+125:39 - of zeros in the shape of mem size by
+125:42 - number of actions i believe that means i
+125:45 - need an extra
+125:46 - parenthesis there yes
+125:49 - and we'll also have a reward memory
+125:52 - and that will just be in shape mem size
+125:56 - we also need a terminal memory so
+126:00 - in reinforcement learning uh we have the
+126:03 - concept of the terminal state so
+126:05 - when the episode is over the agent
+126:06 - enters the terminal state from which it
+126:08 - receives no future rewards so the value
+126:11 - of that terminal state is identically
+126:13 - zero and so the way we're going to keep
+126:15 - track of when we transition into
+126:17 - terminal states is by saving the done
+126:19 - flags from the open ai gem environment
+126:23 - and that'll be shape
+126:25 - numpy uh by zeros mem size
+126:29 - and
+126:31 - i've called this float32 it's probably
+126:33 - because torchy is a little bit
+126:35 - particular with data types so we have to
+126:37 - be
+126:39 - cognizant of that
+126:42 - we need a function to store transitions
+126:44 - which is just a state
+126:46 - action reward
+126:48 - new state and
+126:50 - done flag
+126:51 - so the index is going to be the first
+126:54 - available position
+126:56 - so
+126:57 - mem counter just keeps track of the last
+126:59 - memory you stored it's just an integer
+127:01 - quantity from zero up to mem size and so
+127:04 - when mem counter becomes greater than
+127:06 - mem size it just wraps around from zero
+127:08 - so when they're equal at zero and when
+127:10 - it's equal to mem size plus one it
+127:12 - becomes one and so on and so forth
+127:15 - so state memory subindex
+127:18 - equals state
+127:20 - action memory index
+127:26 - reward
+127:31 - equals state underscore
+127:33 - and the
+127:36 - terminal memory
+127:38 - good grief terminal memory index doesn't
+127:41 - equal done but it equals one minus done
+127:44 - so the reason is that when we get to the
+127:47 - update equation the bellman equation for
+127:49 - our learning function you'll see we want
+127:50 - to multiply by whether or not the
+127:52 - episode is over and that gets is
+127:55 - facilitated by
+127:56 - one minus the quantity done
+127:59 - just increment mem counter
+128:03 - and next we need to
+128:05 - sample that buffer so sample buffer and
+128:08 - that will take in a batch size as input
+128:12 - so the max memory
+128:14 - is going to be the minimum of either mem
+128:16 - counter
+128:18 - or
+128:19 - mem size not the max but the minimum
+128:23 - then match is just going to be a random
+128:25 - choice
+128:27 - of
+128:28 - a maximum index of maximum
+128:31 - number of elements
+128:33 - excuse me equal to batch size scroll
+128:36 - down a bit
+128:37 - and then we want to get a hold of the
+128:40 - respective states actions rewards and
+128:42 - new states and terminal flags and pass
+128:44 - them back to the learning function
+128:47 - sub
+128:48 - batch
+128:50 - new states
+128:57 - rewards
+129:04 - know it's not easy to type and talk at
+129:05 - the same time apparently uh
+129:08 - and let's get um actions
+129:11 - self dot action memory
+129:14 - match
+129:16 - and terminal
+129:24 - good grief so we want to return states
+129:26 - actions rewards
+129:29 - new states and the terminal flags
+129:32 - perfect so that is it for our replay
+129:34 - memory so
+129:36 - you're going to see this a lot in the
+129:37 - other videos on deep deterministic
+129:39 - policy gradients
+129:40 - because we're going to need it for
+129:42 - basically anything that uses a memory
+129:46 - next let's go ahead and get to the meat
+129:47 - of the problem with our critic network
+129:50 - and as is often the case when you're
+129:52 - dealing with pytorch you want to derive
+129:54 - your
+129:55 - neural network classes from nn.module
+129:57 - that gives you access to
+129:59 - important stuff like the train and eval
+130:02 - function which will set us in train or
+130:04 - evaluation mode very important later i
+130:06 - couldn't get it to work until i figured
+130:07 - that out so a little tidbit for you you
+130:10 - also need access to the parameters for
+130:13 - updating the weights of the neural
+130:14 - network
+130:15 - so
+130:17 - let's define our initialize function
+130:20 - the beta is our learning rate
+130:23 - we'll need input dimms
+130:25 - number of dimensions for the first fully
+130:26 - connected layer as well as second
+130:28 - connected layer
+130:29 - number of actions
+130:31 - a name the name is important for saving
+130:33 - the network
+130:34 - you'll see that we have
+130:36 - many different networks
+130:38 - so we'll want to keep track of which one
+130:40 - is which
+130:41 - very important
+130:44 - as well as a checkpoint directory for
+130:45 - saving the model they're also very
+130:47 - important because this model runs very
+130:48 - very slowly so you'll want to
+130:52 - save it periodically
+130:55 - and you want to call the super
+130:56 - constructor for critic network
+130:59 - and that will call the constructor for
+131:01 - nn.module i believe
+131:03 - input dems equals input dimms
+131:06 - sc1 dimms
+131:10 - so these will just be the parameters for
+131:12 - our deep neural network that
+131:14 - approximates the value function
+131:16 - the number of actions
+131:19 - a checkpoint file and that is os path
+131:23 - join
+131:24 - checkpoint der
+131:26 - with
+131:27 - name plus
+131:29 - underscore ddpg
+131:31 - and if you check my github repo i will
+131:33 - upload the trained model because this
+131:35 - model takes a long time to train
+131:38 - so i want you to be able to take
+131:39 - advantage of the fully trained model
+131:40 - that i've spent the resources and time
+131:42 - training up so you may as well benefit
+131:45 - from that so next up we need to define
+131:46 - the first layer of our neural network
+131:48 - just a linear layer
+131:50 - and that'll take input dimms
+131:53 - and output
+131:54 - fc1 dimms
+131:57 - we're also going to need a number for
+131:59 - initializing the weights and biases of
+132:02 - that layer of the neural network i'm
+132:04 - going to call that f1 and it's divided
+132:06 - by 1 over the square root of the
+132:10 - number of
+132:11 - dimensions into the network so
+132:14 - self dot
+132:15 - fc1
+132:17 - dot weight
+132:19 - dot size
+132:20 - and that returns a tuple so i need the
+132:23 - zeroth element of that
+132:26 - and then we want to initialize that
+132:28 - layer by using t
+132:30 - torch and then init dot uniform
+132:32 - underscore
+132:34 - the the tensor you want to initialize
+132:36 - which is fc1 weight
+132:38 - data
+132:40 - up uh from -1 to positive f1 so uh this
+132:44 - will be a small number of order uh
+132:46 - 0.1 or so not exactly 0.1 but of order
+132:49 - 0.1
+132:51 - and you also want to initialize the
+132:55 - biases
+132:57 - bias.data and that gets the same number
+133:00 - and again in the future video when we go
+133:02 - over the derivation of the paper i'll
+133:04 - explain all of this uh but just for now
+133:06 - know that this is to constrain the
+133:09 - initial weights of the network to a very
+133:11 - narrow region of parameter space to help
+133:12 - you get better convergence
+133:14 - um
+133:16 - perfect so oh and make sure to subscribe
+133:18 - so you don't miss that video because
+133:20 - it's going to be lit
+133:22 - so bn1 is a layered norm
+133:25 - and takes
+133:26 - fc1 dims as input
+133:29 - the batch normalization helps with um
+133:31 - convergence of your model uh you don't
+133:33 - get good convergence if you don't have
+133:35 - it so leave it in
+133:36 - so fc2 is the second layer another
+133:39 - linear it takes fc one dimms as input
+133:42 - and outputs fc
+133:44 - two dimms
+133:48 - good grief and we wanna do the same
+133:50 - thing with initialization so it's one
+133:52 - over the square root of self dot fc2
+133:56 - weight data dot size
+133:59 - zero
+134:00 - and you want to do tnn init uniform
+134:04 - underscore
+134:05 - c2
+134:07 - weight
+134:08 - data
+134:09 - minus f2 up to f2 make sure that's right
+134:13 - so we don't screw that up because that's
+134:14 - important
+134:15 - that looks correct
+134:17 - the syntax here is the first parameter
+134:19 - is the tensor you want to initialize and
+134:21 - then the lower and upper boundaries
+134:24 - so next we need uh bn2 which is our
+134:26 - second batch norm layer
+134:33 - fc2 dimms
+134:35 - and just a note the fact that we have a
+134:38 - normalization layer a batch norm type
+134:40 - layer means that we have to use the eval
+134:42 - and train functions later
+134:44 - kind of a nuisance it took me a while to
+134:45 - figure that out
+134:48 - the critic network is also going to get
+134:51 - a
+134:53 - action value because the
+134:55 - action value function takes in the
+134:56 - states and actions as input
+134:59 - but we're going to add it in at the very
+135:01 - end of the network
+135:04 - linear
+135:06 - actions
+135:07 - see two dimms
+135:09 - and this gets a constant initialization
+135:11 - of zero zero three
+135:14 - or sorry the um
+135:17 - the next one uh the output gets a
+135:21 - initialization of
+135:23 - zero zero three
+135:24 - and since this is a scalar value it just
+135:26 - has one output
+135:29 - and you want to initialize it again
+135:31 - uniformly
+135:33 - that q dot weight dot data and that gets
+135:36 - minus f3 up to f3
+135:41 - and likewise for bias data
+135:48 - okay so now we have our optimizer and
+135:52 - that will be the atom optimizer
+135:54 - and what are we going to optimize the
+135:56 - parameters
+135:57 - and the learning rate will be beta so
+135:59 - you notice that we did not define
+136:02 - parameters
+136:03 - right here right we're just calling it
+136:05 - and this comes from the inheritance from
+136:07 - nn.module that's why we do that so we
+136:09 - get access to the
+136:10 - network parameters
+136:13 - next
+136:14 - you certainly want to run this on a gpu
+136:16 - because it is an incredibly expensive
+136:17 - algorithm so you want to call the device
+136:21 - so t device
+136:23 - cuda zero if t dot cuda dot is
+136:27 - available
+136:29 - else
+136:31 - cuda one so i have two gpus if you only
+136:35 - have a single gpu it will be else cpu
+136:38 - but i don't recommend running this on a
+136:40 - cpu so next you want to send the whole
+136:42 - network to your device by self.2
+136:45 - self.device
+136:47 - we are almost there for the
+136:49 - critic class next thing we have to worry
+136:51 - about is the forward function
+136:54 - and that takes a state and an action as
+136:56 - input
+136:57 - keep in mind the actions are continuous
+136:59 - so it's a vector in this case length two
+137:01 - for the continuous lunar lander
+137:02 - environment it's two real numbers in a
+137:04 - list or numpy array format
+137:07 - so state value
+137:10 - fc1 state
+137:13 - and then you want to pass it through
+137:15 - bn1
+137:17 - state value
+137:18 - and finally you want to activate it
+137:22 - f.value state value now it is an open
+137:26 - debate whether or not you want to do the
+137:27 - value before or after the batch
+137:30 - normalization
+137:32 - in my mind it makes more sense to do the
+137:34 - batch normalization first because
+137:37 - when you are calculating batch
+137:38 - statistics
+137:40 - if you apply the value first then you're
+137:42 - lopping off everything below zero right
+137:44 - so that means that your statistics are
+137:46 - going to be skewed toward the positive
+137:48 - end when perhaps the real distribution
+137:50 - has a mean of zero instead of a positive
+137:52 - mean or maybe it even has a negative
+137:54 - mean which you wouldn't see if you used
+137:56 - the
+137:56 - value function
+138:00 - before the batch normalization so just
+138:02 - something to keep in mind
+138:03 - you can play around with it feel free to
+138:05 - clone this and see what you get but
+138:07 - that's how i've done it i did try both
+138:09 - ways and this seemed to work the best
+138:14 - so next we want to feed it into the
+138:16 - second fully connected layer
+138:20 - bn2 state value
+138:24 - and
+138:25 - then we want to
+138:27 - be into that oh sorry i already did that
+138:30 - one second let me let the cat out so
+138:31 - we've already done the batch
+138:32 - normalization we don't want to activate
+138:34 - it yet what we want to do first is
+138:37 - take into account the action value
+138:40 - and
+138:42 - what we're going to do is
+138:46 - activate the action through the action
+138:47 - value layer and perform a value
+138:49 - activation on it right away we're not
+138:50 - going to calculate batch statistics on
+138:52 - this so we don't need to worry about
+138:53 - that
+138:55 - but what we want to do is
+138:57 - add the two values together so state
+138:59 - action value f.value
+139:01 - t add state value
+139:04 - and action value other thing that's a
+139:06 - little bit wonky here and i invite you
+139:08 - to clone this and play with yourself is
+139:10 - that i am double valuing the action
+139:13 - value function so the actual value
+139:14 - quantity so i do a value here
+139:17 - and then i do a value on the ad now
+139:20 - this is a little bit sketchy i've played
+139:22 - around with it and this is the way it
+139:24 - works for me
+139:26 - so if you can clone it and get it to
+139:27 - work a different way the other
+139:29 - possibility is that you
+139:31 - don't do this value here but you do the
+139:33 - value after the add so
+139:34 - value is a non-commutative function with
+139:36 - add so what that means is that if you do
+139:39 - an addition first and then a value
+139:41 - that's different than doing the sum of
+139:43 - the two values right or so if you take
+139:45 - value of minus 10 plus value of 5
+139:48 - you get a
+139:50 - value of minus 10 to 0 plus value of 5
+139:52 - is 5 so you get 5 if you take the value
+139:55 - of minus 10 plus 5 then you get a value
+139:57 - of -5 or zero so it's a non-commutative
+140:00 - function so it does matter the order uh
+140:03 - but this is the way i found it to work
+140:04 - i've seen other implementations that do
+140:05 - it differently feel free to clone this
+140:08 - and do your own thing with it
+140:10 - i welcome any additions improvements or
+140:12 - comments
+140:15 - so then we want to get the actual state
+140:16 - action value
+140:18 - by passing that's uh additive quantity
+140:21 - through our final layer of the network
+140:26 - and go ahead and return that
+140:29 - a little bit of bookkeeping
+140:30 - we have a check
+140:32 - save checkpoint function
+140:34 - and you'll say print
+140:39 - and then you want to call t.save
+140:42 - self.state dict what this does is it
+140:44 - creates a state dictionary uh where the
+140:47 - keys are the names of the parameters and
+140:48 - the values are the parameters themselves
+140:51 - and where do you want to save that you
+140:53 - want to say that in the checkpoint file
+140:56 - then you also have the load checkpoint
+141:00 - good grief checkpoint function
+141:03 - and that does the same thing just in
+141:04 - reverse
+141:06 - loading checkpoint
+141:09 - and you want
+141:11 - self.loadstatedict
+141:14 - t load self.checkpoint
+141:17 - file
+141:19 - so that is it for our critic network now
+141:21 - we move on to the actor network
+141:26 - and then of course derives from
+141:28 - nn.module
+141:30 - we have an uh init function
+141:32 - it takes alpha
+141:35 - if we get spell correctly
+141:36 - input dimms fc1 dimms fc2 dimms
+141:40 - this is pretty similar to the
+141:43 - critic network it will just have
+141:46 - a different structure
+141:48 - in particular we don't have the
+141:50 - um
+141:51 - we don't have the
+141:55 - actions i can't type and talk at the
+141:57 - same time
+142:01 - but it's pretty similar nonetheless
+142:03 - so input dimms we want to save
+142:09 - and actions
+142:10 - see one dimms
+142:15 - and fc2 dims same deal
+142:19 - uh let me go copy the checkpoint file
+142:22 - function
+142:23 - just to make life easy
+142:28 - perfect i like to make life easy so we
+142:30 - have our first fully connected layer
+142:32 - and in dot linear take
+142:34 - self.input dimms as input
+142:37 - and fc1 dims and of course it operates
+142:40 - in the same way as i
+142:42 - discussed in the replay buffer where it
+142:44 - will just unpack the tuple
+142:47 - next we have the initialization value
+142:49 - very similar 1 over mp square root
+142:53 - self.fc1.weight
+142:54 - data size
+142:56 - 0th element and we want to initialize
+143:00 - the first layer uniformly within that
+143:02 - interval
+143:04 - and it's uniform
+143:06 - underscore
+143:08 - se1 weight data minus f1 and f1
+143:13 - copy that
+143:15 - that will be fc1
+143:17 - bias data
+143:20 - fc2 is another linear layer it takes fc1
+143:24 - dimms as input and outputs
+143:27 - fc2 dimms
+143:29 - as you might expect
+143:31 - and the initialization for that
+143:34 - will be basically the same thing except
+143:36 - for layer two so fc2
+143:40 - weight data
+143:41 - and then you know what let's just copy
+143:43 - this
+143:45 - paste and make sure we don't mess it up
+143:48 - fc2
+143:50 - f2
+143:53 - good grief
+143:54 - and
+143:56 - plus minus
+143:57 - f2
+143:59 - um and that is all well and good other
+144:02 - thing we forgot is the batch norm
+144:05 - and that is nn layer norm
+144:08 - and that takes fc1 dims as input
+144:13 - likewise for layer 2 that is
+144:17 - another layer norm takes fc2 dimms as
+144:20 - input shape
+144:21 - and that doesn't get initialized
+144:24 - but we do have the
+144:26 - f3 and that is zero zero three this
+144:28 - comes from the paper we'll go over this
+144:30 - in a future video
+144:31 - uh but don't worry about it self.mu mu
+144:35 - is the representation of the policy in
+144:37 - this case it is a
+144:39 - real vector of shape and actions it's
+144:42 - the actual action not the probability
+144:44 - right because this is deterministic
+144:46 - so it's just a linear layer
+144:49 - takes fc2 dims as input and outputs the
+144:51 - number of actions
+144:54 - and we want to do the same thing where
+144:55 - we initialize the weights
+144:58 - let's copy
+144:59 - paste and instead of fc2 it will be mu
+145:05 - and instead of f2 it is
+145:08 - f3
+145:10 - as you might expect
+145:13 - am i forgetting anything i don't believe
+145:14 - so
+145:15 - so finally we have an optimizer and
+145:18 - that's again optim.addem
+145:20 - self.parameters
+145:22 - and learning rate equals alpha
+145:26 - we also want to do the same thing with
+145:27 - the device
+145:28 - t.device
+145:32 - cuda zero
+145:33 - if t dot cuda dot is available
+145:37 - else cpu
+145:40 - and finally
+145:41 - send it to the device
+145:46 - that is that
+145:48 - so next we have the feed forward so
+145:51 - that takes
+145:52 - the
+145:54 - state as input
+145:56 - so i'm just going to call it x this is
+145:57 - bad naming don't ever do this
+146:00 - self.fc1
+146:02 - do as i say not as i do
+146:04 - self.bn1
+146:06 - of state
+146:10 - value of x that's a mistake
+146:13 - it should be x
+146:17 - x equals
+146:18 - self.fc2 of x
+146:22 - bn2
+146:23 - x
+146:25 - and then
+146:26 - x equal t tan hyperbolic self.mu
+146:30 - of x and then return x so what this will
+146:33 - do is
+146:34 - pass the current state or whatever state
+146:36 - or set of states batch in this case you
+146:38 - want to look at
+146:39 - perform the first uh feed forward pass
+146:43 - batch normate value send it through the
+146:45 - second layer batch norm but not activate
+146:48 - send it through to the
+146:49 - final layer now i take that back i do
+146:51 - want to activate that
+146:54 - silly mean f.value x and then i'll pass
+146:57 - it through the final layer mu and
+146:58 - perform a tangent hyperbolic
+147:00 - activation so what that will do is it'll
+147:02 - bound it between minus one and plus one
+147:05 - and that's important for many
+147:07 - environments later on we can multiply it
+147:09 - by the actual action bounds so some
+147:11 - environments have a max action of plus
+147:12 - or minus two so if you're bounding it by
+147:14 - plus or minus one that's not going to be
+147:16 - very effective so you just have a
+147:17 - multiplicative factor later on
+147:20 - and then i'm going to go copy the two
+147:23 - save and load checkpoint functions
+147:25 - because those are
+147:26 - precisely the same
+147:28 - that's it for our actor next we come to
+147:31 - our final class the meat of the problem
+147:34 - the agent
+147:38 - and that just gets derived from the base
+147:40 - object
+147:42 - and that gets a whole bunch of
+147:44 - parameters alpha and beta of course you
+147:46 - need to pass in the learning rates for
+147:47 - the actor and critic networks
+147:50 - input dimms
+147:51 - a quantity called tau i haven't
+147:52 - introduced that yet but we'll get to it
+147:54 - in a few minutes
+147:55 - we're going to pass in the environment
+147:56 - that's to get the action space that i
+147:58 - talked about just a second ago
+148:00 - the gamma which is the agent's discount
+148:02 - factor so if you're not familiar with
+148:03 - reinforcement learning an agent values a
+148:05 - reward now more than it values a reward
+148:07 - in the future because there's
+148:09 - uncertainty around future rewards so it
+148:10 - makes no sense to value it
+148:12 - as much as a current reward so what's
+148:14 - the discount factor you know how much
+148:16 - less does it value a future reward one
+148:18 - percent um that's where we get a gamma
+148:20 - of 0.99 it's a hyper parameter you can
+148:22 - play around with it values like 0.95 all
+148:25 - the way up to 0.99 are typical
+148:29 - number of actions
+148:31 - will default it to two a lot of
+148:33 - environments only have two actions
+148:36 - the
+148:37 - max size of our memory that gets one
+148:39 - million one one two three one through
+148:41 - three
+148:43 - layer one size
+148:45 - equals default of 400 there to size
+148:49 - 300 is our default and again that comes
+148:52 - from the paper and a batch size
+148:56 - for our batch learning from our replay
+148:58 - memory
+149:01 - so you want to go ahead and save the
+149:03 - parameters
+149:05 - equal tau
+149:06 - and you want to instantiate a memory
+149:09 - that's a replay buffer of size
+149:12 - max size
+149:14 - input dimms and n actions
+149:19 - we also want to store the batch size
+149:23 - for our learning function
+149:26 - we want to instantiate our first actor
+149:28 - yes there are more than one
+149:30 - and that gets alpha
+149:32 - input dims
+149:34 - layer one size
+149:37 - layer two size
+149:38 - and actions equals n actions
+149:41 - name equals
+149:43 - actor
+149:45 - so let's copy that
+149:50 - so next we have our target actor
+149:53 - so much like the deep q network
+149:56 - algorithm this uses target
+149:58 - networks as well as the base network so
+150:01 - it's an off policy method
+150:03 - and the difference here is this going to
+150:05 - be called
+150:06 - target actor it'll be otherwise
+150:09 - identical this will allow us to have
+150:11 - multiple different agents with similar
+150:13 - names
+150:15 - and you'll see how that plays into it
+150:16 - momentarily
+150:19 - we also need a critic
+150:21 - that's a critic network
+150:22 - takes beta
+150:24 - input dimms
+150:26 - they're one size
+150:29 - there are two size and actions equals n
+150:33 - actions
+150:34 - name equals
+150:36 - critic
+150:37 - so let's
+150:39 - be nice and tidy there
+150:42 - and
+150:43 - we also have a target critic as well
+150:48 - and that is otherwise identical it just
+150:50 - gets a different name
+150:51 - and this is very similar to q learning
+150:53 - where you have q eval and q next or
+150:56 - q target whatever you want to call it
+150:58 - same concept
+151:00 - okay so those are all of our networks
+151:02 - what else do we need we need noise
+151:05 - and that's our ou action noise
+151:08 - and the mu is just going to be numpy
+151:10 - zeros
+151:11 - of shape and actions so it'll give you
+151:14 - an array of zeros this is the mean of
+151:16 - the rewards over time
+151:19 - and next we need another function you
+151:21 - may be able to predict if you've seen my
+151:23 - videos on q learning which you should
+151:24 - check out
+151:25 - is the update network parameters
+151:31 - and we'll call it with an initial value
+151:32 - tie equals 1. so what this does is
+151:35 - it solves a problem of
+151:37 - a moving target so in q learning
+151:39 - if you use one network to calculate both
+151:42 - the
+151:43 - action as well as the value of that
+151:46 - action then you're really chasing a
+151:47 - moving target because you're updating
+151:48 - that estimate every turn right so
+151:51 - you are end up using the same parameter
+151:53 - for both and it can lead to divergence
+151:55 - so the solution to that is to use a
+151:57 - target network uh that learns the values
+151:59 - of these states
+152:00 - and action combinations and then the
+152:02 - other network is what learns the policy
+152:05 - and then of course periodically you have
+152:07 - to overwrite the
+152:08 - target parameter target networks
+152:10 - parameters with the evaluation network
+152:12 - parameters and this function will do
+152:13 - precisely that
+152:15 - except that we have four networks
+152:16 - instead of two
+152:18 - so next
+152:19 - we want to choose an action
+152:23 - and that takes whatever the current
+152:25 - observation of the environment is
+152:27 - now very very important
+152:29 - you have to put the actor into
+152:30 - evaluation mode now this doesn't perform
+152:33 - an evaluation step this just tells
+152:35 - pytorch that you don't want to calculate
+152:38 - statistics for the batch normalization
+152:41 - and this is very critical if you don't
+152:42 - do this the agent will not learn
+152:45 - and it doesn't do what you think the
+152:47 - name implies it would do right the
+152:49 - corresponding the
+152:50 - complementary function is trained
+152:52 - doesn't perform a training step it puts
+152:53 - it in training mode where it does store
+152:56 - those statistics in the graph for the
+152:58 - batch normalization if you don't do
+153:00 - batch norm then you don't need to do
+153:01 - this
+153:02 - but if you do what's the other function
+153:05 - um dropout dropout does the same thing
+153:07 - or has the same tick where you have to
+153:09 - call the eval and train functions
+153:12 - so let's start by putting our
+153:14 - observation into a tensor
+153:19 - d type because t dot float to
+153:21 - self.actor.device
+153:24 - so that'll turn it into a cuda float
+153:25 - tensor
+153:26 - now you want to get the
+153:28 - actual
+153:29 - action from the in the actor network so
+153:33 - feed that forward
+153:35 - to
+153:36 - cell.actor.device and just make sure
+153:38 - that you send it to the device so it's a
+153:40 - cuda tensor
+153:42 - so mu prime is going to be mu plus t dot
+153:45 - tensor what are we going to use
+153:46 - self.noise that will give us our
+153:48 - exploration noise
+153:50 - and that is going to be d type of float
+153:54 - and we will send that to
+153:55 - actor
+153:57 - device
+153:59 - and then you want to say
+154:05 - i should be actor.training shouldn't it
+154:07 - yes self.actor.train
+154:09 - yes
+154:11 - and then you want to return mu
+154:13 - prime
+154:15 - cpu.detach
+154:17 - dot numpy so this is an idiom within pi
+154:20 - torch
+154:21 - where you have to
+154:23 - basically do this otherwise it doesn't
+154:25 - um
+154:26 - it doesn't doesn't give you the actual
+154:28 - numpy value right it's going to try to
+154:30 - pass out a tensor which doesn't work
+154:31 - because you can't pass a tensor into the
+154:33 - open ai gym so
+154:35 - kind of a funny little quirk but it is
+154:38 - necessary
+154:40 - so now we need a function to store state
+154:42 - transitions
+154:44 - and this is just kind of an interface
+154:46 - for our
+154:48 - replay memory class
+154:51 - so
+154:52 - memory dot store transition state action
+154:56 - reward new state
+154:58 - done
+154:59 - simple
+155:03 - so now we come to the meat of the
+155:05 - problem where we actually the learning
+155:07 - so
+155:08 - you don't want to learn if you haven't
+155:10 - filled up at least batch size of your
+155:12 - memory buffer so
+155:13 - self.memory.mem
+155:15 - counter is less than self.batch size
+155:19 - then you just want to return
+155:22 - otherwise
+155:23 - action reward new state
+155:26 - done
+155:27 - you want to sample your memory
+155:30 - memory dot sample buffer
+155:34 - self.batch size
+155:40 - then you want to go ahead and turn all
+155:41 - of those into tensors
+155:45 - that's because they come back as numpy
+155:47 - arrays
+155:50 - in this case we'll put them on the
+155:51 - critic device as long as they're on the
+155:52 - same device it doesn't matter i do this
+155:54 - for consistency because these values
+155:56 - will be used
+155:57 - in the critic network
+155:59 - so
+156:00 - the duns
+156:01 - equal to tensor done
+156:06 - two
+156:06 - self self-critic device
+156:09 - you need the new state
+156:11 - peta tensor
+156:12 - new state
+156:15 - d type t float
+156:17 - two self critic device
+156:21 - you also need the actions
+156:30 - predict.device
+156:33 - and you need states
+156:37 - yeah tensor
+156:43 - device
+156:45 - and now we come to another quirk of
+156:46 - pytorch where we're gonna have to send
+156:48 - everything to eval mode
+156:52 - for the targets it may not be that
+156:53 - important i did it for
+156:56 - consistency
+157:06 - so we want to calculate the target
+157:08 - actions much like you do in the bellman
+157:10 - equation for q learning deep q learning
+157:13 - target actor
+157:16 - forward
+157:17 - new state
+157:19 - we want the critic value underscore
+157:22 - which is the new states
+157:23 - zelda target critic
+157:26 - dot forward
+157:29 - and that takes target actions as input
+157:32 - so what we're doing is getting the
+157:35 - target actions from the target actor
+157:37 - network in other words what actions
+157:39 - should it take based on the target
+157:40 - actors
+157:42 - estimates and then plugging that into
+157:44 - the state value function for the target
+157:47 - critic network
+157:50 - you also want the critic value which is
+157:52 - self.critic.forward
+157:54 - for state and action so in other words
+157:56 - what was the
+157:57 - what is your estimate of the values of
+157:59 - the states and actions we actually
+158:00 - encountered in our subset of the replay
+158:02 - buffer
+158:03 - so now we have to calculate the targets
+158:06 - that we're going to move towards
+158:08 - or j and range
+158:10 - so that batch size and i use a loop
+158:14 - instead of a vectorized implementation
+158:16 - because
+158:17 - the vectorized implementation is a
+158:18 - little bit tricky if you don't do it
+158:20 - properly you can end up with something
+158:21 - of shape batch size by batch size which
+158:24 - won't flag an error
+158:26 - but it definitely gives you the wrong
+158:27 - answer and you don't get learning so
+158:29 - target dot append
+158:33 - reward sub j plus self dot gamma times
+158:36 - critic
+158:37 - value underscore sub j times done sub j
+158:41 - so this is where i was talking about the
+158:42 - done flags if the episode is over then
+158:46 - the value of the resulting state is
+158:48 - multiplied by zero and so you don't take
+158:50 - it into account you only take into
+158:52 - account the reward from the current
+158:53 - state
+158:54 - precisely as one would want
+158:56 - so now let's go ahead and turn that
+158:58 - target into a tensor
+159:01 - sorry tensor
+159:03 - target
+159:04 - dot 2
+159:05 - self critic dot device
+159:08 - and we want to reshape this target
+159:11 - equals target dot view
+159:14 - self.batch size
+159:17 - and one
+159:19 - now now we can come to the calculation
+159:22 - of the loss functions so we want to set
+159:25 - the critic back into training mode
+159:28 - because we have
+159:30 - already performed the evaluation now we
+159:32 - want to actually calculate the values
+159:34 - for batch normalization
+159:36 - a train
+159:38 - cell.critic.optimizer.zero
+159:41 - grad
+159:43 - in pi torch whenever you calculate the
+159:45 - loss function you want to zero your
+159:46 - gradients that's so that gradients from
+159:48 - previous steps don't accumulate and
+159:49 - interfere with the calculation it can
+159:51 - slow stuff down
+159:53 - you don't want that
+159:54 - so critical loss is just
+159:58 - good grief f dot mse means square error
+160:01 - loss between the target and the critic
+160:04 - value so then you want to back propagate
+160:07 - back propagate that
+160:09 - backward
+160:11 - and step your optimizer
+160:16 - boom so that's it for the critic
+160:19 - so now we want to set the critic into
+160:21 - evaluation mode
+160:23 - for the calculation of the loss for our
+160:26 - actor network so
+160:27 - cell.actor.optimizer.0grad
+160:32 - and i apologize if this is confusing uh
+160:34 - it was confusing to me it took me a
+160:35 - while to figure it out uh this is one of
+160:37 - the ways in which tensorflow is superior
+160:39 - to pi torch you don't have this quirk uh
+160:42 - i tend to like
+160:43 - tensorflow a little bit better but
+160:45 - you know whatever we'll just figure it
+160:47 - out man and get it going so
+160:50 - mu
+160:51 - equals the forward propagation of the
+160:53 - state
+160:54 - i'm going to put the actor into training
+160:56 - mode
+160:57 - and you want to calculate your actor
+160:58 - loss that's just
+161:00 - minus self.critic dot forward state dot
+161:04 - state and mu
+161:07 - after loss equals t dot mean a back to
+161:10 - loss
+161:11 - again stay tuned for the derivation from
+161:12 - the paper this is all outlined there
+161:16 - otherwise it seems mysterious but this
+161:17 - video is already 45 minutes long so you
+161:20 - know that'll have to wait for a future
+161:22 - video
+161:23 - actor loss backward
+161:25 - and
+161:29 - dot self.actor.optimizer.step
+161:30 - and then we're done learning so now
+161:33 - after you finish learning you want to
+161:35 - update the network parameters for your
+161:36 - target actor and target critic networks
+161:38 - so self.update
+161:42 - network
+161:43 - parameters
+161:46 - man okay so
+161:48 - we're almost there i promise um
+161:52 - let's go ahead and do that def update
+161:54 - network
+161:57 - parameters
+162:00 - self and tau equals none by default
+162:04 - so tau is a parameter that allows the
+162:07 - update of the target network to
+162:10 - gradually approach the
+162:13 - evaluation networks
+162:14 - and this is important for a nice slow
+162:17 - convergence you don't want to take two
+162:19 - largest steps in between updates so
+162:21 - towel is a small number much much less
+162:23 - than one
+162:25 - so
+162:29 - so if tau is none
+162:31 - then you want to say tau equals self.tau
+162:34 - now this may seem mysterious the reason
+162:36 - i'm doing this is because
+162:38 - at the very beginning when we call the
+162:41 - initializer we say
+162:44 - uh update network parameters tau equals
+162:46 - 1. this is because in that in the very
+162:48 - beginning we want to update or sorry we
+162:50 - want all the networks to start with the
+162:51 - same weights and so we call it with a
+162:53 - tau of one and uh in that case tau is
+162:57 - not none so tau is just one and you will
+162:59 - get the update rule here in a second so
+163:02 - this is more hocus pocus with um
+163:06 - pytorch
+163:08 - actor.named parameters
+163:12 - so this will do is it'll get all the
+163:13 - names of the parameters from these
+163:14 - networks
+163:22 - and we want to do the same thing for
+163:23 - target actor
+163:30 - parameters
+163:31 - uh target
+163:33 - critic params
+163:40 - okay
+163:41 - now that we have the parameters let's
+163:42 - turn them into a dictionary that makes
+163:44 - iterating them much easier
+163:47 - because this is actually a generator so
+163:50 - i believe
+163:51 - don't quote me on that
+163:54 - critic params
+163:57 - um the
+163:58 - actor state dict equals dict of the
+164:02 - actor params
+164:04 - target critic
+164:06 - state
+164:07 - uh let's just do target critic dict
+164:12 - equals dict
+164:16 - rams
+164:23 - params boom
+164:24 - okay
+164:25 - almost there so now we want to iterate
+164:28 - over these dictionaries
+164:30 - and copy parameters so for name in
+164:33 - critic state dict
+164:37 - critic state
+164:38 - dict sub name equals
+164:41 - equals tau times critic state dict
+164:45 - name
+164:48 - dot clone
+164:50 - plus
+164:54 - 1 minus tau times target
+164:57 - critic
+164:58 - dict
+164:59 - name dot clone
+165:02 - excel.target
+165:04 - critic.load state dict
+165:07 - critic
+165:09 - state dict so what this does is it
+165:12 - iterates over this dictionary looks at
+165:14 - the key in the
+165:15 - in the uh in the dictionary and updates
+165:18 - the values
+165:19 - from this particular network and you can
+165:22 - see that when tau is one you get one
+165:23 - minus one is zero so it's just this
+165:25 - equals tau one times that so it's i the
+165:28 - identity and then it loads the target
+165:31 - critic with that parameter so at the
+165:33 - very beginning it'll load it with the
+165:36 - parameters from the initial uh
+165:40 - critic network and likewise for the
+165:42 - actor network so let's go ahead and copy
+165:44 - this
+165:46 - and just go ahead and change critic to
+165:49 - actor
+165:51 - and then we'll be done with that
+165:52 - function
+165:54 - and we'll only have one other thing to
+165:56 - take care of before we get to the
+165:59 - main
+166:00 - program
+166:03 - target actor
+166:08 - actor state dict
+166:11 - i believe that is it
+166:14 - yes indeed it
+166:17 - is
+166:18 - now it should be
+166:22 - target actor
+166:24 - yes
+166:27 - perfect okay now it's right
+166:29 - uh
+166:30 - so next up we have two other bookkeeping
+166:32 - functions to save the models so def save
+166:35 - models
+166:38 - and you definitely want this because
+166:39 - this thing takes forever to train
+166:47 - and self.critic
+166:50 - and
+166:53 - target actor
+166:56 - and
+166:59 - target critic
+167:02 - and
+167:03 - load models does the inverse operation
+167:08 - and let's just copy all this
+167:12 - load
+167:15 - keep things simple right
+167:20 - and again i will upload since this takes
+167:22 - so long i'm going to upload my saved
+167:23 - model parameters to the github for you
+167:26 - uh
+167:27 - but this is it this is 275 lines so this
+167:30 - is probably the longest project we have
+167:32 - worked on here at machine learning with
+167:34 - phil
+167:35 - if you've made it this far
+167:35 - congratulations we're already 50 minutes
+167:37 - in and we're almost done i promise so
+167:39 - let's come over to our main function
+167:42 - and
+167:45 - we want to
+167:48 - import our agent so ddpg torch import
+167:53 - agent
+167:55 - we want to import
+167:57 - gym
+167:58 - we want to do we want yes we want numpy
+168:03 - we want um
+168:05 - my super duper awesome
+168:08 - import plot learning
+168:10 - function
+168:13 - and that is it so env gem dot make
+168:17 - lunar lander contin us v2
+168:23 - agent
+168:24 - equals agent
+168:27 - alpha
+168:29 - two three 0.1234 two five so two point
+168:31 - five by ten to the minus five
+168:33 - beta equals zero point zero zero zero
+168:35 - two five so two point five by ten to the
+168:37 - minus four
+168:38 - input dimms equals a list with element
+168:41 - eight
+168:43 - tau tal
+168:43 - 0.001
+168:45 - in vehicles env
+168:47 - well that reminds me i didn't multiply
+168:48 - by the action space
+168:51 - high in the function for the choose
+168:53 - action don't worry that'll be in the
+168:55 - tensorflow implementation uh or i can
+168:58 - leave it as an exercise to the reader it
+168:59 - doesn't matter for this environment uh
+169:00 - when we get to other ones that where it
+169:02 - doesn't matter i'll
+169:03 - be a little bit more diligent about that
+169:05 - batch size is 64
+169:08 - size 400 layer 2 size 300 and actions
+169:12 - equals two
+169:14 - now another interesting tidbit is that
+169:17 - we have to set the random seed uh this
+169:19 - is not something i've done before but
+169:21 - this is a highly
+169:24 - sensitive learning method uh so if you
+169:26 - read the original paper they do averages
+169:28 - over five runs
+169:30 - uh and that's because every run is a
+169:32 - little bit different and i suspect
+169:33 - that's why they had to initialize the
+169:35 - weights and biases within such a narrow
+169:37 - range right you don't want to go all the
+169:38 - way from plus and minus one when you can
+169:40 - constrain to something much more narrow
+169:42 - it gives you a little bit more
+169:42 - repeatability uh so
+169:45 - we have to set the numpy random seed to
+169:47 - some value instead of none so in this
+169:49 - case i view zero i've seen other values
+169:51 - used please
+169:53 - clone this and see what happens if you
+169:55 - input other seed values
+169:58 - so next we need a score history to keep
+170:00 - track of the
+170:01 - scores over time
+170:06 - and we need to
+170:10 - iterate over a thousand games
+170:12 - done equals false
+170:14 - score equals zero
+170:16 - uh observation equals env dot reset
+170:19 - that'll get a new observation
+170:21 - so while not done
+170:24 - agent dot
+170:25 - choose
+170:27 - action
+170:28 - obs
+170:30 - new state
+170:32 - reward done info equals env step act
+170:37 - agent.remember we want to keep track of
+170:39 - that transition obs act reward new state
+170:44 - and done
+170:46 - agent.learn we learn on every step
+170:48 - because this is a temporal difference
+170:50 - learning method instead of a monte carlo
+170:51 - type method where we would learn at the
+170:53 - end of every episode
+170:55 - keep track of the score
+170:57 - and set your old state to the new state
+171:00 - so at the end of the episode if
+171:02 - [Music]
+171:03 - at the end of every episode
+171:05 - we want to print print the place marker
+171:08 - so we'll say score history
+171:11 - dot append score
+171:13 - print episode
+171:16 - i score
+171:19 - percent.2f
+171:21 - score
+171:23 - um
+171:24 - 100 game average
+171:27 - percent.2f
+171:29 - and what this will do is
+171:33 - take the last 100 games and compute the
+171:36 - mean so that way you can get an idea of
+171:37 - its learning remember with the lunar
+171:39 - lander environment solved means that it
+171:41 - has gotten a an average score of 1 200
+171:44 - over the last 100 games
+171:47 - so every 25 games we want to save
+171:51 - the model
+171:54 - agent does save models
+171:56 - and at the end file name equals lunar
+172:00 - lander png
+172:04 - that's not in the loop you want to do at
+172:06 - the end of all the loop games plot
+172:08 - learning
+172:09 - i'll name no score history
+172:13 - file name and a window of 100 games
+172:17 - wow so
+172:19 - an hour in we finally finished this now
+172:20 - we get to go to the terminal and see how
+172:22 - many typos i made i'm sure there's
+172:24 - probably 50 so let's get to it
+172:26 - alright so here we are let's see what we
+172:28 - get
+172:29 - we want to run torch lunar lander
+172:32 - fingers crossed okay so that's a stupid
+172:35 - one so
+172:36 - in line 30 we forgot an equal sign let's
+172:39 - go back there and fix that
+172:41 - all right here we are so it says
+172:45 - line 30
+172:48 - yes right here
+172:51 - all right did we do that again anywhere
+172:53 - else not that i can see
+172:56 - but that's no guarantee alright so let's
+172:57 - go back to the terminal
+173:00 - all right let's try it again
+173:06 - line 119 okay
+173:09 - uh typical
+173:13 - all right so 119
+173:17 - right there
+173:20 - so that's in the actor let's just scroll
+173:22 - down
+173:26 - that's the agent class
+173:29 - i don't think i did it there all right
+173:31 - i'm going back to the terminal
+173:33 - all right so i started it and it ran so
+173:35 - let's see
+173:40 - built-in function has no
+173:46 - function or method has no attribute
+173:48 - numpy all right that's an interesting
+173:50 - bug let's fix that
+173:52 - so that is on line
+173:54 - 192 in our choose action function
+173:57 - and
+173:59 - mu prime
+174:00 - oh that's why
+174:02 - it's detached as a function not an
+174:04 - object that should fix it let's head
+174:07 - back to the terminal
+174:14 - rewards is not defined
+174:18 - so that is in line 55
+174:22 - okay
+174:28 - ah it's just called reward
+174:30 - there we go add the s and back to the
+174:32 - terminal
+174:41 - ah
+174:42 - perfect
+174:44 - that's easy to fix mr
+174:46 - temp slash udpg
+174:54 - it's because i didn't make the directory
+174:56 - first
+174:57 - that's easy
+175:02 - perfect now it's running so i'm not
+175:04 - going to let this run all 1000 games
+175:05 - because it takes about a couple hours or
+175:07 - so instead let's take a look here
+175:10 - so i was running this earlier when i was
+175:12 - making the uh videos for
+175:14 - the uh sorry the recording the agents
+175:17 - play while making uh for this video and
+175:19 - you can see that within
+175:21 - under 650 games it went ahead and solved
+175:24 - it so when you print out the trailing
+175:26 - average for the last hundred games we
+175:28 - get a reward of well over 200
+175:30 - now keep in mind uh one interesting
+175:32 - thing is that this is still
+175:34 - actually in training mode it's not
+175:36 - excuse me it's not in full evaluation
+175:38 - mode because we still have some noise
+175:40 - right if you wanted to do a pure
+175:41 - evaluation of the agent you would set
+175:43 - the noise to zero we'll do that in a set
+175:45 - of future videos there's a whole bunch
+175:47 - of stuff i can do on this topic uh but
+175:49 - just keep in mind that this is an agent
+175:51 - that is still taking some random actions
+175:53 - the noise is nonzero and so it is still
+175:56 - taking sub-optimal actions and getting a
+175:57 - score of 260 and still beating the
+176:00 - environment even though that noise is
+176:01 - present and you can see it in
+176:04 - uh like episode 626 where it gets a
+176:06 - score of 26 so uh and then in episode
+176:09 - 624 where it does you know 8.58 points
+176:12 - so
+176:13 - uh that is pretty cool stuff so this is
+176:15 - a very powerful algorithm and keep in
+176:17 - mind this was a continuous action space
+176:19 - totally intractable for q learning right
+176:21 - that is simply not possible uh it's an
+176:23 - infinitude of of actions so you need
+176:25 - something like ddpg to handle this and
+176:27 - it handles it quite well in future
+176:29 - videos we're going to get to the walker
+176:30 - the bipedal walker we're going to get to
+176:32 - the
+176:33 - learning from pixels where we do the
+176:34 - continuous
+176:35 - racing environment and we'll probably
+176:37 - get into other stuff from the robo
+176:39 - school of the open ai gym so make sure
+176:41 - to subscribe so that you can see that in
+176:44 - future videos uh go ahead and check out
+176:46 - the github for this so you can get the
+176:47 - weight so you can play around with this
+176:49 - so you don't have to spend a couple
+176:50 - hours training it on your gpu
+176:52 - make sure to leave a like share this if
+176:54 - you found it helpful that is incredibly
+176:56 - helpful to me uh and leave a comment
+176:58 - down below i answer all my questions i
+177:00 - look forward to seeing you all in the
+177:02 - next video
+177:10 - you

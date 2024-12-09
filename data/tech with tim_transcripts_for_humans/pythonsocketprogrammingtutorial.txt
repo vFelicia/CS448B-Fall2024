@@ -1,0 +1,1407 @@
+With timestamps:
+
+00:07 - hello everybody and welcome back so in
+00:09 - this video what we're gonna be doing is
+00:11 - talking about socket programming in
+00:12 - Python now what we're gonna do and the
+00:14 - goal of this video here is gonna be to
+00:17 - create an application where we can have
+00:18 - multiple clients connect to a server and
+00:21 - communicate with the server so I'm not
+00:23 - gonna be doing anything crazy complex
+00:25 - we're not gonna go any into anything
+00:26 - that's too specific the objective is to
+00:29 - give you the fundamental skills and
+00:30 - understanding of how sockets work so
+00:33 - that any application or project you want
+00:34 - to use sockets in you at least have a
+00:36 - really good starting point to do that
+00:38 - and you're not kind of lost on how you
+00:40 - get the initial setup done that's kind
+00:42 - of where a lot of people get confused
+00:43 - here is their sockets not connecting
+00:45 - properly or they're getting all these
+00:47 - kind of issues so I'm gonna go over some
+00:48 - of the common problems that I've run
+00:50 - into is sockets as well to hopefully
+00:52 - kind of mitigate those for you guys
+00:54 - we're gonna get started right away by
+00:56 - actually just discussing a kind of basic
+00:58 - overview of networking so networking is
+01:00 - very important to understand when we're
+01:02 - dealing with sockets because a lot of
+01:03 - the time will actually be wrong is
+01:05 - nothing with your code but something
+01:07 - with your understanding of the
+01:08 - networking or the understanding of your
+01:10 - local network so for this tutorial
+01:12 - series we're gonna be running this
+01:14 - server and this client just on our own
+01:16 - computer and our own local network what
+01:18 - that means is anyone on our local
+01:20 - network so our router right you're your
+01:22 - Wi-Fi network will be able to access and
+01:25 - communicate with this server but anyone
+01:27 - outside of that will not what I will do
+01:29 - at the end of the video is show you and
+01:31 - steer you in the right direction on how
+01:33 - you can get this to work publicly over
+01:35 - the internet which means that anyone
+01:36 - from any computer in the world can
+01:38 - connect to your server but that again is
+01:41 - going to come near the end and you need
+01:42 - to understand the difference between say
+01:44 - a local area network and a public
+01:46 - network and kind of how these networking
+01:48 - things operate so that you can
+01:50 - understand what it is that I'm doing
+01:52 - here so anyways let's go ahead and get
+01:54 - started I'm gonna discuss the
+01:55 - client-server model and then a basic
+01:57 - overview of networking so sockets work
+01:59 - on this client-server model now what
+02:01 - that means is we have one central
+02:03 - location or one central process is what
+02:05 - I'm gonna call it which is called our
+02:07 - server
+02:08 - now if we're talking about large
+02:10 - companies like Google obviously we know
+02:12 - that they have milli
+02:13 - or you know even actually probably tens
+02:15 - of millions of servers and our purpose
+02:17 - we're gonna deal with one server but
+02:19 - just know that a lot of the stuff we do
+02:21 - with one server we can expand into
+02:23 - multiple servers fairly easily just by
+02:26 - changing the code up a little bit but in
+02:28 - our example we're going to deal with one
+02:29 - server so the idea behind the
+02:31 - client-server model is you have a
+02:33 - central location which we're gonna call
+02:35 - the server and then you have all of
+02:37 - these clients that are kind of scattered
+02:39 - all over the place they're different
+02:40 - devices there are different computers
+02:42 - they're different networks they're all
+02:44 - around the world right and these are
+02:45 - what we call our clients now a good
+02:47 - example that I typically like to talk
+02:49 - about is games because these are things
+02:50 - that people have played a lot in it's a
+02:52 - very good example of socket programming
+02:54 - um not that games always will implement
+02:57 - socket programming but it's a good
+02:58 - illustration of the client-server model
+03:00 - when we talk about a game the client and
+03:03 - you've probably heard this in gaming
+03:04 - before is your game it's the instance of
+03:07 - your game running on your computer so
+03:09 - let's use the famous example of
+03:10 - fortnight if we're talking about how
+03:12 - fortnight works in terms of an online
+03:14 - game they have their central servers and
+03:17 - then they have all of these clients that
+03:19 - are around the world the clients are you
+03:21 - you are playing the game you are a
+03:23 - client now obviously you do not connect
+03:26 - to another client's computer in fact
+03:28 - that would be a large security risk if
+03:30 - you connected directly to say you know
+03:32 - your competitor who's you know around
+03:34 - the world you connected to their
+03:36 - computer what you do is you connect to
+03:38 - the central server that hosts all of the
+03:41 - clients that are playing in your game or
+03:42 - in your region or whatever it is and the
+03:45 - reason for that well there's a few
+03:46 - different ones obviously a central
+03:48 - location is gonna be faster in general
+03:50 - than each client connecting to each
+03:52 - other clients computer because if we're
+03:53 - playing game of a hundred people I can't
+03:55 - connect to every single one of these
+03:57 - computers and still have things working
+04:00 - properly but that's kind of the concept
+04:02 - behind this another idea is that say
+04:05 - we're playing a game and I connect
+04:06 - directly to the other client well that
+04:08 - means I can cheat very easily because I
+04:11 - can just send the client false
+04:12 - information about my game state that's
+04:14 - pretty easy to do and in fact in most
+04:17 - games you can probably falsify your game
+04:19 - state very easily it just won't work
+04:20 - because of the way that the server is
+04:22 - set up so we have this server in place
+04:24 - to kind of handle and do all
+04:26 - communication between these different
+04:28 - clients so the server connects to each
+04:30 - individual client and then each client
+04:33 - connects to the server and what happens
+04:35 - is messages are passed between the
+04:37 - server and between the client so let's
+04:39 - say I have my little character here
+04:40 - right and he decides he's gonna move
+04:42 - over to the right
+04:43 - well that is passed to the server in the
+04:46 - form of some kind of command or some
+04:48 - kind of message protocol which we'll
+04:50 - talk about in a second to tell the
+04:51 - server hey I moved to the right now to
+04:54 - make sure that this client is not
+04:56 - cheating or falsifying its information
+04:58 - there's a few things that can happen on
+05:00 - the server to do that it can check
+05:01 - previous states you can check speed it
+05:03 - can make sure that the client is sending
+05:05 - accurate information and that is kind of
+05:07 - what I don't know maintains this secure
+05:09 - idea behind this client-server system I
+05:12 - hope that's giving you a little bit of
+05:14 - an idea of what I mean but the idea is
+05:15 - that you know it sends its movement to
+05:18 - the server and then the server transmits
+05:20 - that information back to every single
+05:22 - client and says hey you know client one
+05:24 - moved to the right everyone should know
+05:27 - that so you can update that on your end
+05:29 - and you can see that and that's the idea
+05:31 - behind the client server system so in
+05:33 - our example we're gonna have multiple
+05:34 - clients connecting to the server they're
+05:36 - gonna be sending messages to the server
+05:38 - and the server will list out all of the
+05:40 - messages so that we can see you know
+05:42 - when these messages came in and how they
+05:43 - came in and all of that okay so that's
+05:45 - the idea behind the client-server model
+05:47 - now obviously in an online game we're
+05:50 - gonna be connected to a server that is
+05:52 - somewhere around the world so that means
+05:54 - we're gonna connect over the Internet
+05:56 - right but in our local network things
+05:58 - happen a little bit differently and we
+06:00 - need to understand how our local network
+06:01 - works to understand how the internet
+06:03 - actually operates as a whole so when we
+06:05 - talk about our local network what we
+06:07 - have is a few different components we
+06:09 - obviously have the most vital component
+06:12 - I would say I'm gonna try to draw kind
+06:13 - of a crazy version of this which is our
+06:15 - modem now what the modem does and
+06:17 - typically actually the modem will be
+06:19 - wired in to your internet connection
+06:22 - right so if you want to install a modem
+06:24 - like a Rogers modem or a bell modem or
+06:26 - something like that you typically need a
+06:28 - technician to come to your house and run
+06:30 - a wire into this modem that connects it
+06:33 - to the internet now these wires will go
+06:35 - to some large cell tower you might have
+06:37 - a satellite dish on your house I don't
+06:39 - know
+06:39 - exactly how you are in and out operates
+06:41 - or how it works it might connect to a
+06:43 - fiber optic line it might do something
+06:44 - like that but the idea is this cable
+06:47 - goes to your modem and gives your modem
+06:48 - access to the Internet so then what do
+06:51 - you do well now they kind of have these
+06:53 - modem router things that are combined
+06:55 - but typically you're gonna have a router
+06:57 - so your router maybe looks like this it
+07:00 - has some antennas off of it whatever and
+07:02 - we'll call this the router and the
+07:04 - router is what actually allows devices
+07:07 - in your home to connect to the modem so
+07:10 - it plugs into the modem and the router
+07:12 - transmits these radio frequency waves or
+07:15 - whatever waves they are and you're able
+07:17 - to connect to the router wirelessly
+07:19 - right obviously you can connect wired as
+07:21 - well if you have an Ethernet cable but
+07:22 - the idea behind a router is to allow you
+07:24 - to wirelessly connect to your network so
+07:28 - maybe I have like my phone up here maybe
+07:31 - I have a computer or some device like
+07:33 - these boxes are just gonna be random
+07:34 - devices and the idea is that all of
+07:36 - these connect to the router in some kind
+07:39 - of way some kind of protocol and then
+07:41 - this router communicates with the modem
+07:43 - gets information from the modem the
+07:45 - modem says okay what information do I
+07:47 - need it asks the internet for that
+07:48 - information so it pings the satellite or
+07:50 - whatever information comes back sends it
+07:52 - back to the router the router sends it
+07:54 - back to whatever client was asking for
+07:56 - that information so that's how this
+07:58 - works
+07:59 - on your local network so there's
+08:00 - something called IP addresses now
+08:02 - obviously so your modem is given one
+08:05 - what we call public IP address so a
+08:07 - public IP address excuse my handwriting
+08:12 - this has one so times one public IP
+08:15 - address for your modem that represents
+08:17 - your physical location in the internet
+08:19 - right your physical location on the
+08:21 - world
+08:22 - that's your modems IP address it's
+08:24 - that's important and then you just need
+08:26 - to know that
+08:26 - then within your local network you have
+08:29 - what's called a local IP address so that
+08:32 - so because your router needs to be able
+08:34 - to differentiate between the different
+08:35 - devices on the network so it can know
+08:37 - which device to give information back to
+08:39 - or to look information up for it needs
+08:42 - to know or have some number that
+08:44 - represents each of them so you may have
+08:46 - seen an IP address that looks like this
+08:49 - 192.168.1 maybe it was a dot zero maybe
+08:51 - it's not two depending
+08:52 - what you're doing and then like 176
+08:55 - right something like that well each
+08:57 - device on your local network is given
+08:59 - one of these IP addresses okay so that's
+09:02 - something to understand we have these
+09:04 - local IP addresses that's the way the
+09:06 - router communicates with each device on
+09:08 - the network and then we have the public
+09:10 - IP address which is given to the modem
+09:12 - which is the way the modem communicates
+09:14 - with the internet and every time that
+09:16 - you want to make a search on the
+09:17 - internet you go through this process of
+09:18 - pinging the router router pinging the
+09:20 - modem modem pinging the internet
+09:22 - internet giving it back to the modem
+09:23 - giving it back to the router and giving
+09:25 - it back to you that's the process that
+09:27 - you go through and the reason you can do
+09:28 - that is because you have this IP address
+09:30 - so you can be differentiated on the
+09:31 - network as an individual device now and
+09:33 - you have access points gets a little bit
+09:34 - more confusing but anyways that's the
+09:36 - basic idea behind networking I could be
+09:38 - butchering this slightly I'm not an
+09:40 - expert in this field I'll make that
+09:41 - clear but just understand that this
+09:43 - local IP address which we call the ipv4
+09:46 - address is different than the public IP
+09:49 - address so if I decide to run a what we
+09:52 - call server off of a local IP address
+09:55 - what that means is any other computer on
+09:58 - this local network so that's connected
+10:00 - to my router we'll be able to see it and
+10:03 - access it right because if I'm
+10:04 - connecting and running a server on this
+10:06 - device it's connected to the router
+10:07 - which means any other device is
+10:09 - connected to the router can access this
+10:10 - but anything that's not connected to
+10:13 - this router so on a different network
+10:15 - cannot see that so that's important to
+10:17 - understand however if I decide to run a
+10:19 - server on my public IP address so from
+10:22 - the modem right then what that means is
+10:25 - anything around the world can connect to
+10:27 - this because it's running on a different
+10:29 - IP address so that's the idea behind
+10:31 - networking and behind this client-server
+10:33 - model I hope that makes sense what we're
+10:36 - gonna do is run our networks on or run
+10:38 - our servers on our local IP address but
+10:40 - later again I will show you how to do
+10:42 - that on the public IP address all right
+10:44 - so now we're ready to actually start
+10:45 - writing some code so we're gonna start
+10:47 - by programming out the server and we're
+10:49 - not really gonna be able to test a lot
+10:51 - of this code until we write a bunch of
+10:52 - it so I'm gonna be explaining through
+10:54 - exactly what I'm doing to make sure you
+10:55 - understand but just kind of follow with
+10:57 - me even though you're not wondering if
+10:58 - something's gonna work it or not because
+11:00 - we really can't test this until we do a
+11:02 - significant amount of
+11:03 - the code that we actually need to write
+11:05 - so notice that I mean yes code now I'm
+11:07 - gonna recommend that you use an IDE for
+11:10 - this tutorial series so I'm a PI charm
+11:12 - vyas code maybe using like some NetBeans
+11:15 - thing or something I don't know whatever
+11:16 - ID you're gonna use because we're gonna
+11:18 - have to run multiple instances of Python
+11:20 - we're gonna have a server running and
+11:22 - we're gonna have a clients running on
+11:23 - our own computer we'll test it on
+11:25 - another computer later on but for the
+11:28 - purpose of actually you know testing and
+11:30 - working this out and all that we're
+11:31 - gonna do it on the same computer so the
+11:33 - first thing we're going to do for our
+11:34 - socket script and notice I should have a
+11:36 - server dot PI and client up PI script
+11:38 - doesn't matter if they're in the same
+11:39 - directory or not is import socket and
+11:41 - import threading now for any of you that
+11:44 - don't know what writing is threading is
+11:46 - essentially a way of creating multiple
+11:48 - what we call threads within one Python
+11:50 - program so typically if I did something
+11:53 - like you know if I import time I did
+11:56 - something like time don't sleep one and
+11:58 - then print hello like that then we would
+12:01 - have to wait for this time not sleep to
+12:03 - finish so this wait we had up to wait
+12:05 - one second before we were able to print
+12:07 - hello but if I run each of these pieces
+12:09 - of code in say a different thread what
+12:12 - that means is well one piece of code is
+12:14 - waiting or it's not doing something the
+12:16 - other piece of code or the other thread
+12:18 - can run so we're actually gonna put all
+12:20 - of the kind of message handling stuff in
+12:24 - separate threads for each client that
+12:26 - connects to our server so that a client
+12:28 - is not waiting for another client to say
+12:31 - send a message or receive a message or
+12:33 - something like that before it's able to
+12:35 - access the server and communicate with
+12:36 - the server so we'll talk about that more
+12:38 - when that happens but just kind of
+12:40 - follow along that a thread allows us to
+12:42 - separate code out so that it's not
+12:44 - waiting for other code to finish before
+12:46 - it's able to execute all right so the
+12:49 - first thing I'm going to need to do is
+12:49 - define a port so when we run a server we
+12:52 - need to pick a port that we're gonna run
+12:53 - it on now it's kind of tricky to explain
+12:56 - what port to run on the port that I
+12:58 - typically run on is 50/50 I don't know
+13:01 - the exact numbers of all the ports and
+13:04 - what they do but I'm pretty sure above a
+13:05 - certain threshold maybe above port 4000
+13:08 - all of those ports on your computer
+13:09 - become inactive or not used I think
+13:12 - there's something like 10,000 ports
+13:13 - again I don't really know you're gonna
+13:15 - have to look up the
+13:16 - specific information if you want but a
+13:18 - safe bet is usually to run on port 5050
+13:21 - this is just because we're trying to
+13:22 - pick a port essentially that's not being
+13:24 - used for something else a common example
+13:26 - of a port is something like port 8080 or
+13:28 - port 80 those are HTTP boards I believe
+13:30 - which means that is your communication
+13:32 - with like websites or with web browsers
+13:35 - anything that's communicating over HTTP
+13:38 - which is essentially the entire Internet
+13:39 - has it now okay so we're gonna do port
+13:42 - equals 5050 and then we're gonna say
+13:43 - server equals now here we have a few
+13:46 - different options so the first option is
+13:48 - to go to your command prompt and to type
+13:50 - ipconfig and i a lot of people in
+13:52 - previous videos like oh you show me your
+13:54 - IP address
+13:54 - typing IP config does not show you my
+13:57 - public IP address so don't worry about
+13:59 - that this shows the local network
+14:00 - information so if you go on your command
+14:02 - prompt or if you're on Mac I think it's
+14:04 - ifconfig and not IP config if you're on
+14:06 - Windows you can find something that says
+14:08 - ipv4 address now what that stands for is
+14:11 - your local ipv4 address you can see that
+14:14 - I'm connected to Rogers internet here
+14:15 - right and this is my local ipv4 address
+14:19 - so I'm gonna copy this 192.168.1.2 6
+14:22 - copy that and I'm gonna paste that in
+14:24 - here as my server the reason for that is
+14:27 - because I want to run this on my local
+14:28 - network off of this device this is the
+14:31 - device the server is gonna run on so I
+14:33 - need to choose the IP address of this
+14:34 - device if you try to pick a different IP
+14:37 - address that it can't access that is not
+14:38 - going to work now another way to do this
+14:41 - just type the same line again is to
+14:44 - actually type server equals and then in
+14:47 - this case you're gonna say socket dot
+14:51 - get post by name so I guess this is
+14:54 - actually get host by name and then in
+14:56 - here you're gonna say socket dot on here
+14:59 - get host name no sorry I decided to look
+15:02 - at my other screen to make sure that was
+15:03 - right but what this block of code
+15:05 - actually does is get this IP address
+15:08 - automatically for you so let's say we
+15:10 - want to run this server on a different
+15:12 - device if we just hard code this IP
+15:14 - address in then we're gonna need to
+15:15 - change that every time that we move this
+15:17 - script over so what I typically like to
+15:19 - do is this option that I just wrote so
+15:21 - we essentially say socket get host my
+15:23 - name and then socket get host name if I
+15:26 - can get this autocomplete thing to go
+15:28 - away what this means is
+15:30 - the IP address of this computer by name
+15:32 - and then we say okay so what is the name
+15:34 - that we're gonna look up well that is
+15:36 - the get hostname which is just the name
+15:38 - of our computer you can print out these
+15:40 - two lines if you want to see what they
+15:41 - do in fact let's actually just do it if
+15:43 - I print out server and I run this here
+15:46 - we can see that we get 192.168.1.2 six
+15:50 - and if I decide to just print out this
+15:52 - line here we can see that what this
+15:55 - actually gives us is in this case
+15:58 - desktop r6k and okf so it's just some
+16:01 - name that represents your computer on
+16:03 - the network so we're saying get the
+16:04 - pretty much IP address by hostname and
+16:07 - then get hostname so it gets up for us
+16:09 - so anyways that gives us our server okay
+16:12 - so now that we've determined the port
+16:13 - and the IP address that we want to run
+16:15 - this server on we need to actually make
+16:16 - a socket that's going to allow us to
+16:19 - open up kind of this device to other
+16:22 - connections so the first step is pick
+16:24 - the port and pick the server and then
+16:26 - pick the socket and bind the socket to
+16:28 - that address so what I'm gonna do is I'm
+16:30 - gonna say server and lower case this is
+16:32 - equal to socket dot socket like this is
+16:35 - how you make a new socket and the first
+16:37 - argument here is actually the family of
+16:40 - socket that we want now family kind of
+16:42 - stands for category that's the way I
+16:44 - like to describe it and there's a lot of
+16:45 - different categories that we can pick
+16:47 - now the types are typically prefixed
+16:50 - with a F like this and you can see when
+16:52 - I type socket socket and then socket AF
+16:55 - the first option is inet which is
+16:57 - actually what we're gonna use this
+16:59 - pretty much tells the socket what type
+17:02 - of IP address or what type of address
+17:03 - are we gonna be accepting or looking for
+17:06 - for specific connections so you can see
+17:08 - that I can pick i net 6 which i believe
+17:10 - stands for ipv6 addresses instead of
+17:13 - ipv4 and then there's things like
+17:15 - packets bluetooth and that link you can
+17:17 - do file objects there's all kinds of
+17:19 - different sockets you can create so in
+17:21 - this case we're a new socket AF
+17:22 - underscore eye net and then what I'm
+17:24 - gonna do in here is say socket dot
+17:26 - stream or I believe it's dot sock
+17:29 - underscore stream I'm not really gonna
+17:30 - discuss exactly what this means is kind
+17:32 - of the standard option but it means
+17:34 - we're streaming data through the socket
+17:36 - there's different ways of sending data
+17:38 - through socket but again that gets into
+17:40 - more advanced networking protocols which
+17:42 - I don't really
+17:43 - cover right here so this one we've done
+17:45 - we've created our our socket now we
+17:47 - picked the type so we've said it's an
+17:49 - AFI net which means over the Internet
+17:50 - and then we pick the method which is
+17:52 - sock string and I actually sorry this is
+17:55 - family and this is type I mean you can
+17:57 - kind of think of this as the type of
+17:58 - socket as well but it just specifies the
+18:00 - type of addresses that we're looking for
+18:01 - okay so now what we need to do is
+18:04 - actually bind this to an address so what
+18:06 - we're going to do up here is we're gonna
+18:07 - say a TDR in all capitals and notice I'm
+18:10 - doing all capitals just because these
+18:11 - are constant values I'm gonna say abd
+18:14 - are equals and in this case we're in
+18:16 - type server port so when we bind our
+18:19 - socket to a specific address it needs to
+18:22 - be in a tupple so it needs to have the
+18:23 - server first and then the port in which
+18:25 - that server is running off of so when we
+18:27 - bind this now we can say server dot bind
+18:30 - like that and then simply put a TDR in
+18:33 - here which now means we've bound this
+18:36 - socket to this address
+18:38 - so anything that connects to this
+18:40 - address now will you know hit this
+18:42 - socket that's essentially the objective
+18:43 - okay so we have that and now what we're
+18:46 - gonna do is see how we can actually make
+18:48 - this socket get set up for listening and
+18:50 - just print out a few things and let it
+18:53 - wait for new connections so I'm gonna
+18:55 - zoom out a little bit here and what I'm
+18:57 - gonna do is define I want to zoom in one
+19:01 - more I want to say defined handle client
+19:04 - as a function we're gonna put in here
+19:07 - address and then we're going to put
+19:09 - connection like that or actually will
+19:10 - put connections of con comm and then a
+19:14 - TDR and then we'll just simply put pass
+19:16 - and then we're going to say defines
+19:19 - start so start is just going to start
+19:22 - the socket server for us we'll just make
+19:23 - it in a function to make things a little
+19:25 - bit cleaner
+19:25 - so we'll put start and then we'll simply
+19:27 - put pass in here so at the bottom of my
+19:30 - program what I like to do is call start
+19:31 - and right before I call start what I
+19:33 - want to do is sprint and say starting I
+19:37 - like to just make some nice output here
+19:38 - and say server is starting just so when
+19:42 - we look in the console we can see kind
+19:44 - of what's happening in this case the
+19:45 - server starting okay so inside of start
+19:48 - here what I'm gonna do now is
+19:49 - essentially write the code that's going
+19:50 - to allow our server to start listening
+19:52 - for connections and then handling those
+19:55 - connections and passing them
+19:56 - to handle clients which will run in a
+19:58 - new threat so what I'm gonna do is I'm
+20:00 - gonna say s naught s server dot listen
+20:04 - which means okay we are now listening
+20:06 - for new connections we'll set that up
+20:08 - and then we're gonna say wow true
+20:10 - because this is gonna go in an infinite
+20:12 - loop essentially it's gonna continue to
+20:13 - listen until you know we don't want to
+20:16 - listen anymore until the server crashes
+20:17 - or until we execute it or turn it off
+20:19 - I'm gonna say while true say server dot
+20:23 - accept like that but here we're gonna
+20:25 - say a TDR connection equals server dot
+20:29 - connect and I think that's right
+20:30 - actually I've messed it up it's con
+20:32 - comma a TDR
+20:34 - and the reason for this is essentially
+20:36 - what this line of code does is it's it
+20:38 - it blocks and what that means is this
+20:41 - line will wait like we'll wait on this
+20:44 - line of code here for a new connection
+20:46 - to the server when a new connection
+20:48 - occurs we will store the address of that
+20:51 - connection so what IP address and what
+20:53 - port it came from and then we will store
+20:56 - an actual object that's going to allow
+20:57 - us to send information back to that
+20:59 - connection so that's what con stands for
+21:02 - you can see that it's giving me socket
+21:03 - here unused variable connection so this
+21:05 - is actually a socket object that's going
+21:07 - to allow us to communicate back to the
+21:09 - connection or the thing that connected
+21:11 - and this is simply just the information
+21:13 - about the connection so what port and
+21:15 - what IP address connected to the server
+21:18 - so when that happens what I'm gonna do
+21:20 - is start a new thread which is equal to
+21:22 - handle client so a thread of this
+21:25 - function and this function here will
+21:27 - handle all of the communication between
+21:29 - the clients in between the server from
+21:32 - now on so this little function here is
+21:33 - meant to simply handle new connections
+21:35 - and kind of distribute those to where
+21:37 - they need to go
+21:38 - whereas here will handle the individual
+21:40 - connection between the client and the
+21:42 - server so one client and one server so
+21:45 - what I'm gonna do is I'm gonna say
+21:46 - thread equals spreading dot thread this
+21:52 - is the threading module in Python 3 by
+21:54 - the way so if you have Python 2 this
+21:56 - likely will not work for you and I say
+21:58 - target equals in this case the name of
+22:00 - the function so handle clients no
+22:02 - brackets notice I don't have any
+22:03 - brackets there I'm gonna say args equals
+22:05 - in here con a TDR
+22:09 - so essentially what I'm saying is okay
+22:11 - so when a new connection occurs we are
+22:13 - going to pass that connection to handle
+22:15 - clients will give handle clients so
+22:17 - we'll say target is handle client right
+22:19 - this new thread that's what that means
+22:20 - arguments are what arguments are we
+22:22 - passing to the function so in this case
+22:24 - connection and address and then we'll
+22:26 - simply start the thread so thread start
+22:28 - like that now I often like to see how
+22:31 - many active connections we have on the
+22:33 - server so what I usually do is after I
+22:35 - start a new thread is simply print the
+22:37 - amount of active connections currently
+22:39 - just so that we can see that so what I'm
+22:41 - gonna do here is I'm going to say print
+22:42 - and we'll just do a print a new line
+22:45 - here and we'll say active connections
+22:50 - like about an all capital I'll make this
+22:53 - an F string and then we're simply gonna
+22:55 - say reading dot active like this active
+23:00 - count minus 1 now what this tells us is
+23:03 - how many threads are active on this
+23:05 - process or in this Python process the
+23:08 - amount of threads will represent the
+23:10 - amount of clients connected because we
+23:11 - will create a new thread for each new
+23:13 - client but since there's one thread
+23:15 - running always which is this start
+23:17 - thread to listen for new connections
+23:19 - we'll subtract one which means that this
+23:22 - will tell us there is one active
+23:23 - connection when there is two threads
+23:24 - running right that's the idea we might
+23:26 - need to move this line of code later but
+23:28 - for now we'll leave it here and then
+23:29 - we're now going to start handling handle
+23:32 - client
+23:32 - so since handle client is in its own
+23:34 - thread this is gonna run for each client
+23:37 - just remember this function will be
+23:38 - running in parallel and on parallel
+23:40 - really but kind of concurrently for each
+23:42 - client so the first thing that we're
+23:44 - gonna do is simply print a new
+23:46 - connection so we're gonna say print and
+23:48 - then new connection like that and then
+23:51 - here we'll do another half string and
+23:53 - we'll say who connected so we'll say a
+23:54 - TD are connected just so that we get
+23:58 - some information in our server the next
+24:00 - thing that we'll do is we'll set up a
+24:02 - while loop and we'll say while true
+24:04 - actually we'll say connected equals true
+24:09 - and we'll say while connected like that
+24:12 - so while connected then here we're gonna
+24:15 - wait to receive information from the
+24:18 - client and when we receive information
+24:19 - from the client we're gonna do something
+24:22 - with
+24:22 - and simply printed to the screen so what
+24:25 - I'm gonna say is message equals and then
+24:29 - in this case we're gonna say con like
+24:33 - that dot our CV so dot receive and then
+24:36 - we actually need to put in here how many
+24:38 - bytes we want to receive from the client
+24:40 - now this is gonna bring us into talking
+24:42 - about message protocols which we're
+24:44 - gonna do in just a second
+24:45 - but the idea here is this line of code
+24:47 - again is what we call a blocking line of
+24:49 - code which means that we will not pass
+24:51 - this line of code until we receive a
+24:53 - message from our client so that's why
+24:56 - it's important that we have these and
+24:57 - threads to make sure that we're not
+24:59 - blocking other clients from potentially
+25:00 - connecting because these lines socon dot
+25:03 - receive and server dot accept are
+25:06 - blocking lines of code so receive is
+25:08 - saying okay we're gonna receive a
+25:09 - message from the client we receive that
+25:12 - from this socket like that which means
+25:14 - wait till something is sent over the
+25:15 - socket but what we need to put in the
+25:17 - brackets here is how many bytes we are
+25:20 - going to take so how many bytes we're
+25:21 - going to accept now how are we gonna
+25:23 - know that so the idea behind how many
+25:26 - bytes is like we might send a message
+25:27 - like hello to the server but we might
+25:30 - also send a message like hello like that
+25:33 - to the server right and clearly this
+25:35 - message is a lot longer takes up more
+25:37 - bytes than the other message so how are
+25:39 - we gonna know how many bytes to receive
+25:41 - from the client sorry not the server if
+25:44 - you know if we're just guessing right we
+25:46 - need to come up with some kind of
+25:48 - protocol some method of sending messages
+25:50 - that tells us how many bytes we're gonna
+25:52 - be receiving so what we do is we create
+25:55 - what's called a header now I'm going to
+25:56 - talk about what a header is in a second
+25:58 - but we're gonna do up here is define a
+25:59 - fixed length header of what we're gonna
+26:01 - call 64 bytes now what this means is
+26:04 - what we're actually gonna do is the
+26:06 - first message to the server every single
+26:09 - time from the client is going to be a
+26:11 - header of length 64 that tells us the
+26:14 - length of the message that's gonna come
+26:16 - next so essentially we're gonna say all
+26:18 - right since we don't know how big a
+26:21 - message is gonna be we're gonna say that
+26:23 - the first message to the server every
+26:25 - single time needs to be a message of
+26:27 - length 64 what that means is that it
+26:30 - always no matter how big this message
+26:32 - actually is it needs to be like 64 right
+26:35 - so we'll have to do that
+26:36 - the client-side later but just know that
+26:38 - the header size were picking is 64 and
+26:40 - these 64 bytes that we're sending are
+26:42 - going to have a number in them that
+26:44 - represents the length of the amount of
+26:46 - bytes for the message that we're about
+26:48 - to receive
+26:49 - so essentially say we're gonna send the
+26:51 - message hello this isn't really 5 bytes
+26:54 - but say this is 5 bytes the first thing
+26:56 - we'll send to the server is 5 and we'll
+26:58 - pad that message so that it's 64 bytes
+27:01 - long and then we'll read that we'll say
+27:04 - okay so we're gonna be receiving the
+27:06 - number 5 so we're receiving 5 bytes of
+27:08 - information and then we'll receive again
+27:10 - 5 bytes so that means we'll send this
+27:12 - first message receive it on the server
+27:14 - and the server will wait to receive now
+27:16 - the next message
+27:17 - which will be of length of whatever it's
+27:19 - sent in the first message this will make
+27:21 - more sense once we get through it but
+27:22 - hopefully that gives you an idea of what
+27:24 - I'm trying to accomplish here so the
+27:25 - first thing that we're actually gonna
+27:26 - say is message length because we're
+27:28 - gonna follow this protocol write is
+27:29 - going to be equal to Khanda receive and
+27:31 - then header now hetero means 64 the only
+27:35 - issue with picking a fixed length header
+27:36 - this small is that if we send a message
+27:39 - that is actually essentially we need to
+27:42 - be able to represent the length of the
+27:43 - message that's gonna come with 64 bytes
+27:45 - now I actually don't know what that
+27:48 - means
+27:49 - in terms of the actual numeric value but
+27:51 - if we were sending a really large
+27:53 - message we may potentially run into the
+27:55 - issue where our header is actually too
+27:57 - small to represent the length of the
+27:59 - message that's about to come
+28:01 - we won't in our example but just keep
+28:02 - that in mind that is a potential concern
+28:05 - of the way that we're doing things okay
+28:06 - so what's a message length equals con
+28:08 - dot received header and then what we're
+28:10 - gonna do is actually decode this because
+28:12 - every time we send a message we need to
+28:14 - encode it into a byte format and we're
+28:16 - gonna encode that with a decode that
+28:19 - with a UTF form so I'm gonna say format
+28:22 - up here equals and then here gonna say
+28:25 - UTF - 8 just so that we have that is a
+28:28 - constant we can change that later if we
+28:29 - want so we'll say decode format which
+28:33 - essentially means decode this message
+28:34 - from it's bytes format into a string
+28:37 - using utf-8 and then what we're gonna do
+28:40 - is convert that to an integer so we're
+28:42 - gonna say okay so message underscore
+28:45 - length like that equals an int of
+28:48 - message length and then we're gonna
+28:50 - receive the next message so we'll say
+28:52 - the actual message is going to be equal
+28:54 - to con dot receive and in here this is
+28:57 - gonna be message length same thing
+29:00 - decode format like that if I could type
+29:05 - Y my typing so horribly Jeanette formats
+29:07 - there you go
+29:08 - so con dot receive message length decode
+29:11 - format so the first message tells us how
+29:12 - long the messages that's coming so we
+29:15 - use that convert it to an integer and
+29:16 - then put that in here as how many bytes
+29:18 - we're gonna be receiving for the actual
+29:20 - message so then we should know that this
+29:22 - message is accurate so what we can do is
+29:24 - simply print in here and we'll say put
+29:29 - an F string I'm just gonna put a TDR
+29:31 - which is the address of the person and
+29:33 - then what they said so in this case MSG
+29:35 - so we received a message from them we'll
+29:37 - print out a TDR in brackets and then
+29:39 - whatever the messages that they sent now
+29:42 - an important thing that we need to do is
+29:43 - actually handle how to close a
+29:45 - connection so we want to make sure that
+29:47 - when a client leaves there's some
+29:49 - protocol that we've come up with to make
+29:51 - sure that we handle their disconnection
+29:53 - cleanly so yes they could just
+29:55 - disconnect and not tell the server that
+29:57 - they're disconnecting that wouldn't
+29:59 - really cause that many issues but when
+30:02 - they want to reconnect later we might
+30:03 - run into a problem that the server
+30:05 - already has them connected and since
+30:07 - they didn't cleanly disconnect when they
+30:10 - try to connect it's gonna say hey we
+30:11 - can't connect you because on our end it
+30:13 - seems like you're already connected even
+30:15 - though they may not be so the way that
+30:17 - we do this is we come up with some kind
+30:19 - of message that we send to notify the
+30:21 - server that we're gonna disconnect so in
+30:23 - this case we're gonna call this the
+30:25 - disconnect underscore message and we're
+30:29 - just gonna make this a exclamation point
+30:32 - and then disconnect now you can make
+30:33 - this message whatever you want but this
+30:35 - means when we receive this message we
+30:37 - will close the connection and disconnect
+30:39 - the client from the server so to do that
+30:41 - we're gonna say if here so if MSG equals
+30:46 - equals disconnect message then we'll
+30:50 - simply say break or we can say connected
+30:54 - equals false right we do what everyone
+30:55 - we want I'll just do connect that equals
+30:57 - false and then yeah we can print out the
+31:01 - disconnect message that's fine then
+31:02 - we're gonna say ISKCON dot close what
+31:06 - that means is close the current
+31:08 - connection cleanly disconnect everything
+31:10 - should work fine and in fact yeah that
+31:13 - should actually be fine and I think that
+31:16 - might be the server completed let me
+31:18 - just look and make sure that everything
+31:20 - is fine here
+31:21 - I believe it actually is and we're good
+31:24 - to go all right so this is the server
+31:26 - the server is complete let me show you
+31:27 - what happens when I run it you can see
+31:29 - that we get server is starting like this
+31:31 - now what I'll actually do is I'll close
+31:33 - that right now we'll add one more line
+31:35 - just to tell us what what IP address the
+31:38 - server is running on just so we know so
+31:40 - after we start listening we'll say print
+31:43 - we'll say I don't know something like
+31:46 - this listening so server is listening on
+31:52 - and then in this case we'll put the IP
+31:55 - address we'll say F string and then here
+31:58 - we will do server like that just so we
+32:01 - can see what IP address is actually
+32:02 - running on will do server and that
+32:04 - should be it for the server let's run
+32:06 - this and see server is listening on
+32:08 - 192.168.1.2 6 so this should work for
+32:11 - all of you guys again you don't need to
+32:12 - install any packages or anything I know
+32:13 - I didn't mention that but when you run
+32:14 - this if you're getting an issue recheck
+32:16 - your code look at what I've done here
+32:18 - because chances are you typed something
+32:20 - wrong or you have a firewall or
+32:22 - something on your computer that's not
+32:23 - letting you run this if you're getting
+32:24 - an issue in it's saying like some socket
+32:26 - issue like you cannot run on this
+32:29 - support or whatever it is or cannot run
+32:31 - on this IP address then make sure you
+32:33 - disable any firewall on your Windows
+32:35 - Explorer all right or your windows
+32:37 - whatever you want to call it I don't
+32:38 - know Windows Defender because that may
+32:40 - be causing the issue but anyways now
+32:42 - we're gonna move on to the client and
+32:44 - see how we can actually connect to the
+32:45 - server so here we're gonna import in
+32:47 - this case socket and then I don't
+32:49 - actually don't think we need anything
+32:51 - else on the client sign so we're gonna
+32:53 - define some of the constants we've had
+32:55 - before so we're gonna keep the header of
+32:56 - 64 we're gonna keep the port like that
+32:58 - so let's go header port we need this
+33:01 - format and this disconnect message so
+33:03 - let's copy those and then what we need
+33:06 - is obviously the server now the server
+33:08 - here will change depending on what
+33:10 - server we're connecting to so in this
+33:12 - case we're gonna connect to 192.168.1.2
+33:16 - 6
+33:16 - again remember this number will likely
+33:18 - be different for you it will probably
+33:19 - not be to 6 it will be whatever your
+33:22 - ipv4 addresses that you found from
+33:24 - terminal or from the command line but
+33:26 - you can always write this line here
+33:28 - which will give you the IP address of
+33:29 - your actual machine right so that will
+33:31 - tell you which one you will be able to
+33:33 - run on and then if you print that out
+33:35 - you can see that and type that in here
+33:37 - okay so we have that now all I'm gonna
+33:39 - do is set up the socket for the client
+33:41 - so we've done this already pretty much
+33:42 - we're gonna say socket equals socket dot
+33:46 - sockets in here we're gonna say socket
+33:48 - dot AF underscore eye net if I could
+33:53 - spell socket correctly that was just a
+33:56 - butcher then we'll say socket again dot
+33:59 - in this case sock underscore Street okay
+34:03 - so we'll do that and now we have the
+34:04 - socket set up here and now we need to
+34:06 - connect to the server so to do that what
+34:09 - we're gonna do is say sockets and I
+34:11 - can't name the socket what am i doing
+34:12 - name that client - my apologies guys
+34:15 - client dot connect so notice instead of
+34:18 - bind we're connecting now in this case
+34:21 - we need to define a DDR up here again so
+34:23 - a DDR equals in this case server and
+34:26 - port so we'll connect to a TDR
+34:30 - like that and now we have officially
+34:32 - connected to the server so actually
+34:35 - let's take a pause here and test this
+34:37 - and see if this is working when we
+34:38 - connect because notice I print new
+34:40 - connection right connected and that
+34:42 - should actually show up and we should
+34:44 - see that so let's run the server make
+34:47 - sure that the server is running a common
+34:48 - issue is people don't have the server
+34:50 - running and they try to connect and it
+34:51 - doesn't work I mean obviously yes that's
+34:53 - not going to work when you try to
+34:54 - connect to a server that's not running
+34:56 - now what I'm gonna do is just go on my
+34:58 - command prompt because I don't think vs
+35:00 - code lets you run multiple python
+35:01 - interpreters at the same time although I
+35:04 - could be wrong
+35:04 - let's see D into socket tutorial like
+35:08 - that and let's go python in this case
+35:11 - this was client so when we do that we
+35:15 - get invalid literal for int with base 10
+35:18 - in handle client okay so that's alright
+35:20 - let's just have a look here okay so what
+35:24 - we're gonna do here is just make a quick
+35:25 - fix on the server because you saw that
+35:27 - message that was popping up it was
+35:28 - saying invalid literal
+35:30 - for into a base town I guess it's not
+35:31 - popping up anymore because I closed the
+35:33 - server but it was saying invalid liberal
+35:36 - four inch with base ten and the reason
+35:37 - for that is when we connect a message is
+35:40 - sent to the server telling us that we
+35:42 - connected but what we're doing here is
+35:44 - we're trying to handle immediately the
+35:47 - message that's being sent with the
+35:48 - length of the messages about to come
+35:50 - which we haven't yet sent so we need to
+35:52 - make sure that we're getting a valid
+35:54 - message before we try to convert that
+35:55 - message to an integer because otherwise
+35:57 - we're gonna run into an issue so what
+35:58 - I'm gonna do is simply just say if
+36:00 - message length which simply means if
+36:02 - this message has some content because
+36:05 - essentially when we connect when we
+36:07 - receive will receive nothing the first
+36:10 - time because when we connected the
+36:12 - message is it's kind of it's difficult
+36:15 - to explain exactly why this happens but
+36:17 - when you connect some kind of message is
+36:19 - sent it's not really a valid message is
+36:20 - kind of like a blank message so when we
+36:23 - try to convert that into an integer we
+36:25 - run into an issue so we're just gonna
+36:26 - make sure that we get an actual message
+36:29 - here by checking if this is not none
+36:31 - that's what this line means here and if
+36:33 - it's not none then we'll do this
+36:35 - protocol that we talked about before so
+36:36 - let's run this now let's rerun the
+36:39 - server server's listening on that port
+36:41 - okay so let's go here let's run this and
+36:44 - notice that we don't get an issue this
+36:46 - time we get active connections one
+36:49 - 192.168.1.2 six connect button awesome
+36:52 - okay so now that we're connected to the
+36:54 - server what we actually need to do is
+36:55 - come up with a way to send eight
+36:57 - messages
+36:57 - so we're just going to start by creating
+36:59 - a define send function we're going to
+37:02 - take MSG as a parameter we're gonna
+37:04 - start by saying message equals in this
+37:06 - case MSG dot encode in format now this
+37:11 - is because when we send messages we need
+37:13 - to encode them into a bytes format so
+37:15 - what encode actually does let's see if
+37:16 - it gives me that pop-up it's not of
+37:18 - course is encode this string into a
+37:21 - bytes like object so then we can
+37:24 - actually send the bytes through the
+37:25 - socket and that's you know working
+37:27 - that's how we have to do that now if
+37:29 - since we need to follow this protocol
+37:31 - where the first message we send is the
+37:33 - length of the message that's about to
+37:34 - come we need to get the length this will
+37:36 - say MSG underscore length equals in this
+37:40 - case the land of
+37:42 - message and then what we're gonna do is
+37:46 - we're actually going to encode this as a
+37:48 - string so we're gonna say send length
+37:51 - equals in this case STR of message
+37:56 - underscore length like that dots in code
+38:00 - we're going to encode that with the
+38:02 - format of utf-8 then what we're gonna do
+38:06 - is now pad this to make this length 64
+38:09 - so right now the send length which is
+38:12 - the first message that we're gonna send
+38:13 - representing the length of this message
+38:16 - right the one that we actually want to
+38:17 - send we need to make sure that that
+38:19 - message is 64 bytes long so we don't
+38:22 - necessarily know that it's gonna be 64
+38:24 - bytes long because it's just gonna be
+38:26 - some integer that we're sending maybe
+38:27 - it's like 5 10 20 whatever it's telling
+38:29 - us the length of the bytes that doesn't
+38:32 - mean that the message we're sending is
+38:34 - that long so we need to now find the
+38:35 - length of this message we need to take
+38:39 - 64 and subtract this from 64 to figure
+38:43 - out how much we need to pad this so that
+38:45 - is of length 64 so we're gonna say
+38:47 - padded send the length is equal to in
+38:52 - this case send underscore length
+38:54 - actually I guess we can just do we could
+38:57 - just do this we could just actually add
+38:59 - this padding so send underscore length
+39:00 - plus equals in this case we're gonna say
+39:04 - B and then we're gonna do a blank string
+39:06 - with this space now what this means is
+39:08 - the byte representation of this string
+39:10 - so since we just want to add blank
+39:12 - spaces just we want to add padding to
+39:14 - make it the correct length we can just
+39:16 - add a space so we'll say B and then a
+39:18 - space sentence for byte space x in this
+39:22 - case we're gonna say header minus the
+39:25 - Len in lower cases of send length so
+39:30 - we're gonna get the length of this we're
+39:32 - gonna subtract it from the header and
+39:33 - then we're gonna add that amount to this
+39:35 - so that it's like 64 then all we need to
+39:38 - do is say in this case client dot send
+39:42 - send length then client taught send in
+39:46 - this case it's gonna be that message so
+39:49 - this should hopefully work so we can try
+39:51 - this when you send Hello like that
+39:55 - actually
+39:55 - seduced to hello world so we can see how
+39:58 - that works I don't think the service
+40:00 - still running I'll reboot it it is still
+40:02 - running so actually let's just reboot
+40:04 - that now so we see the server is running
+40:06 - let's go to our command prompt let's go
+40:09 - and run this client script and we see
+40:11 - that we get active connections 1 and
+40:13 - HelloWorld popping up that actually
+40:16 - means that we did this correctly what
+40:18 - happened was this is the server script
+40:19 - notice that that happened when I pressed
+40:21 - enter here we were able to send that
+40:23 - text we decoded that on the server side
+40:25 - and then that was printed and shown so I
+40:28 - can actually send more than one message
+40:29 - obviously if I would like so let's now
+40:31 - handle the disconnection message that's
+40:33 - kind of next I'll shut down this server
+40:35 - we're gonna send the disconnect message
+40:38 - and see what happens now after we send
+40:40 - HelloWorld
+40:41 - let's send a few more actually so send
+40:42 - hello everyone hello Tim like that so
+40:50 - let's run this server now and then run
+40:53 - that and see what happens when we send
+40:55 - that disconnect message so we go here a
+40:57 - new Python client up hi hello world
+40:59 - hello everyone hello Tim disconnect and
+41:02 - then we've disconnected from the server
+41:04 - and if we decide to reconnect again
+41:06 - which we can totally do by just running
+41:08 - this script again we will see that the
+41:09 - active connection is one it's not 2
+41:12 - because we actually exited that thread
+41:14 - and got rid of it when we saw that
+41:16 - disconnect message so that's the basics
+41:18 - behind sending those messages so now
+41:21 - what I'm gonna do is show you how we
+41:22 - actually connect with multiple clients
+41:24 - and how we can make it for example if I
+41:26 - just do like input like this you have to
+41:28 - press space to send it so let's do that
+41:30 - actually first and show you how that
+41:32 - works so input like that here we go
+41:36 - now if I run clients we'll see that it
+41:38 - shows whole world when I press ENTER it
+41:39 - shows hello everyone
+41:40 - enter again hello Tim disconnect that's
+41:43 - great so let's run an instance of client
+41:45 - there we're gonna run one more in
+41:47 - another command prompt if I could get to
+41:50 - the folder so CD socket tutorial Python
+41:56 - client PI and then notice we now get
+41:58 - active connections too it's saying hello
+42:00 - world from someone else if I go to this
+42:02 - script and I hit enter it says hello
+42:04 - everyone and notice that's from a
+42:06 - different number than this number it's
+42:08 - the same IP address because it's the
+42:09 - same computer but it's giving us a
+42:10 - different port number actually I don't
+42:12 - think that's support number but
+42:13 - something anyways and if I now go from
+42:15 - this one and I hit enter if I can get
+42:18 - that in here what's happening on this
+42:20 - client script something's going wrong
+42:22 - here uh enter there we go
+42:24 - gets hello everyone hello everyone come
+42:26 - here hit Enter disconnect come here
+42:29 - hit Enter disconnect so we know multiple
+42:31 - clients connected it doesn't matter when
+42:33 - they're sending messages these will
+42:34 - still work fine I don't know why I had
+42:36 - the bug before I think it was just this
+42:37 - command prompt window is glitching out
+42:39 - but that is the basic idea behind this
+42:42 - client-server system and sending and
+42:43 - handling messages okay so now I've shown
+42:46 - you how we can send messages from the
+42:47 - client to the server but how about from
+42:49 - the server to the client what's actually
+42:51 - quite easy and in fact it's the exact
+42:52 - same thing except just going the other
+42:54 - way
+42:54 - so if we want to send a message back to
+42:56 - the client what I'll do is I'll just
+42:59 - implement in here a simple sent so we'll
+43:01 - literally just go Conn dot send and here
+43:05 - we can say something like I don't know
+43:08 - message received if I can spell receive
+43:12 - properly I don't even know if that's
+43:14 - right any more dots in code format so
+43:19 - all we're gonna do is simply send this
+43:20 - message encoded with that format so
+43:22 - every time that a message is sent to us
+43:24 - we will encode that message and send it
+43:27 - back now to see that sending back oh
+43:29 - I've already added this in here forgot
+43:31 - that I put that there when I was testing
+43:32 - in between the break what we can do is
+43:34 - merely write print client dot receive
+43:38 - and then some number in here ideally we
+43:41 - would use the same protocol we've used
+43:43 - to send a message to the server to send
+43:45 - one back to the client so that
+43:46 - fixed-length header but because I'm lazy
+43:48 - and we're getting near the end of the
+43:49 - video I don't want to do that you guys
+43:51 - understand how that works so I've just
+43:52 - put a large number here to make sure
+43:54 - that we'll be able to handle whatever
+43:55 - message is sent back but the idea is
+43:57 - after we receive a message we will send
+44:00 - back to the client a message and then
+44:03 - they can receive that by writing client
+44:05 - receive if this number is long enough
+44:07 - obviously they will be able to receive
+44:08 - the length of the message we will print
+44:10 - that out in fact we can actually decode
+44:12 - this to make sure this is not byte
+44:14 - formats or decode and then we'll put
+44:16 - format like that and then we will see
+44:18 - that messages received every time that
+44:20 - we
+44:21 - a message and if we don't get that
+44:23 - message received that means something
+44:24 - was wrong on the server side now a lot
+44:27 - of you are probably saying and I'll show
+44:28 - you this how this works in a second well
+44:29 - what if I want to send the messages from
+44:31 - the other client to the other client to
+44:33 - do that what you would need to do is
+44:35 - store a list of all of the messages
+44:37 - below believe that are sent so
+44:39 - essentially every time a message is
+44:41 - received from client 1 what you would
+44:43 - need to do is add that to a list and
+44:46 - then what you would do is send that back
+44:48 - to each client so if you want to do that
+44:51 - you can make another like protocol or
+44:53 - another I don't thread that does that so
+44:56 - send to every single client or what you
+44:58 - can do is check in a specific line
+45:00 - itself what messages it's up-to-date
+45:03 - with so you can say okay um have you
+45:05 - seen the previous message that this
+45:07 - person sent in that person sent if they
+45:08 - haven't you send it to them right
+45:10 - there's different ways to do this that's
+45:13 - when you start getting into more
+45:14 - complicated things in sockets but the
+45:17 - idea is right you know we can send
+45:19 - things from the server to the client the
+45:20 - same way that the client can send things
+45:21 - to the server so let's run this
+45:22 - let's go server see what's an issue here
+45:27 - we run into something let's just do this
+45:29 - one more time okay so server is
+45:31 - listening let's go to our command prompt
+45:33 - let's run a Python client PI and notices
+45:39 - says msg received so we hit enter
+45:42 - message received again message received
+45:45 - disconnect boom everything is working we
+45:46 - are good so that is how that works in
+45:49 - terms of sending messages back now if
+45:51 - you want to send something that's not a
+45:53 - string so you want to send say like an
+45:55 - object then what you can do is you can
+45:57 - send messages that are JSON serialized
+45:59 - or you can send messages that are
+46:01 - pickled now I forget the way that pickle
+46:03 - works totally so I'm not actually gonna
+46:05 - show you but the idea is you can import
+46:08 - pickle and you can look this up there's
+46:09 - tons of stuff online that shows you how
+46:10 - to do this you import pickle you can
+46:13 - pickle like a Python object so an entire
+46:15 - objects like you make your own custom
+46:17 - object you can pickle that which is a
+46:19 - way of serializing it and then send that
+46:21 - through the socket back to the server
+46:24 - where the server can unpick lit and use
+46:26 - it so if you want to send things that
+46:28 - aren't strings that's a way that you can
+46:29 - do it typically we're just gonna be
+46:31 - sending strings which is what I've shown
+46:32 - here
+46:33 - but this should hopefully give you
+46:35 - enough information to make some kind of
+46:37 - socket applications again I know a lot
+46:40 - of you are gonna want to send messages
+46:41 - between clients so the way to do that is
+46:43 - to globally keep track of all the
+46:45 - messages that are sent and then within
+46:47 - the thread here right you're gonna check
+46:49 - if you need to send messages from other
+46:52 - clients to the current client and you
+46:54 - can also do something like a constant
+46:56 - ping command so you can have the client
+46:59 - constantly send the server like a read
+47:01 - read read command or some specific
+47:04 - string and whenever it sends that the
+47:06 - client should are the server should spit
+47:08 - back to it any new messages or any new
+47:10 - information so it's constantly pinging
+47:12 - and asking the server for information
+47:15 - right okay so what I'm gonna do now is
+47:16 - show you how this works on different
+47:18 - computers so I'm gonna run the server
+47:20 - script notice I don't have anything else
+47:22 - running on my computer I'm really not
+47:23 - trying to trick you guys I promise it's
+47:25 - there's no command prompt windows I'm
+47:26 - just gonna run the server on this
+47:27 - computer so servers here we can see
+47:30 - server starting servers listening watch
+47:32 - the server output now while I'm still on
+47:34 - camera here oh I've hit everything while
+47:37 - I'm doing that I have my Mac here now
+47:39 - I've downloaded the client script onto
+47:41 - my Mac so what I'm gonna do is simply
+47:43 - send to the server here like I'm gonna
+47:47 - connect to the server from my Mac and
+47:48 - show you that it actually works and you
+47:50 - see the message so all I'm doing I'm not
+47:52 - sure if you guys can see this I have a
+47:53 - terminal window open I have the client
+47:55 - script here I'm gonna hit enter on here
+47:58 - and you should see new connection active
+48:00 - connections one hello from my macbook is
+48:02 - the first message that is sent now if I
+48:04 - hit enter again
+48:05 - notice right when I hit enter so as my
+48:07 - hand goes down new message enter again
+48:09 - yes Tim disconnects oh I changed a
+48:11 - little bit on here just so that you
+48:13 - could see that this is different
+48:14 - the only modifications I made was the
+48:16 - messages that I was sending since this
+48:18 - computer is on the same Wi-Fi network as
+48:20 - this computer this works right because
+48:22 - we ran this off of this IP address so
+48:24 - all I had to do was connect to that from
+48:26 - my Mac and there we go
+48:28 - that works now if you wanted this to
+48:30 - work over the Internet all you have to
+48:33 - do let me put this math book away for a
+48:35 - second is look up your public IP address
+48:38 - so to do that you can go on Google and
+48:41 - search my public IP address it will pop
+48:44 - up then in your server script what
+48:47 - you're gonna do is change this here so
+48:50 - you're gonna change this to remove this
+48:52 - to simply be that IP address whatever it
+48:55 - is and then from any device anywhere
+48:58 - that has access to the Internet of the
+49:00 - obviously it's important that we're
+49:01 - connect to the internet here you can put
+49:03 - that IP address in and you will be able
+49:04 - to connect now you might run into some
+49:06 - issues with firewalls that will mean you
+49:08 - have to deactivate firewalls
+49:09 - specifically probably on your server
+49:11 - computer potentially on the client
+49:13 - computer as well but that should work
+49:16 - and that is the idea behind all of this
+49:18 - so that has been this tutorial I hope
+49:21 - you guys enjoyed I hope you learned a
+49:22 - little bit about sockets and I hope at
+49:24 - minimum you can send messages now from
+49:26 - one computer to another over the same
+49:28 - network which personally I find very
+49:30 - fascinating that I can just do that
+49:32 - alone sitting in my bedroom I can make a
+49:34 - client-server system so anyways that has
+49:36 - been in I hope you guys enjoyed if you
+49:37 - did make sure you leave a like subscribe
+49:38 - to the channel and I will see you guys
+49:40 - another YouTube video
+
+Cleaned transcript:
+
+hello everybody and welcome back so in this video what we're gonna be doing is talking about socket programming in Python now what we're gonna do and the goal of this video here is gonna be to create an application where we can have multiple clients connect to a server and communicate with the server so I'm not gonna be doing anything crazy complex we're not gonna go any into anything that's too specific the objective is to give you the fundamental skills and understanding of how sockets work so that any application or project you want to use sockets in you at least have a really good starting point to do that and you're not kind of lost on how you get the initial setup done that's kind of where a lot of people get confused here is their sockets not connecting properly or they're getting all these kind of issues so I'm gonna go over some of the common problems that I've run into is sockets as well to hopefully kind of mitigate those for you guys we're gonna get started right away by actually just discussing a kind of basic overview of networking so networking is very important to understand when we're dealing with sockets because a lot of the time will actually be wrong is nothing with your code but something with your understanding of the networking or the understanding of your local network so for this tutorial series we're gonna be running this server and this client just on our own computer and our own local network what that means is anyone on our local network so our router right you're your WiFi network will be able to access and communicate with this server but anyone outside of that will not what I will do at the end of the video is show you and steer you in the right direction on how you can get this to work publicly over the internet which means that anyone from any computer in the world can connect to your server but that again is going to come near the end and you need to understand the difference between say a local area network and a public network and kind of how these networking things operate so that you can understand what it is that I'm doing here so anyways let's go ahead and get started I'm gonna discuss the clientserver model and then a basic overview of networking so sockets work on this clientserver model now what that means is we have one central location or one central process is what I'm gonna call it which is called our server now if we're talking about large companies like Google obviously we know that they have milli or you know even actually probably tens of millions of servers and our purpose we're gonna deal with one server but just know that a lot of the stuff we do with one server we can expand into multiple servers fairly easily just by changing the code up a little bit but in our example we're going to deal with one server so the idea behind the clientserver model is you have a central location which we're gonna call the server and then you have all of these clients that are kind of scattered all over the place they're different devices there are different computers they're different networks they're all around the world right and these are what we call our clients now a good example that I typically like to talk about is games because these are things that people have played a lot in it's a very good example of socket programming um not that games always will implement socket programming but it's a good illustration of the clientserver model when we talk about a game the client and you've probably heard this in gaming before is your game it's the instance of your game running on your computer so let's use the famous example of fortnight if we're talking about how fortnight works in terms of an online game they have their central servers and then they have all of these clients that are around the world the clients are you you are playing the game you are a client now obviously you do not connect to another client's computer in fact that would be a large security risk if you connected directly to say you know your competitor who's you know around the world you connected to their computer what you do is you connect to the central server that hosts all of the clients that are playing in your game or in your region or whatever it is and the reason for that well there's a few different ones obviously a central location is gonna be faster in general than each client connecting to each other clients computer because if we're playing game of a hundred people I can't connect to every single one of these computers and still have things working properly but that's kind of the concept behind this another idea is that say we're playing a game and I connect directly to the other client well that means I can cheat very easily because I can just send the client false information about my game state that's pretty easy to do and in fact in most games you can probably falsify your game state very easily it just won't work because of the way that the server is set up so we have this server in place to kind of handle and do all communication between these different clients so the server connects to each individual client and then each client connects to the server and what happens is messages are passed between the server and between the client so let's say I have my little character here right and he decides he's gonna move over to the right well that is passed to the server in the form of some kind of command or some kind of message protocol which we'll talk about in a second to tell the server hey I moved to the right now to make sure that this client is not cheating or falsifying its information there's a few things that can happen on the server to do that it can check previous states you can check speed it can make sure that the client is sending accurate information and that is kind of what I don't know maintains this secure idea behind this clientserver system I hope that's giving you a little bit of an idea of what I mean but the idea is that you know it sends its movement to the server and then the server transmits that information back to every single client and says hey you know client one moved to the right everyone should know that so you can update that on your end and you can see that and that's the idea behind the client server system so in our example we're gonna have multiple clients connecting to the server they're gonna be sending messages to the server and the server will list out all of the messages so that we can see you know when these messages came in and how they came in and all of that okay so that's the idea behind the clientserver model now obviously in an online game we're gonna be connected to a server that is somewhere around the world so that means we're gonna connect over the Internet right but in our local network things happen a little bit differently and we need to understand how our local network works to understand how the internet actually operates as a whole so when we talk about our local network what we have is a few different components we obviously have the most vital component I would say I'm gonna try to draw kind of a crazy version of this which is our modem now what the modem does and typically actually the modem will be wired in to your internet connection right so if you want to install a modem like a Rogers modem or a bell modem or something like that you typically need a technician to come to your house and run a wire into this modem that connects it to the internet now these wires will go to some large cell tower you might have a satellite dish on your house I don't know exactly how you are in and out operates or how it works it might connect to a fiber optic line it might do something like that but the idea is this cable goes to your modem and gives your modem access to the Internet so then what do you do well now they kind of have these modem router things that are combined but typically you're gonna have a router so your router maybe looks like this it has some antennas off of it whatever and we'll call this the router and the router is what actually allows devices in your home to connect to the modem so it plugs into the modem and the router transmits these radio frequency waves or whatever waves they are and you're able to connect to the router wirelessly right obviously you can connect wired as well if you have an Ethernet cable but the idea behind a router is to allow you to wirelessly connect to your network so maybe I have like my phone up here maybe I have a computer or some device like these boxes are just gonna be random devices and the idea is that all of these connect to the router in some kind of way some kind of protocol and then this router communicates with the modem gets information from the modem the modem says okay what information do I need it asks the internet for that information so it pings the satellite or whatever information comes back sends it back to the router the router sends it back to whatever client was asking for that information so that's how this works on your local network so there's something called IP addresses now obviously so your modem is given one what we call public IP address so a public IP address excuse my handwriting this has one so times one public IP address for your modem that represents your physical location in the internet right your physical location on the world that's your modems IP address it's that's important and then you just need to know that then within your local network you have what's called a local IP address so that so because your router needs to be able to differentiate between the different devices on the network so it can know which device to give information back to or to look information up for it needs to know or have some number that represents each of them so you may have seen an IP address that looks like this 192.168.1 maybe it was a dot zero maybe it's not two depending what you're doing and then like 176 right something like that well each device on your local network is given one of these IP addresses okay so that's something to understand we have these local IP addresses that's the way the router communicates with each device on the network and then we have the public IP address which is given to the modem which is the way the modem communicates with the internet and every time that you want to make a search on the internet you go through this process of pinging the router router pinging the modem modem pinging the internet internet giving it back to the modem giving it back to the router and giving it back to you that's the process that you go through and the reason you can do that is because you have this IP address so you can be differentiated on the network as an individual device now and you have access points gets a little bit more confusing but anyways that's the basic idea behind networking I could be butchering this slightly I'm not an expert in this field I'll make that clear but just understand that this local IP address which we call the ipv4 address is different than the public IP address so if I decide to run a what we call server off of a local IP address what that means is any other computer on this local network so that's connected to my router we'll be able to see it and access it right because if I'm connecting and running a server on this device it's connected to the router which means any other device is connected to the router can access this but anything that's not connected to this router so on a different network cannot see that so that's important to understand however if I decide to run a server on my public IP address so from the modem right then what that means is anything around the world can connect to this because it's running on a different IP address so that's the idea behind networking and behind this clientserver model I hope that makes sense what we're gonna do is run our networks on or run our servers on our local IP address but later again I will show you how to do that on the public IP address all right so now we're ready to actually start writing some code so we're gonna start by programming out the server and we're not really gonna be able to test a lot of this code until we write a bunch of it so I'm gonna be explaining through exactly what I'm doing to make sure you understand but just kind of follow with me even though you're not wondering if something's gonna work it or not because we really can't test this until we do a significant amount of the code that we actually need to write so notice that I mean yes code now I'm gonna recommend that you use an IDE for this tutorial series so I'm a PI charm vyas code maybe using like some NetBeans thing or something I don't know whatever ID you're gonna use because we're gonna have to run multiple instances of Python we're gonna have a server running and we're gonna have a clients running on our own computer we'll test it on another computer later on but for the purpose of actually you know testing and working this out and all that we're gonna do it on the same computer so the first thing we're going to do for our socket script and notice I should have a server dot PI and client up PI script doesn't matter if they're in the same directory or not is import socket and import threading now for any of you that don't know what writing is threading is essentially a way of creating multiple what we call threads within one Python program so typically if I did something like you know if I import time I did something like time don't sleep one and then print hello like that then we would have to wait for this time not sleep to finish so this wait we had up to wait one second before we were able to print hello but if I run each of these pieces of code in say a different thread what that means is well one piece of code is waiting or it's not doing something the other piece of code or the other thread can run so we're actually gonna put all of the kind of message handling stuff in separate threads for each client that connects to our server so that a client is not waiting for another client to say send a message or receive a message or something like that before it's able to access the server and communicate with the server so we'll talk about that more when that happens but just kind of follow along that a thread allows us to separate code out so that it's not waiting for other code to finish before it's able to execute all right so the first thing I'm going to need to do is define a port so when we run a server we need to pick a port that we're gonna run it on now it's kind of tricky to explain what port to run on the port that I typically run on is 50/50 I don't know the exact numbers of all the ports and what they do but I'm pretty sure above a certain threshold maybe above port 4000 all of those ports on your computer become inactive or not used I think there's something like 10,000 ports again I don't really know you're gonna have to look up the specific information if you want but a safe bet is usually to run on port 5050 this is just because we're trying to pick a port essentially that's not being used for something else a common example of a port is something like port 8080 or port 80 those are HTTP boards I believe which means that is your communication with like websites or with web browsers anything that's communicating over HTTP which is essentially the entire Internet has it now okay so we're gonna do port equals 5050 and then we're gonna say server equals now here we have a few different options so the first option is to go to your command prompt and to type ipconfig and i a lot of people in previous videos like oh you show me your IP address typing IP config does not show you my public IP address so don't worry about that this shows the local network information so if you go on your command prompt or if you're on Mac I think it's ifconfig and not IP config if you're on Windows you can find something that says ipv4 address now what that stands for is your local ipv4 address you can see that I'm connected to Rogers internet here right and this is my local ipv4 address so I'm gonna copy this 192.168.1.2 6 copy that and I'm gonna paste that in here as my server the reason for that is because I want to run this on my local network off of this device this is the device the server is gonna run on so I need to choose the IP address of this device if you try to pick a different IP address that it can't access that is not going to work now another way to do this just type the same line again is to actually type server equals and then in this case you're gonna say socket dot get post by name so I guess this is actually get host by name and then in here you're gonna say socket dot on here get host name no sorry I decided to look at my other screen to make sure that was right but what this block of code actually does is get this IP address automatically for you so let's say we want to run this server on a different device if we just hard code this IP address in then we're gonna need to change that every time that we move this script over so what I typically like to do is this option that I just wrote so we essentially say socket get host my name and then socket get host name if I can get this autocomplete thing to go away what this means is the IP address of this computer by name and then we say okay so what is the name that we're gonna look up well that is the get hostname which is just the name of our computer you can print out these two lines if you want to see what they do in fact let's actually just do it if I print out server and I run this here we can see that we get 192.168.1.2 six and if I decide to just print out this line here we can see that what this actually gives us is in this case desktop r6k and okf so it's just some name that represents your computer on the network so we're saying get the pretty much IP address by hostname and then get hostname so it gets up for us so anyways that gives us our server okay so now that we've determined the port and the IP address that we want to run this server on we need to actually make a socket that's going to allow us to open up kind of this device to other connections so the first step is pick the port and pick the server and then pick the socket and bind the socket to that address so what I'm gonna do is I'm gonna say server and lower case this is equal to socket dot socket like this is how you make a new socket and the first argument here is actually the family of socket that we want now family kind of stands for category that's the way I like to describe it and there's a lot of different categories that we can pick now the types are typically prefixed with a F like this and you can see when I type socket socket and then socket AF the first option is inet which is actually what we're gonna use this pretty much tells the socket what type of IP address or what type of address are we gonna be accepting or looking for for specific connections so you can see that I can pick i net 6 which i believe stands for ipv6 addresses instead of ipv4 and then there's things like packets bluetooth and that link you can do file objects there's all kinds of different sockets you can create so in this case we're a new socket AF underscore eye net and then what I'm gonna do in here is say socket dot stream or I believe it's dot sock underscore stream I'm not really gonna discuss exactly what this means is kind of the standard option but it means we're streaming data through the socket there's different ways of sending data through socket but again that gets into more advanced networking protocols which I don't really cover right here so this one we've done we've created our our socket now we picked the type so we've said it's an AFI net which means over the Internet and then we pick the method which is sock string and I actually sorry this is family and this is type I mean you can kind of think of this as the type of socket as well but it just specifies the type of addresses that we're looking for okay so now what we need to do is actually bind this to an address so what we're going to do up here is we're gonna say a TDR in all capitals and notice I'm doing all capitals just because these are constant values I'm gonna say abd are equals and in this case we're in type server port so when we bind our socket to a specific address it needs to be in a tupple so it needs to have the server first and then the port in which that server is running off of so when we bind this now we can say server dot bind like that and then simply put a TDR in here which now means we've bound this socket to this address so anything that connects to this address now will you know hit this socket that's essentially the objective okay so we have that and now what we're gonna do is see how we can actually make this socket get set up for listening and just print out a few things and let it wait for new connections so I'm gonna zoom out a little bit here and what I'm gonna do is define I want to zoom in one more I want to say defined handle client as a function we're gonna put in here address and then we're going to put connection like that or actually will put connections of con comm and then a TDR and then we'll just simply put pass and then we're going to say defines start so start is just going to start the socket server for us we'll just make it in a function to make things a little bit cleaner so we'll put start and then we'll simply put pass in here so at the bottom of my program what I like to do is call start and right before I call start what I want to do is sprint and say starting I like to just make some nice output here and say server is starting just so when we look in the console we can see kind of what's happening in this case the server starting okay so inside of start here what I'm gonna do now is essentially write the code that's going to allow our server to start listening for connections and then handling those connections and passing them to handle clients which will run in a new threat so what I'm gonna do is I'm gonna say s naught s server dot listen which means okay we are now listening for new connections we'll set that up and then we're gonna say wow true because this is gonna go in an infinite loop essentially it's gonna continue to listen until you know we don't want to listen anymore until the server crashes or until we execute it or turn it off I'm gonna say while true say server dot accept like that but here we're gonna say a TDR connection equals server dot connect and I think that's right actually I've messed it up it's con comma a TDR and the reason for this is essentially what this line of code does is it's it it blocks and what that means is this line will wait like we'll wait on this line of code here for a new connection to the server when a new connection occurs we will store the address of that connection so what IP address and what port it came from and then we will store an actual object that's going to allow us to send information back to that connection so that's what con stands for you can see that it's giving me socket here unused variable connection so this is actually a socket object that's going to allow us to communicate back to the connection or the thing that connected and this is simply just the information about the connection so what port and what IP address connected to the server so when that happens what I'm gonna do is start a new thread which is equal to handle client so a thread of this function and this function here will handle all of the communication between the clients in between the server from now on so this little function here is meant to simply handle new connections and kind of distribute those to where they need to go whereas here will handle the individual connection between the client and the server so one client and one server so what I'm gonna do is I'm gonna say thread equals spreading dot thread this is the threading module in Python 3 by the way so if you have Python 2 this likely will not work for you and I say target equals in this case the name of the function so handle clients no brackets notice I don't have any brackets there I'm gonna say args equals in here con a TDR so essentially what I'm saying is okay so when a new connection occurs we are going to pass that connection to handle clients will give handle clients so we'll say target is handle client right this new thread that's what that means arguments are what arguments are we passing to the function so in this case connection and address and then we'll simply start the thread so thread start like that now I often like to see how many active connections we have on the server so what I usually do is after I start a new thread is simply print the amount of active connections currently just so that we can see that so what I'm gonna do here is I'm going to say print and we'll just do a print a new line here and we'll say active connections like about an all capital I'll make this an F string and then we're simply gonna say reading dot active like this active count minus 1 now what this tells us is how many threads are active on this process or in this Python process the amount of threads will represent the amount of clients connected because we will create a new thread for each new client but since there's one thread running always which is this start thread to listen for new connections we'll subtract one which means that this will tell us there is one active connection when there is two threads running right that's the idea we might need to move this line of code later but for now we'll leave it here and then we're now going to start handling handle client so since handle client is in its own thread this is gonna run for each client just remember this function will be running in parallel and on parallel really but kind of concurrently for each client so the first thing that we're gonna do is simply print a new connection so we're gonna say print and then new connection like that and then here we'll do another half string and we'll say who connected so we'll say a TD are connected just so that we get some information in our server the next thing that we'll do is we'll set up a while loop and we'll say while true actually we'll say connected equals true and we'll say while connected like that so while connected then here we're gonna wait to receive information from the client and when we receive information from the client we're gonna do something with and simply printed to the screen so what I'm gonna say is message equals and then in this case we're gonna say con like that dot our CV so dot receive and then we actually need to put in here how many bytes we want to receive from the client now this is gonna bring us into talking about message protocols which we're gonna do in just a second but the idea here is this line of code again is what we call a blocking line of code which means that we will not pass this line of code until we receive a message from our client so that's why it's important that we have these and threads to make sure that we're not blocking other clients from potentially connecting because these lines socon dot receive and server dot accept are blocking lines of code so receive is saying okay we're gonna receive a message from the client we receive that from this socket like that which means wait till something is sent over the socket but what we need to put in the brackets here is how many bytes we are going to take so how many bytes we're going to accept now how are we gonna know that so the idea behind how many bytes is like we might send a message like hello to the server but we might also send a message like hello like that to the server right and clearly this message is a lot longer takes up more bytes than the other message so how are we gonna know how many bytes to receive from the client sorry not the server if you know if we're just guessing right we need to come up with some kind of protocol some method of sending messages that tells us how many bytes we're gonna be receiving so what we do is we create what's called a header now I'm going to talk about what a header is in a second but we're gonna do up here is define a fixed length header of what we're gonna call 64 bytes now what this means is what we're actually gonna do is the first message to the server every single time from the client is going to be a header of length 64 that tells us the length of the message that's gonna come next so essentially we're gonna say all right since we don't know how big a message is gonna be we're gonna say that the first message to the server every single time needs to be a message of length 64 what that means is that it always no matter how big this message actually is it needs to be like 64 right so we'll have to do that the clientside later but just know that the header size were picking is 64 and these 64 bytes that we're sending are going to have a number in them that represents the length of the amount of bytes for the message that we're about to receive so essentially say we're gonna send the message hello this isn't really 5 bytes but say this is 5 bytes the first thing we'll send to the server is 5 and we'll pad that message so that it's 64 bytes long and then we'll read that we'll say okay so we're gonna be receiving the number 5 so we're receiving 5 bytes of information and then we'll receive again 5 bytes so that means we'll send this first message receive it on the server and the server will wait to receive now the next message which will be of length of whatever it's sent in the first message this will make more sense once we get through it but hopefully that gives you an idea of what I'm trying to accomplish here so the first thing that we're actually gonna say is message length because we're gonna follow this protocol write is going to be equal to Khanda receive and then header now hetero means 64 the only issue with picking a fixed length header this small is that if we send a message that is actually essentially we need to be able to represent the length of the message that's gonna come with 64 bytes now I actually don't know what that means in terms of the actual numeric value but if we were sending a really large message we may potentially run into the issue where our header is actually too small to represent the length of the message that's about to come we won't in our example but just keep that in mind that is a potential concern of the way that we're doing things okay so what's a message length equals con dot received header and then what we're gonna do is actually decode this because every time we send a message we need to encode it into a byte format and we're gonna encode that with a decode that with a UTF form so I'm gonna say format up here equals and then here gonna say UTF 8 just so that we have that is a constant we can change that later if we want so we'll say decode format which essentially means decode this message from it's bytes format into a string using utf8 and then what we're gonna do is convert that to an integer so we're gonna say okay so message underscore length like that equals an int of message length and then we're gonna receive the next message so we'll say the actual message is going to be equal to con dot receive and in here this is gonna be message length same thing decode format like that if I could type Y my typing so horribly Jeanette formats there you go so con dot receive message length decode format so the first message tells us how long the messages that's coming so we use that convert it to an integer and then put that in here as how many bytes we're gonna be receiving for the actual message so then we should know that this message is accurate so what we can do is simply print in here and we'll say put an F string I'm just gonna put a TDR which is the address of the person and then what they said so in this case MSG so we received a message from them we'll print out a TDR in brackets and then whatever the messages that they sent now an important thing that we need to do is actually handle how to close a connection so we want to make sure that when a client leaves there's some protocol that we've come up with to make sure that we handle their disconnection cleanly so yes they could just disconnect and not tell the server that they're disconnecting that wouldn't really cause that many issues but when they want to reconnect later we might run into a problem that the server already has them connected and since they didn't cleanly disconnect when they try to connect it's gonna say hey we can't connect you because on our end it seems like you're already connected even though they may not be so the way that we do this is we come up with some kind of message that we send to notify the server that we're gonna disconnect so in this case we're gonna call this the disconnect underscore message and we're just gonna make this a exclamation point and then disconnect now you can make this message whatever you want but this means when we receive this message we will close the connection and disconnect the client from the server so to do that we're gonna say if here so if MSG equals equals disconnect message then we'll simply say break or we can say connected equals false right we do what everyone we want I'll just do connect that equals false and then yeah we can print out the disconnect message that's fine then we're gonna say ISKCON dot close what that means is close the current connection cleanly disconnect everything should work fine and in fact yeah that should actually be fine and I think that might be the server completed let me just look and make sure that everything is fine here I believe it actually is and we're good to go all right so this is the server the server is complete let me show you what happens when I run it you can see that we get server is starting like this now what I'll actually do is I'll close that right now we'll add one more line just to tell us what what IP address the server is running on just so we know so after we start listening we'll say print we'll say I don't know something like this listening so server is listening on and then in this case we'll put the IP address we'll say F string and then here we will do server like that just so we can see what IP address is actually running on will do server and that should be it for the server let's run this and see server is listening on 192.168.1.2 6 so this should work for all of you guys again you don't need to install any packages or anything I know I didn't mention that but when you run this if you're getting an issue recheck your code look at what I've done here because chances are you typed something wrong or you have a firewall or something on your computer that's not letting you run this if you're getting an issue in it's saying like some socket issue like you cannot run on this support or whatever it is or cannot run on this IP address then make sure you disable any firewall on your Windows Explorer all right or your windows whatever you want to call it I don't know Windows Defender because that may be causing the issue but anyways now we're gonna move on to the client and see how we can actually connect to the server so here we're gonna import in this case socket and then I don't actually don't think we need anything else on the client sign so we're gonna define some of the constants we've had before so we're gonna keep the header of 64 we're gonna keep the port like that so let's go header port we need this format and this disconnect message so let's copy those and then what we need is obviously the server now the server here will change depending on what server we're connecting to so in this case we're gonna connect to 192.168.1.2 6 again remember this number will likely be different for you it will probably not be to 6 it will be whatever your ipv4 addresses that you found from terminal or from the command line but you can always write this line here which will give you the IP address of your actual machine right so that will tell you which one you will be able to run on and then if you print that out you can see that and type that in here okay so we have that now all I'm gonna do is set up the socket for the client so we've done this already pretty much we're gonna say socket equals socket dot sockets in here we're gonna say socket dot AF underscore eye net if I could spell socket correctly that was just a butcher then we'll say socket again dot in this case sock underscore Street okay so we'll do that and now we have the socket set up here and now we need to connect to the server so to do that what we're gonna do is say sockets and I can't name the socket what am i doing name that client my apologies guys client dot connect so notice instead of bind we're connecting now in this case we need to define a DDR up here again so a DDR equals in this case server and port so we'll connect to a TDR like that and now we have officially connected to the server so actually let's take a pause here and test this and see if this is working when we connect because notice I print new connection right connected and that should actually show up and we should see that so let's run the server make sure that the server is running a common issue is people don't have the server running and they try to connect and it doesn't work I mean obviously yes that's not going to work when you try to connect to a server that's not running now what I'm gonna do is just go on my command prompt because I don't think vs code lets you run multiple python interpreters at the same time although I could be wrong let's see D into socket tutorial like that and let's go python in this case this was client so when we do that we get invalid literal for int with base 10 in handle client okay so that's alright let's just have a look here okay so what we're gonna do here is just make a quick fix on the server because you saw that message that was popping up it was saying invalid literal for into a base town I guess it's not popping up anymore because I closed the server but it was saying invalid liberal four inch with base ten and the reason for that is when we connect a message is sent to the server telling us that we connected but what we're doing here is we're trying to handle immediately the message that's being sent with the length of the messages about to come which we haven't yet sent so we need to make sure that we're getting a valid message before we try to convert that message to an integer because otherwise we're gonna run into an issue so what I'm gonna do is simply just say if message length which simply means if this message has some content because essentially when we connect when we receive will receive nothing the first time because when we connected the message is it's kind of it's difficult to explain exactly why this happens but when you connect some kind of message is sent it's not really a valid message is kind of like a blank message so when we try to convert that into an integer we run into an issue so we're just gonna make sure that we get an actual message here by checking if this is not none that's what this line means here and if it's not none then we'll do this protocol that we talked about before so let's run this now let's rerun the server server's listening on that port okay so let's go here let's run this and notice that we don't get an issue this time we get active connections one 192.168.1.2 six connect button awesome okay so now that we're connected to the server what we actually need to do is come up with a way to send eight messages so we're just going to start by creating a define send function we're going to take MSG as a parameter we're gonna start by saying message equals in this case MSG dot encode in format now this is because when we send messages we need to encode them into a bytes format so what encode actually does let's see if it gives me that popup it's not of course is encode this string into a bytes like object so then we can actually send the bytes through the socket and that's you know working that's how we have to do that now if since we need to follow this protocol where the first message we send is the length of the message that's about to come we need to get the length this will say MSG underscore length equals in this case the land of message and then what we're gonna do is we're actually going to encode this as a string so we're gonna say send length equals in this case STR of message underscore length like that dots in code we're going to encode that with the format of utf8 then what we're gonna do is now pad this to make this length 64 so right now the send length which is the first message that we're gonna send representing the length of this message right the one that we actually want to send we need to make sure that that message is 64 bytes long so we don't necessarily know that it's gonna be 64 bytes long because it's just gonna be some integer that we're sending maybe it's like 5 10 20 whatever it's telling us the length of the bytes that doesn't mean that the message we're sending is that long so we need to now find the length of this message we need to take 64 and subtract this from 64 to figure out how much we need to pad this so that is of length 64 so we're gonna say padded send the length is equal to in this case send underscore length actually I guess we can just do we could just do this we could just actually add this padding so send underscore length plus equals in this case we're gonna say B and then we're gonna do a blank string with this space now what this means is the byte representation of this string so since we just want to add blank spaces just we want to add padding to make it the correct length we can just add a space so we'll say B and then a space sentence for byte space x in this case we're gonna say header minus the Len in lower cases of send length so we're gonna get the length of this we're gonna subtract it from the header and then we're gonna add that amount to this so that it's like 64 then all we need to do is say in this case client dot send send length then client taught send in this case it's gonna be that message so this should hopefully work so we can try this when you send Hello like that actually seduced to hello world so we can see how that works I don't think the service still running I'll reboot it it is still running so actually let's just reboot that now so we see the server is running let's go to our command prompt let's go and run this client script and we see that we get active connections 1 and HelloWorld popping up that actually means that we did this correctly what happened was this is the server script notice that that happened when I pressed enter here we were able to send that text we decoded that on the server side and then that was printed and shown so I can actually send more than one message obviously if I would like so let's now handle the disconnection message that's kind of next I'll shut down this server we're gonna send the disconnect message and see what happens now after we send HelloWorld let's send a few more actually so send hello everyone hello Tim like that so let's run this server now and then run that and see what happens when we send that disconnect message so we go here a new Python client up hi hello world hello everyone hello Tim disconnect and then we've disconnected from the server and if we decide to reconnect again which we can totally do by just running this script again we will see that the active connection is one it's not 2 because we actually exited that thread and got rid of it when we saw that disconnect message so that's the basics behind sending those messages so now what I'm gonna do is show you how we actually connect with multiple clients and how we can make it for example if I just do like input like this you have to press space to send it so let's do that actually first and show you how that works so input like that here we go now if I run clients we'll see that it shows whole world when I press ENTER it shows hello everyone enter again hello Tim disconnect that's great so let's run an instance of client there we're gonna run one more in another command prompt if I could get to the folder so CD socket tutorial Python client PI and then notice we now get active connections too it's saying hello world from someone else if I go to this script and I hit enter it says hello everyone and notice that's from a different number than this number it's the same IP address because it's the same computer but it's giving us a different port number actually I don't think that's support number but something anyways and if I now go from this one and I hit enter if I can get that in here what's happening on this client script something's going wrong here uh enter there we go gets hello everyone hello everyone come here hit Enter disconnect come here hit Enter disconnect so we know multiple clients connected it doesn't matter when they're sending messages these will still work fine I don't know why I had the bug before I think it was just this command prompt window is glitching out but that is the basic idea behind this clientserver system and sending and handling messages okay so now I've shown you how we can send messages from the client to the server but how about from the server to the client what's actually quite easy and in fact it's the exact same thing except just going the other way so if we want to send a message back to the client what I'll do is I'll just implement in here a simple sent so we'll literally just go Conn dot send and here we can say something like I don't know message received if I can spell receive properly I don't even know if that's right any more dots in code format so all we're gonna do is simply send this message encoded with that format so every time that a message is sent to us we will encode that message and send it back now to see that sending back oh I've already added this in here forgot that I put that there when I was testing in between the break what we can do is merely write print client dot receive and then some number in here ideally we would use the same protocol we've used to send a message to the server to send one back to the client so that fixedlength header but because I'm lazy and we're getting near the end of the video I don't want to do that you guys understand how that works so I've just put a large number here to make sure that we'll be able to handle whatever message is sent back but the idea is after we receive a message we will send back to the client a message and then they can receive that by writing client receive if this number is long enough obviously they will be able to receive the length of the message we will print that out in fact we can actually decode this to make sure this is not byte formats or decode and then we'll put format like that and then we will see that messages received every time that we a message and if we don't get that message received that means something was wrong on the server side now a lot of you are probably saying and I'll show you this how this works in a second well what if I want to send the messages from the other client to the other client to do that what you would need to do is store a list of all of the messages below believe that are sent so essentially every time a message is received from client 1 what you would need to do is add that to a list and then what you would do is send that back to each client so if you want to do that you can make another like protocol or another I don't thread that does that so send to every single client or what you can do is check in a specific line itself what messages it's uptodate with so you can say okay um have you seen the previous message that this person sent in that person sent if they haven't you send it to them right there's different ways to do this that's when you start getting into more complicated things in sockets but the idea is right you know we can send things from the server to the client the same way that the client can send things to the server so let's run this let's go server see what's an issue here we run into something let's just do this one more time okay so server is listening let's go to our command prompt let's run a Python client PI and notices says msg received so we hit enter message received again message received disconnect boom everything is working we are good so that is how that works in terms of sending messages back now if you want to send something that's not a string so you want to send say like an object then what you can do is you can send messages that are JSON serialized or you can send messages that are pickled now I forget the way that pickle works totally so I'm not actually gonna show you but the idea is you can import pickle and you can look this up there's tons of stuff online that shows you how to do this you import pickle you can pickle like a Python object so an entire objects like you make your own custom object you can pickle that which is a way of serializing it and then send that through the socket back to the server where the server can unpick lit and use it so if you want to send things that aren't strings that's a way that you can do it typically we're just gonna be sending strings which is what I've shown here but this should hopefully give you enough information to make some kind of socket applications again I know a lot of you are gonna want to send messages between clients so the way to do that is to globally keep track of all the messages that are sent and then within the thread here right you're gonna check if you need to send messages from other clients to the current client and you can also do something like a constant ping command so you can have the client constantly send the server like a read read read command or some specific string and whenever it sends that the client should are the server should spit back to it any new messages or any new information so it's constantly pinging and asking the server for information right okay so what I'm gonna do now is show you how this works on different computers so I'm gonna run the server script notice I don't have anything else running on my computer I'm really not trying to trick you guys I promise it's there's no command prompt windows I'm just gonna run the server on this computer so servers here we can see server starting servers listening watch the server output now while I'm still on camera here oh I've hit everything while I'm doing that I have my Mac here now I've downloaded the client script onto my Mac so what I'm gonna do is simply send to the server here like I'm gonna connect to the server from my Mac and show you that it actually works and you see the message so all I'm doing I'm not sure if you guys can see this I have a terminal window open I have the client script here I'm gonna hit enter on here and you should see new connection active connections one hello from my macbook is the first message that is sent now if I hit enter again notice right when I hit enter so as my hand goes down new message enter again yes Tim disconnects oh I changed a little bit on here just so that you could see that this is different the only modifications I made was the messages that I was sending since this computer is on the same WiFi network as this computer this works right because we ran this off of this IP address so all I had to do was connect to that from my Mac and there we go that works now if you wanted this to work over the Internet all you have to do let me put this math book away for a second is look up your public IP address so to do that you can go on Google and search my public IP address it will pop up then in your server script what you're gonna do is change this here so you're gonna change this to remove this to simply be that IP address whatever it is and then from any device anywhere that has access to the Internet of the obviously it's important that we're connect to the internet here you can put that IP address in and you will be able to connect now you might run into some issues with firewalls that will mean you have to deactivate firewalls specifically probably on your server computer potentially on the client computer as well but that should work and that is the idea behind all of this so that has been this tutorial I hope you guys enjoyed I hope you learned a little bit about sockets and I hope at minimum you can send messages now from one computer to another over the same network which personally I find very fascinating that I can just do that alone sitting in my bedroom I can make a clientserver system so anyways that has been in I hope you guys enjoyed if you did make sure you leave a like subscribe to the channel and I will see you guys another YouTube video

@@ -1,0 +1,464 @@
+00:00 - oh the search become way too long for
+00:03 - video you can't have that in there
+00:05 - I must type this away thanks for tuning
+00:07 - in at Brack ease hello and welcome to
+00:11 - video number 16 on making a multiplayer
+00:13 - FPS in unity today we are going to be
+00:16 - fixing the bug that I pointed out in the
+00:18 - last video but when we spawn a player in
+00:20 - he will change the health and settings
+00:23 - for all of the other players that also
+00:25 - means spawning a particle effect on all
+00:29 - of the other players that are already in
+00:30 - the game and that looks super weird and
+00:32 - it's not a behavior that we want so
+00:34 - we're going to separate that out so
+00:36 - that's going to be really good to
+00:39 - finally take care of and also we are
+00:42 - going to be moving some of our
+00:45 - functionality when joining a network
+00:47 - into a separate scene I want to now
+00:49 - create the idea of two separate scenes
+00:52 - one offline scene where we are connect
+00:55 - to other players or choose to host a
+00:57 - game and later that will be our maybe
+01:00 - lobby or indid where people can join
+01:02 - your join your game before it starts and
+01:04 - stuff like that and then we transition
+01:07 - over to the online scene where the game
+01:09 - actually takes place so without further
+01:11 - ado let's dig right into it so you can
+01:13 - see that I am here in unity and I'm just
+01:17 - going to load up our main level scene
+01:19 - here and first off let me just
+01:21 - demonstrate what is currently going
+01:23 - wrong when we play the game so let me
+01:26 - just make a very quick build here I'm
+01:28 - simply pressing ctrl B to make that
+01:31 - build very quickly and it's going to
+01:33 - open up here and I'm going to go into
+01:36 - unity here wait for the lighting to
+01:38 - repack and then hit play and then we are
+01:40 - going to select maybe our land host here
+01:43 - and then over here we can select align
+01:46 - client and you will notice that the
+01:48 - other guy spawns a particle system as
+01:52 - well so that means that we are calling a
+01:55 - certain method if we go under our player
+01:58 - and then play a set up and then open
+02:01 - that script up in Visual Studio there is
+02:04 - a very special method in this script and
+02:06 - it's called setup and we are calling
+02:09 - that on all of the different players we
+02:13 - should be calling
+02:13 - it on all clients but only on the player
+02:16 - that currently joined so you can see
+02:19 - here we have this start method here and
+02:22 - we are calling the setup method under
+02:26 - the player script and that's the one up
+02:30 - here and this one takes care of setting
+02:33 - the defaults for our players so that
+02:35 - will first off it will spawn in a
+02:38 - particle system here a spawn effect it
+02:41 - will also switch the cameras enable
+02:43 - colliders and set the current health
+02:45 - value to the maximum health so this is
+02:48 - just setting up the default player and
+02:50 - we of course only want to this to happen
+02:52 - for newly joined players we don't want
+02:54 - this to be called for all the players
+02:57 - when a new player joins so that the
+02:58 - entire game is just like reset so in
+03:02 - order to fix this we need to kind of
+03:04 - separate our understanding of the newly
+03:07 - turned player from the other players and
+03:10 - the way to do this if we go under our
+03:12 - player setup script you can see that we
+03:15 - are calling this from the start method
+03:17 - well when we join as a new player a
+03:20 - start method is going to be called on
+03:23 - all of the different players that is
+03:25 - because for our local instance all of
+03:27 - the different players that we are
+03:29 - joining in the lobby will be spawned
+03:32 - into the scene and therefore their start
+03:35 - method will be called however what is
+03:38 - true for only our player is that we are
+03:41 - marked as a local player so for the
+03:44 - client that joins in only his own player
+03:46 - will be marked as a local player and
+03:48 - therefore we can take this setup method
+03:51 - and remove it from here and up under
+03:55 - this else statement so if we're not the
+03:57 - local player we're going to disable
+03:58 - components and a side of them assign a
+04:00 - remote layer and stuff like that
+04:02 - at l's we are going to call the set of
+04:05 - method on our player and let's just
+04:08 - rename this to player setup just so we
+04:11 - are completely sure of what this is
+04:13 - doing and that was basically all we need
+04:15 - to change in here at least for now we
+04:17 - need to fix it back down here in a
+04:19 - moment then for our player if we go in
+04:23 - here we find our player setup method you
+04:25 - can see that that
+04:26 - now been renamed to from here we are now
+04:30 - only calling this on the client of the
+04:33 - local player on the player so that's all
+04:37 - so we need to kind of transmit this idea
+04:40 - of setting the defaults to all of the
+04:42 - other clients so that when a new player
+04:44 - joins it's not only joined on the actual
+04:47 - client that is joining but all the other
+04:50 - players can see him as well and can see
+04:53 - the spawn prefab and his health gets set
+04:56 - and all that stuff so we need to it in
+04:59 - other words to initialize this player on
+05:02 - all the clients so in order to do this
+05:05 - we are going to use an RPC and the best
+05:08 - way of using and a client RPC I can
+05:11 - remember any method that is marked as a
+05:13 - client RPC will be called on all clients
+05:15 - the best way to call one of these is
+05:18 - from a command so let's start by making
+05:19 - a command so in order to do this we are
+05:22 - going to take all of this code and
+05:26 - simply copy it and then we can make a
+05:29 - private void here and we are going to
+05:31 - call this maybe CMD and this is the
+05:38 - broadcast new player set up something
+05:45 - like that just don't be afraid of using
+05:47 - very long names if they are descriptive
+05:49 - of what we are doing and this is
+05:50 - basically what we're doing we are
+05:51 - telling this server to broadcast out to
+05:54 - all the different clients that a new
+05:56 - player should be set up so you can of
+05:59 - course call this something else if that
+06:00 - makes more sense to you but I think this
+06:02 - will be pretty clear on what we're doing
+06:04 - and then from here we want to call an
+06:06 - RPC so we can now make that as well we
+06:09 - mark this as an a a client client RPC
+06:13 - and we make this again a private void
+06:16 - because we're only calling it from the
+06:17 - same script and we are marking this as
+06:20 - an RPC and this is the set up player on
+06:25 - all clients call and in here we want to
+06:30 - check for or initialize this array and
+06:33 - we want to call this set defaults method
+06:35 - and of course we need to call the RPC
+06:39 - from the sir
+06:40 - and we need to let the server know from
+06:43 - the local player client so that is kind
+06:47 - of all we need to do here then what we
+06:50 - need to do as well is we need to
+06:52 - separate setting up the player from
+06:55 - managing on the current active camera
+06:58 - and the current active UI because
+07:01 - currently we are using this switch
+07:02 - cameras which is wrapped in an if
+07:04 - statement and we kind of need to
+07:06 - separate this out all the other code we
+07:09 - can leave be but this shouldn't be
+07:11 - handled in this set defaults this should
+07:13 - instead be handled up here before we
+07:19 - actually call this on the command
+07:20 - because we only want to switch the
+07:22 - camera and enable the player UI on the
+07:26 - local player we don't need all of the
+07:28 - other clients doing that as well and
+07:30 - since when in the player setup we are
+07:34 - checking if we are the local player
+07:36 - before we call and player setup let's
+07:38 - really no need to wrap this in an if
+07:40 - state and so we can just go ahead and
+07:42 - delete that if statement and just have
+07:45 - these two method calls for themselves
+07:49 - good and of course when we are switching
+07:52 - the cameras here we are setting the
+07:53 - scene camera to false and the player UI
+07:57 - to true we also need a way of or we also
+08:02 - need to do this in the respawn sit down
+08:05 - here so since we are not no longer
+08:08 - including this in the set defaults we
+08:10 - need to just well put it in here so we
+08:14 - need to switch the cameras here as well
+08:16 - so when we respawn again we set the
+08:19 - scene camera active to false and we are
+08:22 - said instead on the UI player UI to true
+08:27 - good
+08:29 - so that should actually be all and I
+08:32 - know we didn't do this in the last video
+08:34 - but it kind of had to think about a
+08:36 - somewhat robust way of doing this and
+08:38 - notice that I still have this kill
+08:40 - command in here so we can use that in a
+08:43 - moment because there is still a problem
+08:45 - with this so let's try and go in here
+08:48 - and just - first let's try this on the
+08:50 - local players let's try and hit play and
+08:52 - so the gland host
+08:54 - and you can see that this is indeed
+08:55 - working and we can I can stop him from
+08:57 - playing and everything is enabling and
+08:59 - disabling as we would want it to so that
+09:01 - now let's try and make a build of this
+09:03 - so control-v or command-v if you're on a
+09:06 - Mac and let's see if this is working on
+09:07 - the on the player and the build player
+09:11 - here as well so wait for the light to
+09:14 - rebuild here hit play on that and it
+09:16 - should also be playing here and what
+09:19 - we'll be doing is we'll select land host
+09:21 - here and we'll select land client here
+09:24 - and you can see now it only spawns the
+09:27 - prefab for this particular client so
+09:29 - that's perfect and you will also see
+09:31 - that if we go ahead and damage this guy
+09:33 - you can see on the console it says he
+09:35 - now has let's say 75 health and we then
+09:39 - drop out here we disconnect and you note
+09:41 - will notice something weird with the
+09:43 - cameras here but we're going to fix that
+09:44 - in just a moment and then we join us a
+09:47 - client again and find the player in
+09:50 - there he is and damage him and go in the
+09:55 - console here
+09:56 - it's spamming with these all it's
+09:58 - spamming way too much we can maybe maybe
+10:00 - we cannot find it I'll just try to now
+10:06 - this is going way too crazy
+10:08 - unfortunately okay
+10:09 - so let's fix it and fix this error
+10:11 - instead so what is happening here well
+10:13 - let's just move out of our build here
+10:16 - what is happening here is that um if we
+10:20 - find or set the false method we are not
+10:25 - doing anything with the camera here but
+10:27 - in our player setup on the disabled
+10:30 - meaning when we are destroyed and we are
+10:32 - basically only destroyed whenever we
+10:35 - choose to disconnect well then it's
+10:37 - setting the scene camera active to true
+10:41 - but it's doing that for all of the
+10:45 - clients not only the local player so we
+10:49 - need to check if we are the local
+10:52 - players so if is local player well then
+10:55 - we can change the cameras okay so that
+10:59 - makes sense so now when we try and hit
+11:01 - play here and we can maybe try and
+11:05 - connect disconnect that looks fine
+11:07 - we can try and kill ourselves here by
+11:09 - pressing K in seed jumps out here to the
+11:12 - scene view and jumps back in so that's
+11:14 - perfect and now we can try and build
+11:16 - this so uh let's build it and that was
+11:19 - the bug that I was talking about before
+11:21 - I just wanted to show you what that did
+11:23 - it it simply triggered the camera flow
+11:26 - for all of the players but which of
+11:28 - course it's not something we we desire
+11:30 - so let's hit play here host Lang client
+11:35 - you know response for this guy damage
+11:38 - this this guy bid so now he's on seventy
+11:40 - health disconnect everything is okay
+11:43 - over here everything is okay over here
+11:45 - let's connect again all right well we
+11:48 - spawned out on top of each other there
+11:50 - that was kind of weird that was because
+11:52 - we didn't move of course we can
+11:54 - implement some kind of way of checking
+11:55 - for that and then we can now damage him
+11:58 - again and you can see it remembers what
+12:00 - health amount he was on so it's no
+12:02 - longer reset as it was before and that's
+12:05 - super good so now we can kill him
+12:07 - and he explodes him goes to the scene
+12:10 - view there and he jumps back in and he
+12:12 - should oh well now he's no longer
+12:17 - spawning on this guy's Network so what's
+12:22 - going on here well I'm just going to
+12:24 - pause the camera here and then I'll be
+12:27 - back in a moment
+12:28 - alright so I figured out what was going
+12:30 - wrong it seems that we are only calling
+12:32 - these set defaults method under our
+12:34 - respawn method and I set defaults is not
+12:37 - marked as a client RPC so that kind of
+12:40 - goes wrong because um we are only
+12:43 - calling this on the local client of the
+12:45 - local player and that's not good we want
+12:48 - to set up the player that has respond on
+12:51 - all of the different clients so what we
+12:53 - want to do is instead called the player
+12:57 - whoops the player setup method and I'm
+13:02 - just going to go ahead and rename this
+13:03 - to setup player because then we won't
+13:06 - confuse it with the player setup script
+13:07 - I think that's a better idea now we can
+13:10 - also take all of this and simply remove
+13:12 - it because we are doing that under this
+13:14 - set of player method anyways then let's
+13:17 - go up to a set of player and configure
+13:19 - this a bit so now we want to check
+13:21 - whether or not whoops that's a phone
+13:23 - going off whether or not we are the
+13:25 - local player so if is local player well
+13:29 - then we want to do all of this stuff we
+13:32 - deleted it before because we were only
+13:33 - calling it from one place but now we're
+13:35 - also calling it from down there so that
+13:37 - would be a good idea okay so now that we
+13:40 - have this in here everything else should
+13:42 - be working however we only want to do
+13:45 - this operation at the very beginning
+13:47 - when we first join in not every time we
+13:50 - respond because this remembers what
+13:52 - components we was enabled and therefore
+13:55 - it knows what to enable again when we
+13:58 - respawn and we don't want to set that to
+14:00 - some kind of value right before we will
+14:03 - want to enable things again so what we
+14:06 - do here is simply do a some kind of
+14:10 - private float or I mean some kind of
+14:13 - private bowl which is name is first set
+14:19 - up or maybe just first set up and we
+14:23 - default that to true and then down here
+14:26 - we simply write if first set up then we
+14:32 - can do this kind of initialization stuff
+14:35 - and then after we've done that we set
+14:38 - first set up to false this way we only
+14:41 - do this once it's maybe a bit of a hack
+14:44 - but it works very solid okay and then
+14:47 - down here on a respawn method now we are
+14:52 - setting our position and our rotation on
+14:55 - the network and it will kind of throw
+14:58 - that out on the network and make sure
+14:59 - it's synced to everyone using another
+15:01 - component and then we are calling the
+15:03 - setup layer which will then throw a
+15:06 - message out to all the different clients
+15:08 - to set up the player probably however we
+15:11 - want to make sure that this position and
+15:13 - rotation is submitted to all of the
+15:17 - different players of transport as
+15:19 - transferred to all of the different
+15:20 - clients before we set up the player else
+15:24 - we will have a case where we are on not
+15:27 - we haven't moved the player or it seems
+15:30 - that the player hasn't moved because he
+15:32 - hasn't declined hasn't received a
+15:34 - message
+15:35 - to move him and then respond the
+15:38 - particles in the wrong place so I simply
+15:42 - want to put in just a tiny bit of an
+15:44 - error margin here a yield return new
+15:47 - waitforseconds where we weights a point
+15:50 - zero or 0.1 second that should be plenty
+15:55 - it's not knows that noticeable in the
+15:57 - game and it's a very easy idea if you
+15:59 - want to or it's very easy thing to do if
+16:02 - you just want to delay this a little bit
+16:06 - to make sure that we are moving the
+16:08 - player before instantiating the
+16:11 - particles so if we try this now this
+16:14 - should look super cool so let's try and
+16:16 - build the player and this should
+16:17 - hopefully be the final time we need to
+16:19 - mess with this and then we can leave it
+16:21 - be for a while it's very confusing
+16:23 - confusing to do this stuff trust me I
+16:26 - know and then we can hit play go on dear
+16:29 - land host go on delaying client and we
+16:33 - can kill this guy off and see if it
+16:34 - works so go he explodes and you should
+16:37 - respawn there that's perfect and we can
+16:40 - do the same again he explodes there and
+16:44 - he should respawn over there and he does
+16:46 - so that's perfect so that's a small
+16:48 - delay made sure that everything is not
+16:51 - working as it should
+16:53 - good so now that this is on working the
+16:56 - game should be very playable and you
+16:59 - should definitely be able to try this
+17:01 - out so what I want to do is now just
+17:04 - clean up some of the code here so I want
+17:06 - to take this if input get keyed down
+17:09 - here this kill method and maybe just
+17:11 - comment that out and since we're not
+17:13 - using the entire update method I'm just
+17:15 - going to Mike all of that with comments
+17:17 - so that's perfect and the next thing
+17:20 - that I wanted to do just very quickly in
+17:23 - this video is have an offline scene and
+17:26 - an online scene this is of course our
+17:28 - online scene so let's go ahead and make
+17:30 - a new scene pressing ctrl N and let's go
+17:35 - ahead and say this as maybe our loppy
+17:41 - scene just Lobby maybe and this can be
+17:44 - our this can still be our main level and
+17:47 - we can just go ahead and maybe
+17:49 - remove the directional light we're not
+17:51 - going to be using that so simply delete
+17:53 - that and we can make a UI here simply an
+17:56 - image that we will stretch to in the
+17:59 - entire screen by holding down alt and
+18:01 - clicking down here and this is just
+18:04 - going to be a fairly dark color
+18:06 - something like that just very flat some
+18:08 - kind of very simple UI could be put in
+18:11 - here let me go to our main level we find
+18:14 - our network manager take her to spawn
+18:16 - points and move them out of here
+18:18 - somewhere we can maybe move them down
+18:20 - here
+18:21 - then we take our network manager we drag
+18:24 - in our main level under the online scene
+18:27 - and our lobby under the offline scene
+18:29 - oops we need to add it to the build
+18:32 - settings so file
+18:33 - build settings drag in the lobby scene
+18:35 - and we want that to be appearing before
+18:37 - our main level and now we can drag it in
+18:41 - here we can then take our network
+18:43 - manager and turn it into a prefab so
+18:44 - let's drag it under the prefabs folder
+18:46 - we can then load in our lobby scene find
+18:50 - our prefabs folder and drag back in the
+18:54 - network manager here so now we need to
+18:56 - make sure that this is synced and that
+18:59 - your apply changes to the prefab here so
+19:01 - now when we hit play in here we are in a
+19:04 - separate scene when we hit land host it
+19:06 - transitions the scene however you'll
+19:08 - notice a small bug and that is that the
+19:10 - lining is currently very weird when we
+19:13 - do this it's not really baked and the
+19:16 - reason for this is that unity
+19:17 - dynamically bakes the lining in the
+19:19 - scene but when it transitions to a new
+19:21 - scene it sometimes doesn't do that so
+19:24 - let's just go and find our lighting this
+19:26 - is found on the window lighting and then
+19:30 - going to the light maps tab and down
+19:33 - here it's currently set to auto if we
+19:35 - just disable that and hit build to build
+19:38 - the lining one last time and you will
+19:40 - need to do this every time you change
+19:41 - the lighting in the scene from now on
+19:43 - this error shouldn't happen so if we go
+19:46 - to a lobby hit play LAN host you can see
+19:51 - that the lighting is correctly built so
+19:53 - now we have this kind of a cool
+19:55 - relationship between a lobby scene where
+19:57 - we are offline and a main-level scene
+19:59 - where we are online later we can expand
+20:02 - this to
+20:02 - having players join maybe you can select
+20:04 - a character whatever there's plenty of
+20:06 - opportunity to this so that's kind of
+20:10 - all I wanted to show you for this video
+20:12 - I hope you enjoyed it and I'll see you
+20:14 - in the next one

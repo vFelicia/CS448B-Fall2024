@@ -1,0 +1,407 @@
+00:00 - already y'all welcome back and in this
+00:03 - video what we're going to do is we're
+00:05 - going to set up a very basic CI CD
+00:06 - pipeline in a way that whenever we merge
+00:09 - any code into our Master Branch then
+00:12 - that code is automatically going to be
+00:14 - deployed to our server
+00:16 - so that way it prevents us from having
+00:19 - SSH into our server pull down update
+00:21 - everything yada yada it's going to save
+00:23 - us a bunch of time however before we
+00:25 - just go ahead and get started what I
+00:27 - want to do is I want to give you a high
+00:29 - level overview of kind of what we're
+00:31 - going to be doing
+00:33 - so the steps that we're going to be
+00:35 - doing is I'm first going to make a
+00:38 - unique SSH key now with this SSH key I'm
+00:43 - of course going to be storing the public
+00:45 - key on my server and for the private key
+00:49 - I'm going to configure it to be stored
+00:51 - in GitHub and what that's going to allow
+00:53 - is GitHub the ability to communicate
+00:55 - with my server and once we have that set
+00:58 - up then we can go ahead and make a
+01:00 - workflow to deploy everything but pretty
+01:02 - much set up the communication first and
+01:04 - then get into the good stuff
+01:07 - so whenever you create a new SSH key
+01:11 - I'll show you the command right here so
+01:14 - pretty much saying that we want to
+01:15 - generate a new SSH key these are just
+01:17 - some of the settings for it and the file
+01:19 - I don't want to just have it override my
+01:22 - default one that I always use so I'm
+01:24 - going to call this SSH GitHub now
+01:27 - whenever you create this make sure not
+01:30 - to include a password if you include a
+01:33 - password then while your automation is
+01:35 - going to break because well it's going
+01:37 - to require someone to manually type in a
+01:39 - password so go ahead and just hit enter
+01:42 - to use a blank password or no password
+01:45 - however you want to call it enter again
+01:47 - and there you go
+01:48 - so as we can see we now have our SSH key
+01:52 - pair created and this one right here is
+01:56 - your private key and this one right here
+01:58 - is the public key that's going to be
+02:00 - stored on the server
+02:01 - so it doesn't really matter the order
+02:03 - that we do this in but let's go ahead
+02:05 - and first I might as well just set up
+02:07 - GitHub to store this private key
+02:12 - so how do we do that well in our
+02:15 - settings
+02:16 - what we can do is scroll down here to go
+02:20 - to secrets and variables and click on
+02:23 - actions right here and we're just going
+02:25 - to make a new repository Secret
+02:28 - so the name of the secret I'm just going
+02:31 - to name it very clear SSH private key
+02:34 - and for the actual value of this what we
+02:38 - can do is we can just
+02:41 - cat out this
+02:44 - so here I can clear this so cats
+02:48 - this and there you go and by the way
+02:50 - even though
+02:52 - um what just got logged out it says
+02:54 - beginning and then it has your key and
+02:56 - then an end make sure that you actually
+02:59 - include these lines right here
+03:03 - not just the stuff in the middle but the
+03:05 - actual line that says beginning and end
+03:08 - so I'm just going to copy this
+03:10 - and paste that bad boy right in there
+03:13 - beautiful
+03:14 - add secrets
+03:16 - and now
+03:17 - we can reference in our workflow this
+03:20 - private Key by using SSH private key
+03:24 - so now that this is taken care of what I
+03:26 - can do
+03:28 - is let me just go ahead and do this in a
+03:30 - new tab
+03:31 - I'm gonna SSH into my server
+03:35 - Ubuntu at and that's my IP
+03:40 - and all right
+03:42 - so what I actually want to do
+03:45 - is just cat out this public key
+03:48 - because we're going to be using that in
+03:50 - just a second so let me clear my screen
+03:54 - and log this out so this is my public
+03:56 - key
+03:58 - I'm going to go ahead and copy that now
+04:00 - to add this to my server what I do is
+04:03 - I'll just use Nano sudo Nano
+04:06 - and it is in ssh in authorized keys and
+04:12 - that's the one by to use that I use by
+04:14 - default so right under here I'm just
+04:16 - going to paste that new one in
+04:18 - and save the file
+04:21 - so now my public key is on my server and
+04:25 - I believe we can just close this out now
+04:27 - clear this
+04:29 - and yeah pretty much good to go
+04:32 - so before we actually write this
+04:34 - workflow there are two other little
+04:36 - things that I need to do let me pop open
+04:38 - GitHub again click the right thing all
+04:41 - right so you know how we just added this
+04:43 - private key right here what I also want
+04:45 - to do is I want to add two more secret
+04:48 - values one for the host in other words
+04:51 - well I might as well just do it it's
+04:53 - probably easier that way so I'm going to
+04:55 - create a new secret and this is SSH host
+05:00 - and for this I am just going to give it
+05:03 - my IP
+05:05 - and then I'm going to create one more
+05:09 - and this is SSH user and this is just
+05:12 - the user to log in so whenever I log in
+05:15 - I said SSH Ubuntu at that IP address and
+05:19 - this way I can just use variables
+05:20 - instead
+05:22 - all right so now we got all of our
+05:24 - secrets configured and yeah I think we
+05:28 - are ready to start writing this workflow
+05:30 - so how do we do this well remember in
+05:33 - workflows what I can do is since this
+05:36 - workflow is going to be triggered
+05:37 - whenever I merge code into master I'm
+05:40 - just going to create a new file called
+05:42 - master.yaml just like that
+05:45 - and for the name of this I am going to
+05:48 - say continuous integration
+05:51 - now unlike before where we trigger this
+05:54 - on pull request what we want to do is
+05:57 - trigger this I don't really have to
+06:00 - explain it kind of self-explanatory on
+06:02 - pushes to the branch master so anytime
+06:06 - we merge code into Master this workflow
+06:09 - is going to get triggered now another
+06:11 - thing that I want to do let me paste
+06:13 - this in first
+06:14 - is what this is basically saying is that
+06:19 - if you just merge code into master and
+06:22 - this workflow is in the process of
+06:25 - deploying and then let's say that right
+06:27 - after that you made another merge into
+06:29 - Master like right again well in this
+06:32 - case we don't want like these two
+06:35 - separate processes deploying code at the
+06:37 - same time so what this says is if
+06:40 - there's any
+06:42 - of these workflows already in progress
+06:44 - then just go ahead and cancel that and
+06:46 - that way the second one is the one that
+06:49 - actually gets deployed so in other words
+06:51 - it pretty much makes sure that only one
+06:54 - of these workflows can run at a time
+06:56 - even if you do two merges right after
+06:59 - each other
+07:00 - now for the jobs unlike before where we
+07:05 - only had one job which was the quality
+07:07 - assurance here we are going to break up
+07:10 - this workflow into two separate jobs now
+07:13 - the first job is going to be that
+07:16 - quality assurance job in other words
+07:18 - it's going to be this workflow because
+07:20 - before we deploy any code what we want
+07:23 - to do is we want to run this again like
+07:25 - I said in the last video just to double
+07:27 - check make sure that our code is
+07:29 - properly linted and properly tested so
+07:32 - before anything happens it's first going
+07:35 - to run this workflow and again this is
+07:37 - how you run other workflows within a
+07:40 - workflow pretty much just give it a name
+07:42 - and say uses and and then a path to the
+07:45 - workflow and then after this
+07:48 - which hopefully this workflow passed
+07:52 - after this we are going to write one
+07:54 - more job which is our deployment process
+07:57 - so we are just going to give it the name
+08:00 - deployed and this needs keyword is going
+08:04 - to reference this job right here so this
+08:07 - is pretty much saying that unless this
+08:09 - past then don't continue in other words
+08:12 - we need this to succeed before we can
+08:15 - deploy now for this deployment process
+08:17 - we are going to be setting up of course
+08:19 - the commands to actually like ssh in and
+08:22 - do some other stuff like deploy the code
+08:24 - and for this we can just run it on in
+08:27 - Ubuntu environment and what exactly do
+08:30 - we want to do in this environment well
+08:33 - this process is going to consist of two
+08:36 - separate steps the first step is
+08:39 - configuring just our SSH make sure that
+08:42 - we have everything set up to connect and
+08:44 - then the second step is actually running
+08:46 - to the command to deploy and update the
+08:49 - code and what this means is we are going
+08:52 - to change into the directory where our
+08:53 - app's at we're gonna take down
+08:56 - whatever's running with Docker composed
+08:58 - down we're going to pull the latest
+08:59 - updates and then we pretty much just uh
+09:01 - rebuild and spin everything up again so
+09:05 - for the first step of configuring SSH
+09:07 - let me paste this in and then I'll kind
+09:10 - of talk you through everything
+09:12 - so the name we're just going to call it
+09:14 - configure SSH now what we need to do is
+09:18 - we're eventually going to be running
+09:19 - this command and I'll talk you through
+09:21 - what this does in a second however this
+09:23 - command is going to require environment
+09:26 - variables
+09:27 - so in order to get these environment
+09:31 - variables what we can do in the easiest
+09:33 - way is just to reference the value
+09:36 - that's stored in GitHub and whatever
+09:38 - that value is just map it over to an
+09:41 - environment variable with the exact same
+09:42 - name so this is pretty much taking a
+09:45 - GitHub secret and converting it to an
+09:47 - environment variable that we can use in
+09:49 - our commands
+09:50 - and then once we have those environment
+09:53 - variables that we can use we're just
+09:54 - going to run this Command right here so
+09:58 - this is actually multiple commands but
+10:00 - what this is doing is first and remember
+10:02 - this is all happening basically in a
+10:04 - blank version of Ubuntu so we're first
+10:07 - going to make this SSH directory since
+10:10 - that's just where the uh private keys go
+10:12 - and then once we have that directory
+10:15 - made we're just gonna take the value of
+10:18 - whatever was in this environment
+10:20 - variable and stick it in this file right
+10:24 - here which is SSH GitHub in other words
+10:26 - we're just creating our Simon key file
+10:29 - now this line is just changing the
+10:32 - permissions of that sign-in key file
+10:34 - and then last but not least we are
+10:37 - running this Command right here
+10:40 - so this is a little bit strange if
+10:41 - you've never seen that syntax but
+10:43 - basically what we're doing is we are
+10:47 - marking the beginning and the end of
+10:51 - this bit of code
+10:53 - which is pretty much saying we are
+10:55 - making a new host called Target and this
+10:59 - host is pretty much our servers address
+11:03 - this is going to be the IP of our server
+11:05 - the user this is going to be Ubuntu
+11:08 - the identity file in other words the
+11:11 - signing key that they're going to use is
+11:13 - that one that we just created right here
+11:15 - or not the signing key the private key I
+11:18 - was thinking of my app logic
+11:20 - um the log level just log out any errors
+11:23 - and the strict host key checking you
+11:25 - know whenever you first sha SSH into a
+11:28 - server and it says Hey the server
+11:30 - identity yada yada and you've got to
+11:31 - manually type yes well what this does is
+11:34 - it just says hey don't worry about that
+11:35 - uh we're not don't bother us with having
+11:38 - to type anything just uh go ahead and
+11:40 - you know skip that part
+11:42 - so anyways this pretty much just
+11:44 - configures
+11:45 - um the where we want to log in and how
+11:47 - we're going to log in and then with this
+11:50 - bit of code right here
+11:52 - we're gonna cat or pretty much like
+11:54 - display it out and then this redirect
+11:56 - directive pretty much just sticks it or
+11:59 - appends it to this SSH config file
+12:03 - so in short we are taking this text and
+12:07 - appending it to this file so now
+12:09 - whenever we SSH into the host Target
+12:13 - it's gonna pretty much know exactly what
+12:16 - system we want to connect to and how we
+12:17 - want to connect
+12:18 - now with that said we only need to run
+12:21 - one more command let me go ahead and
+12:24 - paste it in
+12:25 - and that is this command or this one
+12:29 - last step I should say so this is just
+12:32 - going to run our actual deployment and
+12:35 - to run our deployment what we do is
+12:39 - we're just going to SSH into this target
+12:42 - in other words SSH into my ec2 instance
+12:45 - and now once we're sshed in we pretty
+12:49 - much just write the commands that we
+12:51 - would normally do if we were just like
+12:53 - uh you know already ssh in there and
+12:55 - updating the server
+12:57 - and of course do that what we need to do
+12:59 - is we need to change into the cooking
+13:01 - core directory that's where the app is
+13:04 - now after this we're going to run Docker
+13:06 - compose down and that's going to bring
+13:09 - down those containers remember we're
+13:11 - going to have one for the database and
+13:13 - we have another container that the app
+13:15 - runs in
+13:16 - now once those containers are down we're
+13:18 - going to pull down the latest code and
+13:21 - remember at this point in time
+13:22 - everything was already merged into
+13:24 - master so this is like brand spanking
+13:26 - new code the latest
+13:28 - um changes that you made to your app and
+13:31 - once we have the latest changes we're
+13:32 - just going to run Docker compose build
+13:34 - to rebuild those images with the latest
+13:36 - code and then once we have everything
+13:39 - built then we can go ahead and spin up
+13:42 - those containers using Docker compose up
+13:44 - run it in Demon mode and then we're just
+13:47 - gonna make sure that we have everything
+13:48 - recreated and yeah get all the latest
+13:51 - stuff
+13:53 - so let me actually just add a blank line
+13:55 - to the end of this
+13:58 - and now as soon as I push this up since
+14:02 - I'm not on any other branch and I'm just
+14:04 - pushing right up to master this should
+14:06 - actually kick off this uh CI process so
+14:09 - let me just go ahead and push it up and
+14:12 - I can say testing
+14:14 - CI CD
+14:17 - and let me just commit and push that
+14:19 - and check it out
+14:22 - so now let me go in my actions and you
+14:26 - can see that yes this new workflow is
+14:29 - running and I want to view the details
+14:31 - of it so I'm just going to click into
+14:33 - this
+14:34 - and this is how it's displayed if you
+14:36 - have multiple jobs so the first job that
+14:38 - we have
+14:39 - if I reference back here is this QA job
+14:42 - would actually references this right
+14:45 - here so it's going to check all my
+14:47 - linting and testing and if that succeeds
+14:52 - then it's going to go ahead and run this
+14:55 - deployment script and as long as I
+14:57 - didn't mess anything up it should
+14:59 - automatically deploy that so let me pop
+15:02 - this back open
+15:07 - all right look like everything past QA
+15:10 - now we can see if our deployment process
+15:12 - is working actually let me click into
+15:13 - this SSH configured properly running
+15:16 - deploy looking good wow pretty quick so
+15:21 - this looks like it was all good to go
+15:23 - and we can verify that actually if we go
+15:26 - to the taxi at net admin so it looks
+15:29 - like we're getting error but this is
+15:31 - actually good because well errors aren't
+15:33 - good but whenever I update my server
+15:36 - then
+15:38 - right after what it does is it has to of
+15:41 - course restart Docker and restart nginx
+15:43 - so this just means that nginx is
+15:45 - restarting now the nginx process should
+15:50 - restart and like um I don't know 10
+15:52 - seconds or so so as long as I refresh
+15:55 - that
+15:56 - I can see that yes everything was
+15:59 - deployed and restarted successfully
+16:02 - so that ladies and gentlemen is how you
+16:06 - set up a very basic CI CD workflow
+16:08 - now another thing that I want to point
+16:10 - out is that even though this is indeed a
+16:12 - Bare Bones working CI CD pipeline this
+16:15 - isn't like the ideal process and I say
+16:18 - that because remember whenever we
+16:20 - deployed this even though I was kind of
+16:22 - happy whenever I saw that nginx error
+16:24 - you probably don't want like a
+16:27 - production environment throwing these
+16:28 - errors and we'll talk through some
+16:30 - Solutions on how we can get around that
+16:32 - and some trade-offs between different
+16:34 - deployment processes but for right now I
+16:36 - think that's enough for this video we
+16:39 - are now getting more familiar with
+16:41 - GitHub actions and CI CD so yeah in the
+16:45 - next video let's see what we got to
+16:47 - cover
+16:48 - so we're going to be spinning up RDS
+16:51 - postgres database and then we're going
+16:53 - to be using multiple instances and
+16:56 - setting up a load balancer to distribute
+16:58 - the traffic across those instances and
+17:00 - then getting into some monitoring and
+17:02 - debugging tools as well is going to be
+17:06 - fun so yeah thanks for watching and I
+17:08 - will see y'all next time

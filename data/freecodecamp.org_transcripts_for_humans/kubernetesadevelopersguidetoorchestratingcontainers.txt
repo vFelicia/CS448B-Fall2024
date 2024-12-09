@@ -1,0 +1,1484 @@
+With timestamps:
+
+00:00 - all right
+00:01 - so uh
+00:02 - we're here to talk today about
+00:04 - kubernetes for developers
+00:06 - um
+00:07 - so quick show of hands first off
+00:10 - how many people have any experience with
+00:12 - kubernetes
+00:13 - previously okay couple everybody else
+00:16 - how about docker how many people have
+00:17 - experience with docker
+00:19 - a few more okay good
+00:23 - so my name is jeff french
+00:25 - i'm the principal consultant at
+00:27 - moonswitch we're at devops and cloud
+00:29 - migration
+00:30 - consultancy and we specialize in
+00:33 - kubernetes
+00:34 - so if you need any help with that let me
+00:36 - know
+00:39 - so let's start by talking about what
+00:42 - is kubernetes um kubernetes is a cloud
+00:45 - comes from a class of product known as a
+00:48 - container orchestrator uh or a container
+00:50 - scheduler um
+00:52 - those terms get used a little bit
+00:54 - interchangeably
+00:56 - they tend to actually mean uh slightly
+00:58 - different things and that a scheduler
+01:00 - typically is a little bit less full
+01:02 - featured than an orchestrator um
+01:04 - but we'll get into what that actually
+01:06 - means when it actually orchestrates your
+01:08 - application so
+01:09 - kubernetes is not the only player in
+01:11 - this space
+01:12 - um
+01:13 - they have there are other schedulers and
+01:15 - orchestrators including docker swarm
+01:17 - that you may have used uh apache meso
+01:20 - slash dc os it's kind of based on mesos
+01:22 - and hashicorps nomad are just a few of
+01:26 - the other
+01:27 - container orchestrators and schedulers
+01:30 - that are out there and they all do
+01:33 - relatively the same thing right or
+01:35 - versions of the same thing so
+01:38 - a container orchestrator first off when
+01:40 - we say container
+01:41 - we're typically talking about a docker
+01:43 - container um there are other container
+01:46 - technologies out there that's well
+01:47 - beyond the scope of this talk and most
+01:48 - of these orchestrators have the ability
+01:50 - with some modification to schedule
+01:51 - things other than docker containers or
+01:53 - docker compatible containers
+01:56 - but
+01:57 - the job of a container orchestrator is
+02:01 - to
+02:03 - take a set of instructions that you give
+02:04 - it that say
+02:06 - i have some set of containers that
+02:08 - represent my application that i need to
+02:10 - run and i want you to run them for me
+02:12 - right i don't want to be bothered with
+02:14 - uh you know figuring out is there room
+02:16 - on this i don't know ec2 node over here
+02:19 - and go over there and run a docker run
+02:21 - command to get my container running and
+02:22 - then if my container crashes having to
+02:24 - go and say oh well let me go
+02:27 - start that container back up or you know
+02:29 - upgrade it to a new one or something
+02:30 - like that that's the orchestrator's job
+02:32 - so that's what kubernetes really does
+02:34 - for you it manages a set of nodes that
+02:36 - can run
+02:37 - containers and it schedules containers
+02:40 - to run on those nodes
+02:42 - and it does a lot of things that are
+02:44 - you know as far as
+02:46 - depending on how your cluster is
+02:47 - configured it will
+02:48 - move workloads around to you know
+02:51 - balance them between nodes a little more
+02:53 - or consolidate them more on nodes so
+02:55 - that you can kind of downsize your
+02:56 - cluster
+02:58 - so these are all the kind of functions
+03:00 - of a container orchestrator
+03:03 - and what it does
+03:04 - so
+03:06 - there's two sort of sides on how you
+03:08 - need to on how you need to interact with
+03:09 - a kubernetes cluster one would be the
+03:12 - operator side where you are
+03:15 - typically a sys admin or devops engineer
+03:17 - who is in charge of standing up all the
+03:19 - nodes and joining them into the cluster
+03:21 - and making sure they stay healthy and
+03:22 - all that we're not covering any of that
+03:24 - part today today this is about if you
+03:26 - are a developer who wants your apps to
+03:29 - run on a kubernetes cluster here's this
+03:32 - is kind of a quick start on things that
+03:34 - you want to actually know and we're
+03:35 - going to scratch the surface on some
+03:37 - things
+03:38 - this is a gigantic topic and there's a
+03:40 - ton of documentation out there on the
+03:42 - kubernetes website and lots of blog
+03:43 - posts i'll try to kind of hint at when
+03:46 - there's more things you might want to
+03:47 - research on your own but we're going to
+03:48 - keep this at a pretty high level intro
+03:51 - level talk
+03:54 - so
+03:56 - the first piece of vocabulary we want to
+03:57 - talk about in kubernetes is called a pod
+04:00 - okay so
+04:01 - a pod is a collection of containers and
+04:04 - volumes
+04:06 - so if you've worked with docker before
+04:08 - you know what a container is right it's
+04:09 - basically you've taken your app or some
+04:11 - code that you've written and put it into
+04:13 - this nice little portable container that
+04:16 - can be run somewhere else wherever
+04:17 - there's a docker engine
+04:19 - you've probably also dealt with volumes
+04:21 - if you've dealt with docker which is
+04:22 - essentially defining
+04:24 - a disk that's going to be attached to
+04:26 - that docker container so if you think of
+04:28 - a docker container as a virtual machine
+04:30 - because it
+04:31 - almost is
+04:32 - then a volume would be like a disk that
+04:34 - you're going to attach to that virtual
+04:36 - machine where you can store some data
+04:37 - and have access to a disk
+04:40 - so in kubernetes we deal with pods
+04:42 - and as i said it's a collection of
+04:44 - containers and volumes that you define
+04:46 - now
+04:48 - typically a pod will have
+04:51 - ideally one container
+04:53 - that's not always true but you have one
+04:56 - main container that runs your
+04:57 - application and that's kind of the core
+04:59 - of a pod is here is my web app running
+05:03 - in this docker container
+05:05 - now there are you can have multiple
+05:07 - containers inside of a pod
+05:09 - depending on what you need there
+05:11 - one
+05:12 - common
+05:14 - usage is something you call an init
+05:16 - container so let's say that before your
+05:19 - actual application needs to can run you
+05:21 - need to actually
+05:23 - you know do a little bit of pre-work
+05:25 - before that happens maybe there's some
+05:28 - uh secrets or configuration that's
+05:30 - mounted in on a disk somewhere or coming
+05:32 - in from environment variables and you
+05:33 - need to arrange that into like a config
+05:35 - file that your
+05:36 - main container is going to read so you
+05:38 - could have an init container that spins
+05:40 - up first and the way that kubernetes
+05:42 - handles that is it spins up your init
+05:44 - container it waits for it to
+05:45 - successfully complete and then it spins
+05:47 - up the main container for your pod
+05:51 - the other interesting use for having
+05:54 - multiple containers in a
+05:56 - in a pod would be what's called a side
+05:59 - car
+06:00 - which means that you have another
+06:01 - container that is sort of an auxiliary
+06:03 - container inside your pod that's doing
+06:06 - something out of band from your main app
+06:09 - so
+06:09 - one example for that might be
+06:12 - say a
+06:14 - a logging container say your app just
+06:16 - logs to standard out and maybe you've
+06:18 - got this sidecar container that's kind
+06:20 - of sharing a process space with your
+06:22 - main container that's scraping those
+06:24 - logs and shipping them off to
+06:26 - an elk stack somewhere or something like
+06:28 - that so that's one common use for
+06:31 - side cars or having multiple containers
+06:33 - in a pod
+06:36 - however you could actually have two you
+06:39 - know
+06:40 - what you might consider primary
+06:41 - containers in a pod
+06:43 - one example that i've seen referred to a
+06:44 - lot is like let's say you've got your
+06:47 - main app in this main container is
+06:49 - serving some files from a file system
+06:53 - so you've got a volume mounted in it has
+06:54 - these files on it but these are also
+06:56 - files that need to be updated regularly
+06:58 - so you might have a second container
+07:00 - that's running inside your pod that is
+07:02 - just in the background constantly
+07:04 - checking some other source and syncing
+07:05 - these files into the local volume while
+07:08 - your main container is still
+07:10 - serving this web application that's
+07:11 - provided that's serving those files so
+07:13 - that's another scenario where you might
+07:15 - have multiple containers in a single pod
+07:18 - but typically when you think about a pod
+07:21 - you're generally going to be thinking
+07:22 - about it as one main container and that
+07:24 - sort of represents your unit of work
+07:30 - so let's look at a pod spec so
+07:33 - kubernetes
+07:35 - inter all interaction with kubernetes
+07:36 - basically is handled through a
+07:37 - kubernetes api but they've got a command
+07:39 - line tool called cubecontrol that you
+07:42 - can use to do most tasks against the api
+07:45 - and a very common method of doing that
+07:47 - is loading what are called manifests
+07:49 - that are typically written in yaml but
+07:50 - can also be written in json
+07:52 - and
+07:53 - essentially what ends up happening here
+07:55 - is cube control will take these yaml
+07:56 - files convert them to json and send them
+07:58 - to the api in order to tell your
+07:59 - kubernetes cluster to create certain
+08:01 - resources so when you're looking at
+08:03 - kubernetes you're going to see a lot of
+08:05 - yaml
+08:06 - and it's a really nice way to be able to
+08:08 - express what's going on so let's look at
+08:10 - this pod
+08:11 - in detail here this is a very simple pod
+08:14 - uh it's got some metadata attached to it
+08:16 - namely it's got a name so it's my app
+08:18 - dash pod
+08:20 - and then it's got a label which says oh
+08:23 - this label says that the app running in
+08:25 - here is my app the labels are free form
+08:27 - there's no actual required or standard
+08:30 - labels in kubernetes although there are
+08:31 - a lot of convention-based labels that
+08:34 - people will apply
+08:35 - and you can think of labeling if if
+08:38 - you've worked with
+08:39 - aws or google cloud or anything like
+08:42 - that think of it like the same way that
+08:43 - you would as tagging right so
+08:46 - if you're creating a ton of aws
+08:47 - resources it's a common good practice to
+08:50 - tag those with some consistent and
+08:52 - convention based tags so that you can
+08:54 - easily kind of see what you've got
+08:56 - running
+08:57 - easily issue bulk commands against those
+08:59 - things the same principle applies with
+09:01 - labels and kubernetes right they're a
+09:02 - great way for you to be able to keep
+09:03 - track of the different resources that
+09:05 - are being deployed in order to support a
+09:08 - given application
+09:10 - so then we look at the spec and the
+09:11 - containers and
+09:13 - we'll see that
+09:16 - obviously the the containers here is a
+09:18 - yaml array so you can
+09:21 - list multiple containers this one just
+09:23 - lists one and it's called my app
+09:25 - container i define the docker image that
+09:27 - it uses which is just the busy box
+09:28 - docker image but that can be pulling a
+09:30 - docker image from any uh docker registry
+09:32 - where you've got your docker hosted and
+09:34 - that your cluster has permission to pull
+09:36 - from but we're defining a command for it
+09:38 - to run which this one is obviously just
+09:39 - a real simple kind of echoing out hello
+09:43 - now we look below that we see that we've
+09:45 - got volume mounts so what i've done here
+09:47 - is
+09:48 - we've got a volume defined down at the
+09:50 - bottom of this pod
+09:52 - and it says hey here is this is a very
+09:54 - simple volume uh it's a volume type
+09:56 - known as a host path which basically
+09:58 - just takes exactly what it sounds like a
+10:00 - path on the host that is running this
+10:02 - container which is one of your
+10:03 - kubernetes nodes
+10:04 - and makes that available as a volume
+10:06 - that you can attach to these other
+10:08 - containers
+10:09 - um there are a ton of different types of
+10:12 - volumes that kubernetes supports right
+10:13 - out of the box like probably 30ish
+10:16 - everything from
+10:18 - uh aws ebs discs google persistent disks
+10:22 - um
+10:23 - you know
+10:24 - ceph or gluster ffs file systems nfs
+10:27 - mounts iscsi
+10:29 - if there's a way to attach a disk to a
+10:31 - vm there's probably a way to support
+10:33 - that in kubernetes to get it attached to
+10:35 - your pot and make it available as a
+10:37 - volume
+10:38 - so in this we've got a really simple
+10:41 - on the host at slash data we've got this
+10:43 - directory
+10:45 - that directory has to already exist
+10:47 - there's another directory type that is
+10:48 - directory or create so it will create it
+10:50 - if it doesn't exist
+10:52 - and then as we look back up in the
+10:54 - container spec we can see on the volume
+10:56 - mounts that we've told it hey take that
+10:59 - volume that we called test volume which
+11:01 - is a host path and make it available
+11:04 - inside my container at this mount path
+11:07 - of slash test dash pd
+11:09 - right so that means that now my docker
+11:11 - container this busy box image it could
+11:13 - read files or write files to and from
+11:16 - that mount path
+11:20 - you can also make volumes persistent
+11:23 - you can define it within kubernetes
+11:25 - persistent volumes which say hey this
+11:28 - this volume
+11:29 - should outlive my pod right i don't want
+11:31 - this data to die when my container goes
+11:34 - away right if i shut it down and spin up
+11:36 - another container i want to make sure
+11:38 - that i've still got the same data there
+11:40 - i don't want to lose it and so you can
+11:42 - do that through
+11:44 - persistent volumes and persistent volume
+11:45 - claims which are not included on this
+11:47 - spec but something else you might want
+11:48 - to look at as you actually start looking
+11:50 - at running real workloads on your
+11:52 - kubernetes cluster
+11:57 - okay great so we've got pods sure so do
+12:01 - i have to define that all the time
+12:03 - well
+12:04 - most of the time you won't actually
+12:06 - define a pod directly you'll define what
+12:09 - is known as a another class of resource
+12:11 - known as a controller and the most
+12:14 - common controller that controller type
+12:16 - that you will deal with in kubernetes as
+12:17 - a developer is going to be a deployment
+12:20 - so a deployment describes the desired
+12:22 - state of a set of pods and manages
+12:24 - updates to those pots
+12:26 - so
+12:27 - what that means is
+12:30 - if i want to define this pod and a set
+12:32 - of volumes and everything that's all
+12:33 - fine and good but i might need to run
+12:36 - more than one of them right maybe my app
+12:38 - is popular and i need to run
+12:40 - five web servers to handle it well
+12:42 - rather than
+12:44 - creating five different pod specs with
+12:46 - different names on my own and managing
+12:47 - those i can create a deployment
+12:51 - so with the deployment you can actually
+12:53 - define the number of replicas that you
+12:55 - want
+12:56 - to have running at any given time and
+12:58 - when
+12:59 - the deployment actually starts running
+13:01 - what it does it says okay i should have
+13:04 - this pod running and because you've set
+13:06 - replicas to three i know i'm going to
+13:07 - make three copies of it and and
+13:09 - distribute those out
+13:11 - and it's probably easier to explain that
+13:13 - by looking at a definition of one so
+13:15 - here's the definition of a really simple
+13:17 - deployment
+13:20 - so
+13:20 - we've got again our metadata section
+13:22 - where we can give names and labels and
+13:24 - that's all fine and good but then the
+13:26 - interesting part becomes this spec so
+13:28 - this is what's known as a pod spec and
+13:30 - it follows the exact same schema as the
+13:32 - pod that we looked at previously
+13:34 - but it's going to be
+13:38 - it's going to be
+13:39 - managed by the actual deployment so
+13:42 - under our spec we say
+13:44 - i've got replicas of three and this is a
+13:46 - to run a simple nginx pod that's going
+13:48 - to serve web traffic for my app
+13:51 - so
+13:53 - the templates here are interesting
+13:54 - because this metadata that's under the
+13:56 - template
+13:57 - over here
+13:58 - this is going to actually be applied to
+14:00 - the pods this whole template is a
+14:01 - template for the deployment to create
+14:04 - its own pod specs as needed based on the
+14:06 - number of replicas that you've requested
+14:08 - and then we've got our same spec and
+14:10 - this is really simplified down to just a
+14:12 - single container here but we could have
+14:14 - volumes mounted here we could define
+14:16 - environment variables that need to be
+14:17 - passed in
+14:19 - so
+14:20 - in the background a deployment actually
+14:21 - creates another kubernetes object called
+14:23 - a replica set
+14:25 - and before deployments were around
+14:26 - replica sets were like the recommended
+14:28 - way for you to run a set of pods that's
+14:30 - no longer the case now
+14:32 - you know the the sort of recommended
+14:34 - guidance is not to create replica sets
+14:36 - yourself in most cases but instead to
+14:37 - create a deployment which is again a
+14:40 - defined uh you know a desired state that
+14:43 - you want it to have and so then the
+14:44 - kubernetes api is going to say okay cool
+14:46 - because you've expressed this desired
+14:48 - state i'm going to make sure that i'm
+14:50 - always keeping it in that state and
+14:51 - doing whatever i have to do if i see
+14:53 - that there's only two of your pods
+14:54 - running and you've requested three
+14:56 - replicas then i will spin up another set
+14:59 - of pods to match that
+15:04 - the
+15:07 - so
+15:08 - when you actually spin these up
+15:11 - they
+15:12 - get distributed to whatever nodes are
+15:14 - available and the deployment handles
+15:15 - that for you and it says okay great you
+15:17 - want more of these you can have more of
+15:19 - them and then the nice thing about a
+15:20 - deployment is it becomes a way to manage
+15:22 - your scaling as well so if you were
+15:25 - running three replicas and all of a
+15:27 - sudden you start getting hammered with
+15:28 - traffic you can issue a simple cube
+15:30 - control command to scale up this
+15:32 - deployment to 10 replicas and it's going
+15:34 - to go out there and handle that for you
+15:35 - say okay great i see i've already got
+15:37 - three i'll go spin up seven more for you
+15:39 - let's get those going
+15:42 - and we'll get into a little more detail
+15:44 - about some of the scaling features
+15:46 - toward the end of the presentation
+15:51 - so great
+15:52 - we've got a deployment and this
+15:54 - deployment is now
+15:58 - managing all these pods that are running
+15:59 - my app
+16:00 - awesome
+16:02 - i need to get some traffic to that
+16:03 - application i need to send
+16:06 - users there to do things typically i
+16:08 - mean not always you may have a a
+16:10 - non-interactive workload that's just
+16:11 - doing bitcoin mining or something but
+16:14 - typically you're going to run
+16:16 - web-based applications on a kubernetes
+16:18 - cluster and need to send traffic to them
+16:20 - well a service routes traffic to a set
+16:23 - of pods
+16:24 - so this is basically a definition uh
+16:27 - sort of it's called a service because it
+16:29 - is used for service discovery so that
+16:31 - you can say i need to send traffic to
+16:34 - this pod but i don't necessarily know
+16:36 - the name of that pod because the
+16:37 - deployment may have
+16:39 - killed and created multiple pods there
+16:41 - may be
+16:42 - 10 pods running but i need to just
+16:44 - reference it i want to just load balance
+16:45 - between those so that's where a service
+16:47 - comes in
+16:49 - uh and
+16:50 - when you create a service
+16:53 - there are
+16:54 - a few different types of services that
+16:55 - can be created um the default
+16:58 - type of service is called cluster ip and
+17:01 - what that means is that this service
+17:02 - gets assigned an ip from the cider block
+17:05 - that is internal to the cluster
+17:07 - a cluster ip service is not exposed
+17:09 - outside the cluster at all
+17:12 - it's only accessible by other things
+17:13 - that are running inside the cluster
+17:16 - another type of service is called a
+17:20 - node port
+17:22 - service so when you
+17:25 - declare a service of type node port
+17:28 - you will
+17:29 - specify a port on each one of the nodes
+17:32 - that is going to be listening and
+17:33 - proxying traffic for these pods and so
+17:36 - what it will do is if you say expose a a
+17:39 - service of type node port on
+17:42 - on you know port
+17:44 - 33602
+17:46 - then every single node in your cluster
+17:48 - is going to expose that port and route
+17:50 - that traffic to your pods based on the
+17:53 - definition of your service
+17:55 - and then
+17:56 - the other type of the other common type
+17:58 - of service that you'll see created is
+17:59 - called load balancer
+18:01 - now what this does is it actually
+18:03 - typically integrates with whatever cloud
+18:06 - provider or other
+18:08 - system you're running your kubernetes
+18:10 - cluster on
+18:11 - so let's say you're running in aws and
+18:15 - you create a service of type load
+18:16 - balancer it's actually going to go out
+18:19 - through the aws api and create a an elb
+18:24 - that is going to route traffic to the
+18:26 - nodes in your cluster so in this case
+18:29 - now we're actually exposing this to
+18:32 - something on the outside world the node
+18:33 - port does this as well where you're
+18:35 - saying hey these nodes if they're
+18:36 - accessible somewhere in your vpc
+18:38 - depending on how you have things
+18:39 - configured will actually route this
+18:41 - traffic
+18:42 - now when you're dealing with routing
+18:45 - traffic inside the cluster a service
+18:47 - actually gives you a very nice
+18:48 - convention
+18:49 - if you have which most kubernetes
+18:51 - clusters have
+18:52 - kubernetes dns enabled internally
+18:55 - so what you end up with is a dns name
+18:58 - like this
+18:59 - whatever the name of your service is
+19:02 - whatever the name space that it's
+19:03 - running in
+19:05 - and then dot cluster dot local so
+19:08 - if i have let's say a
+19:12 - database server running in my kubernetes
+19:14 - cluster and i it's maybe in the data
+19:17 - name space and it's called postgres then
+19:19 - i could have a name of
+19:20 - postgres.data.cluster.local
+19:23 - and if i want my other apps within the
+19:25 - within the cluster to be able to access
+19:27 - that i can just feed them that name and
+19:29 - the service is going to take care of
+19:30 - always routing that whenever new pods
+19:32 - come up and old pods go down the service
+19:35 - actually handles routing the traffic to
+19:36 - those
+19:37 - based on a set of rules that we'll look
+19:38 - at here in just a second but my other
+19:40 - applications that are consuming that get
+19:42 - this nice static predictable
+19:45 - dns name that they can reference inside
+19:46 - the cluster
+19:50 - so here is a simple service definition
+19:53 - um
+19:54 - so we're defining a service it's name is
+19:56 - my service
+19:58 - it's got a selector here right so this
+20:01 - selector section is interesting because
+20:03 - this actually interacts with the labels
+20:06 - that we saw on our deployments and our
+20:07 - pods
+20:09 - so what this selector is saying is that
+20:12 - the way that i want this service to
+20:14 - route traffic is by looking for all pods
+20:16 - that have a label of app with a value of
+20:19 - my app
+20:21 - so this is how the service is able to
+20:23 - kind of dynamically route traffic as
+20:26 - your pods get spun up and spun down by
+20:28 - the scheduler
+20:30 - if we look at this we're defining the
+20:32 - ports that we actually want to route
+20:33 - traffic to so in this we're just routing
+20:35 - simple port 80 and port 443
+20:39 - to a target port so this target port is
+20:42 - going to be the port on which my actual
+20:44 - container inside my pod is listening for
+20:47 - these types of traffic so i'll have my
+20:50 - docker container inside my pod listening
+20:52 - for http traffic on port 9376 and this
+20:56 - service is going to listen on port 80
+20:59 - and direct that traffic over to the
+21:01 - other port
+21:10 - okay so with the exception of the
+21:12 - service type load balancer we just said
+21:14 - that the services don't actually expose
+21:16 - things to the outside world by default
+21:18 - the cluster ip service doesn't a node
+21:20 - a node port type does but it's very
+21:23 - difficult to manage because it's going
+21:24 - to be these random ports that are on
+21:26 - three five a hundred a thousand whatever
+21:28 - however many nodes are in your
+21:29 - kubernetes cluster
+21:31 - so how do we get traffic from the
+21:33 - outside world in as we said there is the
+21:37 - load balancer type which will actually
+21:38 - create a load balancer in whatever cloud
+21:41 - provider you happen to be running your
+21:42 - cluster in
+21:44 - that can get expensive real quick if
+21:45 - every single thing that you especially
+21:47 - if you're running a micro service
+21:48 - architecture with you know 30 or 40 you
+21:52 - know web apps that all need to be
+21:54 - exposed all of a sudden
+21:56 - you're going to be paying a lot more for
+21:57 - those elbs than the value they're
+21:59 - actually providing in most cases
+22:01 - well this is where an ingress comes in
+22:04 - so
+22:04 - in kubernetes and ingress is
+22:08 - a resource it's referred to as a
+22:10 - resource even though it doesn't actually
+22:11 - do anything
+22:13 - an ingress simply describes
+22:16 - a set of hosts
+22:18 - and paths that should be routed to a
+22:21 - given service from outside the cluster
+22:23 - to the service that's inside the cluster
+22:25 - they don't actually do anything by
+22:26 - themselves because they actually employ
+22:30 - what is known in kubernetes land as the
+22:32 - operator pattern
+22:34 - where there is a
+22:36 - ingress controller or operator that you
+22:38 - install in your cluster
+22:40 - that actually follows these instructions
+22:42 - that are defined in the ingress so
+22:44 - really common one would be like nginx
+22:46 - ingress which is going to spin up an
+22:49 - nginx instance or instances and
+22:51 - basically read these rules and say okay
+22:53 - great you route all the traffic to me as
+22:55 - nginx and i will automatically
+22:57 - dynamically configure all these backends
+23:00 - to route traffic to within your cluster
+23:04 - so let's take a look at an ingress
+23:08 - here is an ingress that i've used to
+23:12 - expose a gitlab web ui in my cluster
+23:16 - [Music]
+23:17 - to the outside world
+23:19 - now there's a few new concepts in here
+23:22 - an interesting one here is the
+23:24 - annotations annotations are valid in the
+23:27 - metadata of pretty much every
+23:29 - uh kubernetes object
+23:31 - they differ from labels a little bit in
+23:33 - that labels have to be very simple key
+23:35 - value pairs whereas annotations can be
+23:37 - more complex as we see here with
+23:39 - you know having actual url style
+23:44 - identifiers
+23:46 - annotations are typically used to tell
+23:49 - some other thing how it should interact
+23:52 - with this
+23:53 - kubernetes resource so in this case some
+23:55 - of the interesting ones here are that
+23:56 - we're saying okay well the class for
+23:59 - this
+24:00 - ingress is nginx that means that i have
+24:03 - deployed the nginx ingress controller in
+24:05 - my cluster and i'm saying hey i want
+24:08 - this ingress to use the nginx ingress
+24:11 - controller there are ingress controllers
+24:13 - that are there's one that's specific to
+24:15 - google compute if you're running in gke
+24:17 - there are
+24:19 - there's one called traffic there's
+24:21 - i believe there's actually an aha proxy
+24:24 - ingress now
+24:26 - and you could actually run multiple of
+24:27 - these in your cluster if you wanted to
+24:29 - and this annotation helps them decide
+24:31 - which one of them should handle your
+24:33 - ingress
+24:34 - another interesting one here is this tls
+24:37 - acme i'm telling it hey i want you to
+24:39 - get
+24:41 - a tls certificate an ssl cert for my
+24:44 - ingress
+24:45 - in this scenario i've deployed another
+24:47 - controller called cert manager that
+24:49 - knows how to interact with let's encrypt
+24:50 - so whenever it sees that i've created an
+24:52 - ingress with this set to true it says
+24:54 - hey cool i'm going to go in there and
+24:56 - i'm going to read the data out of your
+24:58 - ingress and i'm going to go interact
+24:59 - with let's encrypt to automatically
+25:00 - issue you an ssl certificate a lot of
+25:03 - really interesting things can happen
+25:04 - there based on these annotations
+25:06 - um
+25:07 - the actual ingress itself is specifying
+25:09 - that hey for this given host
+25:12 - i want you to route
+25:14 - the this path to this back end it's very
+25:18 - uh
+25:19 - if you've ever configured nginx or ha
+25:21 - proxy it's a very very familiar type of
+25:23 - concept where you're saying hey when you
+25:25 - see this come in route it over here to
+25:27 - this back end server transparently to
+25:29 - the user pass along some ip data stuff
+25:32 - like that in the headers
+25:33 - this does the same thing so i can
+25:35 - actually have this this is passing all
+25:36 - traffic at the main root path but i
+25:38 - could have it say just you know slash
+25:41 - users if i wanted to route that to some
+25:42 - different service for a reason i can
+25:44 - also have
+25:45 - multiple rules defined in here if i need
+25:47 - to
+25:48 - um
+25:49 - but
+25:50 - and this is telling this back end is
+25:52 - telling it the name of a service so just
+25:54 - as we saw in our previous example of the
+25:56 - service i'm telling it which service to
+25:57 - route to so you can see we've got this
+25:59 - kind of multi-tiered thing where we're
+26:00 - saying okay
+26:01 - and ingress helps me define how traffic
+26:04 - comes into the cluster and goes to a
+26:06 - service then a service helps me define
+26:08 - how traffic that's already gotten into
+26:10 - the cluster gets to its ultimate
+26:11 - destination on an actual back end
+26:15 - and then in the tls section this is just
+26:17 - defining a little more data about where
+26:19 - this ssl cert would be so in this
+26:21 - scenario
+26:22 - we would end up with a kubernetes secret
+26:26 - uh called gitlab gitlab tls that would
+26:28 - have
+26:29 - a couple of keys in it that hold the
+26:31 - private key and the
+26:33 - public cert that were obtained from
+26:34 - let's encrypt and make that available to
+26:37 - whatever ingress controller is trying to
+26:39 - run this such as our nginx instance
+26:47 - so
+26:49 - let's look at what all that looks like
+26:51 - right
+26:52 - so
+26:53 - based on what we've talked about so far
+26:55 - we have
+26:57 - this is a representation of kind of what
+26:59 - we just went through which is that we've
+27:01 - got traffic that's out here in you know
+27:04 - in the internet that
+27:06 - gets
+27:07 - arrives at some host name that we've
+27:09 - defined via external dns
+27:12 - that hits our ingress
+27:14 - so
+27:15 - in this case let's say our ingress is
+27:17 - the nginx ingress controller so it's
+27:18 - hitting an nginx instance and that nginx
+27:20 - reads its own config and says cool
+27:22 - because you came in on this host and
+27:24 - path i know that you want to go to a
+27:26 - particular service so it routes that
+27:28 - traffic down to the service once your
+27:31 - traffic hits the service the service
+27:33 - says okay great
+27:35 - i know how to find the pods that you
+27:38 - want to use and i'm going to send you to
+27:40 - one of them and just because basically a
+27:42 - round-robin dns at that point
+27:44 - where the traffic now hits one of the
+27:46 - pods that i have running
+27:48 - in order to serve that traffic
+27:51 - so this is
+27:53 - sort of the basic application setup that
+27:55 - you'll see for most things that you
+27:57 - deploy into kubernetes especially as a
+27:59 - developer an application developer a lot
+28:02 - of times we're building web uis or apis
+28:05 - and
+28:06 - this is going to be a really common
+28:08 - paradigm for how you actually get
+28:10 - traffic to your application that's
+28:12 - running inside of the kubernetes cluster
+28:19 - so
+28:24 - so now that we've got our
+28:28 - actually tired of standing behind this
+28:30 - podium if i can move just a little bit
+28:32 - without messing up the twitch stream
+28:34 - um
+28:34 - so now that we've got our
+28:38 - application running as a deployment
+28:41 - how do we update it
+28:43 - right
+28:44 - this is one of the reasons why you use a
+28:45 - kubernetes deployment instead of
+28:47 - directly using a replica or pods
+28:48 - yourself is that the deployment has a
+28:52 - lot of options that help you manage how
+28:54 - you actually roll out updates to this
+28:56 - thing
+28:57 - so
+28:58 - whenever
+28:59 - i come in and say okay we've shipped
+29:02 - version one of our app to kubernetes as
+29:05 - a deployment
+29:06 - now
+29:07 - we've got version
+29:09 - 1.0.1 ready to go because we found a bug
+29:11 - and we got to release it so
+29:15 - when i go and actually update say the
+29:18 - image tag that i'm deploying from my
+29:20 - docker container
+29:21 - of this deployment
+29:23 - kubernetes sees that says okay great
+29:25 - well now that you've made an update to
+29:26 - this deployment i'm going to look at
+29:28 - your update strategy and figure out how
+29:30 - it is that you want me to roll this out
+29:34 - the
+29:35 - one option that it has is recreate in
+29:37 - that scenario it just basically goes and
+29:39 - nukes all of your pods and recreates all
+29:42 - of them with the new definition
+29:44 - that's a way to go there's probably a
+29:46 - good use case for it i haven't had a
+29:47 - good use case for it yet because
+29:49 - typically i'm deploying apps that are
+29:50 - actually in use
+29:52 - so the default is a rolling update
+29:55 - strategy
+29:58 - which means it's going to based on a set
+30:00 - of rules
+30:01 - look at all the pods and say okay cool
+30:03 - i'm going to go through
+30:05 - and
+30:06 - upgrade them systematically
+30:09 - until i've got them all done
+30:11 - and when you're doing that you can
+30:13 - define
+30:14 - uh one of two types of strategies
+30:17 - there is the max unavailable and then
+30:20 - there is the max surge and these aren't
+30:21 - exactly mutually exclusive except that
+30:24 - if one of them is set to zero the other
+30:25 - one can't be we'll get into that just a
+30:27 - little bit
+30:28 - but
+30:29 - what we've got here is if we do a max
+30:32 - unavailable then what we're saying is
+30:34 - that a certain number of my pods can be
+30:37 - unavailable at any given time during
+30:40 - this update and that's okay
+30:42 - and you can express that as either an
+30:43 - absolute number of five pods or you can
+30:46 - express it as a percentage like 25 of
+30:49 - whatever i've got deployed
+30:51 - i usually find a percentage to be
+30:54 - something that scales a little better
+30:56 - when you actually start scaling your
+30:57 - deployment up and down you probably care
+31:00 - more about the percentage of total pods
+31:02 - than the actual exact number
+31:06 - when
+31:08 - so
+31:09 - the other type is a max surge
+31:12 - so a max surge defines a number of pods
+31:15 - that can be running in excess of what
+31:17 - you've defined for your deployment so if
+31:20 - i said on my deployment that i want to
+31:21 - have
+31:22 - five replicas
+31:24 - then a max surge says that
+31:26 - so many pods can be above that number
+31:29 - without it actually without the
+31:31 - deployment starting to kill them off as
+31:32 - oh hey that's more than what you asked
+31:34 - for
+31:35 - so
+31:36 - let's look at this a little more detail
+31:38 - with an example
+31:40 - so let's say i've got on our on our
+31:43 - web server nginx replica set to 10
+31:47 - saying all right kubernetes i want to
+31:49 - always have 10
+31:51 - pods running serving all my web traffic
+31:54 - so in the scenario where we have defined
+31:57 - a max unavailable of three
+32:01 - here i've chosen an exact number despite
+32:03 - the fact that i just advised you with
+32:05 - percentages just for simplistic
+32:07 - for simplicity's sake
+32:10 - so in this scenario it means that
+32:13 - once i tell kubernetes to update
+32:16 - our
+32:17 - deployment it will say okay cool well
+32:20 - you've got you've asked for ten copies
+32:23 - of this to be running and i've got a max
+32:24 - unavailable of three so i'm gonna go
+32:26 - kill three of your pods
+32:29 - and and update them to this new spec and
+32:31 - i'm gonna wait until they come online
+32:34 - before i do any more right so
+32:37 - it starts those updates and you know one
+32:39 - of them might finish before the others
+32:41 - so as soon as one of them finishes then
+32:43 - kubernetes says okay cool well i can go
+32:44 - take down another one of your pods that
+32:46 - needs to be updated right and at any
+32:48 - given time it's going to make sure i
+32:49 - still have seven available and and at
+32:51 - least seven available and no more than
+32:54 - three that are not serving traffic
+32:58 - now
+32:59 - in the
+33:00 - max
+33:01 - surge scenario
+33:05 - we go the other way it says okay you've
+33:07 - asked for there to be
+33:09 - 10 of these pods running and i'm not
+33:12 - going to take it any lower than that
+33:13 - instead because you've got a max surge
+33:16 - of three i'll bring up three new pods
+33:18 - and when they're ready i'll start
+33:20 - swapping those in to your set of 10 and
+33:23 - swapping out your other ones
+33:26 - so in that scenario we might go as high
+33:29 - as 13 pods that are active in serving
+33:31 - traffic
+33:33 - and which one you choose really kind of
+33:35 - depends on your application and your
+33:37 - constraints and you know whether it's
+33:39 - more important to keep more pods up and
+33:42 - serving traffic or if it's more
+33:44 - important to stay under a certain number
+33:46 - so that your you know cluster doesn't
+33:48 - get overloaded
+33:50 - you know one thing to consider is that
+33:52 - whenever
+33:52 - any of these schedulers like kubernetes
+33:54 - are trying to schedule their pods they
+33:56 - look at a few different things to say
+33:57 - hey
+33:59 - is there enough cpu and memory on this
+34:02 - node to put this pod there and if
+34:03 - there's no place to put it then those
+34:05 - pods just sit there and never get spun
+34:07 - up right so that might be a scenario if
+34:09 - you know that you typically run sort of
+34:11 - at the capacity of your cluster for
+34:13 - whatever reason
+34:14 - then you might want to choose a max
+34:16 - unavailable update strategy so that it
+34:18 - starts pulling pods out
+34:20 - and freeing up those resources before it
+34:22 - creates new ones if you've got plenty of
+34:24 - headroom on your cluster and it's more
+34:26 - important to make sure that
+34:27 - you've got enough you know pods serving
+34:30 - traffic then you might want to go with a
+34:32 - max surge where it says okay great i'm
+34:34 - going to make sure that i've always got
+34:35 - enough you know 10 pods running to serve
+34:38 - these customers but i'll scale it up as
+34:40 - high as 13 in order to get these updates
+34:42 - rolled out
+34:47 - yes so the the the only real
+34:50 - um
+34:51 - exclusivity rules
+34:53 - um that apply to these according to the
+34:56 - documentation and i haven't done a ton
+34:57 - of experimenting on these two in
+34:58 - practice to see
+35:00 - how they actually play out in really
+35:01 - large-scale scenarios but um
+35:04 - is that if max unavailable is set to
+35:08 - zero then max surge cannot be zero and
+35:12 - vice versa if max surge is set to zero
+35:14 - then max unavailable cannot be set to
+35:16 - zero right you have to allow it to do
+35:18 - one of the other or it'll just be
+35:20 - deadlocked and can't do anything now
+35:22 - if you define
+35:24 - both of them
+35:25 - um
+35:26 - again like i said i haven't done a ton
+35:27 - of experimentation in this scenario but
+35:30 - what i expect would happen is that it's
+35:32 - going to basically
+35:33 - work within those limits so in this
+35:35 - scenario if i had both of these things
+35:37 - defined then it's going to start
+35:40 - creating pods and killing pods as it
+35:41 - needs to and the rules that it's
+35:43 - evaluating against is okay
+35:45 - am i above seven
+35:47 - and you know below 13.
+35:50 - and as long as it's in that range it's
+35:52 - free to start creating and killing pods
+35:54 - all that it needs to
+36:02 - okay so
+36:04 - there are
+36:06 - there are several other ways that you
+36:07 - can run pods in kubernetes
+36:10 - we covered a deployment which is a way
+36:12 - of just essentially keeping things
+36:14 - running based on some described state
+36:16 - right
+36:17 - other
+36:18 - other things in the same family as
+36:20 - deployment would be stateful sets and
+36:22 - daemon sets which are
+36:25 - a little bit less common and a little
+36:26 - more advanced we're not going to get too
+36:27 - deep into them here suffice it to say
+36:29 - that
+36:30 - if you have a daemon set it's like a
+36:32 - deployment except it means that it's
+36:33 - going to run
+36:34 - rather than a number of replicas it's
+36:36 - going to run that pod that you define on
+36:39 - every single node so it has a one-to-one
+36:41 - relationship with the number of nodes in
+36:42 - your cluster if you do a daemon set
+36:45 - that's typically used more for things
+36:47 - like uh log scrapers and aggregators or
+36:50 - things like that where you're kind of
+36:51 - monitoring health usually
+36:53 - or anything else that you need running
+36:55 - on each node exactly once a stateful set
+36:58 - is similar to a deployment except that
+37:00 - it makes some guarantees around identity
+37:02 - and ordering of your actual pods and
+37:05 - that's more commonly used for things
+37:06 - like databases where maybe you've got a
+37:09 - a leader and you know two or three
+37:11 - replicas and which one is the leader and
+37:14 - which ones are the replicas is actually
+37:15 - very important in that scenario and you
+37:16 - need to make sure that there's a certain
+37:18 - amount of availability and that things
+37:19 - are rolled out in a certain way
+37:21 - and those are two things that you can
+37:22 - dig into a little bit more if your
+37:23 - workload
+37:24 - if you think that you need that for your
+37:25 - workload typically you'll use a
+37:27 - deployment
+37:28 - however another class that you'll
+37:30 - actually use quite a bit as a developer
+37:32 - is a job
+37:34 - so
+37:35 - it's similar to a deployment in that it
+37:38 - describes a set of pods except with a
+37:41 - job it runs it once to completion for
+37:44 - each pod that you define and usually
+37:46 - it's one pod
+37:48 - it could be multiple and you can do some
+37:50 - interesting things with parallelism and
+37:52 - q queued workloads but
+37:54 - a really typical example for using a job
+37:57 - would be
+37:58 - database migrations right
+38:00 - whenever i deploy a new version of my
+38:02 - app i want to make sure my database is
+38:04 - migrated to match that version
+38:07 - so i can create a job and that job says
+38:10 - okay great create this pod based on this
+38:12 - pod spec and run it until it completes
+38:15 - and completes successfully
+38:17 - so what that means is
+38:19 - if it goes and starts my job and and
+38:22 - this pod runs but for whatever reason
+38:24 - let's say the database is unavailable or
+38:26 - something else happened and it couldn't
+38:27 - actually run the migrations and complete
+38:29 - them successfully that pod is going to
+38:31 - die and it's going to get restarted
+38:33 - again and it's going to and kubernetes
+38:35 - is going to keep trying to do that until
+38:36 - it successfully completes once now once
+38:39 - you've actually run that database
+38:40 - migration you're like cool i don't want
+38:41 - to do that anymore so it stops your pod
+38:43 - exited successfully indicating that it
+38:45 - was done and it completed whatever it
+38:47 - was trying to do and now that's it
+38:50 - you're done so that job just sits there
+38:52 - um and it's it just sits there in a
+38:54 - completed state you can go back and
+38:56 - inspect the state of it and then you can
+38:57 - delete the job if you want it'll clean
+38:59 - up any pods that it had left laying
+39:01 - around in a non-running state
+39:04 - so let's take a look at a job
+39:08 - again we see that the spec looks very
+39:11 - very familiar
+39:13 - um albeit tiny
+39:17 - that
+39:18 - we've got this essentially the same kind
+39:20 - of template it follows the same template
+39:22 - as the pod spec for deployment and other
+39:25 - things
+39:26 - and the only real difference here is
+39:27 - that because the kind is set to a job
+39:29 - and there's a few other things like a
+39:30 - back off limit that can tell it how much
+39:33 - it needs to back off um from
+39:36 - jobs or that it should stop trying to
+39:37 - run them if it fails four times then
+39:39 - just don't bother trying anymore
+39:42 - but it's very simple very simple
+39:45 - definition of a pod
+39:47 - with the caveat that it's only going to
+39:49 - run once
+39:51 - now
+39:52 - another sort of extension in the job
+39:54 - family is actually the cron job so
+39:57 - the cron job is kind of a controller
+39:59 - type object which says hey
+40:02 - based on some crown expression just like
+40:03 - you would expect
+40:05 - i want you to create jobs for me so if i
+40:07 - create a cron job that has a
+40:10 - you know has a chron expression that
+40:11 - tells me to run
+40:13 - i don't know uh
+40:15 - once every night at 2 am
+40:17 - then once every night at 2 am kubernetes
+40:19 - is going to try to create a job uh it
+40:22 - may not succeed in that so it's there's
+40:24 - not
+40:25 - as a firm of a guarantee on crime job
+40:28 - execution as there would be with say
+40:30 - just traditional crime on your
+40:32 - system but it's going to create a job
+40:34 - and try to have that job run and it's
+40:36 - going to do that every night at say 2
+40:37 - a.m which is a great way to i don't know
+40:39 - back up some files or a database or
+40:40 - something like that or perform some sort
+40:43 - of maintenance task
+40:46 - so
+40:47 - those are jobs and cron jobs
+40:52 - and then
+40:55 - so i promised we'd get back into some of
+40:57 - the scaling stuff as that is one of the
+40:59 - uh interesting you know sort of promises
+41:02 - of of kubernetes and the cloud right is
+41:04 - is that you can scale things you know to
+41:06 - meet demand and then you can scale them
+41:07 - back down when you don't have demand and
+41:09 - save some money right
+41:10 - so
+41:12 - from the developer side one of the ways
+41:14 - that this happens
+41:15 - you can obviously go in and scale a
+41:18 - deployment yourself if you notice a
+41:20 - spike in traffic you can go and issue a
+41:22 - command that says scale this deployment
+41:24 - up because i need more pots
+41:28 - but
+41:29 - do you want to watch the dashboard all
+41:31 - day to find out that there was a
+41:33 - suddenly a spike at 3 am and you needed
+41:35 - to go issue that command manually
+41:36 - probably not instead you can use a
+41:39 - horizontal pod auto scaler
+41:41 - so this will scale out a deployment
+41:43 - based on observed cpu utilization
+41:46 - or other metrics and i probably should
+41:48 - have put an asterisk after that or other
+41:50 - metrics because that part gets well
+41:52 - beyond the scope of this talk suffice it
+41:54 - to say that you can
+41:55 - actually monitor different metrics such
+41:57 - as the number of you know hits coming in
+42:00 - on an ingress or you know disk space or
+42:03 - something like that right
+42:06 - but we'll just talk about them in the
+42:08 - simplistic form of cpu utilization so
+42:12 - let's say i'm running this app and
+42:14 - this app is starting to you know
+42:16 - that the aggregate cpu usage across all
+42:19 - of my pods i've got say i've got
+42:21 - three pods running and
+42:23 - they're at they're averaging out and
+42:25 - they're aggregating up to you know 80 or
+42:27 - 90 cpu utilization i say oh well we're
+42:30 - busy we better scale up so if i've
+42:32 - already defined that in a horizontal pod
+42:34 - auto scaler then the kubernetes api is
+42:36 - already watching that for me and it says
+42:38 - oh hey we've hit the threshold add some
+42:40 - more pods right scale it up take it from
+42:43 - three to six you know um and you can set
+42:46 - the definition on what you're min and
+42:47 - what your max is and
+42:49 - which metric you're you're tracking uh
+42:52 - and the way you do that is with this
+42:54 - cube control command
+42:56 - it's really hard to see sorry but
+42:57 - basically it just says cube control auto
+42:59 - scale deployment you give it a
+43:01 - deployment name you tell it you're
+43:03 - watching for cpu percentage to be above
+43:05 - 50 and i want a minimum of one and a
+43:07 - maximum of 10. so what the horizontal
+43:09 - pod autoscaler is going to do is it will
+43:11 - scale your pods up or down based on
+43:14 - these observed metrics so if we're
+43:16 - running above 50 cpu and
+43:20 - we need more pods it's going to add
+43:22 - those in and then later when the the
+43:24 - wave of traffic has subsided and our our
+43:27 - aggregate cpu usage is down it's going
+43:29 - to start scaling those pods back in as
+43:31 - well
+43:32 - right
+43:34 - now this becomes really really
+43:35 - interesting when you deploy it with
+43:37 - something that would be more in the
+43:39 - operational side of a kubernetes talk
+43:41 - which is a cluster auto scaler so there
+43:43 - are cluster auto scalers for let's say
+43:46 - you know
+43:47 - google or aws or something that will say
+43:50 - hey
+43:51 - whenever kubernetes is trying to
+43:53 - schedule these pods and it says hey
+43:56 - i don't have anywhere to put these right
+43:57 - like i i'm all my nodes don't have
+43:59 - enough cpu or memory to support this pod
+44:02 - that i need to schedule so it's just
+44:03 - pending then the cluster auto scaler
+44:05 - would see that and say oh well let me
+44:07 - add some more nodes to your cluster you
+44:10 - know through an auto scaling group or
+44:11 - whatever else and it goes out and puts
+44:13 - more nodes in the cluster and then all
+44:15 - of a sudden the you know the scheduler
+44:17 - can now find a home for those pods so by
+44:20 - and then the cluster autoscaler does the
+44:22 - same thing in that
+44:23 - periodically it says hey well
+44:26 - we've got more capacity than we need
+44:28 - let's consolidate some of these pods
+44:30 - onto a couple of nodes and take a node
+44:32 - out
+44:34 - using this you can finally kind of
+44:36 - realize
+44:37 - the the true elasticity of today's you
+44:41 - know modern cloud environments where
+44:43 - based on observed metrics that your
+44:45 - application cares about
+44:47 - you can now dynamically scale up you
+44:50 - know to as big as you really feel is
+44:52 - necessary or need without human
+44:55 - interaction just let the machines watch
+44:56 - the traffic take the action based on
+44:58 - rules scale it up now you're handling
+45:01 - enough traffic and then when everything
+45:03 - dies down
+45:04 - all of a sudden it scales back in so
+45:05 - you're not paying for all that capacity
+45:07 - you don't need
+45:09 - so once you get into
+45:10 - horizontal pod auto scalers and cluster
+45:12 - auto scalers you really get the true
+45:15 - kind of promise of why people want to
+45:17 - use things like
+45:19 - the cloud and kubernetes in order to
+45:21 - actually run their workloads
+45:26 - all right
+45:28 - question and answer time
+45:30 - if you've got questions i'll try to give
+45:32 - them answers
+45:34 - and uh
+45:35 - yes
+45:42 - uh
+45:43 - [Music]
+45:51 - oh yeah so
+45:52 - yeah so the question is
+45:55 - uh
+45:56 - does it when a service goes to route
+45:57 - traffic to a pod
+45:59 - does it look at the
+46:01 - load on that pod
+46:04 - by default no i think i saw an option or
+46:08 - it may have been some sort of an add-on
+46:09 - that could do that but by default it
+46:11 - just does simple robining
+46:14 - although i believe you can configure
+46:16 - sticky sessions um so that could that
+46:20 - could come into play as if it knows that
+46:21 - a particular pod is is
+46:23 - not
+46:24 - uh is overloaded with concurrent
+46:26 - sessions
+46:29 - [Music]
+46:35 - um so the question was
+46:39 - does the
+46:40 - when you go to execute a rolling update
+46:42 - does it also um take traffic away before
+46:46 - it does that um so
+46:50 - yes and no right in that it it's going
+46:52 - to go kill a pod
+46:54 - which means that that pod is going to
+46:56 - immediately be marked before it even
+46:58 - gets killed it kind of i mean this all
+47:00 - happens like that but
+47:01 - it's going to actually mark the pod as
+47:04 - as unavailable
+47:06 - which means that the services that try
+47:08 - to route traffic to it say i only route
+47:10 - traffic to available pods so they're
+47:12 - constantly every time they need to route
+47:13 - traffic they're saying all right well
+47:14 - where's the list of available pods that
+47:16 - one's not in it so i won't route any new
+47:18 - traffic there now if you have a sticky
+47:20 - session that was routed there i don't
+47:21 - actually know what happens with that
+47:23 - but
+47:24 - that's essentially how that works and so
+47:27 - while it's not explicitly making
+47:28 - decisions like oh i should take away
+47:30 - traffic for this it's it's sort of this
+47:34 - composition of all these other rules
+47:36 - that we talked about that dictate how
+47:38 - that's how that traffic is going to flow
+47:40 - okay so i mean it pulls it out of the
+47:41 - pool so no new stuff goes through right
+47:43 - if it's in the middle of trying to
+47:45 - service a request
+47:46 - it's potentially that it could kill
+47:49 - basically if you can kill the pod in the
+47:51 - middle of trying to serve this request
+47:52 - it's not going to wait for connections
+47:59 - right so the so to clarify yes uh he was
+48:02 - saying that
+48:03 - it's not going to necessarily wait for
+48:05 - all connections to be drained off of a
+48:06 - pod before it stops sending traffic
+48:08 - there
+48:10 - yeah so and and again this really
+48:12 - uh
+48:14 - this comes down to you know uh a term
+48:17 - that
+48:18 - uh has been getting thrown around a lot
+48:20 - lately about cloud native and designing
+48:23 - cloud native applications um and
+48:25 - that really becomes part of it right
+48:27 - like in in a cloud native application
+48:29 - you should be prepared to handle that
+48:31 - scenario for your customer where uh you
+48:34 - know this you know at any given time the
+48:37 - thing running my application code could
+48:39 - get cut off and i need to make sure that
+48:41 - my client on the other end has some kind
+48:44 - of retry or that it's okay that that
+48:46 - connection be dropped right and that's
+48:48 - going to be very very application and
+48:50 - even particular endpoint or request
+48:51 - dependent to figure out but it's
+48:53 - something that you should be thinking
+48:54 - about as a developer who's going who's
+48:56 - designing applications to run on these
+48:58 - cloud native uh
+49:00 - systems
+49:06 - another question yes
+49:10 - i'm sorry availability when you're like
+49:11 - say you have to upgrade kubernetes
+49:16 - okay so yeah the question was how do you
+49:18 - stay highly available with your apps
+49:20 - when you have to upgrade kubernetes
+49:21 - itself
+49:22 - this gets a little more onto the
+49:23 - operational side of this but
+49:26 - essentially because kubernetes is filled
+49:29 - with nodes and node pools
+49:31 - what you would do is you would simply
+49:33 - add more nodes
+49:35 - and then
+49:37 - that are running the newer version of
+49:38 - kubernetes and the cubelet api and your
+49:41 - other nodes that have apps on them
+49:43 - there's a few series of commands that
+49:44 - you can run you can
+49:46 - you can coordinate a node which
+49:48 - basically says hey
+49:49 - don't schedule any new work on here but
+49:51 - leave the work that's already there
+49:53 - running and then you can also drain a
+49:55 - node which tells kubernetes to start
+49:57 - taking
+49:59 - work off of that node and finding
+50:00 - another place to schedule it so
+50:02 - typically your path there would be
+50:04 - add some new nodes
+50:06 - cordon and drain your old nodes and you
+50:08 - know at whatever pace makes sense for
+50:11 - your application
+50:12 - and so that it kubernetes will then
+50:14 - start you know taking those pods off and
+50:15 - putting them onto the new nodes and they
+50:17 - can't reschedule onto the old nodes
+50:18 - because you've already cordoned them
+50:22 - all right
+50:23 - any more questions
+50:27 - no
+50:28 - all right well
+50:30 - thank you very much again i am jeff
+50:32 - french with moonswitch if you need help
+50:35 - with
+50:36 - devops continuous integration kubernetes
+50:38 - cloud migration
+50:40 - moonswitch.com get in touch we'd love to
+50:43 - help you out
+50:44 - and i have a few t-shirts and stickers
+50:46 - here to give away so if anybody wants
+50:49 - a t-shirt or sticker
+50:51 - um let's see here
+50:55 - i've got
+50:57 - a size
+50:58 - xl t-shirt
+51:00 - any takers
+51:02 - all right
+51:04 - oh sorry
+51:06 - i've got a size large t-shirt
+51:10 - yeah go to this side of the room make
+51:11 - sure this is the large
+51:16 - all right
+51:18 - and then i think that leaves me with
+51:20 - a medium anybody take a medium
+51:24 - there you go very excited for the medium
+51:27 - also i'll have some stickers just
+51:28 - sitting up here if anybody wants them
+51:29 - come on bye grab a sticker decorate your
+51:31 - laptop
+51:33 - all right and uh that's all we've got
+51:36 - for today thanks very much
+
+Cleaned transcript:
+
+all right so uh we're here to talk today about kubernetes for developers um so quick show of hands first off how many people have any experience with kubernetes previously okay couple everybody else how about docker how many people have experience with docker a few more okay good so my name is jeff french i'm the principal consultant at moonswitch we're at devops and cloud migration consultancy and we specialize in kubernetes so if you need any help with that let me know so let's start by talking about what is kubernetes um kubernetes is a cloud comes from a class of product known as a container orchestrator uh or a container scheduler um those terms get used a little bit interchangeably they tend to actually mean uh slightly different things and that a scheduler typically is a little bit less full featured than an orchestrator um but we'll get into what that actually means when it actually orchestrates your application so kubernetes is not the only player in this space um they have there are other schedulers and orchestrators including docker swarm that you may have used uh apache meso slash dc os it's kind of based on mesos and hashicorps nomad are just a few of the other container orchestrators and schedulers that are out there and they all do relatively the same thing right or versions of the same thing so a container orchestrator first off when we say container we're typically talking about a docker container um there are other container technologies out there that's well beyond the scope of this talk and most of these orchestrators have the ability with some modification to schedule things other than docker containers or docker compatible containers but the job of a container orchestrator is to take a set of instructions that you give it that say i have some set of containers that represent my application that i need to run and i want you to run them for me right i don't want to be bothered with uh you know figuring out is there room on this i don't know ec2 node over here and go over there and run a docker run command to get my container running and then if my container crashes having to go and say oh well let me go start that container back up or you know upgrade it to a new one or something like that that's the orchestrator's job so that's what kubernetes really does for you it manages a set of nodes that can run containers and it schedules containers to run on those nodes and it does a lot of things that are you know as far as depending on how your cluster is configured it will move workloads around to you know balance them between nodes a little more or consolidate them more on nodes so that you can kind of downsize your cluster so these are all the kind of functions of a container orchestrator and what it does so there's two sort of sides on how you need to on how you need to interact with a kubernetes cluster one would be the operator side where you are typically a sys admin or devops engineer who is in charge of standing up all the nodes and joining them into the cluster and making sure they stay healthy and all that we're not covering any of that part today today this is about if you are a developer who wants your apps to run on a kubernetes cluster here's this is kind of a quick start on things that you want to actually know and we're going to scratch the surface on some things this is a gigantic topic and there's a ton of documentation out there on the kubernetes website and lots of blog posts i'll try to kind of hint at when there's more things you might want to research on your own but we're going to keep this at a pretty high level intro level talk so the first piece of vocabulary we want to talk about in kubernetes is called a pod okay so a pod is a collection of containers and volumes so if you've worked with docker before you know what a container is right it's basically you've taken your app or some code that you've written and put it into this nice little portable container that can be run somewhere else wherever there's a docker engine you've probably also dealt with volumes if you've dealt with docker which is essentially defining a disk that's going to be attached to that docker container so if you think of a docker container as a virtual machine because it almost is then a volume would be like a disk that you're going to attach to that virtual machine where you can store some data and have access to a disk so in kubernetes we deal with pods and as i said it's a collection of containers and volumes that you define now typically a pod will have ideally one container that's not always true but you have one main container that runs your application and that's kind of the core of a pod is here is my web app running in this docker container now there are you can have multiple containers inside of a pod depending on what you need there one common usage is something you call an init container so let's say that before your actual application needs to can run you need to actually you know do a little bit of prework before that happens maybe there's some uh secrets or configuration that's mounted in on a disk somewhere or coming in from environment variables and you need to arrange that into like a config file that your main container is going to read so you could have an init container that spins up first and the way that kubernetes handles that is it spins up your init container it waits for it to successfully complete and then it spins up the main container for your pod the other interesting use for having multiple containers in a in a pod would be what's called a side car which means that you have another container that is sort of an auxiliary container inside your pod that's doing something out of band from your main app so one example for that might be say a a logging container say your app just logs to standard out and maybe you've got this sidecar container that's kind of sharing a process space with your main container that's scraping those logs and shipping them off to an elk stack somewhere or something like that so that's one common use for side cars or having multiple containers in a pod however you could actually have two you know what you might consider primary containers in a pod one example that i've seen referred to a lot is like let's say you've got your main app in this main container is serving some files from a file system so you've got a volume mounted in it has these files on it but these are also files that need to be updated regularly so you might have a second container that's running inside your pod that is just in the background constantly checking some other source and syncing these files into the local volume while your main container is still serving this web application that's provided that's serving those files so that's another scenario where you might have multiple containers in a single pod but typically when you think about a pod you're generally going to be thinking about it as one main container and that sort of represents your unit of work so let's look at a pod spec so kubernetes inter all interaction with kubernetes basically is handled through a kubernetes api but they've got a command line tool called cubecontrol that you can use to do most tasks against the api and a very common method of doing that is loading what are called manifests that are typically written in yaml but can also be written in json and essentially what ends up happening here is cube control will take these yaml files convert them to json and send them to the api in order to tell your kubernetes cluster to create certain resources so when you're looking at kubernetes you're going to see a lot of yaml and it's a really nice way to be able to express what's going on so let's look at this pod in detail here this is a very simple pod uh it's got some metadata attached to it namely it's got a name so it's my app dash pod and then it's got a label which says oh this label says that the app running in here is my app the labels are free form there's no actual required or standard labels in kubernetes although there are a lot of conventionbased labels that people will apply and you can think of labeling if if you've worked with aws or google cloud or anything like that think of it like the same way that you would as tagging right so if you're creating a ton of aws resources it's a common good practice to tag those with some consistent and convention based tags so that you can easily kind of see what you've got running easily issue bulk commands against those things the same principle applies with labels and kubernetes right they're a great way for you to be able to keep track of the different resources that are being deployed in order to support a given application so then we look at the spec and the containers and we'll see that obviously the the containers here is a yaml array so you can list multiple containers this one just lists one and it's called my app container i define the docker image that it uses which is just the busy box docker image but that can be pulling a docker image from any uh docker registry where you've got your docker hosted and that your cluster has permission to pull from but we're defining a command for it to run which this one is obviously just a real simple kind of echoing out hello now we look below that we see that we've got volume mounts so what i've done here is we've got a volume defined down at the bottom of this pod and it says hey here is this is a very simple volume uh it's a volume type known as a host path which basically just takes exactly what it sounds like a path on the host that is running this container which is one of your kubernetes nodes and makes that available as a volume that you can attach to these other containers um there are a ton of different types of volumes that kubernetes supports right out of the box like probably 30ish everything from uh aws ebs discs google persistent disks um you know ceph or gluster ffs file systems nfs mounts iscsi if there's a way to attach a disk to a vm there's probably a way to support that in kubernetes to get it attached to your pot and make it available as a volume so in this we've got a really simple on the host at slash data we've got this directory that directory has to already exist there's another directory type that is directory or create so it will create it if it doesn't exist and then as we look back up in the container spec we can see on the volume mounts that we've told it hey take that volume that we called test volume which is a host path and make it available inside my container at this mount path of slash test dash pd right so that means that now my docker container this busy box image it could read files or write files to and from that mount path you can also make volumes persistent you can define it within kubernetes persistent volumes which say hey this this volume should outlive my pod right i don't want this data to die when my container goes away right if i shut it down and spin up another container i want to make sure that i've still got the same data there i don't want to lose it and so you can do that through persistent volumes and persistent volume claims which are not included on this spec but something else you might want to look at as you actually start looking at running real workloads on your kubernetes cluster okay great so we've got pods sure so do i have to define that all the time well most of the time you won't actually define a pod directly you'll define what is known as a another class of resource known as a controller and the most common controller that controller type that you will deal with in kubernetes as a developer is going to be a deployment so a deployment describes the desired state of a set of pods and manages updates to those pots so what that means is if i want to define this pod and a set of volumes and everything that's all fine and good but i might need to run more than one of them right maybe my app is popular and i need to run five web servers to handle it well rather than creating five different pod specs with different names on my own and managing those i can create a deployment so with the deployment you can actually define the number of replicas that you want to have running at any given time and when the deployment actually starts running what it does it says okay i should have this pod running and because you've set replicas to three i know i'm going to make three copies of it and and distribute those out and it's probably easier to explain that by looking at a definition of one so here's the definition of a really simple deployment so we've got again our metadata section where we can give names and labels and that's all fine and good but then the interesting part becomes this spec so this is what's known as a pod spec and it follows the exact same schema as the pod that we looked at previously but it's going to be it's going to be managed by the actual deployment so under our spec we say i've got replicas of three and this is a to run a simple nginx pod that's going to serve web traffic for my app so the templates here are interesting because this metadata that's under the template over here this is going to actually be applied to the pods this whole template is a template for the deployment to create its own pod specs as needed based on the number of replicas that you've requested and then we've got our same spec and this is really simplified down to just a single container here but we could have volumes mounted here we could define environment variables that need to be passed in so in the background a deployment actually creates another kubernetes object called a replica set and before deployments were around replica sets were like the recommended way for you to run a set of pods that's no longer the case now you know the the sort of recommended guidance is not to create replica sets yourself in most cases but instead to create a deployment which is again a defined uh you know a desired state that you want it to have and so then the kubernetes api is going to say okay cool because you've expressed this desired state i'm going to make sure that i'm always keeping it in that state and doing whatever i have to do if i see that there's only two of your pods running and you've requested three replicas then i will spin up another set of pods to match that the so when you actually spin these up they get distributed to whatever nodes are available and the deployment handles that for you and it says okay great you want more of these you can have more of them and then the nice thing about a deployment is it becomes a way to manage your scaling as well so if you were running three replicas and all of a sudden you start getting hammered with traffic you can issue a simple cube control command to scale up this deployment to 10 replicas and it's going to go out there and handle that for you say okay great i see i've already got three i'll go spin up seven more for you let's get those going and we'll get into a little more detail about some of the scaling features toward the end of the presentation so great we've got a deployment and this deployment is now managing all these pods that are running my app awesome i need to get some traffic to that application i need to send users there to do things typically i mean not always you may have a a noninteractive workload that's just doing bitcoin mining or something but typically you're going to run webbased applications on a kubernetes cluster and need to send traffic to them well a service routes traffic to a set of pods so this is basically a definition uh sort of it's called a service because it is used for service discovery so that you can say i need to send traffic to this pod but i don't necessarily know the name of that pod because the deployment may have killed and created multiple pods there may be 10 pods running but i need to just reference it i want to just load balance between those so that's where a service comes in uh and when you create a service there are a few different types of services that can be created um the default type of service is called cluster ip and what that means is that this service gets assigned an ip from the cider block that is internal to the cluster a cluster ip service is not exposed outside the cluster at all it's only accessible by other things that are running inside the cluster another type of service is called a node port service so when you declare a service of type node port you will specify a port on each one of the nodes that is going to be listening and proxying traffic for these pods and so what it will do is if you say expose a a service of type node port on on you know port 33602 then every single node in your cluster is going to expose that port and route that traffic to your pods based on the definition of your service and then the other type of the other common type of service that you'll see created is called load balancer now what this does is it actually typically integrates with whatever cloud provider or other system you're running your kubernetes cluster on so let's say you're running in aws and you create a service of type load balancer it's actually going to go out through the aws api and create a an elb that is going to route traffic to the nodes in your cluster so in this case now we're actually exposing this to something on the outside world the node port does this as well where you're saying hey these nodes if they're accessible somewhere in your vpc depending on how you have things configured will actually route this traffic now when you're dealing with routing traffic inside the cluster a service actually gives you a very nice convention if you have which most kubernetes clusters have kubernetes dns enabled internally so what you end up with is a dns name like this whatever the name of your service is whatever the name space that it's running in and then dot cluster dot local so if i have let's say a database server running in my kubernetes cluster and i it's maybe in the data name space and it's called postgres then i could have a name of postgres.data.cluster.local and if i want my other apps within the within the cluster to be able to access that i can just feed them that name and the service is going to take care of always routing that whenever new pods come up and old pods go down the service actually handles routing the traffic to those based on a set of rules that we'll look at here in just a second but my other applications that are consuming that get this nice static predictable dns name that they can reference inside the cluster so here is a simple service definition um so we're defining a service it's name is my service it's got a selector here right so this selector section is interesting because this actually interacts with the labels that we saw on our deployments and our pods so what this selector is saying is that the way that i want this service to route traffic is by looking for all pods that have a label of app with a value of my app so this is how the service is able to kind of dynamically route traffic as your pods get spun up and spun down by the scheduler if we look at this we're defining the ports that we actually want to route traffic to so in this we're just routing simple port 80 and port 443 to a target port so this target port is going to be the port on which my actual container inside my pod is listening for these types of traffic so i'll have my docker container inside my pod listening for http traffic on port 9376 and this service is going to listen on port 80 and direct that traffic over to the other port okay so with the exception of the service type load balancer we just said that the services don't actually expose things to the outside world by default the cluster ip service doesn't a node a node port type does but it's very difficult to manage because it's going to be these random ports that are on three five a hundred a thousand whatever however many nodes are in your kubernetes cluster so how do we get traffic from the outside world in as we said there is the load balancer type which will actually create a load balancer in whatever cloud provider you happen to be running your cluster in that can get expensive real quick if every single thing that you especially if you're running a micro service architecture with you know 30 or 40 you know web apps that all need to be exposed all of a sudden you're going to be paying a lot more for those elbs than the value they're actually providing in most cases well this is where an ingress comes in so in kubernetes and ingress is a resource it's referred to as a resource even though it doesn't actually do anything an ingress simply describes a set of hosts and paths that should be routed to a given service from outside the cluster to the service that's inside the cluster they don't actually do anything by themselves because they actually employ what is known in kubernetes land as the operator pattern where there is a ingress controller or operator that you install in your cluster that actually follows these instructions that are defined in the ingress so really common one would be like nginx ingress which is going to spin up an nginx instance or instances and basically read these rules and say okay great you route all the traffic to me as nginx and i will automatically dynamically configure all these backends to route traffic to within your cluster so let's take a look at an ingress here is an ingress that i've used to expose a gitlab web ui in my cluster to the outside world now there's a few new concepts in here an interesting one here is the annotations annotations are valid in the metadata of pretty much every uh kubernetes object they differ from labels a little bit in that labels have to be very simple key value pairs whereas annotations can be more complex as we see here with you know having actual url style identifiers annotations are typically used to tell some other thing how it should interact with this kubernetes resource so in this case some of the interesting ones here are that we're saying okay well the class for this ingress is nginx that means that i have deployed the nginx ingress controller in my cluster and i'm saying hey i want this ingress to use the nginx ingress controller there are ingress controllers that are there's one that's specific to google compute if you're running in gke there are there's one called traffic there's i believe there's actually an aha proxy ingress now and you could actually run multiple of these in your cluster if you wanted to and this annotation helps them decide which one of them should handle your ingress another interesting one here is this tls acme i'm telling it hey i want you to get a tls certificate an ssl cert for my ingress in this scenario i've deployed another controller called cert manager that knows how to interact with let's encrypt so whenever it sees that i've created an ingress with this set to true it says hey cool i'm going to go in there and i'm going to read the data out of your ingress and i'm going to go interact with let's encrypt to automatically issue you an ssl certificate a lot of really interesting things can happen there based on these annotations um the actual ingress itself is specifying that hey for this given host i want you to route the this path to this back end it's very uh if you've ever configured nginx or ha proxy it's a very very familiar type of concept where you're saying hey when you see this come in route it over here to this back end server transparently to the user pass along some ip data stuff like that in the headers this does the same thing so i can actually have this this is passing all traffic at the main root path but i could have it say just you know slash users if i wanted to route that to some different service for a reason i can also have multiple rules defined in here if i need to um but and this is telling this back end is telling it the name of a service so just as we saw in our previous example of the service i'm telling it which service to route to so you can see we've got this kind of multitiered thing where we're saying okay and ingress helps me define how traffic comes into the cluster and goes to a service then a service helps me define how traffic that's already gotten into the cluster gets to its ultimate destination on an actual back end and then in the tls section this is just defining a little more data about where this ssl cert would be so in this scenario we would end up with a kubernetes secret uh called gitlab gitlab tls that would have a couple of keys in it that hold the private key and the public cert that were obtained from let's encrypt and make that available to whatever ingress controller is trying to run this such as our nginx instance so let's look at what all that looks like right so based on what we've talked about so far we have this is a representation of kind of what we just went through which is that we've got traffic that's out here in you know in the internet that gets arrives at some host name that we've defined via external dns that hits our ingress so in this case let's say our ingress is the nginx ingress controller so it's hitting an nginx instance and that nginx reads its own config and says cool because you came in on this host and path i know that you want to go to a particular service so it routes that traffic down to the service once your traffic hits the service the service says okay great i know how to find the pods that you want to use and i'm going to send you to one of them and just because basically a roundrobin dns at that point where the traffic now hits one of the pods that i have running in order to serve that traffic so this is sort of the basic application setup that you'll see for most things that you deploy into kubernetes especially as a developer an application developer a lot of times we're building web uis or apis and this is going to be a really common paradigm for how you actually get traffic to your application that's running inside of the kubernetes cluster so so now that we've got our actually tired of standing behind this podium if i can move just a little bit without messing up the twitch stream um so now that we've got our application running as a deployment how do we update it right this is one of the reasons why you use a kubernetes deployment instead of directly using a replica or pods yourself is that the deployment has a lot of options that help you manage how you actually roll out updates to this thing so whenever i come in and say okay we've shipped version one of our app to kubernetes as a deployment now we've got version 1.0.1 ready to go because we found a bug and we got to release it so when i go and actually update say the image tag that i'm deploying from my docker container of this deployment kubernetes sees that says okay great well now that you've made an update to this deployment i'm going to look at your update strategy and figure out how it is that you want me to roll this out the one option that it has is recreate in that scenario it just basically goes and nukes all of your pods and recreates all of them with the new definition that's a way to go there's probably a good use case for it i haven't had a good use case for it yet because typically i'm deploying apps that are actually in use so the default is a rolling update strategy which means it's going to based on a set of rules look at all the pods and say okay cool i'm going to go through and upgrade them systematically until i've got them all done and when you're doing that you can define uh one of two types of strategies there is the max unavailable and then there is the max surge and these aren't exactly mutually exclusive except that if one of them is set to zero the other one can't be we'll get into that just a little bit but what we've got here is if we do a max unavailable then what we're saying is that a certain number of my pods can be unavailable at any given time during this update and that's okay and you can express that as either an absolute number of five pods or you can express it as a percentage like 25 of whatever i've got deployed i usually find a percentage to be something that scales a little better when you actually start scaling your deployment up and down you probably care more about the percentage of total pods than the actual exact number when so the other type is a max surge so a max surge defines a number of pods that can be running in excess of what you've defined for your deployment so if i said on my deployment that i want to have five replicas then a max surge says that so many pods can be above that number without it actually without the deployment starting to kill them off as oh hey that's more than what you asked for so let's look at this a little more detail with an example so let's say i've got on our on our web server nginx replica set to 10 saying all right kubernetes i want to always have 10 pods running serving all my web traffic so in the scenario where we have defined a max unavailable of three here i've chosen an exact number despite the fact that i just advised you with percentages just for simplistic for simplicity's sake so in this scenario it means that once i tell kubernetes to update our deployment it will say okay cool well you've got you've asked for ten copies of this to be running and i've got a max unavailable of three so i'm gonna go kill three of your pods and and update them to this new spec and i'm gonna wait until they come online before i do any more right so it starts those updates and you know one of them might finish before the others so as soon as one of them finishes then kubernetes says okay cool well i can go take down another one of your pods that needs to be updated right and at any given time it's going to make sure i still have seven available and and at least seven available and no more than three that are not serving traffic now in the max surge scenario we go the other way it says okay you've asked for there to be 10 of these pods running and i'm not going to take it any lower than that instead because you've got a max surge of three i'll bring up three new pods and when they're ready i'll start swapping those in to your set of 10 and swapping out your other ones so in that scenario we might go as high as 13 pods that are active in serving traffic and which one you choose really kind of depends on your application and your constraints and you know whether it's more important to keep more pods up and serving traffic or if it's more important to stay under a certain number so that your you know cluster doesn't get overloaded you know one thing to consider is that whenever any of these schedulers like kubernetes are trying to schedule their pods they look at a few different things to say hey is there enough cpu and memory on this node to put this pod there and if there's no place to put it then those pods just sit there and never get spun up right so that might be a scenario if you know that you typically run sort of at the capacity of your cluster for whatever reason then you might want to choose a max unavailable update strategy so that it starts pulling pods out and freeing up those resources before it creates new ones if you've got plenty of headroom on your cluster and it's more important to make sure that you've got enough you know pods serving traffic then you might want to go with a max surge where it says okay great i'm going to make sure that i've always got enough you know 10 pods running to serve these customers but i'll scale it up as high as 13 in order to get these updates rolled out yes so the the the only real um exclusivity rules um that apply to these according to the documentation and i haven't done a ton of experimenting on these two in practice to see how they actually play out in really largescale scenarios but um is that if max unavailable is set to zero then max surge cannot be zero and vice versa if max surge is set to zero then max unavailable cannot be set to zero right you have to allow it to do one of the other or it'll just be deadlocked and can't do anything now if you define both of them um again like i said i haven't done a ton of experimentation in this scenario but what i expect would happen is that it's going to basically work within those limits so in this scenario if i had both of these things defined then it's going to start creating pods and killing pods as it needs to and the rules that it's evaluating against is okay am i above seven and you know below 13. and as long as it's in that range it's free to start creating and killing pods all that it needs to okay so there are there are several other ways that you can run pods in kubernetes we covered a deployment which is a way of just essentially keeping things running based on some described state right other other things in the same family as deployment would be stateful sets and daemon sets which are a little bit less common and a little more advanced we're not going to get too deep into them here suffice it to say that if you have a daemon set it's like a deployment except it means that it's going to run rather than a number of replicas it's going to run that pod that you define on every single node so it has a onetoone relationship with the number of nodes in your cluster if you do a daemon set that's typically used more for things like uh log scrapers and aggregators or things like that where you're kind of monitoring health usually or anything else that you need running on each node exactly once a stateful set is similar to a deployment except that it makes some guarantees around identity and ordering of your actual pods and that's more commonly used for things like databases where maybe you've got a a leader and you know two or three replicas and which one is the leader and which ones are the replicas is actually very important in that scenario and you need to make sure that there's a certain amount of availability and that things are rolled out in a certain way and those are two things that you can dig into a little bit more if your workload if you think that you need that for your workload typically you'll use a deployment however another class that you'll actually use quite a bit as a developer is a job so it's similar to a deployment in that it describes a set of pods except with a job it runs it once to completion for each pod that you define and usually it's one pod it could be multiple and you can do some interesting things with parallelism and q queued workloads but a really typical example for using a job would be database migrations right whenever i deploy a new version of my app i want to make sure my database is migrated to match that version so i can create a job and that job says okay great create this pod based on this pod spec and run it until it completes and completes successfully so what that means is if it goes and starts my job and and this pod runs but for whatever reason let's say the database is unavailable or something else happened and it couldn't actually run the migrations and complete them successfully that pod is going to die and it's going to get restarted again and it's going to and kubernetes is going to keep trying to do that until it successfully completes once now once you've actually run that database migration you're like cool i don't want to do that anymore so it stops your pod exited successfully indicating that it was done and it completed whatever it was trying to do and now that's it you're done so that job just sits there um and it's it just sits there in a completed state you can go back and inspect the state of it and then you can delete the job if you want it'll clean up any pods that it had left laying around in a nonrunning state so let's take a look at a job again we see that the spec looks very very familiar um albeit tiny that we've got this essentially the same kind of template it follows the same template as the pod spec for deployment and other things and the only real difference here is that because the kind is set to a job and there's a few other things like a back off limit that can tell it how much it needs to back off um from jobs or that it should stop trying to run them if it fails four times then just don't bother trying anymore but it's very simple very simple definition of a pod with the caveat that it's only going to run once now another sort of extension in the job family is actually the cron job so the cron job is kind of a controller type object which says hey based on some crown expression just like you would expect i want you to create jobs for me so if i create a cron job that has a you know has a chron expression that tells me to run i don't know uh once every night at 2 am then once every night at 2 am kubernetes is going to try to create a job uh it may not succeed in that so it's there's not as a firm of a guarantee on crime job execution as there would be with say just traditional crime on your system but it's going to create a job and try to have that job run and it's going to do that every night at say 2 a.m which is a great way to i don't know back up some files or a database or something like that or perform some sort of maintenance task so those are jobs and cron jobs and then so i promised we'd get back into some of the scaling stuff as that is one of the uh interesting you know sort of promises of of kubernetes and the cloud right is is that you can scale things you know to meet demand and then you can scale them back down when you don't have demand and save some money right so from the developer side one of the ways that this happens you can obviously go in and scale a deployment yourself if you notice a spike in traffic you can go and issue a command that says scale this deployment up because i need more pots but do you want to watch the dashboard all day to find out that there was a suddenly a spike at 3 am and you needed to go issue that command manually probably not instead you can use a horizontal pod auto scaler so this will scale out a deployment based on observed cpu utilization or other metrics and i probably should have put an asterisk after that or other metrics because that part gets well beyond the scope of this talk suffice it to say that you can actually monitor different metrics such as the number of you know hits coming in on an ingress or you know disk space or something like that right but we'll just talk about them in the simplistic form of cpu utilization so let's say i'm running this app and this app is starting to you know that the aggregate cpu usage across all of my pods i've got say i've got three pods running and they're at they're averaging out and they're aggregating up to you know 80 or 90 cpu utilization i say oh well we're busy we better scale up so if i've already defined that in a horizontal pod auto scaler then the kubernetes api is already watching that for me and it says oh hey we've hit the threshold add some more pods right scale it up take it from three to six you know um and you can set the definition on what you're min and what your max is and which metric you're you're tracking uh and the way you do that is with this cube control command it's really hard to see sorry but basically it just says cube control auto scale deployment you give it a deployment name you tell it you're watching for cpu percentage to be above 50 and i want a minimum of one and a maximum of 10. so what the horizontal pod autoscaler is going to do is it will scale your pods up or down based on these observed metrics so if we're running above 50 cpu and we need more pods it's going to add those in and then later when the the wave of traffic has subsided and our our aggregate cpu usage is down it's going to start scaling those pods back in as well right now this becomes really really interesting when you deploy it with something that would be more in the operational side of a kubernetes talk which is a cluster auto scaler so there are cluster auto scalers for let's say you know google or aws or something that will say hey whenever kubernetes is trying to schedule these pods and it says hey i don't have anywhere to put these right like i i'm all my nodes don't have enough cpu or memory to support this pod that i need to schedule so it's just pending then the cluster auto scaler would see that and say oh well let me add some more nodes to your cluster you know through an auto scaling group or whatever else and it goes out and puts more nodes in the cluster and then all of a sudden the you know the scheduler can now find a home for those pods so by and then the cluster autoscaler does the same thing in that periodically it says hey well we've got more capacity than we need let's consolidate some of these pods onto a couple of nodes and take a node out using this you can finally kind of realize the the true elasticity of today's you know modern cloud environments where based on observed metrics that your application cares about you can now dynamically scale up you know to as big as you really feel is necessary or need without human interaction just let the machines watch the traffic take the action based on rules scale it up now you're handling enough traffic and then when everything dies down all of a sudden it scales back in so you're not paying for all that capacity you don't need so once you get into horizontal pod auto scalers and cluster auto scalers you really get the true kind of promise of why people want to use things like the cloud and kubernetes in order to actually run their workloads all right question and answer time if you've got questions i'll try to give them answers and uh yes uh oh yeah so yeah so the question is uh does it when a service goes to route traffic to a pod does it look at the load on that pod by default no i think i saw an option or it may have been some sort of an addon that could do that but by default it just does simple robining although i believe you can configure sticky sessions um so that could that could come into play as if it knows that a particular pod is is not uh is overloaded with concurrent sessions um so the question was does the when you go to execute a rolling update does it also um take traffic away before it does that um so yes and no right in that it it's going to go kill a pod which means that that pod is going to immediately be marked before it even gets killed it kind of i mean this all happens like that but it's going to actually mark the pod as as unavailable which means that the services that try to route traffic to it say i only route traffic to available pods so they're constantly every time they need to route traffic they're saying all right well where's the list of available pods that one's not in it so i won't route any new traffic there now if you have a sticky session that was routed there i don't actually know what happens with that but that's essentially how that works and so while it's not explicitly making decisions like oh i should take away traffic for this it's it's sort of this composition of all these other rules that we talked about that dictate how that's how that traffic is going to flow okay so i mean it pulls it out of the pool so no new stuff goes through right if it's in the middle of trying to service a request it's potentially that it could kill basically if you can kill the pod in the middle of trying to serve this request it's not going to wait for connections right so the so to clarify yes uh he was saying that it's not going to necessarily wait for all connections to be drained off of a pod before it stops sending traffic there yeah so and and again this really uh this comes down to you know uh a term that uh has been getting thrown around a lot lately about cloud native and designing cloud native applications um and that really becomes part of it right like in in a cloud native application you should be prepared to handle that scenario for your customer where uh you know this you know at any given time the thing running my application code could get cut off and i need to make sure that my client on the other end has some kind of retry or that it's okay that that connection be dropped right and that's going to be very very application and even particular endpoint or request dependent to figure out but it's something that you should be thinking about as a developer who's going who's designing applications to run on these cloud native uh systems another question yes i'm sorry availability when you're like say you have to upgrade kubernetes okay so yeah the question was how do you stay highly available with your apps when you have to upgrade kubernetes itself this gets a little more onto the operational side of this but essentially because kubernetes is filled with nodes and node pools what you would do is you would simply add more nodes and then that are running the newer version of kubernetes and the cubelet api and your other nodes that have apps on them there's a few series of commands that you can run you can you can coordinate a node which basically says hey don't schedule any new work on here but leave the work that's already there running and then you can also drain a node which tells kubernetes to start taking work off of that node and finding another place to schedule it so typically your path there would be add some new nodes cordon and drain your old nodes and you know at whatever pace makes sense for your application and so that it kubernetes will then start you know taking those pods off and putting them onto the new nodes and they can't reschedule onto the old nodes because you've already cordoned them all right any more questions no all right well thank you very much again i am jeff french with moonswitch if you need help with devops continuous integration kubernetes cloud migration moonswitch.com get in touch we'd love to help you out and i have a few tshirts and stickers here to give away so if anybody wants a tshirt or sticker um let's see here i've got a size xl tshirt any takers all right oh sorry i've got a size large tshirt yeah go to this side of the room make sure this is the large all right and then i think that leaves me with a medium anybody take a medium there you go very excited for the medium also i'll have some stickers just sitting up here if anybody wants them come on bye grab a sticker decorate your laptop all right and uh that's all we've got for today thanks very much

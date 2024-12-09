@@ -1,0 +1,556 @@
+With timestamps:
+
+00:00 - in this video we're going to handle
+00:01 - simple spreadsheet animation in a period
+00:03 - TCS game by using draw mesh instance
+00:06 - we're going to prepare on our data in
+00:07 - super fast jobs and do very few draw
+00:10 - calls in order to achieve an insane
+00:11 - result of a hundred thousand animated
+00:13 - sprites let's begin
+00:17 - [Music]
+00:22 - hello and welcome I'm your code monkey
+00:24 - and this channel is all about helping
+00:26 - you learn how to make your own games
+00:27 - with in-depth tutorials made by a
+00:29 - professional indie game developer so if
+00:31 - you find the video helpful consider
+00:32 - subscribing so here's what we want to
+00:34 - create a nice simple spreadsheet
+00:36 - animation system however we're going to
+00:38 - be using drama SH instance so instead of
+00:40 - having just a handful of sprites here it
+00:42 - is we have an insane amount of sprites
+00:44 - being rendered all of them individually
+00:46 - animated and if we look at the stats you
+00:48 - can see we have a hundred thousand and
+00:50 - everything is running at 30 frames per
+00:53 - second so this is our goal let's get to
+00:55 - it so here we are in our scene this
+00:58 - video is a continuation of the previous
+00:59 - video on how to do simple spreadsheet
+01:01 - and mission so go check out that video
+01:03 - first if you haven't already there's a
+01:05 - link in the description in that video we
+01:07 - made some entities and set them up to
+01:08 - use simple spreadsheet animation so this
+01:11 - is the result we have entities being
+01:12 - animated using a spreadsheet the
+01:14 - animation is handled by this component
+01:16 - in here as you can see it stores the
+01:18 - current frame the total frame the
+01:20 - various timers and also stores the UV
+01:23 - and the matrix then we have this system
+01:25 - in here which is animating all of that
+01:27 - data it increases the time and if needed
+01:29 - it increases the current frame then it
+01:31 - calculates the UV and the matrix so this
+01:34 - whole thing is running inside a job
+01:36 - which means that this code runs super
+01:38 - fast
+01:39 - even on thousands of sprites and finally
+01:41 - over here we have our render system here
+01:43 - we're doing a for each on every entity
+01:45 - and we are using graphics animation or
+01:48 - to draw a mesh per every entity we're
+01:51 - using the material property block in
+01:53 - order to pass values into our shader
+01:55 - specifically a vector for containing our
+01:57 - UV coordinates so every single unit is
+02:00 - using the same mesh same material the
+02:01 - only difference is handled by the shader
+02:03 - alright so this is what we have so far
+02:05 - and here as you can see it does indeed
+02:07 - work we have our units nicely animated
+02:09 - however the performance isn't as good as
+02:11 - it can be don't limit in this system is
+02:14 - around 12,000 units which makes it run
+02:16 - at 30 frames per second that's already a
+02:18 - pretty massive number especially when
+02:20 - compared to normal game object but we
+02:22 - can sound you better the biggest
+02:24 - bottleneck is here in our rendering
+02:26 - system we're cycling through every
+02:27 - single entity and doing a draw mesh so
+02:30 - with 10000 entities we have the cycle
+02:32 - running 10,000
+02:33 - times on the main thread and drawing
+02:34 - 10,000 meshes being single thread means
+02:37 - this code will get slower and slower the
+02:38 - more units we add now as I mentioned in
+02:41 - the previous video there is another way
+02:42 - in order to draw meshes instead of using
+02:44 - graphics are draw mesh we can use
+02:46 - graphic start draw mesh instance this
+02:49 - function as you can see receives an
+02:50 - array of matrixes so we can prepare the
+02:53 - array containing the matrices for on VAR
+02:54 - units and the material property block
+02:56 - for own the UVs and we do a single drop
+02:59 - so let's try this out let's icon through
+03:02 - all of our entities however instead of
+03:03 - using entities dot for each and let's
+03:05 - make a entity query then let's grab our
+03:13 - array of our animation data now we can
+03:21 - cycle through our array and here let's
+03:25 - create our list of matrixes for all of
+03:28 - our units so out here make a list of
+03:31 - matrix 4x4 in here we just add them all
+03:40 - right so now we have all the information
+03:41 - needed so we do a graphic start Romesh
+03:45 - instance going to use the same mesh
+03:53 - all right so here is our code using draw
+03:56 - mesh instance so we can now get rid of
+03:58 - this one down here and here we have our
+04:00 - modified code so we grab an entity query
+04:03 - of all the entities with our animation
+04:05 - data we grab an array containing all of
+04:08 - that component data we create and
+04:10 - populate a matrix and a UV list then we
+04:13 - create the things that we're going to
+04:14 - need and finally we do a single draw
+04:16 - call using our entire list and you can
+04:18 - list okay now let's go here in order to
+04:21 - spawn just 10 units and let's see any up
+04:27 - here we are we have 10 units being
+04:29 - displayed and here in the stats window
+04:31 - you can see just a single batch and nine
+04:33 - saved by batching alright so everything
+04:35 - seems great now let's try drawing 10,000
+04:38 - units and as soon as we do we come
+04:40 - across an error now one of the
+04:42 - limitations of drama instance is that it
+04:45 - can only draw a thousand and twenty
+04:46 - three meshes per single comp so
+04:48 - essentially we need to split our calls
+04:50 - into various batches so let's do that
+04:53 - over here in our render let's define our
+04:56 - slice count and let's put 10 23 for our
+05:00 - limit and let's cycle through our
+05:02 - entities in here and let's complete the
+05:06 - slice size so we're counting the slice
+05:14 - size since the last slice will be
+05:16 - smaller than 2023 okay and now in here
+05:19 - we make our own lists
+05:28 - then we cycle through our slice eyes and
+05:32 - we grab on the index starting on the I
+05:34 - plus J so on this slice and finally we
+05:37 - set our UV array and now we can draw our
+05:41 - mesh alright so just like that we are
+05:46 - now going to have one draw machine since
+05:48 - call per each slice of 10:23 entities
+05:51 - just one thing in here we are not
+05:53 - increasing the eye by just one but by
+05:55 - our slice count so essentially if we
+05:59 - have just two thousand entities this
+06:01 - will run only twice okay let's see
+06:03 - and yup here we are there's no error and
+06:05 - our meshes are now being displayed all
+06:08 - right awesome however you can already
+06:10 - see another issue specific to draw mesh
+06:12 - instance by using this function we are
+06:15 - essentially bypassing all the entity
+06:16 - sorting and cone meaning we must handle
+06:19 - that ourselves so when you create our
+06:21 - matrix and UV rays we need to sort them
+06:23 - correctly we need to make sure that the
+06:25 - units on a higher position stay on the
+06:27 - beginning of the array and the ones down
+06:29 - here on the end of the array so that
+06:30 - everything is correctly sorted so let's
+06:32 - see how we can do that in the simplest
+06:34 - and most straightforward way possible so
+06:36 - over here we're doing our cycle setting
+06:39 - up our matrix and UV rays in order to
+06:40 - this point and we are doing it based on
+06:43 - the array containing our animation data
+06:44 - so before we do that we need to store
+06:47 - this array by our entity position so
+06:49 - let's go all the way up here and our
+06:51 - aquarium let's also grab the translation
+06:54 - and in here let's do some very simple
+06:58 - sorting
+07:10 - all right so this should do it we cycle
+07:13 - through our list and we are sorting them
+07:15 - based on the position that one so when
+07:18 - two T's above will be behind entities
+07:19 - below
+07:20 - all right so let's test however before
+07:23 - we do that let's go up here and test
+07:25 - with only a hundred units you'll see why
+07:27 - in a bit and let's see so here we are
+07:32 - and yep everything is looking great
+07:34 - we have all our units animated
+07:36 - individually and all of them are being
+07:38 - displayed correctly all the meshes are
+07:40 - correctly sorted and transparency isn't
+07:42 - working great so this is awesome this is
+07:44 - exactly what we want however if we look
+07:47 - at the stats window over here you can
+07:49 - see why we're doing this test with just
+07:50 - a hundred units even with so few units
+07:53 - we are taking five milliseconds in order
+07:55 - to run this scene that is quite slow and
+07:57 - wouldn't work with even a couple
+07:59 - thousand units so far we've been doing
+08:02 - everything very linearly here in our
+08:04 - render code you can see that we're doing
+08:06 - all of this just on the main thread so
+08:08 - we're not benefiting from the job system
+08:10 - we're doing all the sorting right here
+08:13 - on the main thread this specific type of
+08:15 - sorting will increase in complexity
+08:17 - exponentially as we add more units and
+08:20 - over here when we are creating the
+08:21 - matrix and the UV we're also just doing
+08:24 - a very simple cycle going through every
+08:25 - single unit so now that we have the core
+08:28 - functionality working it's time to make
+08:30 - it work by taking advantage of the job
+08:32 - system and improve our performance over
+08:34 - here the biggest bottleneck by far is
+08:36 - the sorting here we cycle through every
+08:39 - single entity and for each entity we are
+08:41 - cycling through every single entity so
+08:44 - with just a hundred entities we are
+08:45 - essentially running this code a hundred
+08:47 - to the power of a hundred times which is
+08:49 - already an insane number the more
+08:51 - entities we get the more insane this
+08:52 - gets so our biggest challenge here is to
+08:55 - figure out a way to do sorting without
+08:56 - having to test every entity against
+08:58 - every other entity now in here I won't
+09:01 - go over the approach that I found the
+09:03 - best after doing a lot of testing I
+09:05 - don't know if my approach is the
+09:07 - absolute best one but the end result is
+09:09 - two hundred thousand animated entities
+09:10 - so that's quite good the way we're going
+09:13 - to do it is essentially split the screen
+09:15 - into very
+09:16 - rectangle slices from top to bottom and
+09:18 - we sort each slice individual that way
+09:21 - each slice has fewer entities so it's
+09:23 - faster and multiple slices can be sorted
+09:25 - at the same time all right so let's get
+09:28 - to it let's duplicate the system just so
+09:30 - we have something to compare with later
+09:32 - so in here just duplicate this and make
+09:36 - this one the old system here just rename
+09:39 - it to the old one and in here we can add
+09:42 - the attribute disabled out of creation
+09:44 - so this system will not run okay good so
+09:46 - we can now modify this one now in here
+09:48 - the first thing we're going to need is a
+09:50 - struct to hold whatever that we're going
+09:52 - to need in order to render so in here
+09:55 - let's make a private struct call it
+09:57 - render data let's store a reference to
+10:01 - our entity we're also going to need a
+10:05 - full 3/4 D position and we're also going
+10:10 - to need the matrix and obviously a UV
+10:15 - okay so this is the struct that we're
+10:17 - going to work with inside all of our
+10:18 - jobs we need the position for sorting
+10:21 - and the matrix and UV for rendering so
+10:23 - let's start off with a job to split our
+10:25 - entities into just two slices so we're
+10:33 - going to have a job cycling through all
+10:35 - our entities grabbing their position and
+10:36 - animation data now in here the way we're
+10:42 - going to split our entities is by using
+10:45 - native cues so we're going to have two
+10:47 - fields for each cue we're using
+10:52 - concurrent so we can concurrently write
+10:54 - in various threads now the goal in here
+10:57 - is essentially if a entity is on the top
+10:59 - half of the screen it will be placed on
+11:01 - the native cue one differences on the
+11:02 - bottom it will be placed on the second
+11:04 - one so we also need to know where
+11:06 - exactly is the top and the bottom
+11:12 - so if you got a float for the top part
+11:15 - of our screen a second slice running
+11:17 - from top so in this case is going to be
+11:19 - right in the middle and the bottom of
+11:21 - our screen the reason we're not simply
+11:23 - defining the top middle and bottom is
+11:25 - because later we're going to slice it
+11:26 - into more than just two parts now in
+11:29 - here inside our execute method first we
+11:31 - do some simple calling to see if it's
+11:33 - even within these valves so we have our
+11:40 - family if it's above the bottom and
+11:42 - under the top now if it is valid we just
+11:45 - do a very simple if all right so here we
+12:01 - have very simple we create our render
+12:03 - data based on the information in here
+12:04 - then we simply check if it's under the
+12:07 - second slice then we place it on the
+12:09 - second q if not we place it on the first
+12:11 - view all right so that's it this is our
+12:12 - very simple job it simply goes through
+12:15 - every entity and place it on one of two
+12:17 - queues so at the end we have our entity
+12:20 - sorted into either the top or the bottom
+12:21 - half of the screen now let's run this
+12:24 - channel let's go down here into our
+12:25 - update and first we're going to make our
+12:28 - adherence
+12:34 - so we have our two cues now we need to
+12:37 - calculate the slice values based on our
+12:39 - camera so grab the main camera the
+12:49 - camera position we complete the bottom
+12:51 - based on the camera orthographic size
+12:53 - same thing for the top and then our
+12:55 - second slice which is right down the
+12:56 - middle
+12:57 - alright now let's schedule and complete
+12:59 - our job all right so we are creating our
+13:09 - job passing in all the valleys that it
+13:11 - needs schedule and complete okay so
+13:13 - let's do a very quick test let's do a
+13:16 - simple debug log to see how many
+13:18 - entities are on the first slice and how
+13:20 - many on the second slice so a debug log
+13:24 - negative Q one dot count and same thing
+13:28 - for t2 all right let's see and you up
+13:34 - here in the console we can already see
+13:36 - 46:54 so we have 46 entities on the top
+13:39 - of the screen and 54 on the bottom half
+13:42 - ok great so we have correctly split our
+13:45 - entities into two separate slices so
+13:48 - essentially right now we can sort both
+13:50 - slices at the same time and since each
+13:52 - of them has fewer units they run even
+13:54 - faster so you can already see you are we
+13:56 - going with this approach so after doing
+13:59 - all of our slicing we now have two
+14:01 - queues one for each slice however we
+14:03 - can't directly sort a native queue so we
+14:06 - need to take these queues and convert
+14:08 - them into native arrays that we can then
+14:10 - sort so let's make a job to do just that
+14:25 - all right so here this very simple job
+14:27 - we take a heat we take an array we try
+14:29 - to the queue whilst the queue has
+14:31 - elements and we similar place them on
+14:33 - the array so very simple now let's run
+14:36 - our job first we need to create our race
+14:40 - for the size of the right won't be the
+14:42 - same size as the queue so we go into the
+14:44 - queue and it we're at the account
+15:03 - alright here it is so we first define
+15:05 - our race with the same size as our
+15:07 - queues we create our jobs we schedule
+15:10 - all the jobs and put the job handle in a
+15:12 - job Hemel a right and once both of them
+15:15 - have been scheduled we complete both
+15:16 - jobs at the same time so right now down
+15:19 - here we already have two arrays instead
+15:21 - of two queues so with those we can now
+15:23 - sort them so let's make a job to do just
+15:25 - that let's sort the same way that we did
+15:32 - previously
+15:39 - and now let's run both jobs so over here
+15:53 - we now have our both arrays correctly
+15:55 - sorted now all we need to do is draw
+15:58 - them so down here let's get rid of our
+16:01 - previous sorting and in our drug code
+16:04 - let's modify it to be more efficient and
+16:06 - work with simple arrays let's make it
+16:08 - work with a matrix in UV array so no
+16:11 - references in the animation that so in
+16:16 - here in order to create a new matrix
+16:17 - array we need to know essentially how
+16:19 - many units are visible since we're doing
+16:21 - calling not necessarily every single
+16:23 - entity won't be visible so let's
+16:25 - calculate that do one end for the
+16:28 - visible entity total and here it will be
+16:32 - essentially the total of our native
+16:35 - array one was native right too so we
+16:41 - create an array of that size now let's
+16:46 - draw our entities using these arrays so
+16:49 - let's assume that these arrays are
+16:50 - completely filled with all the entities
+16:52 - so inside we no longer cycle through our
+16:55 - animation data instead we make some
+16:58 - basic arrays out here
+17:05 - so we have these two normal rays and now
+17:08 - inside our cycle we can simply use a
+17:09 - copy to so use the function on the
+17:13 - native array and we copy from our source
+17:18 - native array so that's the matrix array
+17:20 - and here we can pick the source index so
+17:24 - we are using this super fast function in
+17:26 - order to capture slices from this array
+17:29 - and then we just draw our mesh alright
+17:36 - so this is it
+17:37 - let's also remember to dispose of all
+17:39 - our native arrays so now we have our
+17:43 - draw code in here working perfectly
+17:46 - based on these two arrays so in terms of
+17:48 - the drawing we don't care what happens
+17:50 - previously we just care that we have
+17:51 - these two film the rates now all that's
+17:53 - left is in order to take our sliced
+17:56 - arrays and merge them into these two
+17:58 - arrays so let's make a job to do that
+18:01 - merger let's go up here and now that our
+18:04 - private struct this won't be the film
+18:07 - arrays
+18:28 - all right so here in our job we have our
+18:31 - origin native array and the matrix and
+18:33 - UV ray which are the phone arrays
+18:35 - then we also receive a starting index so
+18:39 - the first ray will be on a certain index
+18:41 - position then the second array will be
+18:43 - on another starting index position so
+18:45 - since we have multiple jobs writing to
+18:47 - both of these arrays we need to disable
+18:49 - the container safety restrictions and
+18:51 - this attribute is also inside unity
+18:54 - collections all of'em and safe now when
+18:57 - using this you need to make very sure
+18:59 - that you are very careful with your
+19:01 - indexes you need to be careful to not
+19:03 - cause any race conditions so now let's
+19:06 - run our job so down here we have our two
+19:09 - arrays sorting then we create our matrix
+19:11 - n UV array and it's in here that we need
+19:13 - to fill them up
+19:27 - so we have our two jobs in order to take
+19:30 - our native array one and two and place
+19:32 - them in the matrix array in UV array
+19:34 - again very careful with the starting
+19:36 - index as you can see the first one won't
+19:38 - start on the starting index of zero but
+19:40 - the second one won't start at the end of
+19:42 - the index for the first array so after
+19:45 - this after these jobs have been
+19:46 - completed our data is now sorted and
+19:49 - placed in a single phone array one for
+19:51 - the matrix and one for the UV now in
+19:54 - here we wrote a lot of code but
+19:56 - hopefully this was easy to follow along
+19:58 - the strategy behind it is quite simple
+20:01 - so the first thing we do is we have a
+20:02 - job in order to count and sort our
+20:04 - entities into various slices so in this
+20:07 - case we just have two slices so one for
+20:10 - the top part of the screen and one for
+20:11 - the bottom part of the screen so this
+20:13 - job places our entities in the correct
+20:15 - queue then before we can do sorting we
+20:18 - need to take the entities from that
+20:19 - queue and place them in an array so we
+20:22 - have this job to do exactly that so down
+20:25 - here we now have our two arrays ready so
+20:27 - we have this job in order to sort our
+20:29 - arrays by position so we schedule in
+20:32 - both jobs and then we run them both so
+20:34 - essentially the top and the bottom won't
+20:35 - be sorted at the same time on different
+20:37 - cores and then once we have them on
+20:39 - Sargent we create full arrays for our
+20:42 - matrixes and our UVs
+20:44 - and then we have this job which takes
+20:46 - our individual arrays and merges them
+20:48 - all into one single array and finally
+20:51 - when we have these two arrays on film
+20:52 - with the correct data down here we have
+20:54 - our draw code so we go through our race
+20:57 - in slices of 10 23 since that's the
+20:59 - limitation of drama instance we do a
+21:01 - simple copy from our full array into our
+21:04 - slice array and we render the whole
+21:06 - thing and obviously one thing we can do
+21:09 - in order to get extra performance is to
+21:11 - simply add our birth compound into all
+21:13 - these jobs since all of them are births
+21:16 - comparable so add that one down that one
+21:19 - and that one alright so let's see
+21:21 - alright so here we are with our new
+21:24 - system and all of our entities are being
+21:26 - drawn so the code is working great now
+21:28 - it's time to see exactly how much of a
+21:30 - speed difference we made between the old
+21:32 - system with no multi-threading and this
+21:34 - one with multi-threading so here we have
+21:36 - the own system running with 500 units
+21:39 - and as you can see a hundred
+21:41 - milliseconds per frame now I see the new
+21:43 - system and here we are with the new
+21:46 - system rendering those same 500 units in
+21:48 - just 1.5 to 2 milliseconds thanks to all
+21:51 - the benefits from multi-threaded code ok
+21:54 - so this is already pretty awesome now
+21:56 - over this past week I've spent a lot of
+21:58 - time working on this code and making it
+21:59 - run as fast as possible on every single
+22:02 - step of the way so let's see the
+22:03 - absolute best performance I've managed
+22:05 - to get so here is the final system
+22:07 - running and over here you can view the
+22:09 - stats as you can see we have a hundred
+22:11 - thousand individually animated sprites
+22:13 - running at 30 frames per second so this
+22:16 - is pretty much the definition of
+22:18 - insanity so let's see how this final
+22:20 - system works and you'll be able to see
+22:21 - the same structure that we built the
+22:24 - strategy in here is very much the same
+22:26 - we have the camera viewport being cut
+22:28 - into multiple slices however instead of
+22:31 - having just two slices we have 20 so in
+22:34 - here you can see our Cowan sword job we
+22:37 - have our 20 slices and 20 Q's and all
+22:41 - these ifs in order to place everything
+22:43 - in the correct queue and we are also
+22:45 - calling for the X minimum and maximum so
+22:48 - over here in the scene view you can see
+22:50 - the culling in action as you can see all
+22:51 - of them are being drawn but if I move
+22:53 - the camera as you can see the entities
+22:55 - that go away on the culling on the
+22:57 - minimum X they get hidden and same thing
+22:59 - on down so it only actually shows the
+23:02 - entities and that need to be shown so we
+23:04 - have our job using our 20 slices and
+23:07 - here we have our update we are going
+23:10 - through our position sizes which are 20
+23:12 - getting the camera and calculating all
+23:14 - of these slices then we create all the
+23:17 - arrays based on those slices we use the
+23:19 - same native cue to a ray job in order to
+23:22 - convert all of those cues into all of
+23:23 - those arrays then same thing in order to
+23:26 - sort then we have our individual arrays
+23:29 - we put together all those 20 arrays into
+23:31 - two separate arrays and then we have our
+23:34 - simple draw code so as you can see the
+23:36 - structure is very much the same that we
+23:37 - did only with a bunch more improvement
+23:40 - so that it runs insanely fast again here
+23:43 - we have a hundred thousand individually
+23:46 - animated sprites running at 30 frames
+23:48 - per second and we can also look at the
+23:50 - profiler so here we have our probe
+23:52 - as you can see everything is running
+23:53 - insanely fast and that's it here's our
+23:56 - insanely fast simple spreadsheet
+23:58 - animation system as always you can
+24:00 - download the project files any tony's
+24:02 - from unity code monkey comm if you liked
+24:04 - the video subscribe the channel for more
+24:05 - unity tutorials
+24:06 - post any questions i have in the
+24:07 - comments and I'll do my best answer
+24:09 - alright see you next time
+24:11 - [Music]
+
+Cleaned transcript:
+
+in this video we're going to handle simple spreadsheet animation in a period TCS game by using draw mesh instance we're going to prepare on our data in super fast jobs and do very few draw calls in order to achieve an insane result of a hundred thousand animated sprites let's begin hello and welcome I'm your code monkey and this channel is all about helping you learn how to make your own games with indepth tutorials made by a professional indie game developer so if you find the video helpful consider subscribing so here's what we want to create a nice simple spreadsheet animation system however we're going to be using drama SH instance so instead of having just a handful of sprites here it is we have an insane amount of sprites being rendered all of them individually animated and if we look at the stats you can see we have a hundred thousand and everything is running at 30 frames per second so this is our goal let's get to it so here we are in our scene this video is a continuation of the previous video on how to do simple spreadsheet and mission so go check out that video first if you haven't already there's a link in the description in that video we made some entities and set them up to use simple spreadsheet animation so this is the result we have entities being animated using a spreadsheet the animation is handled by this component in here as you can see it stores the current frame the total frame the various timers and also stores the UV and the matrix then we have this system in here which is animating all of that data it increases the time and if needed it increases the current frame then it calculates the UV and the matrix so this whole thing is running inside a job which means that this code runs super fast even on thousands of sprites and finally over here we have our render system here we're doing a for each on every entity and we are using graphics animation or to draw a mesh per every entity we're using the material property block in order to pass values into our shader specifically a vector for containing our UV coordinates so every single unit is using the same mesh same material the only difference is handled by the shader alright so this is what we have so far and here as you can see it does indeed work we have our units nicely animated however the performance isn't as good as it can be don't limit in this system is around 12,000 units which makes it run at 30 frames per second that's already a pretty massive number especially when compared to normal game object but we can sound you better the biggest bottleneck is here in our rendering system we're cycling through every single entity and doing a draw mesh so with 10000 entities we have the cycle running 10,000 times on the main thread and drawing 10,000 meshes being single thread means this code will get slower and slower the more units we add now as I mentioned in the previous video there is another way in order to draw meshes instead of using graphics are draw mesh we can use graphic start draw mesh instance this function as you can see receives an array of matrixes so we can prepare the array containing the matrices for on VAR units and the material property block for own the UVs and we do a single drop so let's try this out let's icon through all of our entities however instead of using entities dot for each and let's make a entity query then let's grab our array of our animation data now we can cycle through our array and here let's create our list of matrixes for all of our units so out here make a list of matrix 4x4 in here we just add them all right so now we have all the information needed so we do a graphic start Romesh instance going to use the same mesh all right so here is our code using draw mesh instance so we can now get rid of this one down here and here we have our modified code so we grab an entity query of all the entities with our animation data we grab an array containing all of that component data we create and populate a matrix and a UV list then we create the things that we're going to need and finally we do a single draw call using our entire list and you can list okay now let's go here in order to spawn just 10 units and let's see any up here we are we have 10 units being displayed and here in the stats window you can see just a single batch and nine saved by batching alright so everything seems great now let's try drawing 10,000 units and as soon as we do we come across an error now one of the limitations of drama instance is that it can only draw a thousand and twenty three meshes per single comp so essentially we need to split our calls into various batches so let's do that over here in our render let's define our slice count and let's put 10 23 for our limit and let's cycle through our entities in here and let's complete the slice size so we're counting the slice size since the last slice will be smaller than 2023 okay and now in here we make our own lists then we cycle through our slice eyes and we grab on the index starting on the I plus J so on this slice and finally we set our UV array and now we can draw our mesh alright so just like that we are now going to have one draw machine since call per each slice of 1023 entities just one thing in here we are not increasing the eye by just one but by our slice count so essentially if we have just two thousand entities this will run only twice okay let's see and yup here we are there's no error and our meshes are now being displayed all right awesome however you can already see another issue specific to draw mesh instance by using this function we are essentially bypassing all the entity sorting and cone meaning we must handle that ourselves so when you create our matrix and UV rays we need to sort them correctly we need to make sure that the units on a higher position stay on the beginning of the array and the ones down here on the end of the array so that everything is correctly sorted so let's see how we can do that in the simplest and most straightforward way possible so over here we're doing our cycle setting up our matrix and UV rays in order to this point and we are doing it based on the array containing our animation data so before we do that we need to store this array by our entity position so let's go all the way up here and our aquarium let's also grab the translation and in here let's do some very simple sorting all right so this should do it we cycle through our list and we are sorting them based on the position that one so when two T's above will be behind entities below all right so let's test however before we do that let's go up here and test with only a hundred units you'll see why in a bit and let's see so here we are and yep everything is looking great we have all our units animated individually and all of them are being displayed correctly all the meshes are correctly sorted and transparency isn't working great so this is awesome this is exactly what we want however if we look at the stats window over here you can see why we're doing this test with just a hundred units even with so few units we are taking five milliseconds in order to run this scene that is quite slow and wouldn't work with even a couple thousand units so far we've been doing everything very linearly here in our render code you can see that we're doing all of this just on the main thread so we're not benefiting from the job system we're doing all the sorting right here on the main thread this specific type of sorting will increase in complexity exponentially as we add more units and over here when we are creating the matrix and the UV we're also just doing a very simple cycle going through every single unit so now that we have the core functionality working it's time to make it work by taking advantage of the job system and improve our performance over here the biggest bottleneck by far is the sorting here we cycle through every single entity and for each entity we are cycling through every single entity so with just a hundred entities we are essentially running this code a hundred to the power of a hundred times which is already an insane number the more entities we get the more insane this gets so our biggest challenge here is to figure out a way to do sorting without having to test every entity against every other entity now in here I won't go over the approach that I found the best after doing a lot of testing I don't know if my approach is the absolute best one but the end result is two hundred thousand animated entities so that's quite good the way we're going to do it is essentially split the screen into very rectangle slices from top to bottom and we sort each slice individual that way each slice has fewer entities so it's faster and multiple slices can be sorted at the same time all right so let's get to it let's duplicate the system just so we have something to compare with later so in here just duplicate this and make this one the old system here just rename it to the old one and in here we can add the attribute disabled out of creation so this system will not run okay good so we can now modify this one now in here the first thing we're going to need is a struct to hold whatever that we're going to need in order to render so in here let's make a private struct call it render data let's store a reference to our entity we're also going to need a full 3/4 D position and we're also going to need the matrix and obviously a UV okay so this is the struct that we're going to work with inside all of our jobs we need the position for sorting and the matrix and UV for rendering so let's start off with a job to split our entities into just two slices so we're going to have a job cycling through all our entities grabbing their position and animation data now in here the way we're going to split our entities is by using native cues so we're going to have two fields for each cue we're using concurrent so we can concurrently write in various threads now the goal in here is essentially if a entity is on the top half of the screen it will be placed on the native cue one differences on the bottom it will be placed on the second one so we also need to know where exactly is the top and the bottom so if you got a float for the top part of our screen a second slice running from top so in this case is going to be right in the middle and the bottom of our screen the reason we're not simply defining the top middle and bottom is because later we're going to slice it into more than just two parts now in here inside our execute method first we do some simple calling to see if it's even within these valves so we have our family if it's above the bottom and under the top now if it is valid we just do a very simple if all right so here we have very simple we create our render data based on the information in here then we simply check if it's under the second slice then we place it on the second q if not we place it on the first view all right so that's it this is our very simple job it simply goes through every entity and place it on one of two queues so at the end we have our entity sorted into either the top or the bottom half of the screen now let's run this channel let's go down here into our update and first we're going to make our adherence so we have our two cues now we need to calculate the slice values based on our camera so grab the main camera the camera position we complete the bottom based on the camera orthographic size same thing for the top and then our second slice which is right down the middle alright now let's schedule and complete our job all right so we are creating our job passing in all the valleys that it needs schedule and complete okay so let's do a very quick test let's do a simple debug log to see how many entities are on the first slice and how many on the second slice so a debug log negative Q one dot count and same thing for t2 all right let's see and you up here in the console we can already see 4654 so we have 46 entities on the top of the screen and 54 on the bottom half ok great so we have correctly split our entities into two separate slices so essentially right now we can sort both slices at the same time and since each of them has fewer units they run even faster so you can already see you are we going with this approach so after doing all of our slicing we now have two queues one for each slice however we can't directly sort a native queue so we need to take these queues and convert them into native arrays that we can then sort so let's make a job to do just that all right so here this very simple job we take a heat we take an array we try to the queue whilst the queue has elements and we similar place them on the array so very simple now let's run our job first we need to create our race for the size of the right won't be the same size as the queue so we go into the queue and it we're at the account alright here it is so we first define our race with the same size as our queues we create our jobs we schedule all the jobs and put the job handle in a job Hemel a right and once both of them have been scheduled we complete both jobs at the same time so right now down here we already have two arrays instead of two queues so with those we can now sort them so let's make a job to do just that let's sort the same way that we did previously and now let's run both jobs so over here we now have our both arrays correctly sorted now all we need to do is draw them so down here let's get rid of our previous sorting and in our drug code let's modify it to be more efficient and work with simple arrays let's make it work with a matrix in UV array so no references in the animation that so in here in order to create a new matrix array we need to know essentially how many units are visible since we're doing calling not necessarily every single entity won't be visible so let's calculate that do one end for the visible entity total and here it will be essentially the total of our native array one was native right too so we create an array of that size now let's draw our entities using these arrays so let's assume that these arrays are completely filled with all the entities so inside we no longer cycle through our animation data instead we make some basic arrays out here so we have these two normal rays and now inside our cycle we can simply use a copy to so use the function on the native array and we copy from our source native array so that's the matrix array and here we can pick the source index so we are using this super fast function in order to capture slices from this array and then we just draw our mesh alright so this is it let's also remember to dispose of all our native arrays so now we have our draw code in here working perfectly based on these two arrays so in terms of the drawing we don't care what happens previously we just care that we have these two film the rates now all that's left is in order to take our sliced arrays and merge them into these two arrays so let's make a job to do that merger let's go up here and now that our private struct this won't be the film arrays all right so here in our job we have our origin native array and the matrix and UV ray which are the phone arrays then we also receive a starting index so the first ray will be on a certain index position then the second array will be on another starting index position so since we have multiple jobs writing to both of these arrays we need to disable the container safety restrictions and this attribute is also inside unity collections all of'em and safe now when using this you need to make very sure that you are very careful with your indexes you need to be careful to not cause any race conditions so now let's run our job so down here we have our two arrays sorting then we create our matrix n UV array and it's in here that we need to fill them up so we have our two jobs in order to take our native array one and two and place them in the matrix array in UV array again very careful with the starting index as you can see the first one won't start on the starting index of zero but the second one won't start at the end of the index for the first array so after this after these jobs have been completed our data is now sorted and placed in a single phone array one for the matrix and one for the UV now in here we wrote a lot of code but hopefully this was easy to follow along the strategy behind it is quite simple so the first thing we do is we have a job in order to count and sort our entities into various slices so in this case we just have two slices so one for the top part of the screen and one for the bottom part of the screen so this job places our entities in the correct queue then before we can do sorting we need to take the entities from that queue and place them in an array so we have this job to do exactly that so down here we now have our two arrays ready so we have this job in order to sort our arrays by position so we schedule in both jobs and then we run them both so essentially the top and the bottom won't be sorted at the same time on different cores and then once we have them on Sargent we create full arrays for our matrixes and our UVs and then we have this job which takes our individual arrays and merges them all into one single array and finally when we have these two arrays on film with the correct data down here we have our draw code so we go through our race in slices of 10 23 since that's the limitation of drama instance we do a simple copy from our full array into our slice array and we render the whole thing and obviously one thing we can do in order to get extra performance is to simply add our birth compound into all these jobs since all of them are births comparable so add that one down that one and that one alright so let's see alright so here we are with our new system and all of our entities are being drawn so the code is working great now it's time to see exactly how much of a speed difference we made between the old system with no multithreading and this one with multithreading so here we have the own system running with 500 units and as you can see a hundred milliseconds per frame now I see the new system and here we are with the new system rendering those same 500 units in just 1.5 to 2 milliseconds thanks to all the benefits from multithreaded code ok so this is already pretty awesome now over this past week I've spent a lot of time working on this code and making it run as fast as possible on every single step of the way so let's see the absolute best performance I've managed to get so here is the final system running and over here you can view the stats as you can see we have a hundred thousand individually animated sprites running at 30 frames per second so this is pretty much the definition of insanity so let's see how this final system works and you'll be able to see the same structure that we built the strategy in here is very much the same we have the camera viewport being cut into multiple slices however instead of having just two slices we have 20 so in here you can see our Cowan sword job we have our 20 slices and 20 Q's and all these ifs in order to place everything in the correct queue and we are also calling for the X minimum and maximum so over here in the scene view you can see the culling in action as you can see all of them are being drawn but if I move the camera as you can see the entities that go away on the culling on the minimum X they get hidden and same thing on down so it only actually shows the entities and that need to be shown so we have our job using our 20 slices and here we have our update we are going through our position sizes which are 20 getting the camera and calculating all of these slices then we create all the arrays based on those slices we use the same native cue to a ray job in order to convert all of those cues into all of those arrays then same thing in order to sort then we have our individual arrays we put together all those 20 arrays into two separate arrays and then we have our simple draw code so as you can see the structure is very much the same that we did only with a bunch more improvement so that it runs insanely fast again here we have a hundred thousand individually animated sprites running at 30 frames per second and we can also look at the profiler so here we have our probe as you can see everything is running insanely fast and that's it here's our insanely fast simple spreadsheet animation system as always you can download the project files any tony's from unity code monkey comm if you liked the video subscribe the channel for more unity tutorials post any questions i have in the comments and I'll do my best answer alright see you next time

@@ -1,0 +1,1106 @@
+With timestamps:
+
+00:04 - hey everybody
+00:05 - welcome to live coding with jesse i'm
+00:07 - jesse
+00:08 - and today we're going to do something
+00:10 - weird we're going to code in php
+00:14 - nothing wrong with php it's just weird
+00:16 - because we usually don't code with php
+00:19 - uh we roll with javascript around here
+00:22 - but um
+00:24 - i have to i don't really have another
+00:26 - option
+00:27 - so let me
+00:28 - kind of break down what the problem is
+00:30 - and how i think we're going to solve it
+00:32 - and if any of you have
+00:35 - better ideas please let me know i'm open
+00:37 - to trying anything at this point
+00:40 - because
+00:43 - i need to get some data it's really
+00:44 - important and our current setup won't
+00:47 - allow for getting the data that
+00:50 - uh that we need
+00:52 - so
+00:54 - here's here's what's happening i've made
+00:56 - these custom fields so if you're not
+00:58 - familiar with wordpress this might not
+01:00 - make sense at first but then hopefully
+01:02 - once we get into it it'll make a little
+01:04 - bit more sense but
+01:05 - uh on the the posts
+01:08 - we made all these custom post types
+01:10 - right and we have these posts well i've
+01:12 - added in some custom fields right by
+01:15 - default wordpress has certain fields
+01:17 - like a title and content things like
+01:19 - that
+01:20 - well i needed more than that
+01:22 - all right you'll see why when we look at
+01:25 - a specific case
+01:28 - but i can't access that data through
+01:30 - graphql so we're using that wp graphql
+01:34 - plugin and it doesn't give us data from
+01:36 - those custom fields by default
+01:39 - so to complicate a little bit more i've
+01:42 - used a plug-in called advanced custom
+01:44 - fields pro
+01:46 - to get that data
+01:48 - or i'm sorry to make those fields
+01:52 - so what i need to do is figure out a way
+01:56 - in php
+01:57 - so most likely in we either add to the
+02:00 - php plug-in that we've been using to
+02:03 - make all the custom post types or we'll
+02:05 - have have a new one i haven't really
+02:07 - decided yet
+02:09 - um
+02:11 - we need to figure out some way to make
+02:13 - those
+02:15 - the data from those fields
+02:17 - available
+02:20 - in graphql
+02:22 - through that wp graphql plugin
+02:25 - so i have some ideas
+02:26 - so i went to the git repository
+02:31 - and
+02:35 - there were some other people that were
+02:36 - trying to do the same thing so i have
+02:38 - some ideas based on what they posted of
+02:40 - their solutions
+02:42 - and hopefully from their solutions we'll
+02:44 - be able to piece something together
+02:46 - that'll work for our use case
+02:49 - that's the plan
+02:50 - if anybody has any skills with wordpress
+02:52 - php
+02:54 - um
+02:55 - you know wordpress plugins
+02:58 - uh then you're most welcome here and uh
+03:02 - you know feel free to chime in
+03:06 - uh at any point
+03:08 - all right so i just got a message from
+03:10 - one of my student workers and
+03:14 - he does not have the level of access
+03:16 - necessary to do what i just asked him to
+03:20 - do in wordpress so
+03:21 - let me give him access real quick
+03:24 - and then we'll get started
+03:32 - if you notice my head like kind of
+03:34 - blowing i'm listening to like
+03:37 - 90s
+03:38 - rap music right now on spotify so i just
+03:41 - finished uh the second season of luke
+03:44 - cage on netflix and so now i'm of course
+03:47 - like
+03:48 - remembering all this old school rap
+03:50 - music because it's all the the
+03:52 - soundtrack for that show is
+03:54 - all that kind of stuff
+03:56 - so
+03:59 - apologies to that
+04:02 - anybody else a fan of luke cage or the
+04:04 - any of the marvel series on netflix
+04:09 - i'm i'm a big fan luke h is one of my
+04:11 - favorites
+04:14 - i'd probably say luke cage and daredevil
+04:16 - were my favorites out of all the
+04:18 - marvel series
+04:21 - okay
+04:23 - all right so i gave him access
+04:25 - let's see
+04:35 - all right so i just made the student
+04:37 - worker in admin hopefully
+04:40 - hopefully he doesn't mess anything up he
+04:43 - seems to catch on pretty quickly though
+04:45 - to everything so i think it'll be good
+05:01 - all right so i just messaged them and
+05:03 - said with great power comes great
+05:04 - responsibility
+05:08 - so see if anybody gets that reference
+05:10 - let me know where it's from
+05:13 - all right cool we're up to a decent
+05:15 - viewer account now so i think now is a
+05:16 - great time for me to get my face off the
+05:18 - screen
+05:20 - and switch over
+05:22 - all right cool so let me check let me
+05:24 - show you what's what's going on here
+05:26 - so
+05:27 - this is uh
+05:30 - what is this graph
+05:32 - graphical i think that's how we
+05:33 - pronounce it graphical uh it's a chrome
+05:36 - browser plugin that lets us
+05:40 - search through
+05:42 - our graphql data
+05:44 - so i've just searched for menu so this
+05:46 - is the custom post type that i made and
+05:49 - that i'm using these custom fields with
+05:52 - and you can see
+05:54 - here's what's available
+05:59 - these are all the fields that are
+06:00 - available for me to get data from
+06:02 - there's a lot of stuff there
+06:04 - actually i'm probably blocking some of
+06:05 - it it doesn't matter because the stuff
+06:07 - we want is not it's not there
+06:09 - right and if you have this this
+06:11 - extension you can check out
+06:14 - what we have in graphql as well if you'd
+06:16 - like
+06:19 - but yeah i can't get access to that so
+06:22 - we need to change that
+06:25 - so let me show you
+06:27 - let me log in here and i'm going to show
+06:29 - you
+06:30 - what this post
+06:31 - looks like
+06:34 - and
+06:36 - menu
+06:38 - there we go menus
+06:42 - let's see
+06:43 - maybe this one all right cool so we have
+06:45 - this would be
+06:46 - a
+06:48 - navigation menu
+06:50 - that would kind of show up on the right
+06:52 - hand side and just scroll with the user
+06:55 - and this navigation menu
+06:57 - would include these links and it would
+06:59 - appear on all pages that have to do with
+07:02 - franciscan
+07:03 - press
+07:05 - or franciscan university press i think
+07:08 - we should just call it franciscan press
+07:10 - though because otherwise it gets
+07:11 - shortened to fu press
+07:13 - and that's not really a good a good name
+07:16 - right
+07:17 - um
+07:19 - let me get all right christopher's
+07:21 - asking for the link i'll put that in the
+07:25 - in the description yeah that's my fault
+07:26 - i should have just put it in anyway
+07:29 - uh oops
+07:32 - all right the link
+07:33 - to the graphql endpoint that i'm working
+07:35 - with is now in the live chat
+07:39 - so you can check that out if you want
+07:41 - and i'm gonna throw in the link to the
+07:44 - dead version of the website
+07:46 - dev to franciscan dot university
+07:52 - so you can check that out as well
+07:56 - that should not take that long
+07:59 - i thought i set it up to always keep at
+08:01 - least one instance running
+08:05 - i have to work on that if anybody uses
+08:08 - now
+08:09 - uh from zeit
+08:11 - and you know why this could be taking so
+08:14 - long let me know
+08:16 - because i'm not it shouldn't take that
+08:18 - long
+08:19 - um
+08:20 - okay
+08:23 - so let's just go to a place that should
+08:26 - have this menu so let's let's check out
+08:29 - um
+08:31 - franciscan
+08:34 - the press thing let's see
+08:36 - maybe franciscan magazine should have
+08:41 - i don't even have that route set up yet
+08:43 - okay
+08:44 - um
+08:45 - i still have to set that one up some of
+08:47 - the stuff down lower on the menu i guess
+08:49 - didn't get set up
+08:52 - um
+08:53 - households
+08:59 - oh there we go
+09:01 - that's kind of odd
+09:03 - why isn't that working
+09:11 - all right cool well good to see that i
+09:13 - still have work to do anyway this
+09:15 - households page i know should have a
+09:17 - menu
+09:18 - so
+09:20 - we're gonna the menu would just be on
+09:23 - this side right where i'm not kind of
+09:24 - moving my mouse
+09:25 - uh and it would just scroll down with
+09:27 - the user so i just wanna just let you
+09:29 - know where this menu would be and then
+09:30 - on mobile i think the menu will drop to
+09:32 - the bottom so we'll actually make two
+09:34 - different menus and we'll just switch
+09:35 - out visibility based on screen width and
+09:38 - we can do that just with some some media
+09:40 - queries with css
+09:44 - all right
+09:45 - and i forgot to set my pomodoro timer
+09:47 - let me set that now
+09:49 - so i'm going to code for 25 minutes and
+09:52 - after that i'm going to go to the live
+09:53 - chat and answer your questions so i see
+09:55 - some some activity there in the chat
+09:57 - so
+10:00 - if
+10:03 - if you've asked something i'm not
+10:04 - ignoring you i'm just going to wait
+10:06 - until after this 25 minute period is up
+10:12 - all right
+10:14 - so we probably won't even need to look
+10:16 - at this page anymore we're mainly going
+10:18 - to be dealing with this page and with
+10:20 - our our php
+10:22 - so let's scroll over
+10:26 - there we go
+10:27 - so here's our
+10:29 - our current plugin the fastest way to
+10:31 - get started i think would just be to use
+10:34 - this same plugin that we've been using
+10:36 - for all our custom post types this
+10:38 - plugin is available on github
+10:40 - if you check out that
+10:43 - fus marcon repository that's the same
+10:46 - place we have the repository for
+10:49 - uh for this this react project you'll
+10:52 - see this franciscan franciscan custom
+10:54 - post types uh plug-in so you can check
+10:57 - that out if you'd like
+10:59 - it's open source feel free to change it
+11:01 - edit it use it for whatever you need to
+11:05 - um
+11:06 - but i think we could we could probably
+11:08 - just for now put some stuff down here
+11:13 - and then
+11:15 - probably put it in its own plug-in at
+11:17 - some point because this plug-in is
+11:18 - getting really really huge
+11:24 - all right
+11:53 - all right sorry about that my student
+11:55 - workers keeps asking me things on slack
+11:57 - so
+11:58 - i want to respond
+12:00 - um
+12:02 - all right so next thing i'm going to do
+12:03 - is pull over this
+12:07 - these
+12:11 - i guess examples that are here
+12:13 - in this
+12:15 - repo and i'm going to paste this in the
+12:18 - description so
+12:19 - these are attempts that other people
+12:21 - have made
+12:24 - to get this to work basically to solve
+12:25 - the same problem that we're we're having
+12:28 - and it seems like at least some of them
+12:30 - were successful okay so this one
+12:33 - was successful
+12:35 - in particular for the repeater field
+12:38 - which is the field that we're we're
+12:39 - using
+12:41 - so i'm i definitely want to try this one
+12:43 - first there's a bit
+12:46 - there's one that's that's
+12:48 - shorter
+12:49 - it doesn't quite require as many lines
+12:51 - of code
+12:52 - that we might be able to utilize later
+12:54 - on when we have some more custom fields
+12:56 - that aren't as complex as this
+13:00 - but for now i really want to try to get
+13:01 - this repeater field working because i
+13:03 - know if i can get this working i can
+13:05 - probably get anything working this is
+13:07 - seems to be
+13:11 - the most
+13:12 - complex
+13:14 - example that we could use
+13:17 - all right so
+13:18 - first things first let's just copy and
+13:20 - paste this and start editing it and see
+13:22 - if we can get
+13:24 - a different response here
+13:27 - and with php and wordpress plugins in
+13:29 - particular you know pretty much right
+13:32 - away if it doesn't work because usually
+13:34 - everything crashes
+13:36 - so
+13:37 - that'll be
+13:38 - it'll be obvious if we mess it up
+13:41 - and then also
+13:43 - if we don't see the right data here
+13:46 - then
+13:47 - we'll know right away
+13:56 - okay
+14:00 - all right that always seems like i'm
+14:02 - looking away from the camera but my my
+14:04 - other monitor is is over here so
+14:08 - i don't i was going to move the webcam
+14:10 - to show you but i
+14:12 - i don't want to move it and then i give
+14:13 - everybody motion sickness so i'm going
+14:15 - to hold off on that
+14:16 - but my other monitors here that's how i
+14:18 - keep looking away
+14:21 - all right so i'm going to read through
+14:23 - this anybody that's better at php than i
+14:26 - am which
+14:27 - wouldn't be that hard to be better than
+14:28 - me at php uh please
+14:31 - correct me if i'm reading this wrong but
+14:33 - i'm just gonna try to think through this
+14:36 - so i can get some idea of what's going
+14:38 - on before we jump in and start changing
+14:40 - things
+14:43 - okay
+14:45 - so
+14:46 - we're adding an action graphql exhibit
+14:49 - fields and
+14:50 - a lot of these functions are built into
+14:52 - wordpress so
+14:55 - we we just kind of have to assume like
+14:57 - this is going to work this function does
+14:59 - something
+15:00 - if we really are confused we can look it
+15:02 - up and probably will be able to find it
+15:05 - in the wordpress documentation
+15:08 - all right so we're going to add an
+15:09 - action graph gives you fields function
+15:12 - fields okay
+15:16 - making an object okay so it looks like
+15:18 - in this case
+15:24 - session
+15:26 - okay so session is the name of a field
+15:30 - all right good so
+15:31 - let's
+15:34 - let's change session right now
+15:38 - oh sessions type all right
+15:40 - um
+15:44 - sessions
+15:48 - field
+15:52 - yeah let's change every instance of
+15:55 - session
+15:57 - to link
+15:58 - since that's what we're dealing with in
+16:00 - this particular case so
+16:03 - we'll just get get that uh
+16:06 - change right away
+16:08 - um
+16:21 - why did i have
+16:24 - for some reason it's putting two s's
+16:26 - there but
+16:27 - all right lynx thanks and then i need to
+16:29 - capitalize it here
+16:32 - and
+16:37 - i can't remember if that was supposed to
+16:38 - be capitalized or not let's let's
+16:39 - capitalize
+16:41 - okay
+16:50 - oh john you caught that about too many
+16:52 - s's there thank you
+16:54 - um
+16:56 - all right so now let's let's continue so
+17:02 - we're creating this new object type
+17:04 - we've given it a name of link a
+17:06 - description
+17:07 - um
+17:08 - one link row and then your text domain
+17:13 - i i mean this seems like an example
+17:15 - example text that
+17:18 - but i'm not sure what's supposed to go
+17:19 - in there so i'm going to leave it like
+17:21 - that for now and hopefully we'll be able
+17:23 - to see this
+17:24 - displayed somewhere later on and then
+17:27 - we'll get an idea of what it should be
+17:30 - all right so then we have fields so in
+17:32 - this case the fields that are being
+17:34 - defined for each row so i'm making a lot
+17:37 - of assumptions here but i'm assuming
+17:39 - that each one of these
+17:44 - is is going to be one row of our of our
+17:48 - repeater so each row in our repeater
+17:51 - fields is
+17:52 - is made up of two fields
+17:54 - and in this case
+17:56 - they have the uid in the name but in our
+17:58 - case it's going to be
+18:01 - link
+18:02 - well let's say
+18:05 - link
+18:09 - url
+18:11 - and let's call this
+18:17 - link name i'm pretty sure that's what i
+18:19 - named them
+18:21 - and in both cases these are strings
+18:28 - so we don't have to change that
+18:37 - resolve a custom post type and make sure
+18:39 - this is exposed to graphql
+18:46 - white map space
+18:48 - let me check that
+18:50 - example here where did it go
+18:55 - i don't know what that white map space
+18:57 - is
+19:01 - okay in this app i'm reading right here
+19:03 - the context of this
+19:05 - there we go white map space sessions
+19:07 - have some string fields and a field for
+19:09 - a map space
+19:12 - the white map space custom post type
+19:17 - okay
+19:22 - in this app you have exhibits
+19:25 - okay so the main custom post type is
+19:28 - white exhibit custom post type which can
+19:30 - have a list of sessions that's the
+19:32 - repeater field so in our case
+19:35 - white exhibit
+19:37 - is menu
+19:39 - now i'm not sure
+19:42 - i have some fields
+19:44 - sessions have some string fields and a
+19:46 - field for a map space white map space
+19:49 - custom post type so i don't know that we
+19:52 - need that white
+19:53 - white map space
+19:54 - all right i think
+19:56 - this would be a field
+20:02 - maybe that is connecting us to another
+20:05 - post type which we don't really need
+20:07 - right now on that one but it's good to
+20:08 - know that we can do that so let's get
+20:10 - rid of map space
+20:18 - okay
+20:23 - all right so we've gotten rid of that
+20:25 - just it's always nice to get rid of code
+20:27 - especially when you don't really
+20:28 - understand it anyway
+20:30 - one less thing to worry about
+20:33 - all right define the field containing
+20:35 - your repeater
+20:45 - links
+20:47 - return a list because repeaters are
+20:49 - lists
+20:50 - okay
+20:52 - type
+20:53 - links type description
+20:55 - yeah
+21:06 - all right um
+21:13 - all right this is graphql exhibit fields
+21:17 - this is this needs to change right um
+21:22 - unless this is just
+21:24 - this name could be whatever we want
+21:27 - i guess it doesn't matter but let's
+21:29 - let's say menu
+21:32 - menus fields
+21:41 - let's say that
+21:43 - the thing that i'm i'm
+21:46 - i don't get is
+21:51 - these values should in some way be
+21:53 - connected to that menu's custom post
+21:55 - type
+21:58 - and i'm not seeing where that connection
+21:59 - is
+22:01 - so
+22:04 - let me check this again
+22:15 - all right i'm going to scroll up and see
+22:18 - because there's a similar solution
+22:21 - and i said each year on our project
+22:23 - that'll return strange
+22:34 - get filled
+22:45 - using issues gives you so good first
+22:48 - meadow did we use get field
+23:14 - okay and you see some previous examples
+23:16 - with the same problem
+23:18 - which
+23:19 - the these were
+23:21 - i believe failed attempts
+23:31 - well it looks like there's a gist here
+23:33 - with another solution
+23:36 - we'll take one look at this
+23:38 - whoa
+23:53 - okay so this section looks very similar
+24:12 - but this section is definitely different
+24:16 - hooray
+24:25 - interesting
+24:48 - um
+25:05 - all right let me see
+25:10 - it says to use this get field but i
+25:13 - didn't see it in here so let's search
+25:15 - for it
+25:17 - there we go there it is
+25:18 - get field links
+25:20 - post
+25:22 - okay you know what i'm just going to try
+25:23 - this so i can't really see
+25:27 - exactly how this is gonna all link up
+25:29 - but
+25:30 - i'm gonna try it
+25:33 - maybe i'm just missing something and it
+25:35 - it will work i hope that's the case all
+25:37 - right so i just copied that
+25:40 - and i'm going to paste it
+25:43 - oops
+25:46 - too many things open
+25:48 - all right
+25:49 - so we're going to go down
+25:52 - to plugins
+25:54 - this is the wordpress admin panel in
+25:56 - case you know you're not familiar with
+25:58 - that
+25:59 - um
+26:01 - so i'm gonna go down to plugins
+26:04 - if i can find it there we go and then
+26:06 - editor
+26:07 - you can actually edit the code for
+26:09 - plugins right here it is not recommended
+26:12 - obviously
+26:13 - right i would be way more hesitant to do
+26:16 - this to a site that was live but we're
+26:17 - still in development mode so
+26:19 - the site has not launched yet and i'm
+26:21 - okay with this
+26:24 - you could definitely crash a live site
+26:26 - when doing this
+26:28 - and
+26:29 - let's update and hopefully we don't get
+26:32 - a white screen
+26:34 - hey
+26:36 - great
+26:38 - i'm gonna refresh just to verify yeah no
+26:41 - no weird right white screen that's
+26:44 - awesome
+26:45 - um now let's go back here and
+26:48 - i'm just gonna run that
+26:49 - and see
+26:53 - i'm going to click on menu again and see
+26:55 - if we can
+27:08 - um
+27:22 - all right i'm not getting it there but
+27:24 - it potentially it might show up
+27:27 - elsewhere
+27:29 - so what did we call that
+27:33 - link
+27:35 - let's see if we can find it here
+27:48 - um
+28:06 - hmm
+28:11 - i don't think that worked
+28:14 - but we could try
+28:17 - reloading everything
+28:42 - hmm
+28:50 - let me check my time
+28:52 - all right so if you ask some questions
+28:53 - in the chat just hang in there for about
+28:55 - six more minutes and then i'll answer
+28:56 - some questions
+29:08 - all right this is alphabetical order so
+29:15 - i'm just gonna scroll down
+29:18 - nope nothing just link
+29:21 - um
+29:25 - yeah i'm not worried about that
+29:39 - i mean i'm gonna i don't think link is
+29:40 - the link we're looking for i'm gonna
+29:42 - verify that now
+29:43 - yeah that's definitely not the
+29:45 - particular link that we are
+29:49 - looking for that's the permalink
+29:58 - all right let me check this out
+30:16 - hmm
+30:48 - hmm
+30:50 - nope
+30:51 - all right so i'm not seeing anything new
+30:55 - uh in our
+30:58 - our schema so
+31:02 - first attempt didn't work
+31:04 - not really surprised at that
+31:11 - so
+31:13 - let's see
+31:22 - all right let's think about this
+31:24 - uh description for graphql okay so all
+31:26 - of this
+31:30 - define your fields the description one
+31:33 - link row
+31:59 - define the field containing your
+32:01 - repeater
+32:06 - you know what we
+32:08 - i'm wondering if this is case sensitive
+32:11 - and that makes a difference
+32:13 - right because we are
+32:18 - i don't know if this would make a
+32:19 - difference here then usually when we're
+32:21 - talking about the description the name
+32:23 - um can be what anything
+32:31 - thank you equals give
+32:34 - blanks
+32:46 - you know what i should double check and
+32:47 - see if i've
+32:50 - what the slug for the repeater is that i
+32:53 - actually uh used
+32:58 - all right so let's go in here
+33:05 - here's our plug in our custom fields
+33:06 - plug-in
+33:08 - so we're going to go check out
+33:10 - every time you make a new field in this
+33:12 - plug-in it's it's given a name but then
+33:14 - it's also given a slug so the slug is
+33:17 - the more
+33:20 - useful thing uh when we're dealing with
+33:22 - the code
+33:25 - so let's check out links
+33:28 - and
+33:29 - this field name is links
+33:32 - let's make sure that's how we did it yep
+33:34 - so we did say links and not link
+33:41 - so i think this is fine because
+33:44 - are we talking about one link yeah
+33:48 - um
+33:48 - but here we have links
+33:54 - okay
+34:01 - hmm
+34:06 - all right so that looks okay
+34:15 - oliver says set graphql exhibit fields
+34:18 - and not graphql menu fields
+34:22 - okay oliver yeah so it was exhibit
+34:25 - fields before but i thought exhibit i'll
+34:28 - try it out
+34:32 - um i'll try that out it just seemed like
+34:36 - before that um exhibit was specific to
+34:40 - the project like exhibit was that custom
+34:43 - uh post type
+34:44 - so
+34:49 - i will try that out this would be the
+34:51 - last thing i try before i answer some
+34:52 - questions so
+34:55 - go back here
+34:56 - to this
+34:58 - and
+35:00 - i just pasted in the new stuff
+35:06 - okay
+35:08 - and now
+35:11 - i'm gonna do a refresh just to make sure
+35:14 - nothing's saved there
+35:20 - all right
+35:38 - nothing
+35:47 - hmm
+35:50 - okay
+35:51 - all right couldn't get it to work yet
+35:53 - let's take a five minute break answer
+35:55 - some questions hopefully we can think of
+35:57 - some other things to try uh for this
+36:02 - i will say i assume that this problem
+36:04 - was going to take me a while to figure
+36:06 - out so like not something that i would
+36:08 - get done during today's stream so
+36:12 - as long as i'm making some progress
+36:15 - which i think we've made some progress
+36:16 - so far
+36:17 - at least in figuring out what
+36:20 - a little bit about what doesn't work
+36:24 - so i think we'd be good progress is good
+36:27 - okay
+36:44 - all right looks like some of you said
+36:46 - spider-man i was talking about uh marvel
+36:49 - characters and i i mentioned earlier
+36:51 - that i just finished watching season two
+36:53 - of luke cage and i really liked it uh it
+36:56 - looks like some of your spider-man fans
+36:59 - i always liked spider-man uh when i was
+37:02 - younger that was my favorite
+37:05 - spider-man and wolverine were my
+37:06 - favorite
+37:08 - when i was younger
+37:12 - i still like him
+37:24 - all right looks like a lot of the stuff
+37:25 - in the chat or discussion between some
+37:27 - of the people in the chat so i'm
+37:28 - skipping through some of it if i happen
+37:30 - to miss your question
+37:31 - uh because i got lost in the discussion
+37:34 - just um ask me again down down below
+37:46 - okay christopher thanks
+37:48 - um that graphq uh graphical extension
+37:51 - that i'm using on chrome is called uh
+37:55 - chrome chromie ql c-h-r-o-m-e-i-q-l
+38:00 - so that's supposed to be chromical i
+38:02 - don't know what it's how you pronounce
+38:03 - it but
+38:04 - um
+38:06 - let's see
+38:12 - christopher said ooh php is gross
+38:16 - well i guess everybody has their own
+38:18 - preferences for the first language i
+38:20 - will say this it seems like php does get
+38:24 - hated on quite a bit these days
+38:31 - christopher says no js all the way oh i
+38:33 - mean i much prefer node but sometimes
+38:35 - you got to do what you got to do
+38:37 - um
+38:38 - says i've never been a fan of wordpress
+38:40 - either i prefer to implement the thing
+38:41 - i'm trying to build either with a
+38:43 - library or by writing my own version
+38:44 - usually works better because i know how
+38:46 - it works
+38:47 - yeah for sure um
+38:49 - in this case
+38:51 - i i was not about to write a whole
+38:53 - content management system uh on my own
+38:56 - though
+38:58 - just didn't have the time or the
+38:59 - resources to do it
+39:04 - and i mean wordpress is extremely stable
+39:06 - and has a huge user base so there's no
+39:09 - way i can replicate that
+39:18 - clergson says apollo
+39:20 - and graph
+39:22 - graphic love react native
+39:25 - i'm also a huge fan of react native i
+39:27 - have a react native project going on on
+39:28 - the side with balance.io
+39:31 - so that that project is coming along
+39:33 - really well i can't wait till we're done
+39:34 - and i can actually tell you all like hey
+39:36 - check it out in the app store
+39:38 - um if any of you are at all interested
+39:41 - in cryptocurrency i think that that's
+39:43 - going to be a really cool app
+39:44 - once we're finished with it
+39:50 - all right automated sound kinetics says
+39:53 - hi i'm new to this channel i'm 18 and
+39:55 - i'm really interested in coding but i'm
+39:57 - really confused about choosing a
+39:58 - programming language to start with can
+40:00 - anyone help me out
+40:03 - yeah
+40:05 - it definitely depends on what you want
+40:06 - to do but if you have no idea what you
+40:08 - want to do
+40:09 - i recommend starting with javascript as
+40:12 - your first programming language and
+40:14 - here's here's why
+40:18 - javascript knowing javascript will allow
+40:20 - you to make
+40:22 - the
+40:23 - largest variety of things with
+40:26 - javascript you can of course do websites
+40:29 - web apps but you can also do
+40:32 - native apps
+40:33 - for both mobile and desktop using
+40:36 - electron and react native
+40:39 - you can even use javascript to do some
+40:41 - machine learning
+40:42 - um with like tensorflow.js or brain.js
+40:46 - you can do
+40:49 - ar vr
+40:51 - xor whatever they're calling you know
+40:53 - all the the augmented reality and
+40:56 - different types of reality there's ways
+40:58 - to do with javascript you can do
+41:00 - internet of things stuff with javascript
+41:02 - i think it's
+41:04 - it's the javascript library like johnny
+41:07 - five
+41:08 - that lets you do
+41:09 - like internet of things
+41:11 - stuff i forget what exactly it's called
+41:14 - but
+41:15 - um
+41:18 - there there's really to my knowledge no
+41:20 - area of programming that you are totally
+41:23 - locked out of in javascript but with
+41:25 - other programming language you are a bit
+41:27 - more limited
+41:28 - right so
+41:30 - not that it would be impossible to
+41:32 - program a lot of other things in another
+41:34 - language but it's it's definitely not as
+41:36 - easy
+41:38 - right javascript just runs in the
+41:39 - browser
+41:41 - so the barrier entry there is is just so
+41:44 - low
+41:46 - now if you know you want to go into a
+41:48 - specific field
+41:49 - like if you really wanted to do machine
+41:51 - learning or data science i'd say go with
+41:53 - python if you really really wanted to
+41:55 - focus on
+41:58 - mobile apps for either
+42:00 - ios or android then maybe you want to
+42:03 - specialize
+42:04 - right so
+42:06 - if there's a certain company you really
+42:07 - want to work for and
+42:09 - they specialize in one thing go with
+42:12 - that although if you want to do anything
+42:14 - that has to do with the internet with
+42:16 - with websites
+42:17 - you're gonna have to know some
+42:18 - javascript at some point
+42:20 - unless you i don't know completely back
+42:23 - end and work in in some language some
+42:26 - other language right but
+42:28 - if you're all to touch the front end
+42:31 - of any web app
+42:33 - you're going to need to know some
+42:34 - javascript
+42:36 - so
+42:37 - i'd say that's a good place to go in
+42:39 - terms of
+42:41 - giving you the best opportunity
+42:43 - to explore and figure out what you like
+42:47 - if you want to know what's like really
+42:49 - easy to pick up
+42:50 - honestly i think python's really easy
+42:52 - because there's not a whole lot of weird
+42:54 - syntax stuff going on with with
+42:56 - different characters it's all based on
+42:58 - indentation so python seems to be
+43:01 - easy to pick up
+43:03 - my eight-year-old is learning python
+43:04 - right now so
+43:06 - um i think it's way easier for him
+43:10 - to use that because it's indentation
+43:12 - based instead of trying to look for the
+43:14 - weird characters and knowing when to
+43:16 - press shift on the keyboard and
+43:17 - everything so
+43:20 - that's that's my opinion on that so
+43:25 - i um i i don't pretend to be an expert
+43:30 - but based on my experience and my
+43:32 - knowledge of of the field right now
+43:35 - that's what i would go with
+43:39 - okay
+43:41 - all right so i didn't get through all of
+43:43 - the chat
+43:44 - but i'm gonna restart this pomodoro
+43:46 - timer and then hopefully get through the
+43:48 - rest of the chat when we're done
+43:50 - all right
+43:54 - let's see
+44:12 - all right so we left off
+44:14 - with
+44:18 - hmm
+44:25 - we left off with a failure right we can
+44:27 - need it to work and the last thing we
+44:29 - tried was switching back to
+44:31 - um exhibits instead of menus now the the
+44:36 - thing that
+44:40 - the thing that i thought was odd
+44:45 - was that
+44:46 - we made no reference
+44:48 - to
+44:49 - the post type
+44:52 - where these fields were being stored
+44:54 - uh or or that these were attached to
+44:56 - right so that menu's post type is where
+44:59 - we're
+45:00 - we're entering the data
+45:07 - so i'm wondering if let's go back to our
+45:09 - examples here
+45:13 - i'm i'm wondering if
+45:16 - in this example here
+45:22 - where basically this part
+45:26 - matches up
+45:28 - with this
+45:33 - i'm wondering if all of this
+45:37 - has to go with it as well
+45:58 - let's see where
+46:00 - i'm gonna copy and paste this just so i
+46:02 - can use my editor shortcuts to to look
+46:05 - through it and get some syntax
+46:06 - highlighting on it um but maybe we'll
+46:09 - find our answer down here so let's give
+46:11 - it a lot of space so we know what's what
+46:16 - there we go now it's so much easier just
+46:18 - to to read this with the syntax
+46:20 - highlighting
+46:21 - all right so
+46:24 - this is this repeater field
+46:32 - so we're putting in a lot more info
+46:34 - about the repeater field
+46:42 - object type type okay
+46:45 - and then when we get down here we see we
+46:47 - have a different name here so this is in
+46:50 - the stats fields graphql stats
+46:54 - fields
+46:56 - okay so we're we're naming this
+47:02 - i i kind of think that this could change
+47:05 - and it doesn't doesn't necessarily
+47:07 - matter
+47:09 - to get names that description all right
+47:12 - so this this section like i eventually
+47:15 - figured out is supposed to be like this
+47:17 - singular
+47:18 - um
+47:20 - okay so what
+47:22 - we've
+47:22 - done
+47:24 - what we've done when this section i
+47:26 - think will work
+47:28 - field stats
+47:30 - type
+47:32 - description
+47:44 - all right and what is that compared to
+47:54 - okay
+47:59 - links
+48:03 - fields
+48:09 - all right so let's grab
+48:11 - this
+48:13 - right and
+48:15 - actually i want to see where they where
+48:17 - this goes we have this array here do we
+48:20 - reference array anywhere down here
+48:22 - though
+48:32 - do we reference that particular array i
+48:35 - don't think so
+48:53 - okay
+48:55 - um let's grab this
+48:57 - and
+49:00 - we'll add it up here modify it for what
+49:03 - we need
+49:05 - so instead of stats
+49:09 - we're going to say
+49:11 - links
+49:25 - all right see links
+49:26 - repeater field
+49:28 - and here's this thing this key a field
+49:32 - and then this
+49:33 - i wonder
+49:35 - i wonder if we'll need that and where we
+49:37 - can get that from like if that value is
+49:40 - assigned when we've created that
+49:49 - let me you know i have a fan running in
+49:51 - the background on low let me know if
+49:53 - that noise is if you can hear that noise
+49:55 - and if it's annoying um i'll try to
+49:59 - turn that off if it's if it's getting
+50:00 - too annoying for you all
+50:06 - i'm going to double check my messages
+50:08 - here make sure there's no work messages
+50:15 - there's so many notifications
+50:19 - all right i think i'm good
+50:28 - okay
+50:30 - that's
+50:31 - that's the only thing that i'm worried
+50:33 - about here is that key
+50:36 - of like where are we getting that key
+50:37 - from
+50:43 - and then the subfields
+50:48 - we definitely need to change
+51:03 - hmm
+51:12 - i'm wondering
+51:29 - hmm
+51:42 - i'm going to leave it as is what i'm
+51:44 - wondering is
+51:46 - would would this code actually register
+51:51 - new custom fields
+52:00 - but it's not it's not applying them
+52:01 - anywhere
+52:05 - all right let me get rid of this stuff
+52:06 - down here though
+52:10 - so i definitely don't want this in here
+52:20 - and i'm gonna take one more look at this
+52:23 - something at the bottom that i was
+52:25 - interested in here
+52:39 - okay
+52:44 - all right so let's let's just throw this
+52:46 - in here right now
+52:48 - and see what happens i'm
+52:51 - well i'm kind of surprised we didn't get
+52:52 - an error already but
+52:55 - we'll see maybe we'll get one here
+53:00 - hey nikki's here hey how's it going
+53:04 - yeah there we go the php code changes
+53:06 - roll back because in airline 1703.
+53:16 - an unexpected
+53:20 - that's interesting
+53:21 - right because we we got that you know we
+53:23 - copied and pasted that right from here
+53:25 - so
+53:26 - okay
+53:34 - well let's take that out i kind of
+53:37 - think we'll get another error but
+53:39 - yeah unexpected use
+53:44 - all right so that code is not going to
+53:46 - work
+53:53 - all right well let's take some of this
+53:54 - out then
+54:13 - this
+54:23 - all right
+54:27 - let's update just get rid of those
+54:29 - errors
+54:31 - all right great
+54:34 - um i don't want to
+54:41 - back here
+54:46 - let's go
+54:50 - there's our menus
+54:53 - i'm gonna go into the menus just to make
+54:55 - sure we haven't messed anything up
+54:58 - um
+55:00 - this would be a good
+55:02 - a good check to make sure that they're
+55:05 - they're right please
+55:08 - insurance
+55:10 - whoa
+55:11 - whoa whoa whoa
+55:16 - all right that's definitely not the
+55:17 - right url
+55:24 - some the old site has some weird stuff
+55:25 - like this so in this case i'm not gonna
+55:28 - attempt to
+55:29 - keep this url
+55:34 - okay well it looks like it hasn't messed
+55:36 - it up
+55:50 - okay
+55:54 - nikki
+56:05 - all right
+56:06 - can
+56:07 - anybody hear me and see me at this point
+56:12 - i think it's working now
+56:15 - so um
+56:16 - yeah so there's a huge thunderstorm
+56:18 - right now
+56:19 - and the power went out so i think i'm
+56:21 - gonna end the stream i'm really sorry to
+56:23 - end it so abruptly but i think i'm gonna
+56:26 - end the stream because the odds of the
+56:27 - power going back out are pretty good
+56:30 - um so i don't i don't want to keep
+56:32 - having um you know this this video once
+56:35 - it's you know available again have these
+56:37 - huge gaps in it
+56:39 - uh so
+56:40 - yeah so i'm just gonna end and this now
+56:43 - try to keep working on it i'm maybe i'll
+56:45 - switch to my laptop uh so that
+56:48 - i don't have to deal with the power
+56:49 - going out but um anyway thank you all
+56:52 - for watching and for your help and
+56:54 - advice during this i'm still gonna keep
+56:56 - working on this so this is an important
+56:59 - thing like this this really needs to get
+57:01 - finished before we can launch
+57:04 - um
+57:06 - probably other than that i'm going to
+57:07 - add some more custom post types and
+57:09 - custom fields and have my you know my
+57:12 - student workers fill that that data in
+57:15 - and that'll basically be what i'm up to
+57:18 - say thursday i'll try to get a stream in
+57:21 - tomorrow it'll probably be from home
+57:25 - so i will try that if not i'll be back
+57:27 - next week
+57:28 - and um
+57:30 - as always i'm available on all different
+57:32 - social media things you can ask me
+57:34 - questions and um
+57:37 - uh yeah so
+57:40 - until next time have a wonderful day
+
+Cleaned transcript:
+
+hey everybody welcome to live coding with jesse i'm jesse and today we're going to do something weird we're going to code in php nothing wrong with php it's just weird because we usually don't code with php uh we roll with javascript around here but um i have to i don't really have another option so let me kind of break down what the problem is and how i think we're going to solve it and if any of you have better ideas please let me know i'm open to trying anything at this point because i need to get some data it's really important and our current setup won't allow for getting the data that uh that we need so here's here's what's happening i've made these custom fields so if you're not familiar with wordpress this might not make sense at first but then hopefully once we get into it it'll make a little bit more sense but uh on the the posts we made all these custom post types right and we have these posts well i've added in some custom fields right by default wordpress has certain fields like a title and content things like that well i needed more than that all right you'll see why when we look at a specific case but i can't access that data through graphql so we're using that wp graphql plugin and it doesn't give us data from those custom fields by default so to complicate a little bit more i've used a plugin called advanced custom fields pro to get that data or i'm sorry to make those fields so what i need to do is figure out a way in php so most likely in we either add to the php plugin that we've been using to make all the custom post types or we'll have have a new one i haven't really decided yet um we need to figure out some way to make those the data from those fields available in graphql through that wp graphql plugin so i have some ideas so i went to the git repository and there were some other people that were trying to do the same thing so i have some ideas based on what they posted of their solutions and hopefully from their solutions we'll be able to piece something together that'll work for our use case that's the plan if anybody has any skills with wordpress php um you know wordpress plugins uh then you're most welcome here and uh you know feel free to chime in uh at any point all right so i just got a message from one of my student workers and he does not have the level of access necessary to do what i just asked him to do in wordpress so let me give him access real quick and then we'll get started if you notice my head like kind of blowing i'm listening to like 90s rap music right now on spotify so i just finished uh the second season of luke cage on netflix and so now i'm of course like remembering all this old school rap music because it's all the the soundtrack for that show is all that kind of stuff so apologies to that anybody else a fan of luke cage or the any of the marvel series on netflix i'm i'm a big fan luke h is one of my favorites i'd probably say luke cage and daredevil were my favorites out of all the marvel series okay all right so i gave him access let's see all right so i just made the student worker in admin hopefully hopefully he doesn't mess anything up he seems to catch on pretty quickly though to everything so i think it'll be good all right so i just messaged them and said with great power comes great responsibility so see if anybody gets that reference let me know where it's from all right cool we're up to a decent viewer account now so i think now is a great time for me to get my face off the screen and switch over all right cool so let me check let me show you what's what's going on here so this is uh what is this graph graphical i think that's how we pronounce it graphical uh it's a chrome browser plugin that lets us search through our graphql data so i've just searched for menu so this is the custom post type that i made and that i'm using these custom fields with and you can see here's what's available these are all the fields that are available for me to get data from there's a lot of stuff there actually i'm probably blocking some of it it doesn't matter because the stuff we want is not it's not there right and if you have this this extension you can check out what we have in graphql as well if you'd like but yeah i can't get access to that so we need to change that so let me show you let me log in here and i'm going to show you what this post looks like and menu there we go menus let's see maybe this one all right cool so we have this would be a navigation menu that would kind of show up on the right hand side and just scroll with the user and this navigation menu would include these links and it would appear on all pages that have to do with franciscan press or franciscan university press i think we should just call it franciscan press though because otherwise it gets shortened to fu press and that's not really a good a good name right um let me get all right christopher's asking for the link i'll put that in the in the description yeah that's my fault i should have just put it in anyway uh oops all right the link to the graphql endpoint that i'm working with is now in the live chat so you can check that out if you want and i'm gonna throw in the link to the dead version of the website dev to franciscan dot university so you can check that out as well that should not take that long i thought i set it up to always keep at least one instance running i have to work on that if anybody uses now uh from zeit and you know why this could be taking so long let me know because i'm not it shouldn't take that long um okay so let's just go to a place that should have this menu so let's let's check out um franciscan the press thing let's see maybe franciscan magazine should have i don't even have that route set up yet okay um i still have to set that one up some of the stuff down lower on the menu i guess didn't get set up um households oh there we go that's kind of odd why isn't that working all right cool well good to see that i still have work to do anyway this households page i know should have a menu so we're gonna the menu would just be on this side right where i'm not kind of moving my mouse uh and it would just scroll down with the user so i just wanna just let you know where this menu would be and then on mobile i think the menu will drop to the bottom so we'll actually make two different menus and we'll just switch out visibility based on screen width and we can do that just with some some media queries with css all right and i forgot to set my pomodoro timer let me set that now so i'm going to code for 25 minutes and after that i'm going to go to the live chat and answer your questions so i see some some activity there in the chat so if if you've asked something i'm not ignoring you i'm just going to wait until after this 25 minute period is up all right so we probably won't even need to look at this page anymore we're mainly going to be dealing with this page and with our our php so let's scroll over there we go so here's our our current plugin the fastest way to get started i think would just be to use this same plugin that we've been using for all our custom post types this plugin is available on github if you check out that fus marcon repository that's the same place we have the repository for uh for this this react project you'll see this franciscan franciscan custom post types uh plugin so you can check that out if you'd like it's open source feel free to change it edit it use it for whatever you need to um but i think we could we could probably just for now put some stuff down here and then probably put it in its own plugin at some point because this plugin is getting really really huge all right all right sorry about that my student workers keeps asking me things on slack so i want to respond um all right so next thing i'm going to do is pull over this these i guess examples that are here in this repo and i'm going to paste this in the description so these are attempts that other people have made to get this to work basically to solve the same problem that we're we're having and it seems like at least some of them were successful okay so this one was successful in particular for the repeater field which is the field that we're we're using so i'm i definitely want to try this one first there's a bit there's one that's that's shorter it doesn't quite require as many lines of code that we might be able to utilize later on when we have some more custom fields that aren't as complex as this but for now i really want to try to get this repeater field working because i know if i can get this working i can probably get anything working this is seems to be the most complex example that we could use all right so first things first let's just copy and paste this and start editing it and see if we can get a different response here and with php and wordpress plugins in particular you know pretty much right away if it doesn't work because usually everything crashes so that'll be it'll be obvious if we mess it up and then also if we don't see the right data here then we'll know right away okay all right that always seems like i'm looking away from the camera but my my other monitor is is over here so i don't i was going to move the webcam to show you but i i don't want to move it and then i give everybody motion sickness so i'm going to hold off on that but my other monitors here that's how i keep looking away all right so i'm going to read through this anybody that's better at php than i am which wouldn't be that hard to be better than me at php uh please correct me if i'm reading this wrong but i'm just gonna try to think through this so i can get some idea of what's going on before we jump in and start changing things okay so we're adding an action graphql exhibit fields and a lot of these functions are built into wordpress so we we just kind of have to assume like this is going to work this function does something if we really are confused we can look it up and probably will be able to find it in the wordpress documentation all right so we're going to add an action graph gives you fields function fields okay making an object okay so it looks like in this case session okay so session is the name of a field all right good so let's let's change session right now oh sessions type all right um sessions field yeah let's change every instance of session to link since that's what we're dealing with in this particular case so we'll just get get that uh change right away um why did i have for some reason it's putting two s's there but all right lynx thanks and then i need to capitalize it here and i can't remember if that was supposed to be capitalized or not let's let's capitalize okay oh john you caught that about too many s's there thank you um all right so now let's let's continue so we're creating this new object type we've given it a name of link a description um one link row and then your text domain i i mean this seems like an example example text that but i'm not sure what's supposed to go in there so i'm going to leave it like that for now and hopefully we'll be able to see this displayed somewhere later on and then we'll get an idea of what it should be all right so then we have fields so in this case the fields that are being defined for each row so i'm making a lot of assumptions here but i'm assuming that each one of these is is going to be one row of our of our repeater so each row in our repeater fields is is made up of two fields and in this case they have the uid in the name but in our case it's going to be link well let's say link url and let's call this link name i'm pretty sure that's what i named them and in both cases these are strings so we don't have to change that resolve a custom post type and make sure this is exposed to graphql white map space let me check that example here where did it go i don't know what that white map space is okay in this app i'm reading right here the context of this there we go white map space sessions have some string fields and a field for a map space the white map space custom post type okay in this app you have exhibits okay so the main custom post type is white exhibit custom post type which can have a list of sessions that's the repeater field so in our case white exhibit is menu now i'm not sure i have some fields sessions have some string fields and a field for a map space white map space custom post type so i don't know that we need that white white map space all right i think this would be a field maybe that is connecting us to another post type which we don't really need right now on that one but it's good to know that we can do that so let's get rid of map space okay all right so we've gotten rid of that just it's always nice to get rid of code especially when you don't really understand it anyway one less thing to worry about all right define the field containing your repeater links return a list because repeaters are lists okay type links type description yeah all right um all right this is graphql exhibit fields this is this needs to change right um unless this is just this name could be whatever we want i guess it doesn't matter but let's let's say menu menus fields let's say that the thing that i'm i'm i don't get is these values should in some way be connected to that menu's custom post type and i'm not seeing where that connection is so let me check this again all right i'm going to scroll up and see because there's a similar solution and i said each year on our project that'll return strange get filled using issues gives you so good first meadow did we use get field okay and you see some previous examples with the same problem which the these were i believe failed attempts well it looks like there's a gist here with another solution we'll take one look at this whoa okay so this section looks very similar but this section is definitely different hooray interesting um all right let me see it says to use this get field but i didn't see it in here so let's search for it there we go there it is get field links post okay you know what i'm just going to try this so i can't really see exactly how this is gonna all link up but i'm gonna try it maybe i'm just missing something and it it will work i hope that's the case all right so i just copied that and i'm going to paste it oops too many things open all right so we're going to go down to plugins this is the wordpress admin panel in case you know you're not familiar with that um so i'm gonna go down to plugins if i can find it there we go and then editor you can actually edit the code for plugins right here it is not recommended obviously right i would be way more hesitant to do this to a site that was live but we're still in development mode so the site has not launched yet and i'm okay with this you could definitely crash a live site when doing this and let's update and hopefully we don't get a white screen hey great i'm gonna refresh just to verify yeah no no weird right white screen that's awesome um now let's go back here and i'm just gonna run that and see i'm going to click on menu again and see if we can um all right i'm not getting it there but it potentially it might show up elsewhere so what did we call that link let's see if we can find it here um hmm i don't think that worked but we could try reloading everything hmm let me check my time all right so if you ask some questions in the chat just hang in there for about six more minutes and then i'll answer some questions all right this is alphabetical order so i'm just gonna scroll down nope nothing just link um yeah i'm not worried about that i mean i'm gonna i don't think link is the link we're looking for i'm gonna verify that now yeah that's definitely not the particular link that we are looking for that's the permalink all right let me check this out hmm hmm nope all right so i'm not seeing anything new uh in our our schema so first attempt didn't work not really surprised at that so let's see all right let's think about this uh description for graphql okay so all of this define your fields the description one link row define the field containing your repeater you know what we i'm wondering if this is case sensitive and that makes a difference right because we are i don't know if this would make a difference here then usually when we're talking about the description the name um can be what anything thank you equals give blanks you know what i should double check and see if i've what the slug for the repeater is that i actually uh used all right so let's go in here here's our plug in our custom fields plugin so we're going to go check out every time you make a new field in this plugin it's it's given a name but then it's also given a slug so the slug is the more useful thing uh when we're dealing with the code so let's check out links and this field name is links let's make sure that's how we did it yep so we did say links and not link so i think this is fine because are we talking about one link yeah um but here we have links okay hmm all right so that looks okay oliver says set graphql exhibit fields and not graphql menu fields okay oliver yeah so it was exhibit fields before but i thought exhibit i'll try it out um i'll try that out it just seemed like before that um exhibit was specific to the project like exhibit was that custom uh post type so i will try that out this would be the last thing i try before i answer some questions so go back here to this and i just pasted in the new stuff okay and now i'm gonna do a refresh just to make sure nothing's saved there all right nothing hmm okay all right couldn't get it to work yet let's take a five minute break answer some questions hopefully we can think of some other things to try uh for this i will say i assume that this problem was going to take me a while to figure out so like not something that i would get done during today's stream so as long as i'm making some progress which i think we've made some progress so far at least in figuring out what a little bit about what doesn't work so i think we'd be good progress is good okay all right looks like some of you said spiderman i was talking about uh marvel characters and i i mentioned earlier that i just finished watching season two of luke cage and i really liked it uh it looks like some of your spiderman fans i always liked spiderman uh when i was younger that was my favorite spiderman and wolverine were my favorite when i was younger i still like him all right looks like a lot of the stuff in the chat or discussion between some of the people in the chat so i'm skipping through some of it if i happen to miss your question uh because i got lost in the discussion just um ask me again down down below okay christopher thanks um that graphq uh graphical extension that i'm using on chrome is called uh chrome chromie ql chromeiql so that's supposed to be chromical i don't know what it's how you pronounce it but um let's see christopher said ooh php is gross well i guess everybody has their own preferences for the first language i will say this it seems like php does get hated on quite a bit these days christopher says no js all the way oh i mean i much prefer node but sometimes you got to do what you got to do um says i've never been a fan of wordpress either i prefer to implement the thing i'm trying to build either with a library or by writing my own version usually works better because i know how it works yeah for sure um in this case i i was not about to write a whole content management system uh on my own though just didn't have the time or the resources to do it and i mean wordpress is extremely stable and has a huge user base so there's no way i can replicate that clergson says apollo and graph graphic love react native i'm also a huge fan of react native i have a react native project going on on the side with balance.io so that that project is coming along really well i can't wait till we're done and i can actually tell you all like hey check it out in the app store um if any of you are at all interested in cryptocurrency i think that that's going to be a really cool app once we're finished with it all right automated sound kinetics says hi i'm new to this channel i'm 18 and i'm really interested in coding but i'm really confused about choosing a programming language to start with can anyone help me out yeah it definitely depends on what you want to do but if you have no idea what you want to do i recommend starting with javascript as your first programming language and here's here's why javascript knowing javascript will allow you to make the largest variety of things with javascript you can of course do websites web apps but you can also do native apps for both mobile and desktop using electron and react native you can even use javascript to do some machine learning um with like tensorflow.js or brain.js you can do ar vr xor whatever they're calling you know all the the augmented reality and different types of reality there's ways to do with javascript you can do internet of things stuff with javascript i think it's it's the javascript library like johnny five that lets you do like internet of things stuff i forget what exactly it's called but um there there's really to my knowledge no area of programming that you are totally locked out of in javascript but with other programming language you are a bit more limited right so not that it would be impossible to program a lot of other things in another language but it's it's definitely not as easy right javascript just runs in the browser so the barrier entry there is is just so low now if you know you want to go into a specific field like if you really wanted to do machine learning or data science i'd say go with python if you really really wanted to focus on mobile apps for either ios or android then maybe you want to specialize right so if there's a certain company you really want to work for and they specialize in one thing go with that although if you want to do anything that has to do with the internet with with websites you're gonna have to know some javascript at some point unless you i don't know completely back end and work in in some language some other language right but if you're all to touch the front end of any web app you're going to need to know some javascript so i'd say that's a good place to go in terms of giving you the best opportunity to explore and figure out what you like if you want to know what's like really easy to pick up honestly i think python's really easy because there's not a whole lot of weird syntax stuff going on with with different characters it's all based on indentation so python seems to be easy to pick up my eightyearold is learning python right now so um i think it's way easier for him to use that because it's indentation based instead of trying to look for the weird characters and knowing when to press shift on the keyboard and everything so that's that's my opinion on that so i um i i don't pretend to be an expert but based on my experience and my knowledge of of the field right now that's what i would go with okay all right so i didn't get through all of the chat but i'm gonna restart this pomodoro timer and then hopefully get through the rest of the chat when we're done all right let's see all right so we left off with hmm we left off with a failure right we can need it to work and the last thing we tried was switching back to um exhibits instead of menus now the the thing that the thing that i thought was odd was that we made no reference to the post type where these fields were being stored uh or or that these were attached to right so that menu's post type is where we're we're entering the data so i'm wondering if let's go back to our examples here i'm i'm wondering if in this example here where basically this part matches up with this i'm wondering if all of this has to go with it as well let's see where i'm gonna copy and paste this just so i can use my editor shortcuts to to look through it and get some syntax highlighting on it um but maybe we'll find our answer down here so let's give it a lot of space so we know what's what there we go now it's so much easier just to to read this with the syntax highlighting all right so this is this repeater field so we're putting in a lot more info about the repeater field object type type okay and then when we get down here we see we have a different name here so this is in the stats fields graphql stats fields okay so we're we're naming this i i kind of think that this could change and it doesn't doesn't necessarily matter to get names that description all right so this this section like i eventually figured out is supposed to be like this singular um okay so what we've done what we've done when this section i think will work field stats type description all right and what is that compared to okay links fields all right so let's grab this right and actually i want to see where they where this goes we have this array here do we reference array anywhere down here though do we reference that particular array i don't think so okay um let's grab this and we'll add it up here modify it for what we need so instead of stats we're going to say links all right see links repeater field and here's this thing this key a field and then this i wonder i wonder if we'll need that and where we can get that from like if that value is assigned when we've created that let me you know i have a fan running in the background on low let me know if that noise is if you can hear that noise and if it's annoying um i'll try to turn that off if it's if it's getting too annoying for you all i'm going to double check my messages here make sure there's no work messages there's so many notifications all right i think i'm good okay that's that's the only thing that i'm worried about here is that key of like where are we getting that key from and then the subfields we definitely need to change hmm i'm wondering hmm i'm going to leave it as is what i'm wondering is would would this code actually register new custom fields but it's not it's not applying them anywhere all right let me get rid of this stuff down here though so i definitely don't want this in here and i'm gonna take one more look at this something at the bottom that i was interested in here okay all right so let's let's just throw this in here right now and see what happens i'm well i'm kind of surprised we didn't get an error already but we'll see maybe we'll get one here hey nikki's here hey how's it going yeah there we go the php code changes roll back because in airline 1703. an unexpected that's interesting right because we we got that you know we copied and pasted that right from here so okay well let's take that out i kind of think we'll get another error but yeah unexpected use all right so that code is not going to work all right well let's take some of this out then this all right let's update just get rid of those errors all right great um i don't want to back here let's go there's our menus i'm gonna go into the menus just to make sure we haven't messed anything up um this would be a good a good check to make sure that they're they're right please insurance whoa whoa whoa whoa all right that's definitely not the right url some the old site has some weird stuff like this so in this case i'm not gonna attempt to keep this url okay well it looks like it hasn't messed it up okay nikki all right can anybody hear me and see me at this point i think it's working now so um yeah so there's a huge thunderstorm right now and the power went out so i think i'm gonna end the stream i'm really sorry to end it so abruptly but i think i'm gonna end the stream because the odds of the power going back out are pretty good um so i don't i don't want to keep having um you know this this video once it's you know available again have these huge gaps in it uh so yeah so i'm just gonna end and this now try to keep working on it i'm maybe i'll switch to my laptop uh so that i don't have to deal with the power going out but um anyway thank you all for watching and for your help and advice during this i'm still gonna keep working on this so this is an important thing like this this really needs to get finished before we can launch um probably other than that i'm going to add some more custom post types and custom fields and have my you know my student workers fill that that data in and that'll basically be what i'm up to say thursday i'll try to get a stream in tomorrow it'll probably be from home so i will try that if not i'll be back next week and um as always i'm available on all different social media things you can ask me questions and um uh yeah so until next time have a wonderful day

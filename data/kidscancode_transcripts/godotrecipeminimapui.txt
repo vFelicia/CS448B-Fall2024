@@ -1,0 +1,433 @@
+00:00 - welcome to judo recipes in this video
+00:02 - we're going to look at how to make a
+00:04 - mini-map or radar item for your UI
+00:06 - displaying the interesting objects in
+00:08 - your game as always you can see a
+00:10 - written version of this on the Godot
+00:12 - recipes website at the link in the
+00:13 - description we've got a lot to do so
+00:15 - let's get started here's a preview of
+00:19 - what we're going for
+00:20 - objects appear in the mini-map based on
+00:22 - their positions in the world by the way
+00:24 - another approach to this is to alert the
+00:27 - player to nearby threats by drawing
+00:28 - indicators on the edges of the screen
+00:30 - game endeavour has done a video on
+00:32 - exactly how to do that which I recommend
+00:35 - you watch and if you're not subscribed
+00:37 - to his channel you're really missing out
+00:40 - so to begin I've made a simplistic 2d
+00:46 - top-down game setup with a player and
+00:49 - some mobs that run around and some
+00:52 - crates you can pick up basically it
+00:54 - looks like this you can walk around you
+00:58 - can pick up the crates these are going
+00:59 - to be some positive object you can look
+01:01 - for and then there are mobs that wander
+01:04 - around the map randomly there's no
+01:08 - shooting there's no damage there's none
+01:10 - of that stuff because I just wanted the
+01:12 - basics here and if you don't know how to
+01:15 - set up things like this I have some
+01:17 - other tutorials on how to make a tile
+01:18 - map to do your level how to do a
+01:21 - top-down character and I'll link to
+01:22 - those in the description below but this
+01:26 - is the game that we want to add the mini
+01:28 - map to so that I can see where these
+01:30 - objects are even when they're off-screen
+01:33 - all right we're gonna start by setting
+01:35 - up the layout of our mini maps I'm going
+01:37 - to open a new scene here and we want our
+01:41 - mini map to play nice with whatever
+01:42 - other UI elements you might have in your
+01:46 - game you know a full game you're
+01:48 - probably gonna have a health display or
+01:50 - some kind of inventory or or some other
+01:53 - UI elements that are also on the screen
+01:55 - at the same time and so we're gonna set
+01:58 - up our mini-map using containers so that
+02:01 - we can place that into any other
+02:04 - responsive UI that you've created for
+02:06 - the rest of your game so let's start by
+02:09 - creating a margin container so I don't
+02:13 - want the whatever size we have our
+02:15 - mini-map at I want to make sure all the
+02:17 - elements of it stay inside with a little
+02:20 - bit of buffer space around it so I'm
+02:23 - going to set the custom constants of
+02:24 - this to 5 on each side just to give us a
+02:28 - little bit of space around it oops and
+02:31 - with me let's rename this to mini-map
+02:34 - and then we're going to save it alright
+02:39 - now we want to add our frame in here for
+02:41 - our mini-map and to do that we're going
+02:44 - to use not a texture rect but a nine
+02:47 - patch rect and I'll show you what that
+02:49 - does in a second here so you see this
+02:52 - texture region panel
+02:54 - and up well if we drag our texture in
+02:56 - here here's why we want to use an iPad
+03:00 - trapped because if we used a regular
+03:02 - texture and we resize the frame then our
+03:07 - 128 by 128 image becomes stretched and
+03:13 - ugly and I don't want that I want the
+03:15 - frame to stay the same size and just
+03:18 - enclose a different size space as we
+03:21 - move it around now in the 9 Patrick you
+03:24 - can go into the texture region box and
+03:26 - you can draw out the region you want and
+03:29 - you know set the margins and you see how
+03:32 - they're changing but I sometimes find it
+03:35 - easier to just enter the numbers in this
+03:37 - case we want to put in 64 for all four
+03:41 - margins and now
+03:45 - what we will have is when we resize we
+03:49 - see the frame borders stay the same size
+03:52 - and they just stretch to enclose
+03:55 - whatever area is inside okay so now we
+03:59 - want to fill this inside part with our
+04:02 - grid texture that's going to tile to
+04:06 - cover everything but I don't want if I
+04:08 - make it a child of the nine patch rect
+04:10 - it's gonna tile the full area right and
+04:13 - I want it to stay inside of the borders
+04:16 - of the frame so as a another child of
+04:19 - the mini-map so it's gonna be a sibling
+04:20 - of the nine patch rect we're gonna add
+04:22 - another margin container and why don't
+04:26 - we go ahead and name the nine fat tract
+04:27 - frame so we know what that's for
+04:29 - so this margin container is gonna hold
+04:31 - our grid and we just need to give it the
+04:33 - margins that will ensure that it stays
+04:36 - inside the frame and that is 20 pixels
+04:42 - on all four sides
+04:44 - and then as a child of that we will put
+04:48 - the a texture rect which I'm going to
+04:52 - name grid and drop the pattern blueprint
+04:58 - pattern in there and set the stretch
+05:01 - mode to tile and now we have an
+05:05 - ice-filled image
+05:07 - that will tile to cover however big or
+05:11 - small we make our map but also you can
+05:17 - see if i zoom in here the borders of the
+05:20 - grid are inside the frame so I'm gonna
+05:25 - leave the minute mini-map size to around
+05:29 - 200 by 200 just as a starting size for
+05:34 - us again it can it'll be flexible once
+05:37 - we're finished
+05:38 - so this is our node setup and has
+05:42 - everything that we need in it for the
+05:44 - appearance of our map now we can start
+05:45 - writing the script that will make
+05:48 - everything appear so let's add a script
+05:50 - to this and the first thing that we want
+05:54 - to display in the mini-map is a marker
+05:57 - for the player at the center so as a
+06:00 - child of the grid I'm gonna add a sprite
+06:03 - node and in this sprite note I'm going
+06:07 - to stick the texture for the player icon
+06:11 - that's this little arrow now notice how
+06:13 - it put it right in the top-left corner
+06:15 - of the grid right which is because it's
+06:19 - a child of the grid and a zero zero
+06:20 - point of the grid is right there
+06:22 - now the grids size is 150 by 150 right
+06:26 - now that means our sprite node would be
+06:30 - at the center if we put it at 75 75 and
+06:35 - don't worry we'll do this automatically
+06:38 - in the script but for right now this is
+06:40 - a way to show you manually how we want
+06:42 - to put the marker at the center of the
+06:44 - grid now I'm gonna add two more markers
+06:46 - so I'm going to duplicate this I'm gonna
+06:48 - call this first one the player marker
+06:50 - and then the second one I'm going to use
+06:54 - this little red icon and this is going
+06:58 - to be the mob marker we can put that
+07:04 - over there and then this last one is
+07:07 - going to be the alert marker this is
+07:10 - just marked something that you want to
+07:11 - pay attention to so we'll use a little
+07:14 - yellow exclamation point so there's our
+07:17 - three markers that we're going to have
+07:19 - in the map but I'm going to go ahead and
+07:23 - hide the mob and alert marker because we
+07:25 - don't want them showing by default now
+07:27 - at this point we have a decision to make
+07:31 - and that decision kind of depends on how
+07:35 - your game is set up overall and since
+07:39 - we're using a simplistic you know
+07:41 - simplified game as a demonstration the
+07:45 - way that we do it in this example might
+07:48 - not be the best for you or a particular
+07:49 - game setup so keep that in mind if
+07:52 - you're following along and adding this
+07:53 - into your own game but what I'm going to
+07:56 - do is I have right now two objects that
+07:59 - need to appear on the map I have the mob
+08:00 - and I have the crate and I'm just gonna
+08:03 - put both of them in a group called
+08:04 - mini-map objects and so any object
+08:08 - that's in this group will appear on the
+08:10 - mini-map and then the other thing I'm
+08:13 - going to do is in the object itself I'm
+08:16 - just gonna make a property called
+08:17 - mini-map icon that tells me what icon to
+08:21 - use or which marker to use to show this
+08:24 - object in the map so now we can go over
+08:29 - to our mini-map here and we look at our
+08:31 - script and we're gonna start by adding a
+08:35 - couple of variables here I'm gonna add a
+08:39 - node path to the player since the player
+08:46 - is going to appear at the center of the
+08:47 - map but also the positions of all the
+08:50 - other objects are going to be relative
+08:52 - to this player all right since the
+08:53 - player stays at the center so we want a
+08:56 - link to the player we're also going to
+08:59 - have a variable called zoom it's gonna
+09:03 - be how much the map is zoomed in and out
+09:05 - I'm going to set this to 1.5 right now
+09:08 - and then we'll talk about at the end how
+09:11 - we can vary that to change the effect
+09:14 - and then I'm going to add some
+09:16 - references to the various nodes that
+09:18 - we're going to need to use in our script
+09:20 - this for convenience and then we need a
+09:25 - way to map those
+09:29 - tags that we gave the objects the
+09:34 - properties that we assigned to them to
+09:36 - the actual objects that we want to
+09:39 - attach to so I told the mob that its
+09:42 - icon should be mob that's going to link
+09:45 - to this mob marker and then the same
+09:48 - thing for the alert one likes to be
+09:53 - alert marker and then that needs to be
+10:01 - on ready again because these are unready
+10:03 - variables and then the last things we
+10:07 - need is we need the grid scale this is
+10:10 - the scale factor to go from the size of
+10:13 - the world down to the size of the map
+10:15 - and then we're going to also keep a list
+10:23 - of markers so let's say there are 10
+10:26 - mobs on the map each mob is going to
+10:30 - have one marker item assigned to it
+10:32 - moving around on the in the map grid and
+10:37 - so this markers dictionary is going to
+10:40 - have the keys are gonna be the actual
+10:42 - objects the actual mobs and crates and
+10:45 - the values will be the markers that are
+10:49 - assigned to them then in the ready we're
+10:54 - going to Center the player marker I'll
+10:57 - make sure it's at the center of the grid
+11:00 - so we're going to set its position equal
+11:03 - to the grids rect size divided by two
+11:08 - and then we're also going to calculate
+11:11 - that grid scale and what that's gonna be
+11:15 - is I'm going to take the grid rect size
+11:18 - how big our grid is I'm going to divide
+11:22 - by the viewport wrecked which is the
+11:26 - size of the screen dot size and then
+11:32 - we're going to multiply by the zoom so
+11:35 - what this means right now is that the
+11:36 - grid size will represent 1.5 times the
+11:42 - port size and then let's see how this is
+11:45 - going we'll go down here and we'll do
+11:47 - our process function and we'll set the
+11:52 - player now if there's no player meaning
+11:56 - I haven't assigned anything to this node
+11:58 - path then then I want to return I don't
+12:04 - want it I want to skip the process
+12:06 - function if there's no player to track
+12:08 - but if there is then we're going to take
+12:11 - the player marker and we're instead its
+12:13 - rotation equal to the player's rotation
+12:18 - so we'll do a get node player rotation
+12:23 - but the one thing to keep in mind is our
+12:26 - player marker points upwards so that
+12:29 - means it's not pointing down the x axis
+12:32 - which is the zero rotation so we need to
+12:33 - add PI over two so let's try this out
+12:39 - we'll go over to our world scene we have
+12:42 - a canvas layer already to hold our UI
+12:44 - and we're gonna add an instance of the
+12:47 - mini-map and we can place it why don't
+12:51 - we place it in the bottom I'm gonna put
+12:54 - it in the bottom right and let's hit
+12:57 - play okay so that's where it is now
+13:02 - notice it's not doing anything because
+13:04 - we didn't assign the player so let's go
+13:07 - over here to our inspector and assign
+13:11 - the player object and now we should have
+13:16 - there we go we should have a arrow the
+13:19 - points in the same direction the player
+13:21 - is pointing now let's make markers for
+13:24 - each of the items on the map so we'll do
+13:27 - this in the ready map objects equals get
+13:34 - tree get nodes in Group mini-map objects
+13:43 - so now we have an array of all of the
+13:46 - mobs and crates and then we're going to
+13:49 - go through each of them and we make a
+13:54 - new marker for each one and we're gonna
+13:59 - use the icons dictionary to get the
+14:04 - items mini-map icon so now I've chosen
+14:12 - whichever marker matches and I'm going
+14:17 - to duplicate it so I have a duplicate of
+14:20 - the mob marker or of the alert marker
+14:24 - depending then we're gonna add it as a
+14:27 - child of the grid and then we're gonna
+14:34 - add it we're gonna make we got to make
+14:36 - sure we show it because the the ones
+14:40 - we're duplicating are hidden and we need
+14:45 - to set our dictionary so that we have a
+14:52 - link between the mob and the mobs marker
+14:55 - or the crate and the crates marker and
+14:57 - then in the process we can just use that
+15:00 - to set all of their positions so for
+15:03 - item and markers then we need to figure
+15:07 - out the objects position so the objects
+15:12 - position is the items position minus the
+15:17 - players that's the vector from the
+15:19 - player to the item and then we need to
+15:23 - multiply that by the grid scale so that
+15:27 - we scale it down to the grid size and
+15:29 - then we need to add grid rec size over
+15:34 - to because we need to shift it to the
+15:37 - center of the grid and then we can place
+15:42 - the object there so we take the marker
+15:49 - and we said its position to that new
+15:55 - position we calculated now if we run
+15:58 - this here's what we're gonna see
+16:00 - there's the mob you see it moving that
+16:03 - let me run over here on the side and you
+16:06 - see how them the mini-map icons are
+16:09 - being drawn way outside the map right
+16:11 - the the mob is this far away from the
+16:14 - player at the map scale so it's being
+16:17 - drawn that far away and so the positions
+16:20 - are updating but we need to constrain
+16:23 - them we need to keep them inside the map
+16:25 - so right here before we set the position
+16:29 - we're going to constrain it so we're
+16:32 - gonna say object pause dot X and we're
+16:35 - going to clamp that to between 0 and the
+16:40 - grid rect
+16:43 - size correct size X and then do the same
+16:50 - thing for y and that way that no matter
+16:55 - where the icon is calculated to be it'll
+17:00 - stay inside the grid so now you can see
+17:04 - all the ones that are off and far away
+17:07 - are being drawn along the edges here now
+17:12 - at this point we can decide kind of what
+17:15 - we want to do about these icons that are
+17:17 - off the edge all right we basically have
+17:20 - two choices we could hide them so you
+17:23 - can't see these ones that are really far
+17:24 - away at all or we could change their
+17:27 - appearance in some way if they're on the
+17:30 - edge so I'm going to do the second one
+17:33 - so before we clamp the position we're
+17:37 - gonna check and see if grid oops get
+17:43 - wrecked so we want to get the rectangle
+17:45 - of the grid and just check if it has the
+17:48 - point we're looking for which is the
+17:50 - object position plus grid rect position
+17:56 - the reason we have to do that grid rect
+17:58 - position is there's a little bit of an
+17:59 - offset right the grid because it's in
+18:01 - at a margin container has a position of
+18:04 - 2020 all right so if that point that the
+18:10 - marker is being drawn at is inside the
+18:14 - rectangle then we'll set the marker
+18:21 - scale to 1:1 but if it's outside then we
+18:28 - want to set the scale to a smaller value
+18:31 - and so I'm going to use 0.75 and then
+18:38 - this will update as they come in and out
+18:40 - of that area all right so now we've got
+18:45 - small ones around the edge and see how
+18:47 - that one turns small when I went off the
+18:49 - screen now as I go down here you see
+18:52 - they turn big when they get closer now
+18:56 - the last thing I wanted to add was to
+18:58 - allow us to be able to change this zoom
+19:00 - so I'm going to take this zoom and I'm
+19:02 - at a set get to it so we'll have a
+19:07 - function that gets called whenever it is
+19:10 - changed so we'll define that here and we
+19:19 - want to clamp this value so that doesn't
+19:22 - get too big or too small because we're
+19:24 - going to change it with the mouse wheel
+19:26 - we clamp the value between 0.5 and 5
+19:30 - these are just arbitrary values that
+19:32 - I've chosen to look pretty good you can
+19:35 - adjust them how you like and then we're
+19:37 - going to use that to set the grid scale
+19:38 - which is the calculation we did here we
+19:43 - want to change the value of that and
+19:45 - then to make that take effect we need to
+19:49 - connect the minimaps GUI input all right
+19:57 - so this is called then we got an event
+20:01 - so if the event is an input mouse mouse
+20:06 - mouse button and it's pressed then we
+20:11 - have two options either it was a wheel
+20:13 - up or wheel down
+20:15 - when we check that with the button index
+20:19 - wheel up and then the other option is
+20:24 - that it might be wheel down and then in
+20:30 - both cases we're just going to change
+20:32 - the zoom by 0.1 add it if we scrolled up
+20:37 - on the wheel and we'll subtract it if we
+20:42 - scroll down on the wheel and now if we
+20:45 - run this again you should be able to see
+20:47 - the difference I'll go over here where
+20:49 - there's a bunch of items and then you
+20:55 - see if I'm inside I'm scrolling the
+20:57 - wheel in and out you can see how it
+20:59 - changes the effect to show them as being
+21:02 - closer to me even though these guys are
+21:04 - pretty far away now so I'm zoomed out
+21:06 - quite a bit there he is okay so that's
+21:09 - the mini-map now one thing that we
+21:12 - didn't talk about was what to do when an
+21:15 - item disappears so if one of these mobs
+21:18 - is killed or if the crate is picked up
+21:21 - we want these market to disappear and
+21:23 - conversely if you have a mob spawner or
+21:26 - something like that you want them to
+21:27 - appear when those things show up like
+21:31 - right now if I go pick up this crate I'm
+21:34 - gonna crash the game because it's not
+21:37 - going to know what to do with that
+21:38 - marker anymore no longer has a an item
+21:40 - that it's attached to but that's okay
+21:43 - we're not going to deal with that in
+21:45 - this tutorial that's something where
+21:48 - you'd want to tie that into your
+21:49 - spawning system maybe have some signals
+21:53 - that get sent out when a mob spawns or D
+21:55 - spawns connect that signal to the
+21:57 - mini-map and remove the marker when that
+22:02 - happens you might want to have more
+22:04 - marker types you just create more of
+22:06 - these markers and link them to the units
+22:09 - that you want to use them you could have
+22:13 - you could have a picture of your map as
+22:15 - the background instead of the grid here
+22:18 - and scroll that around as you walk
+22:21 - around your map so you see the walls as
+22:22 - well a lot of different options so
+22:26 - hopefully this helps you and you can
+22:28 - adapt this to work with whatever project
+22:30 - you're working on thanks for watching
+22:32 - and I'll see you in the next video this
+22:35 - tutorial is part of my new Godot recipes
+22:37 - website the goal is to collect all the
+22:39 - best tips and lessons to help make you a
+22:41 - better at Godot developer if you liked
+22:43 - this video I hope you'll go and check
+22:44 - out the site and make sure to hit
+22:46 - subscribe so you'll be notified whenever
+22:47 - I release new videos thanks for watching
