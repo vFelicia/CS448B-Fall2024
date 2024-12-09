@@ -1,4 +1,4 @@
-# CS448B-Fall2024
+# CS448B-Fall2024-Final-Project-Submission
 
 This is repo is an adapted repository of the main one I'm using for research. It has only the essential files needed to run everything, with some specific instruction! 
 
