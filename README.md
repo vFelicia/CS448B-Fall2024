@@ -1,1 +1,11 @@
 # CS448B-Fall2024
+
+This is repo is an adapted repository of the main one I'm using for research. It has only the essential files needed to run everything, with some specific instruction! 
+
+I foresee some issues if you try to run the code yourself for grading:
+* You MIGHT need to run through the pipeline to produce files required for `08-nlp-interactive-visualization.ipynb`, and this is because some files are too big to commit to GitHub. This repo should be finalized by submission so you don't have to, but that means I will not be able to further commit to the repo after I submit it.
+* Unfortuantely, some of the Jupyter Notebooks need to be ran on a virtual environment of Python 3.9.0 and you will therefore likely have to install some libraries.
+* Please contact me if there's an alternative method for you to see everything to make grading easier -- vgfelica@stanford.edu or on Slack as Vryan Feliciano.
+
+- `analysis --> NLP Analysis`: This directory will contain all files related to the NLP Analysis. The visualizations are chiefly in the `08-nlp-interactive-visualization.ipynb` Jupyter Notebook.
+- `data`: This directory contains the data used for the research project in general.
