@@ -8,4 +8,6 @@ I foresee some issues if you try to run the code yourself for grading:
 * Please contact me if there's an alternative method for you to see everything to make grading easier -- vgfelica@stanford.edu or on Slack as Vryan Feliciano.
 
 - `analysis --> NLP Analysis`: This directory will contain all files related to the NLP Analysis. The visualizations are chiefly in the `08-nlp-interactive-visualization.ipynb` Jupyter Notebook.
+  -  The Notebooks that use Python 3.9.0 are `07-nlp-topicmodeling.ipynb` and `08-nlp-interactive-visualization.ipynb`. Everything else runs in Python 3.13.0.
 - `data`: This directory contains the data used for the research project in general.
+- `Python3.9.0-libraries-versions`: This file contains all the libraries + versions needed to run in Python 3.9.0.
