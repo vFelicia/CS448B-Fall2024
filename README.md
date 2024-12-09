@@ -7,8 +7,9 @@ I foresee some issues if you try to run the code yourself for grading:
 * Unfortuantely, some of the Jupyter Notebooks need to be ran on a virtual environment of Python 3.9.0 and you will therefore likely have to install some libraries.
 * Please contact me if there's an alternative method for you to see everything to make grading easier -- vgfelica@stanford.edu or on Slack as Vryan Feliciano.
 
-Here's an explanation of what's on the repo:
+Here's an explanation of what's on the repo as it pertains to the final project:
 - `analysis --> NLP Analysis`: This directory will contain all files related to the NLP Analysis. The visualizations are chiefly in the `08-nlp-interactive-visualization.ipynb` Jupyter Notebook.
   -  The Notebooks that use Python 3.9.0 are `07-nlp-topicmodeling.ipynb` and `08-nlp-interactive-visualization.ipynb`. Everything else runs in Python 3.13.0.
 - `data`: This directory contains the data used for the research project in general.
 - `Python3.9.0-libraries-versions`: This file contains all the libraries + versions needed to run in Python 3.9.0.
+- `A3`: Is just my A3 submission!
